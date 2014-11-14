@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -47,11 +48,7 @@ public class FeedEvictor extends Configured implements Tool {
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
     public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Path confPath = new Path("file:///" + System.getProperty("oozie.action.conf.xml"));
-
-        LOG.info("{} found ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
-        conf.addResource(confPath);
+        Configuration conf = OozieActionConfigurationHelper.createActionConf();
         int ret = ToolRunner.run(conf, new FeedEvictor(), args);
         if (ret != 0) {
             throw new Exception("Unable to perform eviction action args: " + Arrays.toString(args));
@@ -74,7 +71,7 @@ public class FeedEvictor extends Configured implements Tool {
         LOG.info("Applying retention on {} type: {}, Limit: {}, timezone: {}, frequency: {}, storage: {}",
                 feedPattern, retentionType, retentionLimit, timeZone, frequency, feedStorageType);
 
-        Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern);
+        Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern, getConf());
         Path path = new Path(logFile);
         StringBuilder buffer = storage.evict(retentionLimit, timeZone, path);
 
@@ -125,7 +122,4 @@ public class FeedEvictor extends Configured implements Tool {
 
         return new GnuParser().parse(options, args);
     }
-
-
-
 }

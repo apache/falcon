@@ -35,6 +35,7 @@ import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.retention.EvictionHelper;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -62,7 +63,7 @@ import java.util.regex.Pattern;
 /**
  * A file system implementation of a feed storage.
  */
-public class FileSystemStorage implements Storage {
+public class FileSystemStorage extends Configured implements Storage {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileSystemStorage.class);
     private final StringBuffer instancePaths = new StringBuffer();
@@ -301,7 +302,8 @@ public class FileSystemStorage implements Storage {
     }
 
     @Override
-    public StringBuilder evict(String retentionLimit, String timeZone, Path logFilePath) throws FalconException {
+    public StringBuilder evict(String retentionLimit, String timeZone,
+                               Path logFilePath) throws FalconException {
         try{
             for (Location location : getLocations()) {
                 fileSystemEvictor(getUriTemplate(location.getType()), retentionLimit, timeZone, logFilePath);
@@ -318,8 +320,8 @@ public class FileSystemStorage implements Storage {
         return instanceDates;
     }
 
-    private void fileSystemEvictor(String feedPath, String retentionLimit,
-                                   String timeZone, Path logFilePath) throws IOException, ELException, FalconException {
+    private void fileSystemEvictor(String feedPath, String retentionLimit, String timeZone,
+                                   Path logFilePath) throws IOException, ELException, FalconException {
         Path normalizedPath = new Path(feedPath);
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(normalizedPath.toUri());
         feedPath = normalizedPath.toUri().getPath();
@@ -346,7 +348,7 @@ public class FileSystemStorage implements Storage {
     }
 
     private List<Path> discoverInstanceToDelete(String inPath, String timeZone, String dateMask,
-                                                      Date start, FileSystem fs) throws IOException {
+                                                Date start, FileSystem fs) throws IOException {
 
         FileStatus[] files = findFilesForFeed(fs, inPath);
         if (files == null || files.length == 0) {
@@ -480,7 +482,7 @@ public class FileSystemStorage implements Storage {
         return fileStatus;
     }
 
-    private Configuration getConf() {
+    public Configuration getConf() {
         Configuration conf = new Configuration();
         conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
         return conf;

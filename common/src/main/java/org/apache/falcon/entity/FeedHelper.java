@@ -37,6 +37,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.util.BuildProperties;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
@@ -170,6 +171,18 @@ public final class FeedHelper {
             return new FileSystemStorage(storageUriTemplate);
         } else if (storageType == Storage.TYPE.TABLE) {
             return new CatalogStorage(storageUriTemplate);
+        }
+
+        throw new IllegalArgumentException("Bad type: " + type);
+    }
+
+    public static Storage createStorage(String type, String storageUriTemplate,
+                                        Configuration conf) throws URISyntaxException {
+        Storage.TYPE storageType = Storage.TYPE.valueOf(type);
+        if (storageType == Storage.TYPE.FILESYSTEM) {
+            return new FileSystemStorage(storageUriTemplate);
+        } else if (storageType == Storage.TYPE.TABLE) {
+            return new CatalogStorage(storageUriTemplate, conf);
         }
 
         throw new IllegalArgumentException("Bad type: " + type);

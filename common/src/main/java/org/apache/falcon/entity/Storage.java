@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Date;
@@ -31,7 +32,7 @@ import java.util.List;
  * A class to encapsulate the storage for a given feed which can either be
  * expressed as a path on the file system or a table in a catalog.
  */
-public interface Storage {
+public interface Storage extends Configurable {
 
     String DOLLAR_EXPR_START_REGEX = "\\$\\{";
     String QUESTION_EXPR_START_REGEX = "\\?\\{";

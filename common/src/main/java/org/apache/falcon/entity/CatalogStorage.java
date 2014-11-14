@@ -33,6 +33,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.retention.EvictionHelper;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ import java.util.regex.Matcher;
 /**
  * A catalog registry implementation of a feed storage.
  */
-public class CatalogStorage implements Storage {
+public class CatalogStorage extends Configured implements Storage {
 
     private static final Logger LOG = LoggerFactory.getLogger(EvictionHelper.class);
 
@@ -189,6 +190,11 @@ public class CatalogStorage implements Storage {
         this.catalogUrl = uri.getScheme() + "://" + uri.getAuthority();
 
         parseUriTemplate(uri);
+    }
+
+    protected CatalogStorage(String uriTemplate, Configuration conf) throws URISyntaxException {
+        this(uriTemplate);
+        setConf(conf);
     }
 
     private void parseUriTemplate(URI uriTemplate) throws URISyntaxException {
@@ -404,7 +410,7 @@ public class CatalogStorage implements Storage {
             LOG.info("No partitions to delete.");
         } else {
             final boolean isTableExternal = CatalogServiceFactory.getCatalogService().isTableExternal(
-                    getCatalogUrl(), getDatabase(), getTable());
+                getConf(), getCatalogUrl(), getDatabase(), getTable());
             try {
                 dropPartitions(toBeDeleted, datedPartKeys, isTableExternal);
             } catch (IOException e) {
@@ -427,7 +433,7 @@ public class CatalogStorage implements Storage {
 
         final String filter = createFilter(datedPartKeys, datedPartValues);
         return CatalogServiceFactory.getCatalogService().listPartitionsByFilter(
-                getCatalogUrl(), getDatabase(), getTable(), filter);
+            getConf(), getCatalogUrl(), getDatabase(), getTable(), filter);
     }
 
     private void fillSortedDatedPartitionKVs(List<String> sortedPartKeys, List<String> sortedPartValues,
@@ -511,8 +517,8 @@ public class CatalogStorage implements Storage {
                                 boolean isTableExternal) throws FalconException, IOException {
 
         // get table partition columns
-        List<String> partColumns = CatalogServiceFactory.getCatalogService().getTablePartitionCols(getCatalogUrl(),
-                getDatabase(), getTable());
+        List<String> partColumns = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
+            getConf(), getCatalogUrl(), getDatabase(), getTable());
 
         /* In case partition columns are a super-set of dated partitions, there can be multiple
          * partitions that share the same set of date-partition values. All such partitions can
@@ -554,8 +560,8 @@ public class CatalogStorage implements Storage {
     private void dropPartitionInstances(List<CatalogPartition> partitionsToDrop, Map<String, String> partSpec,
                                         boolean isTableExternal) throws FalconException, IOException {
 
-        boolean deleted = CatalogServiceFactory.getCatalogService().dropPartitions(getCatalogUrl(), getDatabase(),
-                getTable(), partSpec);
+        boolean deleted = CatalogServiceFactory.getCatalogService().dropPartitions(
+            getConf(), getCatalogUrl(), getDatabase(), getTable(), partSpec);
 
         if (!deleted) {
             return;

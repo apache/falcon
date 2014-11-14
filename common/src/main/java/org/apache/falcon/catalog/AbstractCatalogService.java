@@ -19,6 +19,7 @@
 package org.apache.falcon.catalog;
 
 import org.apache.falcon.FalconException;
+import org.apache.hadoop.conf.Configuration;
 
 import java.util.List;
 import java.util.Map;
@@ -56,18 +57,20 @@ public abstract class AbstractCatalogService {
     /**
      * Returns if the table is external or not. Executed in the workflow engine.
      *
+     * @param conf conf object
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
      * @return true if external else false
      * @throws FalconException
      */
-    public abstract boolean isTableExternal(String catalogUrl, String database,
+    public abstract boolean isTableExternal(Configuration conf, String catalogUrl, String database,
                                             String tableName) throws FalconException;
 
     /**
      * List partitions by filter. Executed in the workflow engine.
      *
+     * @param conf conf object
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
@@ -77,13 +80,17 @@ public abstract class AbstractCatalogService {
      * @return list of partitions
      * @throws FalconException
      */
-    public abstract List<CatalogPartition> listPartitionsByFilter(String catalogUrl, String database,
+    public abstract List<CatalogPartition> listPartitionsByFilter(Configuration conf,
+                                                                  String catalogUrl,
+                                                                  String database,
                                                                   String tableName, String filter)
         throws FalconException;
 
     /**
      * Drops a given partition. Executed in the workflow engine.
      *
+     *
+     * @param conf  conf object
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
@@ -91,12 +98,15 @@ public abstract class AbstractCatalogService {
      * @return if the partition was dropped
      * @throws FalconException
      */
-    public abstract boolean dropPartitions(String catalogUrl, String database, String tableName,
+    public abstract boolean dropPartitions(Configuration conf, String catalogUrl,
+                                           String database, String tableName,
                                            Map<String, String> partitions) throws FalconException;
 
     /**
      * Gets the partition. Executed in the workflow engine.
      *
+     *
+     * @param conf  conf
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
@@ -105,16 +115,21 @@ public abstract class AbstractCatalogService {
      * @return An instance of CatalogPartition.
      * @throws FalconException
      */
-    public abstract CatalogPartition getPartition(String catalogUrl, String database, String tableName,
-                                                  Map<String, String> partitionSpec) throws FalconException;
+    public abstract CatalogPartition getPartition(Configuration conf, String catalogUrl,
+                                                  String database, String tableName,
+                                                  Map<String, String> partitionSpec)
+        throws FalconException;
 
     /**
+     *
+     * @param conf  conf
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName table name
      * @return list of partition column names of the table
      * @throws FalconException
      */
-    public abstract List<String> getTablePartitionCols(String catalogUrl, String database,
-                                                     String tableName) throws FalconException;
+    public abstract List<String> getTablePartitionCols(Configuration conf, String catalogUrl,
+                                                       String database,
+                                                       String tableName) throws FalconException;
 }

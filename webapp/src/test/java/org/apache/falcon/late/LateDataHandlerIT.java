@@ -59,6 +59,7 @@ public class LateDataHandlerIT {
     private static final String PARTITION_VALUE = "2012-04-21-00"; // ${YEAR}-${MONTH}-${DAY}-${HOUR}
     private static final String LATE_DATA_DIR = "/falcon/test/late/foo/logs/latedata/2013-09-24-00-00/primary-cluster";
 
+    private final Configuration conf = new Configuration(false);
     private final TestContext context = new TestContext();
     private String storageUrl;
     private String metastoreUrl;
@@ -144,10 +145,11 @@ public class LateDataHandlerIT {
         }
 
         LateDataHandler lateDataHandler = new LateDataHandler();
-        final long metric = lateDataHandler.computeStorageMetric(args[3], args[7], new Configuration());
+        lateDataHandler.setConf(conf);
+        final long metric = lateDataHandler.computeStorageMetric(args[3], args[7], conf);
         Assert.assertEquals(recordedMetrics.get("foo").longValue(), metric);
 
-        final String changes = lateDataHandler.detectChanges(lateDataPath, recordedMetrics, new Configuration());
+        final String changes = lateDataHandler.detectChanges(lateDataPath, recordedMetrics, conf);
         Assert.assertEquals("", changes);
     }
 
@@ -185,13 +187,14 @@ public class LateDataHandlerIT {
         reinstatePartition();
 
         LateDataHandler lateDataHandler = new LateDataHandler();
-        long metric = lateDataHandler.computeStorageMetric(args[3], args[7], new Configuration());
+        lateDataHandler.setConf(conf);
+        long metric = lateDataHandler.computeStorageMetric(args[3], args[7], conf);
         Assert.assertFalse(recordedMetrics.get("foo") == metric);
 
         Map<String, Long> computedMetrics = new LinkedHashMap<String, Long>();
         computedMetrics.put("foo", metric);
 
-        String changes = lateDataHandler.detectChanges(lateDataPath, computedMetrics, new Configuration());
+        String changes = lateDataHandler.detectChanges(lateDataPath, computedMetrics, conf);
         Assert.assertEquals("foo", changes);
     }
 
@@ -210,7 +213,7 @@ public class LateDataHandlerIT {
         client.addPartition(reinstatedPartition);
 
         CatalogPartition reInstatedPartition = CatalogServiceFactory.getCatalogService().getPartition(
-                metastoreUrl, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, metastoreUrl, DATABASE_NAME, TABLE_NAME, partitionSpec);
         Assert.assertNotNull(reInstatedPartition);
     }
 }

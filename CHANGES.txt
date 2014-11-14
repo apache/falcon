@@ -144,6 +144,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-880 Oozie Java actions for hive tables fail in secure mode
+   (Venkatesh Seetharam)
+
    FALCON-717 Shutdown not clean for JMSMessageConsumer
    (Shaik Idris Ali via Venkatesh Seetharam
 

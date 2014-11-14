@@ -21,6 +21,7 @@ package org.apache.falcon.catalog;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hcatalog.api.HCatClient;
 import org.apache.hcatalog.api.HCatCreateDBDesc;
@@ -53,6 +54,7 @@ public class HiveCatalogServiceIT {
     private static final String EXTERNAL_TABLE_NAME = "falcon_external";
     private static final String EXTERNAL_TABLE_LOCATION = "jail://global:00/falcon/staging/falcon_external";
 
+    private final Configuration conf = new Configuration(false);
     private HiveCatalogService hiveCatalogService;
     private HCatClient client;
 
@@ -195,18 +197,18 @@ public class HiveCatalogServiceIT {
 
     @Test
     public void testIsTableExternalFalse() throws Exception {
-        Assert.assertFalse(hiveCatalogService.isTableExternal(METASTORE_URL, DATABASE_NAME, TABLE_NAME));
+        Assert.assertFalse(hiveCatalogService.isTableExternal(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME));
     }
     @Test
     public void testIsTableExternalTrue() throws Exception {
-        Assert.assertTrue(hiveCatalogService.isTableExternal(METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME));
+        Assert.assertTrue(hiveCatalogService.isTableExternal(conf, METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME));
     }
 
     @Test
     public void testListPartitionsByFilterNull() throws Exception {
 
         List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, null);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, null);
         Assert.assertEquals(filteredPartitions.size(), 3);
     }
 
@@ -225,7 +227,7 @@ public class HiveCatalogServiceIT {
         throws Exception {
 
         List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, lessThanFilter);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, lessThanFilter);
         Assert.assertEquals(filteredPartitions.size(), expectedPartitionCount);
     }
 
@@ -245,7 +247,7 @@ public class HiveCatalogServiceIT {
         throws Exception {
 
         List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, greaterThanFilter);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, greaterThanFilter);
         Assert.assertEquals(filteredPartitions.size(), expectedPartitionCount);
     }
 
@@ -274,7 +276,7 @@ public class HiveCatalogServiceIT {
         partialPartitionSpec.put("ds", "20130903");
 
         Assert.assertTrue(hiveCatalogService.dropPartitions(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
 
         List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
         Assert.assertEquals(1, partitions.size(), "Unexpected number of partitions");
@@ -285,7 +287,7 @@ public class HiveCatalogServiceIT {
         partialPartitionSpec.put("ds", "20130902");
 
         Assert.assertTrue(hiveCatalogService.dropPartitions(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
         partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
         Assert.assertEquals(partitions.size(), 0, "Unexpected number of partitions");
     }
@@ -297,7 +299,7 @@ public class HiveCatalogServiceIT {
         partitionSpec.put("region", "in");
 
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
         Assert.assertNotNull(partition);
 
         long createTime = partition.getCreateTime();
@@ -315,7 +317,7 @@ public class HiveCatalogServiceIT {
         client.addPartition(first);
 
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
         Assert.assertNotNull(partition);
         final long originalCreateTime = partition.getCreateTime();
 
@@ -329,7 +331,7 @@ public class HiveCatalogServiceIT {
         client.addPartition(second);
 
         CatalogPartition reInstatedPartition = CatalogServiceFactory.getCatalogService().getPartition(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
         Assert.assertNotNull(reInstatedPartition);
         final long reInstatedCreateTime = reInstatedPartition.getCreateTime();
 
@@ -347,7 +349,7 @@ public class HiveCatalogServiceIT {
     @Test  (dataProvider = "tableName")
     public void testGetTablePartitionCols(String tableName) throws Exception {
         List<String> partCols = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
-                METASTORE_URL, DATABASE_NAME, tableName);
+            conf, METASTORE_URL, DATABASE_NAME, tableName);
         Assert.assertEquals(partCols.size(), 2);
         Collections.sort(partCols);
         Assert.assertEquals(partCols.get(0), "ds");

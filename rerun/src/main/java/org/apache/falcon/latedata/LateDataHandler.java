@@ -27,6 +27,7 @@ import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -50,12 +51,7 @@ public class LateDataHandler extends Configured implements Tool {
     private static final Logger LOG = LoggerFactory.getLogger(LateDataHandler.class);
 
     public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Path confPath = new Path("file:///"
-                + System.getProperty("oozie.action.conf.xml"));
-
-        LOG.info("{} found ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
-        conf.addResource(confPath);
+        Configuration conf = OozieActionConfigurationHelper.createActionConf();
         ToolRunner.run(conf, new LateDataHandler(), args);
     }
 
@@ -236,9 +232,10 @@ public class LateDataHandler extends Configured implements Tool {
         throws IOException, URISyntaxException, FalconException {
 
         CatalogStorage storage = (CatalogStorage)
-                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUriTemplate);
+                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUriTemplate, getConf());
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
-                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), storage.getPartitions());
+                getConf(), storage.getCatalogUrl(), storage.getDatabase(),
+                storage.getTable(), storage.getPartitions());
         return partition == null ? 0 : partition.getCreateTime();
     }
 
