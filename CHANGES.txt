@@ -41,6 +41,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-766 Falcon workflow rerun by default should rerun only Failed nodes
+   and remove continue option (Shaik Idris Ali via Venkatesh Seetharam)
+
    FALCON-744 Document existing falcon data archival to cloud store
    (Venkatesh Seetharam)
 

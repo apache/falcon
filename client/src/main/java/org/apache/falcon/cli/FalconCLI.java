@@ -100,7 +100,6 @@ public class FalconCLI {
     public static final String RUNNING_OPT = "running";
     public static final String KILL_OPT = "kill";
     public static final String RERUN_OPT = "rerun";
-    public static final String CONTINUE_OPT = "continue";
     public static final String LOG_OPT = "logs";
     public static final String RUNID_OPT = "runid";
     public static final String CLUSTERS_OPT = "clusters";
@@ -270,8 +269,6 @@ public class FalconCLI {
             validateNotEmpty(end, END_OPT);
             result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters,
                     lifeCycles);
-        } else if (optionsList.contains(CONTINUE_OPT)) {
-            result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(LOG_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
@@ -684,12 +681,6 @@ public class FalconCLI {
                 "Reruns process instances for a given process in the range start time and "
                         + "optional end time and overrides properties present in job.properties file");
 
-        Option continues = new Option(
-                CONTINUE_OPT,
-                false,
-                "resume process instance execution for a given process in the range start time and "
-                        + "optional end time and overrides properties present in job.properties file");
-
         Option logs = new Option(
                 LOG_OPT,
                 false,
@@ -717,7 +708,6 @@ public class FalconCLI {
         group.addOption(resume);
         group.addOption(rerun);
         group.addOption(logs);
-        group.addOption(continues);
         group.addOption(params);
         group.addOption(listing);
 

@@ -1300,14 +1300,14 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
             if (props == null || props.isEmpty()) {
-                jobprops.put(OozieClient.RERUN_FAIL_NODES, "false");
+                jobprops.put(OozieClient.RERUN_FAIL_NODES, "true");
             } else {
                 for (Entry<Object, Object> entry : props.entrySet()) {
                     jobprops.put(entry.getKey(), entry.getValue());
                 }
                 if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES)
                         && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
-                    jobprops.put(OozieClient.RERUN_FAIL_NODES, "false");
+                    jobprops.put(OozieClient.RERUN_FAIL_NODES, "true");
                 }
             }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);

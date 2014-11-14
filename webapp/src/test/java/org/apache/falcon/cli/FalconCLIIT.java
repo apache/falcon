@@ -835,17 +835,17 @@ public class FalconCLIIT {
                         + " -end " +  SchemaHelper.getDateFormat().format(new Date())));
 
         Assert.assertEquals(-1,
-                executeWithURL("instance -continue -type process -name "
+                executeWithURL("instance -rerun -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
 
         Assert.assertEquals(0,
-                executeWithURL("instance -continue -type process -name "
+                executeWithURL("instance -rerun -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
 
         Assert.assertEquals(0,
-                executeWithURL("instance -continue -type feed -lifecycle eviction -name "
+                executeWithURL("instance -rerun -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())
                         + " -end " + SchemaHelper.getDateFormat().format(new Date())));

@@ -468,16 +468,6 @@ public class FalconClient {
                 getServletInputStream(clusters, sourceClusters, temp), null, colo, lifeCycles);
     }
 
-    public String rerunInstances(String type, String entity, String start,
-                                 String end, String colo, String clusters, String sourceClusters,
-                                 List<LifeCycle> lifeCycles)
-        throws FalconCLIException, UnsupportedEncodingException {
-
-        return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, "oozie.wf.rerun.failnodes=true\n"), null, colo,
-                lifeCycles);
-    }
-
     public String getLogsOfInstances(String type, String entity, String start,
                                      String end, String colo, String runId,
                                      List<LifeCycle> lifeCycles, String filterBy,
