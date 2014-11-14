@@ -33,26 +33,25 @@ public abstract class AbstractCatalogService {
     /**
      * This method checks if the catalog service is alive.
      *
+     * @param conf conf
      * @param catalogUrl url for the catalog service
-     * @param metaStorePrincipal kerberos principal for hive metastore as this is executed in falcon on behalf of user
      * @return if the service was reachable
      * @throws FalconException exception
      */
-    public abstract boolean isAlive(String catalogUrl,
-                                    String metaStorePrincipal) throws FalconException;
+    public abstract boolean isAlive(Configuration conf, String catalogUrl) throws FalconException;
 
     /**
      * This method checks if the given table exists in the catalog.
      *
+     * @param conf  conf
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
-     * @param metaStorePrincipal kerberos principal for hive metastore as this is executed in falcon on behalf of user
      * @return if the table exists
      * @throws FalconException exception
      */
-    public abstract boolean tableExists(String catalogUrl, String database, String tableName,
-                                        String metaStorePrincipal) throws FalconException;
+    public abstract boolean tableExists(Configuration conf, String catalogUrl,
+                                        String database, String tableName) throws FalconException;
 
     /**
      * Returns if the table is external or not. Executed in the workflow engine.

@@ -176,23 +176,23 @@ public class HiveCatalogServiceIT {
 
     @Test
     public void testIsAlive() throws Exception {
-        Assert.assertTrue(hiveCatalogService.isAlive(METASTORE_URL, "metaStorePrincipal"));
+        Assert.assertTrue(hiveCatalogService.isAlive(conf, METASTORE_URL));
     }
 
     @Test (expectedExceptions = Exception.class)
     public void testIsAliveNegative() throws Exception {
-        hiveCatalogService.isAlive("thrift://localhost:9999", "metaStorePrincipal");
+        hiveCatalogService.isAlive(conf, "thrift://localhost:9999");
     }
 
     @Test (expectedExceptions = FalconException.class)
     public void testTableExistsNegative() throws Exception {
-        hiveCatalogService.tableExists(METASTORE_URL, DATABASE_NAME, "blah", "metaStorePrincipal");
+        hiveCatalogService.tableExists(conf, METASTORE_URL, DATABASE_NAME, "blah");
     }
 
     @Test
     public void testTableExists() throws Exception {
         Assert.assertTrue(hiveCatalogService.tableExists(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, "metaStorePrincipal"));
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME));
     }
 
     @Test

@@ -144,6 +144,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-894 Cluster submission with hive registry fails in secure setup
+   (Venkatesh Seetharam)
+
    FALCON-892 HCatReplication fails in secure setup (Venkatesh Seetharam)
 
    FALCON-889 Windows azure replication fails with "wasb" as the scheme to an

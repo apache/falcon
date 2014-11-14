@@ -40,7 +40,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
-import org.apache.falcon.security.SecurityUtil;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -418,10 +418,10 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
 
             CatalogStorage catalogStorage = (CatalogStorage) storage;
-            String metaStorePrincipal = ClusterHelper.getPropertyValue(clusterEntity,
-                    SecurityUtil.HIVE_METASTORE_PRINCIPAL);
-            if (!CatalogServiceFactory.getCatalogService().tableExists(catalogStorage.getCatalogUrl(),
-                    catalogStorage.getDatabase(), catalogStorage.getTable(), metaStorePrincipal)) {
+            Configuration clusterConf = ClusterHelper.getConfiguration(clusterEntity);
+            if (!CatalogServiceFactory.getCatalogService().tableExists(
+                    clusterConf, catalogStorage.getCatalogUrl(),
+                    catalogStorage.getDatabase(), catalogStorage.getTable())) {
                 buffer.append("Table [")
                         .append(catalogStorage.getTable())
                         .append("] does not exist for feed: ")

@@ -189,15 +189,15 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         LOG.info("Validating catalog registry interface: {}", catalogUrl);
 
         try {
-            String metaStorePrincipal = null;
+            Configuration clusterConf = ClusterHelper.getConfiguration(cluster);
             if (UserGroupInformation.isSecurityEnabled()) {
-                metaStorePrincipal = ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+                String metaStorePrincipal = clusterConf.get(SecurityUtil.HIVE_METASTORE_PRINCIPAL);
                 Validate.notEmpty(metaStorePrincipal,
                         "Cluster definition missing required metastore credential property: "
                                 + SecurityUtil.HIVE_METASTORE_PRINCIPAL);
             }
 
-            if (!CatalogServiceFactory.getCatalogService().isAlive(catalogUrl, metaStorePrincipal)) {
+            if (!CatalogServiceFactory.getCatalogService().isAlive(clusterConf, catalogUrl)) {
                 throw new ValidationException("Unable to reach Catalog server:" + catalogUrl);
             }
         } catch (FalconException e) {

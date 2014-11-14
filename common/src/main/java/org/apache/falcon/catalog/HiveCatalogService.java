@@ -20,6 +20,7 @@ package org.apache.falcon.catalog;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -63,17 +64,13 @@ public class HiveCatalogService extends AbstractCatalogService {
      */
     public static HCatClient getHCatClient(String metastoreUrl) throws FalconException {
         try {
-            HiveConf hcatConf = createHiveConf(metastoreUrl);
+            HiveConf hcatConf = createHiveConf(new Configuration(false), metastoreUrl);
             return HCatClient.create(hcatConf);
         } catch (HCatException e) {
             throw new FalconException("Exception creating HCatClient: " + e.getMessage(), e);
         } catch (IOException e) {
             throw new FalconException("Exception creating HCatClient: " + e.getMessage(), e);
         }
-    }
-
-    private static HiveConf createHiveConf(String metastoreUrl) throws IOException {
-        return createHiveConf(new Configuration(false), metastoreUrl);
     }
 
     private static HiveConf createHiveConf(Configuration conf,
@@ -156,19 +153,18 @@ public class HiveCatalogService extends AbstractCatalogService {
     /**
      * This is used from with in falcon namespace.
      *
-     * @param catalogUrl metastore uri
-     * @param metaStoreServicePrincipal metastore principal
+     * @param conf                      conf
+     * @param catalogUrl                metastore uri
      * @return hive metastore client handle
      * @throws FalconException
      */
-    private static synchronized HCatClient createProxiedHCatClient(String catalogUrl,
-                                                                   String metaStoreServicePrincipal)
-        throws FalconException {
+    private static HCatClient createProxiedHCatClient(Configuration conf,
+                                                      String catalogUrl) throws FalconException {
 
         try {
-            final HiveConf hcatConf = createHiveConf(catalogUrl);
+            final HiveConf hcatConf = createHiveConf(conf, catalogUrl);
             UserGroupInformation proxyUGI = CurrentUser.getProxyUGI();
-            addSecureCredentialsAndToken(metaStoreServicePrincipal, hcatConf, proxyUGI);
+            addSecureCredentialsAndToken(conf, hcatConf, proxyUGI);
 
             LOG.info("Creating HCatalog client object for {}", catalogUrl);
             return proxyUGI.doAs(new PrivilegedExceptionAction<HCatClient>() {
@@ -183,10 +179,11 @@ public class HiveCatalogService extends AbstractCatalogService {
         }
     }
 
-    private static void addSecureCredentialsAndToken(String metaStoreServicePrincipal,
+    private static void addSecureCredentialsAndToken(Configuration conf,
                                                      HiveConf hcatConf,
                                                      UserGroupInformation proxyUGI) throws IOException {
         if (UserGroupInformation.isSecurityEnabled()) {
+            String metaStoreServicePrincipal = conf.get(SecurityUtil.HIVE_METASTORE_PRINCIPAL);
             hcatConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname,
                 metaStoreServicePrincipal);
             hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
@@ -215,12 +212,11 @@ public class HiveCatalogService extends AbstractCatalogService {
     }
 
     @Override
-    public boolean isAlive(final String catalogUrl,
-                           final String metaStorePrincipal) throws FalconException {
+    public boolean isAlive(Configuration conf, final String catalogUrl) throws FalconException {
         LOG.info("Checking if the service is alive for: {}", catalogUrl);
 
         try {
-            HCatClient client = createProxiedHCatClient(catalogUrl, metaStorePrincipal);
+            HCatClient client = createProxiedHCatClient(conf, catalogUrl);
             HCatDatabase database = client.getDatabase("default");
             return database != null;
         } catch (HCatException e) {
@@ -229,12 +225,12 @@ public class HiveCatalogService extends AbstractCatalogService {
     }
 
     @Override
-    public boolean tableExists(final String catalogUrl, final String database, final String tableName,
-                               final String metaStorePrincipal) throws FalconException {
+    public boolean tableExists(Configuration conf, final String catalogUrl, final String database,
+                               final String tableName) throws FalconException {
         LOG.info("Checking if the table exists: {}", tableName);
 
         try {
-            HCatClient client = createProxiedHCatClient(catalogUrl, metaStorePrincipal);
+            HCatClient client = createProxiedHCatClient(conf, catalogUrl);
             HCatTable table = client.getTable(database, tableName);
             return table != null;
         } catch (HCatException e) {
