@@ -26,7 +26,7 @@ mvn clean assembly:assembly -DskipTests -DskipCheck=true
 
 </verbatim>
 
-Tar can be found in {project dir}/target/falcon-${project.version}-bin.tar.gz
+Tar can be found in {project dir}/target/apache-falcon-${project.version}-bin.tar.gz
 
 Tar is structured as follows
 
@@ -67,7 +67,7 @@ mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2
 
 </verbatim>
 
-Tar can be found in {project dir}/target/falcon-distributed-${project.version}-server.tar.gz
+Tar can be found in {project dir}/target/apache-falcon-distributed-${project.version}-server.tar.gz
 
 Tar is structured as follows
 
@@ -252,7 +252,7 @@ src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 
 >> ex. src/bin/package.sh 1.1.2 4.0.1 or src/bin/package.sh 0.20.2-cdh3u5 4.0.1
 >> ex. src/bin/package.sh 2.5.0 4.0.0
->> Falcon package is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
+>> Falcon package is available in <<falcon home>>/target/apache-falcon-<<version>>-bin.tar.gz
 >> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
 </verbatim>
 

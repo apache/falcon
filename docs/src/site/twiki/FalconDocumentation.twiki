@@ -15,6 +15,7 @@
    * <a href="#Security">Security</a>
    * <a href="#Recipes">Recipes</a>
    * <a href="#Monitoring">Monitoring</a>
+   * <a href="#Appendix">Appendix</a>
 
 ---++ Architecture
 
@@ -710,3 +711,5 @@ Recipes is detailed in [[Recipes][Recipes]].
 --++ Monitoring
 
 Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]].
+
+--++ [[Appendix][Appendix]]
