@@ -18,6 +18,8 @@ Trunk (Unreleased)
 
 Release Version: 0.6-incubating
 
+   FALCON-785 Document upgrade path from 0.5 to 0.6 (Venkatesh Seetharam)
+
   INCOMPATIBLE CHANGES
    FALCON-753 Change the ownership for staging dir to user submitting the feed
    (Venkatesh Seetharam)

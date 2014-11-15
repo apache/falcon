@@ -32,7 +32,7 @@ You would need the following installed:
 a. Building falcon from the source release
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* tar -xzvf falcon-${project.version}-source.tar.gz
+* tar -xzvf apache-falcon-${project.version}-source.tar.gz
 * cd falcon-sources-${project.version}
 
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
@@ -58,9 +58,9 @@ b. Building falcon from the source repository
 Once the build successfully completes, artifacts can be packaged for deployment.
 By default the falcon is built for embedded mode.
 
-* mvn clean assembly:assembly -DskipTests
+* mvn clean assembly:assembly -DskipTests -DskipITs
 
-Tar can be found in {project dir}/target/falcon-${project.version}-bin.tar.gz
+Tar can be found in {project dir}/target/apache-falcon-${project.version}-bin.tar.gz
 
 Tar is structured as follows
 
@@ -97,7 +97,7 @@ Tar is structured as follows
 a. Installing falcon
 ~~~~~~~~~~~~~~~~~~~~
 
-* tar -xzvf falcon-${project.version}-bin.tar.gz
+* tar -xzvf apache-falcon-${project.version}-bin.tar.gz
 * cd falcon-${project.version}
 
 b. Starting Falcon Server
