@@ -18,13 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
@@ -34,12 +27,21 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.entity.v0.cluster.Locations;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 
 
 /**
@@ -191,6 +193,56 @@ public class ClusterEntityParserTest extends AbstractTestBase {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
     }
+
+    /**
+     * A lightweight unit test for a cluster where location paths are not instantiated .
+     * Extensive tests are found in ClusterEntityValidationIT.
+     *
+     * @throws ValidationException
+     */
+    @Test(expectedExceptions = ValidationException.class)
+    public void testClusterWithoutLocationsPaths() throws ValidationException {
+        ClusterEntityParser clusterEntityParser = Mockito.spy(
+                (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
+        Cluster cluster = this.dfsCluster.getCluster();
+        Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        clusterEntityParser.validate(cluster);
+        Assert.fail("Should have thrown a validation exception");
+    }
+
+    /**
+     * A lightweight unit test for a cluster where location paths are invalid.
+     * Extensive tests are found in ClusterEntityValidationIT.
+     *
+     * @throws ValidationException
+     */
+    @Test(expectedExceptions = ValidationException.class)
+    public void testClusterWithInvalidLocationsPaths() throws ValidationException {
+        ClusterEntityParser clusterEntityParser = Mockito.spy(
+                (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
+        Cluster cluster = this.dfsCluster.getCluster();
+        Location location = new Location();
+        location.setName("TestName");
+        location.setPath("/apps/non/existent/path");
+        Locations locations = new Locations();
+        locations.getLocations().add(location);
+        cluster.setLocations(locations);
+        Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        try {
+            clusterEntityParser.validate(cluster);
+        } catch (ValidationException e) {
+            String errorMessage = "Location " + location.getPath() + " for cluster "
+                    + cluster.getName() + " must exist.";
+            Assert.assertEquals(e.getMessage(), errorMessage);
+            throw e;
+        }
+        Assert.fail("Should have thrown a validation exception");
+    }
+
 
     @BeforeClass
     public void init() throws Exception {

@@ -23,7 +23,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -59,7 +58,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     @Override
-    public void validate(Cluster cluster) throws StoreAccessException, ValidationException {
+    public void validate(Cluster cluster) throws ValidationException {
         // validating scheme in light of fail-early
         validateScheme(cluster, Interfacetype.READONLY);
         validateScheme(cluster, Interfacetype.WRITE);
@@ -140,7 +139,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         }
     }
 
-    private void validateWorkflowInterface(Cluster cluster) throws ValidationException {
+    protected void validateWorkflowInterface(Cluster cluster) throws ValidationException {
         final String workflowUrl = ClusterHelper.getOozieUrl(cluster);
         LOG.info("Validating workflow interface: {}", workflowUrl);
 
@@ -153,7 +152,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         }
     }
 
-    private void validateMessagingInterface(Cluster cluster) throws ValidationException {
+    protected void validateMessagingInterface(Cluster cluster) throws ValidationException {
         final String messagingUrl = ClusterHelper.getMessageBrokerUrl(cluster);
         final String implementation = StartupProperties.get().getProperty(
                 "broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory");
@@ -172,7 +171,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         }
     }
 
-    private void validateRegistryInterface(Cluster cluster) throws ValidationException {
+    protected void validateRegistryInterface(Cluster cluster) throws ValidationException {
         final boolean isCatalogRegistryEnabled = CatalogServiceFactory.isEnabled();
         if (!isCatalogRegistryEnabled) {
             return;  // ignore the registry interface for backwards compatibility
@@ -260,8 +259,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                                 ? HadoopClientFactory.ALL_PERMISSION
                                 : HadoopClientFactory.READ_EXECUTE_PERMISSION);
             } catch (IOException e) {
-                throw new ValidationException("Unable to validate the location "
-                        + location.getName() + " for cluster " + cluster.getName(), e);
+                throw new ValidationException("Unable to validate the location of name: "
+                        + location.getName() + " with path:" + location.getPath()
+                        + " for cluster " + cluster.getName(), e);
             }
         }
     }

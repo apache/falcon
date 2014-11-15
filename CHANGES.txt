@@ -144,6 +144,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-829 Better error message for cluster submission failure
+   (Karan Kumar via Venkatesh Seetharam)
+
    FALCON-824 Remove usage of Hadoop incompatible API
    (Shwetha G S via Venkatesh Seetharam)
 
