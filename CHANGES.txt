@@ -1,7 +1,8 @@
 Apache Falcon (incubating) Change log
 
-Trunk (Unreleased)
+Release Version: 0.6-incubating
 
+   FALCON-784 Update release notes in CHANGES.txt in branch and trunk (Venkatesh Seetharam)
    FALCON-783 Create branch-0.6 and update version to 0.6-incubating (Venkatesh Seetharam)
 
   INCOMPATIBLE CHANGES
