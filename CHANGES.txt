@@ -2,7 +2,20 @@ Apache Falcon (incubating) Change log
 
 Trunk (Unreleased)
 
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
    FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh Seetharam)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+
+
+Release Version: 0.6-incubating
 
   INCOMPATIBLE CHANGES
    FALCON-753 Change the ownership for staging dir to user submitting the feed
