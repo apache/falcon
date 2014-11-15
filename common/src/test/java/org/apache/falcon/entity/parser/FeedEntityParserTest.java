@@ -903,7 +903,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
             Location location = new Location();
             location.setType(LocationType.DATA);
             location.setPath(
-                "s3://falcontesting@hwxasvtesting.blob.core.windows.net/{YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}");
+                "s3://falcontesting@hwxasvtesting.blob.core.windows.net/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}");
             Locations locations = new Locations();
             locations.getLocations().add(location);
             feedCluster.setLocations(locations);

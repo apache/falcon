@@ -193,6 +193,6 @@ public class AbstractTestBase {
 
     // assumes there will always be at least one group for a logged in user
     protected String getPrimaryGroupName() throws IOException {
-        return CurrentUser.getProxyUGI().getPrimaryGroupName();
+        return CurrentUser.getPrimaryGroupName();
     }
 }

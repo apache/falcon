@@ -260,8 +260,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                                 ? HadoopClientFactory.ALL_PERMISSION
                                 : HadoopClientFactory.READ_EXECUTE_PERMISSION);
             } catch (IOException e) {
-                throw new ValidationException("Unable to validate the location " + location
-                        + " for cluster " + cluster.getName(), e);
+                throw new ValidationException("Unable to validate the location "
+                        + location.getName() + " for cluster " + cluster.getName(), e);
             }
         }
     }

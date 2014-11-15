@@ -233,11 +233,19 @@ public final class HadoopClientFactory {
     }
 
     public static FsPermission getDirDefaultPermission(Configuration conf) {
-        return FsPermission.getDirDefault().applyUMask(FsPermission.getUMask(conf));
+        return getDirDefault().applyUMask(FsPermission.getUMask(conf));
     }
 
     public static FsPermission getFileDefaultPermission(Configuration conf) {
-        return FsPermission.getFileDefault().applyUMask(FsPermission.getUMask(conf));
+        return getFileDefault().applyUMask(FsPermission.getUMask(conf));
+    }
+
+    public static FsPermission getDirDefault() {
+        return new FsPermission((short)511);
+    }
+
+    public static FsPermission getFileDefault() {
+        return new FsPermission((short)438);
     }
 
     public static void mkdirsWithDefaultPerms(FileSystem fs, Path path) throws IOException {

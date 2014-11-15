@@ -144,6 +144,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-824 Remove usage of Hadoop incompatible API
+   (Shwetha G S via Venkatesh Seetharam)
+
    FALCON-894 Cluster submission with hive registry fails in secure setup
    (Venkatesh Seetharam)
 
