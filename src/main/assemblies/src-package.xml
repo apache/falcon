@@ -36,6 +36,7 @@
                 <exclude>**/.idea/**</exclude>
                 <exclude>**/*.iml</exclude>
                 <exclude>**/*.log</exclude>
+                <exclude>falcon-regression/**</exclude>
             </excludes>
         </fileSet>
     </fileSets>
