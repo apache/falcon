@@ -74,10 +74,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     }
 
 	/* NOTE: All test cases assume that there are two entities scheduled in each colo
-        com.inmobi.qa.airavatqa.prism.PrismProcessDeleteTest
-        .testUA1ProcessDeleteAlreadyDeletedProcess */
-
-
+        PrismProcessDeleteTest.testUA1ProcessDeleteAlreadyDeletedProcess */
     @Test(groups = {"prism", "0.2"})
     public void testUA1ProcessDeleteInBothColos() throws Exception {
         //now submit the thing to prism

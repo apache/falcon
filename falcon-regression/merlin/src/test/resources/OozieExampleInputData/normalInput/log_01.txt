@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-package com.inmobi.qa.airavatqa.prism;
+package com.prism;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -25,17 +25,17 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.inmobi.qa.airavatqa.core.Bundle;
-import com.inmobi.qa.airavatqa.core.ColoHelper;
-import com.inmobi.qa.airavatqa.core.PrismHelper;
-import com.inmobi.qa.airavatqa.core.ServiceResponse;
-import com.inmobi.qa.airavatqa.core.Util;
-import com.inmobi.qa.airavatqa.core.Util.URLS;
-import com.inmobi.qa.airavatqa.core.instanceUtil;
-import com.inmobi.qa.airavatqa.core.xmlUtil;
-import com.inmobi.qa.airavatqa.generated.feed.ActionType;
-import com.inmobi.qa.airavatqa.generated.feed.ClusterType;
-import com.inmobi.qa.airavatqa.generated.feed.TimezoneType;
+import com.core.Bundle;
+import com.core.ColoHelper;
+import com.core.PrismHelper;
+import com.core.ServiceResponse;
+import com.core.Util;
+import com.core.Util.URLS;
+import com.core.instanceUtil;
+import com.core.xmlUtil;
+import com.generated.feed.ActionType;
+import com.generated.feed.ClusterType;
+import com.generated.feed.TimezoneType;
 
 public class PrismFeedLateReplicationTest {
 

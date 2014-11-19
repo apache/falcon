@@ -19,11 +19,11 @@
 
 <cluster name="ivory2-stg4" description="" colo="stg" xmlns="uri:falcon:cluster:0.1">
     <interfaces>
-        <interface type="readonly" endpoint="hftp://stg-nn.blue.ua2.inmobi.com:50070" version="0.20.2-cdh3u0"/>
-        <interface type="execute" endpoint="stg-jt.blue.ua2.inmobi.com:54311" version="0.20.2-cdh3u0"/>
-        <interface type="write" endpoint="hdfs://stg-nn.blue.ua2.inmobi.com:54310" version="0.20.2-cdh3u0"/>
-        <interface type="messaging" endpoint="tcp://gs1134.blue.ua2.inmobi.com:61618?daemon=true" version="5.1.6"/>
-        <interface type="workflow" endpoint="http://gs1134.blue.ua2.inmobi.com:11002/oozie/" version="3.1.4"/>
+        <interface type="readonly" endpoint="hftp://host:50070" version="0.20.2-cdh3u0"/>
+        <interface type="execute" endpoint="host:54311" version="0.20.2-cdh3u0"/>
+        <interface type="write" endpoint="hdfs://host:54310" version="0.20.2-cdh3u0"/>
+        <interface type="messaging" endpoint="tcp://host:61618?daemon=true" version="5.1.6"/>
+        <interface type="workflow" endpoint="http://host:11002/oozie/" version="3.1.4"/>
     </interfaces>
     <locations>
         <location name="staging" path="/projects/ivory2/stg/staging"/>

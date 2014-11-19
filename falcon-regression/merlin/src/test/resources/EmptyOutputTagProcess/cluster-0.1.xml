@@ -19,14 +19,14 @@
 
 <cluster colo="ua1" description="" name="corp" xmlns="uri:falcon:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<interfaces>
-		<interface type="readonly" endpoint="http://gs1001.grid.corp.inmobi.com:50070"
+		<interface type="readonly" endpoint="http://host:50070"
 			version="0.20.2" />
-		<interface type="write" endpoint="hdfs://gs1001.grid.corp.inmobi.com:54310"
+		<interface type="write" endpoint="hdfs://host:54310"
 			version="0.20.2" />
-		<interface type="execute" endpoint="hdfs://gs1001.grid.corp.inmobi.com:54311" version="0.20.2" />
-		<interface type="workflow" endpoint="http://gs1001.grid.corp.inmobi.com:11000/oozie/"
+		<interface type="execute" endpoint="hdfs://host:54311" version="0.20.2" />
+		<interface type="workflow" endpoint="http://host:11000/oozie/"
 			version="3.1" />
-		<interface type="messaging" endpoint="tcp://gs1001.grid.corp.inmobi.com:61616?daemon=true"
+		<interface type="messaging" endpoint="tcp://host:61616?daemon=true"
 			version="5.1.6" />
 	</interfaces>
 	<locations>
