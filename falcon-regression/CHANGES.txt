@@ -33,6 +33,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-906: Add license header where it is needed, remove deprecated inmobi
+   references (Paul Isaychuk)
+
    FALCON-890 Merlin tests need to be updated in secure cluster to get the
    token using the ugi object requests (Arpit Gupta)
 
