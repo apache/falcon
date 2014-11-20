@@ -109,7 +109,7 @@ c. Using Falcon
 ~~~~~~~~~~~~~~~
 
 * bin/falcon admin -version
-  Falcon server build version: {Version:"0.3-SNAPSHOT-rd7e2be9afa2a5dc96acd1ec9e325f39c6b2f17f7",Mode:"embedded"}
+  Falcon server build version: {Version:"0.6-incubating-rd7e2be9afa2a5dc96acd1ec9e325f39c6b2f17f7",Mode:"embedded"}
 
 * bin/falcon help
   (for more details about falcon cli usage)

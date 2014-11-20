@@ -23,7 +23,7 @@ GET http://localhost:15000/api/admin/version
     "properties":[
         {
             "key":"Version",
-            "value":"0.4-incubating-SNAPSHOT-rb47788d1112fcf949c22a3860934167237b395b0"
+            "value":"0.6-incubating-rb47788d1112fcf949c22a3860934167237b395b0"
         },
         {
             "key":"Mode",
