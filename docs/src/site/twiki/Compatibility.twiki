@@ -1,4 +1,4 @@
----+ Appendix
+---+ Compatibility
 
 ---++ 0.6-incubating Version Compatibility Matrix
 
@@ -20,6 +20,7 @@
    * Titan 0.4.2
    * Java 1.6, Java 1.7
 
+   Note : Oozie versions below 4.1.0 are not compatible with Java 1.7
 
 ---++ 0.6-incubating Release Notes
 
@@ -41,14 +42,13 @@ Please follow these instructions when upgrading from an older release.
 
 ---+++ Upgrading from 0.5-incubating
 
-0.6-incubating is backwards incompatible with 0.5-incubating. However, there are some minor changes
-to be aware of. The entity schemas can be migrated from 0.5 to 0.6 by adding ACLs. Lineage resource
-has changed in 0.6.
+0.6-incubating is backwards *incompatible* with 0.5-incubating. It is recommended that user do not
+migrate from 0.5 to 0.6. However if the user must migrate from 0.5-incubating to 0.6-incubating,
+user should [[https://cwiki.apache.org/confluence/display/FALCON/Index][follow these instructions]
 
 ---+++ Upgrading from 0.4-incubating
 
-It is not possible to upgrade to 0.6-incubating from 0.4-incubating. Please migrate the falcon
-entities from config store manually.
+It is not possible to upgrade to 0.6-incubating from 0.4-incubating.
 
 ---+++ Upgrading from 0.3-incubating
 
