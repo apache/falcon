@@ -2,8 +2,8 @@ Apache Falcon (incubating) Change log
 
 Release Version: 0.6-incubating
 
-   FALCON-897
-   remove regression code from source release (Venkatesh Seetharam)
+   FALCON-901 Addon designer should be excluded from 0.6 release (Balu Vellanki via Venkatesh Seetharam)
+   FALCON-897 remove regression code from source release (Venkatesh Seetharam)
    FALCON-785 Document upgrade path from 0.5 to 0.6 (Venkatesh Seetharam)
    FALCON-784 Update release notes in CHANGES.txt in branch and trunk (Venkatesh Seetharam)
    FALCON-783 Create branch-0.6 and update version to 0.6-incubating (Venkatesh Seetharam)

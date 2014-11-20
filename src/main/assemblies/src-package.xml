@@ -37,6 +37,7 @@
                 <exclude>**/*.iml</exclude>
                 <exclude>**/*.log</exclude>
                 <exclude>falcon-regression/**</exclude>
+                <exclude>addons/designer/**</exclude>
             </excludes>
         </fileSet>
     </fileSets>
