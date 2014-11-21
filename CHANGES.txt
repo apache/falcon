@@ -59,6 +59,8 @@ Release Version: 0.6-incubating
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-320 Whitespace has not been taken into consideration in runtime.properties
+
    FALCON-766 Falcon workflow rerun by default should rerun only Failed nodes
    and remove continue option (Shaik Idris Ali via Venkatesh Seetharam)
 

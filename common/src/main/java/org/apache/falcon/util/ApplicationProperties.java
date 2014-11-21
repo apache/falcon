@@ -19,6 +19,7 @@
 package org.apache.falcon.util;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.slf4j.Logger;
@@ -160,5 +161,15 @@ public abstract class ApplicationProperties extends Properties {
             keys.add(key.substring(key.indexOf('.') + 1));
         }
         return keys;
+    }
+
+    @Override
+    public String getProperty(String key) {
+        return StringUtils.trim(super.getProperty(key));
+    }
+
+    @Override
+    public String getProperty(String key, String defaultValue) {
+        return StringUtils.trim(super.getProperty(key, defaultValue));
     }
 }

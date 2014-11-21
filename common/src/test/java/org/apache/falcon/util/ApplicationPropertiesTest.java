@@ -55,6 +55,17 @@ public class ApplicationPropertiesTest {
         Assert.assertEquals(classPathLocation.get("test"), "hello world");
     }
 
+    @Test
+    public void testPropertiesWithSpaces() throws Exception{
+        ApplicationProperties properties = new ConfigLocation();
+        properties.put("key1", "value with trailing spaces.  ");
+        properties.put("key2", "  value with leading spaces.");
+        properties.put("key3", "  value with spaces on both ends. ");
+        Assert.assertEquals(properties.getProperty("key1"), "value with trailing spaces.");
+        Assert.assertEquals(properties.getProperty("key2"), "value with leading spaces.");
+        Assert.assertEquals(properties.getProperty("key3"), "value with spaces on both ends.");
+    }
+
     @Test (expectedExceptions = FalconException.class)
     public void testMissingLocation() throws FalconException {
         new MissingLocation().loadProperties();
