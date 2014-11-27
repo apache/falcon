@@ -109,7 +109,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private static final List<String> PARENT_WF_ACTION_NAMES = Arrays.asList(
             "pre-processing",
-            "should-record",
+            "recordsize",
             "succeeded-post-processing",
             "failed-post-processing"
     );
@@ -676,8 +676,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         List<InstancesResult.InstanceAction> instanceActions = new ArrayList<InstancesResult.InstanceAction>();
 
         List<WorkflowAction> wfActions = wfJob.getActions();
+        // We wanna capture job urls for all user-actions & non succeeded actions of the main workflow
         for (WorkflowAction action : wfActions) {
             if (action.getType().equalsIgnoreCase("sub-workflow") && StringUtils.isNotEmpty(action.getExternalId())) {
+                // if the action is sub-workflow, get job urls of all actions within the sub-workflow
                 List<WorkflowAction> subWorkFlowActions = getWorkflowInfo(cluster, action.getExternalId()).getActions();
                 for (WorkflowAction subWfAction : subWorkFlowActions) {
                     if (!subWfAction.getType().startsWith(":")) {
@@ -688,13 +690,18 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     }
                 }
             } else if (!action.getType().startsWith(":")) {
+                // if the action is a transition node it starts with :, we don't need their statuses
                 if (PARENT_WF_ACTION_NAMES.contains(action.getName())
                         && !Status.SUCCEEDED.toString().equals(action.getExternalStatus())) {
+                    // falcon actions in the main workflow are defined in the list
+                    // get job urls for all non succeeded actions of the main workflow
                     InstancesResult.InstanceAction instanceAction =
                             new InstancesResult.InstanceAction(action.getName(), action.getExternalStatus(),
                                     action.getConsoleUrl());
                     instanceActions.add(instanceAction);
-                } else if (!PARENT_WF_ACTION_NAMES.contains(action.getName())) {
+                } else if (!PARENT_WF_ACTION_NAMES.contains(action.getName())
+                        && !StringUtils.equals(action.getExternalId(), "-")) {
+                    // if user-action is pig/hive there is no sub-workflow, we wanna capture their urls as well
                     InstancesResult.InstanceAction instanceAction =
                             new InstancesResult.InstanceAction(action.getName(), action.getExternalStatus(),
                                     action.getConsoleUrl());
