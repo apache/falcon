@@ -56,9 +56,9 @@ public final class GraphAssert {
         Assert.assertEquals(verticesResult.getResults().size(), verticesResult.getTotalSize(),
             "Size of vertices don't match");
         for (Vertex vertex : verticesResult.getResults()) {
-            Assert.assertNotNull(vertex.get_id(),
+            Assert.assertNotNull(vertex.getId(),
                 "id of the vertex should be non-null: " + vertex);
-            Assert.assertEquals(vertex.get_type(), NODE_TYPE.VERTEX,
+            Assert.assertEquals(vertex.getNodeType(), NODE_TYPE.VERTEX,
                 "_type of the vertex should be non-null: " + vertex);
             Assert.assertNotNull(vertex.getName(),
                 "name of the vertex should be non-null: " + vertex);
@@ -86,12 +86,12 @@ public final class GraphAssert {
      * @param edge edge to be checked
      */
     public static void assertEdgeSanity(Edge edge) {
-        Assert.assertNotNull(edge.get_id(), "id of an edge can't be null: " + edge);
-        Assert.assertEquals(edge.get_type(), NODE_TYPE.EDGE,
+        Assert.assertNotNull(edge.getId(), "id of an edge can't be null: " + edge);
+        Assert.assertEquals(edge.getNodeType(), NODE_TYPE.EDGE,
             "_type of an edge can't be null: " + edge);
-        Assert.assertNotNull(edge.get_label(), "_label of an edge can't be null: " + edge);
-        Assert.assertTrue(edge.get_inV() > 0, "_inV of an edge can't be null: " + edge);
-        Assert.assertTrue(edge.get_outV() > 0, "_outV of an edge can't be null: " + edge);
+        Assert.assertNotNull(edge.getLabel(), "_label of an edge can't be null: " + edge);
+        Assert.assertTrue(edge.getInV() > 0, "_inV of an edge can't be null: " + edge);
+        Assert.assertTrue(edge.getOutV() > 0, "_outV of an edge can't be null: " + edge);
     }
 
     /**
@@ -159,7 +159,7 @@ public final class GraphAssert {
                                                   final int minOccurrence) {
         int occurrence = 0;
         for(Edge edge : edgesResult.getResults()) {
-            if (edge.get_label() == edgeLabel) {
+            if (edge.getLabel() == edgeLabel) {
                 LOGGER.info("Found edge: " + edge);
                 occurrence++;
                 if (occurrence >= minOccurrence) {

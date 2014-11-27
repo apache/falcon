@@ -136,7 +136,7 @@ public class BaseRequest {
     }
 
     private HttpResponse execute(HttpRequest request)
-            throws IOException, AuthenticationException, InterruptedException {
+        throws IOException, AuthenticationException, InterruptedException {
         // add headers to the request
         if (null != headers && headers.size() > 0) {
             for (Header header : headers) {
@@ -157,7 +157,7 @@ public class BaseRequest {
             SchemeRegistry schemeRegistry = new SchemeRegistry();
             schemeRegistry.register(new Scheme("https", uri.getPort(), SSL_SOCKET_FACTORY));
             BasicClientConnectionManager cm = new BasicClientConnectionManager(schemeRegistry);
-                client = new DefaultHttpClient(cm);
+            client = new DefaultHttpClient(cm);
         } else {
             client = new DefaultHttpClient();
         }

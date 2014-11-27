@@ -22,7 +22,7 @@ import java.util.List;
 
 /** Abstract class for representing a result of lineage api call.*/
 public abstract class GraphResult {
-    int totalSize;
+    protected int totalSize;
 
     public int getTotalSize() {
         return totalSize;

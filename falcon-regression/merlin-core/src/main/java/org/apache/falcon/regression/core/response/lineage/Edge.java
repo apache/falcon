@@ -52,35 +52,41 @@ public class Edge extends GraphEntity {
         @SerializedName("third")THIRD,
         @SerializedName("value")VALUE,
     }
+    @SerializedName("_id")
+    private String id;
 
-    private String _id;
-    private int _outV;
-    private int _inV;
-    private LEBEL_TYPE _label;
+    @SerializedName("_outV")
+    private int outV;
 
-    public String get_id() {
-        return _id;
+    @SerializedName("_inV")
+    private int inV;
+
+    @SerializedName("_label")
+    private LEBEL_TYPE label;
+
+    public String getId() {
+        return id;
     }
 
-    public int get_outV() {
-        return _outV;
+    public int getOutV() {
+        return outV;
     }
 
-    public int get_inV() {
-        return _inV;
+    public int getInV() {
+        return inV;
     }
 
-    public LEBEL_TYPE get_label() {
-        return _label;
+    public LEBEL_TYPE getLabel() {
+        return label;
     }
 
     @Override
     public String toString() {
         return "Edge{"
-                + "_id='" + _id + '\''
-                + ", _outV=" + _outV
-                + ", _inV=" + _inV
-                + ", _label=" + _label
+                + "_id='" + id + '\''
+                + ", _outV=" + outV
+                + ", _inV=" + inV
+                + ", _label=" + label
                 + '}';
     }
 

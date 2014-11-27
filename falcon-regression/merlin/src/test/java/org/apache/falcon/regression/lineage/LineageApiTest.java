@@ -164,7 +164,7 @@ public class LineageApiTest extends BaseTestClass {
         final VerticesResult userResult =
             lineageHelper.getVerticesByName(MerlinConstants.CURRENT_USER_NAME);
         GraphAssert.assertVertexSanity(userResult);
-        final int vertexId = userResult.getResults().get(0).get_id();
+        final int vertexId = userResult.getResults().get(0).getId();
         final VertexResult userVertex =
             lineageHelper.getVertexById(vertexId);
         Assert.assertEquals(userResult.getResults().get(0), userVertex.getResults(),
@@ -198,8 +198,8 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(allVerticesResult);
         int invalidVertexId = -1;
         for (Vertex vertex : allVerticesResult.getResults()) {
-            if(invalidVertexId <= vertex.get_id()) {
-                invalidVertexId = vertex.get_id() + 1;
+            if(invalidVertexId <= vertex.getId()) {
+                invalidVertexId = vertex.getId() + 1;
             }
         }
 
@@ -224,7 +224,7 @@ public class LineageApiTest extends BaseTestClass {
         final VerticesResult coloResult = lineageHelper.getVerticesByType(vertexType);
         GraphAssert.assertVertexSanity(coloResult);
         for (Vertex coloVertex : coloResult.getResults()) {
-            final int coloVertexId = coloVertex.get_id();
+            final int coloVertexId = coloVertex.getId();
             final VertexResult coloProperties = lineageHelper.getVertexProperties(coloVertexId);
             Assert.assertNotNull(coloProperties.getResults().getName(),
                 "name should not be null");
@@ -281,8 +281,8 @@ public class LineageApiTest extends BaseTestClass {
 
         int invalidVertexId = -1;
         for (Vertex vertex : allVerticesResult.getResults()) {
-            if(invalidVertexId <= vertex.get_id()) {
-                invalidVertexId = vertex.get_id() + 1;
+            if(invalidVertexId <= vertex.getId()) {
+                invalidVertexId = vertex.getId() + 1;
             }
         }
 
@@ -402,7 +402,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexDirectionFetchEdges() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final EdgesResult bothEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.bothEdges);
@@ -439,7 +439,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexCountsFetchVertices() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final VerticesResult bothVertices =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.bothVertices);
@@ -478,7 +478,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexDirectionFetchCounts() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final VerticesResult bothCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.bothCount);
@@ -502,7 +502,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexDirectionFetchVertexIds() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         final VertexIdsResult bothVerticesIds =
             lineageHelper.getVertexIdsByDirection(clusterVertexId, Direction.bothVerticesIds);
@@ -536,7 +536,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVertexBadDirection() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
 
         HttpResponse response = lineageHelper
             .runGetRequest(lineageHelper.getUrl(LineageHelper.URL.VERTICES,
@@ -565,7 +565,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testEdge() throws Exception {
-        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).get_id();
+        final int clusterVertexId = lineageHelper.getVertex(clusterMerlin.getName()).getId();
         final EdgesResult outGoingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
@@ -573,7 +573,7 @@ public class LineageApiTest extends BaseTestClass {
             1, "There should be an edge from the cluster to colo");
 
         final String clusterColoEdgeId =
-            outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).get(0).get_id();
+            outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).get(0).getId();
         final Edge clusterColoEdge =
             lineageHelper.getEdgeById(clusterColoEdgeId).getResults();
         GraphAssert.assertEdgeSanity(clusterColoEdge);
@@ -613,7 +613,7 @@ public class LineageApiTest extends BaseTestClass {
         Vertex coloVertex = colo1Vertex.get(0);
         logger.info("coloVertex: " + coloVertex);
         final VerticesResult verticesByDirection =
-            lineageHelper.getVerticesByDirection(coloVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(coloVertex.getId(), Direction.inComingVertices);
         AssertUtil.checkForListSize(
             verticesByDirection.filterByName(clusterMerlin.getName()), 1);
     }
@@ -625,7 +625,7 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(clusterResult);
         Vertex clusterVertex = clusterResult.getResults().get(0);
         final VerticesResult clusterIncoming =
-            lineageHelper.getVerticesByDirection(clusterVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(clusterVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(clusterIncoming);
         for(FeedMerlin feed : inputFeeds) {
             AssertUtil.checkForListSize(clusterIncoming.filterByName(feed.getName()), 1);
@@ -642,7 +642,7 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(userResult);
         Vertex clusterVertex = userResult.getResults().get(0);
         final VerticesResult userIncoming =
-            lineageHelper.getVerticesByDirection(clusterVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(clusterVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(userIncoming);
         for(FeedMerlin feed : inputFeeds) {
             AssertUtil.checkForListSize(userIncoming.filterByName(feed.getName()), 1);

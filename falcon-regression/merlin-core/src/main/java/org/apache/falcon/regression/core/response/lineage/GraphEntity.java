@@ -18,12 +18,15 @@
 
 package org.apache.falcon.regression.core.response.lineage;
 
+import com.google.gson.annotations.SerializedName;
+
 /** Abstract class for graph entities. */
 public abstract class GraphEntity {
-    NODE_TYPE _type;
+    @SerializedName("_type")
+    protected NODE_TYPE nodeType;
 
-    public NODE_TYPE get_type() {
-        return _type;
+    public NODE_TYPE getNodeType() {
+        return nodeType;
     }
 
 }

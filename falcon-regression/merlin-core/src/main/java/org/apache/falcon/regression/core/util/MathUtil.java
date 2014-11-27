@@ -23,19 +23,22 @@ import org.testng.Assert;
 
 import java.util.Arrays;
 
-public class MathUtil {
+/**
+ * Util class for math operations.
+ */
+public final class MathUtil {
     private MathUtil() {
         throw new AssertionError("Instantiating utility class...");
     }
 
     /**
-     * Cross product many arrays
+     * Cross product many arrays.
      * @param firstArray first array that you want to cross product
      * @param otherArrays other arrays that you want to cross product
      * @return cross product
      */
     public static Object[][] crossProduct(Object[] firstArray, Object[]... otherArrays) {
-        if(otherArrays == null || otherArrays.length == 0) {
+        if (otherArrays == null || otherArrays.length == 0) {
             Object[][] result = new Object[firstArray.length][1];
             for (int i = 0; i < firstArray.length; ++i) {
                 result[i][0] = firstArray[i];

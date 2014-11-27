@@ -31,20 +31,24 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
 
+/**
+ * Page of entity (feed or process or cluster).
+ * @param <T> type of entity
+ */
 public class EntityPage<T> extends Page {
 
     private Class<T> type;
 
     protected EntityPage(WebDriver driver, ColoHelper helper, EntityType type, Class<T> entity, String entityName) {
         super(driver, helper);
-        URL += String.format("/entity.html?type=%s&id=%s", type.toString().toLowerCase(), entityName);
+        url += String.format("/entity.html?type=%s&id=%s", type.toString().toLowerCase(), entityName);
         this.type = entity;
         expectedElement = "//textarea[@id='entity-def-textarea' and contains(text(), 'xml')]";
         notFoundMsg = String.format(" %s '%s' not found!", type, entityName);
     }
 
     /**
-     * Returns page of defined CLUSTER entity
+     * Returns page of defined CLUSTER entity.
      * @param entityName name of defined entity
      * @return page of defined CLUSTER entity
      */
@@ -53,7 +57,7 @@ public class EntityPage<T> extends Page {
     }
 
     /**
-     * Returns page of defined FEED entity
+     * Returns page of defined FEED entity.
      * @param entityName name of defined entity
      * @return page of defined FEED entity
      */
@@ -62,7 +66,7 @@ public class EntityPage<T> extends Page {
     }
 
     /**
-     * Returns entity object
+     * Returns entity object.
      * @return entity object
      * @throws JAXBException
      */

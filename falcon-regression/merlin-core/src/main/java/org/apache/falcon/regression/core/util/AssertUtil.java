@@ -208,7 +208,7 @@ public final class AssertUtil {
     }
 
     /**
-     * Assert that command executed unsuccessfully
+     * Assert that command executed unsuccessfully.
      *
      * @param execResult ExecResult of the command execution
      */

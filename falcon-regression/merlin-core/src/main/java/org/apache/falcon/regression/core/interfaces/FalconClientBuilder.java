@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression.core.interfaces;
@@ -32,7 +31,7 @@ import java.util.List;
 /**
  * FalconClientBuilder is to be used for launching falcon client command.
  */
-public class FalconClientBuilder implements Builder<CommandLine> {
+public final class FalconClientBuilder implements Builder<CommandLine> {
     private final String user;
     private final CommandLine commandLine;
     private final List<String> args;
@@ -44,14 +43,14 @@ public class FalconClientBuilder implements Builder<CommandLine> {
          */
         LIN_SUDO {
             @Override
-            public CommandLine getCommandLine(String user) {
+            public CommandLine getCommandLine(String forUser) {
                 return CommandLine.parse("sudo").addArgument("-u")
-                        .addArgument(user).addArgument(falconClientBinary);
+                    .addArgument(forUser).addArgument(FALCON_CLIENT_BINARY);
             }
             @Override
-            public void addArgsToCommandLine(CommandLine commandLine, List<String> args) {
-                for (String arg : args) {
-                    commandLine.addArgument(arg);
+            public void addArgsToCommandLine(CommandLine cmdLine, List<String> arguments) {
+                for (String arg : arguments) {
+                    cmdLine.addArgument(arg);
                 }
             }
         },
@@ -60,16 +59,16 @@ public class FalconClientBuilder implements Builder<CommandLine> {
          */
         WIN_SU {
             @Override
-            public CommandLine getCommandLine(String user) {
+            public CommandLine getCommandLine(String forUser) {
                 return CommandLine.parse(OSUtil.WIN_SU_BINARY)
-                        .addArgument("-u").addArgument(user)
-                        .addArgument("-p").addArgument(MerlinConstants.getPasswordForUser(user))
-                        .addArgument(falconClientBinary);
+                    .addArgument("-u").addArgument(forUser)
+                    .addArgument("-p").addArgument(MerlinConstants.getPasswordForUser(forUser))
+                    .addArgument(FALCON_CLIENT_BINARY);
             }
             @Override
-            public void addArgsToCommandLine(CommandLine commandLine, List<String> args) {
-                String lastArg = StringUtils.join(args, " ");
-                commandLine.addArgument(lastArg, true);
+            public void addArgsToCommandLine(CommandLine cmdLine, List<String> arguments) {
+                String lastArg = StringUtils.join(arguments, " ");
+                cmdLine.addArgument(lastArg, true);
             }
         },
         /**
@@ -77,21 +76,21 @@ public class FalconClientBuilder implements Builder<CommandLine> {
          */
         NONE {
             @Override
-            public CommandLine getCommandLine(String user) {
-                return CommandLine.parse(falconClientBinary);
+            public CommandLine getCommandLine(String forUser) {
+                return CommandLine.parse(FALCON_CLIENT_BINARY);
             }
             @Override
-            public void addArgsToCommandLine(CommandLine commandLine, List<String> args) {
-                for (String arg : args) {
-                    commandLine.addArgument(arg);
+            public void addArgsToCommandLine(CommandLine cmdLine, List<String> arguments) {
+                for (String arg : arguments) {
+                    cmdLine.addArgument(arg);
                 }
             }
         };
 
-        private static final String falconClientBinary =
+        private static final String FALCON_CLIENT_BINARY =
                 Config.getProperty("falcon.client.binary", "falcon");
-        public abstract void addArgsToCommandLine(CommandLine commandLine, List<String> args);
-        public abstract CommandLine getCommandLine(String user);
+        public abstract void addArgsToCommandLine(CommandLine cmdLine, List<String> arguments);
+        public abstract CommandLine getCommandLine(String forUser);
     }
 
     private FalconClientBuilder(String user) {
@@ -113,7 +112,7 @@ public class FalconClientBuilder implements Builder<CommandLine> {
     }
 
     /**
-     * Get an instance of FalconClientBuilder
+     * Get an instance of FalconClientBuilder.
      * @return instance of FalconClientBuilder
      */
     public static FalconClientBuilder getBuilder() {
@@ -130,7 +129,7 @@ public class FalconClientBuilder implements Builder<CommandLine> {
     }
 
     /**
-     * Add the given argument
+     * Add the given argument.
      * @param arg argument to be added to builder
      * @return this
      */
@@ -140,7 +139,7 @@ public class FalconClientBuilder implements Builder<CommandLine> {
     }
 
     /**
-     * Create submit command
+     * Create submit command.
      * @param entityType type of the entity
      * @param fileName file containing the entity to be submitted
      * @return this
@@ -153,7 +152,7 @@ public class FalconClientBuilder implements Builder<CommandLine> {
     }
 
     /**
-     * Create delete command
+     * Create delete command.
      * @param entityType type of the entity
      * @param entityName name of the entity to be deleted
      * @return this
@@ -167,7 +166,7 @@ public class FalconClientBuilder implements Builder<CommandLine> {
 
 
     /**
-     * Build the CommandLine object for this FalconClientBuilder
+     * Build the CommandLine object for this FalconClientBuilder.
      * @return instance of CommandLine object
      */
     @Override

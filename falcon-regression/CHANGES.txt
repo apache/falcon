@@ -33,6 +33,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-684 Fix problems found by checkstyle in non-test files in falcon-regression (Ruslan
+   Ostafiychuk)
+
    FALCON-923 Remove unused xsd's (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-699 Use APIResult and other support classes from falcon-client in falcon-regression

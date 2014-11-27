@@ -31,7 +31,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,9 +56,8 @@ public final class FalconAuthorizationToken {
         }
     };
 
-    private static void authenticate(String user, String protocol, String host,
-                                    int port)
-            throws IOException, AuthenticationException, InterruptedException {
+    private static void authenticate(String user, String protocol, String host, int port)
+        throws IOException, AuthenticationException, InterruptedException {
         final URL url = new URL(String.format("%s://%s:%d/%s", protocol, host, port,
             AUTH_URL + "?" + PseudoAuthenticator.USER_NAME + "=" + user));
         LOGGER.info("Authorize using url: " + url.toString());
@@ -92,7 +90,7 @@ public final class FalconAuthorizationToken {
 
     public static AuthenticatedURL.Token getToken(String user, String protocol, String host,
                                                   int port, boolean overWrite)
-            throws IOException, AuthenticationException, InterruptedException {
+        throws IOException, AuthenticationException, InterruptedException {
         String key = getKey(user, protocol, host, port);
 
         /*if the tokens are null or if token is not found then we will go ahead and authenticate
@@ -105,7 +103,7 @@ public final class FalconAuthorizationToken {
 
     public static AuthenticatedURL.Token getToken(String user, String protocol, String host,
                                                   int port)
-            throws IOException, AuthenticationException, InterruptedException {
+        throws IOException, AuthenticationException, InterruptedException {
         return getToken(user, protocol, host, port, false);
     }
 

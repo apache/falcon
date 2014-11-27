@@ -32,26 +32,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Page with list of entities.
+ */
 public class EntitiesPage extends Page {
 
-    private static final Logger logger = Logger.getLogger(EntitiesPage.class);
+    protected static final String ENTITIES_TABLE = "//table[@id='entity-list']/tbody/tr";
 
-    private final static String ACTIVE_NXT_BTN
-            = "//ul/li[not(@class)]/a[contains(text(),'»')]";
-    protected final static String ENTITIES_TABLE
-            = "//table[@id='entity-list']/tbody/tr";
-    private final static String PAGE_NUMBER = "//ul[@class='pagination']/li[@class='active']/a";
+    private static final Logger LOGGER = Logger.getLogger(EntitiesPage.class);
+    private static final String ACTIVE_NXT_BTN = "//ul/li[not(@class)]/a[contains(text(),'»')]";
+    private static final String PAGE_NUMBER = "//ul[@class='pagination']/li[@class='active']/a";
 
     public EntitiesPage(WebDriver driver, ColoHelper helper, EntityType type) {
         super(driver, helper);
-        URL += "/index.html?type=" + type.toString().toLowerCase();
+        url += "/index.html?type=" + type.toString().toLowerCase();
 
         expectedElement = ENTITIES_TABLE;
         notFoundMsg = String.format("No entities on %sS page", type);
     }
 
     /**
-     * Returns status of defined entity
+     * Returns status of defined entity.
      * @param entityName name of entity
      * @return status of defined entity
      */
@@ -59,7 +60,9 @@ public class EntitiesPage extends Page {
         navigateTo();
         while (true) {
             String status = getEntitiesOnPage().get(entityName);
-            if (status != null) return EntityStatus.valueOf(status);
+            if (status != null) {
+                return EntityStatus.valueOf(status);
+            }
             if (nextPagePresent()) {
                 goNextPage();
             } else {
@@ -70,10 +73,10 @@ public class EntitiesPage extends Page {
     }
 
     /**
-     * Loads next page
+     * Loads next page.
      */
     private void goNextPage() {
-        logger.info("Navigating to next page...");
+        LOGGER.info("Navigating to next page...");
         WebElement nextButton = driver.findElement(By.xpath(ACTIVE_NXT_BTN));
         nextButton.click();
         waitForElement(expectedElement, DEFAULT_TIMEOUT, "Next page didn't load");
@@ -81,12 +84,12 @@ public class EntitiesPage extends Page {
 
 
     /**
-     * Checks if next page is present
+     * Checks if next page is present.
      * @return true if next page is present
      */
 
     private boolean nextPagePresent() {
-        logger.info("Checking if next page is present...");
+        LOGGER.info("Checking if next page is present...");
         try {
             new WebDriverWait(driver, DEFAULT_TIMEOUT).until(new Condition(ACTIVE_NXT_BTN, true));
             return true;
@@ -96,7 +99,7 @@ public class EntitiesPage extends Page {
     }
 
     /**
-     * Returns page number
+     * Returns page number.
      * @return page number
      */
     public int getPageNumber() {
@@ -104,8 +107,8 @@ public class EntitiesPage extends Page {
         return Integer.parseInt(number);
     }
 
-    private Map<String,String> getEntitiesOnPage() {
-        logger.info("Reading all entities on page...");
+    private Map<String, String> getEntitiesOnPage() {
+        LOGGER.info("Reading all entities on page...");
         List<WebElement> lines = driver.findElements(By.xpath(ENTITIES_TABLE));
         Map<String, String> entities = new HashMap<String, String>();
         for (WebElement line : lines) {
@@ -117,7 +120,7 @@ public class EntitiesPage extends Page {
     }
 
     /**
-     * Status of entity that can be shown on Falcon UI
+     * Status of entity that can be shown on Falcon UI.
      */
     public enum EntityStatus {
         UNKNOWN, SUBMITTED, RUNNING, SUSPENDED

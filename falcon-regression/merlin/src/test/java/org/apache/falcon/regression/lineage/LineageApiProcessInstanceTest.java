@@ -131,7 +131,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(processResult);
         Vertex processVertex = processResult.getResults().get(0);
         final VerticesResult processIncoming =
-            lineageHelper.getVerticesByDirection(processVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(processVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(processIncoming);
         final List<Vertex> processInstanceVertices =
             processIncoming.filterByType(Vertex.VERTEX_TYPE.PROCESS_INSTANCE);
@@ -154,7 +154,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(processResult);
         Vertex processVertex = processResult.getResults().get(0);
         final VerticesResult processIncoming =
-            lineageHelper.getVerticesByDirection(processVertex.get_id(), Direction.inComingVertices);
+            lineageHelper.getVerticesByDirection(processVertex.getId(), Direction.inComingVertices);
         GraphAssert.assertVertexSanity(processIncoming);
         // fetching process instance vertex
         final List<Vertex> piVertices =
@@ -182,7 +182,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
                 "Unexpected processInstanceTime: " + processInstanceTime +
                     "it should have been be in the list " + allowedPITimes);
 
-            VerticesResult piIncoming = lineageHelper.getVerticesByDirection(piVertex.get_id(),
+            VerticesResult piIncoming = lineageHelper.getVerticesByDirection(piVertex.getId(),
                 Direction.inComingVertices);
             GraphAssert.assertVertexSanity(piIncoming);
             //process input start="now(0,-20) and end is "now(0,0)"
@@ -207,7 +207,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
             }
 
             VerticesResult piOutgoing = lineageHelper.getVerticesByDirection(
-                piVertex.get_id(), Direction.outgoingVertices);
+                piVertex.getId(), Direction.outgoingVertices);
             GraphAssert.assertVertexSanity(piOutgoing);
             Assert.assertEquals(piOutgoing.filterByType(Vertex.VERTEX_TYPE.FEED_INSTANCE).size(),
                 1, "Expected only one output feed instance.");

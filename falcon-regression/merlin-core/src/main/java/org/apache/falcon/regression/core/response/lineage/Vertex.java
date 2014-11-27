@@ -55,8 +55,10 @@ public class Vertex extends GraphEntity {
         }
     }
 
-    private int _id;
+    @SerializedName("_id")
+    private int id;
     private String name;
+
     private VERTEX_TYPE type;
     private String timestamp;
     private String version;
@@ -71,8 +73,8 @@ public class Vertex extends GraphEntity {
     private String workflowEngineUrl;
     private String subflowId;
 
-    public int get_id() {
-        return _id;
+    public int getId() {
+        return id;
     }
 
     public String getTimestamp() {
@@ -94,8 +96,8 @@ public class Vertex extends GraphEntity {
     @Override
     public String toString() {
         return "Vertex{"
-                + "_id=" + _id
-                + ", _type=" + _type
+                + "_id=" + id
+                + ", _type=" + nodeType
                 + ", name='" + name + '\''
                 + ", type=" + type
                 + ", timestamp='" + timestamp + '\''
@@ -122,7 +124,7 @@ public class Vertex extends GraphEntity {
 
         Vertex vertex = (Vertex) o;
 
-        if (_id != vertex._id || !name.equals(vertex.name)
+        if (id != vertex.id || !name.equals(vertex.name)
                 || (runId != null ? !runId.equals(vertex.runId) : vertex.runId != null)
                 || (status != null ? !status.equals(vertex.status) : vertex.status != null)
                 || (subflowId != null ? !subflowId.equals(vertex.subflowId)
@@ -151,7 +153,7 @@ public class Vertex extends GraphEntity {
 
     @Override
     public int hashCode() {
-        int result = _id;
+        int result = id;
         result = 31 * result + name.hashCode();
         result = 31 * result + type.hashCode();
         result = 31 * result + timestamp.hashCode();

@@ -24,7 +24,15 @@ import org.apache.falcon.entity.v0.EntityType;
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
 
-class TestEntityUtil {
+/**
+ * Util class for merlin entities.
+ */
+final class TestEntityUtil {
+
+    private TestEntityUtil() {
+        throw new AssertionError("Instantiating utility class...");
+    }
+
     public static Entity fromString(EntityType type, String str) {
         try {
             Unmarshaller unmarshaller = type.getUnmarshaller();

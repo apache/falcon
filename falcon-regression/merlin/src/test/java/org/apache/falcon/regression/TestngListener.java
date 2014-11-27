@@ -68,9 +68,9 @@ public class TestngListener implements ITestListener, IExecutionListener {
     @Override
     public void onTestFailure(ITestResult result) {
         logEndOfTest(result, "FAILED");
-        if (BaseUITestClass.getDRIVER() != null) {
-            byte[] scrFile = ((TakesScreenshot)BaseUITestClass.getDRIVER()).getScreenshotAs
-                    (OutputType.BYTES);
+        if (BaseUITestClass.getDriver() != null) {
+            byte[] scrFile = ((TakesScreenshot)BaseUITestClass.getDriver())
+                .getScreenshotAs(OutputType.BYTES);
             try {
                 String filename = OSUtil.getPath("target", "surefire-reports", "screenshots", String.format("%s.%s.png",
                         result.getTestClass().getRealClass().getSimpleName(), result.getName()));

@@ -30,35 +30,38 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 
+/**
+ * Abstract page of Falcon UI.
+ */
 public abstract class Page {
-    protected final static int DEFAULT_TIMEOUT = 10;
-    protected String URL;
+    protected static final int DEFAULT_TIMEOUT = 10;
+    protected String url;
     protected WebDriver driver;
 
     protected String expectedElement;
     protected String notFoundMsg;
 
-    private static final Logger logger = Logger.getLogger(Page.class);
+    private static final Logger LOGGER = Logger.getLogger(Page.class);
 
     Page(WebDriver driver, ColoHelper helper) {
         this.driver = driver;
-        URL = helper.getClusterHelper().getHostname();
+        url = helper.getClusterHelper().getHostname();
     }
 
     /**
-     * Go to page in browser
+     * Go to page in browser.
      */
     public void navigateTo() {
-        logger.info("Navigating to " + URL);
-        driver.get(URL);
+        LOGGER.info("Navigating to " + url);
+        driver.get(url);
         waitForElement(expectedElement, DEFAULT_TIMEOUT, notFoundMsg);
     }
 
     /**
-     * Refresh page
+     * Refresh page.
      */
     public void refresh() {
-        logger.info("Refreshing page " + URL);
+        LOGGER.info("Refreshing page " + url);
         driver.navigate().refresh();
     }
 
@@ -95,7 +98,7 @@ public abstract class Page {
     }
 
     /**
-     * Wait until WebElement became visible
+     * Wait until WebElement became visible.
      * @param xpath xpath of expected WebElement
      * @param timeoutSeconds how many seconds we should wait for visibility
      * @param errMessage message for TimeoutException
@@ -104,7 +107,9 @@ public abstract class Page {
         waitForElement(xpath, timeoutSeconds, errMessage);
         WebElement element = driver.findElement(By.xpath(xpath));
         for (int i = 0; i < timeoutSeconds * 10; i++) {
-            if (element.isDisplayed()) return;
+            if (element.isDisplayed()) {
+                return;
+            }
             TimeUtil.sleepSeconds(0.1);
         }
         throw new TimeoutException(errMessage);

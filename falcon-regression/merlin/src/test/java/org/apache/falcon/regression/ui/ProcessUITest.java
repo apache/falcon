@@ -174,7 +174,7 @@ public class ProcessUITest extends BaseUITestClass {
             OozieClientException, InterruptedException {
 
         //check Process statuses via UI
-        EntitiesPage page = new EntitiesPage(DRIVER, cluster, EntityType.PROCESS);
+        EntitiesPage page = new EntitiesPage(driver, cluster, EntityType.PROCESS);
         page.navigateTo();
         String process = bundles[0].getProcessData();
         String processName = Util.readEntityName(process);
@@ -188,7 +188,7 @@ public class ProcessUITest extends BaseUITestClass {
         softAssert.assertEquals(page.getEntityStatus(processName),
                 EntitiesPage.EntityStatus.RUNNING, "Process status should be RUNNING");
 
-        ProcessPage processPage = new ProcessPage(DRIVER, cluster, processName);
+        ProcessPage processPage = new ProcessPage(driver, cluster, processName);
         processPage.navigateTo();
 
         String bundleID = InstanceUtil.getLatestBundleID(cluster, processName, EntityType.PROCESS);

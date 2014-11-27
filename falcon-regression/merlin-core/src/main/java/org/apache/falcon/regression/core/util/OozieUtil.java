@@ -246,7 +246,7 @@ public final class OozieUtil {
 
 
     public static List<String> getMissingDependencies(ColoHelper helper, String bundleID)
-            throws OozieClientException {
+        throws OozieClientException {
         CoordinatorJob jobInfo;
         jobInfo = null;
         OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
@@ -257,16 +257,15 @@ public final class OozieUtil {
             for (CoordinatorJob coord : bundleJob.getCoordinators()) {
                 LOGGER.info("Appname is : " + coord.getAppName());
                 if ((coord.getAppName().contains("DEFAULT") && coord.getAppName().contains("PROCESS"))
-                        ||
-                        (coord.getAppName().contains("REPLICATION") && coord.getAppName().contains("FEED")))
+                        || (coord.getAppName().contains("REPLICATION") && coord.getAppName()
+                            .contains("FEED"))) {
                     jobInfo = oozieClient.getCoordJobInfo(coord.getId());
-                else {
+                } else {
                     LOGGER.info("Desired coord does not exists on " + oozieClient.getOozieUrl());
                 }
             }
 
-        }
-        else {
+        } else {
             jobInfo = oozieClient.getCoordJobInfo(bundleJob.getCoordinators().get(0).getId());
         }
 
@@ -491,7 +490,7 @@ public final class OozieUtil {
     }
 
     public static void createMissingDependenciesForBundle(ColoHelper helper, String bundleId)
-            throws OozieClientException, IOException {
+        throws OozieClientException, IOException {
         OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
         List<CoordinatorJob> coords = oozieClient.getBundleJobInfo(bundleId).getCoordinators();
         for (CoordinatorJob coord : coords) {
@@ -506,9 +505,10 @@ public final class OozieUtil {
         }
     }
 
-    public static void validateRetryAttempts(ColoHelper helper, String bundleId,EntityType type, int attempts) throws OozieClientException {
+    public static void validateRetryAttempts(ColoHelper helper, String bundleId, EntityType type,
+                                             int attempts) throws OozieClientException {
         OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
-        CoordinatorJob coord = getDefaultOozieCoord(helper, bundleId,type);
+        CoordinatorJob coord = getDefaultOozieCoord(helper, bundleId, type);
         int actualRun = oozieClient.getJobInfo(coord.getActions().get(0).getExternalId()).getRun();
         LOGGER.info("Actual run count: " + actualRun); // wrt 0
         Assert.assertEquals(actualRun, attempts, "Rerun attempts did not match");

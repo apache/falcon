@@ -20,7 +20,6 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.testng.Assert;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -41,8 +40,8 @@ public final class KerberosHelper {
             return UserGroupInformation.createRemoteUser(user);
         }
         // if secure create a ugi object from keytab
-        return UserGroupInformation.loginUserFromKeytabAndReturnUGI(getPrincipal(user), getKeyTab
-                (user));
+        return UserGroupInformation.loginUserFromKeytabAndReturnUGI(getPrincipal(user),
+            getKeyTab(user));
     }
 
     private static String getKeyTab(String user) {

@@ -152,7 +152,7 @@ public final class BundleUtil {
     }
 
     public static void submitAllClusters(ColoHelper prismHelper, Bundle... b)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         for (Bundle aB : b) {
             ServiceResponse r = prismHelper.getClusterHelper().submitEntity(aB.getClusters().get(0));
             Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));

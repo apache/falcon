@@ -93,7 +93,7 @@ public final class InstanceUtil {
 
     public static APIResult sendRequestProcessInstance(String
             url, String user)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return hitUrl(url, Util.getMethodType(url), user);
     }
 
@@ -617,20 +617,25 @@ public final class InstanceUtil {
             String clusterName,
             ClusterType clusterType, String partition,
             String... locations) {
-        return setFeedClusterWithTable(feed, feedValidity, feedRetention, clusterName, clusterType,
-                partition, null, locations);
+        Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
+                clusterType, partition, null, locations);
+        return setFeedCluster(feed, clusterName, feedCluster);
     }
 
     public static String setFeedClusterWithTable(String feed, Validity feedValidity,
-            Retention feedRetention, String clusterName,
-            ClusterType clusterType, String partition,
-            String tableUri, String... locations) {
+                                                 Retention feedRetention, String clusterName,
+                                                 ClusterType clusterType, String partition,
+                                                 String tableUri) {
+        Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
+                    clusterType, partition, tableUri, null);
+        return setFeedCluster(feed, clusterName, feedCluster);
+    }
+
+    private static String setFeedCluster(String feed, String clusterName, Cluster feedCluster) {
         FeedMerlin f = new FeedMerlin(feed);
         if (clusterName == null) {
             f.getClusters().getClusters().clear();
         } else {
-            Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
-                    clusterType, partition, tableUri, locations);
             f.getClusters().getClusters().add(feedCluster);
         }
         return f.toString();
@@ -645,7 +650,9 @@ public final class InstanceUtil {
     private static Cluster createFeedCluster(
             Validity feedValidity, Retention feedRetention, String clusterName, ClusterType clusterType,
             String partition, String tableUri, String[] locations) {
-
+        if (clusterName == null) {
+            return null;
+        }
         Cluster cluster = new Cluster();
         cluster.setName(clusterName);
         cluster.setRetention(feedRetention);
@@ -710,7 +717,7 @@ public final class InstanceUtil {
      */
     public static APIResult createAndSendRequestProcessInstance(
             String url, String params, String colo, String user)
-            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         if (params != null && !colo.equals("")) {
             url = url + params + "&" + colo.substring(1);
         } else if (params != null) {
@@ -1037,7 +1044,7 @@ public final class InstanceUtil {
             LOGGER.info(String.format("Try %d of %d", (i + 1), maxTries));
             CoordinatorJob coordinatorJob = client.getCoordJobInfo(coordId);
             final Status coordinatorStatus = coordinatorJob.getStatus();
-            if(expectedStatus != CoordinatorAction.Status.TIMEDOUT){
+            if (expectedStatus != CoordinatorAction.Status.TIMEDOUT){
                 Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(coordinatorStatus),
                         String.format("Coordinator %s should be running/prep but is %s.", coordId, coordinatorStatus));
             }

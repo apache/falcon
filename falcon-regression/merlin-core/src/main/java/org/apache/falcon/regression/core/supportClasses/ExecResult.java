@@ -20,6 +20,9 @@ package org.apache.falcon.regression.core.supportClasses;
 
 import org.apache.commons.exec.CommandLine;
 
+/**
+ * Class with result of command line execution.
+ */
 public final class ExecResult {
 
     private final int exitVal;
@@ -57,11 +60,11 @@ public final class ExecResult {
 
     @Override
     public String toString() {
-        return "ExecResult{" +
-                "exitVal=" + exitVal +
-                ", output='" + output + '\'' +
-                ", error='" + error + '\'' +
-                ", commandLine=" + commandLine +
-                '}';
+        return "ExecResult{"
+                + "exitVal=" + exitVal
+                + ", output='" + output + '\''
+                + ", error='" + error + '\''
+                + ", commandLine=" + commandLine
+                + '}';
     }
 }
