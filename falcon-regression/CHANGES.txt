@@ -33,8 +33,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-923 Remove unused xsd's (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-699 Use APIResult and other support classes from falcon-client in falcon-regression
-   (Ruslan Ostafiychuk
+   (Ruslan Ostafiychuk)
 
    FALCON-906: Add license header where it is needed, remove deprecated inmobi
    references (Paul Isaychuk via Raghav Kumar Gautam)
