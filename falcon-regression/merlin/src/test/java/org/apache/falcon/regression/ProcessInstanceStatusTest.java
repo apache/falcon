@@ -21,10 +21,8 @@ package org.apache.falcon.regression;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.InstancesResult.WorkflowStatus;
-import org.apache.falcon.regression.core.response.ResponseKeys;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
@@ -34,6 +32,8 @@ import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
@@ -227,9 +227,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getProcessHelper().delete(bundles[0].getProcessData()));
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
-        if ((r.getStatusCode() != ResponseKeys.PROCESS_NOT_FOUND)) {
-            Assert.assertTrue(false);
-        }
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**
@@ -259,7 +257,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:20Z&end=2010-01-02T01:07Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 400);
+        InstanceUtil.validateError(r, ResponseErrors.START_BEFORE_SCHEDULED);
     }
 
     /**
@@ -341,9 +339,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper()
             .getProcessInstanceStatus("invalidProcess", "?start=2010-01-01T01:00Z");
-        if (!(r.getStatusCode() == ResponseKeys.PROCESS_NOT_FOUND)) {
-            Assert.assertTrue(false);
-        }
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**

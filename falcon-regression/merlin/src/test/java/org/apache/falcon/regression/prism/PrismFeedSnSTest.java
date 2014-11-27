@@ -23,7 +23,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.APIResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -269,12 +268,12 @@ public class PrismFeedSnSTest extends BaseTestClass {
     public void testFeedSnSOnBothColosUsingColoHelper() throws Exception {
         //schedule both bundles
         bundles[0].submitFeed();
-        APIResult result = Util.parseResponse((cluster1.getFeedHelper().submitEntity(feed1)));
-        Assert.assertEquals(result.getStatusCode(), 404);
+        ServiceResponse result = (cluster1.getFeedHelper().submitEntity(feed1));
+        Assert.assertEquals(result.getCode(), 404);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
         bundles[1].submitFeed();
-        result = Util.parseResponse(cluster2.getFeedHelper().submitAndSchedule(feed2));
-        Assert.assertEquals(result.getStatusCode(), 404);
+        result = cluster2.getFeedHelper().submitAndSchedule(feed2);
+        Assert.assertEquals(result.getCode(), 404);
         AssertUtil.checkNotStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
     }
 
@@ -336,10 +335,8 @@ public class PrismFeedSnSTest extends BaseTestClass {
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testSNSNonExistentFeedOnBothColosUsingColoHelper() throws Exception {
-        Assert.assertEquals(Util.parseResponse(cluster1.getFeedHelper().submitAndSchedule(feed1))
-            .getStatusCode(), 404);
-        Assert.assertEquals(Util.parseResponse(cluster2.getFeedHelper().submitAndSchedule(feed2))
-            .getStatusCode(), 404);
+        Assert.assertEquals(cluster1.getFeedHelper().submitAndSchedule(feed1).getCode(), 404);
+        Assert.assertEquals(cluster2.getFeedHelper().submitAndSchedule(feed2).getCode(), 404);
     }
 
     /**

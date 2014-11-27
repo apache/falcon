@@ -229,10 +229,10 @@ public class PrismProcessSnSTest extends BaseTestClass {
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testScheduleNonExistentProcessOnBothColos() throws Exception {
-        Assert.assertEquals(Util.parseResponse(cluster2.getProcessHelper()
-            .submitAndSchedule(process1)).getStatusCode(), 404);
-        Assert.assertEquals(Util.parseResponse(cluster1.getProcessHelper()
-            .submitAndSchedule(process2)).getStatusCode(), 404);
+        Assert.assertEquals(cluster2.getProcessHelper()
+            .submitAndSchedule(process1).getCode(), 404);
+        Assert.assertEquals(cluster1.getProcessHelper()
+            .submitAndSchedule(process2).getCode(), 404);
     }
 
     @AfterClass(alwaysRun = true)

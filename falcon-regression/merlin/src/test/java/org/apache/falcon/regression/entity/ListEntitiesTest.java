@@ -25,13 +25,13 @@ import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.falcon.regression.core.response.EntityResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
@@ -45,6 +45,7 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
@@ -59,9 +60,9 @@ public class ListEntitiesTest extends BaseTestClass {
     private String baseTestHDFSDir = baseHDFSDir + testDir;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String[] tags = {"first=yes", "second=yes", "third=yes", "wrong=no"};
-    private static final Comparator<EntityResult> NAME_COMPARATOR = new Comparator<EntityResult>() {
+    private static final Comparator<EntityElement> NAME_COMPARATOR = new Comparator<EntityElement>() {
         @Override
-        public int compare(EntityResult o1, EntityResult o2) {
+        public int compare(EntityElement o1, EntityElement o2) {
             return o1.name.compareTo(o2.name);
         }
     };
@@ -122,11 +123,11 @@ public class ListEntitiesTest extends BaseTestClass {
     public void listEntitiesWithOrderBy(IEntityManagerHelper helper)
             throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
-        List<EntityResult> entities =
-            helper.listAllEntities("orderBy=name", null).getEntitiesResult().getEntities();
-        LOGGER.info(helper.getEntityType() + " entities: " + entities);
-        Assert.assertTrue(Ordering.from(NAME_COMPARATOR).isOrdered(entities),
-            helper.getEntityType() + " entities are not ordered by name: " + entities);
+        EntityElement[] entities =
+            helper.listAllEntities("orderBy=name", null).getEntityList().getElements();
+        LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(entities));
+        Assert.assertTrue(Ordering.from(NAME_COMPARATOR).isOrdered(Arrays.asList(entities)),
+            helper.getEntityType() + " entities are not ordered by name: " + Arrays.toString(entities));
     }
 
 
@@ -139,11 +140,11 @@ public class ListEntitiesTest extends BaseTestClass {
         String[] statuses = helper.getEntityType().equalsIgnoreCase("cluster")
             ? new String[]{"SUBMITTED"} : new String[]{"SUBMITTED", "RUNNING"};
 
-        List<EntityResult> allEntities =
-            helper.listAllEntities("fields=status", null).getEntitiesResult().getEntities();
+        EntityElement[] allEntities =
+            helper.listAllEntities("fields=status", null).getEntityList().getElements();
         int[] counters = new int[statuses.length];
 
-        for (EntityResult entity : allEntities) {
+        for (EntityElement entity : allEntities) {
             for (int i = 0; i < statuses.length; i++) {
                 if (statuses[i].equals(entity.status)) {
                     counters[i]++;
@@ -152,11 +153,11 @@ public class ListEntitiesTest extends BaseTestClass {
         }
 
         for (int i = 0; i < statuses.length; i++) {
-            List<EntityResult> entities = helper.listAllEntities("fields=status&filterBy=STATUS:"
-                + statuses[i], null).getEntitiesResult().getEntities();
-            Assert.assertEquals(entities.size(), counters[i],
+            EntityElement[] entities = helper.listAllEntities("fields=status&filterBy=STATUS:"
+                + statuses[i], null).getEntityList().getElements();
+            Assert.assertEquals(entities.length, counters[i],
                 "Number of entities is not correct with status=" + statuses[i]);
-            for (EntityResult entity : entities) {
+            for (EntityElement entity : entities) {
                 Assert.assertEquals(entity.status, statuses[i], "Entity should has status "
                     + statuses[i] + ". Entity: " + entity);
             }
@@ -171,22 +172,23 @@ public class ListEntitiesTest extends BaseTestClass {
     public void listEntitiesWithOffset(IEntityManagerHelper helper)
             throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
-        List<EntityResult> allEntities =
-            helper.listAllEntities(null, null).getEntitiesResult().getEntities();
-        LOGGER.info(helper.getEntityType() + " entities: " + allEntities);
-        int allEntitiesCount = allEntities.size();
+        EntityElement[] allEntities =
+            helper.listAllEntities(null, null).getEntityList().getElements();
+        LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(allEntities));
+        int allEntitiesCount = allEntities.length;
         for (int i = 0; i <= allEntitiesCount; i++) {
 
-            List<EntityResult> entities =
-                helper.listEntities("offset=" + i, null).getEntitiesResult().getEntities();
+            EntityElement[] entities =
+                helper.listEntities("offset=" + i, null).getEntityList().getElements();
             LOGGER.info(String.format("%s entities with offset %d: %s",
-                helper.getEntityType(), i, entities));
+                helper.getEntityType(), i, Arrays.toString(entities)));
 
-            Assert.assertEquals(entities.size(),
+            Assert.assertEquals(entities != null ? entities.length : 0,
                 allEntitiesCount - i < 10 ? allEntitiesCount - i : 10,
                 "Number of entities is not correct.");
-            for (int j = 0; j < entities.size(); j++) {
-                Assert.assertEquals(entities.get(j).name, allEntities.get(j + i).name,
+
+            for (int j = 0; entities != null && j < entities.length; j++) {
+                Assert.assertEquals(entities[j].name, allEntities[j + i].name,
                     "Order of entities is not correct");
             }
         }
@@ -199,17 +201,17 @@ public class ListEntitiesTest extends BaseTestClass {
     public void listEntitiesWithNumResults(IEntityManagerHelper helper)
             throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
-        List<EntityResult> allEntities =
-            helper.listAllEntities(null, null).getEntitiesResult().getEntities();
-        int allEntitiesCount = allEntities.size();
+        EntityElement[] allEntities =
+            helper.listAllEntities(null, null).getEntityList().getElements();
+        int allEntitiesCount = allEntities.length;
 
         for (int i = 1; i <= allEntitiesCount; i++) {
-            List<EntityResult> entities =
-                helper.listEntities("numResults=" + i, null).getEntitiesResult().getEntities();
-            Assert.assertEquals(entities.size(), i,
+            EntityElement[] entities =
+                helper.listEntities("numResults=" + i, null).getEntityList().getElements();
+            Assert.assertEquals(entities.length, i,
                 "Number of entities is not equal to numResults parameter");
             for (int j = 0; j < i; j++) {
-                Assert.assertEquals(entities.get(j).name, allEntities.get(j).name,
+                Assert.assertEquals(entities[j].name, allEntities[j].name,
                     "Order of entities is not correct");
             }
         }
@@ -223,11 +225,11 @@ public class ListEntitiesTest extends BaseTestClass {
     public void listEntitiesWithTags(IEntityManagerHelper helper)
             throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
-        List<EntityResult> allEntities =
-            helper.listAllEntities("fields=tags", null).getEntitiesResult().getEntities();
+        EntityElement[] allEntities =
+            helper.listAllEntities("fields=tags", null).getEntityList().getElements();
         int[] counters = new int[tags.length];
 
-        for (EntityResult entity : allEntities) {
+        for (EntityElement entity : allEntities) {
             for (int i = 0; i < tags.length; i++) {
                 if (entity.tag != null && entity.tag.contains(tags[i])) {
                     counters[i]++;
@@ -236,14 +238,16 @@ public class ListEntitiesTest extends BaseTestClass {
         }
 
         for (int i = 0; i < tags.length; i++) {
-            List<EntityResult> entities = helper.listAllEntities("fields=tags&tags=" + tags[i],
-                null).getEntitiesResult().getEntities();
-            Assert.assertEquals(entities.size(), counters[i],
+            EntityElement[] entities = helper.listAllEntities("fields=tags&tags=" + tags[i],
+                null).getEntityList().getElements();
+            Assert.assertEquals(entities != null ? entities.length : 0, counters[i],
                 "Number of entities is not correct with tag=" + tags[i]);
-            for (EntityResult entity : entities) {
-                Assert.assertNotNull(entity.tag, "Entity should have tags. Entity: " + entity);
-                Assert.assertTrue(entity.tag.contains(tags[i]), "Entity should contain tag "
-                    + tags[i] + ". Entity: " + entity);
+
+            for (int j = 0; entities != null && j < entities.length; j++) {
+                Assert.assertNotNull(entities[j].tag, "Entity should have tags. Entity: "
+                    + entities[j]);
+                Assert.assertTrue(entities[j].tag.contains(tags[i]), "Entity should contain tag "
+                    + tags[i] + ". Entity: " + entities[j]);
             }
 
         }
@@ -257,20 +261,24 @@ public class ListEntitiesTest extends BaseTestClass {
     public void listEntitiesWithCustomFilter(IEntityManagerHelper helper)
             throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
-        List<EntityResult> entities = helper.listEntities(
+        EntityElement[] entities = helper.listEntities(
             "numResults=2&fields=status,tags&filterBy=STATUS:SUBMITTED&orderBy=name&tags=" + tags[2],
-            null).getEntitiesResult().getEntities();
-        SoftAssert softAssert = new SoftAssert();
-        for (EntityResult entity : entities) {
-            softAssert.assertEquals(entity.status, "SUBMITTED",
-                "Entities should have status 'SUBMITTED'");
-            softAssert.assertTrue(entity.tag.contains(tags[2]), "There is entity without tag="
-                + tags[2] + " Entity: " + entity);
+            null).getEntityList().getElements();
+        if (entities != null) {
+            SoftAssert softAssert = new SoftAssert();
+            for (EntityElement entity : entities) {
+                softAssert.assertEquals(entity.status, "SUBMITTED",
+                    "Entities should have status 'SUBMITTED'");
+                softAssert.assertTrue(entity.tag.contains(tags[2]), "There is entity without tag="
+                    + tags[2] + " Entity: " + entity);
+            }
+
+            softAssert.assertTrue(entities.length <= 2, "Number of results should be 2 or less");
+
+            softAssert.assertTrue(Ordering.from(NAME_COMPARATOR).isOrdered(Arrays.asList(entities)),
+                helper.getEntityType() + " entities are not ordered by name: " + Arrays.toString(entities));
+            softAssert.assertAll();
         }
-        softAssert.assertTrue(entities.size() <= 3, "Number of results should be 3 or less");
-        softAssert.assertTrue(Ordering.from(NAME_COMPARATOR).isOrdered(entities),
-            helper.getEntityType() + " entities are not ordered by name: " + entities);
-        softAssert.assertAll();
     }
 
 

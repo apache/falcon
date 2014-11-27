@@ -19,10 +19,10 @@
 package org.apache.falcon.regression.core.helpers;
 
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.falcon.regression.core.response.InstancesSummaryResult;
-import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

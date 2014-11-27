@@ -32,7 +32,6 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -84,8 +83,8 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
     private void submitFirstClusterScheduleFirstFeed()
             throws JAXBException, IOException, URISyntaxException, AuthenticationException,
             InterruptedException {
-        Assert.assertEquals(Util.parseResponse(prism.getClusterHelper()
-            .submitEntity(bundles[0].getClusters().get(0))).getStatusCode(), 200);
+        AssertUtil.assertSucceeded(prism.getClusterHelper()
+            .submitEntity(bundles[0].getClusters().get(0)));
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
     }
@@ -136,8 +135,7 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
     public void snsDeletedFeed() throws Exception {
         submitFirstClusterScheduleFirstFeed();
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().delete(feed))
-            .getStatusCode(), 200);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
@@ -154,8 +152,7 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
     public void snsSuspendedFeed() throws Exception {
         submitFirstClusterScheduleFirstFeed();
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().suspend(feed))
-            .getStatusCode(), 200);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);

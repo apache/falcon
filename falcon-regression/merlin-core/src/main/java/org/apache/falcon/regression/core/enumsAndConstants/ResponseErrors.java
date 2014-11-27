@@ -16,14 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.response;
+package org.apache.falcon.regression.core.enumsAndConstants;
 
-/** Class containing response keys of rest requests. */
-public final class ResponseKeys {
-    private ResponseKeys() {
-        throw new AssertionError();
+/** Class containing response errors of rest requests. */
+public enum ResponseErrors {
+
+    PROCESS_NOT_FOUND("(PROCESS) not found"),
+    UNPARSEABLE_DATE("Start and End dates cannot be empty for Instance POST apis"),
+    START_BEFORE_SCHEDULED("is before the entity was scheduled");
+
+    private String error;
+
+    ResponseErrors(String error) {
+        this.error = error;
     }
 
-    public static final int PROCESS_NOT_FOUND = 777;
-    public static final int UNPARSEABLE_DATE = 2;
+    public String getError() {
+        return error;
+    }
+
 }

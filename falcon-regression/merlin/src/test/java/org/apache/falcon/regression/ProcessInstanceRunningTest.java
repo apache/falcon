@@ -21,10 +21,8 @@ package org.apache.falcon.regression;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.InstancesResult.WorkflowStatus;
-import org.apache.falcon.regression.core.response.ResponseKeys;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -34,12 +32,13 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -48,7 +47,6 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * Regression for instance running api.
@@ -163,8 +161,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void getNonExistenceProcessInstance() throws Exception {
         InstancesResult r = prism.getProcessHelper().getRunningInstance("invalidName");
-        Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
-                "Unexpected status code");
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**
@@ -177,8 +174,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
-        Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
-                "Unexpected status code");
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**

@@ -25,7 +25,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
@@ -42,12 +41,12 @@ import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.falcon.regression.core.response.APIResult;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.InstancesSummaryResult;
-import org.apache.falcon.regression.core.response.ResponseKeys;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.request.BaseRequest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,8 +68,6 @@ import org.testng.Assert;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -114,81 +111,47 @@ public final class InstanceUtil {
         while ((line = reader.readLine()) != null) {
             stringResponse.append(line).append("\n");
         }
-        String jsonString = stringResponse.toString();
-        LOGGER.info("The web service response is:\n" + Util.prettyPrintXmlOrJson(jsonString));
-        APIResult r = null;
-        try {
-            if (url.contains("/summary/")) {
-                //Order is not guaranteed in the getDeclaredConstructors() call
-                Constructor<?>[] constructors = InstancesSummaryResult.class
-                        .getDeclaredConstructors();
-                for (Constructor<?> constructor : constructors) {
-                    //we want to invoke the constructor that has no parameters
-                    if (constructor.getParameterTypes().length == 0) {
-                        constructor.setAccessible(true);
-                        r = (InstancesSummaryResult) constructor.newInstance();
-                        break;
-                    }
-                }
-            } else {
-                //Order is not guaranteed in the getDeclaredConstructors() call
-                Constructor<?>[] constructors = InstancesResult.class
-                        .getDeclaredConstructors();
-                for (Constructor<?> constructor : constructors) {
-                    //we want to invoke the constructor that has no parameters
-                    if (constructor.getParameterTypes().length == 0) {
-                        constructor.setAccessible(true);
-                        r = (InstancesResult) constructor.newInstance();
-                        break;
-                    }
-                }
+        String responseString = stringResponse.toString();
+        LOGGER.info("The web service response is:\n" + Util.prettyPrintXmlOrJson(responseString));
+        APIResult result;
+        if (url.contains("/summary/")) {
+            result = new InstancesSummaryResult(APIResult.Status.FAILED, responseString);
+        } else {
+            result = new InstancesResult(APIResult.Status.FAILED, responseString);
+        }
+        Assert.assertNotNull(result, "APIResult is null");
+        for (ResponseErrors error : ResponseErrors.values()) {
+            if (responseString.contains(error.getError())) {
+                return result;
             }
-        } catch (IllegalAccessException e) {
-            Assert.fail("Could not create InstancesSummaryResult or "
-                    +
-                    "InstancesResult constructor\n" + ExceptionUtils.getStackTrace(e));
-        } catch (InstantiationException e) {
-            Assert.fail("Could not create InstancesSummaryResult or "
-                    +
-                    "InstancesResult constructor\n" + ExceptionUtils.getStackTrace(e));
-        } catch (InvocationTargetException e) {
-            Assert.fail("Could not create InstancesSummaryResult or "
-                    +
-                    "InstancesResult constructor\n" + ExceptionUtils.getStackTrace(e));
         }
-        Assert.assertNotNull(r, "APIResult is null");
-        if (jsonString.contains("(PROCESS) not found")) {
-            r.setStatusCode(ResponseKeys.PROCESS_NOT_FOUND);
-            return r;
-        } else if (jsonString.contains("Start and End dates cannot be empty for Instance POST apis")
-                || jsonString.contains("Unparseable date:")) {
-            r.setStatusCode(ResponseKeys.UNPARSEABLE_DATE);
-            return r;
-        } else if (response.getStatusLine().getStatusCode() == 400
-            && (jsonString.contains("(FEED) not found")
-            || jsonString.contains("is beforePROCESS  start")
-            || jsonString.contains("is after end date")
-            || jsonString.contains("is after PROCESS's end"))
-            || jsonString.contains("is before PROCESS's  start")
-            || jsonString.contains("is before the entity was scheduled")) {
-            r.setStatusCode(400);
-            return r;
+        for (String error : new String[] {
+            "(FEED) not found",
+            "is beforePROCESS  start",
+            "is after end date",
+            "is after PROCESS's end",
+            "is before PROCESS's  start",
+            "is before the entity was scheduled",
+        }) {
+            if (responseString.contains(error)) {
+                return result;
+            }
         }
         try {
-            r = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
+            result = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
                 @Override
                 public Date deserialize(JsonElement json, Type t, JsonDeserializationContext c) {
                     return new DateTime(json.getAsString()).toDate();
                 }
-            }).create().fromJson(jsonString,
+            }).create().fromJson(responseString,
                     url.contains("/summary/") ? InstancesSummaryResult.class : InstancesResult.class);
         } catch (JsonSyntaxException e) {
-            Assert.fail("Not a valid json:\n" + jsonString);
+            Assert.fail("Not a valid json:\n" + responseString);
         }
-        LOGGER.info("r.getMessage(): " + r.getMessage());
-        LOGGER.info("r.getStatusCode(): " + r.getStatusCode());
-        LOGGER.info("r.getStatus() " + r.getStatus());
-        return r;
+        LOGGER.info("statusCode: " + response.getStatusLine().getStatusCode());
+        LOGGER.info("message: " + result.getMessage());
+        LOGGER.info("APIResult.Status: " + result.getStatus());
+        return result;
     }
 
     /**
@@ -235,10 +198,9 @@ public final class InstanceUtil {
         Assert.assertNull(r.getInstances(), "Unexpected :" + Arrays.toString(r.getInstances()));
     }
 
-    public static void validateSuccessWithStatusCode(InstancesResult r,
-            int expectedErrorCode) {
-        Assert.assertEquals(r.getStatusCode(), expectedErrorCode,
-                "Parameter start is empty should have the response");
+    public static void validateError(InstancesResult r, ResponseErrors error) {
+        Assert.assertTrue(r.getMessage().contains(error.getError()),
+            "Error should contains '" + error.getError() + "'");
     }
 
     /**

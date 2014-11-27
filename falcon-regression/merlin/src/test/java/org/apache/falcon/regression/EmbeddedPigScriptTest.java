@@ -25,10 +25,8 @@ import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Properties;
 import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.InstancesResult.WorkflowStatus;
-import org.apache.falcon.regression.core.response.ResponseKeys;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -38,6 +36,8 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
@@ -158,8 +158,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         prism.getProcessHelper().delete(process);
         TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
-        Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
-            "Unexpected status code");
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     @Test(groups = {"singleCluster"})

@@ -21,9 +21,8 @@ package org.apache.falcon.regression;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.ResponseKeys;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -31,6 +30,7 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
@@ -194,7 +194,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume("invalidName",
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.PROCESS_NOT_FOUND);
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**
@@ -207,7 +207,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     public void testProcessInstanceResumeNoParams() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, 2);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 
     /**
@@ -222,7 +222,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName,
             "?start=2010-01-02T01:05Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.PROCESS_NOT_FOUND);
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**

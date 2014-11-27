@@ -25,7 +25,6 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -37,6 +36,7 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.BundleJob;
@@ -665,7 +665,7 @@ public class NewRetryTest extends BaseTestClass {
                         "Z" + "&end=" + formatter.print(dateBoundaries[dateBoundaries.length - 1])
                         .replace("/", "T") + "Z");
 
-            Assert.assertEquals(piResult.getStatusCode(), 0, "rerun failed miserably! you fool!");
+            AssertUtil.assertSucceeded(piResult);
 
             validateRetry(clusterOC, bundleId,
                 bundles[0].getProcessObject().getRetry().getAttempts() + 1);

@@ -20,7 +20,6 @@ package org.apache.falcon.regression.lineage;
 
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.EntityResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -28,6 +27,7 @@ import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
@@ -106,14 +106,14 @@ public class ProcessPipelineTest extends BaseTestClass{
             for(int p = 0, n = 3; p < 3; p++, n++){
                 String pipeline = "pipeline" + p;
                 ServiceResponse response = prism.getProcessHelper().getListByPipeline(pipeline);
-                List<EntityResult> processes = response.getEntitiesResult().getEntities();
+                EntityElement[] processes = response.getEntityList().getElements();
                 //check that all retrieved processes match to expected list
                 List<String> expected = map.get(pipeline);
-                Assert.assertEquals(processes.size(), expected.size(),
+                Assert.assertEquals(processes.length, expected.size(),
                     String.format("Invalid number of processes for pipeline [%s].", pipeline));
-                for(EntityResult process : processes){
-                    Assert.assertTrue(expected.contains(process.getName()), String.format("Expected "
-                        + "list %s doesn't contain %s for %s.", expected, process.getName(), pipeline));
+                for(EntityElement process : processes){
+                    Assert.assertTrue(expected.contains(process.name), String.format("Expected "
+                        + "list %s doesn't contain %s for %s.", expected, process.name, pipeline));
                 }
             }
         } finally {

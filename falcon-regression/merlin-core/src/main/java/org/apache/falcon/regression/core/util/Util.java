@@ -38,9 +38,9 @@ import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.falcon.regression.core.response.APIResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
+import org.apache.falcon.resource.APIResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.http.HttpResponse;
@@ -150,28 +150,17 @@ public final class Util {
      */
     public static APIResult parseResponse(ServiceResponse response) throws JAXBException {
         if (!isXML(response.getMessage())) {
-            return new APIResult(APIResult.Status.FAILED, response.getMessage(), "somerandomstring",
-                response.getCode());
+            return new APIResult(APIResult.Status.FAILED, response.getMessage());
         }
         JAXBContext jc = JAXBContext.newInstance(APIResult.class);
         Unmarshaller u = jc.createUnmarshaller();
-        APIResult temp;
         if (response.getMessage().contains("requestId")) {
-            temp = (APIResult) u
+            return  (APIResult) u
                 .unmarshal(new InputSource(new StringReader(response.getMessage())));
-            temp.setStatusCode(response.getCode());
         } else {
-            temp = new APIResult();
-            temp.setStatusCode(response.getCode());
-            temp.setMessage(response.getMessage());
-            temp.setRequestId("");
-            if (response.getCode() == 200) {
-                temp.setStatus(APIResult.Status.SUCCEEDED);
-            } else {
-                temp.setStatus(APIResult.Status.FAILED);
-            }
+            return new APIResult(response.getCode() == 200
+                ? APIResult.Status.SUCCEEDED : APIResult.Status.FAILED, response.getMessage());
         }
-        return temp;
     }
 
     /**

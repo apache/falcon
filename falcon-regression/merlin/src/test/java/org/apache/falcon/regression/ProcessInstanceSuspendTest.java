@@ -21,9 +21,8 @@ package org.apache.falcon.regression;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.ResponseKeys;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -32,12 +31,11 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
-import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -46,7 +44,6 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * Process instance suspend tests.
@@ -133,7 +130,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
             .getProcessData()), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:01Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        AssertUtil.assertSucceeded(r);
     }
 
     /**
@@ -172,7 +169,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:22Z");
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 
     /**
@@ -212,9 +209,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper()
             .getProcessInstanceSuspend("invalidName", "?start=2010-01-02T01:20Z");
-        if ((r.getStatusCode() != ResponseKeys.PROCESS_NOT_FOUND)) {
-            Assert.assertTrue(false);
-        }
+        InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
     /**
@@ -233,7 +228,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
             "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 2);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 
     /**

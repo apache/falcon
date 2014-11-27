@@ -20,6 +20,7 @@ package org.apache.falcon.regression.core.response;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -93,13 +94,13 @@ public class ServiceResponse {
      * Retrieves EntitiesResult from a message if possible.
      * @return EntitiesResult
      */
-    public EntitiesResult getEntitiesResult(){
+    public EntityList getEntityList(){
         try {
-            JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
+            JAXBContext jc = JAXBContext.newInstance(EntityList.class);
             Unmarshaller u = jc.createUnmarshaller();
-            return  (EntitiesResult) u.unmarshal(new StringReader(message));
+            return  (EntityList) u.unmarshal(new StringReader(message));
         } catch (JAXBException e) {
-            LOGGER.info("getEntitiesResult() failed:\n" + ExceptionUtils.getStackTrace(e));
+            LOGGER.info("getEntityList() failed:\n" + ExceptionUtils.getStackTrace(e));
             return null;
         }
     }
