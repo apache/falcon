@@ -89,27 +89,24 @@ public class PigProcessIT {
         overlay.put("cluster", "primary-cluster");
 
         String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
         // context.setCluster(filePath);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
-        Assert.assertEquals(0,
-                TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type feed -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
-        Assert.assertEquals(0,
-                TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type feed -file " + filePath), 0);
 
         final String pigProcessName = "pig-" + context.getProcessName();
         overlay.put("processName", pigProcessName);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PIG_PROCESS_TEMPLATE, overlay);
-        Assert.assertEquals(0,
-                TestContext.executeWithURL("entity -submitAndSchedule -type process -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submitAndSchedule -type process -file " + filePath), 0);
 
         WorkflowJob jobInfo = OozieTestUtils.getWorkflowJob(context.getCluster().getCluster(),
                 OozieClient.FILTER_NAME + "=FALCON_PROCESS_DEFAULT_" + pigProcessName);
-        Assert.assertEquals(WorkflowJob.Status.SUCCEEDED, jobInfo.getStatus());
+        Assert.assertEquals(jobInfo.getStatus(), WorkflowJob.Status.SUCCEEDED);
 
         InstancesResult response = context.getService().path("api/instance/running/process/" + pigProcessName)
                 .header("Cookie", context.getAuthenticationToken())

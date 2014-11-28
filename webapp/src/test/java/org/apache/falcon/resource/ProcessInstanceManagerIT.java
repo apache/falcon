@@ -63,9 +63,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
@@ -77,7 +77,7 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
 
@@ -87,9 +87,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
@@ -109,9 +109,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
@@ -127,9 +127,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
@@ -142,9 +142,9 @@ public class ProcessInstanceManagerIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
 
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
 
         waitForWorkflow(START_INSTANCE, WorkflowJob.Status.RUNNING);
@@ -158,9 +158,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
         response = context.service.path("api/instance/status/process/" + context.processName)
@@ -169,9 +169,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
         response = context.service.path("api/instance/status/process/" + context.processName)
@@ -180,9 +180,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
         waitForWorkflow(START_INSTANCE, WorkflowJob.Status.KILLED);
@@ -196,9 +196,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.SUSPENDED);
 
         waitForWorkflow(START_INSTANCE, WorkflowJob.Status.SUSPENDED);
@@ -213,9 +213,9 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
-        Assert.assertEquals(1, response.getInstances().length);
+        Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
 
         waitForWorkflow(START_INSTANCE, WorkflowJob.Status.RUNNING);

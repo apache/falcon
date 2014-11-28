@@ -279,7 +279,7 @@ public class HiveCatalogServiceIT {
             conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
 
         List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
-        Assert.assertEquals(1, partitions.size(), "Unexpected number of partitions");
+        Assert.assertEquals(partitions.size(), 1, "Unexpected number of partitions");
         Assert.assertEquals(new String[]{"20130902", "in"},
                 partitions.get(0).getValues().toArray(), "Mismatched partition");
 

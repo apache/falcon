@@ -150,7 +150,7 @@ public class LateDataHandlerIT {
         Assert.assertEquals(recordedMetrics.get("foo").longValue(), metric);
 
         final String changes = lateDataHandler.detectChanges(lateDataPath, recordedMetrics, conf);
-        Assert.assertEquals("", changes);
+        Assert.assertEquals(changes, "");
     }
 
     @Test
@@ -195,7 +195,7 @@ public class LateDataHandlerIT {
         computedMetrics.put("foo", metric);
 
         String changes = lateDataHandler.detectChanges(lateDataPath, computedMetrics, conf);
-        Assert.assertEquals("foo", changes);
+        Assert.assertEquals(changes, "foo");
     }
 
     private void reinstatePartition() throws Exception {

@@ -51,60 +51,45 @@ public class FalconCLISmokeIT {
         Map<String, String> overlay = context.getUniqueOverlay();
 
         filePath = TestContext.overlayParametersOverTemplate(context.getClusterFileTemplate(), overlay);
-        Assert.assertEquals(-1,
-                executeWithURL("entity -submitAndSchedule -type cluster -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -submitAndSchedule -type cluster -file " + filePath), -1);
         context.setCluster(overlay.get("cluster"));
 
         // this is necessary for lineage
-        Assert.assertEquals(0, executeWithURL("entity -submit -type cluster -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -submit -type cluster -file " + filePath), 0);
         // verify
-        Assert.assertEquals(0, executeWithURL("metadata -vertices -key name -value " + context.getClusterName()));
+        Assert.assertEquals(executeWithURL("metadata -vertices -key name -value " + context.getClusterName()), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
-        Assert.assertEquals(0,
-                executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -submitAndSchedule -type feed -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
-        Assert.assertEquals(0,
-                executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -submitAndSchedule -type feed -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
-        Assert.assertEquals(0,
-                executeWithURL("entity -submit -type feed -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
-        Assert.assertEquals(0,
-                executeWithURL("entity -submit -type feed -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
-        Assert.assertEquals(0,
-                executeWithURL("entity -validate -type process -file " + filePath));
+        Assert.assertEquals(executeWithURL("entity -validate -type process -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
-        Assert.assertEquals(0,
-                executeWithURL("entity -submitAndSchedule -type process -file "
-                        + filePath));
+        Assert.assertEquals(executeWithURL("entity -submitAndSchedule -type process -file " + filePath), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         // test entity List cli
-        Assert.assertEquals(0,
-                executeWithURL("entity -list -type cluster"
-                        + " -offset 0 -numResults 1"));
-        Assert.assertEquals(0,
-                executeWithURL("entity -list -type process -fields status "
-                        + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name -offset 1 -numResults 1"));
-        Assert.assertEquals(-1,
-                executeWithURL("entity -list -type process -fields status "
-                        + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy INVALID -offset 0 -numResults 1"));
-        Assert.assertEquals(0,
-                executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")));
+        Assert.assertEquals(executeWithURL("entity -list -type cluster -offset 0 -numResults 1"), 0);
+        Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
+                        + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name -offset 1 -numResults 1"), 0);
+        Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
+                        + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy INVALID -offset 0 -numResults 1"), -1);
+        Assert.assertEquals(executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")), 0);
 
-        Assert.assertEquals(0,
-                executeWithURL("instance -status -type feed -name "
-                        + overlay.get("outputFeedName") + " -start " + START_INSTANCE));
-        Assert.assertEquals(0,
-                executeWithURL("instance -running -type process -name " + overlay.get("processName")));
+        Assert.assertEquals(executeWithURL("instance -status -type feed -name "
+                        + overlay.get("outputFeedName") + " -start " + START_INSTANCE), 0);
+        Assert.assertEquals(executeWithURL("instance -running -type process -name " + overlay.get("processName")), 0);
     }
 
     private int executeWithURL(String command) throws Exception {

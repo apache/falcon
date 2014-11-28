@@ -7,8 +7,14 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-   FALCON-784 Update release notes in CHANGES.txt in branch and trunk (Venkatesh Seetharam)
-   FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh Seetharam)
+   FALCON-784 Update release notes in CHANGES.txt in branch and trunk 
+   (Venkatesh Seetharam)
+
+   FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh 
+   Seetharam)
+
+   FALCON-807 Fix order of actual and expected expression in assert 
+   statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
 
   OPTIMIZATIONS
 

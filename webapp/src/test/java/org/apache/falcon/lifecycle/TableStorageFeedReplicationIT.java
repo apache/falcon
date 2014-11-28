@@ -145,17 +145,17 @@ public class TableStorageFeedReplicationIT {
         final String feedName = "customer-table-replicating-feed";
         final Map<String, String> overlay = sourceContext.getUniqueOverlay();
         String filePath = TestContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
 
         HCatPartition sourcePartition = HiveTestUtils.getPartition(
                 sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME, "ds", PARTITION_VALUE);
         Assert.assertNotNull(sourcePartition);
 
         filePath = TestContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath), 0);
 
         // wait until the workflow job completes
         WorkflowJob jobInfo = OozieTestUtils.getWorkflowJob(targetContext.getCluster().getCluster(),
@@ -183,10 +183,10 @@ public class TableStorageFeedReplicationIT {
         final String feedName = "customer-table-replicating-feed";
         final Map<String, String> overlay = sourceContext.getUniqueOverlay();
         String filePath = TestContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
 
         HCatPartition sourcePartition = HiveTestUtils.getPartition(
                 sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME, "ds", PARTITION_VALUE);
@@ -200,7 +200,7 @@ public class TableStorageFeedReplicationIT {
         Assert.assertNotNull(targetPartition);
 
         filePath = TestContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+        Assert.assertEquals(TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath), 0);
 
         // wait until the workflow job completes
         WorkflowJob jobInfo = OozieTestUtils.getWorkflowJob(targetContext.getCluster().getCluster(),
