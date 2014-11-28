@@ -17,9 +17,12 @@ Trunk (Unreleased)
    statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
 
   OPTIMIZATIONS
+   FALCON-913 Change the default values of log clean up services
+   (Suhas vasu)
 
   BUG FIXES
-
+   FALCON-917 Fix corner cases while getting job id during instance status
+   (Suhas Vasu) 
 
 
 Release Version: 0.6-incubating
@@ -170,9 +173,6 @@ Release Version: 0.6-incubating
   OPTIMIZATIONS
 
   BUG FIXES
-   FALCON-917 Fix corner cases while getting job id during instance status
-   (Suhas Vasu)
-
    FALCON-829 Better error message for cluster submission failure
    (Karan Kumar via Venkatesh Seetharam)
 
