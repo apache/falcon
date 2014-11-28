@@ -39,25 +39,28 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * A listener for test running.
+ */
 public class TestngListener implements ITestListener, IExecutionListener {
-    private static final Logger logger = Logger.getLogger(TestngListener.class);
+    private static final Logger LOGGER = Logger.getLogger(TestngListener.class);
     private final String hr = StringUtils.repeat("-", 100);
 
     @Override
     public void onTestStart(ITestResult result) {
-        logger.info(hr);
-        logger.info(
+        LOGGER.info(hr);
+        LOGGER.info(
             String.format("Testing going to start for: %s.%s(%s)", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters())));
         NDC.push(result.getName());
     }
 
     private void logEndOfTest(ITestResult result, String outcome) {
-        logger.info(
+        LOGGER.info(
             String.format("Testing going to end for: %s.%s(%s) %s", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters()), outcome));
         NDC.pop();
-        logger.info(hr);
+        LOGGER.info(hr);
     }
 
     @Override
@@ -76,12 +79,12 @@ public class TestngListener implements ITestListener, IExecutionListener {
                         result.getTestClass().getRealClass().getSimpleName(), result.getName()));
                 FileUtils.writeByteArrayToFile(new File(filename), scrFile);
             } catch (IOException e) {
-                logger.info("Saving screenshot FAILED: " + e.getCause());
+                LOGGER.info("Saving screenshot FAILED: " + e.getCause());
             }
         }
 
-        logger.info(ExceptionUtils.getStackTrace(result.getThrowable()));
-        logger.info(hr);
+        LOGGER.info(ExceptionUtils.getStackTrace(result.getThrowable()));
+        LOGGER.info(hr);
     }
 
     @Override
@@ -109,7 +112,7 @@ public class TestngListener implements ITestListener, IExecutionListener {
     @Override
     public void onExecutionFinish() {
         if (!Config.getBoolean("log.capture.oozie", false)) {
-            logger.info("oozie log capturing is disabled");
+            LOGGER.info("oozie log capturing is disabled");
             return;
         }
         final String logLocation = Config.getProperty("log.capture.location", "./");

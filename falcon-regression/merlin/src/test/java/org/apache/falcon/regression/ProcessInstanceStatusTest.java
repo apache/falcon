@@ -66,8 +66,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
-    private String feedInputTimedOutPath = baseTestHDFSDir + "/timedoutStatus" +
-        MINUTE_DATE_PATTERN;
+    private String feedInputTimedOutPath = baseTestHDFSDir + "/timedoutStatus"
+        + MINUTE_DATE_PATTERN;
     private String feedOutputTimedOutPath =
         baseTestHDFSDir + "/output-data/timedoutStatus" + MINUTE_DATE_PATTERN;
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceStatusTest.class);
@@ -86,7 +86,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     }
 
     /**
-     *  Configures general process definition which particular properties can be overwritten
+     *  Configures general process definition which particular properties can be overwritten.
      */
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
@@ -168,8 +168,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusDateEmpty()
-            throws JAXBException, AuthenticationException, IOException, URISyntaxException,
-            OozieClientException, InterruptedException {
+        throws JAXBException, AuthenticationException, IOException, URISyntaxException,
+        OozieClientException, InterruptedException {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:30Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);

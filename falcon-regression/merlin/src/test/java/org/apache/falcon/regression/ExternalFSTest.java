@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression;
@@ -31,7 +30,7 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.MathUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
@@ -61,10 +60,13 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
+/**
+ * Tests for operations with external file systems.
+ */
 @Test(groups = "embedded")
 public class ExternalFSTest extends BaseTestClass{
 
-    public static final String wasbEndPoint =
+    public static final String WASB_END_POINT =
             "wasb://" + MerlinConstants.WASB_CONTAINER + "@" + MerlinConstants.WASB_ACCOUNT;
     private ColoHelper cluster = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
@@ -83,7 +85,7 @@ public class ExternalFSTest extends BaseTestClass{
     @BeforeClass
     public void setUpClass() throws IOException {
         Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", wasbEndPoint);
+        conf.set("fs.defaultFS", WASB_END_POINT);
         conf.set("fs.azure.account.key." + MerlinConstants.WASB_ACCOUNT,
                 MerlinConstants.WASB_SECRET);
         wasbFS = FileSystem.get(conf);
@@ -138,8 +140,8 @@ public class ExternalFSTest extends BaseTestClass{
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
         LOGGER.info("Time range between : " + startTime + " and " + endTime);
-        String datePattern = StringUtils .join(new String[]{
-                "${YEAR}", "${MONTH}", "${DAY}", "${HOUR}", "${MINUTE}"}, separator);
+        String datePattern = StringUtils .join(
+            new String[]{"${YEAR}", "${MONTH}", "${DAY}", "${HOUR}", "${MINUTE}"}, separator);
 
         //configure feed
         String feed = bundles[0].getDataSets().get(0);
@@ -207,7 +209,7 @@ public class ExternalFSTest extends BaseTestClass{
     @DataProvider
     public Object[][] getData() {
         //"-" for single directory, "/" - for dir with subdirs };
-        return MathUtil.crossProduct(new FileSystem[]{wasbFS},
+        return MatrixUtil.crossProduct(new FileSystem[]{wasbFS},
             new String[]{"/", "-"},
             new Boolean[]{true, false});
     }

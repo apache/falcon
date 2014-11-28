@@ -38,16 +38,19 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Test delays in feed.
+ */
 @Test(groups = "distributed")
 public class FeedDelayParallelTimeoutTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
 
-    String baseTestDir = baseHDFSDir + "/FeedDelayParallelTimeoutTest";
-    String feedInputPath = baseTestDir + MINUTE_DATE_PATTERN;
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private static final Logger logger = Logger.getLogger(FeedDelayParallelTimeoutTest.class);
+    private String baseTestDir = baseHDFSDir + "/FeedDelayParallelTimeoutTest";
+    private String feedInputPath = baseTestDir + MINUTE_DATE_PATTERN;
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(FeedDelayParallelTimeoutTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -56,7 +59,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster1);
         bundles[1] = new Bundle(bundle, cluster2);
@@ -115,7 +118,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         feedOutput01 = Util.setFeedProperty(feedOutput01, "timeout", "minutes(35)");
         feedOutput01 = Util.setFeedProperty(feedOutput01, "parallel", "3");
 
-        logger.info("feedOutput01: " + Util.prettyPrintXml(feedOutput01));
+        LOGGER.info("feedOutput01: " + Util.prettyPrintXml(feedOutput01));
         prism.getFeedHelper().submitAndSchedule(feedOutput01);
     }
 

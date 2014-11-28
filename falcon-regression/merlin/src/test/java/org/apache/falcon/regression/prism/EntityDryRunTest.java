@@ -44,8 +44,8 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
-/*
-test cases for https://issues.apache.org/jira/browse/FALCON-353
+/**
+ * test cases for https://issues.apache.org/jira/browse/FALCON-353.
  */
 public class EntityDryRunTest extends BaseTestClass {
 
@@ -85,7 +85,7 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     * tries to submit process with invalid el exp
+     * tries to submit process with invalid el exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleProcess() throws Exception {
@@ -96,7 +96,7 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     * tries to update process with invalid EL exp
+     * tries to update process with invalid EL exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateProcess() throws Exception {
@@ -113,7 +113,7 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     * tries to submit feed with invalied EL exp
+     * tries to submit feed with invalied EL exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleFeed() throws Exception {
@@ -125,7 +125,7 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     * tries to update feed with invalid el exp
+     * tries to update feed with invalid el exp.
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateFeed() throws Exception {
@@ -143,9 +143,9 @@ public class EntityDryRunTest extends BaseTestClass {
 
     private void validate(ServiceResponse response) throws JAXBException {
         AssertUtil.assertFailed(response);
-        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: " +
-            "AUTHENTICATION : E1004 : Expression language evaluation error, Unable to evaluate " +
-            ":${coord:someEL(1)"), "Correct response was not present in process / feed schedule");
+        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: "
+            + "AUTHENTICATION : E1004 : Expression language evaluation error, Unable to evaluate :"
+            + "${coord:someEL(1)"), "Correct response was not present in process / feed schedule");
     }
 
     @AfterClass(alwaysRun = true)

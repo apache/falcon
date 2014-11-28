@@ -25,19 +25,18 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.ActionType;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.Clusters;
+import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Retention;
-import org.apache.falcon.entity.v0.feed.RetentionType;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.log4j.Logger;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
@@ -51,8 +50,6 @@ import java.util.Map;
 /** Class for representing a feed xml. */
 public class FeedMerlin extends Feed {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedMerlin.class);
-
     public FeedMerlin(String feedData) {
         this((Feed) TestEntityUtil.fromString(EntityType.FEED, feedData));
     }
@@ -60,6 +57,7 @@ public class FeedMerlin extends Feed {
     public FeedMerlin(final Feed feed) {
         try {
             PropertyUtils.copyProperties(this, feed);
+            this.setACL(feed.getACL());
         } catch (IllegalAccessException e) {
             Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
         } catch (InvocationTargetException e) {
@@ -72,9 +70,84 @@ public class FeedMerlin extends Feed {
     public static List<FeedMerlin> fromString(List<String> feedStrings) {
         List<FeedMerlin> feeds = new ArrayList<FeedMerlin>();
         for (String feedString : feedStrings) {
-            feeds.add(new FeedMerlin(feedString));
+            feeds.add(fromString(feedString));
         }
         return feeds;
+    }
+
+    public static FeedMerlin fromString(String feedString) {
+        return new FeedMerlin(feedString);
+    }
+
+    /** clear clusters of this feed. */
+    public FeedMerlin clearFeedClusters() {
+        getClusters().getClusters().clear();
+        return this;
+    }
+
+    /** add a feed cluster to this feed. */
+    public FeedMerlin addFeedCluster(Cluster cluster) {
+        getClusters().getClusters().add(cluster);
+        return this;
+    }
+
+    /** Fluent builder wrapper for cluster fragment of feed entity . */
+    public static class FeedClusterBuilder {
+        private Cluster cluster = new Cluster();
+
+        public FeedClusterBuilder(String clusterName) {
+            cluster.setName(clusterName);
+        }
+
+        public Cluster build() {
+            Cluster retVal = cluster;
+            cluster = null;
+            return retVal;
+        }
+
+        public FeedClusterBuilder withRetention(String limit, ActionType action) {
+            Retention r = new Retention();
+            r.setLimit(new Frequency(limit));
+            r.setAction(action);
+            cluster.setRetention(r);
+            return this;
+        }
+
+        public FeedClusterBuilder withValidity(String startTime, String endTime) {
+            Validity v = new Validity();
+            v.setStart(TimeUtil.oozieDateToDate(startTime).toDate());
+            v.setEnd(TimeUtil.oozieDateToDate(endTime).toDate());
+            cluster.setValidity(v);
+            return this;
+        }
+
+        public FeedClusterBuilder withClusterType(ClusterType type) {
+            cluster.setType(type);
+            return this;
+        }
+
+        public FeedClusterBuilder withPartition(String partition) {
+            cluster.setPartition(partition);
+            return this;
+        }
+
+        public FeedClusterBuilder withTableUri(String tableUri) {
+            CatalogTable catalogTable = new CatalogTable();
+            catalogTable.setUri(tableUri);
+            cluster.setTable(catalogTable);
+            return this;
+        }
+
+        public FeedClusterBuilder withDataLocation(String dataLocation) {
+            Location oneLocation = new Location();
+            oneLocation.setPath(dataLocation);
+            oneLocation.setType(LocationType.DATA);
+
+            Locations feedLocations = new Locations();
+            feedLocations.getLocations().add(oneLocation);
+            cluster.setLocations(feedLocations);
+            return this;
+        }
     }
 
     /**
@@ -87,33 +160,18 @@ public class FeedMerlin extends Feed {
      */
     public void setFeedClusters(List<String> newClusters, String location, String startTime,
                                 String endTime) {
-        Clusters cs = new Clusters();
+        clearFeedClusters();
         setFrequency(new Frequency("" + 5, Frequency.TimeUnit.minutes));
 
         for (String newCluster : newClusters) {
-            Cluster c = new Cluster();
-            c.setName(new ClusterMerlin(newCluster).getName());
-            Location l = new Location();
-            l.setType(LocationType.DATA);
-            l.setPath(location + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
-            Locations ls = new Locations();
-            ls.getLocations().add(l);
-            c.setLocations(ls);
-            Validity v = new Validity();
-            startTime = TimeUtil.addMinsToTime(startTime, -180);
-            endTime = TimeUtil.addMinsToTime(endTime, 180);
-            v.setStart(TimeUtil.oozieDateToDate(startTime).toDate());
-            v.setEnd(TimeUtil.oozieDateToDate(endTime).toDate());
-            c.setValidity(v);
-            Retention r = new Retention();
-            r.setAction(ActionType.DELETE);
-            Frequency f1 = new Frequency("" + 20, Frequency.TimeUnit.hours);
-            r.setLimit(f1);
-            r.setType(RetentionType.INSTANCE);
-            c.setRetention(r);
-            cs.getClusters().add(c);
+            Cluster feedCluster = new FeedClusterBuilder(new ClusterMerlin(newCluster).getName())
+                .withDataLocation(location + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}")
+                .withValidity(TimeUtil.addMinsToTime(startTime, -180),
+                    TimeUtil.addMinsToTime(endTime, 180))
+                .withRetention("hours(20)", ActionType.DELETE)
+                .build();
+            addFeedCluster(feedCluster);
         }
-        setClusters(cs);
     }
 
     public void setRetentionValue(String retentionValue) {

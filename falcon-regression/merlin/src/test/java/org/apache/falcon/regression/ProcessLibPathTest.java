@@ -44,22 +44,22 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * Tests with process lib folder detached from workflow.xml
+ * Tests with process lib folder detached from workflow.xml.
  */
 @Test(groups = "embedded")
 public class ProcessLibPathTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    String testDir = baseHDFSDir + "/ProcessLibPath";
-    String testLibDir = testDir + "/TestLib";
-    private static final Logger logger = Logger.getLogger(ProcessLibPathTest.class);
-    String processName;
-    String process;
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private String testDir = baseHDFSDir + "/ProcessLibPath";
+    private String testLibDir = testDir + "/TestLib";
+    private static final Logger LOGGER = Logger.getLogger(ProcessLibPathTest.class);
+    private String processName;
+    private String process;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
 
         //common lib for both test cases
         HadoopUtil.uploadDir(clusterFS, testLibDir, OSUtil.RESOURCES_OOZIE + "lib");
@@ -77,7 +77,7 @@ public class ProcessLibPathTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
@@ -98,7 +98,7 @@ public class ProcessLibPathTest extends BaseTestClass {
     }
 
     /**
-     * Test which test a process with no lib folder in workflow location
+     * Test which test a process with no lib folder in workflow location.
      *
      * @throws Exception
      */
@@ -108,7 +108,7 @@ public class ProcessLibPathTest extends BaseTestClass {
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
         HadoopUtil.deleteDirIfExists(workflowDir + "/lib", clusterFS);
         bundles[0].setProcessWorkflow(workflowDir);
-        logger.info("processData: " + Util.prettyPrintXml(process));
+        LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
@@ -116,7 +116,7 @@ public class ProcessLibPathTest extends BaseTestClass {
     }
 
     /**
-     * Test which test a process with wrong jar in lib folder in workflow location
+     * Test which test a process with wrong jar in lib folder in workflow location.
      *
      * @throws Exception
      */
@@ -128,7 +128,7 @@ public class ProcessLibPathTest extends BaseTestClass {
         HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib",
             OSUtil.RESOURCES + "ivory-oozie-lib-0.1.jar");
         bundles[0].setProcessWorkflow(workflowDir);
-        logger.info("processData: " + Util.prettyPrintXml(process));
+        LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);

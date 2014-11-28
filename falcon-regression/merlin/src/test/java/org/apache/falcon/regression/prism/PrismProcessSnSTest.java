@@ -41,16 +41,19 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Submit and schedule process via prism tests.
+ */
 public class PrismProcessSnSTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessSnSTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismProcessSnSTest.class);
-    String process1;
-    String process2;
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessSnSTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismProcessSnSTest.class);
+    private String process1;
+    private String process2;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -59,7 +62,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
@@ -91,7 +94,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
 
         //check if there is no criss cross
         ServiceResponse response = prism.getProcessHelper().getStatus(process2);
-        logger.info(response.getMessage());
+        LOGGER.info(response.getMessage());
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
     }
 
@@ -219,13 +222,13 @@ public class PrismProcessSnSTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process2));
 
         Assert.assertEquals(Util.parseResponse(prism.getProcessHelper()
-            .getStatus(process1)).getMessage(),cluster1Running);
+            .getStatus(process1)).getMessage(), cluster1Running);
         Assert.assertEquals(Util.parseResponse(prism.getProcessHelper()
             .getStatus(process2)).getMessage(), cluster2Running);
     }
 
     /**
-     * Attempt to submit and schedule processes when all required entities weren't registered
+     * Attempt to submit and schedule processes when all required entities weren't registered.
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testScheduleNonExistentProcessOnBothColos() throws Exception {

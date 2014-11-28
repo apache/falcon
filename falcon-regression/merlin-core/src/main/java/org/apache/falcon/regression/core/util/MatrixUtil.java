@@ -24,10 +24,10 @@ import org.testng.Assert;
 import java.util.Arrays;
 
 /**
- * Util class for math operations.
+ * Util class for matrix operations.
  */
-public final class MathUtil {
-    private MathUtil() {
+public final class MatrixUtil {
+    private MatrixUtil() {
         throw new AssertionError("Instantiating utility class...");
     }
 

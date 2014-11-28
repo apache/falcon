@@ -43,14 +43,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Delete process via prism tests.
+ */
 @Test(groups = "distributed")
 public class PrismProcessDeleteTest extends BaseTestClass {
 
-    Bundle bundle;
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessDeleteTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismProcessDeleteTest.class);
+    private Bundle bundle;
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessDeleteTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismProcessDeleteTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -59,7 +62,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
@@ -189,7 +192,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             compareDataStoreStates(systemPostUp.get("ua1Archive"), finalUA1ArchiveStore,
                 clusterName);
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            LOGGER.info(e.getMessage());
             throw new TestNGException(e.getMessage());
         } finally {
             Util.restartService(cluster2.getClusterHelper());
@@ -242,7 +245,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             compareDataStoresForEquality(initialUA1Store, finalUA1Store);
             compareDataStoresForEquality(initialUA1ArchiveStore, finalUA1ArchiveStore);
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            LOGGER.info(e.getMessage());
             throw new TestNGException(e.getMessage());
         }
     }
@@ -305,7 +308,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             compareDataStoreStates(finalUA1ArchiveStore, initialUA1ArchiveStore, clusterName);
 
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            LOGGER.info(e.getMessage());
             throw new TestNGException(e.getMessage());
         } finally {
             Util.restartService(cluster2.getClusterHelper());
@@ -356,7 +359,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             compareDataStoresForEquality(initialUA1Store, finalUA1Store);
             compareDataStoresForEquality(initialUA1ArchiveStore, finalUA1ArchiveStore);
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            LOGGER.info(e.getMessage());
             throw new TestNGException(e.getMessage());
         }
     }
@@ -415,7 +418,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
                 prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            LOGGER.info(e.getMessage());
             throw new TestNGException(e.getMessage());
         } finally {
             Util.restartService(cluster2.getClusterHelper());

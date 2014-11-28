@@ -48,19 +48,22 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 
+/**
+ * Tests with rescheduling process in final states.
+ */
 @Test(groups = "embedded", enabled = false)
 public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    String baseTestDir = baseHDFSDir + "/RescheduleProcessInFinalStates";
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    String inputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
-    private static final Logger logger = Logger.getLogger(RescheduleProcessInFinalStatesTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private String baseTestDir = baseHDFSDir + "/RescheduleProcessInFinalStates";
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private String inputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
+    private static final Logger LOGGER = Logger.getLogger(RescheduleProcessInFinalStatesTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
 
         Bundle b = BundleUtil.readELBundle();
@@ -83,7 +86,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
@@ -190,7 +193,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     /**
      * Tries to get entity definition and checks it is absent (-get definition should return
-     * process not found)
+     * process not found).
      *
      * @param process process entity definition
      * @throws URISyntaxException
@@ -199,8 +202,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      * @throws JAXBException
      */
     private void checkNotFoundDefinition(String process)
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         ServiceResponse r = prism.getProcessHelper().getEntityDefinition(process);
         Assert.assertTrue(r.getMessage().contains("(process) not found"));
         AssertUtil.assertFailed(r);

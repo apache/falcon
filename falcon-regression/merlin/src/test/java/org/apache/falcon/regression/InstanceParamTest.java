@@ -96,8 +96,8 @@ public class InstanceParamTest extends BaseTestClass {
      */
     @Test(timeOut = 1200000, enabled = false)
     public void getParamsValidRequestInstanceWaiting()
-            throws URISyntaxException, JAXBException, AuthenticationException, IOException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, JAXBException, AuthenticationException, IOException,
+        OozieClientException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -115,8 +115,8 @@ public class InstanceParamTest extends BaseTestClass {
      */
     @Test(timeOut = 1200000, enabled = true)
     public void getParamsValidRequestInstanceSucceeded()
-            throws URISyntaxException, JAXBException, AuthenticationException, IOException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, JAXBException, AuthenticationException, IOException,
+        OozieClientException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -134,12 +134,11 @@ public class InstanceParamTest extends BaseTestClass {
 
     /**
      *  Schedule process. Wait till instance got killed. Get its params.
-     *  TODO: change according to test case
      */
     @Test(timeOut = 1200000, enabled = false)
     public void getParamsValidRequestInstanceKilled()
-            throws URISyntaxException, JAXBException, AuthenticationException, IOException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, JAXBException, AuthenticationException, IOException,
+        OozieClientException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -149,7 +148,7 @@ public class InstanceParamTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(cluster1OC, processName, 0,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS); //change according to test case
         InstancesResult r = prism.getProcessHelper()
             .getInstanceParams(processName, "?start=" + startTime);
         r.getMessage();

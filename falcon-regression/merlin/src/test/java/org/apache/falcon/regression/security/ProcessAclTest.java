@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression.security;
@@ -27,8 +26,7 @@ import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
-import org.apache.falcon.regression.core.util.KerberosHelper;
-import org.apache.falcon.regression.core.util.MathUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,6 +45,9 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Date;
 
+/**
+ * Tests ACL of process with different operations.
+ */
 @Test(groups = "authorization")
 public class ProcessAclTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ProcessAclTest.class);
@@ -57,7 +58,7 @@ public class ProcessAclTest extends BaseTestClass {
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private final IEntityManagerHelper processHelper = prism.getProcessHelper();
-    String processString;
+    private String processString;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -82,7 +83,7 @@ public class ProcessAclTest extends BaseTestClass {
     }
 
     /**
-     * Test process read operation by different types of user
+     * Test process read operation by different types of user.
      * @param user the user that would attempt operation
      * @param op the read operation that would be performed
      * @param isAllowed is operation expected to go through
@@ -93,33 +94,33 @@ public class ProcessAclTest extends BaseTestClass {
         throws Exception {
         bundles[0].submitProcess(true);
         final boolean executeRes = op.executeAs(user, processHelper, processString);
-        Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user +
-                " performing: " + op);
+        Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
+            + " performing: " + op);
     }
 
     @DataProvider(name = "generateUserReadOpsPermissions")
     public Object[][] generateUserReadOpsPermissions() {
         final EntityOp[] falconReadOps = {EntityOp.status, EntityOp.dependency,
-            EntityOp.listing, EntityOp.definition};
-        final Object[][] allowedCombinations = MathUtil.crossProduct(
-                new String[]{MerlinConstants.FALCON_SUPER_USER_NAME,
-                        MerlinConstants.FALCON_SUPER_USER2_NAME,
-                        MerlinConstants.USER2_NAME},
+            EntityOp.listing, EntityOp.definition, };
+        final Object[][] allowedCombinations = MatrixUtil.crossProduct(
+            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME,
+                MerlinConstants.FALCON_SUPER_USER2_NAME,
+                MerlinConstants.USER2_NAME, },
             falconReadOps,
             new Boolean[]{true}
         );
 
-        final Object[][] notAllowedCombinations = MathUtil.crossProduct(
+        final Object[][] notAllowedCombinations = MatrixUtil.crossProduct(
             new String[]{MerlinConstants.DIFFERENT_USER_NAME},
             falconReadOps,
             new Boolean[]{false}
         );
 
-        return MathUtil.append(allowedCombinations, notAllowedCombinations);
+        return MatrixUtil.append(allowedCombinations, notAllowedCombinations);
     }
 
     /**
-     * Test edit operation on submitted process by different users
+     * Test edit operation on submitted process by different users.
      * @param user the user that would attempt operation
      * @param op the edit operation that would be performed
      * @param isAllowed is operation expected to go through
@@ -135,32 +136,35 @@ public class ProcessAclTest extends BaseTestClass {
             processString = processMerlin.toString();
         }
         final boolean executeRes = op.executeAs(user, processHelper, processString);
-        Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user +
-            " performing: " + op);
+        Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
+            + " performing: " + op);
     }
 
     @DataProvider(name = "generateUserSubmittedEditOpsPermission")
     public Object[][] generateUserSubmittedEditOpsPermission() {
         final EntityOp[] falconEditOps = {EntityOp.delete, EntityOp.update};
 
-        final Object[][] allowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
-                MerlinConstants.USER2_NAME},
+        final Object[][] allowedCombinations = MatrixUtil.crossProduct(
+            new String[]{
+                MerlinConstants.FALCON_SUPER_USER_NAME,
+                MerlinConstants.FALCON_SUPER_USER2_NAME,
+                MerlinConstants.USER2_NAME,
+            },
             falconEditOps,
             new Boolean[]{true}
         );
 
-        final Object[][] notAllowedCombinations = MathUtil.crossProduct(
-                new String[]{MerlinConstants.DIFFERENT_USER_NAME},
-                falconEditOps,
-                new Boolean[]{false}
+        final Object[][] notAllowedCombinations = MatrixUtil.crossProduct(
+            new String[]{MerlinConstants.DIFFERENT_USER_NAME},
+            falconEditOps,
+            new Boolean[]{false}
         );
 
-        return MathUtil.append(allowedCombinations, notAllowedCombinations);
+        return MatrixUtil.append(allowedCombinations, notAllowedCombinations);
     }
 
     /**
-     * Test edit operation on scheduled process by different users
+     * Test edit operation on scheduled process by different users.
      * @param user the user that would attempt operation
      * @param op the edit operation that would be performed
      * @param isAllowed is operation expected to go through
@@ -170,7 +174,7 @@ public class ProcessAclTest extends BaseTestClass {
     public void othersEditScheduledProcess(final String user, final EntityOp op, boolean isAllowed)
         throws Exception {
         bundles[0].submitFeedsScheduleProcess();
-        if(op == EntityOp.resume) {
+        if (op == EntityOp.resume) {
             processHelper.suspend(processString);
         } else if (op == EntityOp.update) {
             ProcessMerlin processMerlin = new ProcessMerlin(processString);
@@ -178,28 +182,33 @@ public class ProcessAclTest extends BaseTestClass {
             processString = processMerlin.toString();
         }
         final boolean executeRes = op.executeAs(user, processHelper, processString);
-        Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user +
-            " performing: " + op);
+        Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
+            + " performing: " + op);
     }
 
     @DataProvider(name = "generateUserScheduledEditOpsPermission")
     public Object[][] generateUserScheduledEditOpsPermission() {
 
-        final Object[][] allowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
-                MerlinConstants.USER2_NAME},
+        final Object[][] allowedCombinations = MatrixUtil.crossProduct(
+            new String[]{
+                MerlinConstants.FALCON_SUPER_USER_NAME,
+                MerlinConstants.FALCON_SUPER_USER2_NAME,
+                MerlinConstants.USER2_NAME,
+            },
             new EntityOp[]{EntityOp.delete, EntityOp.update, EntityOp.suspend, EntityOp.resume},
             new Boolean[]{true}
         );
 
-        final Object[][] notAllowedCombinations = MathUtil.crossProduct(
+        final Object[][] notAllowedCombinations = MatrixUtil.crossProduct(
             new String[]{MerlinConstants.DIFFERENT_USER_NAME},
-            new EntityOp[]{EntityOp.delete, EntityOp.update,
-                EntityOp.suspend, EntityOp.resume},
+            new EntityOp[]{
+                EntityOp.delete, EntityOp.update,
+                EntityOp.suspend, EntityOp.resume,
+            },
             new Boolean[]{false}
         );
 
-        return MathUtil.append(allowedCombinations, notAllowedCombinations);
+        return MatrixUtil.append(allowedCombinations, notAllowedCombinations);
     }
 
     /**
@@ -213,28 +222,28 @@ public class ProcessAclTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(oldProcess));
         final ProcessMerlin processMerlin = new ProcessMerlin(oldProcess);
         processMerlin.setACL(MerlinConstants.DIFFERENT_USER_NAME,
-                MerlinConstants.DIFFERENT_USER_GROUP, "*");
+            MerlinConstants.DIFFERENT_USER_GROUP, "*");
         final String newProcess = processMerlin.toString();
         AssertUtil.assertSucceeded(processHelper.update(oldProcess, newProcess));
         //check that current user can't access the feed
         for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
-                EntityOp.definition}) {
+            EntityOp.definition, }) {
             final boolean executeRes =
-                    op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, processHelper, newProcess);
+                op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, processHelper, newProcess);
             Assert.assertFalse(executeRes, "Unexpected result: user "
-                    + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
+                + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
         }
         //check that different user can access the feed
         for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
-                EntityOp.definition}) {
+            EntityOp.definition, }) {
             final boolean executeRes =
-                    op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, processHelper, newProcess);
+                op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, processHelper, newProcess);
             Assert.assertTrue(executeRes, "Unexpected result: user "
-                    + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
+                + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
         }
         //check modification permissions
         AssertUtil.assertSucceeded(processHelper.update(newProcess, oldProcess,
-                MerlinConstants.DIFFERENT_USER_NAME));
+            MerlinConstants.DIFFERENT_USER_NAME));
     }
 
     @AfterMethod(alwaysRun = true)

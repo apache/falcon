@@ -54,11 +54,11 @@ public class FeedInstanceStatusTest extends BaseTestClass {
     private String feedInputPath = baseTestDir + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
 
-    ColoHelper cluster2 = servers.get(1);
-    ColoHelper cluster3 = servers.get(2);
-    FileSystem cluster2FS = serverFS.get(1);
-    FileSystem cluster3FS = serverFS.get(2);
-    private static final Logger logger = Logger.getLogger(FeedInstanceStatusTest.class);
+    private ColoHelper cluster2 = servers.get(1);
+    private ColoHelper cluster3 = servers.get(2);
+    private FileSystem cluster2FS = serverFS.get(1);
+    private FileSystem cluster3FS = serverFS.get(2);
+    private static final Logger LOGGER = Logger.getLogger(FeedInstanceStatusTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -67,7 +67,7 @@ public class FeedInstanceStatusTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
@@ -87,18 +87,18 @@ public class FeedInstanceStatusTest extends BaseTestClass {
      * -submit, -resume, -kill, -rerun.
      */
     @Test(groups = {"multiCluster"})
-    public void feedInstanceStatus_running() throws Exception {
+    public void feedInstanceStatusRunning() throws Exception {
         bundles[0].setInputFeedDataPath(feedInputPath);
 
-        logger.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
         AssertUtil.assertSucceeded(prism.getClusterHelper()
             .submitEntity(bundles[0].getClusters().get(0)));
 
-        logger.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
+        LOGGER.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
         AssertUtil.assertSucceeded(prism.getClusterHelper()
             .submitEntity(bundles[1].getClusters().get(0)));
 
-        logger.info("cluster bundle3: " + Util.prettyPrintXml(bundles[2].getClusters().get(0)));
+        LOGGER.info("cluster bundle3: " + Util.prettyPrintXml(bundles[2].getClusters().get(0)));
         AssertUtil.assertSucceeded(prism.getClusterHelper()
             .submitEntity(bundles[2].getClusters().get(0)));
 
@@ -127,7 +127,7 @@ public class FeedInstanceStatusTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         //status before submit
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
@@ -147,15 +147,12 @@ public class FeedInstanceStatusTest extends BaseTestClass {
         // single instance at -30
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 20));
-
         //single at -10
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
-
         //single at 10
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
-
         //single at 30
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
@@ -177,20 +174,17 @@ public class FeedInstanceStatusTest extends BaseTestClass {
         // single instance at -30
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 20));
-
         //single at -10
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
-
         //single at 10
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
-
         //single at 30
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
 
-        logger.info("Wait till feed goes into running ");
+        LOGGER.info("Wait till feed goes into running ");
 
         //suspend instances -10
         prism.getFeedHelper().getProcessInstanceSuspend(feedName,
@@ -240,7 +234,7 @@ public class FeedInstanceStatusTest extends BaseTestClass {
         InstancesResult responseInstance = prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 110));
 
-        logger.info(responseInstance.getMessage());
+        LOGGER.info(responseInstance.getMessage());
     }
 
     @AfterClass(alwaysRun = true)

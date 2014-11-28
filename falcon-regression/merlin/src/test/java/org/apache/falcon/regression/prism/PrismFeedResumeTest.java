@@ -39,16 +39,19 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Resume feed via prism tests.
+ */
 @Test(groups = "distributed")
 public class PrismFeedResumeTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
     private boolean restartRequired;
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedResumeTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedResumeTest.class);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedResumeTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedResumeTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -57,7 +60,7 @@ public class PrismFeedResumeTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readLateDataBundle();
 
         for (int i = 0; i < 2; i++) {

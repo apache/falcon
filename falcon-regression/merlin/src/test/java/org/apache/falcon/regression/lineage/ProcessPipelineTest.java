@@ -82,8 +82,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test
     public void listPipeline()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         //match processes to pipelines
         HashMap<String, List<String>> map = new HashMap<String, List<String>>();
         //index for few different pipelines
@@ -127,8 +127,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test
     public void testProcessWithPipeline()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            SAXException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        SAXException, InterruptedException {
         String pipeline = "samplePipeline";
         bundles[0].setProcessPipeline(pipeline);
         bundles[0].submitProcess(true);
@@ -151,8 +151,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test(dataProvider = "data")
     public void testPipelines(String pipeline, String action, boolean shouldSucceed)
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         bundles[0].setProcessPipeline(pipeline);
         if (action.equals("list")){
             if (shouldSucceed){
@@ -177,7 +177,9 @@ public class ProcessPipelineTest extends BaseTestClass{
             //{specialName, "submit", false}, {utf8Name, "submit", false},
             {longName, "submit", true},
             {"pipeline0,pipeline1,pipeline2,pipeline3,pipeline4,pipeline5,pipeline6,pipeline7,"
-                 +"pipeline8,pipeline9,pipeline10,pipeline11", "submit", true}};
+                 + "pipeline8,pipeline9,pipeline10,pipeline11", "submit", true,
+            },
+        };
     }
 
     @AfterClass(alwaysRun = true)

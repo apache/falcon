@@ -46,18 +46,18 @@ import java.util.List;
  * EL Expression test.
  */
 @Test(groups = "embedded")
-public class ELExp_FutureAndLatestTest extends BaseTestClass {
+public class ELExpFutureAndLatestTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private String baseTestDir = baseHDFSDir + "/ELExp_FutureAndLatest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private static final Logger logger = Logger.getLogger(ELExp_FutureAndLatestTest.class);
+    private static final Logger LOGGER = Logger.getLogger(ELExpFutureAndLatestTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
 
         Bundle b = BundleUtil.readELBundle();
@@ -78,17 +78,17 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
-        bundles[0].setInputFeedDataPath(baseTestDir + "/ELExp_latest/testData" +
-            MINUTE_DATE_PATTERN);
+        bundles[0].setInputFeedDataPath(baseTestDir + "/ELExp_latest/testData"
+            + MINUTE_DATE_PATTERN);
         bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setInputFeedValidity("2010-04-01T00:00Z", "2015-04-01T00:00Z");
         String processStart = TimeUtil.getTimeWrtSystemTime(-3);
         String processEnd = TimeUtil.getTimeWrtSystemTime(8);
-        logger.info("processStart: " + processStart + " processEnd: " + processEnd);
+        LOGGER.info("processStart: " + processStart + " processEnd: " + processEnd);
         bundles[0].setProcessValidity(processStart, processEnd);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);

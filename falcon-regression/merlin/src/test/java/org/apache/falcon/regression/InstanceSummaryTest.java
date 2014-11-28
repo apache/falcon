@@ -60,15 +60,15 @@ import java.util.List;
 @Test(groups = "embedded")
 public class InstanceSummaryTest extends BaseTestClass {
 
-    String baseTestHDFSDir = baseHDFSDir + "/InstanceSummaryTest";
-    String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
-    String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    String startTime;
-    String endTime;
-    ColoHelper cluster3 = servers.get(2);
-    Bundle processBundle;
-    private static final Logger logger = Logger.getLogger(InstanceSummaryTest.class);
-    String processName;
+    private String baseTestHDFSDir = baseHDFSDir + "/InstanceSummaryTest";
+    private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private String startTime;
+    private String endTime;
+    private ColoHelper cluster3 = servers.get(2);
+    private Bundle processBundle;
+    private static final Logger LOGGER = Logger.getLogger(InstanceSummaryTest.class);
+    private String processName;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -86,7 +86,7 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster3);
         processBundle.generateUniqueBundle();
@@ -103,12 +103,11 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     /**
      *  Schedule single-cluster process. Get its instances summary.
-     *  TODO: should be complete
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummarySingleClusterProcess()
-            throws URISyntaxException, JAXBException, IOException, ParseException,
-            OozieClientException, AuthenticationException, InterruptedException {
+        throws URISyntaxException, JAXBException, IOException, ParseException,
+        OozieClientException, AuthenticationException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, processBundle.getProcessData(), 0);
@@ -168,7 +167,7 @@ public class InstanceSummaryTest extends BaseTestClass {
 
         // both start end out od range
         r = prism.getProcessHelper().getInstanceSummary(processName,
-            "?start=" + TimeUtil.addMinsToTime(startTime,-100)
+            "?start=" + TimeUtil.addMinsToTime(startTime, -100)
                 + "&end=" + TimeUtil.addMinsToTime(endTime, 100));
 
         // end only
@@ -178,7 +177,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     /**
      * Adjust multi-cluster process. Submit and schedule it. Get its instances summary.
-     * TODO: should be complete
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummaryMultiClusterProcess() throws JAXBException,
@@ -214,7 +212,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     /**
      *  Adjust multi-cluster feed. Submit and schedule it. Get its instances summary.
-     *  TODO: should be complete
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummaryMultiClusterFeed() throws JAXBException, ParseException, IOException,

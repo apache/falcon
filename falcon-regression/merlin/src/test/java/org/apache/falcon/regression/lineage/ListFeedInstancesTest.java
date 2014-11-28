@@ -72,8 +72,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
 
     @BeforeClass(alwaysRun = true)
     public void setUp()
-            throws IOException, OozieClientException, JAXBException, AuthenticationException,
-            URISyntaxException, InterruptedException {
+        throws IOException, OozieClientException, JAXBException, AuthenticationException,
+        URISyntaxException, InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         startTime = TimeUtil.getTimeWrtSystemTime(-55);
         endTime = TimeUtil.getTimeWrtSystemTime(5);
@@ -174,8 +174,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedOrderBy()
-            throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
-            IOException, InterruptedException {
+        throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
+        IOException, InterruptedException {
         SoftAssert softAssert = new SoftAssert();
         //orderBy start time
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
@@ -223,8 +223,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedStartEnd()
-            throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
-            IOException, InterruptedException {
+        throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
+        IOException, InterruptedException {
         //actual start/end values.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&end=" + endTime, null);
@@ -290,7 +290,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedOffsetNumResults()
-            throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         //check the default value of the numResults param. Expecting 10 instances.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName, null, null);
         InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
@@ -347,8 +347,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedFilterBy()
-            throws OozieClientException, AuthenticationException, IOException, URISyntaxException,
-            InterruptedException {
+        throws OozieClientException, AuthenticationException, IOException, URISyntaxException,
+        InterruptedException {
         //test with the filterBy status.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "filterBy=STATUS:RUNNING", null);
@@ -395,7 +395,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
      */
     @Test
     public void testFeedCustomFilter()
-            throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         String params = "start=" + startTime + "&filterBy=status:RUNNING";
         InstancesResult r = prism.getFeedHelper().listInstances(feedName, params, null);
         InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);

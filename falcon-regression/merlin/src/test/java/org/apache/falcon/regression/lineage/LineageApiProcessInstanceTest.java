@@ -50,24 +50,27 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tests for Lineage API with submitted process.
+ */
 @Test(groups = "lineage-rest")
 public class LineageApiProcessInstanceTest extends BaseTestClass {
-    private static final Logger logger = Logger.getLogger(LineageApiProcessInstanceTest.class);
+    private static final Logger LOGGER = Logger.getLogger(LineageApiProcessInstanceTest.class);
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    LineageHelper lineageHelper;
-    String baseTestHDFSDir = baseHDFSDir + "/LineageApiInstanceTest";
-    String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    String feedInputPrefix = baseTestHDFSDir + "/input";
-    String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
-    String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
-    String processName;
-    String inputFeedName;
-    String outputFeedName;
-    final String dataStartDate = "2010-01-02T09:00Z";
-    final String processStartDate = "2010-01-02T09:50Z";
-    final String endDate = "2010-01-02T10:00Z";
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private LineageHelper lineageHelper;
+    private String baseTestHDFSDir = baseHDFSDir + "/LineageApiInstanceTest";
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private String feedInputPrefix = baseTestHDFSDir + "/input";
+    private String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
+    private String processName;
+    private String inputFeedName;
+    private String outputFeedName;
+    private final String dataStartDate = "2010-01-02T09:00Z";
+    private final String processStartDate = "2010-01-02T09:50Z";
+    private final String endDate = "2010-01-02T10:00Z";
 
 
     @BeforeClass(alwaysRun = true)
@@ -87,7 +90,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
 
         // data set creation
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(dataStartDate, endDate, 5);
-        logger.info("dataDates = " + dataDates);
+        LOGGER.info("dataDates = " + dataDates);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, feedInputPrefix,
             dataDates);
 
@@ -107,8 +110,9 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         for (int i = 0; i < 20; i++) {
             status = InstanceUtil.getDefaultCoordinatorStatus(cluster,
                 Util.getProcessName(bundles[0].getProcessData()), 0);
-            if (status == Job.Status.SUCCEEDED || status == Job.Status.KILLED)
+            if (status == Job.Status.SUCCEEDED || status == Job.Status.KILLED) {
                 break;
+            }
             TimeUtil.sleepSeconds(30);
         }
         Assert.assertNotNull(status);
@@ -122,7 +126,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
     }
 
     /**
-     * Test navigation from the process vertex to its instances vertices
+     * Test navigation from the process vertex to its instances vertices.
      * @throws Exception
      */
     @Test
@@ -135,17 +139,17 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(processIncoming);
         final List<Vertex> processInstanceVertices =
             processIncoming.filterByType(Vertex.VERTEX_TYPE.PROCESS_INSTANCE);
-        logger.info("process instances = " + processInstanceVertices);
+        LOGGER.info("process instances = " + processInstanceVertices);
         InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(processName, "?start=" + processStartDate +
-                "&end=" + endDate);
+            .getProcessInstanceStatus(processName, "?start=" + processStartDate
+                + "&end=" + endDate);
         Assert.assertEquals(processInstanceVertices.size(), result.getInstances().length,
-            "Number of process instances should be same weather it is retrieved from lineage api " +
-                "or falcon rest api");
+            "Number of process instances should be same weather it is retrieved from lineage api "
+                + "or falcon rest api");
     }
 
     /**
-     * Test navigation from the process instance vertex to its input and output feed instances
+     * Test navigation from the process instance vertex to its input and output feed instances.
      * @throws Exception
      */
     @Test
@@ -159,15 +163,15 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         // fetching process instance vertex
         final List<Vertex> piVertices =
             processIncoming.filterByType(Vertex.VERTEX_TYPE.PROCESS_INSTANCE);
-        logger.info("process instance vertex = " + piVertices);
+        LOGGER.info("process instance vertex = " + piVertices);
 
         // fetching process instances info
         InstancesResult piResult = prism.getProcessHelper()
-            .getProcessInstanceStatus(processName, "?start=" + processStartDate +
-                "&end=" + endDate);
+            .getProcessInstanceStatus(processName, "?start=" + processStartDate
+                + "&end=" + endDate);
         Assert.assertEquals(piVertices.size(), piResult.getInstances().length,
-            "Number of process instances should be same weather it is retrieved from lineage api " +
-                "or falcon rest api");
+            "Number of process instances should be same weather it is retrieved from lineage api "
+                + "or falcon rest api");
         final List<String> allowedPITimes = new ArrayList<String>();
         for (InstancesResult.Instance processInstance : piResult.getInstances()) {
             allowedPITimes.add(processInstance.getInstance());
@@ -177,10 +181,10 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
             Assert.assertTrue(piVertex.getName().startsWith(processName),
                 "Process instance names should start with process name: " + piVertex.getName());
             String processInstanceTime = piVertex.getName().substring(processName.length() + 1);
-            logger.info("processInstanceTime = " + processInstanceTime);
+            LOGGER.info("processInstanceTime = " + processInstanceTime);
             Assert.assertTrue(allowedPITimes.remove(processInstanceTime),
-                "Unexpected processInstanceTime: " + processInstanceTime +
-                    "it should have been be in the list " + allowedPITimes);
+                "Unexpected processInstanceTime: " + processInstanceTime
+                    + "it should have been be in the list " + allowedPITimes);
 
             VerticesResult piIncoming = lineageHelper.getVerticesByDirection(piVertex.getId(),
                 Direction.inComingVertices);
@@ -200,10 +204,10 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
                     "input feed instances should start with input feed name: " + inFeedInstName);
                 final String inFeedInstanceTime = inFeedInstName.substring(
                     inputFeedName.length() + 1);
-                logger.info("inFeedInstanceTime = " + inFeedInstanceTime);
+                LOGGER.info("inFeedInstanceTime = " + inFeedInstanceTime);
                 Assert.assertTrue(allowedInpFeedInstDates.remove(inFeedInstanceTime),
-                    "Unexpected inFeedInstanceTime: " + inFeedInstanceTime  + " it should have " +
-                        "been present in: " + allowedInpFeedInstDates);
+                    "Unexpected inFeedInstanceTime: " + inFeedInstanceTime  + " it should have "
+                        + "been present in: " + allowedInpFeedInstDates);
             }
 
             VerticesResult piOutgoing = lineageHelper.getVerticesByDirection(
@@ -215,10 +219,10 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
             final Vertex outFeedInst = piOutgoing.filterByType(Vertex.VERTEX_TYPE.FEED_INSTANCE).get(0);
             final String outFeedInstName = outFeedInst.getName();
             Assert.assertTrue(outFeedInstName.startsWith(outputFeedName),
-                "Expecting outFeedInstName: " + outFeedInstName +
-                    " to start with outputFeedName: " + outputFeedName);
-            final String outFeedInstanceTime = outFeedInstName.substring(outputFeedName.length() +
-                1);
+                "Expecting outFeedInstName: " + outFeedInstName
+                    + " to start with outputFeedName: " + outputFeedName);
+            final String outFeedInstanceTime = outFeedInstName.substring(outputFeedName.length()
+                + 1);
             Assert.assertEquals(outFeedInstanceTime, processInstanceTime,
                 "Expecting output feed instance time and process instance time to be same");
         }

@@ -47,16 +47,18 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Tests with partitions as expression language variables.
+ */
 @Test(groups = "embedded")
 public class ProcessPartitionExpVariableTest extends BaseTestClass {
-    private static final Logger logger = Logger.getLogger(ProcessPartitionExpVariableTest.class);
+    private static final Logger LOGGER = Logger.getLogger(ProcessPartitionExpVariableTest.class);
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private String baseTestDir = baseHDFSDir + "/ProcessPartitionExpVariableTest";
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -65,7 +67,7 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
@@ -87,7 +89,7 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true)
-    public void ProcessPartitionExpVariableTest_OptionalCompulsoryPartition() throws Exception {
+    public void optionalCompulsoryPartition() throws Exception {
         String startTime = TimeUtil.getTimeWrtSystemTime(-4);
         String endTime = TimeUtil.getTimeWrtSystemTime(30);
 
@@ -100,10 +102,10 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
         bundles[0].addProcessProperty(p);
         bundles[0].setProcessInputPartition("${var1}", "${fileTime}");
 
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
-
-        logger.info(Util.prettyPrintXml(bundles[0].getProcessData()));
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
+        LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
         bundles[0].submitAndScheduleBundle(prism, false);
 
         List<String> dataDates = generateDateAndOneDayAfter(
@@ -132,8 +134,8 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
                                                            int minuteSkip) {
         final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm/");
         final DateTimeFormatter formatter2 = DateTimeFormat.forPattern("yyyy-MMM-dd");
-        logger.info("generating data between " + formatter.print(startDate) + " and " +
-            formatter.print(endDate));
+        LOGGER.info("generating data between " + formatter.print(startDate) + " and "
+            + formatter.print(endDate));
 
         List<String> dates = new ArrayList<String>();
         while (!startDate.isAfter(endDate)) {
@@ -147,9 +149,6 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
         return dates;
     }
 
-    //TODO: ProcessPartitionExpVariableTest_OptionalPartition()
-    //TODO: ProcessPartitionExpVariableTest_CompulsoryPartition()
-    //TODO: ProcessPartitionExpVariableTest_moreThanOnceVariable()
 
     @AfterClass(alwaysRun = true)
     public void tearDownClass() throws IOException {

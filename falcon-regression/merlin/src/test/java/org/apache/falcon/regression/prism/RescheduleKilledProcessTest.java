@@ -42,12 +42,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Tests with rescheduling killed process.
+ */
 @Test(groups = "embedded")
 public class RescheduleKilledProcessTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    String aggregateWorkflowDir = baseHDFSDir + "/RescheduleKilledProcessTest/aggregator";
-    private static final Logger logger = Logger.getLogger(RescheduleKilledProcessTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private String aggregateWorkflowDir = baseHDFSDir + "/RescheduleKilledProcessTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(RescheduleKilledProcessTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -56,7 +59,7 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
@@ -112,7 +115,7 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
 
         bundles[0].setInputFeedDataPath(baseHDFSDir + "/rawLogs" + MINUTE_DATE_PATTERN);
 
-        logger.info("process: " + Util.prettyPrintXml(bundles[0].getProcessData()));
+        LOGGER.info("process: " + Util.prettyPrintXml(bundles[0].getProcessData()));
 
         bundles[0].submitFeedsScheduleProcess(prism);
         String processData = bundles[0].getProcessData();

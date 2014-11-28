@@ -50,18 +50,18 @@ import java.lang.reflect.Method;
 @Test(groups = "distributed")
 public class FeedClusterUpdateTest extends BaseTestClass {
 
-    String baseTestDir = baseHDFSDir + "/FeedClusterUpdateTest";
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    ColoHelper cluster3 = servers.get(2);
-    FileSystem cluster2FS = serverFS.get(1);
-    FileSystem cluster3FS = serverFS.get(2);
+    private String baseTestDir = baseHDFSDir + "/FeedClusterUpdateTest";
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private ColoHelper cluster3 = servers.get(2);
+    private FileSystem cluster2FS = serverFS.get(1);
+    private FileSystem cluster3FS = serverFS.get(2);
     private String feed;
-    String startTime;
-    String feedOriginalSubmit;
-    String feedUpdated;
-    private static final Logger logger = Logger.getLogger(FeedClusterUpdateTest.class);
+    private String startTime;
+    private String feedOriginalSubmit;
+    private String feedUpdated;
+    private static final Logger LOGGER = Logger.getLogger(FeedClusterUpdateTest.class);
 
 
     @BeforeClass(alwaysRun = true)
@@ -87,7 +87,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
 
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
@@ -123,7 +123,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             XmlUtil.createRetention("hours(10)", ActionType.DELETE),
             Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -140,16 +140,14 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 "REPLICATION"), 0);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit), "RETENTION" +
-                    ""), 1);
+                Util.readEntityName(feedOriginalSubmit), "RETENTION"), 1);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster3.getFeedHelper(),
                 Util.readEntityName(feedOriginalSubmit),
                 "REPLICATION"), 0);
         Assert.assertEquals(InstanceUtil
                 .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
+                    Util.readEntityName(feedOriginalSubmit), "RETENTION"), 0);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster1.getFeedHelper(),
                 Util.readEntityName(feedOriginalSubmit),
@@ -219,7 +217,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -274,7 +272,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
+        LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
@@ -312,7 +310,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
                 null);
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -367,7 +365,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
+        LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
@@ -405,7 +403,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
                 null);
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -459,7 +457,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             XmlUtil.createRetention("hours(10)", ActionType.DELETE),
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null);
 
-        logger.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
+        LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
@@ -497,7 +495,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
                 null);
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -552,7 +550,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
+        LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
@@ -601,7 +599,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -619,8 +617,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 "REPLICATION"), 0);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit), "RETENTION" +
-                    ""), 1);
+                Util.readEntityName(feedOriginalSubmit), "RETENTION"), 1);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster3.getFeedHelper(),
                 Util.readEntityName(feedOriginalSubmit),
@@ -730,7 +727,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
@@ -781,7 +778,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("Feed: " + Util.prettyPrintXml(feedUpdated));
+        LOGGER.info("Feed: " + Util.prettyPrintXml(feedUpdated));
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);

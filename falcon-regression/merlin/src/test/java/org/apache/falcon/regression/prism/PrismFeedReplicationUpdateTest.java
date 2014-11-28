@@ -45,24 +45,27 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Update replication feed tests.
+ */
 @Test(groups = "embedded")
 public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    ColoHelper cluster3 = servers.get(2);
-    FileSystem cluster1FS = serverFS.get(0);
-    FileSystem cluster2FS = serverFS.get(1);
-    FileSystem cluster3FS = serverFS.get(2);
-    String cluster1Colo = cluster1.getClusterHelper().getColoName();
-    String cluster2Colo = cluster2.getClusterHelper().getColoName();
-    String cluster3Colo = cluster3.getClusterHelper().getColoName();
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private ColoHelper cluster3 = servers.get(2);
+    private FileSystem cluster1FS = serverFS.get(0);
+    private FileSystem cluster2FS = serverFS.get(1);
+    private FileSystem cluster3FS = serverFS.get(2);
+    private String cluster1Colo = cluster1.getClusterHelper().getColoName();
+    private String cluster2Colo = cluster2.getClusterHelper().getColoName();
+    private String cluster3Colo = cluster3.getClusterHelper().getColoName();
     private final String baseTestDir = baseHDFSDir + "/PrismFeedReplicationUpdateTest";
     private final String inputPath = baseTestDir + "/input-data" + MINUTE_DATE_PATTERN;
-    private String alternativeInputPath = baseTestDir + "/newFeedPath/input-data" +
-        MINUTE_DATE_PATTERN;
+    private String alternativeInputPath = baseTestDir + "/newFeedPath/input-data"
+        + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedReplicationUpdateTest.class);
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedReplicationUpdateTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void prepareCluster() throws IOException {
@@ -72,7 +75,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readELBundle();
 
         for (int i = 0; i < 3; i++) {
@@ -139,7 +142,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "UK/${cluster.colo}");
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed));
         AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
@@ -147,7 +150,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         //change feed location path
         feed = InstanceUtil.setFeedFilePath(feed, alternativeInputPath);
 
-        logger.info("updated feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("updated feed: " + Util.prettyPrintXml(feed));
 
         //update feed
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed, feed));
@@ -180,7 +183,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, timeOut = 1800000)
-    public void updateFeed_dependentProcessTest() throws Exception {
+    public void updateFeedDependentProcessTest() throws Exception {
         //set cluster colos
         bundles[0].setCLusterColo(cluster1Colo);
         bundles[1].setCLusterColo(cluster2Colo);
@@ -292,7 +295,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         //submit and schedule process
         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process));
 
-        logger.info("Wait till process goes into running ");
+        LOGGER.info("Wait till process goes into running ");
 
         int timeout = OSUtil.IS_WINDOWS ? 50 : 25;
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), Util.getProcessName(process), 1,
@@ -301,7 +304,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
             Status.RUNNING, EntityType.PROCESS, timeout);
 
         feed01 = InstanceUtil.setFeedFilePath(feed01, alternativeInputPath);
-        logger.info("updated feed: " + Util.prettyPrintXml(feed01));
+        LOGGER.info("updated feed: " + Util.prettyPrintXml(feed01));
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed01, feed01));
     }
 

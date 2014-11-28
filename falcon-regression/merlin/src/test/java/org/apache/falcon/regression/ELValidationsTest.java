@@ -58,41 +58,41 @@ import java.util.TimeZone;
 @Test(groups = "embedded")
 public class ELValidationsTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    private static final Logger logger = Logger.getLogger(ELValidationsTest.class);
-    String aggregateWorkflowDir = baseHDFSDir + "/ELTest/aggregator";
+    private ColoHelper cluster = servers.get(0);
+    private static final Logger LOGGER = Logger.getLogger(ELValidationsTest.class);
+    private String aggregateWorkflowDir = baseHDFSDir + "/ELTest/aggregator";
 
     //test for instance when process time line is subset of feed time
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
     }
 
     @Test(groups = {"0.1", "0.2"})
-    public void startInstBeforeFeedStart_today02() throws Exception {
+    public void startInstBeforeFeedStartToday02() throws Exception {
         String response =
-            testWith(prism, cluster, "2009-02-02T20:00Z", "2011-12-31T00:00Z", "2009-02-02T20:00Z",
+            testWith("2009-02-02T20:00Z", "2011-12-31T00:00Z", "2009-02-02T20:00Z",
                 "2011-12-31T00:00Z", "now(-40,0)", "currentYear(20,30,24,20)", false);
         validate(response);
     }
 
     @Test(groups = {"singleCluster"})
     public void startInstAfterFeedEnd() throws Exception {
-        String response = testWith(prism, cluster, null, null, null, null,
+        String response = testWith(null, null, null, null,
             "currentYear(10,0,22,0)", "now(4,20)", false);
         validate(response);
     }
 
     @Test(groups = {"singleCluster"})
     public void bothInstReverse() throws Exception {
-        String response = testWith(prism, cluster, null, null, null, null,
+        String response = testWith(null, null, null, null,
             "now(0,0)", "now(-100,0)", false);
         validate(response);
     }
 
     @Test(groups = {"singleCluster"}, dataProvider = "EL-DP")
-    public void ExpressionLanguageTest(String startInstance, String endInstance) throws Exception {
-        testWith(prism, cluster, null, null, null, null, startInstance, endInstance, true);
+    public void expressionLanguageTest(String startInstance, String endInstance) throws Exception {
+        testWith(null, null, null, null, startInstance, endInstance, true);
     }
 
     @DataProvider(name = "EL-DP")
@@ -105,39 +105,37 @@ public class ELValidationsTest extends BaseTestClass {
             {"currentYear(0,0,22,0)", "currentYear(1,1,22,0)"},
             {"currentMonth(0,22,0)", "currentMonth(1,22,20)"},
             {"lastMonth(30,22,0)", "lastMonth(60,2,40)"},
-            {"lastYear(12,0,22,0)", "lastYear(13,1,22,0)"}
+            {"lastYear(12,0,22,0)", "lastYear(13,1,22,0)"},
         };
     }
 
     private void validate(String response) {
         if ((response.contains("End instance ") || response.contains("Start instance"))
             && (response.contains("for feed") || response.contains("of feed"))
-            && (response.contains("is before the start of feed") ||
-            response.contains("is after the end of feed"))) {
+            && (response.contains("is before the start of feed")
+            || response.contains("is after the end of feed"))) {
             return;
         }
-        if (response.contains("End instance") &&
-            response.contains("is before the start instance")) {
+        if (response.contains("End instance")
+            && response.contains("is before the start instance")) {
             return;
         }
         Assert.fail("Response is not valid");
     }
 
-    private String testWith(ColoHelper prismHelper, ColoHelper server, String feedStart,
+    private String testWith(String feedStart,
                             String feedEnd, String processStart,
                             String processEnd,
                             String startInstance, String endInstance, boolean isMatch)
         throws IOException, JAXBException, ParseException, URISyntaxException {
-        HadoopUtil.uploadDir(server.getClusterHelper().getHadoopFS(),
+        HadoopUtil.uploadDir(cluster.getClusterHelper().getHadoopFS(),
             aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle bundle = BundleUtil.readELBundle();
-        bundle = new Bundle(bundle, server.getPrefix());
+        bundle = new Bundle(bundle, cluster.getPrefix());
         bundle.generateUniqueBundle();
         bundle.setProcessWorkflow(aggregateWorkflowDir);
         if (feedStart != null && feedEnd != null) {
-            bundle.setFeedValidity(feedStart, feedEnd,
-                bundle.getInputFeedNameFromBundle
-                        ());
+            bundle.setFeedValidity(feedStart, feedEnd, bundle.getInputFeedNameFromBundle());
         }
         if (processStart != null && processEnd != null) {
             bundle.setProcessValidity(processStart, processEnd);
@@ -145,18 +143,19 @@ public class ELValidationsTest extends BaseTestClass {
         try {
             bundle.setInvalidData();
             bundle.setDatasetInstances(startInstance, endInstance);
-            String submitResponse = bundle.submitFeedsScheduleProcess(prismHelper);
-            logger.info("processData in try is: " + Util.prettyPrintXml(bundle.getProcessData()));
+            String submitResponse = bundle.submitFeedsScheduleProcess(prism);
+            LOGGER.info("processData in try is: " + Util.prettyPrintXml(bundle.getProcessData()));
             TimeUtil.sleepSeconds(45);
-            if (isMatch)
-                getAndMatchDependencies(server, bundle);
+            if (isMatch) {
+                getAndMatchDependencies(cluster, bundle);
+            }
             return submitResponse;
         } catch (Exception e) {
             e.printStackTrace();
             throw new TestNGException(e);
         } finally {
-            logger.info("deleting entity:");
-            bundle.deleteBundle(prismHelper);
+            LOGGER.info("deleting entity:");
+            bundle.deleteBundle(prism);
         }
     }
 
@@ -173,7 +172,7 @@ public class ELValidationsTest extends BaseTestClass {
             }
             Assert.assertTrue(bundles != null && bundles.size() > 0, "Bundle job not created.");
             String coordID = bundles.get(0);
-            logger.info("coord id: " + coordID);
+            LOGGER.info("coord id: " + coordID);
             List<String> missingDependencies =
                 OozieUtil.getMissingDependencies(prismHelper, coordID);
             for (int i = 0; i < 10 && missingDependencies == null; ++i) {
@@ -182,35 +181,36 @@ public class ELValidationsTest extends BaseTestClass {
             }
             Assert.assertNotNull(missingDependencies, "Missing dependencies not found.");
             for (String dependency : missingDependencies) {
-                logger.info("dependency from job: " + dependency);
+                LOGGER.info("dependency from job: " + dependency);
             }
             Date jobNominalTime = OozieUtil.getNominalTime(prismHelper, coordID);
             Calendar time = Calendar.getInstance();
             time.setTime(jobNominalTime);
-            logger.info("nominalTime:" + jobNominalTime);
+            LOGGER.info("nominalTime:" + jobNominalTime);
             SimpleDateFormat df = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-            logger.info(
+            LOGGER.info(
                 "nominalTime in GMT string: " + df.format(jobNominalTime.getTime()) + " GMT");
             TimeZone z = time.getTimeZone();
             int offset = z.getRawOffset();
             int offsetHrs = offset / 1000 / 60 / 60;
             int offsetMins = offset / 1000 / 60 % 60;
 
-            logger.info("offset: " + offsetHrs);
-            logger.info("offset: " + offsetMins);
+            LOGGER.info("offset: " + offsetHrs);
+            LOGGER.info("offset: " + offsetMins);
 
             time.add(Calendar.HOUR_OF_DAY, (-offsetHrs));
             time.add(Calendar.MINUTE, (-offsetMins));
 
-            logger.info("GMT Time: " + time.getTime());
+            LOGGER.info("GMT Time: " + time.getTime());
 
             int frequency = bundle.getInitialDatasetFrequency();
             List<String> qaDependencyList =
                 getQADepedencyList(time, bundle.getStartInstanceProcess(time),
                     bundle.getEndInstanceProcess(time),
                     frequency, bundle);
-            for (String qaDependency : qaDependencyList)
-                logger.info("qa qaDependencyList: " + qaDependency);
+            for (String qaDependency : qaDependencyList) {
+                LOGGER.info("qa qaDependencyList: " + qaDependency);
+            }
 
             Assert.assertTrue(matchDependencies(missingDependencies, qaDependencyList));
         } catch (Exception e) {
@@ -219,12 +219,14 @@ public class ELValidationsTest extends BaseTestClass {
         }
     }
 
-    private boolean matchDependencies(List<String> fromJob, List<String> QAList) {
-        if (fromJob.size() != QAList.size())
+    private boolean matchDependencies(List<String> fromJob, List<String> qaList) {
+        if (fromJob.size() != qaList.size()) {
             return false;
+        }
         for (int index = 0; index < fromJob.size(); index++) {
-            if (!fromJob.get(index).contains(QAList.get(index)))
+            if (!fromJob.get(index).contains(qaList.get(index))) {
                 return false;
+            }
         }
         return true;
     }
@@ -232,8 +234,8 @@ public class ELValidationsTest extends BaseTestClass {
     private List<String> getQADepedencyList(Calendar nominalTime, Date startRef,
                                             Date endRef, int frequency,
                                             Bundle bundle) {
-        logger.info("start ref:" + startRef);
-        logger.info("end ref:" + endRef);
+        LOGGER.info("start ref:" + startRef);
+        LOGGER.info("end ref:" + endRef);
         Calendar initialTime = Calendar.getInstance();
         initialTime.setTime(startRef);
         Calendar finalTime = Calendar.getInstance();
@@ -243,11 +245,11 @@ public class ELValidationsTest extends BaseTestClass {
 
         TimeZone tz = TimeZone.getTimeZone("GMT");
         nominalTime.setTimeZone(tz);
-        logger.info("nominalTime: " + initialTime.getTime());
-        logger.info("finalTime: " + finalTime.getTime());
+        LOGGER.info("nominalTime: " + initialTime.getTime());
+        LOGGER.info("finalTime: " + finalTime.getTime());
         List<String> returnList = new ArrayList<String>();
         while (!initialTime.getTime().equals(finalTime.getTime())) {
-            logger.info("initialTime: " + initialTime.getTime());
+            LOGGER.info("initialTime: " + initialTime.getTime());
             returnList.add(getPath(path, initialTime));
             initialTime.add(Calendar.MINUTE, frequency);
         }

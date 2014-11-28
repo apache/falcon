@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression.security;
@@ -45,7 +44,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 
 /**
- * Tests if ACL info is consistent with user submitting the entity
+ * Tests if ACL info is consistent with user submitting the entity.
  */
 @Test(groups = "authorization")
 public class AclValidationTest extends BaseTestClass {
@@ -57,9 +56,9 @@ public class AclValidationTest extends BaseTestClass {
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
 
-    ClusterMerlin clusterMerlin;
-    FeedMerlin feedMerlin;
-    ProcessMerlin processMerlin;
+    private ClusterMerlin clusterMerlin;
+    private FeedMerlin feedMerlin;
+    private ProcessMerlin processMerlin;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -80,14 +79,14 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     /**
-     * Test a cluster's acl validations for different aclOwner and aclGroup
+     * Test a cluster's acl validations for different aclOwner and aclGroup.
      * @param aclOwner owner for the acl
      * @param aclGroup group for the acl
      * @throws Exception
      */
     @Test(dataProvider = "generateUserAndGroup")
     public void submitClusterBadAcl(String aclOwner, String aclGroup) throws Exception {
-        clusterMerlin.setACL(aclOwner,aclGroup, "*");
+        clusterMerlin.setACL(aclOwner, aclGroup, "*");
         final ServiceResponse serviceResponse =
             prism.getClusterHelper().submitEntity(clusterMerlin.toString());
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -95,7 +94,7 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     /**
-     * Test a feed's acl validations for different aclOwner and aclGroup
+     * Test a feed's acl validations for different aclOwner and aclGroup.
      * @param aclOwner owner for the acl
      * @param aclGroup group for the acl
      * @throws Exception
@@ -111,7 +110,7 @@ public class AclValidationTest extends BaseTestClass {
     }
 
     /**
-     * Test a process's acl validations for different aclOwner and aclGroup
+     * Test a process's acl validations for different aclOwner and aclGroup.
      * @param aclOwner owner for the acl
      * @param aclGroup group for the acl
      * @throws Exception

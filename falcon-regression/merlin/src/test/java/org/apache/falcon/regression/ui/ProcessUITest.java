@@ -62,24 +62,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * UI tests with submitted/scheduled process.
+ */
 @Test(groups = "lineage-ui")
 public class ProcessUITest extends BaseUITestClass {
 
     private ColoHelper cluster = servers.get(0);
     private String baseTestDir = baseHDFSDir + "/TestProcessUI";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private static final Logger logger = Logger.getLogger(ProcessUITest.class);
-    String feedInputPath = baseTestDir + "/input";
-    final String feedOutputPath = baseTestDir + "/output";
+    private static final Logger LOGGER = Logger.getLogger(ProcessUITest.class);
+    private final String feedInputPath = baseTestDir + "/input";
+    private final String feedOutputPath = baseTestDir + "/output";
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private SoftAssert softAssert = new SoftAssert();
 
     @BeforeMethod
     public void setUp()
-            throws IOException, JAXBException, NoSuchMethodException, IllegalAccessException,
-            InvocationTargetException, URISyntaxException, AuthenticationException,
-            InterruptedException {
+        throws IOException, JAXBException, NoSuchMethodException, IllegalAccessException,
+        InvocationTargetException, URISyntaxException, AuthenticationException,
+        InterruptedException {
         CleanupUtil.cleanAllEntities(prism);
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         openBrowser();
@@ -89,7 +92,7 @@ public class ProcessUITest extends BaseUITestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
-        logger.info("Start time: " + startTime + "\tEnd time: " + endTime);
+        LOGGER.info("Start time: " + startTime + "\tEnd time: " + endTime);
 
         //prepare process definition
         bundles[0].setProcessValidity(startTime, endTime);
@@ -110,7 +113,7 @@ public class ProcessUITest extends BaseUITestClass {
         bundles[0].setProcessData(process.toString());
 
         //provide necessary data for first 3 instances to run
-        logger.info("Creating necessary data...");
+        LOGGER.info("Creating necessary data...");
         String prefix = bundles[0].getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(
@@ -129,7 +132,7 @@ public class ProcessUITest extends BaseUITestClass {
                 prefix + "_00" + k + "/", dataDates);
         }
 
-        logger.info("Process data: " + Util.prettyPrintXml(bundles[0].getProcessData()));
+        LOGGER.info("Process data: " + Util.prettyPrintXml(bundles[0].getProcessData()));
         FeedMerlin[] inputFeeds;
         FeedMerlin[] outputFeeds;
         final FeedMerlin inputMerlin = new FeedMerlin(bundles[0].getInputFeedFromBundle());
@@ -166,12 +169,12 @@ public class ProcessUITest extends BaseUITestClass {
     /**
      * Test checks that UI show expected statuses of submitted Process (SUBMITTED and RUNNING)
      * then checks instances icons to be relevant to statuses of oozie actions
-     * and checks that Lineage links are available only for SUCCEEDED instances
+     * and checks that Lineage links are available only for SUCCEEDED instances.
      */
     @Test
     public void testProcessUI()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            OozieClientException, InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        OozieClientException, InterruptedException {
 
         //check Process statuses via UI
         EntitiesPage page = new EntitiesPage(driver, cluster, EntityType.PROCESS);
@@ -217,7 +220,7 @@ public class ProcessUITest extends BaseUITestClass {
 
             //check that Lineage links are available only for SUCCEEDED instances
             boolean isPresent = page.isLineageLinkPresent(oozieDate);
-            if(actions.get(date) == CoordinatorAction.Status.SUCCEEDED) {
+            if (actions.get(date) == CoordinatorAction.Status.SUCCEEDED) {
                 softAssert.assertTrue(isPresent, "Lineage button should be present for instance: " + oozieDate);
             } else {
                 softAssert.assertFalse(isPresent, "Lineage button should not be present for instance: " + oozieDate);

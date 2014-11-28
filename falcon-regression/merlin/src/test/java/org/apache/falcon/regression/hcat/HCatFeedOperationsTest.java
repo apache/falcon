@@ -55,15 +55,18 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tests with operations with hcat feed.
+ */
 public class HCatFeedOperationsTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    OozieClient clusterOC = serverOC.get(0);
-    HCatClient clusterHC;
+    private ColoHelper cluster = servers.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
+    private HCatClient clusterHC;
 
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster2OC = serverOC.get(1);
-    HCatClient cluster2HC;
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private HCatClient cluster2HC;
 
     private String dbName = "default";
     private String tableName = "hcatFeedOperationsTest";
@@ -184,8 +187,9 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     }
 
     /**
-     * Submit Hcat Replication feed when Hcat table mentioned in table uri exists on both source and target. The response is
-     * Psucceeded, and a replication co-rdinator should apear on target oozie. The test however does not ensure that
+     * Submit Hcat Replication feed when Hcat table mentioned in table uri exists on both source and target.
+     * The response is  Psucceeded, and a replication co-rdinator should apear on target oozie.
+     * The test however does not ensure that
      * replication goes through.
      *
      * @throws Exception
@@ -255,7 +259,8 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     }
 
 
-    public static void createEmptyTable(HCatClient cli, String dbName, String tabName, List<HCatFieldSchema> partitionCols) throws HCatException{
+    public static void createEmptyTable(HCatClient cli, String dbName, String tabName,
+                                        List<HCatFieldSchema> partitionCols) throws HCatException{
 
         ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
         cols.add(HCatUtil.getStringSchema("id", "id comment"));

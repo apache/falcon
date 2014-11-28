@@ -33,6 +33,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-698 Fix checkstyle bugs in test files in falcon-regression (Ruslan Ostafiychuk and
+   Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
    FALCON-684 Fix problems found by checkstyle in non-test files in falcon-regression (Ruslan
    Ostafiychuk)
 

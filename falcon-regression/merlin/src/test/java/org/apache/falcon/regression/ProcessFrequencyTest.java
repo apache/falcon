@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.falcon.regression;
@@ -48,6 +47,9 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Test process with different frequency combinations.
+ */
 public class ProcessFrequencyTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ProcessFrequencyTest.class);
     private ColoHelper cluster = servers.get(0);
@@ -91,13 +93,13 @@ public class ProcessFrequencyTest extends BaseTestClass {
      */
     @Test(dataProvider = "generateProcessFrequencies")
     public void testProcessWithFrequency(final FreqType freqType, final int freqAmount)
-    throws Exception {
+        throws Exception {
         final String startDate = "2010-01-02T01:00Z";
         final String endDate = "2010-01-02T01:01Z";
         final String inputPath = baseTestHDFSDir + "/input/";
         bundles[0].setInputFeedDataPath(inputPath + freqType.getPathValue());
         bundles[0].setOutputFeedLocationData(
-                baseTestHDFSDir + "/output-data/" + freqType.getPathValue());
+            baseTestHDFSDir + "/output-data/" + freqType.getPathValue());
         bundles[0].setProcessPeriodicity(freqAmount, freqType.getFalconTimeUnit());
         bundles[0].setProcessInputStartEnd("now(0,0)", "now(0,0)");
         bundles[0].setProcessValidity(startDate, endDate);
@@ -106,13 +108,13 @@ public class ProcessFrequencyTest extends BaseTestClass {
         //upload data
         HadoopUtil.deleteDirIfExists(inputPath, clusterFS);
         final String startPath = inputPath + freqType.getFormatter().print(
-                TimeUtil.oozieDateToDate(startDate));
+            TimeUtil.oozieDateToDate(startDate));
         HadoopUtil.copyDataToFolder(clusterFS, startPath, OSUtil.NORMAL_INPUT);
 
         final String processName = Util.readEntityName(bundles[0].getProcessData());
         //InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 5);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }
@@ -120,10 +122,10 @@ public class ProcessFrequencyTest extends BaseTestClass {
     @DataProvider(name = "generateProcessFrequencies")
     public Object[][] generateProcessFrequencies() {
         return new Object[][] {
-                {FreqType.MINUTELY, 2},
-                {FreqType.HOURLY, 3},
-                {FreqType.DAILY, 5},
-                {FreqType.MONTHLY, 7},
+            {FreqType.MINUTELY, 2, },
+            {FreqType.HOURLY, 3, },
+            {FreqType.DAILY, 5, },
+            {FreqType.MONTHLY, 7, },
         };
     }
 
@@ -133,14 +135,14 @@ public class ProcessFrequencyTest extends BaseTestClass {
      */
     @Test
     public void testProcessWithBadFrequency()
-    throws Exception {
+        throws Exception {
         final String startDate = "2010-01-02T01:00Z";
         final String endDate = "2010-01-02T01:01Z";
         final String inputPath = baseTestHDFSDir + "/input/";
         final FreqType freqType = FreqType.MINUTELY;
         bundles[0].setInputFeedDataPath(inputPath + freqType.getPathValue());
         bundles[0].setOutputFeedLocationData(
-                baseTestHDFSDir + "/output-data/" + freqType.getPathValue());
+            baseTestHDFSDir + "/output-data/" + freqType.getPathValue());
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
 

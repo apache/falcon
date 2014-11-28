@@ -53,17 +53,17 @@ import java.util.List;
 @Test(groups = "embedded")
 public class NoOutputProcessTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
-    String testDir = baseHDFSDir + "/NoOutputProcessTest";
-    String inputPath = testDir + "/input" + MINUTE_DATE_PATTERN;
-    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noInOp";
-    private static final Logger logger = Logger.getLogger(NoOutputProcessTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
+    private String testDir = baseHDFSDir + "/NoOutputProcessTest";
+    private String inputPath = testDir + "/input" + MINUTE_DATE_PATTERN;
+    private String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noInOp";
+    private static final Logger LOGGER = Logger.getLogger(NoOutputProcessTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
         uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle();
@@ -79,7 +79,7 @@ public class NoOutputProcessTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
@@ -106,7 +106,7 @@ public class NoOutputProcessTest extends BaseTestClass {
      */
     @Test(enabled = true, groups = {"singleCluster"})
     public void checkForJMSMsgWhenNoOutput() throws Exception {
-        logger.info("attaching messageConsumer to:   " + "FALCON.ENTITY.TOPIC");
+        LOGGER.info("attaching messageConsumer to:   " + "FALCON.ENTITY.TOPIC");
         JmsMessageConsumer messageConsumer =
             new JmsMessageConsumer("FALCON.ENTITY.TOPIC", cluster.getClusterHelper().getActiveMQ());
         messageConsumer.start();

@@ -37,13 +37,16 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Schedule feed via prism tests.
+ */
 @Test(groups = "embedded")
 public class PrismFeedScheduleTest extends BaseTestClass {
 
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedScheduleTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedScheduleTest.class);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedScheduleTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedScheduleTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -52,7 +55,7 @@ public class PrismFeedScheduleTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws IOException {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readLateDataBundle();
 
         for (int i = 0; i < 2; i++) {
@@ -76,8 +79,8 @@ public class PrismFeedScheduleTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2"})
     public void testFeedScheduleOn1ColoWhileAnotherColoHasSuspendedFeed()
         throws Exception {
-        logger.info("cluster: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
-        logger.info("feed: " + Util.prettyPrintXml(bundles[0].getDataSets().get(0)));
+        LOGGER.info("cluster: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("feed: " + Util.prettyPrintXml(bundles[0].getDataSets().get(0)));
 
         bundles[0].submitAndScheduleFeed();
         AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(bundles[0].getDataSets().get(0)));

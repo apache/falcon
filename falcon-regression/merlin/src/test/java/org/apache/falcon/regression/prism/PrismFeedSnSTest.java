@@ -45,16 +45,19 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Submit and schedule feed via prism tests.
+ */
 public class PrismFeedSnSTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
     private boolean restartRequired;
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedSnSTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedSnSTest.class);
-    String feed1, feed2;
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedSnSTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedSnSTest.class);
+    private String feed1, feed2;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -63,7 +66,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         restartRequired = false;
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
@@ -262,7 +265,6 @@ public class PrismFeedSnSTest extends BaseTestClass {
 
     /**
      * Submit and schedule feed1 on cluster1 and check that it failed. Repeat for feed2.
-     *  TODO: should be reviewed
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testFeedSnSOnBothColosUsingColoHelper() throws Exception {
@@ -369,12 +371,12 @@ public class PrismFeedSnSTest extends BaseTestClass {
         String clust2 = bundles[1].getClusters().get(0);
 
         bundles[0].setCLusterColo(cluster1.getClusterHelper().getColoName());
-        logger.info("cluster bundles[0]: " + Util.prettyPrintXml(clust1));
+        LOGGER.info("cluster bundles[0]: " + Util.prettyPrintXml(clust1));
         ServiceResponse r = prism.getClusterHelper().submitEntity(clust1);
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         bundles[1].setCLusterColo(cluster2.getClusterHelper().getColoName());
-        logger.info("cluster bundles[1]: " + Util.prettyPrintXml(clust2));
+        LOGGER.info("cluster bundles[1]: " + Util.prettyPrintXml(clust2));
         r = prism.getClusterHelper().submitEntity(clust2);
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -395,9 +397,9 @@ public class PrismFeedSnSTest extends BaseTestClass {
         feed = InstanceUtil
             .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA2, "2099-10-01T12:25Z"),
                 XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(clust2), ClusterType.TARGET, null, baseHDFSDir +
-                    "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+                Util.readEntityName(clust2), ClusterType.TARGET, null, baseHDFSDir
+                + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         Util.shutDownService(cluster1.getFeedHelper());
 

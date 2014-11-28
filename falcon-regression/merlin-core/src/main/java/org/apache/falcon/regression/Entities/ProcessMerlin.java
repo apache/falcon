@@ -25,7 +25,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Cluster;
-import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Output;
@@ -33,18 +32,14 @@ import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Properties;
 import org.apache.falcon.entity.v0.process.Property;
-import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.hadoop.fs.FileSystem;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +61,45 @@ public class ProcessMerlin extends Process {
         }
     }
 
+    public static ProcessMerlin fromString(String processString) {
+        return new ProcessMerlin(processString);
+    }
+
+
+    public ProcessMerlin clearProcessCluster() {
+        getClusters().getClusters().clear();
+        return this;
+    }
+
+    public ProcessMerlin addProcessCluster(Cluster cluster) {
+        getClusters().getClusters().add(cluster);
+        return this;
+    }
+
+    /** Fluent builder wrapper for cluster fragment of process entity . */
+    public static class ProcessClusterBuilder {
+        private Cluster cluster = new Cluster();
+
+        public ProcessClusterBuilder(String clusterName) {
+            cluster.setName(clusterName);
+        }
+
+        public Cluster build() {
+            Cluster retVal = cluster;
+            cluster = null;
+            return retVal;
+        }
+
+        public ProcessClusterBuilder withValidity(String startTime, String endTime) {
+            Validity v = new Validity();
+            v.setStart(TimeUtil.oozieDateToDate(startTime).toDate());
+            v.setEnd(TimeUtil.oozieDateToDate(endTime).toDate());
+            cluster.setValidity(v);
+            return this;
+        }
+
+    }
+
     /**
      * Method sets a number of clusters to process definition.
      *
@@ -75,50 +109,14 @@ public class ProcessMerlin extends Process {
      * @param endTime end of process validity on every cluster
      */
     public void setProcessClusters(List<String> newClusters, String startTime, String endTime) {
-        Clusters cs =  new Clusters();
+        clearProcessCluster();
         for (String newCluster : newClusters) {
-            Cluster c = new Cluster();
-            c.setName(new ClusterMerlin(newCluster).getName());
-            org.apache.falcon.entity.v0.process.Validity v =
-                new org.apache.falcon.entity.v0.process.Validity();
-            v.setStart(TimeUtil.oozieDateToDate(startTime).toDate());
-            v.setEnd(TimeUtil.oozieDateToDate(endTime).toDate());
-            c.setValidity(v);
-            cs.getClusters().add(c);
+            final Cluster processCluster = new ProcessClusterBuilder(
+                new ClusterMerlin(newCluster).getName())
+                .withValidity(startTime, endTime)
+                .build();
+            addProcessCluster(processCluster);
         }
-        setClusters(cs);
-    }
-
-    public Bundle setFeedsToGenerateData(FileSystem fs, Bundle b) {
-        Date start = getClusters().getClusters().get(0).getValidity().getStart();
-        Format formatter = new SimpleDateFormat("yyyy'-'MM'-'dd'T'HH':'mm'Z'");
-        String startDate = formatter.format(start);
-        Date end = getClusters().getClusters().get(0).getValidity().getEnd();
-        String endDate = formatter.format(end);
-
-        Map<String, FeedMerlin> inpFeeds = getInputFeeds(b);
-        for (FeedMerlin feedElement : inpFeeds.values()) {
-            feedElement.getClusters().getClusters().get(0).getValidity()
-                .setStart(TimeUtil.oozieDateToDate(startDate).toDate());
-            feedElement.getClusters().getClusters().get(0).getValidity()
-                .setEnd(TimeUtil.oozieDateToDate(endDate).toDate());
-            b.writeFeedElement(feedElement, feedElement.getName());
-        }
-        return b;
-    }
-
-    public Map<String, FeedMerlin> getInputFeeds(Bundle b) {
-        Map<String, FeedMerlin> inpFeeds = new HashMap<String, FeedMerlin>();
-        for (Input input : getInputs().getInputs()) {
-            for (String feed : b.getDataSets()) {
-                if (Util.readEntityName(feed).equalsIgnoreCase(input.getFeed())) {
-                    FeedMerlin feedO = new FeedMerlin(feed);
-                    inpFeeds.put(Util.readEntityName(feed), feedO);
-                    break;
-                }
-            }
-        }
-        return inpFeeds;
     }
 
     public final void setProperty(String name, String value) {
@@ -198,8 +196,8 @@ public class ProcessMerlin extends Process {
      * @param numberOfOutputs number of outputs
      */
     public void setProcessFeeds(List<String> newDataSets,
-                                  int numberOfInputs, int numberOfOptionalInput,
-                                  int numberOfOutputs) {
+                                int numberOfInputs, int numberOfOptionalInput,
+                                int numberOfOutputs) {
         int numberOfOptionalSet = 0;
         boolean isFirst = true;
 

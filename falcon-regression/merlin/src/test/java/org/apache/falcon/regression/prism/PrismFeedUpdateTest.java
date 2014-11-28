@@ -54,20 +54,23 @@ import java.util.List;
 import java.util.Random;
 
 
+/**
+ * Update feed via prism tests.
+ */
 @Test(groups = "embedded")
 public class PrismFeedUpdateTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    FileSystem server1FS = serverFS.get(0);
-    OozieClient cluster1OC = serverOC.get(0);
-    String baseTestDir = baseHDFSDir + "/PrismFeedUpdateTest";
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
-    public final String cluster1colo = cluster1.getClusterHelper().getColoName();
-    public final String cluster2colo = cluster2.getClusterHelper().getColoName();
-    private static final Logger logger = Logger.getLogger(PrismFeedUpdateTest.class);
-    String feedInputTimedOutPath = baseTestDir + "/timedout" + MINUTE_DATE_PATTERN;
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private FileSystem server1FS = serverFS.get(0);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private String baseTestDir = baseHDFSDir + "/PrismFeedUpdateTest";
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
+    private final String cluster1colo = cluster1.getClusterHelper().getColoName();
+    private final String cluster2colo = cluster2.getClusterHelper().getColoName();
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedUpdateTest.class);
+    private String feedInputTimedOutPath = baseTestDir + "/timedout" + MINUTE_DATE_PATTERN;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -77,7 +80,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
@@ -97,7 +100,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
      * queue. TODO : complete test case
      */
     @Test(enabled = true, timeOut = 1200000)
-    public void updateFeedQueue_dependentMultipleProcess_oneProcessZeroInput() throws Exception {
+    public void updateFeedQueueDependentMultipleProcessOneProcessZeroInput() throws Exception {
         //cluster1colo and cluster2colo are source. feed01 on cluster1colo target cluster2colo,
         // feed02 on cluster2colo target cluster1colo
         bundles[0].setProcessWorkflow(workflowForNoIpOp);
@@ -106,9 +109,9 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
         //set cluster colos
         bundles[0].setCLusterColo(cluster1colo);
-        logger.info("cluster bundles[0]: " + Util.prettyPrintXml(cluster1Def));
+        LOGGER.info("cluster bundles[0]: " + Util.prettyPrintXml(cluster1Def));
         bundles[1].setCLusterColo(cluster2colo);
-        logger.info("cluster bundles[1]: " + Util.prettyPrintXml(cluster2Def));
+        LOGGER.info("cluster bundles[1]: " + Util.prettyPrintXml(cluster2Def));
 
         //submit 2 clusters
         AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster1Def));
@@ -162,8 +165,8 @@ public class PrismFeedUpdateTest extends BaseTestClass {
             Util.readEntityName(cluster2Def), ClusterType.TARGET, null);
 
         //submit and schedule feeds
-        logger.info("feed01: " + Util.prettyPrintXml(feed01));
-        logger.info("outputFeed: " + Util.prettyPrintXml(outputFeed));
+        LOGGER.info("feed01: " + Util.prettyPrintXml(feed01));
+        LOGGER.info("outputFeed: " + Util.prettyPrintXml(outputFeed));
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01));
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed));
 
@@ -195,11 +198,11 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         process02 = processMerlin.toString();
 
         //submit and schedule both process
-        logger.info("process: " + Util.prettyPrintXml(process01));
-        logger.info("process: " + Util.prettyPrintXml(process02));
+        LOGGER.info("process: " + Util.prettyPrintXml(process01));
+        LOGGER.info("process: " + Util.prettyPrintXml(process02));
         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process01));
         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process02));
-        logger.info("Wait till process goes into running ");
+        LOGGER.info("Wait till process goes into running ");
         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(process01), 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 1);
         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(process02), 1,
@@ -207,7 +210,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
         //change feed location path
         outputFeed = Util.setFeedProperty(outputFeed, "queueName", "myQueue");
-        logger.info("updated feed: " + Util.prettyPrintXml(outputFeed));
+        LOGGER.info("updated feed: " + Util.prettyPrintXml(outputFeed));
 
         //update feed first time
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(outputFeed, outputFeed));

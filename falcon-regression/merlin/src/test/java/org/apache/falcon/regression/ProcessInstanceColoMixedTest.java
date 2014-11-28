@@ -18,12 +18,13 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -31,7 +32,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,21 +112,9 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         //set source and target for the 2 feeds
 
         //set clusters to null;
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01,
-                XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
-        feed02 = InstanceUtil
-            .setFeedCluster(feed02,
-                XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
-        outputFeed = InstanceUtil
-            .setFeedCluster(outputFeed,
-                XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
+        feed01 = FeedMerlin.fromString(feed01).clearFeedClusters().toString();
+        feed02 = FeedMerlin.fromString(feed02).clearFeedClusters().toString();
+        outputFeed = FeedMerlin.fromString(outputFeed).clearFeedClusters().toString();
 
         //set new feed input data
         feed01 = Util.setFeedPathValue(feed01, String.format(feedPath, 1));
@@ -147,133 +135,119 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         String startTime = TimeUtil.getTimeWrtSystemTime(-70);
 
         //set clusters for feed01
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.SOURCE, null);
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null);
+        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
+        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
         //set clusters for feed02
-        feed02 = InstanceUtil
-            .setFeedCluster(feed02, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
-        feed02 = InstanceUtil
-            .setFeedCluster(feed02, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE, null);
+        feed02 = FeedMerlin.fromString(feed02).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
+        feed02 = FeedMerlin.fromString(feed02).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
 
         //set clusters for output feed
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-            XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.SOURCE, null);
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-            XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null);
+        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
+        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
         //submit and schedule feeds
-        LOGGER.info("feed01: " + Util.prettyPrintXml(feed01));
-        LOGGER.info("feed02: " + Util.prettyPrintXml(feed02));
-        LOGGER.info("outputFeed: " + Util.prettyPrintXml(outputFeed));
-
-        ServiceResponse r = prism.getFeedHelper().submitAndSchedule(feed01);
-        AssertUtil.assertSucceeded(r);
-        r = prism.getFeedHelper().submitAndSchedule(feed02);
-        AssertUtil.assertSucceeded(r);
-        r = prism.getFeedHelper().submitAndSchedule(outputFeed);
-        AssertUtil.assertSucceeded(r);
-
-        //create a process with 2 clusters
-
-        //get a process
-        String process = bundles[0].getProcessData();
-
-        //add clusters to process
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed02));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed));
 
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-16);
         // String processEndTime = InstanceUtil.getTimeWrtSystemTime(20);
 
-        process = InstanceUtil
-            .setProcessCluster(process, null,
-                XmlUtil.createProcessValidity(startTime, "2099-01-01T00:00Z"));
-        process = InstanceUtil
-            .setProcessCluster(process, Util.readEntityName(bundles[0].getClusters().get(0)),
-                XmlUtil.createProcessValidity(processStartTime,
-                    TimeUtil.addMinsToTime(processStartTime, 35)));
-        process = InstanceUtil
-            .setProcessCluster(process, Util.readEntityName(bundles[1].getClusters().get(0)),
-                XmlUtil.createProcessValidity(
-                    TimeUtil.addMinsToTime(processStartTime, 16),
-                    TimeUtil.addMinsToTime(processStartTime, 45)));
-        process = InstanceUtil
-            .addProcessInputFeed(process, Util.readEntityName(feed02),
-                    Util.readEntityName(feed02));
+        String process = bundles[0].getProcessData();
+        process = ProcessMerlin.fromString(process).clearProcessCluster().toString();
+        process = ProcessMerlin.fromString(process).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(
+                Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withValidity(processStartTime, TimeUtil.addMinsToTime(processStartTime, 35))
+                .build())
+            .toString();
+        process = ProcessMerlin.fromString(process).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withValidity(TimeUtil.addMinsToTime(processStartTime, 16),
+                    TimeUtil.addMinsToTime(processStartTime, 45))
+                .build())
+            .toString();
+        process = InstanceUtil.addProcessInputFeed(process, Util.readEntityName(feed02),
+            Util.readEntityName(feed02));
 
         //submit and schedule process
-        LOGGER.info("process: " + Util.prettyPrintXml(process));
-
         prism.getProcessHelper().submitAndSchedule(process);
 
         LOGGER.info("Wait till process goes into running ");
-
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), Util.getProcessName(process), 1,
             Status.RUNNING, EntityType.PROCESS);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(1), Util.getProcessName(process), 1,
             Status.RUNNING, EntityType.PROCESS);
-        InstancesResult responseInstance = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + processStartTime + "&end=" + TimeUtil
-                    .addMinsToTime(processStartTime, 45));
+
+        final String processName = Util.readEntityName(bundles[0].getProcessData());
+        InstancesResult responseInstance = prism.getProcessHelper().getProcessInstanceStatus(
+            processName, "?start=" + processStartTime
+            + "&end=" + TimeUtil.addMinsToTime(processStartTime, 45));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + TimeUtil
-                    .addMinsToTime(processStartTime, 37) + "&end="
-                        + TimeUtil.addMinsToTime(processStartTime, 44));
+        responseInstance = prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=" + TimeUtil.addMinsToTime(processStartTime, 37)
+                + "&end=" + TimeUtil.addMinsToTime(processStartTime, 44));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + TimeUtil
-                    .addMinsToTime(processStartTime, 37) + "&end="
-                        + TimeUtil.addMinsToTime(processStartTime, 44));
+        responseInstance = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            "?start=" + TimeUtil.addMinsToTime(processStartTime, 37)
+                + "&end=" + TimeUtil.addMinsToTime(processStartTime, 44));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + processStartTime + "&end=" + TimeUtil
-                    .addMinsToTime(processStartTime, 7));
+        responseInstance = prism.getProcessHelper().getProcessInstanceResume(processName,
+            "?start=" + processStartTime + "&end=" + TimeUtil.addMinsToTime(processStartTime, 7));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + TimeUtil
-                    .addMinsToTime(processStartTime, 16) + "&end="
-                        + TimeUtil.addMinsToTime(processStartTime, 45));
+        responseInstance = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            "?start=" + TimeUtil.addMinsToTime(processStartTime, 16)
+                + "&end=" + TimeUtil.addMinsToTime(processStartTime, 45));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = cluster1.getProcessHelper()
-            .getProcessInstanceKill(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + processStartTime + "&end=" + TimeUtil
-                    .addMinsToTime(processStartTime, 7));
+        responseInstance = cluster1.getProcessHelper().getProcessInstanceKill(processName,
+            "?start=" + processStartTime + "&end="+ TimeUtil.addMinsToTime(processStartTime, 7));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper()
-            .getProcessInstanceRerun(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=" + processStartTime + "&end=" + TimeUtil
-                    .addMinsToTime(processStartTime, 7));
+        responseInstance = prism.getProcessHelper().getProcessInstanceRerun(processName,
+            "?start=" + processStartTime + "&end=" + TimeUtil.addMinsToTime(processStartTime, 7));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
     }

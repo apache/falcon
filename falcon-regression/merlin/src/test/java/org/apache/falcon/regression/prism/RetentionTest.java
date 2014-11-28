@@ -30,8 +30,8 @@ import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
@@ -60,19 +60,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Test with retention.
+ */
 @Test(groups = "embedded")
 public class RetentionTest extends BaseTestClass {
     private static final String TEST_FOLDERS = "testFolders/";
-    String baseTestHDFSDir = baseHDFSDir + "/RetentionTest/";
-    String testHDFSDir = baseTestHDFSDir + TEST_FOLDERS;
-    private static final Logger logger = Logger.getLogger(RetentionTest.class);
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
+    private String baseTestHDFSDir = baseHDFSDir + "/RetentionTest/";
+    private String testHDFSDir = baseTestHDFSDir + TEST_FOLDERS;
+    private static final Logger LOGGER = Logger.getLogger(RetentionTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
+    private static final int[] GAPS = new int[]{2, 4, 5, 1};
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readRetentionBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].setInputFeedDataPath(testHDFSDir);
@@ -86,7 +90,7 @@ public class RetentionTest extends BaseTestClass {
     }
 
     /**
-     * Particular test case for https://issues.apache.org/jira/browse/FALCON-321
+     * Particular test case for https://issues.apache.org/jira/browse/FALCON-321.
      * @throws Exception
      */
     @Test
@@ -136,13 +140,13 @@ public class RetentionTest extends BaseTestClass {
     private void replenishData(FreqType freqType, boolean gap, boolean withData) throws Exception {
         int skip = 1;
         if (gap) {
-            skip = gaps[new Random().nextInt(gaps.length)];
+            skip = GAPS[new Random().nextInt(GAPS.length)];
         }
         final DateTime today = new DateTime(DateTimeZone.UTC);
         final List<DateTime> times = TimeUtil.getDatesOnEitherSide(
             freqType.addTime(today, -36), freqType.addTime(today, 36), skip, freqType);
         final List<String> dataDates = TimeUtil.convertDatesToString(times, freqType.getFormatter());
-        logger.info("dataDates = " + dataDates);
+        LOGGER.info("dataDates = " + dataDates);
         dataDates.add(HadoopUtil.SOMETHING_RANDOM);
         if (withData) {
             HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.RESOURCES + "log_01.txt",
@@ -174,9 +178,9 @@ public class RetentionTest extends BaseTestClass {
         List<String> initialData = Util.getHadoopDataFromDir(clusterFS, feed, testHDFSDir);
 
         cluster.getFeedHelper().schedule(feed);
-        logger.info(cluster.getClusterHelper().getActiveMQ());
+        LOGGER.info(cluster.getClusterHelper().getActiveMQ());
         final String feedName = Util.readEntityName(feed);
-        logger.info(feedName);
+        LOGGER.info(feedName);
         JmsMessageConsumer messageConsumer = new JmsMessageConsumer("FALCON." + feedName,
                 cluster.getClusterHelper().getActiveMQ());
         messageConsumer.start();
@@ -184,7 +188,7 @@ public class RetentionTest extends BaseTestClass {
         String bundleId = OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0);
 
         List<String> workflows = OozieUtil.waitForRetentionWorkflowToSucceed(bundleId, clusterOC);
-        logger.info("workflows: " + workflows);
+        LOGGER.info("workflows: " + workflows);
         messageConsumer.interrupt();
         Util.printMessageData(messageConsumer);
 
@@ -194,9 +198,9 @@ public class RetentionTest extends BaseTestClass {
         //now see if retention value was matched to as expected
         List<String> expectedOutput = filterDataOnRetention(initialData, currentTime, retentionUnit,
             retentionPeriod, freqType);
-        logger.info("initialData = " + initialData);
-        logger.info("finalData = " + finalData);
-        logger.info("expectedOutput = " + expectedOutput);
+        LOGGER.info("initialData = " + initialData);
+        LOGGER.info("finalData = " + finalData);
+        LOGGER.info("expectedOutput = " + expectedOutput);
 
         final List<String> missingData = new ArrayList<String>(initialData);
         missingData.removeAll(expectedOutput);
@@ -210,7 +214,7 @@ public class RetentionTest extends BaseTestClass {
 
     /**
      * Makes validation based on comparison of data which is expected to be removed with data
-     * mentioned in messages from ActiveMQ
+     * mentioned in messages from ActiveMQ.
      *
      * @param feedName feed name
      * @param messages messages from ActiveMQ
@@ -247,7 +251,7 @@ public class RetentionTest extends BaseTestClass {
     }
 
     /**
-     * Evaluates amount of data which is expected to be retained
+     * Evaluates amount of data which is expected to be retained.
      *
      * @param inputData initial data on cluster
      * @param currentTime current date
@@ -273,7 +277,6 @@ public class RetentionTest extends BaseTestClass {
         return finalData;
     }
 
-    final static int[] gaps = new int[]{2, 4, 5, 1};
 
     /**
      * Provides different sets of parameters for retention workflow.
@@ -282,13 +285,15 @@ public class RetentionTest extends BaseTestClass {
     public Object[][] getTestData(Method m) {
         // a negative value like -4 should be covered in validation scenarios.
         Integer[] retentionPeriods = new Integer[]{0, 10080, 60, 8, 24};
-        RetentionUnit[] retentionUnits = new RetentionUnit[]{RetentionUnit.HOURS,
-            RetentionUnit.DAYS};// "minutes","hours", "days",
+        RetentionUnit[] retentionUnits = new RetentionUnit[]{
+            RetentionUnit.HOURS,
+            RetentionUnit.DAYS,
+        }; // "minutes","hours", "days",
         Boolean[] gaps = new Boolean[]{false, true};
         FreqType[] freqTypes = new FreqType[]{FreqType.DAILY, FreqType.YEARLY, FreqType.MONTHLY};
         final Boolean[] withData = new Boolean[]{true};
 
-        return MathUtil.crossProduct(retentionPeriods, retentionUnits, gaps, freqTypes, withData);
+        return MatrixUtil.crossProduct(retentionPeriods, retentionUnits, gaps, freqTypes, withData);
     }
 
     @AfterClass(alwaysRun = true)

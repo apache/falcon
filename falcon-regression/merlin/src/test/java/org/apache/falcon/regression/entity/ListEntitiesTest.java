@@ -72,8 +72,8 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @BeforeClass(alwaysRun = true)
     public void prepareData()
-            throws IOException, AuthenticationException, JAXBException, URISyntaxException,
-            InterruptedException {
+        throws IOException, AuthenticationException, JAXBException, URISyntaxException,
+        InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         CleanupUtil.cleanAllEntities(prism);
 
@@ -121,7 +121,7 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithOrderBy(IEntityManagerHelper helper)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] entities =
             helper.listAllEntities("orderBy=name", null).getEntityList().getElements();
@@ -136,7 +136,7 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithFilterByStatus(IEntityManagerHelper helper)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         String[] statuses = helper.getEntityType().equalsIgnoreCase("cluster")
             ? new String[]{"SUBMITTED"} : new String[]{"SUBMITTED", "RUNNING"};
 
@@ -170,7 +170,7 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithOffset(IEntityManagerHelper helper)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
             helper.listAllEntities(null, null).getEntityList().getElements();
@@ -199,7 +199,7 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithNumResults(IEntityManagerHelper helper)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
             helper.listAllEntities(null, null).getEntityList().getElements();
@@ -223,7 +223,7 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithTags(IEntityManagerHelper helper)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
             helper.listAllEntities("fields=tags", null).getEntityList().getElements();
@@ -259,7 +259,7 @@ public class ListEntitiesTest extends BaseTestClass {
      */
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithCustomFilter(IEntityManagerHelper helper)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] entities = helper.listEntities(
             "numResults=2&fields=status,tags&filterBy=STATUS:SUBMITTED&orderBy=name&tags=" + tags[2],

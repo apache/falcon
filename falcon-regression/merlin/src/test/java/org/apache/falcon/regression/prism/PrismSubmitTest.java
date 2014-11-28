@@ -40,16 +40,19 @@ import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.util.List;
 
+/**
+ * Submit tests with prism.
+ */
 @Test(groups = "distributed")
 public class PrismSubmitTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    String baseTestDir = baseHDFSDir + "/PrismSubmitTest";
-    String randomHDFSPath = baseTestDir + "/someRandomPath";
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    boolean restartRequired;
-    private static final Logger logger = Logger.getLogger(PrismSubmitTest.class);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private String baseTestDir = baseHDFSDir + "/PrismSubmitTest";
+    private String randomHDFSPath = baseTestDir + "/someRandomPath";
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private boolean restartRequired;
+    private static final Logger LOGGER = Logger.getLogger(PrismSubmitTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -58,7 +61,7 @@ public class PrismSubmitTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         restartRequired = false;
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster1);
@@ -77,7 +80,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_1prism1coloPrismdown() throws Exception {
+    public void submitCluster1prism1coloPrismDown() throws Exception {
         restartRequired = true;
         Util.shutDownService(prism.getClusterHelper());
 
@@ -95,14 +98,14 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_resubmitDiffContent() throws Exception {
+    public void submitClusterResubmitDiffContent() throws Exception {
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
         List<String> beforeSubmitCluster = cluster1.getClusterHelper().getStoreInfo();
         List<String> beforeSubmitPrism = cluster2.getClusterHelper().getStoreInfo();
 
         bundles[0].setCLusterWorkingPath(bundles[0].getClusters().get(0), randomHDFSPath);
-        logger.info("modified cluster Data: "
+        LOGGER.info("modified cluster Data: "
             + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
         r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
@@ -114,7 +117,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_resubmitAlreadyPARTIALWithAllUp() throws Exception {
+    public void submitClusterResubmitAlreadyPARTIALWithAllUp() throws Exception {
         restartRequired = true;
         Util.shutDownService(cluster1.getClusterHelper());
         TimeUtil.sleepSeconds(30);
@@ -131,7 +134,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitProcess_1ColoDownAfter2FeedSubmitStartAfterProcessSubmitAnsDeleteProcess()
+    public void submitProcess1ColoDownAfter2FeedSubmitStartAfterProcessSubmitAnsDeleteProcess()
         throws Exception {
         restartRequired = true;
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
@@ -185,7 +188,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitProcess_ideal() throws Exception {
+    public void submitProcessIdeal() throws Exception {
 
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
@@ -228,7 +231,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_1prism1coloColoDown() throws Exception {
+    public void submitCluster1prism1coloColoDown() throws Exception {
         restartRequired = true;
         Util.shutDownService(cluster1.getClusterHelper());
 
@@ -268,7 +271,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_1prism1coloSubmitDeleted() throws Exception {
+    public void submitCluster1prism1coloSubmitDeleted() throws Exception {
         prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         prism.getClusterHelper().delete(bundles[0].getClusters().get(0));
 
@@ -293,7 +296,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "embedded")
-    public void submitProcess_woClusterSubmit() throws Exception {
+    public void submitProcessWOClusterSubmit() throws Exception {
         ServiceResponse r = prism.getProcessHelper().submitEntity(bundles[0].getProcessData());
 
         Assert.assertTrue(r.getMessage().contains("FAILED"));
@@ -301,7 +304,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "embedded")
-    public void submitProcess_woFeedSubmit() throws Exception {
+    public void submitProcessWOFeedSubmit() throws Exception {
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -311,7 +314,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = {"prism", "0.2", "distributed"})
-    public void submitCluster_resubmitAlreadyPARTIAL() throws Exception {
+    public void submitClusterResubmitAlreadyPARTIAL() throws Exception {
         restartRequired = true;
         bundles[1] = new Bundle(bundles[0], cluster2);
         bundles[1].generateUniqueBundle();
@@ -324,7 +327,7 @@ public class PrismSubmitTest extends BaseTestClass {
         Util.shutDownService(cluster1.getFeedHelper());
 
         bundles[1].setCLusterColo(cluster2.getClusterHelper().getColoName());
-        logger.info("cluster b2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
+        LOGGER.info("cluster b2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[1].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("PARTIAL"));
 
@@ -341,7 +344,7 @@ public class PrismSubmitTest extends BaseTestClass {
         Util.restartService(cluster1.getFeedHelper());
 
         bundles[0].setCLusterColo(cluster1.getClusterHelper().getColoName());
-        logger.info("cluster b1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("cluster b1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
         r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -356,7 +359,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_polarization() throws Exception {
+    public void submitClusterPolarization() throws Exception {
         restartRequired = true;
         //shutdown one colo and submit
         Util.shutDownService(cluster1.getClusterHelper());
@@ -385,7 +388,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_resubmitDiffContentPARTIAL() throws Exception {
+    public void submitClusterResubmitDiffContentPARTIAL() throws Exception {
         restartRequired = true;
         Util.shutDownService(cluster1.getClusterHelper());
         TimeUtil.sleepSeconds(30);
@@ -409,7 +412,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test
-    public void submitCluster_PARTIALDeletedOfPARTIALSubmit() throws Exception {
+    public void submitClusterPARTIALDeletedOfPARTIALSubmit() throws Exception {
         restartRequired = true;
         Util.shutDownService(cluster1.getClusterHelper());
         TimeUtil.sleepSeconds(30);
@@ -432,7 +435,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_submitPartialDeleted() throws Exception {
+    public void submitClusterSubmitPartialDeleted() throws Exception {
         restartRequired = true;
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
 
@@ -467,7 +470,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "embedded")
-    public void submitCluster_resubmitAlreadySucceeded() throws Exception {
+    public void submitClusterResubmitAlreadySucceeded() throws Exception {
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -483,7 +486,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "distributed")
-    public void submitCluster_1prism1coloAllUp() throws Exception {
+    public void submitCluster1prism1coloAllUp() throws Exception {
         List<String> beforeSubmitCluster1 = cluster1.getClusterHelper().getStoreInfo();
         List<String> beforeSubmitCluster2 = cluster2.getClusterHelper().getStoreInfo();
         List<String> beforeSubmitPrism = prism.getClusterHelper().getStoreInfo();
@@ -504,7 +507,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test(groups = "embedded")
-    public void submitCluster_1prism1coloAlreadySubmitted() throws Exception {
+    public void submitCluster1prism1coloAlreadySubmitted() throws Exception {
         prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
 
         List<String> beforeSubmitCluster1 = cluster1.getClusterHelper().getStoreInfo();
@@ -524,7 +527,7 @@ public class PrismSubmitTest extends BaseTestClass {
     }
 
     @Test
-    public void submitProcess_1ColoDownAfter1FeedSubmitStartAfter2feed() throws Exception {
+    public void submitProcess1ColoDownAfter1FeedSubmitStartAfter2feed() throws Exception {
         restartRequired = true;
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"), r.getMessage());

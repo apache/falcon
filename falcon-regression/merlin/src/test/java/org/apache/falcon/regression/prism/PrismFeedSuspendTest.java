@@ -39,14 +39,17 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+/**
+ * Suspend feed via prism tests.
+ */
 public class PrismFeedSuspendTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedSuspendTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedSuspendTest.class);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedSuspendTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedSuspendTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -55,7 +58,7 @@ public class PrismFeedSuspendTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));

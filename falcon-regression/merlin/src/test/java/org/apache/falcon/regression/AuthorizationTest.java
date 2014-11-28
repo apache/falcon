@@ -437,10 +437,8 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1KillSomeU2RerunAllProcessInstances()
-            throws IOException, JAXBException,
-
-            AuthenticationException, URISyntaxException, OozieClientException,
-            InterruptedException {
+        throws IOException, JAXBException, AuthenticationException, URISyntaxException,
+        OozieClientException, InterruptedException {
         String startTime = TimeUtil
             .getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
@@ -503,8 +501,8 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1SubmitU2UpdateFeed()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         String feed = bundles[0].getInputFeedFromBundle();
         //submit feed
         bundles[0].submitClusters(prism);
@@ -514,8 +512,8 @@ public class AuthorizationTest extends BaseTestClass {
                 .readEntityName(feed)) && !definition.contains("(feed) not found"),
             "Feed should be already submitted");
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
-            MINUTE_DATE_PATTERN);
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+            + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
             TimeUtil.getTimeWrtSystemTime(0),
@@ -534,8 +532,8 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
-            MINUTE_DATE_PATTERN);
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+            + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
             TimeUtil.getTimeWrtSystemTime(0),
@@ -619,8 +617,8 @@ public class AuthorizationTest extends BaseTestClass {
             .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
-            MINUTE_DATE_PATTERN);
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+            + MINUTE_DATE_PATTERN);
 
         //update feed by U1
         serviceResponse = prism.getFeedHelper().update(feed, newFeed,
@@ -657,12 +655,12 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed,
-        baseHDFSDir + "/randomPath/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/");
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+            + MINUTE_DATE_PATTERN);
 
         //update feed by U2
         serviceResponse = prism.getFeedHelper().update(feed, newFeed,
-        TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
+            TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
                  "Feed scheduled by first user should not be updated by second user");
     }

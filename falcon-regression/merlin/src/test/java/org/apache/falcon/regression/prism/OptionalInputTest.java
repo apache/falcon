@@ -44,16 +44,19 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 
+/**
+ * Tests with optional input.
+ */
 @Test(groups = "embedded")
 public class OptionalInputTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient oozieClient = serverOC.get(0);
-    String baseTestDir = baseHDFSDir + "/OptionalInputTest";
-    String inputPath = baseTestDir + "/input";
-    String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private static final Logger logger = Logger.getLogger(OptionalInputTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient oozieClient = serverOC.get(0);
+    private String baseTestDir = baseHDFSDir + "/OptionalInputTest";
+    private String inputPath = baseTestDir + "/input";
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(OptionalInputTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -62,7 +65,7 @@ public class OptionalInputTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
@@ -82,18 +85,20 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_1optional_1compulsary() throws Exception {
+    public void optionalTest1optional1compulsary() throws Exception {
         bundles[0].generateRequiredBundle(1, 2, 1, inputPath, 1,
                 "2010-01-02T01:00Z", "2010-01-02T01:12Z");
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
         String process = bundles[0].getProcessData();
-        logger.info(Util.prettyPrintXml(process));
+        LOGGER.info(Util.prettyPrintXml(process));
 
         bundles[0].submitAndScheduleBundle(prism, false);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide("2010-01-02T00:50Z",
@@ -112,21 +117,23 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_1optional_2compulsary() throws Exception {
+    public void optionalTest1optional2compulsary() throws Exception {
         bundles[0].generateRequiredBundle(1, 3, 1, inputPath, 1,
                 "2010-01-02T01:00Z", "2010-01-02T01:12Z");
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
         String processName = Util.readEntityName(bundles[0].getProcessData());
-        logger.info(Util.prettyPrintXml(bundles[0].getProcessData()));
+        LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
         bundles[0].submitAndScheduleBundle(prism, false);
 
-        logger.info("instanceShouldStillBeInWaitingState");
+        LOGGER.info("instanceShouldStillBeInWaitingState");
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
                 2, CoordinatorAction.Status.WAITING, EntityType.PROCESS);
 
@@ -148,18 +155,20 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_2optional_1compulsary() throws Exception {
+    public void optionalTest2optional1compulsary() throws Exception {
         bundles[0].generateRequiredBundle(1, 3, 2, inputPath, 1, "2010-01-02T01:00Z",
             "2010-01-02T01:12Z");
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
         String processName = Util.readEntityName(bundles[0].getProcessData());
-        logger.info(Util.prettyPrintXml(bundles[0].getProcessData()));
+        LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
 
         bundles[0].submitAndScheduleBundle(prism, false);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
@@ -180,19 +189,21 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_optionalInputWithEmptyDir() throws Exception {
+    public void optionalTestOptionalInputWithEmptyDir() throws Exception {
         String startTime = TimeUtil.getTimeWrtSystemTime(-4);
         String endTime = TimeUtil.getTimeWrtSystemTime(10);
         bundles[0].generateRequiredBundle(1, 2, 1, inputPath, 1, startTime, endTime);
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
         String process = bundles[0].getProcessData();
-        logger.info(Util.prettyPrintXml(process));
+        LOGGER.info(Util.prettyPrintXml(process));
 
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(
             TimeUtil.addMinsToTime(startTime, -10), endTime, 5);
@@ -214,17 +225,19 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_allInputOptional() throws Exception {
+    public void optionalTestAllInputOptional() throws Exception {
         bundles[0].generateRequiredBundle(1, 2, 2, inputPath, 1,
                 "2010-01-02T01:00Z", "2010-01-02T01:12Z");
         bundles[0].setProcessInputNames("inputData");
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         String process = bundles[0].getProcessData();
-        logger.info(Util.prettyPrintXml(process));
+        LOGGER.info(Util.prettyPrintXml(process));
 
         bundles[0].submitAndScheduleBundle(prism, false);
         InstanceUtil.waitTillInstanceReachState(oozieClient, Util.getProcessName(process),
@@ -240,20 +253,22 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_updateProcessMakeOptionalCompulsory() throws Exception {
+    public void optionalTestUpdateProcessMakeOptionalCompulsory() throws Exception {
         String startTime = TimeUtil.getTimeWrtSystemTime(-4);
         String endTime = TimeUtil.getTimeWrtSystemTime(30);
         bundles[0].generateRequiredBundle(1, 2, 1, inputPath, 1, startTime, endTime);
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
         String process = bundles[0].getProcessData();
         String processName = Util.getProcessName(process);
-        logger.info(Util.prettyPrintXml(process));
+        LOGGER.info(Util.prettyPrintXml(process));
 
         bundles[0].submitAndScheduleBundle(prism, true);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
@@ -264,14 +279,14 @@ public class OptionalInputTest extends BaseTestClass {
             inputPath + "/input1/", dataDates);
 
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
-                1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+            1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final ProcessMerlin processMerlin = new ProcessMerlin(process);
         processMerlin.setProcessFeeds(bundles[0].getDataSets(), 2, 0, 1);
         bundles[0].setProcessData(processMerlin.toString());
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         process = bundles[0].getProcessData();
-        logger.info("modified process:" + Util.prettyPrintXml(process));
+        LOGGER.info("modified process:" + Util.prettyPrintXml(process));
 
         prism.getProcessHelper().update(process, process);
 
@@ -294,20 +309,22 @@ public class OptionalInputTest extends BaseTestClass {
      * @throws Exception
      */
     @Test(enabled = true, groups = {"singleCluster"})
-    public void optionalTest_updateProcessMakeCompulsoryOptional() throws Exception {
+    public void optionalTestUpdateProcessMakeCompulsoryOptional() throws Exception {
         String startTime = TimeUtil.getTimeWrtSystemTime(-4);
         String endTime = TimeUtil.getTimeWrtSystemTime(30);
         bundles[0].generateRequiredBundle(1, 2, 1, inputPath, 1, startTime, endTime);
-        for (int i = 0; i < bundles[0].getClusters().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        for (int i = 0; i < bundles[0].getDataSets().size(); i++)
-            logger.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getClusters().get(i)));
+        }
+        for (int i = 0; i < bundles[0].getDataSets().size(); i++) {
+            LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
+        }
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(4);
         String process = bundles[0].getProcessData();
         String processName = Util.getProcessName(process);
-        logger.info(Util.prettyPrintXml(process));
+        LOGGER.info(Util.prettyPrintXml(process));
 
         bundles[0].submitAndScheduleBundle(prism, true);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
@@ -318,7 +335,7 @@ public class OptionalInputTest extends BaseTestClass {
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.SINGLE_FILE,
             inputPath + "/input1/", dataDates);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
-                1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+            1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final ProcessMerlin processMerlin = new ProcessMerlin(process);
         processMerlin.setProcessFeeds(bundles[0].getDataSets(), 2, 2, 1);
@@ -328,7 +345,7 @@ public class OptionalInputTest extends BaseTestClass {
         //delete all input data
         HadoopUtil.deleteDirIfExists(inputPath + "/", clusterFS);
         bundles[0].setProcessInputNames("inputData0", "inputData");
-        logger.info("modified process:" + Util.prettyPrintXml(process));
+        LOGGER.info("modified process:" + Util.prettyPrintXml(process));
 
         prism.getProcessHelper().update(process, process);
 

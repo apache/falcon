@@ -50,27 +50,30 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Replication feed with partitions as expression language variables tests.
+ */
 @Test(groups = "distributed")
 public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    ColoHelper cluster3 = servers.get(2);
-    FileSystem cluster1FS = serverFS.get(0);
-    FileSystem cluster2FS = serverFS.get(1);
-    FileSystem cluster3FS = serverFS.get(2);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private ColoHelper cluster3 = servers.get(2);
+    private FileSystem cluster1FS = serverFS.get(0);
+    private FileSystem cluster2FS = serverFS.get(1);
+    private FileSystem cluster3FS = serverFS.get(2);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
     private String testDate = "/2012/10/01/12/";
     private String baseTestDir = baseHDFSDir + "/PrismFeedReplicationPartitionExpTest";
     private String testBaseDir1 = baseTestDir + "/localDC/rc/billing";
     private String testBaseDir2 = baseTestDir + "/clusterPath/localDC/rc/billing";
     private String testBaseDir3 = baseTestDir + "/dataBillingRC/fetlrc/billing";
     private String testBaseDir4 = baseTestDir + "/sourcetarget";
-    private String testBaseDir_server1source = baseTestDir + "/source1";
+    private String testBaseDirServer1source = baseTestDir + "/source1";
     private String testDirWithDate = testBaseDir1 + testDate;
-    private String testDirWithDate_sourcetarget = testBaseDir4 + testDate;
-    private String testDirWithDate_source1 = testBaseDir_server1source + testDate;
+    private String testDirWithDateSourcetarget = testBaseDir4 + testDate;
+    private String testDirWithDateSource1 = testBaseDirServer1source + testDate;
     private String testFile1 = OSUtil.RESOURCES
         + OSUtil.getPath("ReplicationResources", "feed-s4Replication.xml");
     private String testFile2 = OSUtil.RESOURCES + OSUtil.getPath("ReplicationResources", "id.pig");
@@ -78,7 +81,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         + OSUtil.getPath("ReplicationResources", "cluster-0.1.xml");
     private String testFile4 = OSUtil.RESOURCES
         + OSUtil.getPath("ReplicationResources", "log4testng.properties");
-    private static final Logger logger =
+    private static final Logger LOGGER =
         Logger.getLogger(PrismFeedReplicationPartitionExpTest.class);
 
 
@@ -99,7 +102,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
 
-        logger.info("creating test data");
+        LOGGER.info("creating test data");
 
         uploadDataToServer3(testDirWithDate + "00/ua2/", testFile1);
         uploadDataToServer3(testDirWithDate + "05/ua2/", testFile2);
@@ -142,37 +145,37 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
         //data for test normalTest_1s2t_pst where both source target partition are required
 
-        uploadDataToServer3(testDirWithDate_sourcetarget + "00/ua3/ua2/", testFile1);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "05/ua3/ua2/", testFile2);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "10/ua3/ua2/", testFile3);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "15/ua3/ua2/", testFile4);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "20/ua3/ua2/", testFile4);
+        uploadDataToServer3(testDirWithDateSourcetarget + "00/ua3/ua2/", testFile1);
+        uploadDataToServer3(testDirWithDateSourcetarget + "05/ua3/ua2/", testFile2);
+        uploadDataToServer3(testDirWithDateSourcetarget + "10/ua3/ua2/", testFile3);
+        uploadDataToServer3(testDirWithDateSourcetarget + "15/ua3/ua2/", testFile4);
+        uploadDataToServer3(testDirWithDateSourcetarget + "20/ua3/ua2/", testFile4);
 
-        uploadDataToServer3(testDirWithDate_sourcetarget + "00/ua3/ua1/", testFile1);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "05/ua3/ua1/", testFile2);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "10/ua3/ua1/", testFile3);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "15/ua3/ua1/", testFile4);
-        uploadDataToServer3(testDirWithDate_sourcetarget + "20/ua3/ua1/", testFile4);
+        uploadDataToServer3(testDirWithDateSourcetarget + "00/ua3/ua1/", testFile1);
+        uploadDataToServer3(testDirWithDateSourcetarget + "05/ua3/ua1/", testFile2);
+        uploadDataToServer3(testDirWithDateSourcetarget + "10/ua3/ua1/", testFile3);
+        uploadDataToServer3(testDirWithDateSourcetarget + "15/ua3/ua1/", testFile4);
+        uploadDataToServer3(testDirWithDateSourcetarget + "20/ua3/ua1/", testFile4);
 
         // data when server 1 acts as source
-        uploadDataToServer1(testDirWithDate_source1 + "00/ua2/", testFile1);
-        uploadDataToServer1(testDirWithDate_source1 + "05/ua2/", testFile2);
+        uploadDataToServer1(testDirWithDateSource1 + "00/ua2/", testFile1);
+        uploadDataToServer1(testDirWithDateSource1 + "05/ua2/", testFile2);
 
 
-        uploadDataToServer1(testDirWithDate_source1 + "00/ua1/", testFile1);
-        uploadDataToServer1(testDirWithDate_source1 + "05/ua1/", testFile2);
+        uploadDataToServer1(testDirWithDateSource1 + "00/ua1/", testFile1);
+        uploadDataToServer1(testDirWithDateSource1 + "05/ua1/", testFile2);
 
 
-        uploadDataToServer1(testDirWithDate_source1 + "00/ua3/", testFile1);
-        uploadDataToServer1(testDirWithDate_source1 + "05/ua3/", testFile2);
+        uploadDataToServer1(testDirWithDateSource1 + "00/ua3/", testFile1);
+        uploadDataToServer1(testDirWithDateSource1 + "05/ua3/", testFile2);
 
-        logger.info("completed creating test data");
+        LOGGER.info("completed creating test data");
 
     }
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readFeedReplicaltionBundle();
 
         for (int i = 0; i < 3; i++) {
@@ -227,17 +230,17 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE, "");
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
-        AssertUtil.assertFailed(r, "submit of feed should have failed as the partition in source " +
-            "is blank");
+        AssertUtil.assertFailed(r, "submit of feed should have failed as the partition in source "
+            + "is blank");
     }
 
 
     @Test(enabled = true)
-    public void normalTest_1s1t1n_ps() throws Exception {
+    public void normalTest1s1t1nPS() throws Exception {
         //this test is for ideal condition when data is present in all the required places and
         // replication takes
         // place normally
@@ -275,7 +278,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
                 Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
                 "${cluster.colo}", testBaseDir1 + MINUTE_DATE_PATTERN);
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
@@ -336,7 +339,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
 
     @Test(enabled = true)
-    public void normalTest_1s1t1n_pt() throws Exception {
+    public void normalTest1s1t1nPT() throws Exception {
         //this test is for ideal condition when data is present in all the required places and
         // replication takes
         // place normally
@@ -370,7 +373,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE, null,
             testBaseDir1 + MINUTE_DATE_PATTERN);
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
@@ -420,7 +423,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
 
     @Test(enabled = true)
-    public void normalTest_1s2t_pt() throws Exception {
+    public void normalTest1s2tPT() throws Exception {
         //this test is for ideal condition when data is present in all the required places and
         // replication takes
         // place normally
@@ -462,7 +465,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE, null);
 
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
@@ -518,7 +521,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
     }
 
     @Test(enabled = true, groups = "embedded")
-    public void normalTest_2s1t_pt() throws Exception {
+    public void normalTest2s1tPT() throws Exception {
         //this test is for ideal condition when data is present in all the required places and
         // replication takes
         // place normally
@@ -559,20 +562,20 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE, null);
 
         //clean target if old data exists
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertFailed(r, "Submission of feed should have failed.");
         Assert.assertTrue(r.getMessage().contains(
-                "Partition expression has to be specified for cluster " +
-                    Util.readEntityName(bundles[0].getClusters().get(0)) +
-                    " as there are more than one source clusters"),
+                "Partition expression has to be specified for cluster "
+                    + Util.readEntityName(bundles[0].getClusters().get(0))
+                    + " as there are more than one source clusters"),
             "Failed response has unexpected error message.");
     }
 
 
     @Test(enabled = true)
-    public void normalTest_1s2t_ps() throws Exception {
+    public void normalTest1s2tPS() throws Exception {
 
         //this test is for ideal condition when data is present in all the required places and
         // replication takes
@@ -615,7 +618,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "${cluster.colo}");
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
@@ -675,7 +678,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
 
     @Test(enabled = true)
-    public void normalTest_2s1t_ps() throws Exception {
+    public void normalTest2s1tPS() throws Exception {
         //this test is for ideal condition when data is present in all the required places and
         // replication takes
         // place normally
@@ -702,7 +705,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
                 XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
                 Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.SOURCE,
                 "${cluster.colo}",
-                testBaseDir_server1source + MINUTE_DATE_PATTERN);
+                testBaseDirServer1source + MINUTE_DATE_PATTERN);
 
         feed = InstanceUtil
             .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA2, "2099-10-01T12:25Z"),
@@ -716,7 +719,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "${cluster.colo}", testBaseDir1 + MINUTE_DATE_PATTERN);
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
@@ -727,7 +730,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         TimeUtil.sleepSeconds(15);
 
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED,20);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
         //check if data has been replicated correctly
 
@@ -746,7 +749,8 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
 
         List<Path> ua1OriginalData00 = HadoopUtil
-            .getAllFilesRecursivelyHDFS(cluster1FS, new Path(testBaseDir_server1source + testDate + "00/ua1"));
+            .getAllFilesRecursivelyHDFS(cluster1FS, new Path(
+                testBaseDirServer1source + testDate + "00/ua1"));
         List<Path> ua3OriginalData05 = HadoopUtil
             .getAllFilesRecursivelyHDFS(cluster3FS, new Path(testDirWithDate + "05/ua1"));
 
@@ -756,7 +760,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
 
     @Test(enabled = true)
-    public void normalTest_1s2t_pst() throws Exception {
+    public void normalTest1s2tPST() throws Exception {
 
 
         //this test is for ideal condition when data is present in all the required places and
@@ -798,7 +802,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
             "${cluster.colo}", testBaseDir4 + MINUTE_DATE_PATTERN + "/");
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
@@ -841,13 +845,17 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
 
         List<Path> ua3OriginalData05ua1 = HadoopUtil
-            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(testDirWithDate_sourcetarget + "05/ua3/ua1"));
+            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(
+                testDirWithDateSourcetarget + "05/ua3/ua1"));
         List<Path> ua3OriginalData10ua1 = HadoopUtil
-            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(testDirWithDate_sourcetarget + "10/ua3/ua1"));
+            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(
+                testDirWithDateSourcetarget + "10/ua3/ua1"));
         List<Path> ua3OriginalData10ua2 = HadoopUtil
-            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(testDirWithDate_sourcetarget + "10/ua3/ua2"));
+            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(
+                testDirWithDateSourcetarget + "10/ua3/ua2"));
         List<Path> ua3OriginalData15ua2 = HadoopUtil
-            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(testDirWithDate_sourcetarget + "15/ua3/ua2"));
+            .getAllFilesRecursivelyHDFS(cluster3FS, new Path(
+                testDirWithDateSourcetarget + "15/ua3/ua2"));
 
         AssertUtil.checkForListSizes(ua1ReplicatedData05, ua3OriginalData05ua1);
         AssertUtil.checkForListSizes(ua1ReplicatedData10, ua3OriginalData10ua1);
@@ -886,7 +894,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE, "");
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);

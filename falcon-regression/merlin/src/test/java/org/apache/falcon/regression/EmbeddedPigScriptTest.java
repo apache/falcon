@@ -59,21 +59,21 @@ import java.util.List;
 @Test(groups = "embedded")
 public class EmbeddedPigScriptTest extends BaseTestClass {
 
-    ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
-    OozieClient clusterOC = serverOC.get(0);
-    String pigTestDir = baseHDFSDir + "/EmbeddedPigScriptTest";
-    String pigScriptDir = pigTestDir + "/EmbeddedPigScriptTest/pig";
-    String pigScriptLocation = pigScriptDir + "/id.pig";
-    String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
-    private static final Logger logger = Logger.getLogger(EmbeddedPigScriptTest.class);
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
+    private String pigTestDir = baseHDFSDir + "/EmbeddedPigScriptTest";
+    private String pigScriptDir = pigTestDir + "/EmbeddedPigScriptTest/pig";
+    private String pigScriptLocation = pigScriptDir + "/id.pig";
+    private String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
+    private static final Logger LOGGER = Logger.getLogger(EmbeddedPigScriptTest.class);
     private static final double TIMEOUT = 15;
-    String processName;
-    String process;
+    private String processName;
+    private String process;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-        logger.info("in @BeforeClass");
+        LOGGER.info("in @BeforeClass");
 
         //copy pig script
         HadoopUtil.uploadDir(clusterFS, pigScriptDir, OSUtil.RESOURCES + "pig");
@@ -90,7 +90,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();

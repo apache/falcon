@@ -184,8 +184,8 @@ public class EntitySummaryTest extends BaseTestClass {
     private List<String> scheduleEntityValidateWaitingInstances(ColoHelper cluster, String entity,
                                                                 EntityType entityType,
                                                                 String clusterName)
-            throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, JAXBException,
+        OozieClientException, InterruptedException {
         String entityName = Util.readEntityName(entity);
         IEntityManagerHelper helper;
         List<String> names = new ArrayList<String>();
@@ -242,7 +242,7 @@ public class EntitySummaryTest extends BaseTestClass {
      */
     private void validateProgressingInstances(List<String> names, EntityType entityType,
                                               String clusterName)
-            throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         InstancesResult r;
         IEntityManagerHelper helper;
         if (entityType == EntityType.FEED) {
@@ -307,8 +307,8 @@ public class EntitySummaryTest extends BaseTestClass {
      */
     @Test
     public void getSummaryFilterBy()
-            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-            InterruptedException {
+        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+        InterruptedException {
         //prepare process template
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].submitClusters(prism);

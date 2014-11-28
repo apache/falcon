@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
@@ -42,15 +43,10 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 /**
- * feed late data test
- */
-
-/*
  * This test submits and schedules feed and then check for replication.
  * On adding further late data it checks whether the data has been replicated correctly in the given late cut-off time.
  * Assuming that late frequency set in server is 3 minutes. Although value can be changed according to requirement.
  */
-
 public class FeedLateRerunTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
@@ -85,9 +81,9 @@ public class FeedLateRerunTest extends BaseTestClass {
     }
 
     @Test(enabled = true)
-    public void FeedLateRerunTestWithEmptyFolders ()
-            throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException, InterruptedException {
+    public void feedLateRerunTestWithEmptyFolders()
+        throws AuthenticationException, IOException, URISyntaxException, JAXBException,
+        OozieClientException, InterruptedException {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 30);
@@ -97,22 +93,22 @@ public class FeedLateRerunTest extends BaseTestClass {
         String feed = bundles[0].getDataSets().get(0);
         feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-                XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-                XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-                XmlUtil.createValidity(startTime, endTime),
-                XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)),
-                ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-                XmlUtil.createValidity(startTime, endTime),
-                XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)),
-                ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         String entityName = Util.readEntityName(feed);
 
@@ -124,8 +120,8 @@ public class FeedLateRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
 
         Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), entityName,
-                        "REPLICATION"), 1);
+            .checkIfFeedCoordExist(cluster2.getFeedHelper(), entityName,
+                "REPLICATION"), 1);
 
 
         //Finding bundleId of replicated instance on target
@@ -133,17 +129,18 @@ public class FeedLateRerunTest extends BaseTestClass {
 
 
         //Finding and creating missing dependencies
-        List<String> missingDependencies = getAndCreateDependencies(cluster1,cluster1FS,cluster2,cluster2OC, bundleId, false, entityName);
+        List<String> missingDependencies = getAndCreateDependencies(
+            cluster1, cluster1FS, cluster2, cluster2OC, bundleId, false, entityName);
 
         int count = 1;
         for (String location : missingDependencies) {
-            if(count==1) {
+            if (count==1) {
                 source = location;
                 count++;
             }
         }
 
-        source=splitPathFromIp(source,"8020");
+        source=splitPathFromIp(source, "8020");
         LOGGER.info("source : " + source);
         target = source.replace("source", "target");
         LOGGER.info("target : " + target);
@@ -155,20 +152,20 @@ public class FeedLateRerunTest extends BaseTestClass {
          */
 
         int sleepMins = 8;
-        for(int i=0; i < sleepMins ; i++) {
+        for(int i=0; i < sleepMins; i++) {
             LOGGER.info("Waiting...");
             TimeUtil.sleepSeconds(60);
         }
 
 
         String bundleID = InstanceUtil.getLatestBundleID(cluster2, entityName, EntityType.FEED);
-        OozieUtil.validateRetryAttempts(cluster2, bundleID,EntityType.FEED, 1);
+        OozieUtil.validateRetryAttempts(cluster2, bundleID, EntityType.FEED, 1);
 
         //check if data has been replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
-                .getAllFilesRecursivelyHDFS(cluster1FS, new Path(source));
+            .getAllFilesRecursivelyHDFS(cluster1FS, new Path(source));
         List<Path> cluster2ReplicatedData = HadoopUtil
-                .getAllFilesRecursivelyHDFS(cluster2FS, new Path(target));
+            .getAllFilesRecursivelyHDFS(cluster2FS, new Path(target));
 
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
 
@@ -177,9 +174,9 @@ public class FeedLateRerunTest extends BaseTestClass {
 
 
     @Test(enabled = true)
-    public void FeedLateRerunTestWithData ()
-            throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException, InterruptedException {
+    public void feedLateRerunTestWithData()
+        throws AuthenticationException, IOException, URISyntaxException, JAXBException,
+        OozieClientException, InterruptedException {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 30);
@@ -189,22 +186,22 @@ public class FeedLateRerunTest extends BaseTestClass {
         String feed = bundles[0].getDataSets().get(0);
         feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-                XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-                XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-                XmlUtil.createValidity(startTime, endTime),
-                XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)),
-                ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-                XmlUtil.createValidity(startTime, endTime),
-                XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)),
-                ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         String entityName = Util.readEntityName(feed);
 
@@ -216,26 +213,27 @@ public class FeedLateRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
 
         Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), entityName,
-                        "REPLICATION"), 1);
+            .checkIfFeedCoordExist(cluster2.getFeedHelper(), entityName,
+                "REPLICATION"), 1);
 
 
         //Finding bundleId of replicated instance on target
         String bundleId = InstanceUtil.getLatestBundleID(cluster2, entityName, EntityType.FEED);
 
         //Finding and creating missing dependencies
-        List<String> missingDependencies = getAndCreateDependencies(cluster1,cluster1FS,cluster2,cluster2OC, bundleId, true, entityName);
+        List<String> missingDependencies = getAndCreateDependencies(
+            cluster1, cluster1FS, cluster2, cluster2OC, bundleId, true, entityName);
 
         int count = 1;
         for (String location : missingDependencies) {
-            if(count==1) {
+            if (count==1) {
                 source = location;
                 count++;
             }
         }
 
         LOGGER.info("source : " + source);
-        source=splitPathFromIp(source,"8020");
+        source=splitPathFromIp(source, "8020");
         LOGGER.info("source : " + source);
         target = source.replace("source", "target");
         LOGGER.info("target : " + target);
@@ -247,29 +245,29 @@ public class FeedLateRerunTest extends BaseTestClass {
          */
 
         int sleepMins = 8;
-        for(int i=0; i < sleepMins ; i++) {
+        for(int i=0; i < sleepMins; i++) {
             LOGGER.info("Waiting...");
             TimeUtil.sleepSeconds(60);
         }
 
 
         String bundleID = InstanceUtil.getLatestBundleID(cluster2, entityName, EntityType.FEED);
-        OozieUtil.validateRetryAttempts(cluster2, bundleID,EntityType.FEED, 1);
+        OozieUtil.validateRetryAttempts(cluster2, bundleID, EntityType.FEED, 1);
 
         //check if data has been replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
-                .getAllFilesRecursivelyHDFS(cluster1FS, new Path(source));
+            .getAllFilesRecursivelyHDFS(cluster1FS, new Path(source));
         List<Path> cluster2ReplicatedData = HadoopUtil
-                .getAllFilesRecursivelyHDFS(cluster2FS, new Path(target));
+            .getAllFilesRecursivelyHDFS(cluster2FS, new Path(target));
 
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
 
     }
 
-    private String splitPathFromIp (String src,String port) {
-        String req_src,tempSrc="";
-        if(src.contains(":")) {
-            String tempPath[] = src.split(":");
+    private String splitPathFromIp(String src, String port) {
+        String reqSrc, tempSrc = "";
+        if (src.contains(":")) {
+            String[] tempPath = src.split(":");
             for (String aTempPath : tempPath) {
                 if (aTempPath.startsWith(port)) {
                     tempSrc = aTempPath;
@@ -277,21 +275,23 @@ public class FeedLateRerunTest extends BaseTestClass {
             }
         }
 
-        if(tempSrc.isEmpty()) {
-            req_src=src;
+        if (tempSrc.isEmpty()) {
+            reqSrc = src;
+        } else {
+            reqSrc=tempSrc.replace(port, "");
         }
-        else {
-            req_src=tempSrc.replace(port,"");
-        }
-        return req_src;
+        return reqSrc;
     }
 
     /*
     prismHelper1 - source colo
     prismHelper2 - target colo
      */
-    private List<String> getAndCreateDependencies (ColoHelper prismHelper1, FileSystem clusterFS1, ColoHelper prismHelper2,OozieClient oozieClient2, String bundleId,  boolean dataFlag, String entityName)
-            throws OozieClientException, IOException {
+    private List<String> getAndCreateDependencies(ColoHelper prismHelper1, FileSystem clusterFS1,
+                                                  ColoHelper prismHelper2,
+                                                  OozieClient oozieClient2, String bundleId,
+                                                  boolean dataFlag, String entityName)
+        throws OozieClientException, IOException {
 
         List<String> missingDependencies = OozieUtil.getMissingDependencies(prismHelper2, bundleId);
         for (int i = 0; i < 10 && missingDependencies == null; ++i) {
@@ -310,10 +310,10 @@ public class FeedLateRerunTest extends BaseTestClass {
         InstanceUtil.createHDFSFolders(prismHelper1, missingDependencies);
 
         //Adding data to empty folders depending on dataFlag
-        if(dataFlag) {
+        if (dataFlag) {
             int tempCount = 1;
             for (String location : missingDependencies) {
-                if(tempCount==1) {
+                if (tempCount==1) {
                     LOGGER.info("Transferring data to : " + location);
                     HadoopUtil.copyDataToFolder(clusterFS1, location, OSUtil.RESOURCES + "feed-s4Replication.xml");
                     tempCount++;
@@ -323,13 +323,13 @@ public class FeedLateRerunTest extends BaseTestClass {
 
         //replication should start, wait while it ends
         InstanceUtil.waitTillInstanceReachState(oozieClient2, entityName, 1,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         // Adding data for late rerun
 
         int tempCounter = 1;
         for (String dependency : missingDependencies) {
-            if(tempCounter==1) {
+            if (tempCounter==1) {
                 LOGGER.info("Transferring late data to : " + dependency);
                 HadoopUtil.copyDataToFolder(clusterFS1, dependency, OSUtil.RESOURCES + "log4j.properties");
             }

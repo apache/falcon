@@ -46,17 +46,20 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+/**
+ * Schedule process via prsm tests.
+ */
 public class PrismProcessScheduleTest extends BaseTestClass {
 
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
-    OozieClient cluster1OC = serverOC.get(0);
-    OozieClient cluster2OC = serverOC.get(1);
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessScheduleTest/aggregator";
-    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
-    private static final Logger logger = Logger.getLogger(PrismProcessScheduleTest.class);
-    String process1;
-    String process2;
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessScheduleTest/aggregator";
+    private String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
+    private static final Logger LOGGER = Logger.getLogger(PrismProcessScheduleTest.class);
+    private String process1;
+    private String process2;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -66,7 +69,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
@@ -328,15 +331,15 @@ public class PrismProcessScheduleTest extends BaseTestClass {
         String process = bundles[0].getProcessData();
         try {
             hadoopFileEditor = new HadoopFileEditor(cluster1.getClusterHelper().getHadoopFS());
-            hadoopFileEditor.edit(new ProcessMerlin(process).getWorkflow().getPath() +
-                    "/workflow.xml", "<value>${outputData}</value>",
-                                        "<property>\n" +
-                       "                    <name>randomProp</name>\n" +
-                       "                    <value>randomValue</value>\n" +
-                       "                </property>");
+            hadoopFileEditor.edit(new ProcessMerlin(process).getWorkflow().getPath()
+                    + "/workflow.xml", "<value>${outputData}</value>",
+                                        "<property>\n"
+                       + "                    <name>randomProp</name>\n"
+                       + "                    <value>randomValue</value>\n"
+                       + "                </property>");
             bundles[0].submitFeedsScheduleProcess(prism);
             InstanceUtil.waitForBundleToReachState(cluster1,
-                Util.readEntityName(process),Job.Status.KILLED);
+                Util.readEntityName(process), Job.Status.KILLED);
             String oldBundleID = InstanceUtil.getLatestBundleID(cluster1,
                 Util.readEntityName(process), EntityType.PROCESS);
             prism.getProcessHelper().delete(process);
@@ -349,49 +352,49 @@ public class PrismProcessScheduleTest extends BaseTestClass {
                 hadoopFileEditor.restore();
             }
         }
-     }
+    }
 
-     /**
-     * Schedule a process that contains no inputs. The process should be successfully scheduled.
-     *
-     * @throws Exception
-     */
-     @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
-     public void testScheduleWhenZeroInputs()throws Exception{
-         bundles[0].submitClusters(prism);
-         bundles[0].setProcessWorkflow(workflowForNoIpOp);
-         ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
-         processObj.setInputs(null);
-         processObj.setLateProcess(null);
-         AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(bundles[0].getOutputFeedFromBundle()));
-         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(
-             processObj.toString()));
-         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(processObj.toString()), 2,
-                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
-     }
+    /**
+    * Schedule a process that contains no inputs. The process should be successfully scheduled.
+    *
+    * @throws Exception
+    */
+    @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
+    public void testScheduleWhenZeroInputs()throws Exception{
+        bundles[0].submitClusters(prism);
+        bundles[0].setProcessWorkflow(workflowForNoIpOp);
+        ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
+        processObj.setInputs(null);
+        processObj.setLateProcess(null);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(bundles[0].getOutputFeedFromBundle()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(
+            processObj.toString()));
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(processObj.toString()), 2,
+                CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
+    }
 
-     /**
-     * Schedule a process that contains no inputs or outputs. The process should be successfully scheduled.
-     *
-     * @throws Exception
-     */
-     @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
-     public void testScheduleWhenZeroInputsZeroOutputs()throws Exception{
-         bundles[0].submitClusters(prism);
-         bundles[0].setProcessWorkflow(workflowForNoIpOp);
-         ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
-         processObj.setInputs(null);
-         processObj.setOutputs(null);
-         processObj.setLateProcess(null);
-         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(
-             processObj.toString()));
-         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(processObj.toString()), 2,
-                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
-     }
+    /**
+    * Schedule a process that contains no inputs or outputs. The process should be successfully scheduled.
+    *
+    * @throws Exception
+    */
+    @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
+    public void testScheduleWhenZeroInputsZeroOutputs()throws Exception{
+        bundles[0].submitClusters(prism);
+        bundles[0].setProcessWorkflow(workflowForNoIpOp);
+        ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
+        processObj.setInputs(null);
+        processObj.setOutputs(null);
+        processObj.setLateProcess(null);
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(
+            processObj.toString()));
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(processObj.toString()), 2,
+                CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
+    }
 
 
-     @AfterClass(alwaysRun = true)
-     public void tearDownClass() throws IOException {
-         cleanTestDirs();
-     }
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
+    }
 }

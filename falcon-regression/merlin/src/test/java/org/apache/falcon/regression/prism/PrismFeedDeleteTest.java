@@ -49,16 +49,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Delete feed via prism tests.
+ */
 @Test(groups = "distributed")
 public class PrismFeedDeleteTest extends BaseTestClass {
 
     private boolean restartRequired;
-    ColoHelper cluster1 = servers.get(0);
-    ColoHelper cluster2 = servers.get(1);
+    private ColoHelper cluster1 = servers.get(0);
+    private ColoHelper cluster2 = servers.get(1);
     private String cluster1Colo = cluster1.getClusterHelper().getColoName();
     private String cluster2Colo = cluster2.getClusterHelper().getColoName();
-    String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedDeleteTest/aggregator";
-    private static final Logger logger = Logger.getLogger(PrismFeedDeleteTest.class);
+    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedDeleteTest/aggregator";
+    private static final Logger LOGGER = Logger.getLogger(PrismFeedDeleteTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -67,7 +70,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        logger.info("test name: " + method.getName());
+        LOGGER.info("test name: " + method.getName());
         restartRequired = false;
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster1);
@@ -88,7 +91,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
     }
 
     /**
-     * NOTE: All test cases assume that there are two entities scheduled in each colo
+     * NOTE: All test cases assume that there are two entities scheduled in each colo.
      */
 
     @Test(groups = {"multiCluster"})
@@ -191,11 +194,11 @@ public class PrismFeedDeleteTest extends BaseTestClass {
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().delete(bundles[0].getDataSets().get(0)));
 
-        List<String> Server2ArchivePostUp = cluster2.getFeedHelper().getArchiveInfo();
-        List<String> Server2StorePostUp = cluster2.getFeedHelper().getStoreInfo();
+        List<String> server2ArchivePostUp = cluster2.getFeedHelper().getArchiveInfo();
+        List<String> server2StorePostUp = cluster2.getFeedHelper().getStoreInfo();
 
-        List<String> Server1ArchivePostUp = cluster1.getFeedHelper().getArchiveInfo();
-        List<String> Server1StorePostUp = cluster1.getFeedHelper().getStoreInfo();
+        List<String> server1ArchivePostUp = cluster1.getFeedHelper().getArchiveInfo();
+        List<String> server1StorePostUp = cluster1.getFeedHelper().getStoreInfo();
 
         List<String> prismHelperArchivePostUp = prism.getFeedHelper().getArchiveInfo();
         List<String> prismHelperStorePostUp = prism.getFeedHelper().getStoreInfo();
@@ -203,11 +206,11 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         compareDataStoreStates(finalPrismStore, prismHelperStorePostUp, clusterName);
         compareDataStoreStates(prismHelperArchivePostUp, finalPrismArchiveStore, clusterName);
 
-        compareDataStoreStates(initialServer1Store, Server1StorePostUp, clusterName);
-        compareDataStoreStates(Server1ArchivePostUp, finalServer1ArchiveStore, clusterName);
+        compareDataStoreStates(initialServer1Store, server1StorePostUp, clusterName);
+        compareDataStoreStates(server1ArchivePostUp, finalServer1ArchiveStore, clusterName);
 
-        compareDataStoresForEquality(finalServer2Store, Server2StorePostUp);
-        compareDataStoresForEquality(finalServer2ArchiveStore, Server2ArchivePostUp);
+        compareDataStoresForEquality(finalServer2Store, server2StorePostUp);
+        compareDataStoresForEquality(finalServer2ArchiveStore, server2ArchivePostUp);
     }
 
 
@@ -366,13 +369,13 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         bundles[1] = new Bundle(bundles[1], cluster2);
 
         bundles[0].setCLusterColo(cluster1Colo);
-        logger.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
 
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         bundles[1].setCLusterColo(cluster2Colo);
-        logger.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
+        LOGGER.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
         r = prism.getClusterHelper().submitEntity(bundles[1].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -614,21 +617,21 @@ public class PrismFeedDeleteTest extends BaseTestClass {
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().delete(bundles[0].getDataSets().get(0)));
 
-        List<String> Server1StorePostUp = cluster1.getFeedHelper().getStoreInfo();
-        List<String> Server1ArchivePostUp = cluster1.getFeedHelper().getArchiveInfo();
+        List<String> server1StorePostUp = cluster1.getFeedHelper().getStoreInfo();
+        List<String> server1ArchivePostUp = cluster1.getFeedHelper().getArchiveInfo();
 
-        List<String> Server2StorePostUp = cluster2.getFeedHelper().getStoreInfo();
-        List<String> Server2ArchivePostUp = cluster2.getFeedHelper().getArchiveInfo();
+        List<String> server2StorePostUp = cluster2.getFeedHelper().getStoreInfo();
+        List<String> server2ArchivePostUp = cluster2.getFeedHelper().getArchiveInfo();
 
         List<String> prismStorePostUp = prism.getFeedHelper().getStoreInfo();
         List<String> prismArchivePostUp = prism.getFeedHelper().getArchiveInfo();
 
 
-        compareDataStoresForEquality(Server2StorePostUp, finalServer2Store);
-        compareDataStoresForEquality(Server2ArchivePostUp, finalServer2ArchiveStore);
+        compareDataStoresForEquality(server2StorePostUp, finalServer2Store);
+        compareDataStoresForEquality(server2ArchivePostUp, finalServer2ArchiveStore);
 
-        compareDataStoreStates(finalServer1Store, Server1StorePostUp, clusterName);
-        compareDataStoreStates(Server1ArchivePostUp, finalServer1ArchiveStore, clusterName);
+        compareDataStoreStates(finalServer1Store, server1StorePostUp, clusterName);
+        compareDataStoreStates(server1ArchivePostUp, finalServer1ArchiveStore, clusterName);
 
         compareDataStoreStates(finalPrismStore, prismStorePostUp, clusterName);
         compareDataStoreStates(prismArchivePostUp, finalPrismArchiveStore, clusterName);
@@ -785,13 +788,13 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         restartRequired = true;
 
         bundles[0].setCLusterColo(cluster1Colo);
-        logger.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
 
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         bundles[1].setCLusterColo(cluster2Colo);
-        logger.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
+        LOGGER.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
         r = prism.getClusterHelper().submitEntity(bundles[1].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -816,7 +819,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
                 baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         r = prism.getFeedHelper().submitEntity(feed);
 
@@ -886,13 +889,13 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         restartRequired = true;
 
         bundles[0].setCLusterColo(cluster1Colo);
-        logger.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
+        LOGGER.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
 
         ServiceResponse r = prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         bundles[1].setCLusterColo(cluster2Colo);
-        logger.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
+        LOGGER.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
         r = prism.getClusterHelper().submitEntity(bundles[1].getClusters().get(0));
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
@@ -915,7 +918,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
                 baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
 
-        logger.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         r = prism.getFeedHelper().submitEntity(feed);
 
@@ -943,8 +946,8 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         Util.shutDownService(cluster1.getFeedHelper());
 
         ServiceResponse response = prism.getFeedHelper().delete(feed);
-        Assert.assertTrue(response.getMessage().contains(cluster1Colo + "/org.apache.falcon" +
-            ".FalconException")
+        Assert.assertTrue(response.getMessage().contains(cluster1Colo + "/org.apache.falcon"
+            + ".FalconException")
             && response.getMessage().contains(cluster2Colo + "/" + Util.readEntityName(feed)));
         AssertUtil.assertPartial(response);
 

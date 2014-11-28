@@ -55,22 +55,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Tests for Lineage UI graph.
+ */
 @Test(groups = "lineage-ui")
 public class LineageGraphTest extends BaseUITestClass {
 
     private ColoHelper cluster = servers.get(0);
     private String baseTestDir = baseHDFSDir + "/LineageGraphTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private static final Logger logger = Logger.getLogger(LineageGraphTest.class);
-    String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
+    private static final Logger LOGGER = Logger.getLogger(LineageGraphTest.class);
+    private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String processName = null;
     private String inputFeedName = null;
     private String outputFeedName = null;
-    int inputEnd = 4;
+    private int inputEnd = 4;
     private List<Vertex> piVertices;
-    LineageHelper lineageHelper = new LineageHelper(prism);
+    private LineageHelper lineageHelper = new LineageHelper(prism);
 
     /**
      * Adjusts bundle and schedules it. Provides process with data, waits till some instances got
@@ -78,8 +81,8 @@ public class LineageGraphTest extends BaseUITestClass {
      */
     @BeforeClass
     public void setUp()
-            throws IOException, JAXBException, URISyntaxException, AuthenticationException,
-            OozieClientException, InterruptedException {
+        throws IOException, JAXBException, URISyntaxException, AuthenticationException,
+        OozieClientException, InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
@@ -87,7 +90,7 @@ public class LineageGraphTest extends BaseUITestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
-        logger.info("Start time: " + startTime + "\tEnd time: " + endTime);
+        LOGGER.info("Start time: " + startTime + "\tEnd time: " + endTime);
 
         /**prepare process definition*/
         bundles[0].setProcessValidity(startTime, endTime);
@@ -98,13 +101,13 @@ public class LineageGraphTest extends BaseUITestClass {
         bundles[0].setProcessInput("now(0,0)", String.format("now(0,%d)", inputEnd - 1));
 
         /**provide necessary data for first 3 instances to run*/
-        logger.info("Creating necessary data...");
+        LOGGER.info("Creating necessary data...");
         String prefix = bundles[0].getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(
             TimeUtil.addMinsToTime(startTime, -2), endTime, 0);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
-        logger.info("Process data: " + Util.prettyPrintXml(bundles[0].getProcessData()));
+        LOGGER.info("Process data: " + Util.prettyPrintXml(bundles[0].getProcessData()));
         bundles[0].submitBundle(prism);
 
         processName = bundles[0].getProcessName();
@@ -158,16 +161,16 @@ public class LineageGraphTest extends BaseUITestClass {
             Assert.assertEquals(processInstancesUI.get(0), nominalTime);
             /* input feed validations */
             List<String> inpInstancesUI = map.get(inputFeedName);
-            logger.info("InputFeed instances on lineage UI : " + inpInstancesUI);
-            logger.info("InputFeed instances from API : " + inpInstancesAPI);
+            LOGGER.info("InputFeed instances on lineage UI : " + inpInstancesUI);
+            LOGGER.info("InputFeed instances from API : " + inpInstancesAPI);
             Assert.assertEquals(inpInstancesUI.size(), inpInstancesAPI.size());
             for (Vertex inpInstanceAPI : inpInstancesAPI) {
                 Assert.assertTrue(inpInstancesUI.contains(inpInstanceAPI.getNominalTime()));
             }
             /* output feed validation */
             List<String> outInstancesUI = map.get(outputFeedName);
-            logger.info("Expected outputFeed instances : " + outInstancesUI);
-            logger.info("Actual instance : " + outInstancesAPI);
+            LOGGER.info("Expected outputFeed instances : " + outInstancesUI);
+            LOGGER.info("Actual instance : " + outInstancesAPI);
             Assert.assertEquals(outInstancesUI.size(), outInstancesAPI.size());
             for (Vertex outInstanceAPI : outInstancesAPI) {
                 Assert.assertTrue(outInstancesUI.contains(outInstanceAPI.getNominalTime()));
@@ -177,7 +180,7 @@ public class LineageGraphTest extends BaseUITestClass {
     }
 
     /**
-     * Clicks on each vertex and check the content of info panel
+     * Clicks on each vertex and check the content of info panel.
      */
     @Test
     public void testVerticesInfo()
@@ -207,8 +210,8 @@ public class LineageGraphTest extends BaseUITestClass {
                         Assert.assertEquals(info.get("Runs on"), clusterName,
                             String.format(message, "cluster", processName));
                     }
-                    Assert.assertEquals(info.get("Owned by"), System.getProperty("user" +
-                        ".name"), "Entity should be owned by current system user.");
+                    Assert.assertEquals(info.get("Owned by"), System.getProperty("user"
+                        + ".name"), "Entity should be owned by current system user.");
                 }
             }
             processPage.refresh();
@@ -257,9 +260,6 @@ public class LineageGraphTest extends BaseUITestClass {
         lineageHelper = new LineageHelper(prism);
         VerticesResult processResult = lineageHelper.getVerticesByName(processName);
         Vertex processVertex = processResult.getResults().get(0);
-        List<Vertex> piVertices =
-            lineageHelper.getVerticesByDirection(processVertex.getId(),
-                Direction.inComingVertices).filterByType(Vertex.VERTEX_TYPE.PROCESS_INSTANCE);
         for (Vertex piVertex : piVertices) {
             String nominalTime = piVertex.getNominalTime();
             processPage.openLineage(nominalTime);
@@ -324,18 +324,20 @@ public class LineageGraphTest extends BaseUITestClass {
                     isEdgePresent =
                         isPointNearTheVertex(startPointAPI, vertexRadius, startPointUI, 5)
                             && isPointNearTheVertex(endPointAPI, vertexRadius, endPointUI, 5);
-                    if (isEdgePresent) break;
+                    if (isEdgePresent) {
+                        break;
+                    }
                 }
                 Assert.assertTrue(
-                    isEdgePresent, String.format("Edge %s-->%s isn't present on lineage or " +
-                    "painted incorrectly.", startVertexAPI.getName(), endVertexAPI.getName()));
+                    isEdgePresent, String.format("Edge %s-->%s isn't present on lineage or "
+                        + "painted incorrectly.", startVertexAPI.getName(), endVertexAPI.getName()));
             }
             processPage.refresh();
         }
     }
 
     /**
-     * Test which opens and closes Lineage info and checks content of it
+     * Test which opens and closes Lineage info and checks content of it.
      */
     @Test
     public void testLineageOpenClose() {
@@ -354,7 +356,7 @@ public class LineageGraphTest extends BaseUITestClass {
     }
 
     /**
-     * Evaluates if endpoint is in permissible region near the vertex
+     * Evaluates if endpoint is in permissible region near the vertex.
      *
      * @param center    coordinates of vertex center
      * @param radius    radius of vertex
@@ -362,8 +364,8 @@ public class LineageGraphTest extends BaseUITestClass {
      */
     private boolean isPointNearTheVertex(Point center, int radius, Point point, int deviation) {
         double distance = Math.sqrt(
-            Math.pow(point.getX() - center.getX(), 2) +
-                Math.pow(point.getY() - center.getY(), 2));
+            Math.pow(point.getX() - center.getX(), 2)
+                + Math.pow(point.getY() - center.getY(), 2));
         return distance <= radius + deviation;
     }
 }
