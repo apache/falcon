@@ -33,6 +33,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-916 Falcon idempotency is being voilated during delete. (Balu
+   Vellanki via Srikanth Sundarrajan)
+
    FALCON-917 Fix corner cases while getting job id during instance status
    (Suhas Vasu) 
 

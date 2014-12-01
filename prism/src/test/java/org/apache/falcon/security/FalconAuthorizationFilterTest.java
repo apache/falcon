@@ -38,6 +38,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.HttpMethod;
 import java.io.IOException;
 
 /**
@@ -217,6 +218,7 @@ public class FalconAuthorizationFilterTest {
         Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
         Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + uri);
         Mockito.when(mockRequest.getPathInfo()).thenReturn(uri);
+        Mockito.when(mockRequest.getMethod()).thenReturn(HttpMethod.GET);
 
         try {
             filter.doFilter(mockRequest, mockResponse, mockChain);
@@ -226,6 +228,33 @@ public class FalconAuthorizationFilterTest {
             filter.destroy();
         }
     }
+
+    @Test
+    public void testDoFilterForDeleteEntityInvalidEntity() throws Exception {
+        CurrentUser.authenticate("falcon");
+
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+
+        Filter filter = new FalconAuthorizationFilter();
+        synchronized (StartupProperties.get()) {
+            filter.init(mockConfig);
+        }
+
+        String uri = "/entities/suspend/process/bad-entity";
+        StringBuffer requestUrl = new StringBuffer("http://localhost" + uri);
+        Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+        Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + uri);
+        Mockito.when(mockRequest.getPathInfo()).thenReturn(uri);
+        Mockito.when(mockRequest.getMethod()).thenReturn(HttpMethod.DELETE);
+
+        try {
+            filter.doFilter(mockRequest, mockResponse, mockChain);
+        } finally {
+            filter.destroy();
+        }
+    }
+
+
 
     public void addClusterEntity() throws Exception {
         clusterEntity = EntityBuilderTestUtil.buildCluster(CLUSTER_ENTITY_NAME);

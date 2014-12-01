@@ -39,6 +39,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
@@ -89,9 +90,11 @@ public class FalconAuthorizationFilter implements Filter {
                     HttpServletResponse.SC_FORBIDDEN, e.getMessage());
                 return; // do not continue processing
             } catch (EntityNotRegisteredException e) {
-                sendError((HttpServletResponse) response,
-                    HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-                return; // do not continue processing
+                if (!httpRequest.getMethod().equals(HttpMethod.DELETE)) {
+                    sendError((HttpServletResponse) response,
+                            HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                    return; // do not continue processing
+                } // else Falcon deletes a non-existing entity and returns success (idempotent operation).
             } catch (IllegalArgumentException e) {
                 sendError((HttpServletResponse) response,
                     HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
