@@ -160,6 +160,13 @@ public class EntityManagerTest extends AbstractEntityManager {
         CurrentUser.authenticate(System.getProperty("user.name"));
     }
 
+
+    @Test
+    public void testCapOnNumberOfResults() {
+        Assert.assertNotEquals(getRequiredNumberOfResults(10000, 0, 10000), 10000);
+        Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 10000), MAX_RESULTS);
+    }
+
     @Test
     public void testGetEntityListPagination() throws Exception {
         String user = System.getProperty("user.name");

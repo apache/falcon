@@ -61,6 +61,7 @@ public abstract class AbstractEntityManager {
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     protected static final String DEFAULT_NUM_RESULTS = "10";
+    protected static final int MAX_RESULTS = getMaxResultsPerPage();
 
     private AbstractWorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
@@ -71,6 +72,18 @@ public abstract class AbstractEntityManager {
         } catch (FalconException e) {
             throw new FalconRuntimException(e);
         }
+    }
+
+    private static int getMaxResultsPerPage() {
+        Integer result = 100;
+        final String key = "webservices.default.max.results.per.page";
+        String value = RuntimeProperties.get().getProperty(key, result.toString());
+        try {
+            result = Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            LOG.warn("Invalid value:{} for key:{} in runtime.properties", value, key);
+        }
+        return result;
     }
 
     protected void checkColo(String colo) {
@@ -814,6 +827,8 @@ public abstract class AbstractEntityManager {
             // No elements to return
             return 0;
         }
+
+        numresults = numresults <= MAX_RESULTS ? numresults : MAX_RESULTS;
         int retLen = arraySize - offset;
         if (retLen > numresults) {
             retLen = numresults;

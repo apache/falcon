@@ -7,20 +7,23 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-877 Pagination API should have a cap on number of results 
+   returned (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-734 Document when to use Distributed Mode vs. Embedded Mode
+   (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-805 Create store to store feed properties like name against 
+   it's path (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-807 Fix order of actual and expected expression in assert 
+   statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
+
    FALCON-784 Update release notes in CHANGES.txt in branch and trunk 
    (Venkatesh Seetharam)
 
    FALCON-782 Update trunk version to 0.7-incubating-SNAPSHOT (Venkatesh 
    Seetharam)
-
-   FALCON-807 Fix order of actual and expected expression in assert 
-   statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
-
-   FALCON-805 Create store to store feed properties like name against 
-   it's path (Ajay Yadav via Srikanth Sundarrajan)
-
-   FALCON-734 Document when to use Distributed Mode vs. Embedded Mode
-   (Ajay Yadav via Srikanth Sundarrajan)
 
   OPTIMIZATIONS
    FALCON-913 Change the default values of log clean up services
