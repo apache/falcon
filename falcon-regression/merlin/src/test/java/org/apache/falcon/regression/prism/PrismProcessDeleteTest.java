@@ -76,7 +76,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         removeBundles();
     }
 
-	/* NOTE: All test cases assume that there are two entities scheduled in each colo
+    /* NOTE: All test cases assume that there are two entities scheduled in each colo
         PrismProcessDeleteTest.testUA1ProcessDeleteAlreadyDeletedProcess */
     @Test(groups = {"prism", "0.2"})
     public void testUA1ProcessDeleteInBothColos() throws Exception {

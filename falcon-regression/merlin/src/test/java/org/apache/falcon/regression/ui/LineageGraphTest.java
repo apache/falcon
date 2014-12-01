@@ -138,7 +138,7 @@ public class LineageGraphTest extends BaseUITestClass {
     @Test
     public void testGraphVertices() {
 
-        ProcessPage processPage = new ProcessPage(driver, cluster, processName);
+        ProcessPage processPage = new ProcessPage(getDriver(), cluster, processName);
         processPage.navigateTo();
         for (Vertex piVertex : piVertices) {
             String nominalTime = piVertex.getNominalTime();
@@ -186,7 +186,7 @@ public class LineageGraphTest extends BaseUITestClass {
     public void testVerticesInfo()
         throws JAXBException, URISyntaxException, AuthenticationException, IOException {
         String clusterName = Util.readEntityName(bundles[0].getClusters().get(0));
-        ProcessPage processPage = new ProcessPage(driver, cluster, processName);
+        ProcessPage processPage = new ProcessPage(getDriver(), cluster, processName);
         processPage.navigateTo();
         for (Vertex piVertex : piVertices) {
             String nominalTime = piVertex.getNominalTime();
@@ -230,7 +230,7 @@ public class LineageGraphTest extends BaseUITestClass {
         expectedDescriptions.put("lineage-legend-feed-inst", "Feed instance");
         expectedDescriptions.put("lineage-legend-feed-inst lineage-legend-terminal",
             "Feed instance (terminal)");
-        ProcessPage processPage = new ProcessPage(driver, prism, processName);
+        ProcessPage processPage = new ProcessPage(getDriver(), prism, processName);
         processPage.navigateTo();
         for (Vertex piVertex : piVertices) {
             String nominalTime = piVertex.getNominalTime();
@@ -255,7 +255,7 @@ public class LineageGraphTest extends BaseUITestClass {
      */
     @Test
     public void testTerminals() {
-        ProcessPage processPage = new ProcessPage(driver, prism, processName);
+        ProcessPage processPage = new ProcessPage(getDriver(), prism, processName);
         processPage.navigateTo();
         lineageHelper = new LineageHelper(prism);
         VerticesResult processResult = lineageHelper.getVerticesByName(processName);
@@ -290,7 +290,7 @@ public class LineageGraphTest extends BaseUITestClass {
      */
     @Test
     public void testEdges() {
-        ProcessPage processPage = new ProcessPage(driver, prism, processName);
+        ProcessPage processPage = new ProcessPage(getDriver(), prism, processName);
         processPage.navigateTo();
         for (Vertex piVertex : piVertices) {
             String nominalTime = piVertex.getNominalTime();
@@ -341,7 +341,7 @@ public class LineageGraphTest extends BaseUITestClass {
      */
     @Test
     public void testLineageOpenClose() {
-        ProcessPage processPage = new ProcessPage(driver, prism, processName);
+        ProcessPage processPage = new ProcessPage(getDriver(), prism, processName);
         processPage.navigateTo();
         List<String> previous = new ArrayList<String>();
         for (Vertex piVertex : piVertices) {

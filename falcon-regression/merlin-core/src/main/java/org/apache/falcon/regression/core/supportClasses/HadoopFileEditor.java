@@ -86,7 +86,7 @@ public class HadoopFileEditor {
             fs.delete(file, false);
             File crcFile = new File("." + currentFile + ".crc");
             if (crcFile.exists()) {
-                crcFile.delete();
+                LOGGER.info("Result of delete on crcFile" + crcFile + " : " + crcFile.delete());
             }
             fs.copyFromLocalFile(new Path(currentFile), file);
         } else {

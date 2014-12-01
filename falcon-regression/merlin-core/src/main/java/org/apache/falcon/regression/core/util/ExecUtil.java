@@ -27,6 +27,7 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
@@ -129,10 +130,11 @@ public final class ExecUtil {
             TimeUtil.sleepSeconds(1);
         }
 
-        in.close();
+        IOUtils.closeQuietly(r);
+        IOUtils.closeQuietly(in);
         channel.disconnect();
         session.disconnect();
-        out.close();
+        IOUtils.closeQuietly(out);
         return data;
     }
 
