@@ -15,7 +15,7 @@
    * <a href="#Security">Security</a>
    * <a href="#Recipes">Recipes</a>
    * <a href="#Monitoring">Monitoring</a>
-   * <a href="#Appendix">Appendix</a>
+   * <a href="#Backwards_Compatibility">Backwards Compatibility Instructions</a>
 
 ---++ Architecture
 
@@ -715,8 +715,10 @@ Security is detailed in [[Security][Security]].
 
 Recipes is detailed in [[Recipes][Recipes]].
 
---++ Monitoring
+---++ Monitoring
 
 Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]].
 
---++ [[Appendix][Appendix]]
+---++ Backwards Compatibility
+
+Backwards compatibility instructions are [[Compatibility][detailed here.]]

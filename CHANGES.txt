@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-785 Document upgrade path from 0.5 to 0.6. (Balu Vellanki 
+   via Srikanth Sundarrajan)
+
    FALCON-877 Pagination API should have a cap on number of results 
    returned (Ajay Yadav via Srikanth Sundarrajan)
 
