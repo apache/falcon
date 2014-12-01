@@ -56,11 +56,18 @@ There are two basic components of Falcon set up. Falcon Prism and Falcon Server.
 As the name suggests Falcon Prism splits the request it gets to the Falcon Servers. More details below:
 
 ---+++ Stand Alone Mode
-Stand alone mode is useful when the hadoop jobs and relevant data processing involves only one hadoop cluster. In this mode there is single Falcon server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend, kill are sent to this server only. For running in this mode one should use the falcon which has been built for standalone mode, or build using standalone option if using source code.
+Stand alone mode is useful when the hadoop jobs and relevant data processing involves only one hadoop cluster.
+In this mode there is a single Falcon server that contacts Oozie to schedule jobs on Hadoop.
+All the process/feed requests like submit, schedule, suspend, kill etc. are sent to this server.
+For running falcon in this mode one should use the falcon which has been built using standalone option.
 
 ---+++ Distributed Mode
-Distributed mode is the mode which you might me using most of the time. This is for organisations which have multiple instances of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config locations.
-In this mode Prism acts as a contact point for Falcon servers. Below are the requests that can be sent to prism and server in this mode:
+Distributed mode is for multiple (colos) instances of hadoop clusters, and multiple workflow schedulers to handle them.
+In this mode falcon has 2 components: Prism and Server(s).
+Both Prism and servers have their own setup (runtime and startup properties) and their own config locations.
+In this mode Prism acts as a contact point for Falcon servers.
+While all commands are available through Prism, only read and instance api's are available through Server.
+Below are the requests that can be sent to each of these:
 
  Prism: submit, schedule, submitAndSchedule, Suspend, Resume, Kill, instance management
  Server: schedule, suspend, resume, instance management

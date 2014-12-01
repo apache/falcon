@@ -19,6 +19,9 @@ Trunk (Unreleased)
    FALCON-805 Create store to store feed properties like name against 
    it's path (Ajay Yadav via Srikanth Sundarrajan)
 
+   FALCON-734 Document when to use Distributed Mode vs. Embedded Mode
+   (Ajay Yadav via Srikanth Sundarrajan)
+
   OPTIMIZATIONS
    FALCON-913 Change the default values of log clean up services
    (Suhas vasu)
