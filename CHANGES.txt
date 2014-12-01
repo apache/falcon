@@ -16,6 +16,9 @@ Trunk (Unreleased)
    FALCON-807 Fix order of actual and expected expression in assert 
    statements in webapp module (Ajay Yadav via Srikanth Sundarrajan)
 
+   FALCON-805 Create store to store feed properties like name against 
+   it's path (Ajay Yadav via Srikanth Sundarrajan)
+
   OPTIMIZATIONS
    FALCON-913 Change the default values of log clean up services
    (Suhas vasu)
