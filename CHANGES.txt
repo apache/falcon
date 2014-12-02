@@ -29,6 +29,9 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-423 Updating falcon server endpoint in distributed setup doesn't 
+   work. (Srikanth Sundarrajan)
+
    FALCON-913 Change the default values of log clean up services
    (Suhas vasu)
 
