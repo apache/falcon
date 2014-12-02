@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.core.helpers;
 
 import com.google.gson.GsonBuilder;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.regression.core.response.lineage.Direction;
 import org.apache.falcon.regression.core.response.lineage.EdgeResult;
@@ -36,9 +37,7 @@ import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.Map;
@@ -96,14 +95,7 @@ public class LineageHelper {
      * @throws IOException
      */
     public String getResponseString(HttpResponse response) throws IOException {
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null){
-            sb.append(line).append("\n");
-        }
-        return sb.toString();
+        return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
     }
 
     /**
@@ -155,8 +147,8 @@ public class LineageHelper {
         if (paramPairs != null && paramPairs.size() > 0) {
             String[] params = new String[paramPairs.size()];
             int i = 0;
-            for (String key : paramPairs.keySet()) {
-                params[i++] = key + '=' + paramPairs.get(key);
+            for (Map.Entry<String, String> entry : paramPairs.entrySet()) {
+                params[i++] = entry.getKey() + '=' + entry.getValue();
             }
             return hostAndPath + "/?" + StringUtils.join(params, "&");
         }

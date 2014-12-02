@@ -33,6 +33,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-926 Fix problems found by findbugs in merlin and merlin-core (Ruslan Ostafiychuk and
+   Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
    FALCON-698 Fix checkstyle bugs in test files in falcon-regression (Ruslan Ostafiychuk and
    Raghav Kumar Gautam via Ruslan Ostafiychuk)
 

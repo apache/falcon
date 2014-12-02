@@ -27,13 +27,13 @@ import org.openqa.selenium.firefox.FirefoxProfile;
  */
 public class BaseUITestClass extends BaseTestClass{
 
-    protected static WebDriver driver;
+    private static WebDriver driver;
 
     public static WebDriver getDriver() {
         return driver;
     }
 
-    protected void openBrowser() {
+    protected static void openBrowser() {
 
         FirefoxProfile profile = new FirefoxProfile();
         profile.setPreference("network.negotiate-auth.trusted-uris", "http://, https://");
@@ -44,7 +44,7 @@ public class BaseUITestClass extends BaseTestClass{
     }
 
 
-    public void closeBrowser() {
+    public static void closeBrowser() {
         if (driver != null) {
             driver.close();
             driver.quit();

@@ -23,6 +23,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
@@ -65,9 +66,7 @@ import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -104,14 +103,7 @@ public final class InstanceUtil {
             IOException, AuthenticationException, InterruptedException {
         BaseRequest request = new BaseRequest(url, method, user);
         HttpResponse response = request.run();
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-        StringBuilder stringResponse = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringResponse.append(line).append("\n");
-        }
-        String responseString = stringResponse.toString();
+        String responseString = IOUtils.toString(response.getEntity().getContent(), "UTF-8");
         LOGGER.info("The web service response is:\n" + Util.prettyPrintXmlOrJson(responseString));
         APIResult result;
         if (url.contains("/summary/")) {
@@ -537,8 +529,8 @@ public final class InstanceUtil {
             LOGGER.info("Key = " + entry.getKey() + ", Value = " + entry.getValue());
         }
         int i = 0;
-        for (Integer key : bundleMap.keySet()) {
-            bundleID = bundleMap.get(key);
+        for (Map.Entry<Integer, String> entry : bundleMap.entrySet()) {
+            bundleID = entry.getValue();
             if (i == bundleNumber) {
                 return bundleID;
             }

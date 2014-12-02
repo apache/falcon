@@ -39,12 +39,7 @@ public class BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(BaseTestClass.class);
 
     static {
-        try {
-            prepareProperties();
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());  //To change body of catch statement use
-            System.exit(1);
-        }
+        prepareProperties();
     }
 
     protected ColoHelper prism;
@@ -68,8 +63,7 @@ public class BaseTestClass {
                 serverFS.add(server.getClusterHelper().getHadoopFS());
                 serverOC.add(server.getClusterHelper().getOozieClient());
             } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
+                throw new RuntimeException(e);
             }
         }
         bundles = new Bundle[serverNames.length];

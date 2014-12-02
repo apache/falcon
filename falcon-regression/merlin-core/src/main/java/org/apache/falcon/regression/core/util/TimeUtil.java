@@ -205,7 +205,6 @@ public final class TimeUtil {
         DateTime finalDate = new DateTime(oozieDateToDate(startTimeOfLateCoord));
         while (true) {
             DateTime sysDate = oozieDateToDate(getTimeWrtSystemTime(0));
-            sysDate.withZoneRetainFields(DateTimeZone.UTC);
             LOGGER.info("sysDate: " + sysDate + "  finalDate: " + finalDate);
             if (sysDate.compareTo(finalDate) > 0) {
                 break;

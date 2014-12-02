@@ -128,8 +128,10 @@ public class BaseRequest {
             request = new HttpPost(new URI(this.url));
         } else if (this.method.equalsIgnoreCase("put")) {
             request = new HttpPut(new URI(this.url));
+        } else {
+            throw new IOException("Unknown method: " + method);
         }
-        if (this.requestData != null && request != null) {
+        if (this.requestData != null) {
             request.setEntity(new StringEntity(requestData));
         }
         return execute(request);

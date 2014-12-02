@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.core.util;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,7 +27,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -339,22 +339,12 @@ public final class HadoopUtil {
     public static void copyDataToFolders(FileSystem fs, final String folderPrefix,
         List<String> folderList, String... fileLocations) throws IOException {
         for (final String folder : folderList) {
-            boolean r;
             String folderSpace = folder.replaceAll("/", "_");
-            File f = new File(OSUtil.NORMAL_INPUT + folderSpace + ".txt");
-            if (!f.exists()) {
-                r = f.createNewFile();
-                if (!r) {
-                    LOGGER.info("file could not be created");
-                }
-            }
-            FileWriter fr = new FileWriter(f);
-            fr.append("folder");
-            fr.close();
-            fs.copyFromLocalFile(new Path(f.getAbsolutePath()), new Path(folderPrefix + folder));
-            r = f.delete();
-            if (!r) {
-                LOGGER.info("delete was not successful");
+            File file = new File(OSUtil.NORMAL_INPUT + folderSpace + ".txt");
+            FileUtils.writeStringToFile(file, "folder", true);
+            fs.copyFromLocalFile(new Path(file.getAbsolutePath()), new Path(folderPrefix + folder));
+            if (!file.delete()) {
+                LOGGER.info("delete was not successful for file: " + file);
             }
             Path[] srcPaths = new Path[fileLocations.length];
             for (int i = 0; i < srcPaths.length; ++i) {
