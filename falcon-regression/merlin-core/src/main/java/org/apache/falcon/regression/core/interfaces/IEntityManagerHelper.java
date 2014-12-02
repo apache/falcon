@@ -489,9 +489,8 @@ public abstract class IEntityManagerHelper {
             .createAndSendRequestProcessInstance(url, params, allColo, user);
     }
 
-    public InstancesSummaryResult getInstanceSummary(String entityName,
-                                                     String params
-    ) throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+    public InstancesSummaryResult getInstanceSummary(String entityName, String params)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         String url = createUrl(this.hostname + URLS.INSTANCE_SUMMARY.getValue(), getEntityType(),
             entityName, "");
         return (InstancesSummaryResult) InstanceUtil

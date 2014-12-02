@@ -96,8 +96,8 @@ public class Vertex extends GraphEntity {
     @Override
     public String toString() {
         return "Vertex{"
-                + "_id=" + id
-                + ", _type=" + nodeType
+                + "id=" + id
+                + ", nodeType=" + nodeType
                 + ", name='" + name + '\''
                 + ", type=" + type
                 + ", timestamp='" + timestamp + '\''

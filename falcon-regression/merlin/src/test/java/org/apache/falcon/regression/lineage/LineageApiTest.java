@@ -62,7 +62,7 @@ public class LineageApiTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(LineageApiTest.class);
     private static final String TEST_NAME = "LineageApiTest";
     private static final String TEST_TAG =
-        Edge.LEBEL_TYPE.TESTNAME.toString().toLowerCase() + "=" + TEST_NAME;
+        Edge.LabelType.TESTNAME.toString().toLowerCase() + "=" + TEST_NAME;
     private static final String VERTEX_NOT_FOUND_REGEX = ".*Vertex.*%d.*not.*found.*\n?";
     private static final String INVALID_ARGUMENT_STR = "Invalid argument";
     private LineageHelper lineageHelper;
@@ -411,10 +411,10 @@ public class LineageApiTest extends BaseTestClass {
         final EdgesResult bothEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.bothEdges);
         GraphAssert.assertEdgeSanity(bothEdges);
-        Assert.assertEquals(bothEdges.filterByType(Edge.LEBEL_TYPE.STORED_IN).size(),
+        Assert.assertEquals(bothEdges.filterByType(Edge.LabelType.STORED_IN).size(),
             inputFeeds.length + outputFeeds.length,
             "There should be edge between the cluster and inputFeeds, outputFeeds");
-        Assert.assertEquals(bothEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).size(),
+        Assert.assertEquals(bothEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
             1, "There should be an edge from the cluster to colo");
         Assert.assertEquals(bothEdges.getTotalSize(), inputFeeds.length + outputFeeds.length + 2,
             "There should be edge from the cluster to inputFeeds & outputFeeds,"
@@ -425,7 +425,7 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertEdgeSanity(inComingEdges);
         Assert.assertEquals(inComingEdges.getTotalSize(), inputFeeds.length + outputFeeds.length,
             "There should be edge from the cluster to inputFeeds & outputFeeds");
-        Assert.assertEquals(inComingEdges.filterByType(Edge.LEBEL_TYPE.STORED_IN).size(),
+        Assert.assertEquals(inComingEdges.filterByType(Edge.LabelType.STORED_IN).size(),
             inputFeeds.length + outputFeeds.length,
             "There should be edge from the cluster to inputFeeds & outputFeeds");
 
@@ -433,9 +433,9 @@ public class LineageApiTest extends BaseTestClass {
         final EdgesResult outGoingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
-        Assert.assertEquals(outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).size(),
+        Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
             1, "There should be an edge from the cluster to colo");
-        Assert.assertEquals(outGoingEdges.filterByType(Edge.LEBEL_TYPE.TESTNAME).size(),
+        Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.TESTNAME).size(),
             1, "There should be an edge from the cluster to classification");
         Assert.assertEquals(outGoingEdges.getTotalSize(), 2,
             "There should be an edge from the cluster to colo");
@@ -560,10 +560,10 @@ public class LineageApiTest extends BaseTestClass {
         Assert.assertTrue(edgesResult.getTotalSize() > 0, "Total number of edges should be"
             + " greater that zero but is: " + edgesResult.getTotalSize());
         GraphAssert.assertEdgeSanity(edgesResult);
-        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LEBEL_TYPE.CLUSTER_COLO, 1);
-        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LEBEL_TYPE.STORED_IN,
+        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LabelType.CLUSTER_COLO, 1);
+        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LabelType.STORED_IN,
             numInputFeeds + numOutputFeeds);
-        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LEBEL_TYPE.OWNED_BY,
+        GraphAssert.assertEdgePresenceMinOccur(edgesResult, Edge.LabelType.OWNED_BY,
             1 + numInputFeeds + numOutputFeeds);
     }
 
@@ -573,11 +573,11 @@ public class LineageApiTest extends BaseTestClass {
         final EdgesResult outGoingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
-        Assert.assertEquals(outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).size(),
+        Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
             1, "There should be an edge from the cluster to colo");
 
         final String clusterColoEdgeId =
-            outGoingEdges.filterByType(Edge.LEBEL_TYPE.CLUSTER_COLO).get(0).getId();
+            outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).get(0).getId();
         final Edge clusterColoEdge =
             lineageHelper.getEdgeById(clusterColoEdgeId).getResults();
         GraphAssert.assertEdgeSanity(clusterColoEdge);

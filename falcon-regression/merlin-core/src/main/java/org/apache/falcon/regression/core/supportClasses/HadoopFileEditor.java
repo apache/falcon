@@ -46,10 +46,12 @@ public class HadoopFileEditor {
         files = new ArrayList<String>();
     }
 
-    /*
-    method to edit a file present on HDFS. Path is the location on HDFS,
-    2nd param is the first instance of string after u want ur tesxt to be
-    inserted, 3rd param is the text u want to insert
+    /**
+     * Method to edit a file present on HDFS. Path is the location on HDFS,
+     * @param path path of the file to be edited
+     * @param putAfterString first instance of string after which the text is to be
+     * @param toBeInserted the text to be inserted
+     * @throws IOException
      */
     public void edit(String path, String putAfterString, String toBeInserted) throws IOException {
         paths.add(path);
@@ -65,20 +67,20 @@ public class HadoopFileEditor {
         if (fs.exists(file)) {
             fs.copyToLocalFile(file, new Path(currentFile));
             FileUtils.copyFile(new File(currentFile), new File(currentFile + ".bck"));
-            BufferedWriter bufwriter = new BufferedWriter(new FileWriter("tmp"));
+            BufferedWriter bufWriter = new BufferedWriter(new FileWriter("tmp"));
             BufferedReader br = new BufferedReader(new FileReader(currentFile));
             String line;
             boolean isInserted = false;
             while ((line = br.readLine()) != null) {
-                bufwriter.write(line);
-                bufwriter.write('\n');
+                bufWriter.write(line);
+                bufWriter.write('\n');
                 if (line.contains(putAfterString) && !isInserted) {
-                    bufwriter.write(toBeInserted);
+                    bufWriter.write(toBeInserted);
                     isInserted = true;
                 }
             }
             br.close();
-            bufwriter.close();
+            bufWriter.close();
             FileUtils.deleteQuietly(new File(currentFile));
             FileUtils.copyFile(new File("tmp"), new File(currentFile));
             FileUtils.deleteQuietly(new File("tmp"));
@@ -94,8 +96,9 @@ public class HadoopFileEditor {
         }
     }
 
-    /*
-    puts back the original file to HDFS that was editied by edit function
+    /**
+     * Restore back the original file to HDFS that was edited by edit function.
+     * @throws IOException
      */
     public void restore() throws IOException {
         for (int i = 0; i < paths.size(); i++) {

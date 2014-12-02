@@ -210,8 +210,8 @@ public class LineageGraphTest extends BaseUITestClass {
                         Assert.assertEquals(info.get("Runs on"), clusterName,
                             String.format(message, "cluster", processName));
                     }
-                    Assert.assertEquals(info.get("Owned by"), System.getProperty("user"
-                        + ".name"), "Entity should be owned by current system user.");
+                    Assert.assertEquals(info.get("Owned by"), System.getProperty("user.name"),
+                        "Entity should be owned by current system user.");
                 }
             }
             processPage.refresh();
@@ -300,7 +300,7 @@ public class LineageGraphTest extends BaseUITestClass {
             List<Edge> incEdges = lineageHelper.getEdgesByDirection(piVertex.getId(),
                 Direction.inComingEdges).getResults();
             List<Edge> outcEdges = lineageHelper.getEdgesByDirection(piVertex.getId(),
-                Direction.outGoingEdges).filterByType(Edge.LEBEL_TYPE.OUTPUT);
+                Direction.outGoingEdges).filterByType(Edge.LabelType.OUTPUT);
             assert expectedEdgesAPI.addAll(incEdges);
             assert expectedEdgesAPI.addAll(outcEdges);
             /** Check the number of edges and their location*/
@@ -328,9 +328,9 @@ public class LineageGraphTest extends BaseUITestClass {
                         break;
                     }
                 }
-                Assert.assertTrue(
-                    isEdgePresent, String.format("Edge %s-->%s isn't present on lineage or "
-                        + "painted incorrectly.", startVertexAPI.getName(), endVertexAPI.getName()));
+                Assert.assertTrue(isEdgePresent,
+                    String.format("Edge %s-->%s isn't present on lineage or painted incorrectly.",
+                        startVertexAPI.getName(), endVertexAPI.getName()));
             }
             processPage.refresh();
         }

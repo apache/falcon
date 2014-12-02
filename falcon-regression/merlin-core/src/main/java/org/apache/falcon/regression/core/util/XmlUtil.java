@@ -18,10 +18,6 @@
 
 package org.apache.falcon.regression.core.util;
 
-import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.ActionType;
-import org.apache.falcon.entity.v0.feed.Retention;
-import org.apache.falcon.entity.v0.feed.Validity;
 import org.custommonkey.xmlunit.Diff;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.apache.log4j.Logger;
@@ -38,32 +34,6 @@ public final class XmlUtil {
         throw new AssertionError("Instantiating utility class...");
     }
     private static final Logger LOGGER = Logger.getLogger(XmlUtil.class);
-
-    public static Validity createValidity(String start, String end) {
-        Validity v = new Validity();
-        v.setStart(TimeUtil.oozieDateToDate(start).toDate());
-        v.setEnd(TimeUtil.oozieDateToDate(end).toDate());
-        return v;
-    }
-
-    public static Retention createRetention(String limit, ActionType action) {
-        Retention r = new Retention();
-        r.setLimit(new Frequency(limit));
-        r.setAction(action);
-        return r;
-    }
-
-    public static org.apache.falcon.entity.v0.process.Validity
-    createProcessValidity(
-        String startTime, String endTime) {
-        org.apache.falcon.entity.v0.process.Validity v =
-            new org.apache.falcon.entity.v0.process.Validity();
-        LOGGER.info("instanceUtil.oozieDateToDate(endTime).toDate(): "
-            + TimeUtil.oozieDateToDate(endTime).toDate());
-        v.setEnd(TimeUtil.oozieDateToDate(endTime).toDate());
-        v.setStart(TimeUtil.oozieDateToDate(startTime).toDate());
-        return v;
-    }
 
     public static boolean isIdentical(String expected, String actual)
         throws IOException, SAXException {

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
@@ -97,10 +98,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         }
         BundleUtil.submitAllClusters(prism, bundles[0], bundles[1], bundles[2]);
         feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         startTime = TimeUtil.getTimeWrtSystemTime(-50);
     }
 
@@ -112,16 +110,23 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     @Test(enabled = false, groups = {"multiCluster"})
     public void addSourceCluster() throws Exception {
         //add one source and one target , schedule only on source
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                TimeUtil.addMinsToTime(startTime, 65)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-            null);
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feedOriginalSubmit,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
+        feedOriginalSubmit = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -158,23 +163,32 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 "RETENTION"), 0);
 
         //prepare updated Feed
-        feedUpdated = InstanceUtil.setFeedCluster(
-            feed, XmlUtil.createValidity(startTime,
-                TimeUtil.addMinsToTime(startTime, 65)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-            "US/${cluster.colo}");
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedUpdated = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
@@ -204,18 +218,24 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     @Test(enabled = false, groups = {"multiCluster"})
     public void addTargetCluster() throws Exception {
         //add one source and one target , schedule only on source
-        feedOriginalSubmit = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                null);
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feedOriginalSubmit,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedOriginalSubmit = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -254,23 +274,33 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             0);
 
         //prepare updated Feed
-        feedUpdated = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                "US/${cluster.colo}");
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedUpdated = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("US/${cluster.colo}")
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
@@ -303,12 +333,15 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     @Test(enabled = false, groups = {"multiCluster"})
     public void add2SourceCluster() throws Exception {
         //add one source and one target , schedule only on source
-        feedOriginalSubmit = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                null);
+        feedOriginalSubmit = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -347,23 +380,33 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             0);
 
         //prepare updated Feed
-        feedUpdated = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                "US/${cluster.colo}");
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.SOURCE, null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedUpdated = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("US/${cluster.colo}")
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
@@ -396,12 +439,14 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     @Test(enabled = false, groups = {"multiCluster"})
     public void add2TargetCluster() throws Exception {
         //add one source and one target , schedule only on source
-        feedOriginalSubmit = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                null);
+        feedOriginalSubmit = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -441,21 +486,30 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             0);
 
         //prepare updated Feed
-        feedUpdated = InstanceUtil.setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                TimeUtil.addMinsToTime(startTime, 65)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-            null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null);
+        feedUpdated = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
@@ -488,12 +542,15 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     @Test(enabled = false, groups = {"multiCluster"})
     public void add1Source1TargetCluster() throws Exception {
         //add one source and one target , schedule only on source
-        feedOriginalSubmit = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                null);
+        feedOriginalSubmit = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -532,23 +589,33 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 "RETENTION"), 0);
 
         //prepare updated Feed
-        feedUpdated = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                "US/${cluster.colo}");
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedUpdated = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("US/${cluster.colo}")
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
 
@@ -581,23 +648,32 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     @Test(enabled = false, groups = {"multiCluster"})
     public void deleteSourceCluster() throws Exception {
         //add one source and one target , schedule only on source
-        feedOriginalSubmit = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                "US/${cluster.colo}");
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feedOriginalSubmit,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feedOriginalSubmit,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedOriginalSubmit = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("US/${cluster.colo}")
+                .build())
+            .toString();
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -636,17 +712,23 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 "RETENTION"), 1);
 
         //prepare updated Feed
-        feedUpdated = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-                null);
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
+        feedUpdated = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime,
+                    TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .build())
+            .toString();
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
 
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
@@ -701,31 +783,34 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         //add two source and one target
 
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feedOriginalSubmit = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
-        feedOriginalSubmit = InstanceUtil
-            .setFeedCluster(feedOriginalSubmit, XmlUtil.createValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65)),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)),
-                ClusterType.SOURCE,
-                "US/${cluster.colo}");
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feedOriginalSubmit,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)),
-            ClusterType.TARGET, null);
-        feedOriginalSubmit = InstanceUtil.setFeedCluster(feedOriginalSubmit,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)),
-            ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("US/${cluster.colo}")
+                .build())
+            .toString();
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.TARGET)
+                .build())
+            .toString();
+        feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
@@ -765,18 +850,17 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         //prepare updated Feed
 
-        feedUpdated = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feedUpdated = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
-        feedUpdated = InstanceUtil.setFeedCluster(feedUpdated,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 110)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)),
-            ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 110))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build())
+            .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedUpdated));
 

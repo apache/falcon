@@ -34,11 +34,11 @@ public class EdgesResult extends GraphResult {
         return String.format("EdgesResult{totalSize=%d, results=%s}", totalSize, results);
     }
 
-    public List<Edge> filterByType(Edge.LEBEL_TYPE edgeLabel) {
+    public List<Edge> filterByType(Edge.LabelType edgeLabel) {
         return filterEdgesByType(results, edgeLabel);
     }
 
-    public List<Edge> filterEdgesByType(List<Edge> edges, Edge.LEBEL_TYPE edgeLabel) {
+    public List<Edge> filterEdgesByType(List<Edge> edges, Edge.LabelType edgeLabel) {
         final List<Edge> result = new ArrayList<Edge>();
         for (Edge edge : edges) {
             if (edge.getLabel() == edgeLabel) {

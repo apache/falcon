@@ -18,6 +18,8 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
@@ -30,7 +32,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -104,10 +105,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         Bundle.submitCluster(bundles[0], bundles[1], bundles[2]);
 
         String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
         // use the colo string here so that the test works in embedded and distributed mode.
         String postFix = "/US/" + cluster2Colo;
@@ -123,24 +121,31 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
         String startTime = TimeUtil.getTimeWrtSystemTime(-30);
 
-        feed = InstanceUtil.setFeedCluster(feed, XmlUtil.createValidity(startTime,
-            TimeUtil.addMinsToTime(startTime, 85)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-            "US/${cluster.colo}");
+        feed = FeedMerlin.fromString(feed)
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
+                Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 85))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("US/${cluster.colo}")
+                .build()).toString();
 
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 20),
-                TimeUtil.addMinsToTime(startTime, 105)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 20),
+                    TimeUtil.addMinsToTime(startTime, 105))
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(TimeUtil.addMinsToTime(startTime, 40),
-                TimeUtil.addMinsToTime(startTime, 130)),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-            "UK/${cluster.colo}");
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(TimeUtil.addMinsToTime(startTime, 40),
+                    TimeUtil.addMinsToTime(startTime, 130))
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
+                .build()).toString();
 
         LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
@@ -198,20 +203,9 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         String outputFeed = bundles[0].getOutputFeedFromBundle();
 
         //set clusters to null;
-        feed01 = InstanceUtil.setFeedCluster(feed01,
-            XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
-
-        feed02 = InstanceUtil.setFeedCluster(feed02,
-            XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
-
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed01 = FeedMerlin.fromString(feed01).clearFeedClusters().toString();
+        feed02 = FeedMerlin.fromString(feed02).clearFeedClusters().toString();
+        outputFeed = FeedMerlin.fromString(outputFeed).clearFeedClusters().toString();
 
         //set new feed input data
         feed01 = Util.setFeedPathValue(feed01, baseHDFSDir + "/feed01" + MINUTE_DATE_PATTERN);
@@ -229,41 +223,49 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         String startTime = TimeUtil.getTimeWrtSystemTime(-50);
 
         //set clusters for feed01
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.SOURCE,
-                null);
+        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
 
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET,
-                null);
+        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
         //set clusters for feed02
-        feed02 = InstanceUtil
-            .setFeedCluster(feed02, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET,
-                null);
+        feed02 = FeedMerlin.fromString(feed02).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
-        feed02 = InstanceUtil
-            .setFeedCluster(feed02, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.SOURCE,
-                null);
+        feed02 = FeedMerlin.fromString(feed02).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
 
         //set clusters for output feed
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.SOURCE, null);
+        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
 
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null);
+        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
         //submit and schedule feeds
         prism.getFeedHelper().submitAndSchedule(feed01);
@@ -279,16 +281,21 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-6);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(70);
 
-        process = InstanceUtil.setProcessCluster(process, null,
-            XmlUtil.createProcessValidity(startTime, "2099-01-01T00:00Z"));
+        process = ProcessMerlin.fromString(process).clearProcessCluster().toString();
 
-        process = InstanceUtil
-            .setProcessCluster(process, Util.readEntityName(bundles[0].getClusters().get(0)),
-                XmlUtil.createProcessValidity(processStartTime, processEndTime));
+        process = ProcessMerlin.fromString(process).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(
+                Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withValidity(processStartTime, processEndTime)
+                .build()
+        ).toString();
 
-        process = InstanceUtil
-            .setProcessCluster(process, Util.readEntityName(bundles[2].getClusters().get(0)),
-                XmlUtil.createProcessValidity(processStartTime, processEndTime));
+        process = ProcessMerlin.fromString(process).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(
+                Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withValidity(processStartTime, processEndTime)
+                .build()
+        ).toString();
         process = InstanceUtil.addProcessInputFeed(process, Util.readEntityName(feed02),
             Util.readEntityName(feed02));
 

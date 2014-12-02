@@ -31,7 +31,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -115,22 +114,22 @@ public class FeedReplicationTest extends BaseTestClass {
         String feed = bundles[0].getDataSets().get(0);
         feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)),
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)),
-            ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
@@ -186,28 +185,30 @@ public class FeedReplicationTest extends BaseTestClass {
         String feed = bundles[0].getDataSets().get(0);
         feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)),
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)),
-            ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
         //set cluster3 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)),
-            ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
@@ -282,22 +283,22 @@ public class FeedReplicationTest extends BaseTestClass {
         String feed = bundles[0].getDataSets().get(0);
         feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)),
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)),
-            ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));

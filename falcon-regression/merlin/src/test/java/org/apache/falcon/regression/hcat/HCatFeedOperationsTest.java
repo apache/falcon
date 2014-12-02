@@ -34,7 +34,6 @@ import org.apache.falcon.regression.core.util.HCatUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatCreateTableDesc;
@@ -177,11 +176,13 @@ public class HCatFeedOperationsTest extends BaseTestClass {
 
         feed = bundles[0].getDataSets().get(0);
         // set cluster 2 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-                XmlUtil.createValidity(startDate, endDate),
-                XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
-                tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
 
         AssertUtil.assertPartial(prism.getFeedHelper().submitAndSchedule(feed));
     }
@@ -206,11 +207,13 @@ public class HCatFeedOperationsTest extends BaseTestClass {
 
         feed = bundles[0].getDataSets().get(0);
         // set cluster 2 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-                XmlUtil.createValidity(startDate, endDate),
-                XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-                Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
-                tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         Assert.assertEquals(InstanceUtil

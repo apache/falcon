@@ -33,7 +33,6 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -123,16 +122,8 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
         /* set source and target for the 2 feeds */
         //set clusters to null;
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01,
-                XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
-        outputFeed = InstanceUtil
-            .setFeedCluster(outputFeed,
-                XmlUtil.createValidity("2009-02-01T00:00Z", "2012-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
+        feed01 = FeedMerlin.fromString(feed01).clearFeedClusters().toString();
+        outputFeed = FeedMerlin.fromString(outputFeed).clearFeedClusters().toString();
 
         //set new feed input data
         feed01 = Util.setFeedPathValue(feed01, baseTestDir + "/feed01" + MINUTE_DATE_PATTERN);
@@ -145,24 +136,32 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         HadoopUtil.lateDataReplenish(server1FS, 80, 20, prefix, null);
 
         //set clusters for feed01
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(cluster1Def), ClusterType.SOURCE, null);
-        feed01 = InstanceUtil
-            .setFeedCluster(feed01, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-                Util.readEntityName(cluster2Def), ClusterType.TARGET, null);
+        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
+        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
         //set clusters for output feed
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(cluster1Def), ClusterType.SOURCE, null);
-        outputFeed = InstanceUtil.setFeedCluster(outputFeed,
-            XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-            XmlUtil.createRetention("hours(10)", ActionType.DELETE),
-            Util.readEntityName(cluster2Def), ClusterType.TARGET, null);
+        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
+        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
+                .withRetention("hours(10)", ActionType.DELETE)
+                .withValidity(startTime, "2099-01-01T00:00Z")
+                .withClusterType(ClusterType.TARGET)
+                .build()).toString();
 
         //submit and schedule feeds
         LOGGER.info("feed01: " + Util.prettyPrintXml(feed01));
@@ -177,15 +176,17 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         //add clusters to process
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-11);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(70);
-        process01 = InstanceUtil
-            .setProcessCluster(process01, null,
-                XmlUtil.createProcessValidity(startTime, "2099-01-01T00:00Z"));
-        process01 = InstanceUtil
-            .setProcessCluster(process01, Util.readEntityName(cluster1Def),
-                XmlUtil.createProcessValidity(processStartTime, processEndTime));
-        process01 = InstanceUtil
-            .setProcessCluster(process01, Util.readEntityName(cluster2Def),
-                XmlUtil.createProcessValidity(processStartTime, processEndTime));
+        process01 = ProcessMerlin.fromString(process01).clearProcessCluster().toString();
+        process01 = ProcessMerlin.fromString(process01).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(Util.readEntityName(cluster1Def))
+                .withValidity(processStartTime, processEndTime)
+                .build()
+        ).toString();
+        process01 = ProcessMerlin.fromString(process01).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(Util.readEntityName(cluster2Def))
+                .withValidity(processStartTime, processEndTime)
+                .build()
+        ).toString();
 
         //get 2nd process
         String process02 = process01;

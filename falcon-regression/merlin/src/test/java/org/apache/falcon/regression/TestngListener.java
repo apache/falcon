@@ -40,7 +40,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- * A listener for test running.
+ * Testng listener class. This is useful for things that are applicable to all the tests as well
+ * taking actions that depend on test results.
  */
 public class TestngListener implements ITestListener, IExecutionListener {
     private static final Logger LOGGER = Logger.getLogger(TestngListener.class);
@@ -72,8 +73,8 @@ public class TestngListener implements ITestListener, IExecutionListener {
     public void onTestFailure(ITestResult result) {
         logEndOfTest(result, "FAILED");
         if (BaseUITestClass.getDriver() != null) {
-            byte[] scrFile = ((TakesScreenshot)BaseUITestClass.getDriver())
-                .getScreenshotAs(OutputType.BYTES);
+            byte[] scrFile =
+                ((TakesScreenshot)BaseUITestClass.getDriver()).getScreenshotAs(OutputType.BYTES);
             try {
                 String filename = OSUtil.getPath("target", "surefire-reports", "screenshots", String.format("%s.%s.png",
                         result.getTestClass().getRealClass().getSimpleName(), result.getName()));

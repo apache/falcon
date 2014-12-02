@@ -21,6 +21,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
@@ -30,7 +31,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -99,20 +99,22 @@ public class ListFeedInstancesTest extends BaseTestClass {
         String cluster1Def = bundles[0].getClusters().get(0);
         String cluster2Def = bundles[1].getClusters().get(0);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set cluster1 as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(cluster1Def), ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set cluster2 as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(cluster2Def), ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         //submit clusters
         AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster1Def));

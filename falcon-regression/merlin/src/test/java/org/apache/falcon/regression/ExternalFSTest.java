@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -34,7 +35,6 @@ import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
@@ -148,22 +148,22 @@ public class ExternalFSTest extends BaseTestClass{
         String targetDataLocation = endpoint + testWasbTargetDir + datePattern;
         feed = InstanceUtil.setFeedFilePath(feed, sourcePath + '/' + datePattern);
         //erase all clusters from feed definition
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         //set local cluster as source
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[0].getClusters().get(0)),
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build()).toString();
         //set externalFS cluster as target
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)),
-            ClusterType.TARGET, null, targetDataLocation);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build()).toString();
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));

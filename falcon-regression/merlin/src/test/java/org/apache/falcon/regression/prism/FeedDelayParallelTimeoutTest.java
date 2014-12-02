@@ -18,15 +18,12 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
-import org.apache.falcon.entity.v0.feed.ActionType;
-import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterClass;
@@ -85,11 +82,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
             new org.apache.falcon.entity.v0.Frequency(
                 "hours(5)");
 
-        feedOutput01 = InstanceUtil
-            .setFeedCluster(feedOutput01,
-                XmlUtil.createValidity("2010-10-01T12:00Z", "2099-01-01T00:00Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
-                ClusterType.SOURCE, null);
+        feedOutput01 = FeedMerlin.fromString(feedOutput01).clearFeedClusters().toString();
 
         // uncomment below 2 line when falcon in sync with ivory
 

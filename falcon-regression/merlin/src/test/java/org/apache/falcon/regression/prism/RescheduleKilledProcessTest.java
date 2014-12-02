@@ -27,7 +27,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterClass;
@@ -88,11 +87,13 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
         processMerlin.setProcessFeeds(feed, 0, 0, 1);
         process = processMerlin.toString();
 
-        process = InstanceUtil.setProcessCluster(process, null,
-            XmlUtil.createProcessValidity(processStartTime, "2099-01-01T00:00Z"));
-        process = InstanceUtil
-            .setProcessCluster(process, Util.readEntityName(bundles[0].getClusters().get(0)),
-                XmlUtil.createProcessValidity(processStartTime, processEndTime));
+        process = ProcessMerlin.fromString(process).clearProcessCluster().toString();
+        process = ProcessMerlin.fromString(process).addProcessCluster(
+            new ProcessMerlin.ProcessClusterBuilder(
+                Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withValidity(processStartTime, processEndTime)
+                .build()
+        ).toString();
         bundles[0].setProcessData(process);
 
         bundles[0].submitFeedsScheduleProcess(prism);

@@ -155,7 +155,7 @@ public final class GraphAssert {
      * @param minOccurrence required number of edges
      */
     public static void assertEdgePresenceMinOccur(final EdgesResult edgesResult,
-                                                  final Edge.LEBEL_TYPE edgeLabel,
+                                                  final Edge.LabelType edgeLabel,
                                                   final int minOccurrence) {
         int occurrence = 0;
         for(Edge edge : edgesResult.getResults()) {

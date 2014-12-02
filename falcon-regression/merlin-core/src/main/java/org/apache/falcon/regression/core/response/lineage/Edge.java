@@ -24,7 +24,7 @@ import com.google.gson.annotations.SerializedName;
 public class Edge extends GraphEntity {
 
     /** Class for representing different labels of edge. */
-    public static enum LEBEL_TYPE {
+    public static enum LabelType {
         @SerializedName("stored-in")STORED_IN,
         @SerializedName("runs-on")RUNS_ON,
         @SerializedName("input")INPUT,
@@ -62,7 +62,7 @@ public class Edge extends GraphEntity {
     private int inV;
 
     @SerializedName("_label")
-    private LEBEL_TYPE label;
+    private LabelType label;
 
     public String getId() {
         return id;
@@ -76,17 +76,17 @@ public class Edge extends GraphEntity {
         return inV;
     }
 
-    public LEBEL_TYPE getLabel() {
+    public LabelType getLabel() {
         return label;
     }
 
     @Override
     public String toString() {
         return "Edge{"
-                + "_id='" + id + '\''
-                + ", _outV=" + outV
-                + ", _inV=" + inV
-                + ", _label=" + label
+                + "id='" + id + '\''
+                + ", outV=" + outV
+                + ", inV=" + inV
+                + ", label=" + label
                 + '}';
     }
 

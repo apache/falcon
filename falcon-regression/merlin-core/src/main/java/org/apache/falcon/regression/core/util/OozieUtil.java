@@ -256,9 +256,11 @@ public final class OozieUtil {
 
             for (CoordinatorJob coord : bundleJob.getCoordinators()) {
                 LOGGER.info("Appname is : " + coord.getAppName());
-                if ((coord.getAppName().contains("DEFAULT") && coord.getAppName().contains("PROCESS"))
-                        || (coord.getAppName().contains("REPLICATION") && coord.getAppName()
-                            .contains("FEED"))) {
+                if ((coord.getAppName().contains("DEFAULT")
+                        && coord.getAppName().contains("PROCESS"))
+                    ||
+                    (coord.getAppName().contains("REPLICATION")
+                        && coord.getAppName().contains("FEED"))) {
                     jobInfo = oozieClient.getCoordJobInfo(coord.getId());
                 } else {
                     LOGGER.info("Desired coord does not exists on " + oozieClient.getOozieUrl());

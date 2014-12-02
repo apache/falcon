@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
@@ -26,11 +27,9 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
@@ -384,21 +383,25 @@ public class PrismFeedSnSTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:00Z";
 
         String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedCluster(feed,
-            XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
-            ClusterType.SOURCE, null);
+        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA1, "2099-10-01T12:10Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(clust1), ClusterType.SOURCE, "${cluster.colo}",
-                baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN);
-        feed = InstanceUtil
-            .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA2, "2099-10-01T12:25Z"),
-                XmlUtil.createRetention("days(10000)", ActionType.DELETE),
-                Util.readEntityName(clust2), ClusterType.TARGET, null, baseHDFSDir
-                + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(clust1))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTimeUA1, "2099-10-01T12:10Z")
+                .withClusterType(ClusterType.SOURCE)
+                .withPartition("${cluster.colo}")
+                .withDataLocation(baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .build())
+            .toString();
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(clust2))
+                .withRetention("days(10000)", ActionType.DELETE)
+                .withValidity(startTimeUA2, "2099-10-01T12:25Z")
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(
+                    baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .build()).toString();
         LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         Util.shutDownService(cluster1.getFeedHelper());

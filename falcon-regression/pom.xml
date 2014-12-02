@@ -34,13 +34,12 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>checkstyle</module>
         <module>merlin-core</module>
         <module>merlin</module>
     </modules>
 
     <properties>
-        <oozie.version>3.2.2</oozie.version>
+        <oozie.version>4.0.0.2.1.7.0-784</oozie.version>
         <hive.version>0.13.1</hive.version>
     </properties>
 
@@ -359,6 +358,7 @@
                         <exclude>*.txt</exclude>
                         <exclude>.git/**</exclude>
                         <exclude>.idea/**</exclude>
+                        <exclude>oozie_logs/**</exclude>
                         <exclude>**/*.twiki</exclude>
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
@@ -427,7 +427,7 @@
                     <!--debug>true</debug -->
                     <xmlOutput>true</xmlOutput>
                     <excludeFilterFile>
-                        ${project.basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml
+                        ${project.basedir}/../../checkstyle/src/main/resources/falcon/findbugs-exclude.xml
                     </excludeFilterFile>
                     <failOnError>true</failOnError>
                     <skip>${skipCheck}</skip>

@@ -33,6 +33,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-928 Use falcon's checkstyle for falcon regression code (Raghav Kumar Gautam)
+
    FALCON-909 Remove names of the contributors from xmls and code (Ruslan Ostafiychuk)
 
    FALCON-926 Fix problems found by findbugs in merlin and merlin-core (Ruslan Ostafiychuk and

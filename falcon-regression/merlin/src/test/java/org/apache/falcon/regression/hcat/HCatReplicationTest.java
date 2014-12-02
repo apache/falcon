@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.hcat;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.EntityType;
@@ -34,7 +35,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -179,11 +179,13 @@ public class HCatReplicationTest extends BaseTestClass {
 
         String feed = bundles[0].getDataSets().get(0);
         // set the cluster 2 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-            XmlUtil.createValidity(startDate, endDate),
-            XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
-            tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -265,17 +267,21 @@ public class HCatReplicationTest extends BaseTestClass {
 
         String feed = bundles[0].getDataSets().get(0);
         // set the cluster 2 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-            XmlUtil.createValidity(startDate, endDate),
-            XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-            Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
-            tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
         // set the cluster 3 as the target.
-        feed = InstanceUtil.setFeedClusterWithTable(feed,
-            XmlUtil.createValidity(startDate, endDate),
-            XmlUtil.createRetention("months(9000)", ActionType.DELETE),
-            Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null,
-            tableUri);
+        feed = FeedMerlin.fromString(feed).addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("months(9000)", ActionType.DELETE)
+                .withValidity(startDate, endDate)
+                .withClusterType(ClusterType.TARGET)
+                .withTableUri(tableUri)
+                .build()).toString();
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);

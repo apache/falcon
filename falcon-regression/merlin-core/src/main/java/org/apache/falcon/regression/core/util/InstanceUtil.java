@@ -24,19 +24,10 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
-import org.apache.falcon.entity.v0.feed.CatalogTable;
-import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.entity.v0.feed.Retention;
-import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
@@ -90,8 +81,7 @@ public final class InstanceUtil {
     private static final EnumSet<Status> RUNNING_PREP_SUCCEEDED = EnumSet.of(Status.RUNNING,
         Status.PREP, Status.SUCCEEDED);
 
-    public static APIResult sendRequestProcessInstance(String
-            url, String user)
+    public static APIResult sendRequestProcessInstance(String url, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return hitUrl(url, Util.getMethodType(url), user);
     }
@@ -594,96 +584,6 @@ public final class InstanceUtil {
     }
 
     /**
-     * Sets one more cluster to feed.
-     *
-     * @param feed          feed which is to be modified
-     * @param feedValidity  validity of the feed on the cluster
-     * @param feedRetention set retention of the feed on the cluster
-     * @param clusterName   cluster name, if null would erase all the cluster details from the feed
-     * @param clusterType   cluster type
-     * @param partition     - partition where data is available for feed
-     * @param locations     - location where data is picked
-     * @return - string representation of the modified feed
-     */
-    public static String setFeedCluster(String feed, Validity feedValidity, Retention feedRetention,
-            String clusterName,
-            ClusterType clusterType, String partition,
-            String... locations) {
-        Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
-                clusterType, partition, null, locations);
-        return setFeedCluster(feed, clusterName, feedCluster);
-    }
-
-    public static String setFeedClusterWithTable(String feed, Validity feedValidity,
-                                                 Retention feedRetention, String clusterName,
-                                                 ClusterType clusterType, String partition,
-                                                 String tableUri) {
-        Cluster feedCluster = createFeedCluster(feedValidity, feedRetention, clusterName,
-                    clusterType, partition, tableUri, null);
-        return setFeedCluster(feed, clusterName, feedCluster);
-    }
-
-    private static String setFeedCluster(String feed, String clusterName, Cluster feedCluster) {
-        FeedMerlin f = new FeedMerlin(feed);
-        if (clusterName == null) {
-            f.getClusters().getClusters().clear();
-        } else {
-            f.getClusters().getClusters().add(feedCluster);
-        }
-        return f.toString();
-    }
-
-    private static CatalogTable getCatalogTable(String tableUri) {
-        CatalogTable catalogTable = new CatalogTable();
-        catalogTable.setUri(tableUri);
-        return catalogTable;
-    }
-
-    private static Cluster createFeedCluster(
-            Validity feedValidity, Retention feedRetention, String clusterName, ClusterType clusterType,
-            String partition, String tableUri, String[] locations) {
-        if (clusterName == null) {
-            return null;
-        }
-        Cluster cluster = new Cluster();
-        cluster.setName(clusterName);
-        cluster.setRetention(feedRetention);
-        if (clusterType != null) {
-            cluster.setType(clusterType);
-        }
-        cluster.setValidity(feedValidity);
-        if (partition != null) {
-            cluster.setPartition(partition);
-        }
-
-        // if table uri is not empty or null then set it.
-        if (StringUtils.isNotEmpty(tableUri)) {
-            cluster.setTable(getCatalogTable(tableUri));
-        }
-        Locations feedLocations = new Locations();
-        if (ArrayUtils.isNotEmpty(locations)) {
-            for (int i = 0; i < locations.length; i++) {
-                Location oneLocation = new Location();
-                oneLocation.setPath(locations[i]);
-                if (i == 0) {
-                    oneLocation.setType(LocationType.DATA);
-                } else if (i == 1) {
-                    oneLocation.setType(LocationType.STATS);
-                } else if (i == 2) {
-                    oneLocation.setType(LocationType.META);
-                } else if (i == 3) {
-                    oneLocation.setType(LocationType.TMP);
-                } else {
-                    Assert.fail("unexpected value of locations: " + Arrays.toString(locations));
-                }
-                feedLocations.getLocations().add(oneLocation);
-            }
-            cluster.setLocations(feedLocations);
-        }
-        return cluster;
-    }
-
-    /**
      * Retrieves replication coordinatorID from bundle of coordinators.
      */
     public static List<String> getReplicationCoordID(String bundlID,
@@ -728,30 +628,6 @@ public final class InstanceUtil {
         String p = feedElement.getLocations().getLocations().get(0).getPath();
         p = p.substring(0, p.indexOf('$'));
         return p;
-    }
-
-    /**
-     * Sets one more cluster to process definition.
-     *
-     * @param process     - process definition string representation
-     * @param clusterName - name of cluster
-     * @param validity    - cluster validity
-     * @return - string representation of modified process
-     */
-    public static String setProcessCluster(String process, String clusterName,
-            org.apache.falcon.entity.v0.process.Validity validity) {
-        org.apache.falcon.entity.v0.process.Cluster c =
-                new org.apache.falcon.entity.v0.process.Cluster();
-        c.setName(clusterName);
-        c.setValidity(validity);
-        ProcessMerlin p = new ProcessMerlin(process);
-
-        if (clusterName == null) {
-            p.getClusters().getClusters().set(0, null);
-        } else {
-            p.getClusters().getClusters().add(c);
-        }
-        return p.toString();
     }
 
     /**
