@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-593 Preserve data type for properties in a vertex. (Ajay
+   Yadav via Srikanth Sundarrajan)
+
    FALCON-785 Document upgrade path from 0.5 to 0.6. (Balu Vellanki 
    via Srikanth Sundarrajan)
 

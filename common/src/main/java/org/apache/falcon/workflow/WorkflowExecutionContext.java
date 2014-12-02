@@ -38,9 +38,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Captures the workflow execution context.
@@ -149,6 +152,21 @@ public class WorkflowExecutionContext {
 
     String getTimestamp() {
         return getValue(WorkflowExecutionArgs.TIMESTAMP);
+    }
+
+    /**
+     * Returns timestamp as a long.
+     * @return Date as long (milliseconds since epoch) for the timestamp.
+     */
+    public long getTimeStampAsLong() {
+        String dateString = getTimestamp();
+        try {
+            DateFormat dateFormat = new SimpleDateFormat(INSTANCE_FORMAT.substring(0, dateString.length()));
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return dateFormat.parse(dateString).getTime();
+        } catch (java.text.ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

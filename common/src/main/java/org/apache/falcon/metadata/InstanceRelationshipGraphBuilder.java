@@ -71,7 +71,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LOG.info("Adding process instance: {}", processInstanceName);
 
         Vertex processInstance = addVertex(processInstanceName,
-                RelationshipType.PROCESS_INSTANCE, context.getTimeStampAsISO8601());
+                RelationshipType.PROCESS_INSTANCE, context.getTimeStampAsLong());
         addWorkflowInstanceProperties(processInstance, context);
 
         addInstanceToEntity(processInstance, context.getEntityName(),
@@ -250,7 +250,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                                    String feedName, String clusterName) throws FalconException {
         LOG.info("Adding feed instance {}", feedInstanceName);
         Vertex feedInstance = addVertex(feedInstanceName, RelationshipType.FEED_INSTANCE,
-                context.getTimeStampAsISO8601());
+                context.getTimeStampAsLong());
 
         addInstanceToEntity(feedInstance, feedName,
                 RelationshipType.FEED_ENTITY, RelationshipLabel.INSTANCE_ENTITY_EDGE);
