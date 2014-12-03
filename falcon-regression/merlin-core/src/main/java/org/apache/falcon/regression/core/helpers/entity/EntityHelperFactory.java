@@ -16,26 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.interfaces;
+package org.apache.falcon.regression.core.helpers.entity;
 
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.regression.core.helpers.ClusterEntityHelperImpl;
-import org.apache.falcon.regression.core.helpers.DataEntityHelperImpl;
-import org.apache.falcon.regression.core.helpers.ProcessEntityHelperImpl;
 
 /** Factory class to create helper objects. */
 public final class EntityHelperFactory {
     private EntityHelperFactory() {
     }
 
-    public static IEntityManagerHelper getEntityHelper(EntityType type, String prefix) {
+    public static AbstractEntityHelper getEntityHelper(EntityType type, String prefix) {
         switch (type) {
         case FEED:
-            return new DataEntityHelperImpl(prefix);
+            return new FeedEntityHelper(prefix);
         case CLUSTER:
-            return new ClusterEntityHelperImpl(prefix);
+            return new ClusterEntityHelper(prefix);
         case PROCESS:
-            return new ProcessEntityHelperImpl(prefix);
+            return new ProcessEntityHelper(prefix);
         default:
             return null;
         }

@@ -22,7 +22,7 @@ import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -57,7 +57,7 @@ public class ProcessAclTest extends BaseTestClass {
     private String baseTestDir = baseHDFSDir + "/ProcessAclTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
-    private final IEntityManagerHelper processHelper = prism.getProcessHelper();
+    private final AbstractEntityHelper processHelper = prism.getProcessHelper();
     private String processString;
 
     @BeforeClass(alwaysRun = true)

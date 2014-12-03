@@ -25,7 +25,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -1079,9 +1079,9 @@ public class PrismFeedDeleteTest extends BaseTestClass {
     }
 
     public HashMap<String, List<String>> getSystemState(EntityType entityType) throws Exception {
-        IEntityManagerHelper prismHelper = prism.getClusterHelper();
-        IEntityManagerHelper server1Helper = cluster1.getClusterHelper();
-        IEntityManagerHelper server2Helper = cluster2.getClusterHelper();
+        AbstractEntityHelper prismHelper = prism.getClusterHelper();
+        AbstractEntityHelper server1Helper = cluster1.getClusterHelper();
+        AbstractEntityHelper server2Helper = cluster2.getClusterHelper();
 
         if (entityType == EntityType.FEED) {
             prismHelper = prism.getFeedHelper();

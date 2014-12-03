@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.interfaces;
+package org.apache.falcon.regression.core.helpers;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang.StringUtils;

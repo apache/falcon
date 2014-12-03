@@ -24,7 +24,7 @@ import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.CleanupUtil;
@@ -120,7 +120,7 @@ public class ListEntitiesTest extends BaseTestClass {
      * Testing orderBy parameter. Entities should be ordered by name when orderBy=name.
      */
     @Test(dataProvider = "getHelpers")
-    public void listEntitiesWithOrderBy(IEntityManagerHelper helper)
+    public void listEntitiesWithOrderBy(AbstractEntityHelper helper)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] entities =
@@ -135,7 +135,7 @@ public class ListEntitiesTest extends BaseTestClass {
      * Filter entities by status (SUBMITTED or RUNNING).
      */
     @Test(dataProvider = "getHelpers")
-    public void listEntitiesWithFilterByStatus(IEntityManagerHelper helper)
+    public void listEntitiesWithFilterByStatus(AbstractEntityHelper helper)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         String[] statuses = helper.getEntityType().equalsIgnoreCase("cluster")
             ? new String[]{"SUBMITTED"} : new String[]{"SUBMITTED", "RUNNING"};
@@ -169,7 +169,7 @@ public class ListEntitiesTest extends BaseTestClass {
      * Testing offset parameter. Checking number of entities and order.
      */
     @Test(dataProvider = "getHelpers")
-    public void listEntitiesWithOffset(IEntityManagerHelper helper)
+    public void listEntitiesWithOffset(AbstractEntityHelper helper)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
@@ -198,7 +198,7 @@ public class ListEntitiesTest extends BaseTestClass {
      * Testing numResults parameter. Checking number of entities and order.
      */
     @Test(dataProvider = "getHelpers")
-    public void listEntitiesWithNumResults(IEntityManagerHelper helper)
+    public void listEntitiesWithNumResults(AbstractEntityHelper helper)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
@@ -222,7 +222,7 @@ public class ListEntitiesTest extends BaseTestClass {
      * Get list of entities with tag.
      */
     @Test(dataProvider = "getHelpers")
-    public void listEntitiesWithTags(IEntityManagerHelper helper)
+    public void listEntitiesWithTags(AbstractEntityHelper helper)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
@@ -258,7 +258,7 @@ public class ListEntitiesTest extends BaseTestClass {
      * Testing list entities API with custom filter.
      */
     @Test(dataProvider = "getHelpers")
-    public void listEntitiesWithCustomFilter(IEntityManagerHelper helper)
+    public void listEntitiesWithCustomFilter(AbstractEntityHelper helper)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] entities = helper.listEntities(

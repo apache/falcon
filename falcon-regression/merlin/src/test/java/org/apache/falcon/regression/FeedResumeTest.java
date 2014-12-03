@@ -22,7 +22,7 @@ package org.apache.falcon.regression;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -45,7 +45,7 @@ import java.lang.reflect.Method;
 @Test(groups = "embedded")
 public class FeedResumeTest extends BaseTestClass {
 
-    private final IEntityManagerHelper feedHelper = prism.getFeedHelper();
+    private final AbstractEntityHelper feedHelper = prism.getFeedHelper();
     private String feed;
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);

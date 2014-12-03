@@ -37,7 +37,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
 import org.apache.falcon.resource.APIResult;
@@ -171,7 +171,7 @@ public final class Util {
      * @throws IOException
      * @throws JSchException
      */
-    public static List<String> getStoreInfo(IEntityManagerHelper helper, String subPath)
+    public static List<String> getStoreInfo(AbstractEntityHelper helper, String subPath)
         throws IOException, JSchException {
         if (helper.getStoreLocation().startsWith("hdfs:")) {
             return HadoopUtil.getAllFilesHDFS(helper.getHadoopFS(),
@@ -390,7 +390,7 @@ public final class Util {
      * @throws IOException
      * @throws JSchException
      */
-    public static void shutDownService(IEntityManagerHelper helper)
+    public static void shutDownService(AbstractEntityHelper helper)
         throws IOException, JSchException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
             helper.getPassword(), helper.getServiceStopCmd(),
@@ -406,7 +406,7 @@ public final class Util {
      * @throws AuthenticationException
      * @throws URISyntaxException
      */
-    public static void startService(IEntityManagerHelper helper)
+    public static void startService(AbstractEntityHelper helper)
         throws IOException, JSchException, AuthenticationException, URISyntaxException,
             InterruptedException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
@@ -435,7 +435,7 @@ public final class Util {
      * @throws AuthenticationException
      * @throws URISyntaxException
      */
-    public static void restartService(IEntityManagerHelper helper)
+    public static void restartService(AbstractEntityHelper helper)
         throws IOException, JSchException, AuthenticationException, URISyntaxException,
         InterruptedException {
         LOGGER.info("restarting service for: " + helper.getQaHost());
@@ -737,7 +737,7 @@ public final class Util {
             JAXBException,
             IOException, URISyntaxException, AuthenticationException, InterruptedException {
         EntityType type = getEntityType(entity);
-        IEntityManagerHelper helper;
+        AbstractEntityHelper helper;
         if (EntityType.PROCESS == type) {
             helper = cluster.getProcessHelper();
         } else if (EntityType.FEED == type) {

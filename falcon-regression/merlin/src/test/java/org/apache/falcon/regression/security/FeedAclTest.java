@@ -22,7 +22,7 @@ import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -54,7 +54,7 @@ public class FeedAclTest extends BaseTestClass {
     private String baseTestDir = baseHDFSDir + "/FeedAclTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
-    private final IEntityManagerHelper feedHelper = prism.getFeedHelper();
+    private final AbstractEntityHelper feedHelper = prism.getFeedHelper();
     private String feedString;
 
     @BeforeClass(alwaysRun = true)

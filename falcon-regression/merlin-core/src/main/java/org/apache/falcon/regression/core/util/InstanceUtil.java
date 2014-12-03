@@ -35,7 +35,7 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
@@ -428,7 +428,7 @@ public final class InstanceUtil {
      * @throws OozieClientException
      */
     public static List<CoordinatorJob> getBundleCoordinators(String bundleID,
-            IEntityManagerHelper helper)
+            AbstractEntityHelper helper)
         throws OozieClientException {
         OozieClient localOozieClient = helper.getOozieClient();
         BundleJob bundleInfo = localOozieClient.getBundleJobInfo(bundleID);
@@ -587,7 +587,7 @@ public final class InstanceUtil {
      * Retrieves replication coordinatorID from bundle of coordinators.
      */
     public static List<String> getReplicationCoordID(String bundlID,
-            IEntityManagerHelper helper)
+            AbstractEntityHelper helper)
         throws OozieClientException {
         List<CoordinatorJob> coords = InstanceUtil.getBundleCoordinators(bundlID, helper);
         List<String> replicationCoordID = new ArrayList<String>();
@@ -706,7 +706,7 @@ public final class InstanceUtil {
         return feedElement.toString();
     }
 
-    public static int checkIfFeedCoordExist(IEntityManagerHelper helper,
+    public static int checkIfFeedCoordExist(AbstractEntityHelper helper,
             String feedName, String coordType) throws OozieClientException {
         LOGGER.info("feedName: " + feedName);
         int numberOfCoord = 0;

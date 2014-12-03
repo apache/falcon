@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.interfaces;
+package org.apache.falcon.regression.core.helpers.entity;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.falcon.regression.core.helpers.FalconClientBuilder;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.regression.core.util.Config;
@@ -49,11 +50,11 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 /** Abstract class for helper classes. */
-public abstract class IEntityManagerHelper {
+public abstract class AbstractEntityHelper {
 
     public static final boolean AUTHENTICATE = setAuthenticate();
 
-    private static final Logger LOGGER = Logger.getLogger(IEntityManagerHelper.class);
+    private static final Logger LOGGER = Logger.getLogger(AbstractEntityHelper.class);
 
     protected static final String CLIENT_LOCATION = OSUtil.RESOURCES
         + OSUtil.getPath("IvoryClient", "IvoryCLI.jar");
@@ -206,7 +207,7 @@ public abstract class IEntityManagerHelper {
         return coloName;
     }
 
-    public IEntityManagerHelper(String prefix) {
+    public AbstractEntityHelper(String prefix) {
         if ((null == prefix) || prefix.isEmpty()) {
             prefix = "";
         } else {
@@ -542,7 +543,6 @@ public abstract class IEntityManagerHelper {
     /**
      * Submit an entity through falcon client.
      * @param entityStr string of the entity to be submitted
-     * @return
      * @throws IOException
      */
     public ExecResult clientSubmit(final String entityStr) throws IOException {
@@ -557,7 +557,6 @@ public abstract class IEntityManagerHelper {
     /**
      * Delete an entity through falcon client.
      * @param entityStr string of the entity to be submitted
-     * @return
      * @throws IOException
      */
     public ExecResult clientDelete(final String entityStr, String user) throws IOException {

@@ -27,7 +27,7 @@ import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.CleanupUtil;
@@ -188,7 +188,7 @@ public class EntitySummaryTest extends BaseTestClass {
         throws AuthenticationException, IOException, URISyntaxException, JAXBException,
         OozieClientException, InterruptedException {
         String entityName = Util.readEntityName(entity);
-        IEntityManagerHelper helper;
+        AbstractEntityHelper helper;
         List<String> names = new ArrayList<String>();
         for (int i = 1; i <= 7; i++) {
             String uniqueName = entityName + i;
@@ -245,7 +245,7 @@ public class EntitySummaryTest extends BaseTestClass {
                                               String clusterName)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         InstancesResult r;
-        IEntityManagerHelper helper;
+        AbstractEntityHelper helper;
         if (entityType == EntityType.FEED) {
             helper = prism.getFeedHelper();
         } else {

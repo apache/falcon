@@ -20,7 +20,7 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.resource.EntityList;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -62,11 +62,11 @@ public final class CleanupUtil {
         return getAllEntitiesOfOneType(prism.getClusterHelper(), null);
     }
 
-    public static List<String> getAllEntitiesOfOneType(IEntityManagerHelper iEntityManagerHelper,
+    public static List<String> getAllEntitiesOfOneType(AbstractEntityHelper entityManagerHelper,
                                                        String user)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException,
         InterruptedException {
-        final EntityList entityList = getEntitiesResultOfOneType(iEntityManagerHelper, user);
+        final EntityList entityList = getEntitiesResultOfOneType(entityManagerHelper, user);
         List<String> clusters = new ArrayList<String>();
         for (EntityList.EntityElement entity : entityList.getElements()) {
             clusters.add(entity.name);
@@ -75,10 +75,10 @@ public final class CleanupUtil {
     }
 
     private static EntityList getEntitiesResultOfOneType(
-        IEntityManagerHelper iEntityManagerHelper, String user)
+        AbstractEntityHelper entityManagerHelper, String user)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException,
         InterruptedException {
-        final ServiceResponse clusterResponse = iEntityManagerHelper.listAllEntities(null, user);
+        final ServiceResponse clusterResponse = entityManagerHelper.listAllEntities(null, user);
         JAXBContext jc = JAXBContext.newInstance(EntityList.class);
         Unmarshaller u = jc.createUnmarshaller();
         return (EntityList) u.unmarshal(
@@ -120,7 +120,7 @@ public final class CleanupUtil {
     }
 
     public static void cleanAllProcessesQuietly(ColoHelper prism,
-                                                IEntityManagerHelper entityManagerHelper) {
+                                                AbstractEntityHelper entityManagerHelper) {
         try {
             final List<String> processes = getAllProcesses(prism);
             for (String process : processes) {
@@ -143,7 +143,7 @@ public final class CleanupUtil {
         cleanAllClustersQuietly(prism);
     }
 
-    public static void deleteQuietly(IEntityManagerHelper helper, String feed) {
+    public static void deleteQuietly(AbstractEntityHelper helper, String feed) {
         try {
             helper.delete(feed);
         } catch (Exception e) {

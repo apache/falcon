@@ -21,7 +21,7 @@ package org.apache.falcon.regression.security;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -53,7 +53,7 @@ public class ClusterAclTest extends BaseTestClass {
     private String baseTestDir = baseHDFSDir + "/ClusterAclTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
-    private final IEntityManagerHelper clusterHelper = prism.getClusterHelper();
+    private final AbstractEntityHelper clusterHelper = prism.getClusterHelper();
     private String clusterString;
 
     @BeforeClass(alwaysRun = true)

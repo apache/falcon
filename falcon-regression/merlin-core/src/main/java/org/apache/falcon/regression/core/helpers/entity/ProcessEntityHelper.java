@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.helpers;
+package org.apache.falcon.regression.core.helpers.entity;
 
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.regression.core.util.Util;
 
 /** Helper class to work with process endpoints of a colo. */
-public class ProcessEntityHelperImpl extends IEntityManagerHelper {
+public class ProcessEntityHelper extends AbstractEntityHelper {
 
-    public ProcessEntityHelperImpl(String prefix) {
+    public ProcessEntityHelper(String prefix) {
         super(prefix);
     }
 

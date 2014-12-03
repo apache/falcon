@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.helpers;
+package org.apache.falcon.regression.core.helpers.entity;
 
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.resource.InstancesResult;
@@ -28,12 +27,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 /** Helper class to work with cluster endpoints of a colo. */
-public class ClusterEntityHelperImpl extends IEntityManagerHelper {
+public class ClusterEntityHelper extends AbstractEntityHelper {
 
 
     private static final String INVALID_ERR = "Not Valid for Cluster Entity";
 
-    public ClusterEntityHelperImpl(String prefix) {
+    public ClusterEntityHelper(String prefix) {
         super(prefix);
     }
 

@@ -19,14 +19,14 @@
 package org.apache.falcon.regression.core.helpers;
 
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.regression.core.interfaces.EntityHelperFactory;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
+import org.apache.falcon.regression.core.helpers.entity.EntityHelperFactory;
 
 /** Helper class to work with a colo. */
 public class ColoHelper {
-    private final IEntityManagerHelper clusterHelper;
-    private final IEntityManagerHelper processHelper;
-    private final IEntityManagerHelper feedHelper;
+    private final AbstractEntityHelper clusterHelper;
+    private final AbstractEntityHelper processHelper;
+    private final AbstractEntityHelper feedHelper;
     private String prefix;
 
     public ColoHelper(String prefix) {
@@ -36,15 +36,15 @@ public class ColoHelper {
         feedHelper = EntityHelperFactory.getEntityHelper(EntityType.FEED, prefix);
     }
 
-    public IEntityManagerHelper getClusterHelper() {
+    public AbstractEntityHelper getClusterHelper() {
         return clusterHelper;
     }
 
-    public IEntityManagerHelper getFeedHelper() {
+    public AbstractEntityHelper getFeedHelper() {
         return feedHelper;
     }
 
-    public IEntityManagerHelper getProcessHelper() {
+    public AbstractEntityHelper getProcessHelper() {
         return processHelper;
     }
 

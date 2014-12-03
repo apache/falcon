@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.regression.core.helpers;
+package org.apache.falcon.regression.core.helpers.entity;
 
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util;
 
 /** Helper class to work with feed endpoints of a colo. */
-public class DataEntityHelperImpl extends IEntityManagerHelper {
+public class FeedEntityHelper extends AbstractEntityHelper {
 
-    public DataEntityHelperImpl(String prefix) {
+    public FeedEntityHelper(String prefix) {
         super(prefix);
     }
 

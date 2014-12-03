@@ -21,7 +21,7 @@ package org.apache.falcon.regression.core.supportClasses;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util.URLS;
 import org.testng.TestNGException;
@@ -39,7 +39,7 @@ public class Brother extends Thread {
         return output;
     }
 
-    private IEntityManagerHelper entityManagerHelper;
+    private AbstractEntityHelper entityManagerHelper;
 
     public Brother(String threadName, String operation, EntityType entityType, ThreadGroup tGroup,
                    Bundle b, ColoHelper p, URLS url) {

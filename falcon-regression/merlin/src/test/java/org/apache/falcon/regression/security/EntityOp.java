@@ -18,7 +18,7 @@
 
 package org.apache.falcon.regression.security;
 
-import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.CleanupUtil;
@@ -38,7 +38,7 @@ import java.util.List;
 enum EntityOp {
     status() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.getStatus(data, user);
@@ -60,7 +60,7 @@ enum EntityOp {
     },
     dependency() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.getEntityDependencies(data, user);
@@ -82,7 +82,7 @@ enum EntityOp {
     },
     listing() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final String entityName = Util.readEntityName(data);
             final List<String> entities;
             try {
@@ -109,7 +109,7 @@ enum EntityOp {
     },
     definition() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.getEntityDefinition(data, user);
@@ -131,7 +131,7 @@ enum EntityOp {
     },
     delete() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.delete(data, user);
@@ -153,7 +153,7 @@ enum EntityOp {
     },
     update() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.update(data, data, user);
@@ -175,7 +175,7 @@ enum EntityOp {
     },
     schedule() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.schedule(data, user);
@@ -197,7 +197,7 @@ enum EntityOp {
     },
     submit() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.submitEntity(data, user);
@@ -219,7 +219,7 @@ enum EntityOp {
     },
     submitAndSchedule() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.submitAndSchedule(data, user);
@@ -241,7 +241,7 @@ enum EntityOp {
     },
     suspend() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.suspend(data, user);
@@ -263,7 +263,7 @@ enum EntityOp {
     },
     resume() {
         @Override
-        public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
+        public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
                 response = helper.resume(data, user);
@@ -285,5 +285,5 @@ enum EntityOp {
     };
 
     private static Logger logger = Logger.getLogger(EntityOp.class);
-    public abstract boolean executeAs(String user, IEntityManagerHelper helper, String data);
+    public abstract boolean executeAs(String user, AbstractEntityHelper helper, String data);
 }
