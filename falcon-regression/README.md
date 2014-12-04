@@ -51,7 +51,7 @@ Populate it with prism related properties:
     prism.service_user = falcon
     prism.hadoop_url = node-1.example.com:8020
     prism.hadoop_location = /usr/lib/hadoop/bin/hadoop
-    prism.ivory_hostname = http://node-1.example.com:15000
+    prism.hostname = http://node-1.example.com:15000
     prism.storeLocation = hdfs://node-1.example.com:8020/apps/falcon
 
 Specify the clusters that you would be using for testing:
@@ -68,7 +68,7 @@ For each cluster specify properties:
     cluster1.password = rgautam
     cluster1.hadoop_url = node-1.example.com:8020
     cluster1.hadoop_location = /usr/lib/hadoop/bin/hadoop
-    cluster1.ivory_hostname = http://node-1.example.com:15000
+    cluster1.hostname = http://node-1.example.com:15000
     cluster1.cluster_readonly = webhdfs://node-1.example.com:50070
     cluster1.cluster_execute = node-1.example.com:8032
     cluster1.cluster_write = hdfs://node-1.example.com:8020

@@ -84,7 +84,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
 
         feedOutput01 = FeedMerlin.fromString(feedOutput01).clearFeedClusters().toString();
 
-        // uncomment below 2 line when falcon in sync with ivory
+        // uncomment below 2 line when falcon in sync with falcon
 
         // feedOutput01 = instanceUtil.setFeedCluster(feedOutput01,
         // XmlUtil.createValidity("2013-04-21T00:00Z",

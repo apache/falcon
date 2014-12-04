@@ -37,7 +37,7 @@ public class JmsMessageConsumer extends Thread {
     brokerURL = "tcp://host:61616?daemon=true";
     ActiveMQConnection.DEFAULT_BROKER_URL;
     Name of the queue we will receive messages from
-    String subject = "IVORY.TOPIC";*/
+    String subject = "FALCON.TOPIC";*/
 
     private static final Logger LOGGER = Logger.getLogger(JmsMessageConsumer.class);
     private static final int MAX_MESSAGE_COUNT = 1000;

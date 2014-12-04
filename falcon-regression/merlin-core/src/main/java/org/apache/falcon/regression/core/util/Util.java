@@ -354,7 +354,7 @@ public final class Util {
         List<String> raw = ExecUtil.runRemoteScriptAsSudo(coloHelper.getProcessHelper()
                 .getQaHost(), coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getPassword(),
-            "cat /var/log/ivory/application.* | grep \"" + workflowId + "\" | grep "
+            "cat /var/log/falcon/application.* | grep \"" + workflowId + "\" | grep "
                     + "\"Received\" | awk '{print $2}'",
             coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getIdentityFile()
@@ -371,7 +371,7 @@ public final class Util {
         List<String> raw = ExecUtil.runRemoteScriptAsSudo(coloHelper.getProcessHelper()
                 .getQaHost(), coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getPassword(),
-            "cat /var/log/ivory/application.* | grep \"" + workflowId + "\" | grep "
+            "cat /var/log/falcon/application.* | grep \"" + workflowId + "\" | grep "
                     +
                 "\"Retrying attempt\" | awk '{print $2}'",
             coloHelper.getProcessHelper().getUsername(),

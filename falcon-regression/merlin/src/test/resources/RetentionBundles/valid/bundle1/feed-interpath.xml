@@ -30,8 +30,8 @@
         </cluster>
     </clusters>
     <locations>
-        <location type="meta" path="/projects/ivory/clicksMetaData"/>
-        <location type="stats" path="/projects/ivory/clicksStats"/>
+        <location type="meta" path="/projects/falcon/clicksMetaData"/>
+        <location type="stats" path="/projects/falcon/clicksStats"/>
         <location type="data" path="/projects/bi/ioout/interactions/${YEAR}-${MONTH}-${DAY}"/>
     </locations>
     <ACL owner="testuser" group="group" permission="0x755"/>

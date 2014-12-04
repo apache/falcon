@@ -30,9 +30,9 @@
 			version="5.1.6" />
 	</interfaces>
 	<locations>
-		<location name="staging" path="/projects/ivory/staging" />
+		<location name="staging" path="/projects/falcon/staging" />
 		<location name="temp" path="/tmp" />
-		<location name="working" path="/projects/ivory/working" />
+		<location name="working" path="/projects/falcon/working" />
 	</locations>
 	<properties>
 		<property name="field1" value="value1" />

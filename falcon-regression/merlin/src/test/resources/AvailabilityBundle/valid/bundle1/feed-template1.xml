@@ -36,9 +36,9 @@
     </clusters>
 
     <locations>
-        <location type="data" path="/samarth/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
-        <location type="stats" path="/projects/ivory/clicksStats" />
-        <location type="meta" path="/projects/ivory/clicksMetaData" />
+        <location type="data" path="/test/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
+        <location type="stats" path="/projects/falcon/clicksStats" />
+        <location type="meta" path="/projects/falcon/clicksMetaData" />
     </locations>
     
     <ACL owner="testuser" group="group" permission="0x755" />

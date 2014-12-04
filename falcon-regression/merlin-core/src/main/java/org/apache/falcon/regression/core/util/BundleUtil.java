@@ -102,7 +102,7 @@ public final class BundleUtil {
             LOGGER.info("Loading data from path: " + file.getAbsolutePath());
             final String data = IOUtils.toString(file.toURI());
 
-            if (data.contains("uri:ivory:cluster:0.1") || data.contains("uri:falcon:cluster:0.1")) {
+            if (data.contains("uri:falcon:cluster:0.1")) {
                 LOGGER.info("data been added to cluster");
                 ClusterMerlin clusterMerlin = new ClusterMerlin(data);
                 //set ACL
@@ -128,17 +128,13 @@ public final class BundleUtil {
                     clusterMerlin.getProperties().getProperties().add(property);
                 }
                 clusterData = clusterMerlin.toString();
-            } else if (data.contains("uri:ivory:feed:0.1")
-                    ||
-                data.contains("uri:falcon:feed:0.1")) {
+            } else if (data.contains("uri:falcon:feed:0.1")) {
                 LOGGER.info("data been added to feed");
                 FeedMerlin feedMerlin = new FeedMerlin(data);
                 feedMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
                         MerlinConstants.CURRENT_USER_GROUP, "*");
                 dataSets.add(feedMerlin.toString());
-            } else if (data.contains("uri:ivory:process:0.1")
-                    ||
-                data.contains("uri:falcon:process:0.1")) {
+            } else if (data.contains("uri:falcon:process:0.1")) {
                 LOGGER.info("data been added to process");
                 ProcessMerlin processMerlin = new ProcessMerlin(data);
                 processMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,

@@ -33,6 +33,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-930 Delete old project name (ivory) from code and xmls (Ruslan Ostafiychuk via Raghav
+   Kumar Gautam)
+
    FALCON-927 Refactoring of entity helpers in falcon-regression (Ruslan Ostafiychuk)
 
    FALCON-928 Use falcon's checkstyle for falcon regression code (Raghav Kumar Gautam)

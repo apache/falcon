@@ -137,7 +137,6 @@ public abstract class AbstractEntityHelper {
     private String oozieURL = "";
     protected String activeMQ = "";
     protected String storeLocation = "";
-    protected String hadoopGetCommand = "";
     protected String colo;
     protected String allColo;
     protected String coloName;
@@ -214,7 +213,7 @@ public abstract class AbstractEntityHelper {
             prefix += ".";
         }
         this.qaHost = Config.getProperty(prefix + "qa_host");
-        this.hostname = Config.getProperty(prefix + "ivory_hostname");
+        this.hostname = Config.getProperty(prefix + "hostname");
         this.username = Config.getProperty(prefix + "username", System.getProperty("user.name"));
         this.password = Config.getProperty(prefix + "password", "");
         this.hadoopLocation = Config.getProperty(prefix + "hadoop_location");
@@ -225,8 +224,6 @@ public abstract class AbstractEntityHelper {
         this.oozieURL = Config.getProperty(prefix + "oozie_url");
         this.activeMQ = Config.getProperty(prefix + "activemq_url");
         this.storeLocation = Config.getProperty(prefix + "storeLocation");
-        this.hadoopGetCommand = hadoopLocation + "  fs -cat hdfs://" + hadoopURL
-                + "/projects/ivory/staging/ivory/workflows/process";
         this.allColo = "?colo=" + Config.getProperty(prefix + "colo", "*");
         this.colo = (!Config.getProperty(prefix + "colo", "").isEmpty()) ? "?colo=" + Config
             .getProperty(prefix + "colo") : "";
