@@ -35,6 +35,7 @@ import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
+import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -45,6 +46,8 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Process instance kill tests.
@@ -136,26 +139,40 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     }
 
     /**
-     * Schedule process. Perform -kill action on instances between -start and -end dates which
-     * expose range of last 3 instances which have been materialized already and those which
-     * should be. Check that only existent instances are killed.
+     * Schedule process. Provide data for all instances except the last,
+     * thus making it non-materialized (waiting). Try to -kill last 3 instances.
+     * Check that only running instances were affected.
      *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
-    public void testProcessInstanceKillKillNonMaterialized() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T00:00Z", "2010-01-02T01:00Z");
+    public void testProcessInstanceKillKillNotRunning() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T00:00Z", "2010-01-02T00:26Z");
         bundles[0].setProcessTimeOut(3, TimeUnit.minutes);
-        bundles[0].setProcessPeriodicity(1, TimeUnit.minutes);
+        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+
+        //create data for first 5 instances, 6th should be non-materialized
+        String bundleId = InstanceUtil.getSequenceBundleID(cluster, processName, EntityType.PROCESS, 0);
+        for(CoordinatorJob c : clusterOC.getBundleJobInfo(bundleId).getCoordinators()) {
+            List<CoordinatorAction> actions = clusterOC.getCoordJobInfo(c.getId()).getActions();
+            if (actions.size() == 6) {
+                for(int i = 0; i < 5; i++) {
+                    CoordinatorAction action = actions.get(i);
+                    InstanceUtil.createHDFSFolders(cluster, Arrays
+                        .asList(action.getMissingDependencies().split("#")));
+                }
+                break;
+            }
+        }
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
-                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
         InstancesResult r = prism.getProcessHelper()
-                .getProcessInstanceKill(processName, "?start=2010-01-02T00:03Z&end=2010-01-02T00:30Z");
-        InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
+                .getProcessInstanceKill(processName, "?start=2010-01-02T00:14Z&end=2010-01-02T00:26Z");
+        InstanceUtil.validateResponse(r, 3, 0, 0, 1, 2);
         LOGGER.info(r.toString());
     }
 

@@ -169,6 +169,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-895 Fix intermittent failures in ProcessInstanceStatus and KillsTest classes.
+   (Paul Isaychuk via Raghav Kumar Gautam)
+
    FALCON-891 Removing some more invalid acl tests (Raghav Kumar Gautam)
 
    FALCON-888 Disabling test for special chars in pipeline name and

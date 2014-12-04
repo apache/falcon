@@ -121,6 +121,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1, Status.RUNNING, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T10:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
