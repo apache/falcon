@@ -37,6 +37,14 @@ public final class MerlinConstants {
 
     public static final boolean IS_SECURE =
         "kerberos".equals(new Configuration().get("hadoop.security.authentication", "simple"));
+
+    /** Staging location to use in cluster xml. */
+    public static final String STAGING_LOCATION = Config.getProperty("merlin.staging.location",
+        "/tmp/falcon-regression-staging");
+    /** Working location to use in cluster xml. */
+    public static final String WORKING_LOCATION = Config.getProperty("merlin.working.location",
+        "/tmp/falcon-regression-working");
+
     /** the user that is going to run tests. */
     public static final String CURRENT_USER_NAME = System.getProperty("user.name");
     /** keytab of current user. */

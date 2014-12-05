@@ -18,8 +18,11 @@
 
 package org.apache.falcon.regression.core.util;
 
+import org.apache.commons.configuration.AbstractConfiguration;
+import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
@@ -31,18 +34,29 @@ public final class Config {
     private static final String MERLIN_PROPERTIES = "Merlin.properties";
     private static final Config INSTANCE = new Config(MERLIN_PROPERTIES);
 
-    private PropertiesConfiguration confObj;
+    private AbstractConfiguration confObj;
     private Config(String propFileName) {
         try {
-            LOGGER.info("Going to read properties from: " + propFileName);
-            confObj = new PropertiesConfiguration(Config.class.getResource("/" + propFileName));
-            //if changed configuration will be reloaded within 2 min
-            final FileChangedReloadingStrategy reloadingStrategy = new FileChangedReloadingStrategy();
-            reloadingStrategy.setRefreshDelay(2 * 60 * 1000);
-            confObj.setReloadingStrategy(reloadingStrategy);
+            initConfig(propFileName);
         } catch (ConfigurationException e) {
             Assert.fail("Could not read properties because of exception: " + e);
         }
+    }
+
+    private void initConfig(String propFileName) throws ConfigurationException {
+        CompositeConfiguration compositeConfiguration = new CompositeConfiguration();
+        LOGGER.info("Going to add properties from system properties.");
+        compositeConfiguration.addConfiguration(new SystemConfiguration());
+
+        LOGGER.info("Going to read properties from: " + propFileName);
+        final PropertiesConfiguration merlinConfig =
+            new PropertiesConfiguration(Config.class.getResource("/" + propFileName));
+        //if changed configuration will be reloaded within 2 min
+        final FileChangedReloadingStrategy reloadingStrategy = new FileChangedReloadingStrategy();
+        reloadingStrategy.setRefreshDelay(2 * 60 * 1000);
+        merlinConfig.setReloadingStrategy(reloadingStrategy);
+        compositeConfiguration.addConfiguration(merlinConfig);
+        this.confObj = compositeConfiguration;
     }
 
     public static String getProperty(String key) {

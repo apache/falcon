@@ -112,13 +112,11 @@ public final class BundleUtil {
                 clusterMerlin.getLocations().getLocations().clear();
                 final Location staging = new Location();
                 staging.setName("staging");
-                staging.setPath(Config.getProperty("merlin.staging.location",
-                        "/tmp/falcon-regression-staging"));
+                staging.setPath(MerlinConstants.STAGING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(staging);
                 final Location working = new Location();
                 working.setName("working");
-                working.setPath(Config.getProperty("merlin.working.location",
-                        "/tmp/falcon-regression-working"));
+                working.setPath(MerlinConstants.WORKING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(working);
                 final String protectionPropName = "hadoop.rpc.protection";
                 final String protectionPropValue = Config.getProperty(protectionPropName);
