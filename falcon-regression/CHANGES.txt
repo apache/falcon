@@ -172,6 +172,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-936 Replace deprecated WorkflowJob.getGroup() with getAcl().
+   (Ruslan Ostafiychuk via Raghav Kumar Gautam)
+
    FALCON-895 Fix intermittent failures in ProcessInstanceStatus and KillsTest classes.
    (Paul Isaychuk via Raghav Kumar Gautam)
 

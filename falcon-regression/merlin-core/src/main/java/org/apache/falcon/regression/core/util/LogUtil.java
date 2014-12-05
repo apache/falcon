@@ -249,7 +249,7 @@ public final class LogUtil {
                 sb.append("Status : ").append(info.getStatus()).append(NL);
                 sb.append("Run : ").append(info.getRun()).append(NL);
                 sb.append("User : ").append(info.getUser()).append(NL);
-                sb.append("Group : ").append(info.getGroup()).append(NL);
+                sb.append("Group : ").append(info.getAcl()).append(NL);
                 sb.append("Created : ").append(info.getCreatedTime()).append(NL);
                 sb.append("Started : ").append(info.getStartTime()).append(NL);
                 sb.append("Last Modified : ").append(info.getLastModifiedTime()).append(NL);
