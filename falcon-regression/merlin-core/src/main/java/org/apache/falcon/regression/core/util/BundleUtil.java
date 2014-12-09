@@ -51,8 +51,8 @@ public final class BundleUtil {
     }
     private static final Logger LOGGER = Logger.getLogger(BundleUtil.class);
 
-    public static Bundle readFeedReplicaltionBundle() throws IOException {
-        return readBundleFromFolder("FeedReplicaltionBundles");
+    public static Bundle readFeedReplicationBundle() throws IOException {
+        return readBundleFromFolder("FeedReplicationBundles");
     }
 
     public static Bundle readLateDataBundle() throws IOException {

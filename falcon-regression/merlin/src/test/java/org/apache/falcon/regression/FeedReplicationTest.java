@@ -80,7 +80,7 @@ public class FeedReplicationTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws JAXBException, IOException {
         LOGGER.info("test name: " + method.getName());
-        Bundle bundle = BundleUtil.readFeedReplicaltionBundle();
+        Bundle bundle = BundleUtil.readFeedReplicationBundle();
 
         bundles[0] = new Bundle(bundle, cluster1);
         bundles[1] = new Bundle(bundle, cluster2);

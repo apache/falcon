@@ -47,7 +47,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 /**
- * Schedule process via prsm tests.
+ * Schedule process via prism tests.
  */
 public class PrismProcessScheduleTest extends BaseTestClass {
 

@@ -176,7 +176,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
         LOGGER.info("test name: " + method.getName());
-        Bundle bundle = BundleUtil.readFeedReplicaltionBundle();
+        Bundle bundle = BundleUtil.readFeedReplicationBundle();
 
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
