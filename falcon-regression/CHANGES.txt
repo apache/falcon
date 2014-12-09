@@ -172,6 +172,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-937 Fix tests that are still using hdfs root dir in feeds (Raghav Kumar Gautam
+   via Ruslan Ostafiychuk)
+
    FALCON-936 Replace deprecated WorkflowJob.getGroup() with getAcl().
    (Ruslan Ostafiychuk via Raghav Kumar Gautam)
 

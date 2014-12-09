@@ -102,7 +102,7 @@ public class NewRetryTest extends BaseTestClass {
         feed = Util.insertLateFeedValue(feed, new Frequency("minutes(8)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
         bundles[0].getDataSets().add(feed);
-
+        bundles[0].setOutputFeedLocationData(baseTestDir + "/output" + MINUTE_DATE_PATTERN);
         bundles[0].submitClusters(prism);
     }
 

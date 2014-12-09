@@ -51,7 +51,7 @@ public class ELExpFutureAndLatestTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestDir = baseHDFSDir + "/ELExp_FutureAndLatest";
+    private String baseTestDir = baseHDFSDir + "/ELExpFutureAndLatestTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(ELExpFutureAndLatestTest.class);
 
@@ -67,7 +67,7 @@ public class ELExpFutureAndLatestTest extends BaseTestClass {
         String startDate = TimeUtil.getTimeWrtSystemTime(-20);
         String endDate = TimeUtil.getTimeWrtSystemTime(70);
 
-        b.setInputFeedDataPath(baseTestDir + "/ELExp_latest/testData" + MINUTE_DATE_PATTERN);
+        b.setInputFeedDataPath(baseTestDir + "/testData" + MINUTE_DATE_PATTERN);
         b.setProcessWorkflow(aggregateWorkflowDir);
 
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 1);
@@ -82,7 +82,9 @@ public class ELExpFutureAndLatestTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
-        bundles[0].setInputFeedDataPath(baseTestDir + "/ELExp_latest/testData"
+        bundles[0].setInputFeedDataPath(baseTestDir + "/testData"
+            + MINUTE_DATE_PATTERN);
+        bundles[0].setOutputFeedLocationData(baseTestDir + "/output"
             + MINUTE_DATE_PATTERN);
         bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setInputFeedValidity("2010-04-01T00:00Z", "2015-04-01T00:00Z");

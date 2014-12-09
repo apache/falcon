@@ -91,6 +91,7 @@ public class InstanceSummaryTest extends BaseTestClass {
         processBundle = new Bundle(processBundle, cluster3);
         processBundle.generateUniqueBundle();
         processBundle.setInputFeedDataPath(feedInputPath);
+        processBundle.setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
 
         for (int i = 0; i < 3; i++) {

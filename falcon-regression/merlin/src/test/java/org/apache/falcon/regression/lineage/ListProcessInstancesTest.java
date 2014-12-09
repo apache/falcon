@@ -50,8 +50,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListProcessInstancesTest.class);
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String testDir = "/ListProcessInstancesTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = baseHDFSDir + "/ListProcessInstancesTest";
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String sourcePath = baseTestHDFSDir + "/source";
     private String feedDataLocation = sourcePath + MINUTE_DATE_PATTERN;
@@ -74,6 +73,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
         //prepare process
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setInputFeedDataPath(feedDataLocation);
+        bundles[0].setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitAndScheduleProcess();
