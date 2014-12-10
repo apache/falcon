@@ -68,8 +68,10 @@ public final class CleanupUtil {
         InterruptedException {
         final EntityList entityList = getEntitiesResultOfOneType(entityManagerHelper, user);
         List<String> clusters = new ArrayList<String>();
-        for (EntityList.EntityElement entity : entityList.getElements()) {
-            clusters.add(entity.name);
+        if (entityList.getElements() != null) {
+            for (EntityList.EntityElement entity : entityList.getElements()) {
+                clusters.add(entity.name);
+            }
         }
         return clusters;
     }
