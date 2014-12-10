@@ -31,11 +31,11 @@
                 </property>
                 <property>
                     <name>mapred.mapper.class</name>
-                    <value>org.apache.oozie.example.SampleMapper</value>
+                    <value>org.apache.hadoop.mapred.lib.IdentityMapper</value>
                 </property>
                 <property>
                     <name>mapred.reducer.class</name>
-                    <value>org.apache.oozie.example.SampleReducer</value>
+                    <value>org.apache.hadoop.mapred.lib.IdentityReducer</value>
                 </property>
                 <property>
                     <name>mapred.map.tasks</name>

@@ -29,7 +29,6 @@ import org.apache.falcon.regression.core.util.ExecUtil;
 import org.apache.falcon.regression.core.util.FileUtil;
 import org.apache.falcon.regression.core.util.HCatUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
@@ -55,10 +54,6 @@ public abstract class AbstractEntityHelper {
     public static final boolean AUTHENTICATE = setAuthenticate();
 
     private static final Logger LOGGER = Logger.getLogger(AbstractEntityHelper.class);
-
-    protected static final String CLIENT_LOCATION = OSUtil.RESOURCES
-        + OSUtil.getPath("IvoryClient", "IvoryCLI.jar");
-    protected static final String BASE_COMMAND = "java -jar " + CLIENT_LOCATION;
 
     private static boolean setAuthenticate() {
         String value = Config.getProperty("isAuthenticationSet");
@@ -495,17 +490,6 @@ public abstract class AbstractEntityHelper {
             .createAndSendRequestProcessInstance(url, params, allColo, null);
     }
 
-    public String list() {
-        return ExecUtil.executeCommandGetOutput(
-            BASE_COMMAND + " entity -list -url " + this.hostname + " -type " + getEntityType());
-    }
-
-    public String getDependencies(String entityName) {
-        return ExecUtil.executeCommandGetOutput(
-            BASE_COMMAND + " entity -dependency -url " + this.hostname + " -type "
-                + getEntityType() + " -name " + entityName);
-    }
-
     public List<String> getArchiveInfo() throws IOException, JSchException {
         return Util.getStoreInfo(this, "/archive/" + getEntityType().toUpperCase());
     }
@@ -596,5 +580,21 @@ public abstract class AbstractEntityHelper {
             url += colo.isEmpty() ? "?" + params : "&" + params;
         }
         return (InstancesResult) InstanceUtil.sendRequestProcessInstance(url, user);
+    }
+
+    /**
+     * Get list of all dependencies of a given entity.
+     * @param entityName entity name
+     * @return response
+     * @throws URISyntaxException
+     * @throws AuthenticationException
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public ServiceResponse getDependencies(String entityName)
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+        String url = createUrl(this.hostname + URLS.DEPENDENCIES.getValue(), getEntityType(),
+            entityName + colo);
+        return Util.sendRequest(url, "get", null, null);
     }
 }

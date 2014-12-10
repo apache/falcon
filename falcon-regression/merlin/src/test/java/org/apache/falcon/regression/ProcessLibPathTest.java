@@ -60,9 +60,6 @@ public class ProcessLibPathTest extends BaseTestClass {
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
-
-        //common lib for both test cases
-        HadoopUtil.uploadDir(clusterFS, testLibDir, OSUtil.RESOURCES_OOZIE + "lib");
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
@@ -98,7 +95,7 @@ public class ProcessLibPathTest extends BaseTestClass {
     }
 
     /**
-     * Test which test a process with no lib folder in workflow location.
+     * Tests a process with no lib folder in workflow location.
      *
      * @throws Exception
      */
@@ -106,7 +103,6 @@ public class ProcessLibPathTest extends BaseTestClass {
     public void setDifferentLibPathWithNoLibFolderInWorkflowfLocaltion() throws Exception {
         String workflowDir = testLibDir + "/aggregatorLib1/";
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
-        HadoopUtil.deleteDirIfExists(workflowDir + "/lib", clusterFS);
         bundles[0].setProcessWorkflow(workflowDir);
         LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
@@ -125,8 +121,8 @@ public class ProcessLibPathTest extends BaseTestClass {
         String workflowDir = testLibDir + "/aggregatorLib2/";
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
         HadoopUtil.recreateDir(clusterFS, workflowDir + "/lib");
-        HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib",
-            OSUtil.RESOURCES + "ivory-oozie-lib-0.1.jar");
+        HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib/invalid.jar",
+            OSUtil.RESOURCES + "feed-s4Replication.xml");
         bundles[0].setProcessWorkflow(workflowDir);
         LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);

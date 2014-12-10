@@ -36,6 +36,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-908 Remove jars that are not needed (Paul Isaychuk via Raghav Kumar Gautam)
+
    FALCON-939 Fixing few typos and removing unused stuff (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-930 Delete old project name (ivory) from code and xmls (Ruslan Ostafiychuk via Raghav

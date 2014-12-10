@@ -572,10 +572,11 @@ public class Bundle {
     }
 
 
-    public void verifyDependencyListing(ColoHelper coloHelper) {
+    public void verifyDependencyListing(ColoHelper coloHelper)
+        throws InterruptedException, IOException, AuthenticationException, URISyntaxException {
         //display dependencies of process:
         String dependencies = coloHelper.getProcessHelper().getDependencies(
-            Util.readEntityName(getProcessData()));
+            Util.readEntityName(getProcessData())).getEntityList().toString();
 
         //verify presence
         for (String cluster : clusters) {
@@ -585,15 +586,13 @@ public class Bundle {
             Assert.assertTrue(dependencies.contains("(feed) " + Util.readEntityName(feed)));
             for (String cluster : clusters) {
                 Assert.assertTrue(coloHelper.getFeedHelper().getDependencies(
-                    Util.readEntityName(feed))
+                    Util.readEntityName(feed)).getEntityList().toString()
                     .contains("(cluster) " + Util.readEntityName(cluster)));
             }
             Assert.assertFalse(coloHelper.getFeedHelper().getDependencies(
-                Util.readEntityName(feed))
+                Util.readEntityName(feed)).getEntityList().toString()
                 .contains("(process)" + Util.readEntityName(getProcessData())));
         }
-
-
     }
 
     public void addProcessInput(String feed, String feedName) {
