@@ -18,6 +18,7 @@
 
 package org.apache.falcon.cli;
 
+import org.apache.falcon.ResponseHelper;
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -243,42 +244,71 @@ public class FalconCLI {
         if (optionsList.contains(RUNNING_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
-            result = client.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, sortOrder,
-                    offset, numResults);
+            result =
+                ResponseHelper.getString(client.getRunningInstances(type,
+                        entity, colo, lifeCycles, filterBy, orderBy, sortOrder,
+                        offset, numResults));
         } else if (optionsList.contains(STATUS_OPT) || optionsList.contains(LIST_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
-            result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles,
-                    filterBy, orderBy, sortOrder, offset, numResults);
+            result =
+                ResponseHelper.getString(client
+                        .getStatusOfInstances(type, entity, start, end, colo,
+                                lifeCycles,
+                                filterBy, orderBy, sortOrder, offset, numResults));
         } else if (optionsList.contains(SUMMARY_OPT)) {
-            result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
+            result =
+                ResponseHelper.getString(client
+                        .getSummaryOfInstances(type, entity, start, end, colo,
+                                lifeCycles));
         } else if (optionsList.contains(KILL_OPT)) {
             validateNotEmpty(start, START_OPT);
             validateNotEmpty(end, END_OPT);
-            result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
+            result =
+                ResponseHelper.getString(client
+                        .killInstances(type, entity, start, end, colo, clusters,
+                                sourceClusters, lifeCycles));
         } else if (optionsList.contains(SUSPEND_OPT)) {
             validateNotEmpty(start, START_OPT);
             validateNotEmpty(end, END_OPT);
-            result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
+            result =
+                ResponseHelper.getString(client
+                        .suspendInstances(type, entity, start, end, colo, clusters,
+                                sourceClusters, lifeCycles));
         } else if (optionsList.contains(RESUME_OPT)) {
             validateNotEmpty(start, START_OPT);
             validateNotEmpty(end, END_OPT);
-            result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
+            result =
+                ResponseHelper.getString(client
+                        .resumeInstances(type, entity, start, end, colo, clusters,
+                                sourceClusters, lifeCycles));
         } else if (optionsList.contains(RERUN_OPT)) {
             validateNotEmpty(start, START_OPT);
             validateNotEmpty(end, END_OPT);
-            result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters,
-                    lifeCycles);
+            result =
+                ResponseHelper.getString(client
+                        .rerunInstances(type, entity, start, end, filePath, colo,
+                                clusters, sourceClusters,
+                                lifeCycles));
         } else if (optionsList.contains(LOG_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
-            result = client.getLogsOfInstances(type, entity, start, end, colo, runId, lifeCycles,
-                    filterBy, orderBy, sortOrder, offset, numResults);
+            result =
+                ResponseHelper.getString(client
+                                .getLogsOfInstances(type, entity, start, end, colo, runId,
+                                        lifeCycles,
+                                        filterBy, orderBy, sortOrder, offset, numResults),
+                        runId);
         } else if (optionsList.contains(PARARMS_OPT)) {
             // start time is the nominal time of instance
-            result = client.getParamsOfInstance(type, entity, start, colo, lifeCycles);
+            result =
+                ResponseHelper
+                    .getString(client.getParamsOfInstance(
+                            type, entity, start, colo, lifeCycles));
         } else if (optionsList.contains(LISTING_OPT)) {
-            result = client.getFeedListing(type, entity, start, end, colo);
+            result =
+                ResponseHelper.getString(client
+                        .getFeedListing(type, entity, start, end, colo));
         } else {
             throw new FalconCLIException("Invalid command");
         }
@@ -352,51 +382,54 @@ public class FalconCLI {
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         validateNotEmpty(entityType, ENTITY_TYPE_OPT);
+        EntityType entityTypeEnum = EntityType.valueOf(entityType.toUpperCase());
         validateSortOrder(sortOrder);
         String entityAction = "entity";
 
         if (optionsList.contains(SUBMIT_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            result = client.submit(entityType, filePath);
+            result = client.submit(entityType, filePath).getMessage();
         } else if (optionsList.contains(UPDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             Date effectiveTime = parseDateString(time);
-            result = client.update(entityType, entityName, filePath, effectiveTime);
+            result = client.update(entityType, entityName, filePath, effectiveTime).getMessage();
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            result = client.submitAndSchedule(entityType, filePath);
+            result =
+                client.submitAndSchedule(entityType, filePath).getMessage();
         } else if (optionsList.contains(VALIDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            result = client.validate(entityType, filePath);
+            result = client.validate(entityType, filePath).getMessage();
         } else if (optionsList.contains(SCHEDULE_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.schedule(entityType, entityName, colo);
+            result = client.schedule(entityTypeEnum, entityName, colo).getMessage();
         } else if (optionsList.contains(SUSPEND_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.suspend(entityType, entityName, colo);
+            result = client.suspend(entityTypeEnum, entityName, colo).getMessage();
         } else if (optionsList.contains(RESUME_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.resume(entityType, entityName, colo);
+            result = client.resume(entityTypeEnum, entityName, colo).getMessage();
         } else if (optionsList.contains(DELETE_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
-            result = client.delete(entityType, entityName);
+            result = client.delete(entityTypeEnum, entityName).getMessage();
         } else if (optionsList.contains(STATUS_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.getStatus(entityType, entityName, colo);
+            result =
+                client.getStatus(entityTypeEnum, entityName, colo).getMessage();
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
-            result = client.getDefinition(entityType, entityName);
+            result = client.getDefinition(entityType, entityName).toString();
         } else if (optionsList.contains(DEPENDENCY_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
@@ -415,8 +448,12 @@ public class FalconCLI {
             validateEntityFields(fields);
             validateFilterBy(filterBy, entityAction);
             validateOrderBy(orderBy, entityAction);
-            result = client.getEntitySummary(entityType, cluster, start, end, fields, filterBy, filterTags,
-                    orderBy, sortOrder, offset, numResults, numInstances);
+            result =
+                ResponseHelper.getString(client
+                        .getEntitySummary(
+                                entityType, cluster, start, end, fields, filterBy,
+                                filterTags,
+                                orderBy, sortOrder, offset, numResults, numInstances));
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
@@ -879,7 +916,8 @@ public class FalconCLI {
 
         validateNotEmpty(recipeName, RECIPE_NAME);
 
-        String result = client.submitRecipe(recipeName, recipeToolClass);
+        String result =
+            client.submitRecipe(recipeName, recipeToolClass).getMessage();
         OUT.get().println(result);
     }
 }

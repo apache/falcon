@@ -67,11 +67,14 @@ public final class Debug {
                 if (ConfigurationStore.get().get(eType, dep.name) != null) {
                     continue;
                 }
-                String xml = client.getDefinition(eType.name().toLowerCase(), dep.name);
+                String xml =
+                    client.getDefinition(eType.name().toLowerCase(), dep.name)
+                        .toString();
                 System.out.println(xml);
                 store(eType, xml);
             }
-            String xml = client.getDefinition(type.toLowerCase(), entity);
+            String xml =
+                client.getDefinition(type.toLowerCase(), entity).toString();
             System.out.println(xml);
             store(EntityType.valueOf(type.toUpperCase()), xml);
         }

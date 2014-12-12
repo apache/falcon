@@ -7,6 +7,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-329 Falcon client methods should return objects. (Samar via Shwetha GS)
+
    FALCON-593 Preserve data type for properties in a vertex. (Ajay
    Yadav via Srikanth Sundarrajan)
 
