@@ -30,7 +30,6 @@ public class CatalogPartition {
     private List<String> values;
     private long createTime;
     private long lastAccessTime;
-    private List<String> tableColumns;
     private String inputFormat;
     private String outputFormat;
     private String location;
@@ -57,10 +56,6 @@ public class CatalogPartition {
 
     protected void setLastAccessTime(long lastAccessTime) {
         this.lastAccessTime = lastAccessTime;
-    }
-
-    protected void setTableColumns(List<String> tableColumns) {
-        this.tableColumns = tableColumns;
     }
 
     protected void setInputFormat(String inputFormat) {
@@ -97,14 +92,6 @@ public class CatalogPartition {
         return this.tableName;
     }
 
-    /**
-     * Gets the columns of the table.
-     *
-     * @return the columns
-     */
-    public List<String> getColumns() {
-        return this.tableColumns;
-    }
 
     /**
      * Gets the input format.

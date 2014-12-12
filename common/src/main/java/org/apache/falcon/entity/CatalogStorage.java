@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
+import org.apache.falcon.catalog.AbstractCatalogService;
 import org.apache.falcon.catalog.CatalogPartition;
 import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.common.FeedDataPath;
@@ -46,7 +47,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -394,25 +394,25 @@ public class CatalogStorage extends Configured implements Storage {
         LOG.info("Applying retention on {}, Limit: {}, timezone: {}",
                 getTable(), retentionLimit, timeZone);
 
-        // get sorted date partition keys and values
-        List<String> datedPartKeys = new ArrayList<String>();
-        List<String> datedPartValues = new ArrayList<String>();
         List<CatalogPartition> toBeDeleted;
         try {
+            // get sorted date partition keys and values
+            List<String> datedPartKeys = new ArrayList<String>();
+            List<String> datedPartValues = new ArrayList<String>();
             fillSortedDatedPartitionKVs(datedPartKeys, datedPartValues, retentionLimit, timeZone);
             toBeDeleted = discoverPartitionsToDelete(datedPartKeys, datedPartValues);
-
         } catch (ELException e) {
             throw new FalconException("Couldn't find partitions to be deleted", e);
 
         }
+
         if (toBeDeleted.isEmpty()) {
             LOG.info("No partitions to delete.");
         } else {
             final boolean isTableExternal = CatalogServiceFactory.getCatalogService().isTableExternal(
                 getConf(), getCatalogUrl(), getDatabase(), getTable());
             try {
-                dropPartitions(toBeDeleted, datedPartKeys, isTableExternal);
+                dropPartitions(toBeDeleted, isTableExternal);
             } catch (IOException e) {
                 throw new FalconException("Couldn't drop partitions", e);
             }
@@ -513,95 +513,31 @@ public class CatalogStorage extends Configured implements Storage {
         return filterBuffer.toString();
     }
 
-    private void dropPartitions(List<CatalogPartition> partitionsToDelete, List<String> datedPartKeys,
-                                boolean isTableExternal) throws FalconException, IOException {
+    private void dropPartitions(List<CatalogPartition> partitionsToDelete, boolean isTableExternal)
+        throws FalconException, IOException {
+        AbstractCatalogService catalogService = CatalogServiceFactory.getCatalogService();
+        for (CatalogPartition partition : partitionsToDelete) {
+            boolean deleted = catalogService.dropPartition(getConf(), getCatalogUrl(), getDatabase(), getTable(),
+                    partition.getValues(), true);
 
-        // get table partition columns
-        List<String> partColumns = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
-            getConf(), getCatalogUrl(), getDatabase(), getTable());
-
-        /* In case partition columns are a super-set of dated partitions, there can be multiple
-         * partitions that share the same set of date-partition values. All such partitions can
-         * be deleted by issuing a single HCatalog dropPartition call per date-partition values.
-         * Arrange the partitions grouped by each set of date-partition values.
-         */
-        Map<Map<String, String>, List<CatalogPartition>> dateToPartitionsMap = new HashMap<
-                Map<String, String>, List<CatalogPartition>>();
-        for (CatalogPartition partitionToDrop : partitionsToDelete) {
-            // create a map of name-values of all columns of this partition
-            Map<String, String> partitionsMap = new HashMap<String, String>();
-            for (int i = 0; i < partColumns.size(); i++) {
-                partitionsMap.put(partColumns.get(i), partitionToDrop.getValues().get(i));
+            if (!deleted) {
+                return;
             }
 
-            // create a map of name-values of dated sub-set of this partition
-            Map<String, String> datedPartitions = new HashMap<String, String>();
-            for (String datedPart : datedPartKeys) {
-                datedPartitions.put(datedPart, partitionsMap.get(datedPart));
-            }
-
-            // add a map entry of this catalog partition corresponding to its date-partition values
-            List<CatalogPartition> catalogPartitions;
-            if (dateToPartitionsMap.containsKey(datedPartitions)) {
-                catalogPartitions = dateToPartitionsMap.get(datedPartitions);
-            } else {
-                catalogPartitions = new ArrayList<CatalogPartition>();
-            }
-            catalogPartitions.add(partitionToDrop);
-            dateToPartitionsMap.put(datedPartitions, catalogPartitions);
-        }
-
-        // delete each entry within dateToPartitions Map
-        for (Map.Entry<Map<String, String>, List<CatalogPartition>> entry : dateToPartitionsMap.entrySet()) {
-            dropPartitionInstances(entry.getValue(), entry.getKey(), isTableExternal);
-        }
-    }
-
-    private void dropPartitionInstances(List<CatalogPartition> partitionsToDrop, Map<String, String> partSpec,
-                                        boolean isTableExternal) throws FalconException, IOException {
-
-        boolean deleted = CatalogServiceFactory.getCatalogService().dropPartitions(
-            getConf(), getCatalogUrl(), getDatabase(), getTable(), partSpec);
-
-        if (!deleted) {
-            return;
-        }
-
-        for (CatalogPartition partitionToDrop : partitionsToDrop) {
             if (isTableExternal) { // nuke the dirs if an external table
-                final String location = partitionToDrop.getLocation();
-                final Path path = new Path(location);
-                deleted = HadoopClientFactory.get()
-                        .createProxiedFileSystem(path.toUri()) .delete(path, true);
+                final Path path = new Path(partition.getLocation());
+                if (!HadoopClientFactory.get().createProxiedFileSystem(path.toUri()).delete(path, true)) {
+                    throw new FalconException("Failed to delete location " + path + " for partition "
+                            + partition.getValues());
+                }
             }
-            if (!isTableExternal || deleted) {
-                // replace ',' with ';' since message producer splits instancePaths string by ','
-                String partitionInfo = partitionToDrop.getValues().toString().replace("," , ";");
-                LOG.info("Deleted partition: " + partitionInfo);
-                instanceDates.append(partSpec).append(',');
-                instancePaths.append(getEvictedPartitionPath(partitionToDrop))
-                        .append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
-            }
+
+            // replace ',' with ';' since message producer splits instancePaths string by ','
+            String partitionInfo = partition.getValues().toString().replace(",", ";");
+            LOG.info("Deleted partition: " + partitionInfo);
+            instanceDates.append(partitionInfo).append(',');
+            instancePaths.append(partition.getLocation()).append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
         }
-    }
-
-    private String getEvictedPartitionPath(final CatalogPartition partitionToDrop) {
-        String uriTemplate = getUriTemplate(); // no need for location type for table
-        List<String> values = partitionToDrop.getValues();
-        StringBuilder partitionPath = new StringBuilder();
-        int index = 0;
-        for (String partitionKey : getDatedPartitionKeys()) {
-            String dateMask = getPartitionValue(partitionKey);
-            String date = values.get(index);
-
-            partitionPath.append(uriTemplate.replace(dateMask, date));
-            partitionPath.append(CatalogStorage.PARTITION_SEPARATOR);
-            LOG.info("partitionPath: " + partitionPath);
-        }
-        partitionPath.setLength(partitionPath.length() - 1);
-
-        LOG.info("Return partitionPath: " + partitionPath);
-        return partitionPath.toString();
     }
 
     @Override

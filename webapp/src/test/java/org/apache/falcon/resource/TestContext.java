@@ -28,6 +28,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
+import org.apache.falcon.catalog.HiveCatalogService;
 import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
@@ -42,11 +43,14 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
+import org.apache.hcatalog.api.HCatClient;
 import org.testng.Assert;
 
 import javax.net.ssl.HostnameVerifier;
@@ -120,6 +124,22 @@ public class TestContext {
             configure();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * This is only used for tests.
+     *
+     * @param metastoreUrl metastore url
+     * @return client object
+     * @throws FalconException
+     */
+    public static HCatClient getHCatClient(String metastoreUrl) throws FalconException {
+        try {
+            HiveConf hcatConf = HiveCatalogService.createHiveConf(new Configuration(false), metastoreUrl);
+            return HCatClient.create(hcatConf);
+        } catch (Exception e) {
+            throw new FalconException("Exception creating HCatClient: " + e.getMessage(), e);
         }
     }
 

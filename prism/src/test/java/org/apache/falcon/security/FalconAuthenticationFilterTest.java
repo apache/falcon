@@ -184,7 +184,7 @@ public class FalconAuthenticationFilterTest {
     public void testGetKerberosPrincipalWithSubstitutedHostSecure() throws Exception {
         String principal = StartupProperties.get().getProperty(FalconAuthenticationFilter.KERBEROS_PRINCIPAL);
 
-        String expectedPrincipal = "falcon/" + SecurityUtil.getLocalHostName() + "@Example.com";
+        String expectedPrincipal = "falcon/" + SecurityUtil.getLocalHostName().toLowerCase() + "@Example.com";
         try {
             Configuration conf = new Configuration(false);
             conf.set("hadoop.security.authentication", "kerberos");

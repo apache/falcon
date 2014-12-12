@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -153,7 +154,7 @@ public class LateDataHandler extends Configured implements Tool {
      * The assumption is that if a partition has changed or reinstated, the underlying
      * metric would change, either size or create time.
      *
-     * @param feedUriTemplate URI for the feed storage, filesystem path or table uri
+     * @param feedUri URI for the feed storage, filesystem path or table uri
      * @param feedStorageType feed storage type
      * @param conf configuration
      * @return computed metric
@@ -161,19 +162,19 @@ public class LateDataHandler extends Configured implements Tool {
      * @throws FalconException
      * @throws URISyntaxException
      */
-    public long computeStorageMetric(String feedUriTemplate, String feedStorageType, Configuration conf)
+    public long computeStorageMetric(String feedUri, String feedStorageType, Configuration conf)
         throws IOException, FalconException, URISyntaxException {
 
         Storage.TYPE storageType = Storage.TYPE.valueOf(feedStorageType);
 
         if (storageType == Storage.TYPE.FILESYSTEM) {
             // usage on file system is the metric
-            return getFileSystemUsageMetric(feedUriTemplate, conf);
+            return getFileSystemUsageMetric(feedUri, conf);
         } else if (storageType == Storage.TYPE.TABLE) {
             // todo: this should have been done in oozie mapper but el ${coord:dataIn('input')} returns hcat scheme
-            feedUriTemplate = feedUriTemplate.replace("hcat", "thrift");
+            feedUri = feedUri.replace("hcat", "thrift");
             // creation time of the given partition is the metric
-            return getTablePartitionCreateTimeMetric(feedUriTemplate);
+            return getTablePartitionCreateTimeMetric(feedUri);
         }
 
         throw new IllegalArgumentException("Unknown storage type: " + feedStorageType);
@@ -222,20 +223,20 @@ public class LateDataHandler extends Configured implements Tool {
      * If this partition was reinstated, the assumption is that the create time of
      * this partition would change.
      *
-     * @param feedUriTemplate catalog table uri
+     * @param feedUri catalog table uri
      * @return metric as creation time of the given partition
      * @throws IOException
      * @throws URISyntaxException
      * @throws FalconException
      */
-    private long getTablePartitionCreateTimeMetric(String feedUriTemplate)
+    private long getTablePartitionCreateTimeMetric(String feedUri)
         throws IOException, URISyntaxException, FalconException {
 
         CatalogStorage storage = (CatalogStorage)
-                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUriTemplate, getConf());
+                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUri, getConf());
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
                 getConf(), storage.getCatalogUrl(), storage.getDatabase(),
-                storage.getTable(), storage.getPartitions());
+                storage.getTable(), new ArrayList(storage.getPartitions().values()));
         return partition == null ? 0 : partition.getCreateTime();
     }
 

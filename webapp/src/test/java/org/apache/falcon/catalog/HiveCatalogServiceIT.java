@@ -38,8 +38,8 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +64,7 @@ public class HiveCatalogServiceIT {
         CurrentUser.authenticate(TestContext.REMOTE_USER);
 
         hiveCatalogService = new HiveCatalogService();
-        client = HiveCatalogService.getHCatClient(METASTORE_URL);
+        client = TestContext.getHCatClient(METASTORE_URL);
 
         createDatabase();
         createTable();
@@ -170,11 +170,6 @@ public class HiveCatalogServiceIT {
     }
 
     @Test
-    public void testGet() throws Exception {
-        Assert.assertNotNull(HiveCatalogService.getHCatClient(METASTORE_URL));
-    }
-
-    @Test
     public void testIsAlive() throws Exception {
         Assert.assertTrue(hiveCatalogService.isAlive(conf, METASTORE_URL));
     }
@@ -247,7 +242,7 @@ public class HiveCatalogServiceIT {
         throws Exception {
 
         List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
-            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, greaterThanFilter);
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, greaterThanFilter);
         Assert.assertEquals(filteredPartitions.size(), expectedPartitionCount);
     }
 
@@ -272,34 +267,23 @@ public class HiveCatalogServiceIT {
 
     @Test
     public void testDropPartition() throws Exception {
-        Map<String, String> partialPartitionSpec = new HashMap<String, String>();
-        partialPartitionSpec.put("ds", "20130903");
-
-        Assert.assertTrue(hiveCatalogService.dropPartitions(
-            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
-
+        hiveCatalogService.dropPartition(
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, Arrays.asList("20130902", "in"), true);
         List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
-        Assert.assertEquals(partitions.size(), 1, "Unexpected number of partitions");
-        Assert.assertEquals(new String[]{"20130902", "in"},
+        Assert.assertEquals(partitions.size(), 2, "Unexpected number of partitions");
+        Assert.assertEquals(new String[]{"20130903", "in"},
                 partitions.get(0).getValues().toArray(), "Mismatched partition");
 
-        partialPartitionSpec = new HashMap<String, String>();
-        partialPartitionSpec.put("ds", "20130902");
-
-        Assert.assertTrue(hiveCatalogService.dropPartitions(
-            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+        hiveCatalogService.dropPartitions(
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, Arrays.asList("20130903"), true);
         partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
         Assert.assertEquals(partitions.size(), 0, "Unexpected number of partitions");
     }
 
     @Test
     public void testGetPartition() throws Exception {
-        Map<String, String> partitionSpec = new HashMap<String, String>();
-        partitionSpec.put("ds", "20130902");
-        partitionSpec.put("region", "in");
-
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
-            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, Arrays.asList("20130902", "in"));
         Assert.assertNotNull(partition);
 
         long createTime = partition.getCreateTime();
@@ -308,7 +292,7 @@ public class HiveCatalogServiceIT {
 
     @Test
     public void testReInstatePartition() throws Exception {
-        Map<String, String> partitionSpec = new HashMap<String, String>();
+        Map<String, String> partitionSpec = new LinkedHashMap<String, String>();
         partitionSpec.put("ds", "20130918");
         partitionSpec.put("region", "blah");
 
@@ -317,7 +301,7 @@ public class HiveCatalogServiceIT {
         client.addPartition(first);
 
         CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
-            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, new ArrayList<String>(partitionSpec.values()));
         Assert.assertNotNull(partition);
         final long originalCreateTime = partition.getCreateTime();
 
@@ -331,7 +315,7 @@ public class HiveCatalogServiceIT {
         client.addPartition(second);
 
         CatalogPartition reInstatedPartition = CatalogServiceFactory.getCatalogService().getPartition(
-            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, new ArrayList<String>(partitionSpec.values()));
         Assert.assertNotNull(reInstatedPartition);
         final long reInstatedCreateTime = reInstatedPartition.getCreateTime();
 
@@ -344,15 +328,5 @@ public class HiveCatalogServiceIT {
             {TABLE_NAME},
             {EXTERNAL_TABLE_NAME},
         };
-    }
-
-    @Test  (dataProvider = "tableName")
-    public void testGetTablePartitionCols(String tableName) throws Exception {
-        List<String> partCols = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
-            conf, METASTORE_URL, DATABASE_NAME, tableName);
-        Assert.assertEquals(partCols.size(), 2);
-        Collections.sort(partCols);
-        Assert.assertEquals(partCols.get(0), "ds");
-        Assert.assertEquals(partCols.get(1), "region");
     }
 }

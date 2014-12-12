@@ -32,6 +32,9 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-419 Update deprecated HCatalog API to use Hive Metastore API.
+   (Shwetha GS)
+
    FALCON-423 Updating falcon server endpoint in distributed setup doesn't 
    work. (Srikanth Sundarrajan)
 

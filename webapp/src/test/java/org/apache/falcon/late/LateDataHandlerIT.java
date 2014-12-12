@@ -20,7 +20,6 @@ package org.apache.falcon.late;
 
 import org.apache.falcon.catalog.CatalogPartition;
 import org.apache.falcon.catalog.CatalogServiceFactory;
-import org.apache.falcon.catalog.HiveCatalogService;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -42,6 +41,7 @@ import org.testng.annotations.Test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -199,7 +199,7 @@ public class LateDataHandlerIT {
     }
 
     private void reinstatePartition() throws Exception {
-        final HCatClient client = HiveCatalogService.getHCatClient(metastoreUrl);
+        final HCatClient client = context.getHCatClient(metastoreUrl);
 
         Map<String, String> partitionSpec = new HashMap<String, String>();
         partitionSpec.put("ds", PARTITION_VALUE);
@@ -213,7 +213,7 @@ public class LateDataHandlerIT {
         client.addPartition(reinstatedPartition);
 
         CatalogPartition reInstatedPartition = CatalogServiceFactory.getCatalogService().getPartition(
-            conf, metastoreUrl, DATABASE_NAME, TABLE_NAME, partitionSpec);
+            conf, metastoreUrl, DATABASE_NAME, TABLE_NAME, new ArrayList<String>(partitionSpec.values()));
         Assert.assertNotNull(reInstatedPartition);
     }
 }
