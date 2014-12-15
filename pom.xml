@@ -389,6 +389,7 @@
         <module>prism</module>
         <module>webapp</module>
         <module>docs</module>
+        <module>falcon-ui</module>
     </modules>
 
     <repositories>

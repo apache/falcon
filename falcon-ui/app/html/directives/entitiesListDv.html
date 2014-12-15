@@ -1,0 +1,98 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<table class="listTable table">
+  <thead>
+    
+    <tr>
+      <th colspan="3">
+        <div class="filtersBox">Name <input type="text" class="form-control" ng-model="simpleFilter.name"/></div> 
+       
+        <div class="filtersBox">Tags <input type="text" class="form-control" ng-model="simpleFilter.tags"/></div> 
+      
+        <div ng-if="type !== 'cluster'" class="filtersSelectBox">Status 
+          
+          <select class="form-control" ng-model="simpleFilter.status">
+            <option value="" selected="true">ALL</option>
+            <option>SUBMITTED</option>
+            <option>RUNNING</option>
+            <option>SUSPENDED</option>
+            <option>UNKNOWN</option>           
+          </select>
+     
+        </div>
+      
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr ng-if="input.length > 0" class="buttonsRow">
+      <td class="buttonCell" colspan="4">
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-hide="selectedDisabledButtons.schedule" ng-if="type !== 'cluster'">
+            <span class="entypo play"></span> Schedule
+        </div>
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeResume()" ng-hide="selectedDisabledButtons.resume" ng-if="type !== 'cluster'">
+            <span class="entypo play"></span> Resume
+        </div>
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-hide="selectedDisabledButtons.suspend" ng-if="type !== 'cluster'">
+            <span class="entypo paus"></span> Suspend
+        </div>
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeEdit()" ng-hide="selectedRows.length === 0 || selectedRows.length > 1" ng-if="type !== 'cluster'">
+            <span class="entypo cog"></span> Edit
+        </div>
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeClone()" ng-hide="selectedRows.length === 0 || selectedRows.length > 1">
+            <span class="entypo docs"></span> Copy
+        </div>
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeRemove()" ng-hide="selectedRows.length === 0">
+            <span class="entypo trash"></span> Delete
+        </div>
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="download()" ng-hide="selectedRows.length === 0 || selectedRows.length > 1">
+            <span class="entypo down"></span> Download XML
+        </div>
+      </td>
+    </tr> 
+    <tr ng-if="input.length === 0 && !server.responses.listLoaded[type]">
+      <td> loading {{ type }}s </td>
+    </tr>
+    <tr ng-if="input.length === 0 && server.responses.listLoaded[type]">
+      <td> There are no {{ type }}s </td>
+    </tr>
+    <tr ng-if="input.length !== 0" ng-repeat="item in input | filter:{'name':simpleFilter.name} | filter:{'status':simpleFilter.status} | tagFilter | filter:{'list':simpleFilter.tags}" class="entityRow">
+      <td class="checkboxCell">
+          <input type="checkbox" checklist-model="selectedRows" checklist-value="{name:item.name, type:item.type, status:item.status}" ng-change="checkButtonsToShow()"/>
+      </td>
+      <td class="nameCell" ng-click="goEntityDetails(item.name, type)">
+          {{ item.name }}
+      </td>
+      <td class="stateCell">
+          <span ng-if="type !== 'cluster'" ng-class="{'text-success': item.status === 'RUNNING', 'text-warning': item.status === 'SUSPENDED', 'text-danger': item.status === 'UNKNOWN'}">{{ item.status }}</span>
+      </td>
+      
+    </tr>
+    <tr>
+      <td ng-if="server.responses.multiRequest[type] > 0 || server.responses.listLoaded[type] === false">
+        <div class="spinner" ng-class="{active: server.responses.multiRequest[type] > 0 || server.responses.listLoaded[type] === false}"> 
+          <img src="css/img/ajax-loader.gif" />
+        </div>
+      </td>
+    </tr>
+  </tbody>
+  
+</table>
