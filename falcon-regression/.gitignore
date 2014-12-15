@@ -44,6 +44,9 @@ bin/
 .DS_Store
 */DS_Store
 
+#hadoop-conf
+merlin/src/test/resources/hadoop-conf
+
 #prop files
 merlin/src/main/resources/Merlin.properties
 Merlin.properties

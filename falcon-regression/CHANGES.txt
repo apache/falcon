@@ -36,6 +36,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-947 Ignore hadoop configs in merlin/src/test/resources/hadoop-conf (Ruslan Ostafiychuk)
+
    FALCON-940 Avoid NPE in getAllEntitiesOfOneType() for zero elements
    (Ruslan Ostafiychuk via Raghav Kumar Gautam)
 
