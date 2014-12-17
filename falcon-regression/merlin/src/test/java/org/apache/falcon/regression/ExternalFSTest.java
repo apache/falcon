@@ -69,10 +69,10 @@ public class ExternalFSTest extends BaseTestClass{
     public static final String WASB_END_POINT =
             "wasb://" + MerlinConstants.WASB_CONTAINER + "@" + MerlinConstants.WASB_ACCOUNT;
     private ColoHelper cluster = servers.get(0);
-    private ColoHelper cluster2 = servers.get(1);
     private FileSystem clusterFS = serverFS.get(0);
-    private OozieClient cluster2OC = serverOC.get(1);
+    private OozieClient clusterOC = serverOC.get(0);
     private FileSystem wasbFS;
+    private Bundle externalBundle;
 
 
     private String baseTestDir = baseHDFSDir + "/ExternalFSTest";
@@ -84,6 +84,7 @@ public class ExternalFSTest extends BaseTestClass{
 
     @BeforeClass
     public void setUpClass() throws IOException {
+        HadoopUtil.recreateDir(clusterFS, baseTestDir);
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", WASB_END_POINT);
         conf.set("fs.azure.account.key." + MerlinConstants.WASB_ACCOUNT,
@@ -98,10 +99,10 @@ public class ExternalFSTest extends BaseTestClass{
         Bundle bundle = BundleUtil.readFeedReplicationBundle();
 
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[1] = new Bundle(bundle, cluster2);
+        externalBundle = new Bundle(bundle, cluster);
 
         bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
+        externalBundle.generateUniqueBundle();
 
         LOGGER.info("checking wasb credentials with location: " + testWasbTargetDir);
         wasbFS.create(new Path(testWasbTargetDir));
@@ -110,7 +111,7 @@ public class ExternalFSTest extends BaseTestClass{
 
     @AfterMethod
     public void tearDown() throws IOException {
-        removeBundles();
+        removeBundles(externalBundle);
         wasbFS.delete(new Path(testWasbTargetDir), true);
     }
 
@@ -136,7 +137,7 @@ public class ExternalFSTest extends BaseTestClass{
     public void replicateToExternalFS(final FileSystem externalFS,
         final String separator, final boolean withData) throws Exception {
         final String endpoint = externalFS.getUri().toString();
-        Bundle.submitCluster(bundles[0], bundles[1]);
+        Bundle.submitCluster(bundles[0], externalBundle);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
         LOGGER.info("Time range between : " + startTime + " and " + endTime);
@@ -158,7 +159,7 @@ public class ExternalFSTest extends BaseTestClass{
                 .build()).toString();
         //set externalFS cluster as target
         feed = FeedMerlin.fromString(feed).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(externalBundle.getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTime, endTime)
                 .withClusterType(ClusterType.TARGET)
@@ -182,15 +183,15 @@ public class ExternalFSTest extends BaseTestClass{
         Path dstPath = new Path(endpoint + testWasbTargetDir + '/' + timePattern);
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, feed, 0);
 
         Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
+            .checkIfFeedCoordExist(cluster.getFeedHelper(), Util.readEntityName(feed),
                 "REPLICATION"), 1);
 
         TimeUtil.sleepSeconds(10);
         //replication should start, wait while it ends
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
+        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(feed), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data has been replicated correctly
