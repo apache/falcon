@@ -377,7 +377,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputTimedOutPath);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1, Status.TIMEDOUT,
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3, Status.TIMEDOUT,
             EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
