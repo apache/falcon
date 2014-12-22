@@ -568,21 +568,6 @@ public final class InstanceUtil {
         return actions.get(instanceNumber).getStatus();
     }
 
-
-    public static void createHDFSFolders(ColoHelper helper, List<String> folderList)
-        throws IOException {
-        LOGGER.info("creating folders.....");
-        Configuration conf = new Configuration();
-        conf.set("fs.default.name", "hdfs://" + helper.getFeedHelper().getHadoopURL());
-        final FileSystem fs = FileSystem.get(conf);
-        for (final String folder : folderList) {
-            if (StringUtils.isNotEmpty(folder)) {
-                fs.mkdirs(new Path(folder));
-            }
-        }
-        LOGGER.info("created folders.....");
-    }
-
     /**
      * Retrieves replication coordinatorID from bundle of coordinators.
      */

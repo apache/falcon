@@ -42,10 +42,8 @@ import java.util.*;
 /**
  * Process late data test.
  */
-
+@Test(groups = "embedded")
 public class ProcessLateRerunTest extends BaseTestClass {
-
-
     private ColoHelper cluster1 = servers.get(0);
     private OozieClient cluster1OC = serverOC.get(0);
     private FileSystem cluster1FS = serverFS.get(0);
@@ -79,7 +77,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
      * It checks the number of rerun attempts once late data has been added
      * ensuring that late rerun happened.
      */
-
     @Test(enabled = true)
     public void testProcessLateRerunOnEmptyFolder() throws Exception {
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
@@ -106,7 +103,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
             LOGGER.info("Waiting...");
             TimeUtil.sleepSeconds(60);
         }
-
         InstanceUtil.waitTillInstanceReachState(cluster1OC,
             Util.getProcessName(bundles[0].getProcessData()), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
@@ -116,7 +112,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
         String bundleID = bundleList.get(0);
 
         OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 1);
-
     }
 
     /**
@@ -150,7 +145,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
             LOGGER.info("Waiting...");
             TimeUtil.sleepSeconds(60);
         }
-
         InstanceUtil.waitTillInstanceReachState(cluster1OC,
             Util.getProcessName(bundles[0].getProcessData()), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
@@ -160,7 +154,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
         String bundleID = bundleList.get(0);
 
         OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 1);
-
     }
 
     /**
@@ -198,7 +191,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
             LOGGER.info("Waiting...");
             TimeUtil.sleepSeconds(60);
         }
-
         InstanceUtil.waitTillInstanceReachState(cluster1OC,
             Util.getProcessName(bundles[0].getProcessData()), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
@@ -208,7 +200,6 @@ public class ProcessLateRerunTest extends BaseTestClass {
         String bundleID = bundleList.get(0);
 
         OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 1);
-
     }
 
     /**
@@ -267,14 +258,12 @@ public class ProcessLateRerunTest extends BaseTestClass {
         String bundleID = bundleList.get(0);
 
         OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 0);
-
     }
 
     /*
     dataFlag - denotes whether process should run initially on empty folders or folders containing data
     dataFolder - denotes the folder where you want to upload data for late rerun
      */
-
     private void getAndCreateDependencies(ColoHelper prismHelper, Bundle bundle,
                                           OozieClient oozieClient, FileSystem clusterFS,
                                           boolean dataFlag, int dataFolder) {
@@ -355,5 +344,4 @@ public class ProcessLateRerunTest extends BaseTestClass {
         lateProcess.getLateInputs().add(lateInput);
         return lateProcess;
     }
-
 }

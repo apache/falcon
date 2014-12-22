@@ -162,7 +162,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
             if (actions.size() == 6) {
                 for(int i = 0; i < 5; i++) {
                     CoordinatorAction action = actions.get(i);
-                    InstanceUtil.createHDFSFolders(cluster, Arrays
+                    HadoopUtil.createHDFSFolders(cluster, Arrays
                         .asList(action.getMissingDependencies().split("#")));
                 }
                 break;

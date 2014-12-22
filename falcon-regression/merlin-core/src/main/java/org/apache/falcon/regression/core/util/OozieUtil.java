@@ -466,8 +466,8 @@ public final class OozieUtil {
         String bundleID = InstanceUtil.getSequenceBundleID(helper, entityName, type, bundleNumber);
         OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
         List<CoordinatorJob> coords = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
-        InstanceUtil.createHDFSFolders(helper, getMissingDependenciesForInstance(oozieClient, coords,
-                instanceNumber));
+        HadoopUtil.createHDFSFolders(helper, getMissingDependenciesForInstance(oozieClient, coords,
+            instanceNumber));
     }
 
     private static List<String> getMissingDependenciesForInstance(OozieClient oozieClient,
@@ -501,8 +501,8 @@ public final class OozieUtil {
             for (int instanceNumber = 0; instanceNumber < temp.getActions().size();
                  instanceNumber++) {
                 CoordinatorAction instance = temp.getActions().get(instanceNumber);
-                InstanceUtil.createHDFSFolders(helper,
-                        Arrays.asList(instance.getMissingDependencies().split("#")));
+                HadoopUtil.createHDFSFolders(helper,
+                    Arrays.asList(instance.getMissingDependencies().split("#")));
             }
         }
     }
