@@ -41,6 +41,7 @@
     <properties>
         <oozie.version>4.0.0.2.1.7.0-784</oozie.version>
         <hive.version>0.13.1</hive.version>
+        <testng.exclude.pattern>nothing</testng.exclude.pattern>
     </properties>
 
     <profiles>
@@ -326,6 +327,9 @@
                     <threadCount>1</threadCount>
                     <groups>${testng.groups}</groups>
                     <excludedGroups>${testng.exclude.groups}</excludedGroups>
+                    <excludes>
+                        <exclude>${testng.exclude.pattern}</exclude>
+                    </excludes>
                     <additionalClasspathElements>
                         <!-- Hack to get the dir in CP through CLI and idea -->
                         <additionalClasspathElement>${hadoop.conf.dir}</additionalClasspathElement>
