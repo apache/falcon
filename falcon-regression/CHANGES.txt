@@ -36,6 +36,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-963 Add option to exclude tests in falcon-regression (Ruslan Ostafiychuk)
+
    FALCON-953 Change wasb replication to run with single cluster (Ruslan Ostafiychuk
    via Raghav Kumar Gautam)
 
