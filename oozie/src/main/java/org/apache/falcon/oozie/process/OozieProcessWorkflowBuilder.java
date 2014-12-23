@@ -19,7 +19,6 @@
 package org.apache.falcon.oozie.process;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.oozie.workflow.ACTION;
@@ -37,8 +36,7 @@ public class OozieProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
 
     @Override protected ACTION getUserAction(Cluster cluster, Path buildPath) throws FalconException {
         ACTION action = unmarshalAction(ACTION_TEMPLATE);
-        action.getSubWorkflow().setAppPath(getStoragePath(ProcessHelper.getUserWorkflowPath(entity, cluster,
-            buildPath)));
+        action.getSubWorkflow().setAppPath(getStoragePath(entity.getWorkflow().getPath()));
         return action;
     }
 }

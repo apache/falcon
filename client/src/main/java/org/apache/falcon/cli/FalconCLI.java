@@ -97,7 +97,6 @@ public class FalconCLI {
     public static final String INSTANCE_CMD = "instance";
     public static final String START_OPT = "start";
     public static final String END_OPT = "end";
-    public static final String EFFECTIVE_OPT = "effective";
     public static final String RUNNING_OPT = "running";
     public static final String KILL_OPT = "kill";
     public static final String RERUN_OPT = "rerun";
@@ -371,7 +370,6 @@ public class FalconCLI {
         String cluster = commandLine.getOptionValue(CLUSTER_OPT);
         String start = commandLine.getOptionValue(START_OPT);
         String end = commandLine.getOptionValue(END_OPT);
-        String time = commandLine.getOptionValue(EFFECTIVE_OPT);
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
         String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
@@ -394,8 +392,7 @@ public class FalconCLI {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
-            Date effectiveTime = parseDateString(time);
-            result = client.update(entityType, entityName, filePath, effectiveTime).getMessage();
+            result = client.update(entityType, entityName, filePath).getMessage();
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
@@ -646,7 +643,6 @@ public class FalconCLI {
         Option colo = new Option(COLO_OPT, true, "Colo name");
         Option cluster = new Option(CLUSTER_OPT, true, "Cluster name");
         colo.setRequired(false);
-        Option effective = new Option(EFFECTIVE_OPT, true, "Effective time for update");
         Option fields = new Option(FIELDS_OPT, true, "Entity fields to show for a request");
         Option filterBy = new Option(FILTER_BY_OPT, true,
                 "Filter returned entities by the specified status");
@@ -670,7 +666,6 @@ public class FalconCLI {
         entityOptions.addOption(cluster);
         entityOptions.addOption(start);
         entityOptions.addOption(end);
-        entityOptions.addOption(effective);
         entityOptions.addOption(fields);
         entityOptions.addOption(filterBy);
         entityOptions.addOption(filterTags);

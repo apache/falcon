@@ -75,8 +75,7 @@ Update operation allows an already submitted/scheduled entity to be updated. Clu
 not allowed.
 
 Usage:
-$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update [-effective <<effective time>>] -file
-<<path_to_file>>
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update -file <<path_to_file>>
 
 Example:
 $FALCON_HOME/bin/falcon entity -type process -name HourlyReportsGenerator -update -file /process/definition.xml

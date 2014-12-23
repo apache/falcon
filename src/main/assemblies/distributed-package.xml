@@ -121,6 +121,11 @@
             <source>oozie-el-extensions/target/falcon-oozie-el-extension-${project.version}.jar</source>
             <outputDirectory>oozie/libext</outputDirectory>
         </file>
+
+        <file>
+            <source>oozie-el-extensions/src/main/conf/oozie-site.xml</source>
+            <outputDirectory>oozie/conf</outputDirectory>
+        </file>
     </files>
 </assembly>
     

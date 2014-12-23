@@ -365,9 +365,4 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         action.setRetryMax(props.getProperty("falcon.parentworkflow.retry.max", "3"));
         action.setRetryInterval(props.getProperty("falcon.parentworkflow.retry.interval.secs", "1"));
     }
-
-    @Override
-    protected Path getLibPath(Cluster cluster, Path buildPath) throws FalconException {
-        return super.getLibPath(cluster, buildPath.getParent());
-    }
 }

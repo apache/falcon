@@ -34,7 +34,7 @@
                 <value>hcatalog</value>
             </property>
         </configuration>
-        <main-class>org.apache.falcon.latedata.LateDataHandler</main-class>
+        <main-class>org.apache.falcon.workflow.LateDataHandler</main-class>
         <arg>-out</arg>
         <arg>${logDir}/latedata/${nominalTime}/${srcClusterName}</arg>
         <arg>-paths</arg>

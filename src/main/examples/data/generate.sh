@@ -48,6 +48,6 @@ do
 done
 
 hadoop fs -rmr /data/in/2013/11/15/
-hadoop fs -mkdir /data/in/2013/11/15/
+hadoop fs -mkdir -p /data/in/2013/11/15/
 hadoop fs -put generated-data/00 /data/in/2013/11/15/ 
 rm -rf generated-data

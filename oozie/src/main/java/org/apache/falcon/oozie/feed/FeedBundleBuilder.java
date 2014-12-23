@@ -53,9 +53,14 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
         }
 
         if (!props.isEmpty()) {
-            copySharedLibs(cluster, getLibPath(cluster, buildPath));
+            copySharedLibs(cluster, new Path(getLibPath(buildPath)));
         }
 
         return props;
+    }
+
+    @Override
+    public String getLibPath(Path buildPath) {
+        return new Path(buildPath, "lib").toString();
     }
 }

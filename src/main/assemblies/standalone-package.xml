@@ -110,6 +110,11 @@
         </file>
 
         <file>
+            <source>oozie-el-extensions/src/main/conf/oozie-site.xml</source>
+            <outputDirectory>oozie/conf</outputDirectory>
+        </file>
+
+        <file>
             <source>webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>

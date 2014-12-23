@@ -247,28 +247,6 @@ public class EntityManagerJerseyIT {
     }
 
     @Test
-    public void testUserWorkflowUpdate() throws Exception {
-        //schedule a process
-        TestContext context = newContext();
-        context.scheduleProcess();
-        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
-        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
-        Assert.assertEquals(bundles.size(), 1);
-
-        //create new file in user workflow
-        FileSystem fs = context.cluster.getFileSystem();
-        fs.create(new Path("/falcon/test/workflow", "newfile")).close();
-
-        //update process should create new bundle
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
-        updateEndtime(process);
-        ClientResponse response = update(context, process, null);
-        context.assertSuccessful(response);
-        bundles = OozieTestUtils.getBundles(context);
-        Assert.assertEquals(bundles.size(), 2);
-    }
-
-    @Test
     public void testUpdateSuspendedEntity() throws Exception {
         TestContext context = newContext();
         context.scheduleProcess();

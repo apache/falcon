@@ -18,8 +18,6 @@
 
 package org.apache.falcon.client;
 
-import org.apache.falcon.entity.v0.Entity;
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -30,8 +28,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.cli.FalconMetadataCLI;
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.recipe.RecipeTool;
 import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
@@ -43,6 +41,7 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -64,7 +63,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -324,14 +322,11 @@ public class FalconClient {
                 entityStream, null);
     }
 
-    public APIResult update(String entityType, String entityName, String filePath, Date effectiveTime)
+    public APIResult update(String entityType, String entityName, String filePath)
         throws FalconCLIException {
         InputStream entityStream = getServletInputStream(filePath);
         Entities operation = Entities.UPDATE;
         WebResource resource = service.path(operation.path).path(entityType).path(entityName);
-        if (effectiveTime != null) {
-            resource = resource.queryParam("effective", SchemaHelper.formatDateUTC(effectiveTime));
-        }
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)

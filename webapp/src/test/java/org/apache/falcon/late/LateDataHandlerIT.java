@@ -23,7 +23,7 @@ import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.latedata.LateDataHandler;
+import org.apache.falcon.workflow.LateDataHandler;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FSUtils;

@@ -26,11 +26,6 @@ import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-import java.io.IOException;
 
 /**
  * Helper methods for accessing process members.
@@ -81,42 +76,5 @@ public final class ProcessHelper {
         }
 
         return storageType;
-    }
-
-    public static Path getUserWorkflowPath(Process process, org.apache.falcon.entity.v0.cluster.Cluster cluster,
-        Path buildPath) throws FalconException {
-        try {
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
-            Path wfPath = new Path(process.getWorkflow().getPath());
-            if (fs.isFile(wfPath)) {
-                return new Path(buildPath.getParent(), EntityUtil.PROCESS_USER_DIR + "/" + wfPath.getName());
-            } else {
-                return new Path(buildPath.getParent(), EntityUtil.PROCESS_USER_DIR);
-            }
-        } catch(IOException e) {
-            throw new FalconException("Failed to get workflow path", e);
-        }
-    }
-
-    public static Path getUserLibPath(Process process, org.apache.falcon.entity.v0.cluster.Cluster cluster,
-        Path buildPath) throws FalconException {
-        try {
-            String userLibPath = process.getWorkflow().getLib();
-            if (StringUtils.isEmpty(userLibPath)) {
-                return null;
-            }
-            Path libPath = new Path(userLibPath);
-
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
-            if (fs.isFile(libPath)) {
-                return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR + "/" + libPath.getName());
-            } else {
-                return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR);
-            }
-        } catch(IOException e) {
-            throw new FalconException("Failed to get user lib path", e);
-        }
     }
 }

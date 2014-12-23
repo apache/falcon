@@ -88,8 +88,7 @@ public abstract class AbstractWorkflowEngine {
     public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
                                                       List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract String update(Entity oldEntity, Entity newEntity, String cluster, Date effectiveTime)
-        throws FalconException;
+    public abstract String update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException;
 
     public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
 

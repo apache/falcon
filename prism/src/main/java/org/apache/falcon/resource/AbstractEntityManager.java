@@ -248,8 +248,7 @@ public abstract class AbstractEntityManager {
 
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
-    public synchronized APIResult update(HttpServletRequest request, String type, String entityName,
-                                         String colo, String effectiveTimeStr) {
+    public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -262,8 +261,6 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
-            Date effectiveTime =
-                StringUtils.isEmpty(effectiveTimeStr) ? null : EntityUtil.parseDateUTC(effectiveTimeStr);
             StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
             if (!DeploymentUtil.isPrism()) {
@@ -273,8 +270,7 @@ public abstract class AbstractEntityManager {
                 oldClusters.removeAll(newClusters); //deleted clusters
 
                 for (String cluster : newClusters) {
-                    Date myEffectiveTime = validateEffectiveTime(newEntity, cluster, effectiveTime);
-                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster, myEffectiveTime));
+                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster));
                 }
                 for (String cluster : oldClusters) {
                     getWorkflowEngine().delete(oldEntity, cluster);
@@ -290,15 +286,6 @@ public abstract class AbstractEntityManager {
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
         }
-    }
-
-    private Date validateEffectiveTime(Entity entity, String cluster, Date effectiveTime) {
-        Date start = EntityUtil.getStartTime(entity, cluster);
-        Date end = EntityUtil.getEndTime(entity, cluster);
-        if (effectiveTime == null || effectiveTime.before(start) || effectiveTime.after(end)) {
-            return null;
-        }
-        return effectiveTime;
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException {

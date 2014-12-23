@@ -23,7 +23,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.latedata.LateDataHandler;
+import org.apache.falcon.workflow.LateDataHandler;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;

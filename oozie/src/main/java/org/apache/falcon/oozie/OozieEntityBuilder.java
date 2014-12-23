@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Property;
@@ -75,7 +74,11 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     private static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
-            return path.getName().startsWith("falcon");
+            String fileName = path.getName();
+            if (fileName.startsWith("falcon")) {
+                return true;
+            }
+            return false;
         }
 
         @Override
@@ -293,18 +296,5 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         } finally {
             IOUtils.closeQuietly(resourceAsStream);
         }
-    }
-
-    protected Path getLibPath(Cluster cluster, Path buildPath) throws FalconException {
-        switch (entity.getEntityType()) {
-        case PROCESS:
-            return ProcessHelper.getUserLibPath((Process) entity, cluster, buildPath);
-
-        case FEED:
-            return new Path(buildPath, "lib");
-
-        default:
-        }
-        throw new IllegalArgumentException("Unhandled type " + entity.getEntityType());
     }
 }

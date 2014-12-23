@@ -19,7 +19,6 @@
 package org.apache.falcon.oozie.process;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.oozie.hive.CONFIGURATION.Property;
@@ -47,7 +46,7 @@ public class HiveProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(action);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
-        Path userWfPath = ProcessHelper.getUserWorkflowPath(entity, cluster, buildPath);
+        Path userWfPath = new Path(entity.getWorkflow().getPath());
         hiveAction.setScript(getStoragePath(userWfPath));
 
         addPrepareDeleteOutputPath(hiveAction);
@@ -61,7 +60,7 @@ public class HiveProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder 
         // adds hive-site.xml in hive classpath
         hiveAction.setJobXml("${wf:appPath()}/conf/hive-site.xml");
 
-        addArchiveForCustomJars(cluster, hiveAction.getArchive(), getLibPath(cluster, buildPath));
+        addArchiveForCustomJars(cluster, hiveAction.getArchive(), entity.getWorkflow().getLib());
 
         OozieUtils.marshalHiveAction(action, actionJaxbElement);
         return action;

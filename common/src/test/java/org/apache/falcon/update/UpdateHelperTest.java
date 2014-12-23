@@ -41,8 +41,6 @@ import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -91,72 +89,6 @@ public class UpdateHelperTest extends AbstractTestBase {
         fs.mkdirs(staging);
         fs.create(new Path(staging, "workflow.xml")).close();
         fs.create(new Path(staging, "checksums")).close();
-    }
-
-    @Test
-    public void testCopyUserWorkflow() throws Exception {
-        FileSystem fs = dfsCluster.getFileSystem();
-        Path basePath = new Path("/tmp/basepath");
-        fs.mkdirs(basePath);
-        Path wfdir = new Path(basePath, "workflow");
-        fs.mkdirs(wfdir);
-        Path wf = new Path(wfdir, "workflow.xml");
-        Path lib = new Path(wfdir, "common.jar");
-        fs.create(wf).close();
-        fs.create(lib).close();
-        Path dest = new Path("/tmp/dest");
-        UpdateHelper.checksumAndCopy(fs, wfdir, dest);
-        Assert.assertTrue(fs.exists(new Path(dest, "workflow.xml")) && fs.isFile(new Path(dest, "workflow.xml")));
-        Assert.assertTrue(fs.exists(new Path(dest, "common.jar")) && fs.isFile(new Path(dest, "common.jar")));
-
-        fs.delete(dest, true);
-        UpdateHelper.checksumAndCopy(fs, wf, dest);
-        Assert.assertTrue(fs.exists(new Path(dest, "workflow.xml")) && fs.isFile(new Path(dest, "workflow.xml")));
-    }
-
-    @Test
-    public void testIsWorkflowUpdated() throws IOException, FalconException {
-        FileSystem fs = dfsCluster.getFileSystem();
-        Process process = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
-        String cluster = "testCluster";
-        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
-        Path staging = EntityUtil.getNewStagingPath(clusterEntity, process);
-        fs.mkdirs(staging);
-        fs.create(new Path(staging, "workflow.xml")).close();
-
-        //Update if there is no checksum file
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
-
-        //No update if there is no new file
-        fs.create(new Path(staging, "checksums")).close();
-        Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
-
-        //Update if there is new lib
-        Path libpath = new Path("/falcon/test/lib");
-        process.getWorkflow().setLib(libpath.toString());
-        fs.mkdirs(libpath);
-        Path lib = new Path(libpath, "new.jar");
-        fs.create(lib).close();
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
-
-        //Don't Update if the lib is not updated
-        fs.delete(new Path(staging, "checksums"), true);
-        FSDataOutputStream stream = fs.create(new Path(staging, "checksums"));
-        stream.write((dfsCluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
-                + lib.toString() + "=" + fs.getFileChecksum(lib).toString() + "\n").getBytes());
-        stream.close();
-        Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
-
-        //Update if the lib is updated
-        fs.delete(lib, true);
-        stream = fs.create(lib);
-        stream.writeChars("some new jar");
-        stream.close();
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
-
-        //Update if the lib is deleted
-        fs.delete(lib, true);
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
     }
 
     @Test

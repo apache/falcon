@@ -28,6 +28,10 @@
                 <name>oozie.launcher.mapred.job.priority</name>
                 <value>${jobPriority}</value>
             </property>
+            <property>
+                <name>oozie.launcher.oozie.libpath</name>
+                <value>${wf:conf("falcon.libpath")}</value>
+            </property>
         </configuration>
         <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
         <arg>-cluster</arg>
@@ -82,12 +86,6 @@
         <arg>${falconInputFeeds}</arg>
         <arg>-falconInPaths</arg>
         <arg>${falconInPaths}</arg>
-        <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
-        <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
-        <file>${wf:conf("falcon.libpath")}/jms.jar</file>
-        <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
-        <file>${wf:conf("falcon.libpath")}/oozie-client.jar</file>
-        <file>${wf:conf("falcon.libpath")}/spring-jms.jar</file>
     </java>
     <ok to="end"/>
     <error to="fail"/>

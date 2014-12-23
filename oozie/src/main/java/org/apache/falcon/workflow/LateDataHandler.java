@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.latedata;
+package org.apache.falcon.workflow;
 
 import org.apache.commons.cli.*;
 import org.apache.falcon.FalconException;
@@ -26,7 +26,6 @@ import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;

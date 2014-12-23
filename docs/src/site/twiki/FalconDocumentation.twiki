@@ -202,19 +202,11 @@ no dependent entities on the deleted entity.
 ---+++ Update
 Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
 not allowed. Feed update can cause cascading update to all the processes already scheduled. Process update triggers
-update in falcon if entity is updated/the user specified workflow/lib is updated. The following set of actions are
-performed in Oozie to realize an update:
-   * Suspend the previously scheduled Oozie coordinator. This is to prevent any new action from being triggered.
-   * Update the coordinator to set the end time to "now"
-   * Resume the suspended coordinators
+update in falcon if entity is updated. The following set of actions are performed in scheduler to realize an update:
+   * Update the old scheduled entity to set the end time to "now"
    * Schedule as per the new process/feed definition with the start time as "now"
 
-Update optionally takes effective time as a parameter which is used as the end time of previously scheduled coordinator.
-So, the updated configuration will be effective since the given timestamp.
-
-
 ---++ Instance Management actions
-
 
 Instance Manager gives user the option to control individual instances of the process based on their instance start time (start time of that instance). Start time needs to be given in standard TZ format. Example: 01 Jan 2012 01:00 => 2012-01-01T01:00Z
 

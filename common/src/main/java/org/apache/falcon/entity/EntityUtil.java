@@ -65,9 +65,6 @@ public final class EntityUtil {
     private static final long DAY_IN_MS = 86400000L;
     private static final long MONTH_IN_MS = 2592000000L;
 
-    public static final String PROCESS_CHECKSUM_FILE = "checksums";
-    public static final String PROCESS_USER_DIR = "user";
-    public static final String PROCESS_USERLIB_DIR = "userlib";
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
 
     private EntityUtil() {}

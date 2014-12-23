@@ -260,16 +260,6 @@ public class FileSystemStorage extends Configured implements Storage {
         return null;
     }
 
-    public static Properties getFeedProperties(Feed feed) {
-        Properties feedProperties = new Properties();
-        if (feed.getProperties() != null) {
-            for (org.apache.falcon.entity.v0.feed.Property property : feed.getProperties().getProperties()) {
-                feedProperties.put(property.getName(), property.getValue());
-            }
-        }
-        return feedProperties;
-    }
-
     @Override
     public void validateACL(AccessControlList acl) throws FalconException {
         try {

@@ -20,7 +20,6 @@ package org.apache.falcon.oozie.process;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.oozie.workflow.ACTION;
@@ -45,7 +44,7 @@ public class PigProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
         ACTION action = unmarshalAction(ACTION_TEMPLATE);
 
         PIG pigAction = action.getPig();
-        Path userWfPath = ProcessHelper.getUserWorkflowPath(entity, cluster, buildPath);
+        Path userWfPath = new Path(entity.getWorkflow().getPath());
         pigAction.setScript(getStoragePath(userWfPath));
 
         addPrepareDeleteOutputPath(pigAction);
@@ -60,7 +59,7 @@ public class PigProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
             pigAction.getFile().add("${wf:appPath()}/conf/hive-site.xml");
         }
 
-        addArchiveForCustomJars(cluster, pigAction.getArchive(), getLibPath(cluster, buildPath));
+        addArchiveForCustomJars(cluster, pigAction.getArchive(), entity.getWorkflow().getLib());
 
         return action;
     }

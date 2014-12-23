@@ -18,10 +18,8 @@
 
 package org.apache.falcon.oozie.process;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
-import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.v0.EntityType;
@@ -32,18 +30,12 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieBundleBuilder;
 import org.apache.falcon.oozie.OozieCoordinatorBuilder;
-import org.apache.falcon.update.UpdateHelper;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -84,6 +76,7 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
                 }
             }
         }
+
         return  properties;
     }
 
@@ -107,8 +100,6 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
     }
 
     @Override protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
-        copyUserWorkflow(cluster, buildPath);
-
         List<Properties> props = OozieCoordinatorBuilder.get(entity, Tag.DEFAULT).buildCoords(cluster, buildPath);
         if (props != null) {
             assert props.size() == 1 : "Process should have only 1 coord";
@@ -118,38 +109,8 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
         return props;
     }
 
-    private void copyUserWorkflow(Cluster cluster, Path buildPath) throws FalconException {
-        try {
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
-
-            //Copy user workflow and lib to staging dir
-            Map<String, String> checksums = UpdateHelper.checksumAndCopy(fs, new Path(entity.getWorkflow().getPath()),
-                new Path(buildPath, EntityUtil.PROCESS_USER_DIR));
-            if (StringUtils.isNotEmpty(entity.getWorkflow().getLib())
-                    && fs.exists(new Path(entity.getWorkflow().getLib()))) {
-                checksums.putAll(UpdateHelper.checksumAndCopy(fs, new Path(entity.getWorkflow().getLib()),
-                    new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR)));
-            }
-
-            writeChecksums(fs, new Path(buildPath, EntityUtil.PROCESS_CHECKSUM_FILE), checksums);
-        } catch (IOException e) {
-            throw new FalconException("Failed to copy user workflow/lib", e);
-        }
-    }
-
-    private void writeChecksums(FileSystem fs, Path path, Map<String, String> checksums) throws FalconException {
-        try {
-            FSDataOutputStream stream = fs.create(path);
-            try {
-                for (Map.Entry<String, String> entry : checksums.entrySet()) {
-                    stream.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
-                }
-            } finally {
-                stream.close();
-            }
-        } catch (IOException e) {
-            throw new FalconException("Failed to copy user workflow/lib", e);
-        }
+    @Override
+    public String getLibPath(Path buildPath) {
+        return entity.getWorkflow().getLib();
     }
 }

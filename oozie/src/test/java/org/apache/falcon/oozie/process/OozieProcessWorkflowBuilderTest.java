@@ -235,7 +235,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         ACTION pigActionNode = getAction(parentWorkflow, "user-action");
 
         final PIG pigAction = pigActionNode.getPig();
-        Assert.assertEquals(pigAction.getScript(), "${nameNode}/falcon/staging/workflows/pig-process/user/id.pig");
+        Assert.assertEquals(pigAction.getScript(), "${nameNode}/apps/pig/id.pig");
         Assert.assertNotNull(pigAction.getPrepare());
         Assert.assertEquals(1, pigAction.getPrepare().getDelete().size());
         Assert.assertFalse(pigAction.getParam().isEmpty());
@@ -306,8 +306,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
-        Assert.assertEquals(hiveAction.getScript(),
-                "${nameNode}/falcon/staging/workflows/hive-process/user/script.hql");
+        Assert.assertEquals(hiveAction.getScript(), "${nameNode}/apps/hive/script.hql");
         Assert.assertEquals(hiveAction.getJobXml(), "${wf:appPath()}/conf/hive-site.xml");
         Assert.assertNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
@@ -361,8 +360,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
-        Assert.assertEquals(hiveAction.getScript(),
-                "${nameNode}/falcon/staging/workflows/hive-process/user/script.hql");
+        Assert.assertEquals(hiveAction.getScript(), "${nameNode}/apps/hive/script.hql");
         Assert.assertEquals(hiveAction.getJobXml(), "${wf:appPath()}/conf/hive-site.xml");
         Assert.assertNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
@@ -416,8 +414,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
-        Assert.assertEquals(hiveAction.getScript(),
-                "${nameNode}/falcon/staging/workflows/hive-process/user/script.hql");
+        Assert.assertEquals(hiveAction.getScript(), "${nameNode}/apps/hive/script.hql");
         Assert.assertEquals(hiveAction.getJobXml(), "${wf:appPath()}/conf/hive-site.xml");
         Assert.assertNotNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
@@ -467,8 +464,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
-        Assert.assertEquals(hiveAction.getScript(),
-                "${nameNode}/falcon/staging/workflows/hive-process/user/script.hql");
+        Assert.assertEquals(hiveAction.getScript(), "${nameNode}/apps/hive/script.hql");
         Assert.assertEquals(hiveAction.getJobXml(), "${wf:appPath()}/conf/hive-site.xml");
         Assert.assertNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
@@ -635,8 +631,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
         for (CONFIGURATION.Property prop : props) {
             if (prop.getName().equals("oozie.libpath")) {
-                Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), new Path(bundlePath,
-                    "userlib").toString());
+                Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), process.getWorkflow().getLib());
             }
         }
 

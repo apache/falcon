@@ -10,7 +10,6 @@ Updates the submitted entity.
 ---++ Parameters
    * :entity-type can be feed or process.
    * :entity-name is name of the feed or process.
-   * :effective is optional effective time
 
 ---++ Results
 Result of the validation.
@@ -18,7 +17,7 @@ Result of the validation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/entities/update/process/SampleProcess?effective=2014-01-01T00:00Z
+POST http://localhost:15000/api/entities/update/process/SampleProcess
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
 <process xmlns="uri:falcon:process:0.1" name="SampleProcess" >
@@ -58,7 +57,7 @@ POST http://localhost:15000/api/entities/update/process/SampleProcess?effective=
 <verbatim>
 {
     "requestId": "update\/default\/d6aaa328-6836-4818-a212-515bb43d8b86\n\n",
-    "message": "update\/default\/SampleProcess updated successfully with effective time [(local/2014-01-01T00:00Z)]\n\n",
+    "message": "update\/default\/SampleProcess updated successfully\n\n",
     "status": "SUCCEEDED"
 }
 </verbatim>
