@@ -106,7 +106,8 @@ public class ProcessAclTest extends BaseTestClass {
         final Object[][] allowedCombinations = MatrixUtil.crossProduct(
             new String[]{MerlinConstants.FALCON_SUPER_USER_NAME,
                 MerlinConstants.FALCON_SUPER_USER2_NAME,
-                MerlinConstants.USER2_NAME,},
+                MerlinConstants.USER2_NAME,
+            },
             falconReadOps,
             new Boolean[]{true}
         );
