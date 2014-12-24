@@ -29,12 +29,14 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
@@ -76,7 +78,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         URISyntaxException, InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         startTime = TimeUtil.getTimeWrtSystemTime(-55);
-        endTime = TimeUtil.getTimeWrtSystemTime(5);
+        endTime = TimeUtil.getTimeWrtSystemTime(3);
         LOGGER.info("Time range is between : " + startTime + " and " + endTime);
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
@@ -123,17 +125,14 @@ public class ListFeedInstancesTest extends BaseTestClass {
         //submit and schedule feed
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feedName, 12,
+            CoordinatorAction.Status.WAITING, EntityType.FEED);
 
         //retrieve specific instances to rule them directly
-        List<CoordinatorAction> actions = null;
-        String bundleID = InstanceUtil.getSequenceBundleID(cluster2, feedName, EntityType.FEED, 0);
-        List<CoordinatorJob> coords = cluster2OC.getBundleJobInfo(bundleID).getCoordinators();
-        for (CoordinatorJob coord : coords) {
-            CoordinatorJob temp = cluster2OC.getCoordJobInfo(coord.getId());
-            actions = temp.getActions().size() == 12 ? temp.getActions() : null;
-        }
-        Assert.assertNotNull(actions, "Required coordinator not found.");
+        List<CoordinatorAction> actions = getReplicationInstances(cluster2OC, feedName);
         LOGGER.info(actions);
+        Assert.assertNotNull(actions, "Required coordinator not found.");
+        Assert.assertEquals(actions.size(), 12, "Unexpected number of actions.");
 
         //killing first 6 instances
         String range;
@@ -169,6 +168,33 @@ public class ListFeedInstancesTest extends BaseTestClass {
         r = prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + startTime + "&numResults=12");
         InstanceUtil.validateResponse(r, 12, 1, 1, 4, 6);
+    }
+
+    /*
+     * Retrieves replication coordinator instances.
+     * @param client target oozie client
+     * @param fName feed name
+     */
+    private List<CoordinatorAction> getReplicationInstances(OozieClient client, String fName)
+        throws OozieClientException {
+        String filter = "name=FALCON_FEED_" + fName;
+        List<BundleJob> bundleJobs  = OozieUtil.getBundles(client, filter, 0, 10);
+        Assert.assertNotEquals(bundleJobs.size(), 0, "Could not retrieve bundles");
+        List<String> bundleIds = OozieUtil.getBundleIds(bundleJobs);
+        String bundleId = OozieUtil.getMaxId(bundleIds);
+        LOGGER.info(String.format("Using bundle %s", bundleId));
+        List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
+        String coordId = null;
+        for (CoordinatorJob coord : coords) {
+            if (coord.getAppName().contains("FEED_REPLICATION")) {
+                coordId = coord.getId();
+                break;
+            }
+        }
+        LOGGER.info(String.format("Using coordinator id: %s", coordId));
+        Assert.assertNotNull(coordId, "Replication coordinator not found.");
+        CoordinatorJob coordinatorJob = client.getCoordJobInfo(coordId);
+        return coordinatorJob.getActions();
     }
 
     /**
