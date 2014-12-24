@@ -66,6 +66,7 @@ public final class MerlinConstants {
     /** a user that belongs to falcon super user group but is not FALCON_SUPER_USER_NAME. */
     public static final String FALCON_SUPER_USER2_NAME =
             Config.getProperty("falcon.super.user2.name", "falcon2");
+    /** a user that has same group as that of current user. */
     private static final String USER_2_NAME_STR = "user2_name";
     private static final String USER_2_KEYTAB_STR = "user2_keytab";
     public static final String USER2_NAME;

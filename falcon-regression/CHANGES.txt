@@ -188,6 +188,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-955 enable and fix feedAclUpdate and processAclUpdate tests (Raghav Kumar Gautam via
+   Ruslan Ostafiychuk)
+
    FALCON-948 Enabling late rerun tests (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-956 Fix testProcessInstanceStatusTimedOut (Paul Isaychuk via Raghav Kumar Gautam)

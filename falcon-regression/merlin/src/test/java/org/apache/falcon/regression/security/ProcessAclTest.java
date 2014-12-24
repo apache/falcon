@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.security;
 
+import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
@@ -105,7 +106,7 @@ public class ProcessAclTest extends BaseTestClass {
         final Object[][] allowedCombinations = MatrixUtil.crossProduct(
             new String[]{MerlinConstants.FALCON_SUPER_USER_NAME,
                 MerlinConstants.FALCON_SUPER_USER2_NAME,
-                MerlinConstants.USER2_NAME, },
+                MerlinConstants.USER2_NAME,},
             falconReadOps,
             new Boolean[]{true}
         );
@@ -215,35 +216,46 @@ public class ProcessAclTest extends BaseTestClass {
      * Test process acl modification.
      * @throws Exception
      */
-    @Test(enabled = false)
-    public void processAclUpdate() throws Exception {
+    @Test(dataProvider = "generateAclOwnerAndGroup")
+    public void processAclUpdate(final String newOwner, final String newGroup) throws Exception {
         bundles[0].submitFeedsScheduleProcess();
-        final String oldProcess = bundles[0].getProcessData();
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(oldProcess));
-        final ProcessMerlin processMerlin = new ProcessMerlin(oldProcess);
-        processMerlin.setACL(MerlinConstants.DIFFERENT_USER_NAME,
-            MerlinConstants.DIFFERENT_USER_GROUP, "*");
+        final ProcessMerlin processMerlin = new ProcessMerlin(processString);
+        processMerlin.setACL(newOwner, newGroup, "*");
         final String newProcess = processMerlin.toString();
-        AssertUtil.assertSucceeded(processHelper.update(oldProcess, newProcess));
-        //check that current user can't access the feed
+        AssertUtil.assertSucceeded(processHelper.update(processString, newProcess));
+        //check that current user can access the feed
         for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
             EntityOp.definition, }) {
             final boolean executeRes =
-                op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, processHelper, newProcess);
-            Assert.assertFalse(executeRes, "Unexpected result: user "
-                + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
+                op.executeAs(MerlinConstants.CURRENT_USER_NAME, processHelper, newProcess);
+            Assert.assertEquals(executeRes, newGroup.equals(MerlinConstants.CURRENT_USER_GROUP),
+                "Unexpected result: user " + MerlinConstants.CURRENT_USER_NAME
+                    + " was not able to perform: " + op);
         }
-        //check that different user can access the feed
+        //check that second user can access the feed
         for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
             EntityOp.definition, }) {
-            final boolean executeRes =
-                op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, processHelper, newProcess);
+            final boolean executeRes = op.executeAs(newOwner, processHelper, newProcess);
             Assert.assertTrue(executeRes, "Unexpected result: user "
-                + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
+                + newOwner + " was not able to perform: " + op);
         }
-        //check modification permissions
-        AssertUtil.assertSucceeded(processHelper.update(newProcess, oldProcess,
-            MerlinConstants.DIFFERENT_USER_NAME));
+        //check modified permissions
+        final String retrievedProcess = processHelper.getEntityDefinition(newProcess).getMessage();
+        final ACL retrievedProcessAcl = new ProcessMerlin(retrievedProcess).getACL();
+        Assert.assertEquals(retrievedProcessAcl.getOwner(), newOwner,
+            "Expecting " + newOwner + " to be the acl owner.");
+        Assert.assertEquals(retrievedProcessAcl.getGroup(), newGroup,
+            "Expecting " + newGroup + " to be the acl group.");
+        //check that second user can modify process acl
+        AssertUtil.assertSucceeded(processHelper.update(newProcess, processString, newOwner));
+    }
+
+    @DataProvider(name = "generateAclOwnerAndGroup")
+    public Object[][] generateAclOwnerAndGroup() {
+        return new Object[][]{
+            //{MerlinConstants.USER2_NAME, MerlinConstants.CURRENT_USER_GROUP},
+            {MerlinConstants.DIFFERENT_USER_NAME, MerlinConstants.DIFFERENT_USER_GROUP},
+        };
     }
 
     @AfterMethod(alwaysRun = true)
