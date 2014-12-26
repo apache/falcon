@@ -55,6 +55,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-921 Validate command is exposed only through prism. (Ajay Yadav 
+   via Shwetha GS)
+
    FALCON-916 Falcon idempotency is being voilated during delete. (Balu
    Vellanki via Srikanth Sundarrajan)
 

@@ -140,4 +140,15 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                             @Dimension("colo") @QueryParam("colo") String colo) {
         return super.resume(request, type, entity, colo);
     }
+
+    @POST
+    @Path("validate/{type}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "validate")
+    @Override
+    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
+        return super.validate(request, type);
+    }
+
 }
