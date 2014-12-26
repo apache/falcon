@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource.metadata;
 
+import com.google.common.collect.Sets;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
@@ -25,12 +26,22 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
+import com.tinkerpop.gremlin.java.GremlinPipeline;
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.metadata.GraphUtils;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.metadata.RelationshipType;
+import org.apache.falcon.monitors.Dimension;
+import org.apache.falcon.monitors.Monitored;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.falcon.util.StartupProperties;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -48,7 +59,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Jersey Resource for lineage metadata operations.
@@ -77,6 +91,37 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             GraphUtils.dump(getGraph(), file);
             return Response.ok().build();
         } catch (Exception e) {
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GET
+    @Path("/entities")
+    @Produces({MediaType.APPLICATION_JSON})
+    @Monitored(event = "entity-lineage")
+    public Response getEntityLineageGraph(@Dimension("pipeline") @QueryParam("pipeline") final String pipeline) {
+        LOG.info("Get lineage Graph for pipeline:({})", pipeline);
+
+        try {
+            Iterable<Vertex> processes;
+            if (StringUtils.isNotBlank(pipeline)) {
+                Iterable<Vertex> pipelineNode = getGraph().getVertices(RelationshipProperty.NAME.getName(),
+                        pipeline);
+                if (!pipelineNode.iterator().hasNext()) {
+                    throw FalconWebException.newException("No pipelines found for " + pipeline,
+                            Response.Status.BAD_REQUEST);
+                }
+                Vertex v = pipelineNode.iterator().next(); // pipeline names are unique
+                processes = new GremlinPipeline(v).in(RelationshipLabel.PIPELINES.getName())
+                        .has(RelationshipProperty.TYPE.getName(), RelationshipType.PROCESS_ENTITY.getName());
+                return Response.ok(buildJSONGraph(processes)).build();
+            }
+            throw FalconWebException.newException("Pipeline name can not be blank",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+
+        } catch (Exception e) {
+            LOG.error("Error while fetching entity lineage: ", e);
             throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -390,6 +435,63 @@ public class LineageMetadataResource extends AbstractMetadataResource {
         response.put(TOTAL_SIZE, counter);
 
         return response;
+    }
+
+    private LineageGraphResult buildJSONGraph(Iterable<Vertex> processes) throws  FalconException {
+        LineageGraphResult result = new LineageGraphResult();
+
+        List<String> vertexArray = new LinkedList<String>();
+        List<LineageGraphResult.Edge> edgeArray = new LinkedList<LineageGraphResult.Edge>();
+
+        Map<String, String> feedProducerMap = new HashMap<String, String>();
+        Map<String, List<String>> feedConsumerMap = new HashMap<String, List<String>>();
+
+        if (processes != null) {
+            for (Vertex process : processes) {
+                String processName = process.getProperty(RelationshipProperty.NAME.getName());
+                vertexArray.add(processName);
+                Process producer = ConfigurationStore.get().get(EntityType.PROCESS, processName);
+
+                if (producer != null) {
+                    if (producer.getOutputs() != null) {
+                        //put all produced feeds in feedProducerMap
+                        for (Output output : producer.getOutputs().getOutputs()) {
+                            feedProducerMap.put(output.getFeed(), processName);
+                        }
+                    }
+                    if (producer.getInputs() != null) {
+                        //put all consumed feeds in feedConsumerMap
+                        for (Input input : producer.getInputs().getInputs()) {
+                            //if feed already exists then append it, else insert it with a list
+                            if (feedConsumerMap.containsKey(input.getFeed())) {
+                                feedConsumerMap.get(input.getFeed()).add(processName);
+                            } else {
+                                List<String> value = new LinkedList<String>();
+                                value.add(processName);
+                                feedConsumerMap.put(input.getFeed(), value);
+                            }
+                        }
+                    }
+                }
+            }
+            LOG.debug("feedProducerMap = {}", feedProducerMap);
+            LOG.debug("feedConsumerMap = {}", feedConsumerMap);
+
+            // discard feeds which aren't edges between two processes
+            Set<String> pipelineFeeds = Sets.intersection(feedProducerMap.keySet(), feedConsumerMap.keySet());
+            for (String feedName : pipelineFeeds) {
+                String producerProcess = feedProducerMap.get(feedName);
+                // make an edge from producer to all the consumers
+                for (String consumerProcess : feedConsumerMap.get(feedName)) {
+                    edgeArray.add(new LineageGraphResult.Edge(producerProcess, consumerProcess, feedName));
+                }
+            }
+        }
+
+        result.setEdges(edgeArray.toArray(new LineageGraphResult.Edge[edgeArray.size()]));
+        result.setVertices(vertexArray.toArray(new String[vertexArray.size()]));
+        LOG.debug("result = {}", result);
+        return result;
     }
 
     private static void validateInputs(String errorMsg, String... inputs) {

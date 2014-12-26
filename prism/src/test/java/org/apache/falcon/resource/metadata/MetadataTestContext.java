@@ -51,6 +51,7 @@ public class MetadataTestContext {
     public static final String OPERATION = "GENERATE";
 
     public static final String CLUSTER_ENTITY_NAME = "primary-cluster";
+    public static final String CHILD_PROCESS_ENTITY_NAME = "sample-child-process";
     public static final String PROCESS_ENTITY_NAME = "sample-process";
     public static final String COLO_NAME = "west-coast";
     public static final String WORKFLOW_NAME = "imp-click-join-workflow";
@@ -166,6 +167,23 @@ public class MetadataTestContext {
 
         for (Feed outputFeed : outputFeeds) {
             EntityBuilderTestUtil.addOutput(processEntity, outputFeed);
+        }
+
+        configStore.publish(EntityType.PROCESS, processEntity);
+    }
+
+    public void addConsumerProcess() throws Exception {
+        org.apache.falcon.entity.v0.process.Process processEntity =
+                EntityBuilderTestUtil.buildProcess(CHILD_PROCESS_ENTITY_NAME,
+                        clusterEntity, "classified-as=Critical", "testPipeline");
+        EntityBuilderTestUtil.addProcessWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
+
+        for (Feed inputFeed : inputFeeds) {
+            EntityBuilderTestUtil.addOutput(processEntity, inputFeed);
+        }
+
+        for (Feed outputFeed : outputFeeds) {
+            EntityBuilderTestUtil.addInput(processEntity, outputFeed);
         }
 
         configStore.publish(EntityType.PROCESS, processEntity);

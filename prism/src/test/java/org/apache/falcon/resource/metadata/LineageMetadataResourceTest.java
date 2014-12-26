@@ -351,6 +351,14 @@ public class LineageMetadataResourceTest {
         }
     }
 
+    @Test
+    public void testEntityLineage() throws Exception {
+        testContext.addConsumerProcess();
+        LineageMetadataResource resource = new LineageMetadataResource();
+        Response response = resource.getEntityLineageGraph("testPipeline");
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    }
+
     private void assertBasicVertexProperties(Vertex vertex, Map vertexProperties) {
         RelationshipProperty[] properties = {
             RelationshipProperty.NAME,

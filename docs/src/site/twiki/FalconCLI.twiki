@@ -56,6 +56,9 @@ Optional Args : -fields <<field1,field2>> -filterBy <<field1:value1,field2:value
 
 <a href="./Restapi/EntityList.html">Optional params described here.</a>
 
+
+
+
 ---+++Summary
 
 Summary of entities of a particular type and a cluster will be listed. Entity summary has N most recent instances of entity.
@@ -254,6 +257,20 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -
 
 
 ---++ Metadata Lineage Options
+
+---+++Lineage
+
+Returns the relationship between processes and feeds in a given pipeline in <a href="http://www.graphviz.org/content/dot-language">dot</a> format.
+You can use the output and view a graphical representation of DAG using an online graphviz viewer like <a href="http://graphviz-dev.appspot.com/">this</a>.
+
+
+Usage:
+
+$FALCON_HOME/bin/falcon metadata -lineage -pipeline my-pipeline
+
+pipeline is a mandatory option.
+
+
 
 ---+++ Vertex
 

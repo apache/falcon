@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-256 Create new API for Process dependency graph DAG which captures 
+   process connected via feeds. (Ajay Yadav via Srikanth Sundarrajan)
+
    FALCON-823 Add path matching ability to the radix tree (Ajay Yadav
    via Srikanth Sundarrajan) 
 

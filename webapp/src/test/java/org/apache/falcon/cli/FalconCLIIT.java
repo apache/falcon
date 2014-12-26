@@ -487,6 +487,30 @@ public class FalconCLIIT {
                 + " -file " + createTempJobPropertiesFile()), 0);
     }
 
+
+    @Test
+    public void testEntityLineage() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+
+        String filePath;
+        filePath = TestContext.overlayParametersOverTemplate(context.getClusterFileTemplate(), overlay);
+        context.setCluster(overlay.get("cluster"));
+        Assert.assertEquals(executeWithURL("entity -submit -type cluster -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
+        Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
+        Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        Assert.assertEquals(executeWithURL("entity -submit -type process -file " + filePath), 0);
+
+        Assert.assertEquals(executeWithURL("metadata -lineage -pipeline testPipeline"), 0);
+
+    }
+
     @Test
     public void testEntityPaginationFilterByCommands() throws Exception {
 

@@ -38,6 +38,7 @@ import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
@@ -210,7 +211,8 @@ public class FalconClient {
         LIST("api/metadata/discovery/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         RELATIONS("api/metadata/discovery/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         VERTICES("api/metadata/lineage/vertices", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        EDGES("api/metadata/lineage/edges", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        EDGES("api/metadata/lineage/edges", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LINEAGE("api/metadata/lineage/entities", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -505,6 +507,19 @@ public class FalconClient {
 
     public String getDimensionList(String dimensionType, String cluster) throws FalconCLIException {
         return sendMetadataDiscoveryRequest(MetadataOperations.LIST, dimensionType, null, cluster);
+    }
+
+    public LineageGraphResult getEntityLineageGraph(String pipelineName) throws FalconCLIException {
+        MetadataOperations operation = MetadataOperations.LINEAGE;
+        WebResource resource = service.path(operation.path)
+                .queryParam(FalconMetadataCLI.PIPELINE_OPT, pipelineName);
+
+        ClientResponse clientResponse = resource
+            .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+            .accept(operation.mimeType).type(operation.mimeType)
+            .method(operation.method, ClientResponse.class);
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(LineageGraphResult.class);
     }
 
     public String getDimensionRelations(String dimensionType, String dimensionName) throws FalconCLIException {
