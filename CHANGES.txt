@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-914 Add option to search for Entities. (Ajay Yadav via Srikanth
+   Sundarrajan) 
+
    FALCON-256 Create new API for Process dependency graph DAG which captures 
    process connected via feeds. (Ajay Yadav via Srikanth Sundarrajan)
 

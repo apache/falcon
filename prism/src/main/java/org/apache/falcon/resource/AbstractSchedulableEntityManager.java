@@ -185,7 +185,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             entities = getEntities(type,
                     SchemaHelper.getDateFormat().format(startAndEndDates.first),
                     SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    cluster, filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage);
+                    cluster, filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage, "");
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
         } catch (Exception e) {
             LOG.error("Failed to get entities", e);

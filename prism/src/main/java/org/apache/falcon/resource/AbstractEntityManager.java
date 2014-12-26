@@ -32,7 +32,10 @@ import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.store.EntityAlreadyExistsException;
-import org.apache.falcon.entity.v0.*;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityGraph;
+import org.apache.falcon.entity.v0.EntityIntegrityChecker;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.resource.EntityList.EntityElement;
@@ -51,7 +54,18 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * A base class for managing Entity operations.
@@ -524,13 +538,15 @@ public abstract class AbstractEntityManager {
      * @return EntityList
      */
     public EntityList getEntityList(String type, String fieldStr, String filterBy, String filterTags,
-                                    String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
+                                    String orderBy, String sortOrder, Integer offset, Integer resultsPerPage,
+                                    String pattern) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
         validateEntityFilterByClause(filterBy);
         List<Entity> entities;
         try {
-            entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage);
+            entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, sortOrder, offset,
+                    resultsPerPage, pattern);
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -554,8 +570,8 @@ public abstract class AbstractEntityManager {
     }
 
     protected List<Entity> getEntities(String type, String startDate, String endDate, String cluster,
-                                       String filterBy, String filterTags, String orderBy, String sortOrder,
-                                       int offset, int resultsPerPage) throws FalconException, IOException {
+                                       String filterBy, String filterTags, String orderBy, String sortOrder, int offset,
+                                       int resultsPerPage, String pattern) throws FalconException, IOException {
         final Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         final List<String> filterByTags = getFilterByTags(filterTags);
 
@@ -593,6 +609,10 @@ public abstract class AbstractEntityManager {
                     filterByFieldsValues, filterByTags, tags, pipelines)) {
                 continue;
             }
+
+            if (StringUtils.isNotBlank(pattern) && !fuzzySearch(entity.getName(), pattern)) {
+                continue;
+            }
             entities.add(entity);
         }
         // Sort entities before returning a subset of entity elements.
@@ -606,6 +626,22 @@ public abstract class AbstractEntityManager {
         return new ArrayList<Entity>(entities.subList(offset, (offset + pageCount)));
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    boolean fuzzySearch(String enityName, String pattern) {
+        int currentIndex = 0; // current index in pattern which is to be matched
+        char[] searchPattern = pattern.toLowerCase().toCharArray();
+        String name = enityName.toLowerCase();
+
+        for (Character c : name.toCharArray()) {
+            if (currentIndex < searchPattern.length && c == searchPattern[currentIndex]) {
+                currentIndex++;
+            }
+            if (currentIndex == searchPattern.length) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private boolean filterEntityByDatesAndCluster(Entity entity, String startDate, String endDate, String cluster)
         throws FalconException {

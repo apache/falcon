@@ -366,10 +366,10 @@ public class FalconClient {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 
     public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
-                                    String orderBy, String sortOrder,
-                                    Integer offset, Integer numResults) throws FalconCLIException {
+                                    String orderBy, String sortOrder, Integer offset,
+                                    Integer numResults, String searchPattern) throws FalconCLIException {
         return sendListRequest(Entities.LIST, entityType, fields, filterBy,
-                filterTags, orderBy, sortOrder, offset, numResults);
+                filterTags, orderBy, sortOrder, offset, numResults, searchPattern);
     }
 
     public EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
@@ -589,8 +589,8 @@ public class FalconClient {
     private WebResource addParamsToResource(WebResource resource,
                                             String start, String end, String runId, String colo,
                                             String fields, String filterBy, String tags,
-                                            String orderBy, String sortOrder,
-                                            Integer offset, Integer numResults, Integer numInstances) {
+                                            String orderBy, String sortOrder, Integer offset,
+                                            Integer numResults, Integer numInstances, String searchPattern) {
 
         if (!StringUtils.isEmpty(fields)) {
             resource = resource.queryParam("fields", fields);
@@ -628,6 +628,10 @@ public class FalconClient {
         if (numInstances != null) {
             resource = resource.queryParam("numInstances", numInstances.toString());
         }
+
+        if (!StringUtils.isEmpty(searchPattern)) {
+            resource = resource.queryParam("pattern", searchPattern);
+        }
         return resource;
 
     }
@@ -645,7 +649,7 @@ public class FalconClient {
         resource = addParamsToResource(resource, start, end, null, null,
                 fields, filterBy, filterTags,
                 orderBy, sortOrder,
-                offset, numResults, numInstances);
+                offset, numResults, numInstances, null);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -725,7 +729,7 @@ public class FalconClient {
                 .path(entity);
 
         resource = addParamsToResource(resource, start, end, runid, colo,
-                null, filterBy, null, orderBy, sortOrder, offset, numResults, null);
+                null, filterBy, null, orderBy, sortOrder, offset, numResults, null, null);
 
         if (lifeCycles != null) {
             checkLifeCycleOption(lifeCycles, type);
@@ -778,11 +782,11 @@ public class FalconClient {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     private EntityList sendListRequest(Entities entities, String entityType, String fields, String filterBy,
                                        String filterTags, String orderBy, String sortOrder, Integer offset,
-                                       Integer numResults) throws FalconCLIException {
+                                       Integer numResults, String searchPattern) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
         resource = addParamsToResource(resource, null, null, null, null, fields, filterBy, filterTags,
-                orderBy, sortOrder, offset, numResults, null);
+                orderBy, sortOrder, offset, numResults, null, searchPattern);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)

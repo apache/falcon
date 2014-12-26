@@ -399,8 +399,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
-                                    @QueryParam("numResults") Integer resultsPerPage) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage);
+                                    @QueryParam("numResults") Integer resultsPerPage,
+                                    @QueryParam("pattern") String pattern) {
+        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage, pattern);
     }
 
     @GET

@@ -93,6 +93,7 @@ public class FalconCLI {
     public static final String OFFSET_OPT = "offset";
     public static final String NUM_RESULTS_OPT = "numResults";
     public static final String NUM_INSTANCES_OPT = "numInstances";
+    public static final String PATTERN_OPT = "pattern";
 
     public static final String INSTANCE_CMD = "instance";
     public static final String START_OPT = "start";
@@ -374,6 +375,7 @@ public class FalconCLI {
         String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
+        String searchPattern = commandLine.getOptionValue(PATTERN_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
@@ -437,7 +439,7 @@ public class FalconCLI {
             validateOrderBy(orderBy, entityAction);
             validateFilterBy(filterBy, entityAction);
             EntityList entityList = client.getEntityList(entityType, fields, filterBy,
-                    filterTags, orderBy, sortOrder, offset, numResults);
+                    filterTags, orderBy, sortOrder, offset, numResults, searchPattern);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         }  else if (optionsList.contains(SUMMARY_OPT)) {
             validateEntityTypeForSummary(entityType);
@@ -646,6 +648,8 @@ public class FalconCLI {
         Option fields = new Option(FIELDS_OPT, true, "Entity fields to show for a request");
         Option filterBy = new Option(FILTER_BY_OPT, true,
                 "Filter returned entities by the specified status");
+        Option searchPattern = new Option(PATTERN_OPT, true,
+                "Filter entities by fuzzy matching with specified pattern");
         Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
         Option orderBy = new Option(ORDER_BY_OPT, true,
                 "Order returned entities by this field");
@@ -668,6 +672,7 @@ public class FalconCLI {
         entityOptions.addOption(end);
         entityOptions.addOption(fields);
         entityOptions.addOption(filterBy);
+        entityOptions.addOption(searchPattern);
         entityOptions.addOption(filterTags);
         entityOptions.addOption(orderBy);
         entityOptions.addOption(sortOrder);

@@ -11,6 +11,9 @@ Get list of the entities.
    * :entity-type Valid options are cluster, feed or process.
    * fields <optional param> Fields of entity that the user wants to view, separated by commas.
       * Valid options are STATUS, TAGS, PIPELINES.
+   * pattern <optional param> Find string which contains this sequence of characters. Example: pattern=abc
+     * matching is case insensitive.
+     * For example a pattern mhs will match a process named New-My-Hourly-Summary.
    * filterBy <optional param> Filter results by list of field:value pairs. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
       * Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
       * Query will do an AND among filterBy fields.
