@@ -19,7 +19,8 @@
 package org.apache.falcon.util;
 
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -88,6 +89,21 @@ public class RadixNodeTest {
         normalNode.addValue("data");
         Assert.assertTrue(normalNode.containsValue("data"));
         Assert.assertTrue(normalNode.containsValue("CAS Project"));
+    }
+
+    @Test
+    public void testMatchInput() {
+        RadixNode<String> node = new RadixNode<String>();
+
+        FalconRadixUtils.INodeAlgorithm matcher = new FalconRadixUtils.FeedRegexAlgorithm();
+        node.setKey("/data/cas/projects/${YEAR}/${MONTH}/${DAY}");
+        Assert.assertTrue(node.matches("/data/cas/projects/2014/09/09", matcher));
+        Assert.assertFalse(node.matches("/data/cas/projects/20140909", matcher));
+        Assert.assertFalse(node.matches("/data/2014/projects/2014/09/09", matcher));
+        Assert.assertFalse(node.matches("/data/2014/projects/2014/09/", matcher));
+        Assert.assertFalse(node.matches("/data/cas/projects/2014/09/09trail", matcher));
+        Assert.assertFalse(node.matches("/data/cas/projects/2014/09/09/", matcher));
+        Assert.assertFalse(node.matches("/data/cas/projects/2014/09/", matcher));
     }
 
 }

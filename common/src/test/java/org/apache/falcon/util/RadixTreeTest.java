@@ -34,6 +34,7 @@ import java.util.List;
 public class RadixTreeTest {
 
     private RadixTree<String> tree;
+    private FalconRadixUtils.INodeAlgorithm regexAlgorithm = new FalconRadixUtils.FeedRegexAlgorithm();
 
     @BeforeMethod
     public void setUp() {
@@ -115,6 +116,27 @@ public class RadixTreeTest {
         Assert.assertTrue(tree.find("rand").contains("rand"));
         Assert.assertTrue(tree.find("random").contains("random"));
         Assert.assertTrue(tree.find("randomizer").contains("randomizer"));
+
+    }
+
+    //Tests for find using regular expression
+    @Test
+    public void testFindUsingRegex() {
+        tree.insert("/data/cas/${YEAR}/", "rtbd");
+        Assert.assertTrue(tree.find("/data/cas/2014/", regexAlgorithm).contains("rtbd"));
+        Assert.assertNull(tree.find("/data/cas/", regexAlgorithm));
+        Assert.assertNull(tree.find("/data/cas/2014/09", regexAlgorithm));
+        Assert.assertNull(tree.find("/data/cas/${YEAR}/", regexAlgorithm));
+
+        tree.insert("/data/cas/${YEAR}/colo", "local");
+        tree.insert("/data/cas/${YEAR}/colo", "duplicate-local");
+        Assert.assertNull(tree.find("/data/cas/${YEAR}/", regexAlgorithm));
+        Assert.assertNull(tree.find("/data/cas/${YEAR}/colo", regexAlgorithm));
+        Assert.assertNull(tree.find("/data/cas/", regexAlgorithm));
+        Assert.assertTrue(tree.find("/data/cas/2014/", regexAlgorithm).contains("rtbd"));
+        Assert.assertTrue(tree.find("/data/cas/2014/colo", regexAlgorithm).contains("local"));
+        Assert.assertTrue(tree.find("/data/cas/2014/colo", regexAlgorithm).contains("duplicate-local"));
+
 
     }
 

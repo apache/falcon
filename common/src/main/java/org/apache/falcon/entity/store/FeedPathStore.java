@@ -18,6 +18,8 @@
 
 package org.apache.falcon.entity.store;
 
+import org.apache.falcon.util.FalconRadixUtils;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -32,6 +34,9 @@ public interface FeedPathStore<T> {
     void insert(@Nullable String key, @Nonnull T value);
 
     int getSize();
+
+    @Nullable
+    Collection<T> find(@Nonnull String key, @Nonnull FalconRadixUtils.INodeAlgorithm algorithm);
 
     @Nullable
     Collection<T> find(@Nonnull String key);

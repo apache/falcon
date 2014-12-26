@@ -30,14 +30,25 @@ public final class FeedDataPath {
      * Standard variables for feed time components.
      */
     public static enum VARS {
-        YEAR("yyyy"), MONTH("MM"), DAY("dd"), HOUR("HH"), MINUTE("mm");
+        YEAR("yyyy", "([0-9]{4})"), MONTH("MM", "(0[1-9]|1[0-2])"), DAY("dd", "(0[1-9]|1[0-9]|2[0-9]|3[0-1])"),
+        HOUR("HH", "([0-1][0-9]|2[0-4])"), MINUTE("mm", "([0-5][0-9]|60)");
 
         private final Pattern pattern;
         private final String datePattern;
+        private final String patternRegularExpression;
 
-        private VARS(String datePattern) {
+        private VARS(String datePattern, String patternRegularExpression) {
             pattern = Pattern.compile("\\$\\{" + name() + "\\}");
             this.datePattern = datePattern;
+            this.patternRegularExpression = patternRegularExpression;
+        }
+
+        public String getPatternRegularExpression() {
+            return patternRegularExpression;
+        }
+
+        public String getDatePattern() {
+            return datePattern;
         }
 
         public String regex() {

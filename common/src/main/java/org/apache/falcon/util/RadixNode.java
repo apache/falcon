@@ -124,4 +124,27 @@ public class RadixNode<T> {
 
         return matchLength;
     }
+
+
+    /**
+     * Finds the length of the match between node's key and input.
+     *
+     * It can do either a character by character match or a regular expression match(used to match a feed instance path
+     * with feed location template). Only regular expressions allowed in the feed path are evaluated for matching.
+     * @param input input string to be matched with the key of the node.
+     * @param matcher A custom matcher algorithm to match node's key against the input. It is used when matching
+     *                path of a Feed's instance to Feed's path template.
+     * @return
+     */
+    public boolean matches(String input, FalconRadixUtils.INodeAlgorithm matcher) {
+        if (input == null) {
+            return false;
+        }
+
+        if (matcher == null) {
+            return StringUtils.equals(getKey(), input);
+        }
+
+        return matcher.match(this.getKey(), input);
+    }
 }

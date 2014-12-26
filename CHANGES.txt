@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-823 Add path matching ability to the radix tree (Ajay Yadav
+   via Srikanth Sundarrajan) 
+
    FALCON-329 Falcon client methods should return objects. (Samar via Shwetha GS)
 
    FALCON-593 Preserve data type for properties in a vertex. (Ajay
