@@ -28,22 +28,17 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.log4j.Logger;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
  * Tests falcon client's working in presence of ACL errors.
  */
 @Test(groups = "authorization")
 public class FalconClientTest extends BaseTestClass {
-    private static final Logger LOGGER = Logger.getLogger(AclValidationTest.class);
 
     private final ColoHelper cluster = servers.get(0);
     private final FileSystem clusterFS = serverFS.get(0);
@@ -57,8 +52,7 @@ public class FalconClientTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].generateUniqueBundle();
@@ -96,10 +90,5 @@ public class FalconClientTest extends BaseTestClass {
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
         removeBundles();
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

@@ -31,7 +31,6 @@ import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -180,10 +179,5 @@ public class ProcessPipelineTest extends BaseTestClass{
                  + "pipeline8,pipeline9,pipeline10,pipeline11", "submit", true,
             },
         };
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

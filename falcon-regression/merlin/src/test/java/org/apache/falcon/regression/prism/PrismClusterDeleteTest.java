@@ -26,16 +26,12 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.log4j.Logger;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,7 +45,6 @@ public class PrismClusterDeleteTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
     private String aggregateWorkflowDir = baseHDFSDir + "/PrismClusterDeleteTest/aggregator";
-    private static final Logger LOGGER = Logger.getLogger(PrismClusterDeleteTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -57,8 +52,7 @@ public class PrismClusterDeleteTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         restartRequired = false;
         Bundle bundle = BundleUtil.readLateDataBundle();
         bundles[0] = new Bundle(bundle, cluster1);
@@ -434,10 +428,5 @@ public class PrismClusterDeleteTest extends BaseTestClass {
         Assert.assertEquals(store1.size(), store2.size(), "DataStores are not equal!");
         Assert.assertTrue(Arrays.deepEquals(store2.toArray(new String[store2.size()]),
             store1.toArray(new String[store1.size()])), "DataStores are not equal!");
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

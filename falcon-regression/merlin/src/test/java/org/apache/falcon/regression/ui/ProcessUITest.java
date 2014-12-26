@@ -46,7 +46,6 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -55,7 +54,6 @@ import org.testng.asserts.SoftAssert;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
@@ -161,7 +159,7 @@ public class ProcessUITest extends BaseUITestClass {
 
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown(Method method) throws IOException {
+    public void tearDown() throws IOException {
         closeBrowser();
         removeBundles();
     }
@@ -226,10 +224,5 @@ public class ProcessUITest extends BaseUITestClass {
                 softAssert.assertFalse(isPresent, "Lineage button should not be present for instance: " + oozieDate);
             }
         }
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

@@ -57,7 +57,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -94,8 +93,7 @@ public class ExternalFSTest extends BaseTestClass{
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws JAXBException, IOException {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws JAXBException, IOException {
         Bundle bundle = BundleUtil.readFeedReplicationBundle();
 
         bundles[0] = new Bundle(bundle, cluster);
@@ -117,7 +115,6 @@ public class ExternalFSTest extends BaseTestClass{
 
     @AfterClass(alwaysRun = true)
     public void tearDownClass() throws IOException {
-        cleanTestDirs();
         wasbFS.delete(new Path(baseWasbDir), true);
     }
 

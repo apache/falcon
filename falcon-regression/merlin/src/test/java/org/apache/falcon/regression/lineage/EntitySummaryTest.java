@@ -99,7 +99,7 @@ public class EntitySummaryTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        cleanTestDirs();
+        cleanTestsDirs();
         CleanupUtil.cleanAllEntities(prism);
     }
 

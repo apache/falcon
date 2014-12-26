@@ -34,15 +34,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
  * test cases for https://issues.apache.org/jira/browse/FALCON-353.
@@ -68,8 +65,7 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        LOGGER.info("setup " + method.getName());
+    public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
@@ -79,8 +75,7 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown(Method method) {
-        LOGGER.info("tearDown " + method.getName());
+    public void tearDown() {
         removeBundles();
     }
 
@@ -146,10 +141,5 @@ public class EntityDryRunTest extends BaseTestClass {
         Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: "
             + "AUTHENTICATION : E1004 : Expression language evaluation error, Unable to evaluate :"
             + "${coord:someEL(1)"), "Correct response was not present in process / feed schedule");
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

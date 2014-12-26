@@ -38,7 +38,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -65,8 +64,7 @@ public class FeedLateRerunTest extends BaseTestClass {
     private String target = null;
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws JAXBException, IOException {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws JAXBException, IOException {
         Bundle bundle = BundleUtil.readFeedReplicationBundle();
         bundles[0] = new Bundle(bundle, cluster1);
         bundles[1] = new Bundle(bundle, cluster2);

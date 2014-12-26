@@ -31,14 +31,11 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.TestNGException;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -62,11 +59,6 @@ public class ELValidationsTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ELValidationsTest.class);
     private String aggregateWorkflowDir = baseHDFSDir + "/ELTest/aggregator";
 
-    //test for instance when process time line is subset of feed time
-    @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) {
-        LOGGER.info("test name: " + method.getName());
-    }
 
     @Test(groups = {"0.1", "0.2"})
     public void startInstBeforeFeedStartToday02() throws Exception {
@@ -96,7 +88,7 @@ public class ELValidationsTest extends BaseTestClass {
     }
 
     @DataProvider(name = "EL-DP")
-    public Object[][] getELData(Method m) {
+    public Object[][] getELData() {
         return new Object[][]{
             {"now(-3,0)", "now(4,20)"},
             {"yesterday(22,0)", "now(4,20)"},
@@ -287,10 +279,5 @@ public class ELValidationsTest extends BaseTestClass {
         // format number as String
         DecimalFormat df = new DecimalFormat(String.valueOf(zeros));
         return df.format(num);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

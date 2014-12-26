@@ -79,8 +79,8 @@ public final class MerlinConstants {
     public static final String WASB_SECRET = Config.getProperty("wasb.secret", "");
     public static final String WASB_ACCOUNT  = Config.getProperty("wasb.account", "");
 
-    public static final boolean CLEAN_TEST_DIR =
-        Boolean.valueOf(Config.getProperty("clean_test_dir", "true"));
+    public static final boolean CLEAN_TESTS_DIR =
+        Boolean.valueOf(Config.getProperty("clean_tests_dir", "true"));
 
     /* initialize keyTabMap */
     static {

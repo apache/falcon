@@ -42,13 +42,11 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -654,10 +652,5 @@ public class LineageApiTest extends BaseTestClass {
         for(FeedMerlin feed : outputFeeds) {
             AssertUtil.checkForListSize(userIncoming.filterByName(feed.getName()), 1);
         }
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

@@ -36,6 +36,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-942 Cleanup BaseTestClass and setUp/tearDown methods (Ruslan Ostafiychuk)
+
    FALCON-962 Fortify ListFeedInstancesTest (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-963 Add option to exclude tests in falcon-regression (Ruslan Ostafiychuk)

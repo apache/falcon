@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -349,10 +348,5 @@ public class ListProcessInstancesTest extends BaseTestClass {
             + bundles[0].getClusterNames().get(0) + "&offset=4&numResult=7&sortOrder=asc";
         r = prism.getProcessHelper().listInstances(processName, params, null);
         InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void cleanUp() throws IOException {
-        cleanTestDirs();
     }
 }

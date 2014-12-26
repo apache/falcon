@@ -36,14 +36,11 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 
@@ -78,8 +75,7 @@ public class NoOutputProcessTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
@@ -146,10 +142,5 @@ public class NoOutputProcessTest extends BaseTestClass {
             " Message for all the 3 instance not found");
         Assert.assertEquals(consumerProcessMsg.getReceivedMessages().size(), 3,
             " Message for all the 3 instance not found");
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

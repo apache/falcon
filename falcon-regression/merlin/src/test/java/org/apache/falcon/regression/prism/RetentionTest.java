@@ -44,7 +44,6 @@ import org.apache.oozie.client.OozieClientException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -53,7 +52,6 @@ import org.testng.annotations.Test;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,8 +73,7 @@ public class RetentionTest extends BaseTestClass {
     private static final int[] GAPS = new int[]{2, 4, 5, 1};
 
     @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         Bundle bundle = BundleUtil.readRetentionBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].setInputFeedDataPath(testHDFSDir);
@@ -282,7 +279,7 @@ public class RetentionTest extends BaseTestClass {
      * Provides different sets of parameters for retention workflow.
      */
     @DataProvider(name = "betterDP")
-    public Object[][] getTestData(Method m) {
+    public Object[][] getTestData() {
         // a negative value like -4 should be covered in validation scenarios.
         Integer[] retentionPeriods = new Integer[]{0, 10080, 60, 8, 24};
         RetentionUnit[] retentionUnits = new RetentionUnit[]{
@@ -294,10 +291,5 @@ public class RetentionTest extends BaseTestClass {
         final Boolean[] withData = new Boolean[]{true};
 
         return MatrixUtil.crossProduct(retentionPeriods, retentionUnits, gaps, freqTypes, withData);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

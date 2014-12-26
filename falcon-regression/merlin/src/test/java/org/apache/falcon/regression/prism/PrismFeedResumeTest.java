@@ -26,18 +26,14 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
  * Resume feed via prism tests.
@@ -51,7 +47,6 @@ public class PrismFeedResumeTest extends BaseTestClass {
     private OozieClient cluster2OC = serverOC.get(1);
     private boolean restartRequired;
     private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedResumeTest/aggregator";
-    private static final Logger LOGGER = Logger.getLogger(PrismFeedResumeTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -59,8 +54,7 @@ public class PrismFeedResumeTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         Bundle bundle = BundleUtil.readLateDataBundle();
 
         for (int i = 0; i < 2; i++) {
@@ -316,10 +310,5 @@ public class PrismFeedResumeTest extends BaseTestClass {
         Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(entity)).getMessage(),
             coloHelper.getFeedHelper().getColoName() + "/"
                 + Util.parseResponse(coloHelper.getFeedHelper().getStatus(entity)).getMessage());
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

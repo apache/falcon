@@ -26,18 +26,14 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
  * Suspend process tests.
@@ -50,7 +46,6 @@ public class PrismProcessSuspendTest extends BaseTestClass {
     private OozieClient cluster2OC = serverOC.get(1);
     private  boolean restartRequired;
     private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessSuspendTest/aggregator";
-    private static final Logger LOGGER = Logger.getLogger(PrismProcessSuspendTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -58,8 +53,7 @@ public class PrismProcessSuspendTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         restartRequired = false;
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
@@ -275,10 +269,5 @@ public class PrismProcessSuspendTest extends BaseTestClass {
         AssertUtil.assertFailed(prism.getProcessHelper().suspend(bundles[0].getProcessData()));
         AssertUtil.assertFailed(prism.getProcessHelper().suspend(bundles[1].getProcessData()));
         AssertUtil.assertFailed(cluster2.getProcessHelper().suspend(bundles[1].getProcessData()));
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

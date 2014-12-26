@@ -33,14 +33,11 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 
 /**
@@ -65,8 +62,7 @@ public class FeedInstanceStatusTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void testName(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
@@ -234,10 +230,5 @@ public class FeedInstanceStatusTest extends BaseTestClass {
             "?start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 110));
 
         LOGGER.info(responseInstance.getMessage());
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

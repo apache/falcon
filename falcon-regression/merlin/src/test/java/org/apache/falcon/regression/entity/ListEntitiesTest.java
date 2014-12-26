@@ -112,7 +112,6 @@ public class ListEntitiesTest extends BaseTestClass {
 
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
-        cleanTestDirs();
         CleanupUtil.cleanAllEntities(prism);
     }
 

@@ -25,14 +25,10 @@ import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.log4j.Logger;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 
 /**
  * Feed submission tests.
@@ -42,11 +38,9 @@ public class FeedSubmitTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private String feed;
-    private static final Logger LOGGER = Logger.getLogger(FeedSubmitTest.class);
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
@@ -120,10 +114,5 @@ public class FeedSubmitTest extends BaseTestClass {
 
         response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

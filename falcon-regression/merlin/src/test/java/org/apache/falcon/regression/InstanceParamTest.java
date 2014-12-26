@@ -37,7 +37,6 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +44,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 
 /**
@@ -76,8 +74,7 @@ public class InstanceParamTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setup(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setup() throws Exception {
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster1);
         processBundle.generateUniqueBundle();
@@ -156,15 +153,9 @@ public class InstanceParamTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        processBundle.deleteBundle(prism);
-        removeBundles();
+        removeBundles(processBundle);
         for (FileSystem fs : serverFS) {
             HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
         }
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }

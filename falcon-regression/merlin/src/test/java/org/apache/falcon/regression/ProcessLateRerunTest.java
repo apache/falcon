@@ -36,7 +36,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -56,8 +55,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void setUp() throws Exception {
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 1; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));

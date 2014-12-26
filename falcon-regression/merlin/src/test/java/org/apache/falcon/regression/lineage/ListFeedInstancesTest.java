@@ -485,6 +485,5 @@ public class ListFeedInstancesTest extends BaseTestClass {
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
         removeBundles();
-        cleanTestDirs();
     }
 }

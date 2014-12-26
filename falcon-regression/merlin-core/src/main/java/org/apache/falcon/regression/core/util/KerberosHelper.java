@@ -20,7 +20,6 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
@@ -31,8 +30,6 @@ public final class KerberosHelper {
     private KerberosHelper() {
         throw new AssertionError("Instantiating utility class...");
     }
-
-    private static final Logger LOGGER = Logger.getLogger(KerberosHelper.class);
 
     public static UserGroupInformation getUGI(String user) throws IOException {
         // if unsecure cluster create a remote user object

@@ -51,7 +51,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Minutes;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -59,7 +58,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
@@ -86,8 +84,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(NewPrismProcessUpdateTest.class);
 
     @BeforeMethod(alwaysRun = true)
-    public void testSetup(Method method) throws Exception {
-        LOGGER.info("test name: " + method.getName());
+    public void testSetup() throws Exception {
         Bundle b = BundleUtil.readUpdateBundle();
         bundles[0] = new Bundle(b, cluster1);
         bundles[0].generateUniqueBundle();
@@ -1665,10 +1662,5 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
             }
         }
         return null;
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
     }
 }
