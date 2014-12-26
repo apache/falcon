@@ -59,7 +59,7 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract String delete(Entity entity, String cluster) throws FalconException;
 
-    public abstract void reRun(String cluster, String wfId, Properties props) throws FalconException;
+    public abstract void reRun(String cluster, String wfId, Properties props, boolean isForced) throws FalconException;
 
     public abstract void dryRun(Entity entity, String clusterName) throws FalconException;
 

@@ -52,8 +52,7 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
                     + " At time: {}",
                     (message.getRunId() + 1), message.getAttempts(), message.getEntityName(), message.getInstance(),
                     message.getWfId(), SchemaHelper.formatDateUTC(new Date(System.currentTimeMillis())));
-            handler.getWfEngine().reRun(message.getClusterName(),
-                    message.getWfId(), null);
+            handler.getWfEngine().reRun(message.getClusterName(), message.getWfId(), null, false);
         } catch (Exception e) {
             int maxFailRetryCount = Integer.parseInt(StartupProperties.get()
                     .getProperty("max.retry.failure.count", "1"));

@@ -69,7 +69,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -782,7 +781,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 status = Status.RUNNING.name();
             } else if (jobInfo != null && WF_RERUN_PRECOND.contains(jobInfo.getStatus())) {
                 //wf re-run
-                reRun(cluster, jobInfo.getId(), props);
+                reRun(cluster, jobInfo.getId(), props, false);
                 status = Status.RUNNING.name();
             }
             break;
@@ -1292,22 +1291,18 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void reRun(String cluster, String jobId, Properties props) throws FalconException {
+    public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
 
         ProxyOozieClient client = OozieClientFactory.get(cluster);
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
-            if (props == null || props.isEmpty()) {
-                jobprops.put(OozieClient.RERUN_FAIL_NODES, "true");
-            } else {
-                for (Entry<Object, Object> entry : props.entrySet()) {
-                    jobprops.put(entry.getKey(), entry.getValue());
-                }
-                if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES)
-                        && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
-                    jobprops.put(OozieClient.RERUN_FAIL_NODES, "true");
-                }
+            if (props != null) {
+                jobprops.putAll(props);
+            }
+            //if user has set any of these oozie rerun properties then force rerun flag is ignored
+            if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES) && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
+                jobprops.put(OozieClient.RERUN_FAIL_NODES, !isForced);
             }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
