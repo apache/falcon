@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-952 If hadoop home is set, use $HADOOP_HOME to set falcon classpath
+   (Balu Vellanki via Suhas Vasu)
+
    FALCON-935 Feed and process late rerun failed in falcon trunk
    (Shaik Idris Ali via Suhas Vasu)
 
