@@ -190,6 +190,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-951 Adding wait till instance goes into running for tests in falcon trunk
+   (Pragya Mittal via Raghav Kumar Gautam)
+
    FALCON-955 enable and fix feedAclUpdate and processAclUpdate tests (Raghav Kumar Gautam via
    Ruslan Ostafiychuk)
 

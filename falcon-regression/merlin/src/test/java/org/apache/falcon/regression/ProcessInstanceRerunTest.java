@@ -204,6 +204,8 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         String process = bundles[0].getProcessData();
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         String wfID = InstanceUtil.getWorkflows(cluster, processName, Status.RUNNING,
             Status.SUCCEEDED).get(0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 0, CoordinatorAction
