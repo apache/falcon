@@ -21,7 +21,7 @@
 
   dust.loadSource(dust.compile($('#lineage-info-tmpl').html(), 'info'));
   var CIRCLE_RADIUS = 12, RANK_SEPARATION = 120, LABEL_WIDTH = 120, LABEL_HEIGHT = 80, LABEL_PADDING = 20;
-  var PREFIX = '/api/graphs/lineage';
+  var PREFIX = '/api/metadata/lineage';
 
   var data = {
     queue : {},

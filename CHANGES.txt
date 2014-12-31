@@ -64,6 +64,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-945 Fix broken lineage feature in Web-UI. (Adam Kawa via Srikanth
+   Sundarrajan)
+
    FALCON-921 Validate command is exposed only through prism. (Ajay Yadav 
    via Shwetha GS)
 
