@@ -34,17 +34,11 @@
     </custom>
 
     <bannerLeft>
-        <name>Falcon</name>
+        <name>Apache Falcon</name>
         <src>./images/falcon-logo.png</src>
         <width>200px</width>
         <height>45px</height>
     </bannerLeft>
-
-    <bannerRight>
-        <name>Apache Incubator</name>
-        <src>./images/apache-incubator-logo.png</src>
-        <href>http://incubator.apache.org</href>
-    </bannerRight>
 
     <publishDate position="right"/>
     <version position="right"/>

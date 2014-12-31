@@ -44,7 +44,7 @@ a. Building falcon from the source release
 b. Building falcon from the source repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
+* git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 * cd falcon
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 

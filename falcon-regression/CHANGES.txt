@@ -1,4 +1,4 @@
-Apache Falcon (incubating) Regression Change log
+Apache Falcon Regression Change log
 
 Trunk (Unreleased)
 

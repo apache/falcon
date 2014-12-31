@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.7-incubating-SNAPSHOT</version>
+        <version>0.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>falcon-prism</artifactId>
@@ -183,7 +183,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <dname>cn=falcon.incubator.apache.org</dname>
+                    <dname>cn=falcon.apache.org</dname>
                     <keystore>${project.build.directory}/prism.keystore</keystore>
                     <keypass>falcon-prism-passwd</keypass>
                     <storepass>falcon-prism-passwd</storepass>

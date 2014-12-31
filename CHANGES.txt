@@ -1,4 +1,4 @@
-Apache Falcon (incubating) Change log
+Apache Falcon Change log
 
 Trunk (Unreleased)
 
@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-977 Drop incubator/incubating from falcon codebase. (Shwetha GS
+   via Srikanth Sundarrajan)
+
    FALCON-952 If hadoop home is set, use $HADOOP_HOME to set falcon classpath
    (Balu Vellanki via Suhas Vasu)
 

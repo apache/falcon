@@ -27,11 +27,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.7-incubating-SNAPSHOT</version>
+    <version>0.7-SNAPSHOT</version>
     <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
-    <url>http://falcon.incubator.apache.org/</url>
+    <url>http://falcon.apache.org/</url>
 
     <licenses>
         <license>
@@ -82,9 +82,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</developerConnection>
-        <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/falcon.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/falcon.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/falcon.git</url>
     </scm>
 
     <distributionManagement>

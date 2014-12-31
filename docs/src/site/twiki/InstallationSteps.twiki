@@ -4,7 +4,7 @@
 ---+++ Building Falcon
 
 <verbatim>
-git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
+git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 
 cd falcon
 

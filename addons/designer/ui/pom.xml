@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon.designer</groupId>
         <artifactId>designer-main</artifactId>
-        <version>0.6-incubating-SNAPSHOT</version>
+        <version>0.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>designer-ui</artifactId>
