@@ -36,6 +36,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-978 Refactoring FeedLateRerunTest to be parametrized test (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-979 Fix checkstyle issues introduced by falcon-976 (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 
    FALCON-976 EntityDryRunTest failing in falcon trunk (Pragya M via Samarth Gupta)
