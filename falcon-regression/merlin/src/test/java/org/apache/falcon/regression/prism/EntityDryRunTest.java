@@ -87,7 +87,8 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitProcess(true);
         ServiceResponse response = prism.getProcessHelper().schedule(bundles[0].getProcessData());
-        validate(response,"E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
+        validate(response,
+            "E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
     }
 
     /**
@@ -101,7 +102,8 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         ServiceResponse response = prism.getProcessHelper().update(bundles[0].getProcessData(),
             bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
-        validate(response,"The new entity (process) " + bundles[0].getProcessName() + " can't be scheduled");
+        validate(response,
+            "The new entity (process) " + bundles[0].getProcessName() + " can't be scheduled");
         Assert.assertEquals(
             OozieUtil.getNumberOfBundle(clusterOC, EntityType.PROCESS, bundles[0].getProcessName()),
             1, "more than one bundle found after failed update request");
@@ -116,7 +118,8 @@ public class EntityDryRunTest extends BaseTestClass {
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
-        validate(response,"E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
+        validate(response,
+            "E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
     }
 
     /**
@@ -130,14 +133,16 @@ public class EntityDryRunTest extends BaseTestClass {
         AssertUtil.assertSucceeded(response);
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed, feed);
-        validate(response,"The new entity (feed) " + bundles[0].getInputFeedNameFromBundle() + " can't be scheduled");
+        validate(response, "The new entity (feed) " + bundles[0].getInputFeedNameFromBundle()
+            + " can't be scheduled");
         Assert.assertEquals(
             OozieUtil.getNumberOfBundle(clusterOC, EntityType.FEED, Util.readEntityName(feed)), 1,
             "more than one bundle found after failed update request");
     }
 
-    private void validate(ServiceResponse response,String message) throws JAXBException {
+    private void validate(ServiceResponse response, String message) throws JAXBException {
         AssertUtil.assertFailed(response);
-        Assert.assertTrue(response.getMessage().contains(message), "Correct response was not present in process / feed schedule");
+        Assert.assertTrue(response.getMessage().contains(message),
+            "Correct response was not present in process / feed schedule");
     }
 }

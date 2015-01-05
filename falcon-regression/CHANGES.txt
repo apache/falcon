@@ -36,8 +36,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-979 Fix checkstyle issues introduced by falcon-976 (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 
    FALCON-976 EntityDryRunTest failing in falcon trunk (Pragya M via Samarth Gupta)
+
    FALCON-942 Cleanup BaseTestClass and setUp/tearDown methods (Ruslan Ostafiychuk)
 
    FALCON-962 Fortify ListFeedInstancesTest (Paul Isaychuk via Ruslan Ostafiychuk)
