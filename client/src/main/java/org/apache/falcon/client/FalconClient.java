@@ -673,8 +673,7 @@ public class FalconClient {
         checkIfSuccessful(clientResponse);
         String entity = clientResponse.getEntity(String.class);
 
-        return Entity.fromString(EntityType.valueOf(entityType.toUpperCase()),
-            entity);
+        return Entity.fromString(EntityType.getEnum(entityType), entity);
 
     }
 
@@ -758,7 +757,7 @@ public class FalconClient {
 
     private void checkLifeCycleOption(List<LifeCycle> lifeCycles, String type) throws FalconCLIException {
         if (lifeCycles != null && !lifeCycles.isEmpty()) {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase().trim());
+            EntityType entityType = EntityType.getEnum(type);
             for (LifeCycle lifeCycle : lifeCycles) {
                 if (entityType != lifeCycle.getTag().getType()) {
                     throw new FalconCLIException("Incorrect lifecycle: " + lifeCycle + "for given type: " + type);
@@ -771,7 +770,7 @@ public class FalconClient {
         if (type == null || type.isEmpty()) {
             throw new FalconCLIException("entity type is empty");
         } else {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase().trim());
+            EntityType entityType = EntityType.getEnum(type);
             if (entityType == EntityType.CLUSTER) {
                 throw new FalconCLIException(
                         "Instance management functions don't apply to Cluster entities");

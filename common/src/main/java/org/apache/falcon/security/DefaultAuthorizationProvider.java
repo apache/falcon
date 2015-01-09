@@ -316,7 +316,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         throws EntityNotRegisteredException, AuthorizationException {
 
         try {
-            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            EntityType type = EntityType.getEnum(entityType);
             return EntityUtil.getEntity(type, entityName);
         } catch (FalconException e) {
             if (e instanceof EntityNotRegisteredException) {

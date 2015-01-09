@@ -134,7 +134,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     private Entity getEntity(HttpServletRequest request, String type) {
         try {
             request.getInputStream().reset();
-            Entity entity = deserializeEntity(request, EntityType.valueOf(type.toUpperCase()));
+            Entity entity = deserializeEntity(request, EntityType.getEnum(type));
             request.getInputStream().reset();
             return entity;
         } catch (Exception e) {

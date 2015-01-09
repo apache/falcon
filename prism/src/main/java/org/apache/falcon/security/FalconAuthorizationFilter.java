@@ -139,7 +139,7 @@ public class FalconAuthorizationFilter implements Filter {
         }
 
         try {
-            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            EntityType type = EntityType.getEnum(entityType);
             Entity entity = EntityUtil.getEntity(type, entityName);
             if (entity != null && entity.getACL() != null) {
                 final String aclOwner = entity.getACL().getOwner();

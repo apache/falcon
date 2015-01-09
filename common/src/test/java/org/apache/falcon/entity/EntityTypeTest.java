@@ -39,4 +39,19 @@ public class EntityTypeTest {
         Assert.assertTrue(EntityType.FEED.isSchedulable());
         Assert.assertFalse(EntityType.CLUSTER.isSchedulable());
     }
+
+    @Test
+    public void testValidEntityTypes() {
+        Assert.assertEquals(EntityType.FEED, EntityType.getEnum("feed"));
+        Assert.assertEquals(EntityType.FEED, EntityType.getEnum("FeEd"));
+        Assert.assertEquals(EntityType.CLUSTER, EntityType.getEnum("cluster"));
+        Assert.assertEquals(EntityType.CLUSTER, EntityType.getEnum("cluSTER"));
+        Assert.assertEquals(EntityType.PROCESS, EntityType.getEnum("process"));
+        Assert.assertEquals(EntityType.PROCESS, EntityType.getEnum("pRocess"));
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testInvalidEntityTypes() throws Exception {
+        EntityType.getEnum("invalid");
+    }
 }

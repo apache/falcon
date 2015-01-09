@@ -81,7 +81,7 @@ public final class EntityUtil {
     public static <T extends Entity> T getEntity(String type, String entityName) throws FalconException {
         EntityType entityType;
         try {
-            entityType = EntityType.valueOf(type.toUpperCase());
+            entityType = EntityType.getEnum(type);
         } catch (IllegalArgumentException e) {
             throw new FalconException("Invalid entity type: " + type, e);
         }

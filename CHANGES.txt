@@ -7,6 +7,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-749 Improve error printed in falcon CLI. (Suresh Srinivas via Shwetha GS)
+
    FALCON-977 Drop incubator/incubating from falcon codebase. (Shwetha GS
    via Srikanth Sundarrajan)
 

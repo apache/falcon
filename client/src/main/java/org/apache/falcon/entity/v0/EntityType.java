@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import javax.xml.bind.*;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import java.util.Arrays;
 
 /**
  * Enum for types of entities in Falcon Process, Feed and Cluster.
@@ -94,5 +95,14 @@ public enum EntityType {
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP"})
     public String[] getImmutableProperties() {
         return immutableProperties;
+    }
+
+    public static EntityType getEnum(String type) {
+        try {
+            return EntityType.valueOf(type.toUpperCase().trim());
+        } catch (IllegalArgumentException iae) {
+            throw new IllegalArgumentException("Invalid entity type: " + type + ". Expected "
+                    + Arrays.toString(values()).toLowerCase() + ".");
+        }
     }
 }

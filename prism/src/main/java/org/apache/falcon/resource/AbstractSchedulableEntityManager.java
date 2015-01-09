@@ -225,7 +225,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     }
 
     private void validateTypeForEntitySummary(String type) {
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
             throw FalconWebException.newException("Invalid entity type " + type
                 + " for EntitySummary API. Valid options are feed or process",
@@ -265,7 +265,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     }
 
     private void checkSchedulableEntity(String type) throws UnschedulableEntityException {
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
             throw new UnschedulableEntityException(
                     "Entity type (" + type + ") " + " cannot be Scheduled/Suspended/Resumed");

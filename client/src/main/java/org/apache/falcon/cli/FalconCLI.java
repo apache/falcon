@@ -382,7 +382,7 @@ public class FalconCLI {
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         validateNotEmpty(entityType, ENTITY_TYPE_OPT);
-        EntityType entityTypeEnum = EntityType.valueOf(entityType.toUpperCase());
+        EntityType entityTypeEnum = EntityType.getEnum(entityType);
         validateSortOrder(sortOrder);
         String entityAction = "entity";
 
@@ -462,7 +462,7 @@ public class FalconCLI {
     }
 
     private void validateEntityTypeForSummary(String type) throws FalconCLIException {
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
             throw new FalconCLIException("Invalid entity type " + entityType
                     + " for EntitySummary API. Valid options are feed or process");

@@ -55,7 +55,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             throw FalconWebException.newInstanceException("entity type is empty",
                     Response.Status.BAD_REQUEST);
         } else {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            EntityType entityType = EntityType.getEnum(type);
             if (entityType == EntityType.CLUSTER) {
                 throw FalconWebException.newInstanceException(
                         "Instance management functions don't apply to Cluster entities",
@@ -68,7 +68,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     protected List<LifeCycle> checkAndUpdateLifeCycle(List<LifeCycle> lifeCycleValues,
                                                       String type) throws FalconException {
-        EntityType entityType = EntityType.valueOf(type.toUpperCase().trim());
+        EntityType entityType = EntityType.getEnum(type);
         if (lifeCycleValues == null || lifeCycleValues.isEmpty()) {
             List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
             if (entityType == EntityType.PROCESS) {

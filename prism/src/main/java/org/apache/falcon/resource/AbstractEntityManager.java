@@ -135,7 +135,7 @@ public abstract class AbstractEntityManager {
                 return DeploymentUtil.getDefaultColos();
             }
 
-            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER) {
+            if (EntityType.getEnum(type) == EntityType.CLUSTER) {
                 return getAllColos();
             }
 
@@ -151,7 +151,7 @@ public abstract class AbstractEntityManager {
                 return DeploymentUtil.getDefaultColos();
             }
 
-            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER) {
+            if (EntityType.getEnum(type) == EntityType.CLUSTER) {
                 return getAllColos();
             }
 
@@ -201,7 +201,7 @@ public abstract class AbstractEntityManager {
      */
     public APIResult validate(HttpServletRequest request, String type) {
         try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            EntityType entityType = EntityType.getEnum(type);
             Entity entity = deserializeEntity(request, entityType);
             validate(entity);
 
@@ -235,7 +235,7 @@ public abstract class AbstractEntityManager {
     public APIResult delete(HttpServletRequest request, String type, String entity, String colo) {
         checkColo(colo);
         try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            EntityType entityType = EntityType.getEnum(type);
             String removedFromEngine = "";
             try {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
@@ -265,7 +265,7 @@ public abstract class AbstractEntityManager {
     public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
         checkColo(colo);
         try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
             Entity newEntity = deserializeEntity(request, entityType);
             // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
@@ -343,7 +343,7 @@ public abstract class AbstractEntityManager {
     protected synchronized Entity submitInternal(HttpServletRequest request, String type)
         throws IOException, FalconException {
 
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(request, entityType);
         // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
         decorateEntityWithACL(entity);
@@ -473,7 +473,7 @@ public abstract class AbstractEntityManager {
         Entity entityObj;
         try {
             entityObj = EntityUtil.getEntity(type, entity);
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            EntityType entityType = EntityType.getEnum(type);
             EntityStatus status = getStatus(entityObj, entityType);
             return new APIResult(Status.SUCCEEDED, status.name());
         } catch (FalconWebException e) {
@@ -575,7 +575,7 @@ public abstract class AbstractEntityManager {
         final Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         final List<String> filterByTags = getFilterByTags(filterTags);
 
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        EntityType entityType = EntityType.getEnum(type);
         Collection<String> entityNames = configStore.getEntities(entityType);
         if (entityNames.isEmpty()) {
             return Collections.emptyList();
@@ -894,7 +894,7 @@ public abstract class AbstractEntityManager {
      */
     public String getEntityDefinition(String type, String entityName) {
         try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            EntityType entityType = EntityType.getEnum(type);
             Entity entity = configStore.get(entityType, entityName);
             if (entity == null) {
                 throw new NoSuchElementException(entityName + " (" + type + ") not found");
