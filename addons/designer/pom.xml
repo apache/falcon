@@ -97,8 +97,7 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <hive.version>0.11.0</hive.version>
-        <hcatalog.version>0.11.0</hcatalog.version>
+        <hive.version>0.13.1</hive.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
@@ -364,8 +363,8 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.hcatalog</groupId>
-                <artifactId>webhcat-java-client</artifactId>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-webhcat-java-client</artifactId>
                 <version>${hcatalog.version}</version>
             </dependency>
 

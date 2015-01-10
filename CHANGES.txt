@@ -7,6 +7,12 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-417 Upgrade Hive and HCatalog to latest stable version. (Peeyush Bishnoi
+   via Srikanth Sundarrajan)
+
+   FALCON-896 Upgrade oozie to 4.1.0 and make it the default for falcon. (Peeyush
+   Bishnoi via Srikanth Sundarrajan)
+
    FALCON-749 Improve error printed in falcon CLI. (Suresh Srinivas via Shwetha GS)
 
    FALCON-977 Drop incubator/incubating from falcon codebase. (Shwetha GS

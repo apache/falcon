@@ -195,8 +195,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.hcatalog</groupId>
-            <artifactId>webhcat-java-client</artifactId>
+            <groupId>org.apache.hive.hcatalog</groupId>
+            <artifactId>hive-webhcat-java-client</artifactId>
         </dependency>
 
         <dependency>

@@ -21,7 +21,7 @@ package org.apache.falcon.catalog;
 import java.util.List;
 
 /**
- * The CatalogPartition is a wrapper around org.apache.hcatalog.api.HCatPartition.
+ * The CatalogPartition is a wrapper around org.apache.hive.hcatalog.api.HCatPartition.
  */
 public class CatalogPartition {
 

@@ -30,7 +30,7 @@ import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hcatalog.api.HCatPartition;
+import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;

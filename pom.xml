@@ -107,7 +107,7 @@
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.11.0</hive.version>
+        <hive.version>0.13.1</hive.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -877,10 +877,22 @@
                 </exclusions>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-common</artifactId>
+                <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
             <!--  this is needed for embedded oozie -->
             <dependency>
-                <groupId>org.apache.hcatalog</groupId>
-                <artifactId>webhcat-java-client</artifactId>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-webhcat-java-client</artifactId>
                 <version>${hive.version}</version>
                 <exclusions>
                     <exclusion>

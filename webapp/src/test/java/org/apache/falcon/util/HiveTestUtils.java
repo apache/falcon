@@ -23,11 +23,11 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hcatalog.api.HCatClient;
-import org.apache.hcatalog.api.HCatCreateDBDesc;
-import org.apache.hcatalog.api.HCatCreateTableDesc;
-import org.apache.hcatalog.api.HCatPartition;
-import org.apache.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.api.HCatCreateDBDesc;
+import org.apache.hive.hcatalog.api.HCatCreateTableDesc;
+import org.apache.hive.hcatalog.api.HCatPartition;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 
 import java.util.ArrayList;
 import java.util.HashMap;

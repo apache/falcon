@@ -50,7 +50,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.hcatalog.api.HCatClient;
+import org.apache.hive.hcatalog.api.HCatClient;
 import org.testng.Assert;
 
 import javax.net.ssl.HostnameVerifier;
