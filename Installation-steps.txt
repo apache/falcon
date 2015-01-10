@@ -125,4 +125,4 @@ d. Stopping Falcon Server
 * cd <<project home>>
 * src/bin/pacakge.sh <<hadoop-version>>
   >> ex. src/bin/pacakge.sh 2.5.0
-  >> oozie bundle available in target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz
+  >> oozie bundle available in target/package/oozie-4.1.0/distro/target/oozie-4.1.0-distro.tar.gz

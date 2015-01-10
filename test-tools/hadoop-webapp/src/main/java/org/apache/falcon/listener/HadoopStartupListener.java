@@ -19,12 +19,18 @@
 package org.apache.falcon.listener;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Listener for bootstrapping embedded hadoop cluster for integration tests.
@@ -32,16 +38,31 @@ import javax.servlet.ServletContextListener;
 public class HadoopStartupListener implements ServletContextListener {
     private static final Logger LOG = LoggerFactory.getLogger(HadoopStartupListener.class);
     private BrokerService broker;
+    private final String shareLibPath = "target/share/lib";
+    private static final String SHARE_LIB_PREFIX = "lib_";
+    private static final String USER = System.getProperty("user.name");
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
+            copyShareLib();
             startBroker();
             startHiveMetaStore();
-
         } catch (Exception e) {
             LOG.error("Unable to start daemons", e);
             throw new RuntimeException("Unable to start daemons", e);
+        }
+    }
+
+    private void copyShareLib() throws Exception {
+        String shareLibHDFSPath = getShareLibPath() +  File.separator + SHARE_LIB_PREFIX
+                                    + getTimestampDirectory();
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(new Path(shareLibHDFSPath).toUri(), conf);
+        String[] actionDirectories = getLibActionDirectories();
+        for(String actionDirectory : actionDirectories) {
+            LOG.info("Copying Action Directory {0}", actionDirectory);
+            fs.copyFromLocalFile(new Path(shareLibPath, actionDirectory), new Path(shareLibHDFSPath));
         }
     }
 
@@ -86,5 +107,29 @@ public class HadoopStartupListener implements ServletContextListener {
         } catch(Exception e) {
             LOG.warn("Failed to stop activemq", e);
         }
+    }
+
+    private String getShareLibPath() {
+        return File.separator + "user" + File.separator + USER + File.separator + "share/lib";
+    }
+
+    private String getTimestampDirectory() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date();
+        return dateFormat.format(date).toString();
+    }
+
+    private String[] getLibActionDirectories() {
+        StringBuilder libActionDirectories = new StringBuilder();
+        File f = new File(shareLibPath);
+
+        for(File libDir : f.listFiles()) {
+            if (libDir.isDirectory()) {
+                libActionDirectories.append(libDir.getName()).append("\t");
+            }
+        }
+        String actionDirectories = libActionDirectories.toString();
+        return (actionDirectories).substring(0, actionDirectories.lastIndexOf('\t'))
+                .split("\t");
     }
 }

@@ -103,7 +103,7 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <oozie.version>4.0.1</oozie.version>
+        <oozie.version>4.1.0</oozie.version>
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
@@ -343,7 +343,7 @@
                         <configuration>
                             <!--debug>true</debug -->
                             <xmlOutput>true</xmlOutput>
-                            <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                            <excludeFilterFile>checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
                             <failOnError>true</failOnError>
                         </configuration>
                         <executions>
@@ -377,7 +377,7 @@
         <module>common</module>
         <module>test-util</module>
         <module>hadoop-dependencies</module>
-        <module>hadoop-webapp</module>
+        <module>test-tools</module>
         <module>messaging</module>
         <module>oozie-el-extensions</module>
         <module>oozie</module>

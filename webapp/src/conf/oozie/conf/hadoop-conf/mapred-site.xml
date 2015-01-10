@@ -17,31 +17,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+
+<!-- Put site-specific property overrides in this file. -->
+
 <configuration>
-
-    <property>
-        <name>mapreduce.jobtracker.kerberos.principal</name>
-        <value>mapred/_HOST@LOCALREALM</value>
-    </property>
-
-    <property>
-      <name>yarn.resourcemanager.principal</name>
-      <value>yarn/_HOST@LOCALREALM</value>
-    </property>
-
-    <property>
-        <name>dfs.namenode.kerberos.principal</name>
-        <value>hdfs/_HOST@LOCALREALM</value>
-    </property>
-
     <property>
         <name>mapreduce.framework.name</name>
-        <value>unittests</value>
+        <value>yarn</value>
     </property>
-
-    <property>
-        <name>fs.defaultFS</name>
-        <value>jail://global:00</value>
-    </property>
-
 </configuration>

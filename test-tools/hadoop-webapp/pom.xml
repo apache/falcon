@@ -25,6 +25,7 @@
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
         <version>0.7-SNAPSHOT</version>
+        <relativePath>../..</relativePath>
     </parent>
     <artifactId>falcon-hadoop-webapp</artifactId>
     <description>Apache Falcon Embedded Hadoop - Test Cluster</description>
