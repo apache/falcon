@@ -77,6 +77,7 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
     private Properties getWorkflowProperties() {
         Properties props = new Properties();
         props.setProperty("srcClusterName", "NA");
+        props.setProperty("availabilityFlag", "NA");
         return props;
     }
 

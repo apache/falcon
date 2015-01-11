@@ -181,6 +181,12 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             instancePaths = pathsWithPartitions;
 
             propagateFileSystemCopyProperties(pathsWithPartitions, props);
+
+            if (entity.getAvailabilityFlag() == null) {
+                props.put("availabilityFlag", "NA");
+            } else {
+                props.put("availabilityFlag", entity.getAvailabilityFlag());
+            }
         } else if (sourceStorage.getType() == Storage.TYPE.TABLE) {
             instancePaths = "${coord:dataIn('input')}";
             final CatalogStorage sourceTableStorage = (CatalogStorage) sourceStorage;
@@ -189,6 +195,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             propagateTableStorageProperties(trgCluster, targetTableStorage, props, "falconTarget");
             propagateTableCopyProperties(srcCluster, sourceTableStorage, trgCluster, targetTableStorage, props);
             setupHiveConfiguration(srcCluster, trgCluster, buildPath);
+            props.put("availabilityFlag", "NA");
         }
 
         propagateLateDataProperties(instancePaths, sourceStorage.getType().name(), props);

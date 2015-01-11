@@ -111,6 +111,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
     private Properties getWorkflowProperties() {
         Properties props = new Properties();
         props.setProperty("srcClusterName", "NA");
+        props.setProperty("availabilityFlag", "NA");
         return props;
     }
 

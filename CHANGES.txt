@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-237 falcon feed replication should honour availability flag (Peeyush
+   Bishnoi via Srikanth Sundarrajan)
+
    FALCON-417 Upgrade Hive and HCatalog to latest stable version. (Peeyush Bishnoi
    via Srikanth Sundarrajan)
 

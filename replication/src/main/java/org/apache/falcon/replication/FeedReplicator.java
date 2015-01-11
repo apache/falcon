@@ -21,6 +21,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -68,6 +69,13 @@ public class FeedReplicator extends Configured implements Tool {
         final boolean includePathSet = (includePathConf != null)
                 && !IGNORE.equalsIgnoreCase(includePathConf);
 
+        String availabilityFlag = EntityUtil.SUCCEEDED_FILE_NAME;
+        if (cmd.getOptionValue("falconFeedStorageType").equals(Storage.TYPE.FILESYSTEM.name())) {
+            availabilityFlag = cmd.getOptionValue("availabilityFlag").equals("NA")
+                    ? availabilityFlag : cmd.getOptionValue("availabilityFlag");
+        }
+
+        conf.set("falcon.feed.availability.flag", availabilityFlag);
         DistCp distCp = (includePathSet)
                 ? new CustomReplicator(conf, options)
                 : new DistCp(conf, options);
@@ -75,7 +83,7 @@ public class FeedReplicator extends Configured implements Tool {
         distCp.execute();
 
         if (includePathSet) {
-            executePostProcessing(options);  // this only applies for FileSystem Storage.
+            executePostProcessing(conf, options);  // this only applies for FileSystem Storage.
         }
 
         LOG.info("Completed DistCp");
@@ -107,6 +115,10 @@ public class FeedReplicator extends Configured implements Tool {
         opt.setRequired(true);
         options.addOption(opt);
 
+        opt = new Option("availabilityFlag", true, "availability flag");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         return new GnuParser().parse(options, args);
     }
 
@@ -131,7 +143,7 @@ public class FeedReplicator extends Configured implements Tool {
         return listPaths;
     }
 
-    private void executePostProcessing(DistCpOptions options) throws IOException, FalconException {
+    private void executePostProcessing(Configuration conf, DistCpOptions options) throws IOException, FalconException {
         Path targetPath = options.getTargetPath();
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
                 targetPath.toUri(), getConf());
@@ -154,15 +166,16 @@ public class FeedReplicator extends Configured implements Tool {
             finalOutputPath = targetPath;
         }
 
+        final String availabilityFlag = conf.get("falcon.feed.availability.flag");
         FileStatus[] files = fs.globStatus(finalOutputPath);
         if (files != null) {
             for (FileStatus file : files) {
-                fs.create(new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME)).close();
-                LOG.info("Created {}", new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME));
+                fs.create(new Path(file.getPath(), availabilityFlag)).close();
+                LOG.info("Created {}", new Path(file.getPath(), availabilityFlag));
             }
         } else {
-            // As distcp is not copying empty directories we are creating  _SUCCESS file here
-            fs.create(new Path(finalOutputPath, EntityUtil.SUCCEEDED_FILE_NAME)).close();
+            // As distcp is not copying empty directories we are creating availabilityFlag file here
+            fs.create(new Path(finalOutputPath, availabilityFlag)).close();
             LOG.info("No files present in path: {}", finalOutputPath);
         }
     }

@@ -52,6 +52,8 @@
         <arg>${distcpTargetPaths}</arg>
         <arg>-falconFeedStorageType</arg>
         <arg>${falconFeedStorageType}</arg>
+        <arg>-availabilityFlag</arg>
+        <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
     </java>
     <ok to="succeeded-post-processing"/>
     <error to="failed-post-processing"/>

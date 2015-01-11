@@ -18,7 +18,6 @@
 
 package org.apache.falcon.replication;
 
-import org.apache.falcon.entity.EntityUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.Credentials;
@@ -31,9 +30,9 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of CopyListing that overrides the default behavior by suppressing file,
- * EntityUtil.SUCCEEDED_FILE_NAME and copies that in the last so downstream apps
- * depending on data availability will work correctly.
+ * An implementation of CopyListing that overrides the default behavior by suppressing file
+ * availabilityFlag and copies that in the last so downstream apps depending on data
+ * availability will work correctly.
  */
 public class FilteredCopyListing extends SimpleCopyListing {
     private static final Logger LOG = LoggerFactory.getLogger(FilteredCopyListing.class);
@@ -51,10 +50,13 @@ public class FilteredCopyListing extends SimpleCopyListing {
      */
     private static final char PAT_SET_CLOSE = ']';
 
+    private String availabilityFlag;
+
     private Pattern regex;
 
     protected FilteredCopyListing(Configuration configuration, Credentials credentials) {
         super(configuration, credentials);
+        availabilityFlag = configuration.get("falcon.feed.availability.flag");
         try {
             regex = getRegEx(configuration.get("falcon.include.path", "").trim());
             LOG.info("Inclusion pattern = {}", configuration.get("falcon.include.path"));
@@ -67,7 +69,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
     @Override
     protected boolean shouldCopy(Path path, DistCpOptions options) {
-        if (path.getName().equals(EntityUtil.SUCCEEDED_FILE_NAME)) {
+        if (path.getName().equals(availabilityFlag)) {
             return false;
         }
         return regex == null || regex.matcher(path.toString()).find();

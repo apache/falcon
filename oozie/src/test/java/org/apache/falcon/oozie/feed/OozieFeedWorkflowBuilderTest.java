@@ -327,7 +327,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         ACTION replicationActionNode = getAction(workflow, "replication");
         JAVA replication = replicationActionNode.getJava();
         List<String> args = replication.getArg();
-        Assert.assertEquals(args.size(), 13);
+        Assert.assertEquals(args.size(), 15);
 
         HashMap<String, String> props = getCoordProperties(coord);
 
