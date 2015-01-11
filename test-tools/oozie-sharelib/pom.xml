@@ -48,7 +48,7 @@ limitations under the License.
                 <executions>
                     <execution>
                         <id>add-jar</id>
-                        <phase>install</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>

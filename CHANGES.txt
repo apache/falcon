@@ -75,6 +75,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-984 Falcon build is broken. (Peeyush Bishnoi via Srikanth
+   Sundarrajan)
+
    FALCON-945 Fix broken lineage feature in Web-UI. (Adam Kawa via Srikanth
    Sundarrajan)
 
