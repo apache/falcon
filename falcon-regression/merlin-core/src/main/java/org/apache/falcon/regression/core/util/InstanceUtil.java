@@ -974,11 +974,14 @@ public final class InstanceUtil {
             OozieClient oozieClient =
                     coloHelper.getProcessHelper().getOozieClient();
             BundleJob j = oozieClient.getBundleJobInfo(bundleID);
+            LOGGER.info(sleepCount + ". Current status: " + j.getStatus()
+                + "; expected: " + expectedStatus);
             if (j.getStatus() == expectedStatus) {
-                break;
+                return;
             }
             TimeUtil.sleepSeconds(20);
         }
+        Assert.fail("State " + expectedStatus + " wasn't reached in " + totalMinutesToWait + " mins");
     }
 
     /**

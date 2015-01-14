@@ -202,6 +202,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-990 Fix and enable 3/4 tests of RescheduleProcessInFinalStatesTest (Ruslan Ostafiychuk)
+
    FALCON-951 Adding wait till instance goes into running for tests in falcon trunk
    (Pragya Mittal via Raghav Kumar Gautam)
 

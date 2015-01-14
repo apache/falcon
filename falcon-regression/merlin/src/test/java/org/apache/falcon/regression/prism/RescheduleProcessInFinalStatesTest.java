@@ -49,7 +49,7 @@ import java.util.List;
 /**
  * Tests with rescheduling process in final states.
  */
-@Test(groups = "embedded", enabled = false)
+@Test(groups = "embedded", enabled = true)
 public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
@@ -63,7 +63,6 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
@@ -108,7 +107,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void rescheduleSucceeded() throws Exception {
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
@@ -151,11 +150,11 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void rescheduleDWE() throws Exception {
         prism.getProcessHelper()
             .getProcessInstanceKill(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z");
+                "?start=2010-01-02T01:05Z&end=2010-01-02T01:11Z");
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.DONEWITHERROR);
 
@@ -174,7 +173,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      * Make process run into DOWN WITH ERROR state. Delete it. Check that entity is absent on the
      * server. Reschedule it and check that it succeeds in some time.
      **/
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void rescheduleKilled() throws Exception {
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         InstanceUtil
