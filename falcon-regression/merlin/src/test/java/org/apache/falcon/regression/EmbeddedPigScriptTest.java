@@ -118,7 +118,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         removeBundles();
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getResumedProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
         prism.getProcessHelper().suspend(process);
@@ -132,7 +132,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getSuspendedProcessInstance() throws Exception {
         prism.getProcessHelper().suspend(process);
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -141,7 +141,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateSuccessWOInstances(r);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getRunningProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -149,7 +149,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 600000)
     public void getKilledProcessInstance() throws Exception {
         prism.getProcessHelper().delete(process);
         TimeUtil.sleepSeconds(TIMEOUT);
@@ -157,7 +157,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstanceUtil.validateError(r, ResponseErrors.PROCESS_NOT_FOUND);
     }
 
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"singleCluster"}, timeOut = 6000000)
     public void getSucceededProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
