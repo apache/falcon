@@ -75,6 +75,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-995 Sharelib directory does not exist in webapp
+   (Peeyush Bishnoi via Suhas Vasu)
+
    FALCON-984 Falcon build is broken. (Peeyush Bishnoi via Srikanth
    Sundarrajan)
 

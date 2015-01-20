@@ -55,14 +55,18 @@ public class HadoopStartupListener implements ServletContextListener {
     }
 
     private void copyShareLib() throws Exception {
-        String shareLibHDFSPath = getShareLibPath() +  File.separator + SHARE_LIB_PREFIX
-                                    + getTimestampDirectory();
+        Path shareLibFSPath = new Path(getShareLibPath() +  File.separator + SHARE_LIB_PREFIX
+                + getTimestampDirectory());
         Configuration conf = new Configuration();
-        FileSystem fs = FileSystem.get(new Path(shareLibHDFSPath).toUri(), conf);
+        FileSystem fs = FileSystem.get(shareLibFSPath.toUri(), conf);
+        if (!fs.exists(shareLibFSPath)) {
+            fs.mkdirs(shareLibFSPath);
+        }
+
         String[] actionDirectories = getLibActionDirectories();
         for(String actionDirectory : actionDirectories) {
-            LOG.info("Copying Action Directory {0}", actionDirectory);
-            fs.copyFromLocalFile(new Path(shareLibPath, actionDirectory), new Path(shareLibHDFSPath));
+            LOG.info("Copying Action Directory: {}", actionDirectory);
+            fs.copyFromLocalFile(new Path(shareLibPath, actionDirectory), shareLibFSPath);
         }
     }
 
