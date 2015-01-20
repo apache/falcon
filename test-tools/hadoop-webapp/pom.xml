@@ -233,6 +233,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/oozie/WEB-INF/lib</outputDirectory>
+                            <excludeArtifactIds>httpclient,httpcore</excludeArtifactIds>
                         </configuration>
                     </execution>
                 </executions>

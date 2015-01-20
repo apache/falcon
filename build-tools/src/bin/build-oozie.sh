@@ -61,6 +61,6 @@ esac
 
 rm `find . -name 'pom.xml.bak'`
 
-$MVN_CMD clean install -DskipTests -Phadoop-2
+$MVN_CMD clean source:jar install -DskipTests -Phadoop-2
 
 popd

@@ -75,6 +75,8 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1000 ITs fail with NoSuchFieldError: INSTANCE. (Shwetha GS)
+
    FALCON-109 submission of clusters for non registered colos 
    (Pallavi Rao via Suhas Vasu)
 
