@@ -25,6 +25,7 @@ import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
@@ -33,8 +34,8 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
-import org.apache.falcon.util.DeploymentUtil;
 
+import org.apache.falcon.util.DeploymentUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -110,10 +111,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
 
-        final String entity = getEntity(bufferedRequest, type).getName();
+        final Entity entity = getEntity(bufferedRequest, type);
         Map<String, APIResult> results = new HashMap<String, APIResult>();
-        final Set<String> colos = getApplicableColos(type, getEntity(bufferedRequest, type));
-        results.put(FALCON_TAG, new EntityProxy(type, entity) {
+        final Set<String> colos = getApplicableColos(type, entity);
+
+        validateEntity(entity, colos);
+
+        results.put(FALCON_TAG, new EntityProxy(type, entity.getName()) {
             @Override
             protected Set<String> getColosToApply() {
                 return colos;
@@ -129,6 +133,18 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             results.put(PRISM_TAG, super.submit(bufferedRequest, type, currentColo));
         }
         return consolidateResult(results, APIResult.class);
+    }
+
+    private void validateEntity(Entity entity, Set<String> applicableColos) {
+        if (entity.getEntityType() != EntityType.CLUSTER || embeddedMode) {
+            return;
+        }
+        // If the submitted entity is a cluster, ensure its spec. has one of the valid colos
+        String colo = ((Cluster) entity).getColo();
+        if (!applicableColos.contains(colo)) {
+            throw FalconWebException.newException("The colo mentioned in the cluster specification, "
+                    + colo + ", is not listed in Prism runtime.", Response.Status.BAD_REQUEST);
+        }
     }
 
     private Entity getEntity(HttpServletRequest request, String type) {

@@ -51,6 +51,7 @@ public final class RuntimeProperties extends ApplicationProperties {
             if (INSTANCE.get() == null) {
                 RuntimeProperties properties = new RuntimeProperties();
                 properties.loadProperties();
+                properties.validateProperties();
                 INSTANCE.compareAndSet(null, properties);
                 if (INSTANCE.get() == properties) {
                     Thread refreshThread = new Thread(new DynamicLoader());
@@ -60,6 +61,22 @@ public final class RuntimeProperties extends ApplicationProperties {
             return INSTANCE.get();
         } catch (FalconException e) {
             throw new RuntimeException("Unable to read application " + "runtime properties", e);
+        }
+    }
+
+    protected void validateProperties() throws FalconException {
+        String colosProp = getProperty("all.colos");
+        if (colosProp == null || colosProp.isEmpty()) {
+            return;
+        }
+        String[] colos = colosProp.split(",");
+        for (int i = 0; i < colos.length; i++) {
+            colos[i] = colos[i].trim();
+            String falconEndpoint = getProperty("falcon." + colos[i] + ".endpoint");
+            if (falconEndpoint == null || falconEndpoint.isEmpty()) {
+                throw new FalconException("No falcon server endpoint mentioned in Prism runtime for colo, "
+                        + colos[i] + ".");
+            }
         }
     }
 
@@ -79,6 +96,7 @@ public final class RuntimeProperties extends ApplicationProperties {
                     try {
                         RuntimeProperties newProperties = new RuntimeProperties();
                         newProperties.loadProperties();
+                        newProperties.validateProperties();
                         INSTANCE.set(newProperties);
                         backOffDelay = REFRESH_DELAY;
                     } catch (FalconException e) {
