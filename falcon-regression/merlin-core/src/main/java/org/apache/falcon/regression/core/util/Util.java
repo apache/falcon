@@ -178,8 +178,8 @@ public final class Util {
                 new Path(helper.getStoreLocation() + subPath));
         } else {
             return ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
-                helper.getPassword(), "ls " + helper.getStoreLocation() + "/store" + subPath,
-                helper.getUsername(), helper.getIdentityFile());
+                    helper.getPassword(), "ls " + helper.getStoreLocation()  + subPath,
+                    helper.getUsername(), helper.getIdentityFile());
         }
     }
 
