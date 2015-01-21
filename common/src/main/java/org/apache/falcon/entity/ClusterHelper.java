@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
@@ -117,10 +118,10 @@ public final class ClusterHelper {
         return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
 
-    public static String getLocation(Cluster cluster, String locationKey) {
+    public static Location getLocation(Cluster cluster, ClusterLocationType clusterLocationType) {
         for (Location loc : cluster.getLocations().getLocations()) {
-            if (loc.getName().equals(locationKey)) {
-                return loc.getPath();
+            if (loc.getName().value().equals(clusterLocationType.value())) {
+                return loc;
             }
         }
         return null;

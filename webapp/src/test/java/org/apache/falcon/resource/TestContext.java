@@ -38,6 +38,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
@@ -315,34 +316,39 @@ public class TestContext {
         return submitFileToFalcon(entityType, tmpFile);
     }
 
-    public static void deleteClusterLocations(Cluster clusterEntity,
-                                              FileSystem fs) throws IOException {
-        String stagingLocation = ClusterHelper.getLocation(clusterEntity, "staging");
+    public static void deleteClusterLocations(Cluster clusterEntity, FileSystem fs) throws IOException {
+        String stagingLocation = ClusterHelper.getLocation(clusterEntity, ClusterLocationType.STAGING).getPath();
         Path stagingPath = new Path(stagingLocation);
         if (fs.exists(stagingPath)) {
             fs.delete(stagingPath, true);
         }
 
-        String workingLocation = ClusterHelper.getLocation(clusterEntity, "working");
+        String workingLocation = ClusterHelper.getLocation(clusterEntity, ClusterLocationType.WORKING).getPath();
         Path workingPath = new Path(workingLocation);
         if (fs.exists(workingPath)) {
             fs.delete(workingPath, true);
         }
     }
 
-    public static void createClusterLocations(Cluster clusterEntity,
-                                              FileSystem fs) throws IOException {
-        String stagingLocation = ClusterHelper.getLocation(clusterEntity, "staging");
-        Path stagingPath = new Path(stagingLocation);
-        if (!fs.exists(stagingPath)) {
-            HadoopClientFactory.mkdirs(fs, stagingPath, HadoopClientFactory.ALL_PERMISSION);
-        }
+    public static void createClusterLocations(Cluster clusterEntity, FileSystem fs) throws IOException {
+        createClusterLocations(clusterEntity, fs, true);
+    }
 
-        String workingLocation = ClusterHelper.getLocation(clusterEntity, "working");
-        Path workingPath = new Path(workingLocation);
-        if (!fs.exists(workingPath)) {
-            HadoopClientFactory
-                    .mkdirs(fs, workingPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
+    public static void createClusterLocations(Cluster clusterEntity, FileSystem fs, boolean withWorking)
+        throws IOException {
+        String stagingLocation = ClusterHelper.getLocation(clusterEntity, ClusterLocationType.STAGING).getPath();
+        Path stagingPath = new Path(stagingLocation);
+        if (fs.exists(stagingPath)) {
+            fs.delete(stagingPath, true);
+        }
+        HadoopClientFactory.mkdirs(fs, stagingPath, HadoopClientFactory.ALL_PERMISSION);
+        if (withWorking) {
+            String workingLocation = ClusterHelper.getLocation(clusterEntity, ClusterLocationType.WORKING).getPath();
+            Path workingPath = new Path(workingLocation);
+            if (fs.exists(workingPath)) {
+                fs.delete(workingPath, true);
+            }
+            HadoopClientFactory.mkdirs(fs, workingPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
         }
     }
 
@@ -503,12 +509,11 @@ public class TestContext {
         initClusterLocations(cluster, fs);
     }
 
-    private static void initClusterLocations(EmbeddedCluster cluster,
-                                             FileSystem fs) throws Exception {
-        String stagingPath = ClusterHelper.getLocation(cluster.getCluster(), "staging");
+    private static void initClusterLocations(EmbeddedCluster cluster, FileSystem fs) throws Exception {
+        String stagingPath = ClusterHelper.getLocation(cluster.getCluster(), ClusterLocationType.STAGING).getPath();
         mkdir(fs, new Path(stagingPath), HadoopClientFactory.ALL_PERMISSION);
 
-        String workingPath = ClusterHelper.getLocation(cluster.getCluster(), "working");
+        String workingPath = ClusterHelper.getLocation(cluster.getCluster(), ClusterLocationType.WORKING).getPath();
         mkdir(fs, new Path(workingPath), HadoopClientFactory.READ_EXECUTE_PERMISSION);
     }
 

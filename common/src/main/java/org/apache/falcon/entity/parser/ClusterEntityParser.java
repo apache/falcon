@@ -26,6 +26,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
@@ -154,8 +155,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
 
     protected void validateMessagingInterface(Cluster cluster) throws ValidationException {
         final String messagingUrl = ClusterHelper.getMessageBrokerUrl(cluster);
-        final String implementation = StartupProperties.get().getProperty(
-                "broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory");
+        final String implementation = StartupProperties.get().getProperty("broker.impl.class",
+                "org.apache.activemq.ActiveMQConnectionFactory");
         LOG.info("Validating messaging interface: {}, implementation: {}", messagingUrl, implementation);
 
         try {
@@ -243,37 +244,72 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         try {
             fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
         } catch (FalconException e) {
-            throw new ValidationException(
-                    "Unable to get file system handle for cluster " + cluster.getName(), e);
+            throw new ValidationException("Unable to get file system handle for cluster " + cluster.getName(), e);
         }
 
-        for (Location location : cluster.getLocations().getLocations()) {
-            final String locationName = location.getName();
-            if (locationName.equals("temp")) {
-                continue;
-            }
+        if (ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING) == null) {
+            throw new ValidationException(
+                    "Unable to find the mandatory location of name: " + ClusterLocationType.STAGING.value()
+                            + " for cluster " + cluster.getName());
+        } else {
 
+            Location stagingLocation = ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING);
             try {
-                checkPathOwnerAndPermission(cluster.getName(), location.getPath(), fs,
-                        "staging".equals(locationName)
-                                ? HadoopClientFactory.ALL_PERMISSION
-                                : HadoopClientFactory.READ_EXECUTE_PERMISSION);
+                checkPathOwnerAndPermission(cluster.getName(), stagingLocation.getPath(), fs,
+                        HadoopClientFactory.READ_EXECUTE_PERMISSION, false);
             } catch (IOException e) {
-                throw new ValidationException("Unable to validate the location of name: "
-                        + location.getName() + " with path:" + location.getPath()
-                        + " for cluster " + cluster.getName(), e);
+                throw new ValidationException(
+                        "Unable to validate the location of name: " + stagingLocation.getName().value() + " with path: "
+                                + stagingLocation.getPath() + " for cluster " + cluster.getName(), e);
+            }
+            if (ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING) == null) {
+                //Creating location type of working in the sub dir of staging dir with perms 755. FALCON-910
+                Location workingLocation = new Location();
+                workingLocation.setName(ClusterLocationType.WORKING);
+                String workingDirPath = stagingLocation.getPath();
+                workingDirPath = (workingDirPath.endsWith("/")
+                        ? workingDirPath.concat("working")
+                        : workingDirPath.concat("/working"));
+                workingLocation.setPath(workingDirPath);
+                try {
+                    HadoopClientFactory
+                            .mkdirs(fs, new Path(workingDirPath), HadoopClientFactory.READ_EXECUTE_PERMISSION);
+                    cluster.getLocations().getLocations().add(workingLocation);
+                } catch (IOException e) {
+                    throw new ValidationException(
+                            "Unable to create path for " + workingLocation.getName().value() + " with path: "
+                                    + workingLocation.getPath() + " for cluster " + cluster.getName(), e);
+                }
+            } else {
+                Location workingLocation = ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING);
+                if (stagingLocation.getPath().equals(workingLocation.getPath())) {
+                    throw new ValidationException(
+                            "Location with name: " + stagingLocation.getName().value() + " and " + workingLocation
+                                    .getName().value() + " cannot of same path: " + stagingLocation.getPath()
+                                    + " for cluster :" + cluster.getName());
+                } else {
+                    try {
+                        checkPathOwnerAndPermission(cluster.getName(), workingLocation.getPath(), fs,
+                                HadoopClientFactory.READ_EXECUTE_PERMISSION, true);
+                    } catch (IOException e) {
+                        throw new ValidationException(
+                                "Unable to validate the location of name: " + workingLocation.getName().value()
+                                        + " with path:" + workingLocation.getPath() + " for cluster " + cluster
+                                        .getName(), e);
+                    }
+
+                }
+
             }
         }
     }
 
     private void checkPathOwnerAndPermission(String clusterName, String location, FileSystem fs,
-                                             FsPermission expectedPermission)
-        throws IOException, ValidationException {
+            FsPermission expectedPermission, Boolean exactPerms) throws IOException, ValidationException {
 
         Path locationPath = new Path(location);
         if (!fs.exists(locationPath)) {
-            throw new ValidationException("Location " + location
-                    + " for cluster " + clusterName + " must exist.");
+            throw new ValidationException("Location " + location + " for cluster " + clusterName + " must exist.");
         }
 
         // falcon owns this path on each cluster
@@ -281,17 +317,28 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         FileStatus fileStatus = fs.getFileStatus(locationPath);
         final String locationOwner = fileStatus.getOwner();
         if (!locationOwner.equals(loginUser)) {
-            LOG.error("Location {} has owner {}, should be the process user {}",
-                    locationPath, locationOwner, loginUser);
-            throw new ValidationException("Path [" + locationPath + "] has owner [" + locationOwner
-                    + "], should be the process user " + loginUser);
+            LOG.error("Location {} has owner {}, should be the process user {}", locationPath, locationOwner,
+                    loginUser);
+            throw new ValidationException(
+                    "Path [" + locationPath + "] has owner [" + locationOwner + "], should be the process user "
+                            + loginUser);
         }
-
-        if (fileStatus.getPermission().toShort() != expectedPermission.toShort()) {
-            LOG.error("Location {} has permissions {}, should be {}",
-                    locationPath, fileStatus.getPermission(), expectedPermission);
-            throw new ValidationException("Path " + locationPath + " has permissions: "
-                    + fileStatus.getPermission() + ", should be " + expectedPermission);
+        if (exactPerms) {
+            if (fileStatus.getPermission().toShort() != expectedPermission.toShort()) {
+                LOG.error("Location {} has permissions {}, should be {}", locationPath, fileStatus.getPermission(),
+                        expectedPermission);
+                throw new ValidationException(
+                        "Path " + locationPath + " has permissions: " + fileStatus.getPermission() + ", should be "
+                                + expectedPermission);
+            }
+        } else {
+            if (fileStatus.getPermission().toShort() < expectedPermission.toShort()) {
+                LOG.error("Location {} has permissions {}, should be {}", locationPath, fileStatus.getPermission(),
+                        expectedPermission);
+                throw new ValidationException(
+                        "Path " + locationPath + " has permissions: " + fileStatus.getPermission() + ", should be "
+                                + expectedPermission);
+            }
         }
 
         // try to list to see if the user is able to write to this folder

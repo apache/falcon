@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -714,14 +715,14 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     }
 
     private void verifyClusterLocationsUMask(Cluster aCluster, FileSystem fs) throws IOException {
-        String stagingLocation = ClusterHelper.getLocation(aCluster, "staging");
+        String stagingLocation = ClusterHelper.getLocation(aCluster, ClusterLocationType.STAGING).getPath();
         Path stagingPath = new Path(stagingLocation);
         if (fs.exists(stagingPath)) {
             FileStatus fileStatus = fs.getFileStatus(stagingPath);
             Assert.assertEquals(fileStatus.getPermission().toShort(), 511);
         }
 
-        String workingLocation = ClusterHelper.getLocation(aCluster, "working");
+        String workingLocation = ClusterHelper.getLocation(aCluster, ClusterLocationType.WORKING).getPath();
         Path workingPath = new Path(workingLocation);
         if (fs.exists(workingPath)) {
             FileStatus fileStatus = fs.getFileStatus(workingPath);

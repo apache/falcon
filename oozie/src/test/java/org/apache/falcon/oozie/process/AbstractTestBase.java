@@ -26,6 +26,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
@@ -75,10 +76,10 @@ public class AbstractTestBase {
             if (writeEndpoint != null) {
                 ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(writeEndpoint);
                 FileSystem fs = new Path(writeEndpoint).getFileSystem(EmbeddedCluster.newConfiguration());
-                fs.create(
-                    new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/retention/ext.jar")).close();
-                fs.create(
-                    new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/replication/ext.jar")).close();
+                fs.create(new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
+                        "libext/FEED/retention/ext.jar")).close();
+                fs.create(new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
+                        "libext/FEED/replication/ext.jar")).close();
             }
 
             return cluster;

@@ -32,6 +32,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
@@ -123,7 +124,8 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
         ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).setEndpoint("thrift://localhost:49083");
         fs = new Path(hdfsUrl).getFileSystem(EmbeddedCluster.newConfiguration());
-        fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/PROCESS/ext.jar")).close();
+        fs.create(new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
+                "libext/PROCESS/ext.jar")).close();
 
         Process process = store.get(EntityType.PROCESS, "clicksummary");
         Path wfpath = new Path(process.getWorkflow().getPath());

@@ -26,8 +26,10 @@ import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.TestContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -156,32 +158,48 @@ public class ClusterEntityValidationIT {
         parser.validate(cluster);
     }
 
-    @Test (expectedExceptions = ValidationException.class)
+    @Test
+    public void testValidateClusterLocationsWithoutWorking() throws Exception {
+        overlay = context.getUniqueOverlay();
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        InputStream stream = new FileInputStream(filePath);
+        Cluster clusterEntity = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
+        clusterEntity.getLocations().getLocations().remove(2);
+        FileSystem clusterFileSystem = FileSystem.get(ClusterHelper.getConfiguration(cluster));
+        TestContext.createClusterLocations(clusterEntity, clusterFileSystem, false);
+        parser.validate(clusterEntity);
+        String expectedPath =
+                ClusterHelper.getLocation(clusterEntity, ClusterLocationType.STAGING).getPath() + "/working";
+        Assert.assertEquals(ClusterHelper.getLocation(clusterEntity, ClusterLocationType.WORKING).getPath(),
+                expectedPath);
+        Assert.assertTrue(clusterFileSystem.getFileLinkStatus(new Path(expectedPath)).isDirectory());
+        Assert.assertEquals(clusterFileSystem.getFileLinkStatus(new Path(expectedPath)).getPermission(),
+                HadoopClientFactory.READ_EXECUTE_PERMISSION);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
     public void testValidateClusterLocationsThatDontExist() throws Exception {
         TestContext.deleteClusterLocations(cluster, fs);
         parser.validate(cluster);
         Assert.fail("Should have thrown a validation exception");
     }
 
-    @Test (expectedExceptions = ValidationException.class)
+    @Test(expectedExceptions = ValidationException.class)
     public void testValidateClusterLocationsThatExistWithBadOwner() throws Exception {
-        TestContext.deleteClusterLocations(cluster, fs);
         createClusterLocationsBadPermissions(cluster);
         parser.validate(cluster);
         Assert.fail("Should have thrown a validation exception");
     }
 
     private void createClusterLocationsBadPermissions(Cluster clusterEntity) throws IOException {
-        String stagingLocation = ClusterHelper.getLocation(clusterEntity, "staging");
+        FileSystem clusterFileSystem = FileSystem.get(ClusterHelper.getConfiguration(clusterEntity));
+        TestContext.deleteClusterLocations(clusterEntity, clusterFileSystem);
+        String stagingLocation = ClusterHelper.getLocation(clusterEntity, ClusterLocationType.STAGING).getPath();
         Path stagingPath = new Path(stagingLocation);
-        if (!fs.exists(stagingPath)) {
-            FileSystem.mkdirs(fs, stagingPath, OWNER_ONLY_PERMISSION);
-        }
+        FileSystem.mkdirs(clusterFileSystem, stagingPath, OWNER_ONLY_PERMISSION);
 
-        String workingLocation = ClusterHelper.getLocation(clusterEntity, "working");
+        String workingLocation = ClusterHelper.getLocation(clusterEntity, ClusterLocationType.WORKING).getPath();
         Path workingPath = new Path(workingLocation);
-        if (!fs.exists(workingPath)) {
-            FileSystem.mkdirs(fs, stagingPath, OWNER_ONLY_PERMISSION);
-        }
+        FileSystem.mkdirs(clusterFileSystem, stagingPath, OWNER_ONLY_PERMISSION);
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.falcon.cluster.util;
 
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfaces;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -121,12 +122,12 @@ public class EmbeddedCluster {
         clusterEntity.setInterfaces(interfaces);
 
         Location location = new Location();
-        location.setName("staging");
+        location.setName(ClusterLocationType.STAGING);
         location.setPath("/projects/falcon/staging");
         Locations locs = new Locations();
         locs.getLocations().add(location);
         location = new Location();
-        location.setName("working");
+        location.setName(ClusterLocationType.WORKING);
         location.setPath("/projects/falcon/working");
         locs.getLocations().add(location);
         clusterEntity.setLocations(locs);

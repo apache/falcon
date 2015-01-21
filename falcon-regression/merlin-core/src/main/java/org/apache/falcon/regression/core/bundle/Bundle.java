@@ -21,6 +21,7 @@ package org.apache.falcon.regression.core.bundle;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfaces;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -670,7 +671,7 @@ public class Bundle {
     public void setCLusterWorkingPath(String clusterData, String path) {
         ClusterMerlin c = new ClusterMerlin(clusterData);
         for (int i = 0; i < c.getLocations().getLocations().size(); i++) {
-            if (c.getLocations().getLocations().get(i).getName().contains("working")) {
+            if (c.getLocations().getLocations().get(i).getName().equals(ClusterLocationType.WORKING)) {
                 c.getLocations().getLocations().get(i).setPath(path);
             }
         }

@@ -25,6 +25,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
@@ -69,8 +70,8 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     };
 
     private void addLibsTo(Cluster cluster) throws FalconException {
-        Path lib = new Path(ClusterHelper.getLocation(cluster, "working"), "lib");
-        Path libext = new Path(ClusterHelper.getLocation(cluster, "working"), "libext");
+        Path lib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "lib");
+        Path libext = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "libext");
         try {
             FileSystem fs = HadoopClientFactory.get().createFalconFileSystem(
                     ClusterHelper.getConfiguration(cluster));
