@@ -39,6 +39,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-999 Fix PrismProcessResumeTest in falcon regression (Samarth Gupta)
    
    FALCON-998 Removing 'store' hard coded in regression test (Pragya M via Samarth Gupta)
 
