@@ -120,7 +120,7 @@ public final class ClusterHelper {
 
     public static Location getLocation(Cluster cluster, ClusterLocationType clusterLocationType) {
         for (Location loc : cluster.getLocations().getLocations()) {
-            if (loc.getName().value().equals(clusterLocationType.value())) {
+            if (loc.getName().equals(clusterLocationType)) {
                 return loc;
             }
         }
