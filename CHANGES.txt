@@ -78,6 +78,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-993 Falcon Oozie adaptor test case failed with umask issue
+   (Peeyush Bishnoi via Srikanth Sundarrajan)
+
    FALCON-1000 ITs fail with NoSuchFieldError: INSTANCE. (Shwetha GS)
 
    FALCON-109 submission of clusters for non registered colos 

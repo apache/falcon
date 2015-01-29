@@ -25,6 +25,9 @@ You would need the following installed:
 * JDK 1.6
 * Maven 3.x
 
+*Note:* To build Falcon on Ubuntu/Centos set umask to 022. To do so, add the following line in ~/.bashrc or
+        ~/.bash_profile.
+        umask 022
 
 1. Building Falcon
 ------------------
