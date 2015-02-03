@@ -27,7 +27,6 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.XOozieClient;
 import org.joda.time.DateTime;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTimeZone;
@@ -204,7 +203,7 @@ public final class OozieUtil {
         throws OozieClientException {
         List<DateTime> startTimes = new ArrayList<DateTime>();
 
-        XOozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
+        OozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
         BundleJob bundleJob = oozieClient.getBundleJobInfo(bundleID);
         CoordinatorJob jobInfo;
 
@@ -295,7 +294,7 @@ public final class OozieUtil {
 
     public static List<String> getWorkflowJobs(ColoHelper prismHelper, String bundleID)
         throws OozieClientException {
-        XOozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
+        OozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
         waitForCoordinatorJobCreation(oozieClient, bundleID);
         List<String> workflowIds = new ArrayList<String>();
         List<CoordinatorJob> coordJobs = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
@@ -309,7 +308,7 @@ public final class OozieUtil {
 
     public static Date getNominalTime(ColoHelper prismHelper, String bundleID)
         throws OozieClientException {
-        XOozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
+        OozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
         BundleJob bundleJob = oozieClient.getBundleJobInfo(bundleID);
         CoordinatorJob jobInfo =
             oozieClient.getCoordJobInfo(bundleJob.getCoordinators().get(0).getId());
@@ -322,7 +321,7 @@ public final class OozieUtil {
     public static CoordinatorJob getDefaultOozieCoord(ColoHelper prismHelper, String bundleId,
                                                       EntityType type)
         throws OozieClientException {
-        XOozieClient client = prismHelper.getClusterHelper().getOozieClient();
+        OozieClient client = prismHelper.getClusterHelper().getOozieClient();
         BundleJob bundlejob = client.getBundleJobInfo(bundleId);
 
         for (CoordinatorJob coord : bundlejob.getCoordinators()) {
@@ -368,7 +367,7 @@ public final class OozieUtil {
 
     public static boolean isBundleOver(ColoHelper coloHelper, String bundleId)
         throws OozieClientException {
-        XOozieClient client = coloHelper.getClusterHelper().getOozieClient();
+        OozieClient client = coloHelper.getClusterHelper().getOozieClient();
 
         BundleJob bundleJob = client.getBundleJobInfo(bundleId);
 
@@ -440,7 +439,8 @@ public final class OozieUtil {
     public static String getCoordStartTime(ColoHelper colo, String entity,
                                            int bundleNo)
         throws OozieClientException {
-        String bundleID = InstanceUtil.getSequenceBundleID(colo,
+        final OozieClient oozieClient = colo.getClusterHelper().getOozieClient();
+        String bundleID = InstanceUtil.getSequenceBundleID(oozieClient,
             Util.readEntityName(entity), Util.getEntityType(entity), bundleNo);
 
         CoordinatorJob coord = getDefaultOozieCoord(colo, bundleID,
@@ -463,8 +463,9 @@ public final class OozieUtil {
                                                  String entityName, int bundleNumber,
                                                  int instanceNumber)
         throws OozieClientException, IOException {
-        String bundleID = InstanceUtil.getSequenceBundleID(helper, entityName, type, bundleNumber);
-        OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
+        final OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
+        String bundleID = InstanceUtil.getSequenceBundleID(oozieClient, entityName,
+            type, bundleNumber);
         List<CoordinatorJob> coords = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
         HadoopUtil.createHDFSFolders(helper, getMissingDependenciesForInstance(oozieClient, coords,
             instanceNumber));
@@ -486,7 +487,9 @@ public final class OozieUtil {
     public static void createMissingDependencies(ColoHelper helper, EntityType type,
                                                  String entityName, int bundleNumber)
         throws OozieClientException, IOException {
-        String bundleID = InstanceUtil.getSequenceBundleID(helper, entityName, type, bundleNumber);
+        final OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
+        String bundleID = InstanceUtil.getSequenceBundleID(oozieClient, entityName, type,
+            bundleNumber);
         createMissingDependenciesForBundle(helper, bundleID);
 
     }

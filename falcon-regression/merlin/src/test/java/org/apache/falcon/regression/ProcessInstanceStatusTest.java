@@ -32,6 +32,7 @@ import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
+import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -245,7 +246,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateSuccessOnlyStart(r, WorkflowStatus.SUSPENDED);
+        Assert.assertEquals(r.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertEquals(InstanceUtil.instancesInResultWithStatus(r, WorkflowStatus.SUSPENDED), 1);
     }
 
     /**

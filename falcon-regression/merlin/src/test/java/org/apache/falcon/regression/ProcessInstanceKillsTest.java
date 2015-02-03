@@ -152,7 +152,8 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
 
         //create data for first 5 instances, 6th should be non-materialized
-        String bundleId = InstanceUtil.getSequenceBundleID(cluster, processName, EntityType.PROCESS, 0);
+        String bundleId = InstanceUtil.getSequenceBundleID(clusterOC, processName,
+            EntityType.PROCESS, 0);
         for(CoordinatorJob c : clusterOC.getBundleJobInfo(bundleId).getCoordinators()) {
             List<CoordinatorAction> actions = clusterOC.getCoordJobInfo(c.getId()).getActions();
             if (actions.size() == 6) {

@@ -41,7 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.AuthOozieClient;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -151,14 +151,14 @@ public abstract class AbstractEntityHelper {
     protected String namenodePrincipal;
     protected String hiveMetaStorePrincipal;
 
-    public AuthOozieClient getOozieClient() {
+    public OozieClient getOozieClient() {
         if (null == this.oozieClient) {
             this.oozieClient = OozieUtil.getClient(this.oozieURL);
         }
         return this.oozieClient;
     }
 
-    protected AuthOozieClient oozieClient;
+    protected OozieClient oozieClient;
 
     public FileSystem getHadoopFS() throws IOException {
         if (null == this.hadoopFS) {

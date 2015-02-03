@@ -40,6 +40,8 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-1009 InstanceUtil cleanup (Raghav Kumar Gautam)
+
    FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
 
    FALCON-999 Fix PrismProcessResumeTest in falcon regression (Samarth Gupta)
