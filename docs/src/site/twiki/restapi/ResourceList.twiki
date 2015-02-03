@@ -57,6 +57,7 @@ See also: [[../Security.twiki][Security in Falcon]]
 
 | *Call Type* | *Resource*                                                                  | *Description*                |
 | GET         | [[InstanceRunning][api/instance/running/:entity-type/:entity-name]]         | List of running instances.   |
+| GET         | [[InstanceParams][api/instance/params/:entity-type/:entity-name]]           | List of entity instances along with their workflow params.   |
 | GET         | [[InstanceList][api/instance/list/:entity-type/:entity-name]]               | List of instances   |
 | GET         | [[InstanceStatus][api/instance/status/:entity-type/:entity-name]]           | Status of a given instance   |
 | POST        | [[InstanceKill][api/instance/kill/:entity-type/:entity-name]]               | Kill a given instance        |

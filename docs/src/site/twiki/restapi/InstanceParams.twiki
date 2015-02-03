@@ -5,20 +5,14 @@
    * <a href="#Examples">Examples</a>
 
 ---++ Description
-Get a list of instances along with the information for workflow params.
+Get the params passed to the workflow for an instance of feed/process.
 
 ---++ Parameters
    * :entity-type Valid options are cluster, feed or process.
    * :entity-name Name of the entity.
+   * start should be the nominal time of the instance for which you want the params to be returned
    * colo <optional param> Colo on which the query should be run.
    * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
-   * filterBy <optional param>  Filter results by list of field:value pairs. Example: filterBy=CLUSTER:primary-cluster
-      * Supported filter fields are CLUSTER, SOURCECLUSTER, STARTEDAFTER.
-      * Query will do an AND among filterBy fields.
-   * orderBy <optional param> Field by which results should be ordered.
-      * Supports ordering by "status","startTime","endTime","cluster".
-   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
-   * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
 
 
 ---++ Results
@@ -27,58 +21,62 @@ List of instances currently running.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*
+http://userqa.user.com:16000/api/instance/params/process/Sample-Process?start=2014-10-01T11:00Z&colo=*
 </verbatim>
 ---+++ Result
-<verbatim>
 {
+    "status": "SUCCEEDED",
+    "message": "ua1/PARAMS\n",
+    "requestId": "ua1/807e9fe6-ba60-490e-b720-f8dc8b92063e\n",
     "instances": [
         {
-            "startTime": "2013-10-21T14:39:28-07:00",
-            "cluster": "primary-cluster",
+            "instance": "2014-10-01T11:00Z",
             "status": "RUNNING",
-            "instance": "2012-04-03T06:00Z"
+            "logFile": "http://spyke.user.com:11000/oozie?job=0000211-141117203201940-oozie-oozi-W",
+            "cluster": "sample-cluster",
+            "startTime": "2014-11-19T19:46:29+08:00",
+            "details": "",
+            "actions": [
+                {
+                    "action": "succeeded-post-processing",
+                    "status": "RUNNING",
+                    "logFile": "http://spyke.user.com:50030/jobdetails.jsp?jobid=job_201411071450_1052"
+                }
+            ],
+            "params": {
+                "entry": {"key": "jobTracker", "value": "10.16.114.113:8021"},
+                "entry":{"key":"falconInputNames","value":"IGNORE"},
+                "entry":{"key":"shouldRecord","value":"false"},
+                "entry":{"key":"timeStamp","value":"2014-11-19-11-46"},
+                "entry":{"key":"falconInPaths","value":"IGNORE"},
+                "entry":{"key":"broker.url","value":"tcp://localhost:61616"},
+                "entry":{"key":"feedNames","value":"NONE"},
+                "entry":{"key":"falcon.libpath","value":"/path/falcon/sample/lib"},
+                "entry":{"key":"ENTITY_PATH","value":"/path/falcon/staging/falcon/workflows/process/Sample-Process/9506be19980e0e6fdb709e1baffff_1416397585511/DEFAULT"},
+                "entry":{"key":"entityType","value":"process"},
+                "entry":{"key":"nominalTime","value":"2014-10-01-11-00"},
+                "entry":{"key":"feedInstancePaths","value":"IGNORE"},
+                "entry":{"key":"oozie.bundle.application.path","value":"hdfs://10.16.104.13:8020/path/falcon/staging/falcon/workflows/process/Sample-Process/9506be19980e0e669709e1baffff_1416397585511"},
+                "entry":{"key":"logDir","value":"hdfs://10.16.104.13:8020/path/falcon/staging/falcon/workflows/process/Sample-Process/logs"},
+                "entry":{"key":"userWorkflowEngine","value":"oozie"},
+                "entry":{"key":"broker.ttlInMins","value":"4320"},
+                "entry":{"key":"oozie.use.system.libpath","value":"true"},
+                "entry":{"key":"queueName","value":"reports"},
+                "entry":{"key":"falconDataOperation","value":"GENERATE"},
+                "entry":{"key":"oozie.wf.external.id","value":"Sample-Process/DEFAULT/2014-10-01T11:00Z"},
+                "entry":{"key":"workflowEngineUrl","value":"http://10.11.100.10:11000/oozie/"},
+                "entry":{"key":"userBrokerImplClass","value":"org.apache.activemq.ActiveMQConnectionFactory"},
+                "entry":{"key":"ENTITY_NAME","value":"FALCON_PROCESS_DEFAULT_Sample-Process"},
+                "entry":{"key":"broker.impl.class","value":"org.apache.activemq.ActiveMQConnectionFactory"},
+                "entry":{"key":"userWorkflowName","value":"Sample-workflow"},
+                "entry":{"key":"entityName","value":"Sample-Process"},
+                "entry":{"key":"srcClusterName","value":"NA"},
+                "entry":{"key":"userBrokerUrl","value":"tcp://localhost:61616?daemon=true"},
+                "entry":{"key":"falconInputFeeds","value":"NONE"},
+                "entry":{"key":"user.name","value":"sampleuser"},
+                "entry":{"key":"threedaysback","value":"2014-09-28"},
+                "entry":{"key":"userWorkflowVersion","value":"1.0"}
+            }
         }
-    ],
-    "requestId": "default\/12e9a7d4-3b4f-4a76-b471-c8f3786a62a0\n",
-    "message": "default\/Running Instances\n",
-    "status": "SUCCEEDED"
+    ]
 }
-</verbatim>
-
-
----+++ Rest Call
-<verbatim>
-GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
-</verbatim>
----+++ Result
-<verbatim>
-{
-    "instances": [
-        {
-            "details": "",
-            "endTime": "2013-10-21T14:40:26-07:00",
-            "startTime": "2013-10-21T14:39:56-07:00",
-            "cluster": "primary-cluster",
-            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
-            "status": "RUNNING",
-            "instance": "2012-04-03T07:00Z"
-        },
-        {
-            "details": "",
-            "endTime": "2013-10-21T14:42:27-07:00",
-            "startTime": "2013-10-21T14:41:57-07:00",
-            "cluster": "primary-cluster",
-            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
-            "status": "RUNNING",
-            "instance": "2012-04-03T08:00Z"
-        },
-    ],
-
-    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
-    "message": "default\/STATUS\n",
-    "status": "SUCCEEDED"
-}
-</verbatim>
-
-

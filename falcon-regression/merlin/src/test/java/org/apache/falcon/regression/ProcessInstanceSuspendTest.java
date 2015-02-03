@@ -33,13 +33,13 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
 
 
 /**
@@ -54,22 +54,13 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private static final Logger LOGGER = Logger.getLogger(ProcessInstanceSuspendTest.class);
     private String processName;
     private OozieClient clusterOC = serverOC.get(0);
-
-    @BeforeClass(alwaysRun = true)
-    public void createTestData() throws Exception {
-        LOGGER.info("in @BeforeClass");
-        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        Bundle bundle = BundleUtil.readELBundle();
-        bundle = new Bundle(bundle, cluster);
-        bundle.setInputFeedDataPath(feedInputPath);
-    }
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setInputFeedDataPath(feedInputPath);
@@ -80,8 +71,9 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void tearDown() {
+    public void tearDown() throws IOException {
         removeBundles();
+        HadoopUtil.deleteDirIfExists(baseTestHDFSDir, clusterFS);
     }
 
     /**

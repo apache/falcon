@@ -42,6 +42,7 @@
         <oozie.version>4.0.0.2.1.7.0-784</oozie.version>
         <hive.version>0.13.1</hive.version>
         <testng.exclude.pattern>nothing</testng.exclude.pattern>
+        <testng.include.pattern>**/Test*.java,**/*Test.java,**/*TestCase.java</testng.include.pattern>
     </properties>
 
     <profiles>
@@ -330,6 +331,9 @@
                     <excludes>
                         <exclude>${testng.exclude.pattern}</exclude>
                     </excludes>
+                    <includes>
+                        <include>${testng.include.pattern}</include>
+                    </includes>
                     <additionalClasspathElements>
                         <!-- Hack to get the dir in CP through CLI and idea -->
                         <additionalClasspathElement>${hadoop.conf.dir}</additionalClasspathElement>

@@ -39,6 +39,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
+
+   FALCON-999 Fix PrismProcessResumeTest in falcon regression (Samarth Gupta)
    
    FALCON-998 Removing 'store' hard coded in regression test (Pragya M via Samarth Gupta)
 
@@ -204,6 +208,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1005 In ProcessInstanceSuspendTest clean test dir after each method execution
+   (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-990 Fix and enable 3/4 tests of RescheduleProcessInFinalStatesTest (Ruslan Ostafiychuk)
 
    FALCON-951 Adding wait till instance goes into running for tests in falcon trunk
