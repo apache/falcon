@@ -335,9 +335,9 @@ public class PrismProcessScheduleTest extends BaseTestClass {
 
             InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
             OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
-                    Util.readEntityName(bundles[0].getProcessData()), 0);
+                    bundles[0].getProcessName(), 0);
             InstanceUtil.waitTillInstanceReachState(cluster1OC,
-                    Util.readEntityName(bundles[0].getProcessData()), 2,
+                    bundles[0].getProcessName(), 2,
                     CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
 
             InstanceUtil.waitForBundleToReachState(cluster1,

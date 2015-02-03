@@ -237,7 +237,7 @@ public final class BundleUtil {
         return property;
     }
 
-    public static List<ClusterMerlin> fromString(List<String> clusterStrings) {
+    public static List<ClusterMerlin> getClustersFromStrings(List<String> clusterStrings) {
         List<ClusterMerlin> clusters = new ArrayList<ClusterMerlin>();
         for (String clusterString : clusterStrings) {
             clusters.add(new ClusterMerlin(clusterString));

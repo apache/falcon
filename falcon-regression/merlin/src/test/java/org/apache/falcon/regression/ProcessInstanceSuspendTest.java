@@ -18,7 +18,6 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
@@ -29,7 +28,6 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
@@ -68,7 +66,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
-        processName = Util.readEntityName(bundles[0].getProcessData());
+        processName = bundles[0].getProcessName();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -115,8 +113,8 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
-        InstanceUtil.waitTillInstanceReachState(clusterOC, new ProcessMerlin(bundles[0]
-            .getProcessData()).getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
+                CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:01Z");
         AssertUtil.assertSucceeded(r);

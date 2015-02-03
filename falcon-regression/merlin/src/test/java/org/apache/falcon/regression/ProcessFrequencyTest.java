@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -103,7 +102,7 @@ public class ProcessFrequencyTest extends BaseTestClass {
             TimeUtil.oozieDateToDate(startDate));
         HadoopUtil.copyDataToFolder(clusterFS, startPath, OSUtil.NORMAL_INPUT);
 
-        final String processName = Util.readEntityName(bundles[0].getProcessData());
+        final String processName = bundles[0].getProcessName();
         //InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 5);

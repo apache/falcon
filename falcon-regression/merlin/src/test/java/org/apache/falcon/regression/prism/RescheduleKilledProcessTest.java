@@ -23,7 +23,6 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
@@ -76,8 +75,9 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
     public void rescheduleKilledProcess() throws Exception {
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-11);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(6);
-        ProcessMerlin process = new ProcessMerlin(InstanceUtil.setProcessName(bundles[0].getProcessData(),
-            this.getClass().getSimpleName() + "zeroInputProcess" + new Random().nextInt()));
+        ProcessMerlin process = bundles[0].getProcessObject();
+        process.setName(this.getClass().getSimpleName() + "-zeroInputProcess"
+            + new Random().nextInt());
         List<String> feed = new ArrayList<String>();
         feed.add(bundles[0].getOutputFeedFromBundle());
         process.setProcessFeeds(feed, 0, 0, 1);
@@ -87,7 +87,8 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
             new ProcessMerlin.ProcessClusterBuilder(
                 Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withValidity(processStartTime, processEndTime)
-                .build());
+                .build()
+        );
         bundles[0].setProcessData(process.toString());
 
         bundles[0].submitFeedsScheduleProcess(prism);

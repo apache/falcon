@@ -201,38 +201,38 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:10Z";
 
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2012-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("")
                 .withDataLocation(testBaseDir1 + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2012-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("")
                 .withDataLocation(testBaseDir2 + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("")
-                .build()).toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertFailed(r, "submit of feed should have failed as the partition in source "
             + "is blank");
@@ -255,42 +255,39 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:00Z";
 
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(100000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2099-10-01T12:10Z")
-                .build())
-            .toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(100000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(testBaseDir2 + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(100000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir1 + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
 
-        r = prism.getFeedHelper().schedule(feed);
+        r = prism.getFeedHelper().schedule(feed.toString());
         AssertUtil.assertSucceeded(r);
         TimeUtil.sleepSeconds(15);
 
@@ -302,19 +299,19 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         HadoopUtil.copyDataToFolder(cluster3FS, testDirWithDate + "05/ua3/",
             testFile2);
 
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 2,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
         Assert.assertEquals(
-            InstanceUtil.checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
+            InstanceUtil.checkIfFeedCoordExist(cluster2.getFeedHelper(), feed.getName(),
                 "REPLICATION"), 1);
         Assert.assertEquals(
-            InstanceUtil.checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
+            InstanceUtil.checkIfFeedCoordExist(cluster2.getFeedHelper(), feed.getName(),
                 "RETENTION"), 1);
         Assert.assertEquals(
-            InstanceUtil.checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feed),
+            InstanceUtil.checkIfFeedCoordExist(cluster1.getFeedHelper(), feed.getName(),
                 "RETENTION"), 1);
         Assert.assertEquals(
-            InstanceUtil.checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feed),
+            InstanceUtil.checkIfFeedCoordExist(cluster3.getFeedHelper(), feed.getName(),
                 "RETENTION"), 1);
 
 
@@ -356,53 +353,52 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:00Z";
 
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2099-10-01T12:10Z")
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir2 + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withDataLocation(testBaseDir1 + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitAndSchedule(feed);
+        ServiceResponse r = prism.getFeedHelper().submitAndSchedule(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
 
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 2,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
         Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
+            .checkIfFeedCoordExist(cluster2.getFeedHelper(), feed.getName(),
                 "REPLICATION"), 1);
         Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
+            .checkIfFeedCoordExist(cluster2.getFeedHelper(), feed.getName(),
                 "RETENTION"), 1);
         Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feed),
+            .checkIfFeedCoordExist(cluster1.getFeedHelper(), feed.getName(),
                 "RETENTION"), 1);
         Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feed),
+            .checkIfFeedCoordExist(cluster3.getFeedHelper(), feed.getName(),
                 "RETENTION"), 1);
 
 
@@ -449,48 +445,48 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:10Z";
 
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed, testBaseDir3 + MINUTE_DATE_PATTERN);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(testBaseDir3 + MINUTE_DATE_PATTERN);
 
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2012-10-01T12:10Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("${cluster.colo}")
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2012-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("${cluster.colo}")
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
+                .build());
 
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed.toString()));
         TimeUtil.sleepSeconds(15);
 
-        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(feed), 1,
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, feed.getName(), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 3,
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
         //check if data has been replicated correctly
@@ -550,38 +546,37 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:10Z";
 
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2012-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withDataLocation(testBaseDir1 + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2012-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir2 + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
+                .build());
 
         //clean target if old data exists
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         AssertUtil.assertFailed(r, "Submission of feed should have failed.");
         Assert.assertTrue(r.getMessage().contains(
                 "Partition expression has to be specified for cluster "
@@ -609,49 +604,46 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA2 = "2012-10-01T12:10Z";
 
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed,
-            testBaseDir1 + MINUTE_DATE_PATTERN);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(testBaseDir1 + MINUTE_DATE_PATTERN);
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(10000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2012-10-01T12:11Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(testBaseDir1 + "/ua1" + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(10000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2012-10-01T12:26Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(testBaseDir1 + "/ua2" + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(10000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
-                .build()).toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed.toString()));
         TimeUtil.sleepSeconds(15);
 
-        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(feed), 1,
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, feed.getName(), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 2,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
         //check if data has been replicated correctly
@@ -716,47 +708,46 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA1 = "2012-10-01T12:00Z";
         String startTimeUA2 = "2012-10-01T12:00Z";
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2099-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDirServer1Source + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(testBaseDir2 + "/replicated" + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir1 + MINUTE_DATE_PATTERN)
-                .build())
-            .toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
 
-        r = prism.getFeedHelper().schedule(feed);
+        r = prism.getFeedHelper().schedule(feed.toString());
         AssertUtil.assertSucceeded(r);
         TimeUtil.sleepSeconds(15);
 
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 2,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
         //check if data has been replicated correctly
@@ -804,49 +795,48 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA1 = "2012-10-01T12:05Z";
         String startTimeUA2 = "2012-10-01T12:10Z";
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed, testBaseDir1 + MINUTE_DATE_PATTERN);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(testBaseDir1 + MINUTE_DATE_PATTERN);
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2099-10-01T12:10Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir1 + "/ua1" + MINUTE_DATE_PATTERN + "/")
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir1 + "/ua2" + MINUTE_DATE_PATTERN + "/")
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
                 .withDataLocation(testBaseDir4 + MINUTE_DATE_PATTERN + "/")
-                .build())
-            .toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed.toString()));
         TimeUtil.sleepSeconds(15);
-        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(feed), 1,
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, feed.getName(), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 2,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 20);
 
         //check if data has been replicated correctly
@@ -905,38 +895,38 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         String startTimeUA1 = "2012-10-01T12:05Z";
         String startTimeUA2 = "2012-10-01T12:10Z";
 
-        String feed = bundles[0].getDataSets().get(0);
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.clearFeedClusters();
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA1, "2012-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("")
                 .withDataLocation(testBaseDir1 + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTimeUA2, "2012-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withPartition("")
                 .withDataLocation(testBaseDir2 + MINUTE_DATE_PATTERN)
-                .build()).toString();
+                .build());
 
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity("2012-10-01T12:00Z", "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("")
-                .build()).toString();
+                .build());
 
-        LOGGER.info("feed: " + Util.prettyPrintXml(feed));
+        LOGGER.info("feed: " + Util.prettyPrintXml(feed.toString()));
 
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed.toString());
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertFailed(r, "is defined more than once for feed");
         Assert.assertTrue(r.getMessage().contains("is defined more than once for feed"));

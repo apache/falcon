@@ -112,29 +112,29 @@ public class FeedReplicationTest extends BaseTestClass {
         LOGGER.info("Time range between : " + startTime + " and " + endTime);
 
         //configure feed
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(feedDataLocation);
         //erase all clusters from feed definition
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        feed.clearFeedClusters();
         //set cluster1 as source
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.SOURCE)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build());
         //set cluster2 as target
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.TARGET)
-                        .withDataLocation(targetDataLocation)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build());
 
         //submit and schedule feed
-        LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
+        LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
 
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);
@@ -152,15 +152,15 @@ public class FeedReplicationTest extends BaseTestClass {
         }
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
 
         Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
-                        "REPLICATION"), 1);
+            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed.toString()),
+                "REPLICATION"), 1);
 
         //replication should start, wait while it ends
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed.toString()), 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data has been replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -191,37 +191,37 @@ public class FeedReplicationTest extends BaseTestClass {
         LOGGER.info("Time range between : " + startTime + " and " + endTime);
 
         //configure feed
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(feedDataLocation);
         //erase all clusters from feed definition
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        feed.clearFeedClusters();
         //set cluster1 as source
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.SOURCE)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build());
         //set cluster2 as target
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.TARGET)
-                        .withDataLocation(targetDataLocation)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build());
         //set cluster3 as target
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.TARGET)
-                        .withDataLocation(targetDataLocation)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build());
 
         //submit and schedule feed
-        LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
+        LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
 
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);
@@ -240,23 +240,23 @@ public class FeedReplicationTest extends BaseTestClass {
         }
 
         //check if all coordinators exist
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
 
-        InstanceUtil.waitTillInstancesAreCreated(cluster3, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster3, feed.toString(), 0);
 
         Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
-                        "REPLICATION"), 1);
+            .checkIfFeedCoordExist(cluster2.getFeedHelper(), feed.getName(),
+                "REPLICATION"), 1);
         Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feed),
-                        "REPLICATION"), 1);
+            .checkIfFeedCoordExist(cluster3.getFeedHelper(), feed.getName(),
+                "REPLICATION"), 1);
         //replication on cluster 2 should start, wait till it ends
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //replication on cluster 3 should start, wait till it ends
-        InstanceUtil.waitTillInstanceReachState(cluster3OC, Util.readEntityName(feed), 1,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+        InstanceUtil.waitTillInstanceReachState(cluster3OC, feed.getName(), 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data has been replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -299,29 +299,29 @@ public class FeedReplicationTest extends BaseTestClass {
         FeedMerlin feedElement = bundles[0].getFeedElement(feedName);
         feedElement.setAvailabilityFlag(availabilityFlagName);
         bundles[0].writeFeedElement(feedElement, feedName);
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(feedDataLocation);
         //erase all clusters from feed definition
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        feed.clearFeedClusters();
         //set cluster1 as source
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.SOURCE)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.SOURCE)
+                .build());
         //set cluster2 as target
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
-                        .withRetention("days(1000000)", ActionType.DELETE)
-                        .withValidity(startTime, endTime)
-                        .withClusterType(ClusterType.TARGET)
-                        .withDataLocation(targetDataLocation)
-                        .build()).toString();
+        feed.addFeedCluster(
+            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                .withRetention("days(1000000)", ActionType.DELETE)
+                .withValidity(startTime, endTime)
+                .withClusterType(ClusterType.TARGET)
+                .withDataLocation(targetDataLocation)
+                .build());
 
         //submit and schedule feed
-        LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
+        LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
 
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);
@@ -339,7 +339,7 @@ public class FeedReplicationTest extends BaseTestClass {
         }
 
         //check while instance is got created
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
 
         //check if coordinator exists
         Assert.assertEquals(InstanceUtil
@@ -357,12 +357,12 @@ public class FeedReplicationTest extends BaseTestClass {
                 OSUtil.OOZIE_EXAMPLE_INPUT_DATA + availabilityFlagName);
 
         //check if instance become running
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
-                CoordinatorAction.Status.RUNNING, EntityType.FEED);
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
+            CoordinatorAction.Status.RUNNING, EntityType.FEED);
 
         //wait till instance succeed
-        InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data was replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil

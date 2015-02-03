@@ -26,10 +26,6 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.regression.Entities.FeedMerlin;
-import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -527,37 +523,6 @@ public final class InstanceUtil {
         return InstanceUtil.sendRequestProcessInstance(url, user);
     }
 
-    /**
-     * Retrieves prefix (main sub-folders) of feed data path.
-     */
-    public static String getFeedPrefix(String feed) {
-        FeedMerlin feedElement = new FeedMerlin(feed);
-        String locationPath = feedElement.getLocations().getLocations().get(0).getPath();
-        locationPath = locationPath.substring(0, locationPath.indexOf('$'));
-        return locationPath;
-    }
-
-    /**
-     * Adds one input into process.
-     *
-     * @param process - where input should be inserted
-     * @param feed    - feed which will be used as input feed
-     * @return - string representation of process definition
-     */
-    public static String addProcessInputFeed(String process, String feed, String feedName) {
-
-        ProcessMerlin processElement = new ProcessMerlin(process);
-        Input in1 = processElement.getInputs().getInputs().get(0);
-        Input in2 = new Input();
-        in2.setEnd(in1.getEnd());
-        in2.setFeed(feed);
-        in2.setName(feedName);
-        in2.setPartition(in1.getPartition());
-        in2.setStart(in1.getStart());
-        processElement.getInputs().getInputs().add(in2);
-        return processElement.toString();
-    }
-
     public static org.apache.oozie.client.WorkflowJob.Status getInstanceStatusFromCoord(
             ColoHelper coloHelper, String coordID, int instanceNumber) throws OozieClientException {
         OozieClient oozieClient = coloHelper.getProcessHelper().getOozieClient();
@@ -598,21 +563,6 @@ public final class InstanceUtil {
         return actionInfo.getRun();
     }
 
-
-    /**
-     * Sets new feed data path.
-     *
-     * @param feed feed which is to be modified
-     * @param path new feed data path
-     * @return modified feed
-     */
-    public static String setFeedFilePath(String feed, String path) {
-
-        FeedMerlin feedElement = new FeedMerlin(feed);
-        feedElement.getLocations().getLocations().get(0).setPath(path);
-        return feedElement.toString();
-    }
-
     public static int checkIfFeedCoordExist(AbstractEntityHelper helper,
             String feedName, String coordType) throws OozieClientException {
         LOGGER.info("feedName: " + feedName);
@@ -638,47 +588,6 @@ public final class InstanceUtil {
             }
         }
         return numberOfCoord;
-    }
-
-    /**
-     * Sets process frequency.
-     *
-     * @return modified process definition
-     */
-    public static String setProcessFrequency(String process, Frequency frequency) {
-        ProcessMerlin p = new ProcessMerlin(process);
-        p.setFrequency(frequency);
-        return p.toString();
-    }
-
-    /**
-     * Sets new process name.
-     */
-    public static String setProcessName(String process, String newName) {
-        ProcessMerlin p = new ProcessMerlin(process);
-        p.setName(newName);
-        return p.toString();
-    }
-
-    /**
-     * Sets new process validity on all the process clusters.
-     *
-     * @param process   process entity to be modified
-     * @param startTime start of process validity
-     * @param endTime   end of process validity
-     * @return modified process definition
-     */
-    public static String setProcessValidity(String process,
-            String startTime, String endTime) {
-        ProcessMerlin processElement = new ProcessMerlin(process);
-
-        for (int i = 0; i < processElement.getClusters().getClusters().size(); i++) {
-            processElement.getClusters().getClusters().get(i).getValidity().setStart(
-                    TimeUtil.oozieDateToDate(startTime).toDate());
-            processElement.getClusters().getClusters().get(i).getValidity()
-                    .setEnd(TimeUtil.oozieDateToDate(endTime).toDate());
-        }
-        return processElement.toString();
     }
 
     public static List<CoordinatorAction> getProcessInstanceListFromAllBundles(
@@ -947,17 +856,6 @@ public final class InstanceUtil {
         default:
             return OSUtil.IS_WINDOWS ? 60 : 30;
         }
-    }
-
-    /**
-     * Sets feed frequency.
-     *
-     * @return modified feed
-     */
-    public static String setFeedFrequency(String feed, Frequency f) {
-        FeedMerlin feedElement = new FeedMerlin(feed);
-        feedElement.setFrequency(f);
-        return feedElement.toString();
     }
 
     /**

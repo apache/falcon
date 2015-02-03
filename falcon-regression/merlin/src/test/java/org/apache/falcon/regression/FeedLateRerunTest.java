@@ -87,32 +87,32 @@ public class FeedLateRerunTest extends BaseTestClass {
         LOGGER.info("Time range between : " + startTime + " and " + endTime);
 
         //configure feed
-        String feed = bundles[0].getDataSets().get(0);
-        feed = InstanceUtil.setFeedFilePath(feed, feedDataLocation);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(feedDataLocation);
         //erase all clusters from feed definition
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        feed.clearFeedClusters();
         //set cluster1 as source
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTime, endTime)
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
+                .build());
         //set cluster2 as target
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTime, endTime)
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(targetDataLocation)
-                .build()).toString();
-        String entityName = Util.readEntityName(feed);
+                .build());
+        String entityName = feed.getName();
 
         //submit and schedule feed
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), entityName, "REPLICATION"), 1);
 

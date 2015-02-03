@@ -28,7 +28,6 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -83,7 +82,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
-        processName = Util.readEntityName(bundles[0].getProcessData());
+        processName = bundles[0].getProcessName();
     }
 
     @AfterMethod(alwaysRun = true)

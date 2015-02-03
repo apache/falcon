@@ -236,7 +236,7 @@ public class ValidateAPIPrismAndServerTest extends BaseTestClass {
         prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         prism.getFeedHelper().submitEntity(feed);
         prism.getFeedHelper().submitEntity(bundles[0].getOutputFeedFromBundle());
-        ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processObj = bundles[0].getProcessObject();
         processObj.setWorkflow(null);
         ServiceResponse response = prism.getProcessHelper().validateEntity(processObj.toString());
         AssertUtil.assertFailed(response);
@@ -253,7 +253,7 @@ public class ValidateAPIPrismAndServerTest extends BaseTestClass {
         prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         prism.getFeedHelper().submitEntity(feed);
         prism.getFeedHelper().submitEntity(bundles[0].getOutputFeedFromBundle());
-        ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processObj = bundles[0].getProcessObject();
         processObj.setWorkflow(null);
         ServiceResponse response = cluster.getProcessHelper().validateEntity(processObj.toString());
         AssertUtil.assertFailed(response);

@@ -149,17 +149,17 @@ public class LogMoverTest extends BaseTestClass {
     private boolean validate(boolean logFlag) throws Exception {
         String stagingDir= MerlinConstants.STAGING_LOCATION;
         String path=stagingDir+"/falcon/workflows/process/"+processName+"/logs";
-        List<Path> logmoverPath = HadoopUtil
+        List<Path> logmoverPaths = HadoopUtil
                 .getAllFilesRecursivelyHDFS(clusterFS, new Path(HadoopUtil.cutProtocol(path)));
         if (logFlag) {
-            for(int index=0; index < logmoverPath.size(); index++) {
-                if (logmoverPath.get(index).toString().contains("SUCCEEDED")) {
+            for (Path logmoverPath : logmoverPaths) {
+                if (logmoverPath.toString().contains("SUCCEEDED")) {
                     return true;
                 }
             }
         } else {
-            for(int index=0; index < logmoverPath.size(); index++) {
-                if (logmoverPath.get(index).toString().contains("FAILED")) {
+            for (Path logmoverPath : logmoverPaths) {
+                if (logmoverPath.toString().contains("FAILED")) {
                     return true;
                 }
             }

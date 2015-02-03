@@ -28,7 +28,6 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -79,7 +78,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(6);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        processName = Util.readEntityName(bundles[0].getProcessData());
+        processName = bundles[0].getProcessName();
     }
 
     @AfterMethod(alwaysRun = true)

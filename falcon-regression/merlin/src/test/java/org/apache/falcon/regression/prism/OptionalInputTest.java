@@ -93,7 +93,7 @@ public class OptionalInputTest extends BaseTestClass {
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin process = bundles[0].getProcessObject();
         LOGGER.info(Util.prettyPrintXml(process.toString()));
 
         bundles[0].submitAndScheduleBundle(prism, false);
@@ -125,7 +125,7 @@ public class OptionalInputTest extends BaseTestClass {
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
-        String processName = Util.readEntityName(bundles[0].getProcessData());
+        String processName = bundles[0].getProcessName();
         LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
         bundles[0].submitAndScheduleBundle(prism, false);
 
@@ -163,7 +163,7 @@ public class OptionalInputTest extends BaseTestClass {
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
-        String processName = Util.readEntityName(bundles[0].getProcessData());
+        String processName = bundles[0].getProcessName();
         LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
 
         bundles[0].submitAndScheduleBundle(prism, false);
@@ -232,11 +232,11 @@ public class OptionalInputTest extends BaseTestClass {
             LOGGER.info(Util.prettyPrintXml(bundles[0].getDataSets().get(i)));
         }
 
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
-        LOGGER.info(Util.prettyPrintXml(process.toString()));
+
+        LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
 
         bundles[0].submitAndScheduleBundle(prism, false);
-        InstanceUtil.waitTillInstanceReachState(oozieClient, process.getName(),
+        InstanceUtil.waitTillInstanceReachState(oozieClient, bundles[0].getProcessName(),
                 2, CoordinatorAction.Status.KILLED, EntityType.PROCESS);
     }
 
@@ -262,10 +262,8 @@ public class OptionalInputTest extends BaseTestClass {
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(2);
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
-        LOGGER.info(Util.prettyPrintXml(process.toString()));
-        String processName = process.getName();
-        LOGGER.info(Util.prettyPrintXml(process.toString()));
+        LOGGER.info(Util.prettyPrintXml(bundles[0].getProcessData()));
+        String processName = bundles[0].getProcessName();
 
         bundles[0].submitAndScheduleBundle(prism, true);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
@@ -278,11 +276,9 @@ public class OptionalInputTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
             1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
-        final ProcessMerlin processMerlin = new ProcessMerlin(process);
-        processMerlin.setProcessFeeds(bundles[0].getDataSets(), 2, 0, 1);
-        bundles[0].setProcessData(processMerlin.toString());
-        bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
-        process = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin process = bundles[0].getProcessObject();
+        process.setProcessFeeds(bundles[0].getDataSets(), 2, 0, 1);
+        process.setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         LOGGER.info("modified process:" + Util.prettyPrintXml(process.toString()));
 
         prism.getProcessHelper().update(process.toString(), process.toString());
@@ -319,25 +315,22 @@ public class OptionalInputTest extends BaseTestClass {
 
         bundles[0].setProcessInputStartEnd("now(0,-10)", "now(0,0)");
         bundles[0].setProcessConcurrency(4);
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
-        String processName = process.getName();
+        ProcessMerlin process = bundles[0].getProcessObject();
         LOGGER.info(Util.prettyPrintXml(process.toString()));
 
         bundles[0].submitAndScheduleBundle(prism, true);
-        InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
+        InstanceUtil.waitTillInstanceReachState(oozieClient, process.getName(),
                 2, CoordinatorAction.Status.WAITING, EntityType.PROCESS);
 
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(
             TimeUtil.addMinsToTime(startTime, -10), TimeUtil.addMinsToTime(endTime, 10), 5);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.SINGLE_FILE,
-            inputPath + "/input1/", dataDates);
-        InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
-            1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+                inputPath + "/input1/", dataDates);
+        InstanceUtil.waitTillInstanceReachState(oozieClient, process.getName(),
+                1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
-        final ProcessMerlin processMerlin = new ProcessMerlin(process);
-        processMerlin.setProcessFeeds(bundles[0].getDataSets(), 2, 2, 1);
-        bundles[0].setProcessData(processMerlin.toString());
-        process = new ProcessMerlin(bundles[0].getProcessData());
+        process.setProcessFeeds(bundles[0].getDataSets(), 2, 2, 1);
+        bundles[0].setProcessData(process.toString());
 
         //delete all input data
         HadoopUtil.deleteDirIfExists(inputPath + "/", clusterFS);
@@ -347,7 +340,7 @@ public class OptionalInputTest extends BaseTestClass {
         prism.getProcessHelper().update(process.toString(), process.toString());
 
         //from now on ... it should wait of input0 also
-        InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
+        InstanceUtil.waitTillInstanceReachState(oozieClient, process.getName(),
                 2, CoordinatorAction.Status.KILLED, EntityType.PROCESS);
     }
 }

@@ -125,7 +125,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         feed01.setFeedPathValue(baseTestDir + "/feed01" + MINUTE_DATE_PATTERN);
 
         //generate data in both the colos cluster1colo and cluster2colo
-        String prefix = InstanceUtil.getFeedPrefix(feed01.toString());
+        String prefix = feed01.getFeedPrefix();
         String startTime = TimeUtil.getTimeWrtSystemTime(-40);
         System.out.println("Start time = " + startTime);
         HadoopUtil.deleteDirIfExists(prefix.substring(1), server1FS);
@@ -183,9 +183,9 @@ public class PrismFeedUpdateTest extends BaseTestClass {
                 .build());
 
         //get 2nd process
-        ProcessMerlin process02 = new ProcessMerlin(InstanceUtil
-            .setProcessName(process01.toString(), this.getClass().getSimpleName()
-                + "-zeroInputProcess" + new Random().nextInt()));
+        ProcessMerlin process02 = new ProcessMerlin(process01);
+        process02.setName(this.getClass().getSimpleName() + "-zeroInputProcess"
+            + new Random().nextInt());
         List<String> feed = new ArrayList<String>();
         feed.add(outputFeed.toString());
         process02.setProcessFeeds(feed, 0, 0, 1);

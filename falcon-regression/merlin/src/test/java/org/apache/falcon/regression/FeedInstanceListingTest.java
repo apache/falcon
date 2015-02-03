@@ -77,7 +77,7 @@ public class FeedInstanceListingTest extends BaseTestClass{
         bundles[0].setOutputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessPeriodicity(5, Frequency.TimeUnit.minutes);
-        processName = Util.readEntityName(bundles[0].getProcessData());
+        processName = bundles[0].getProcessName();
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
     }
 

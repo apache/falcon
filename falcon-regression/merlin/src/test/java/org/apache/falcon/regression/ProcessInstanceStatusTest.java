@@ -27,7 +27,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
@@ -97,7 +96,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:22Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        processName = Util.readEntityName(bundles[0].getProcessData());
+        processName = bundles[0].getProcessName();
         HadoopUtil.deleteDirIfExists(baseTestHDFSDir + "/input", clusterFS);
     }
 

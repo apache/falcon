@@ -18,7 +18,6 @@
 
 package org.apache.falcon.regression.prism;
 
-import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -160,8 +159,7 @@ public class PrismSubmitTest extends BaseTestClass {
         List<String> afterSubmitPrism = prism.getProcessHelper().getStoreInfo();
 
         AssertUtil.compareDataStoreStates(beforeSubmitCluster1, afterSubmitCluster1, 0);
-        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism,
-            new ProcessMerlin(bundles[0].getProcessData()).getName(), 1);
+        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism, bundles[0].getProcessName(), 1);
         AssertUtil.compareDataStoreStates(beforeSubmitCluster2, afterSubmitCluster2, 0);
 
         Util.startService(cluster1.getClusterHelper());
@@ -179,8 +177,7 @@ public class PrismSubmitTest extends BaseTestClass {
         afterSubmitPrism = prism.getProcessHelper().getStoreInfo();
 
         AssertUtil.compareDataStoreStates(beforeSubmitCluster1, afterSubmitCluster1, 0);
-        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism,
-            new ProcessMerlin(bundles[0].getProcessData()).getName(), -1);
+        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism, bundles[0].getProcessName(), -1);
         AssertUtil.compareDataStoreStates(beforeSubmitCluster2, afterSubmitCluster2, 0);
     }
 
@@ -219,10 +216,8 @@ public class PrismSubmitTest extends BaseTestClass {
         afterSubmitCluster2 = cluster2.getProcessHelper().getStoreInfo();
         afterSubmitPrism = prism.getProcessHelper().getStoreInfo();
 
-        AssertUtil.compareDataStoreStates(beforeSubmitCluster1, afterSubmitCluster1,
-            new ProcessMerlin(bundles[0].getProcessData()).getName(), 1);
-        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism,
-            new ProcessMerlin(bundles[0].getProcessData()).getName(), 1);
+        AssertUtil.compareDataStoreStates(beforeSubmitCluster1, afterSubmitCluster1, bundles[0].getProcessName(), 1);
+        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism, bundles[0].getProcessName(), 1);
         AssertUtil.compareDataStoreStates(beforeSubmitCluster2, afterSubmitCluster2, 0);
 
     }
@@ -566,8 +561,7 @@ public class PrismSubmitTest extends BaseTestClass {
         afterSubmitPrism = prism.getProcessHelper().getStoreInfo();
 
         AssertUtil.compareDataStoreStates(beforeSubmitCluster1, afterSubmitCluster1, 0);
-        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism,
-            new ProcessMerlin(bundles[0].getProcessData()).getName(), 1);
+        AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism, bundles[0].getProcessName(), 1);
         AssertUtil.compareDataStoreStates(beforeSubmitCluster2, afterSubmitCluster2, 0);
     }
 }

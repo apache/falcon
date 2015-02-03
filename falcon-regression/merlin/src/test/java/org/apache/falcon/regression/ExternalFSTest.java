@@ -143,30 +143,30 @@ public class ExternalFSTest extends BaseTestClass{
             new String[]{"${YEAR}", "${MONTH}", "${DAY}", "${HOUR}", "${MINUTE}"}, separator);
 
         //configure feed
-        String feed = bundles[0].getDataSets().get(0);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
         String targetDataLocation = endpoint + testWasbTargetDir + datePattern;
-        feed = InstanceUtil.setFeedFilePath(feed, sourcePath + '/' + datePattern);
+        feed.setFilePath(sourcePath + '/' + datePattern);
         //erase all clusters from feed definition
-        feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
+        feed.clearFeedClusters();
         //set local cluster as source
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTime, endTime)
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
+                .build());
         //set externalFS cluster as target
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
+        feed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(externalBundle.getClusters().get(0)))
                 .withRetention("days(1000000)", ActionType.DELETE)
                 .withValidity(startTime, endTime)
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(targetDataLocation)
-                .build()).toString();
+                .build());
 
         //submit and schedule feed
-        LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
+        LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
         datePattern = StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH", "mm"}, separator);
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);
@@ -181,15 +181,15 @@ public class ExternalFSTest extends BaseTestClass{
         Path dstPath = new Path(endpoint + testWasbTargetDir + '/' + timePattern);
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, feed.toString(), 0);
 
         Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster.getFeedHelper(), Util.readEntityName(feed),
+            .checkIfFeedCoordExist(cluster.getFeedHelper(), Util.readEntityName(feed.toString()),
                 "REPLICATION"), 1);
 
         TimeUtil.sleepSeconds(10);
         //replication should start, wait while it ends
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(feed), 1,
+        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(feed.toString()), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data has been replicated correctly

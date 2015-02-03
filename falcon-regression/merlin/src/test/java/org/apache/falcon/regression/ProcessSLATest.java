@@ -80,7 +80,7 @@ public class ProcessSLATest extends BaseTestClass {
     @Test
     public void scheduleValidProcessSLA() throws Exception {
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processMerlin = bundles[0].getProcessObject();
         processMerlin.setSla(new Frequency("3", Frequency.TimeUnit.hours),
                 new Frequency("6", Frequency.TimeUnit.hours));
         bundles[0].setProcessData(processMerlin.toString());
@@ -95,7 +95,7 @@ public class ProcessSLATest extends BaseTestClass {
     @Test
     public void scheduleProcessWithSameSLAStartSLAEnd() throws Exception {
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processMerlin = bundles[0].getProcessObject();
         processMerlin.setSla(new Frequency("3", Frequency.TimeUnit.hours),
                 new Frequency("3", Frequency.TimeUnit.hours));
         bundles[0].setProcessData(processMerlin.toString());
@@ -110,7 +110,7 @@ public class ProcessSLATest extends BaseTestClass {
     @Test
     public void scheduleProcessWithSLAEndLowerthanSLAStart() throws Exception {
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processMerlin = bundles[0].getProcessObject();
         processMerlin.setSla(new Frequency("4", Frequency.TimeUnit.hours),
                 new Frequency("2", Frequency.TimeUnit.hours));
         bundles[0].setProcessData(processMerlin.toString());
@@ -131,7 +131,7 @@ public class ProcessSLATest extends BaseTestClass {
     @Test
     public void scheduleProcessWithTimeoutGreaterThanSLAStart() throws Exception {
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processMerlin = bundles[0].getProcessObject();
         processMerlin.setTimeout(new Frequency("3", Frequency.TimeUnit.hours));
         processMerlin.setSla(new Frequency("2", Frequency.TimeUnit.hours),
                 new Frequency("4", Frequency.TimeUnit.hours));
@@ -147,7 +147,7 @@ public class ProcessSLATest extends BaseTestClass {
     @Test
     public void scheduleProcessWithTimeoutLessThanSLAStart() throws Exception {
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin processMerlin = bundles[0].getProcessObject();
         processMerlin.setTimeout(new Frequency("1", Frequency.TimeUnit.hours));
         processMerlin.setSla(new Frequency("2", Frequency.TimeUnit.hours),
                 new Frequency("4", Frequency.TimeUnit.hours));

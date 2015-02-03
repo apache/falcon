@@ -29,7 +29,6 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -159,7 +158,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
         prism.getProcessHelper()
-            .getProcessInstanceKill(Util.readEntityName(bundles[0].getProcessData()),
+            .getProcessInstanceKill(bundles[0].getProcessName(),
                 "?start=2010-01-02T01:05Z&end=2010-01-02T01:11Z");
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.DONEWITHERROR);

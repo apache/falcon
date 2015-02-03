@@ -119,11 +119,11 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(
             TimeUtil.getTimeWrtSystemTime(-35), TimeUtil.getTimeWrtSystemTime(25), 1);
 
-        String prefix = InstanceUtil.getFeedPrefix(feed01.toString());
+        String prefix = feed01.getFeedPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), cluster1FS);
         HadoopUtil.flattenAndPutDataInFolder(cluster1FS, OSUtil.SINGLE_FILE, prefix, dataDates);
 
-        prefix = InstanceUtil.getFeedPrefix(feed02.toString());
+        prefix = feed02.getFeedPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), cluster2FS);
         HadoopUtil.flattenAndPutDataInFolder(cluster2FS, OSUtil.SINGLE_FILE, prefix, dataDates);
 
@@ -179,7 +179,7 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-16);
         // String processEndTime = InstanceUtil.getTimeWrtSystemTime(20);
 
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin process = bundles[0].getProcessObject();
         process.clearProcessCluster();
         process.addProcessCluster(
             new ProcessMerlin.ProcessClusterBuilder(
@@ -192,8 +192,7 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
                 .withValidity(TimeUtil.addMinsToTime(processStartTime, 16),
                     TimeUtil.addMinsToTime(processStartTime, 45))
                 .build());
-        process = new ProcessMerlin(InstanceUtil.addProcessInputFeed(process.toString(), feed02.getName(),
-            feed02.getName()));
+        process.addInputFeed(feed02.getName(), feed02.getName());
 
         //submit and schedule process
         prism.getProcessHelper().submitAndSchedule(process.toString());
@@ -204,42 +203,40 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(serverOC.get(1), process.getName(), 1,
             Status.RUNNING, EntityType.PROCESS);
 
-        final String processName = Util.readEntityName(bundles[0].getProcessData());
-        InstancesResult responseInstance = prism.getProcessHelper().getProcessInstanceStatus(
-            processName, "?start=" + processStartTime
-            + "&end=" + TimeUtil.addMinsToTime(processStartTime, 45));
+        InstancesResult responseInstance = prism.getProcessHelper().getProcessInstanceStatus(process.getName(),
+                "?start=" + processStartTime + "&end=" + TimeUtil.addMinsToTime(processStartTime, 45));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper().getProcessInstanceSuspend(processName,
+        responseInstance = prism.getProcessHelper().getProcessInstanceSuspend(process.getName(),
             "?start=" + TimeUtil.addMinsToTime(processStartTime, 37)
                 + "&end=" + TimeUtil.addMinsToTime(processStartTime, 44));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper().getProcessInstanceStatus(processName,
+        responseInstance = prism.getProcessHelper().getProcessInstanceStatus(process.getName(),
             "?start=" + TimeUtil.addMinsToTime(processStartTime, 37)
                 + "&end=" + TimeUtil.addMinsToTime(processStartTime, 44));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper().getProcessInstanceResume(processName,
+        responseInstance = prism.getProcessHelper().getProcessInstanceResume(process.getName(),
             "?start=" + processStartTime + "&end=" + TimeUtil.addMinsToTime(processStartTime, 7));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper().getProcessInstanceStatus(processName,
+        responseInstance = prism.getProcessHelper().getProcessInstanceStatus(process.getName(),
             "?start=" + TimeUtil.addMinsToTime(processStartTime, 16)
                 + "&end=" + TimeUtil.addMinsToTime(processStartTime, 45));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = cluster1.getProcessHelper().getProcessInstanceKill(processName,
+        responseInstance = cluster1.getProcessHelper().getProcessInstanceKill(process.getName(),
             "?start=" + processStartTime + "&end="+ TimeUtil.addMinsToTime(processStartTime, 7));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);
 
-        responseInstance = prism.getProcessHelper().getProcessInstanceRerun(processName,
+        responseInstance = prism.getProcessHelper().getProcessInstanceRerun(process.getName(),
             "?start=" + processStartTime + "&end=" + TimeUtil.addMinsToTime(processStartTime, 7));
         AssertUtil.assertSucceeded(responseInstance);
         Assert.assertTrue(responseInstance.getInstances() != null);

@@ -126,9 +126,9 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
 
         //update frequency
-        Frequency f = new Frequency("" + 21, Frequency.TimeUnit.minutes);
-        String updatedFeed = InstanceUtil.setFeedFrequency(feed, f);
-        ServiceResponse r = prism.getFeedHelper().update(feed, updatedFeed, "abc", null);
+        FeedMerlin updatedFeed = new FeedMerlin(feed);
+        updatedFeed.setFrequency(new Frequency("21", Frequency.TimeUnit.minutes));
+        ServiceResponse r = prism.getFeedHelper().update(feed, updatedFeed.toString(), "abc", null);
         Assert.assertTrue(r.getMessage()
             .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
     }
@@ -182,9 +182,9 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
 
         //update frequency
-        Frequency f = new Frequency("" + 7, Frequency.TimeUnit.minutes);
-        String updatedFeed = InstanceUtil.setFeedFrequency(feed, f);
-        r = prism.getFeedHelper().update(feed, updatedFeed,
+        FeedMerlin updatedFeed = new FeedMerlin(feed);
+        updatedFeed.setFrequency(new Frequency("7", Frequency.TimeUnit.minutes));
+        r = prism.getFeedHelper().update(feed, updatedFeed.toString(),
             TimeUtil.getTimeWrtSystemTime(-10000), null);
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 1);

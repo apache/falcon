@@ -82,7 +82,7 @@ public class ListEntitiesTest extends BaseTestClass {
 
         //submit 10 different clusters, feeds and processes
         FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin process = bundles[0].getProcessObject();
         ClusterMerlin cluster = bundles[0].getClusterElement();
         String clusterNamePrefix = bundles[0].getClusterElement().getName() + '-';
         String processNamePrefix = bundles[0].getProcessName() + '-';

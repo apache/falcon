@@ -179,7 +179,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
         //reschedule trial
         AssertUtil.assertSucceeded(cluster2.getProcessHelper().schedule(bundles[0].getProcessData()));
         Assert.assertEquals(OozieUtil.getBundles(cluster2.getFeedHelper().getOozieClient(),
-                Util.readEntityName(bundles[0].getProcessData()), EntityType.PROCESS).size(), 1);
+                bundles[0].getProcessName(), EntityType.PROCESS).size(), 1);
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
     }

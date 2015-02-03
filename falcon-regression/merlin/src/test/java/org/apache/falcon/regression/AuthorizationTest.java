@@ -287,36 +287,32 @@ public class AuthorizationTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
 
         //check that there are 3 running instances
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-            .getProcessData()), 3, CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
         //check that there are 2 waiting instances
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-            .getProcessData()), 2, CoordinatorAction.Status.WAITING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 2,
+                CoordinatorAction.Status.WAITING, EntityType.PROCESS);
 
         //3 instances should be running , other 2 should be waiting
-        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(Util
-                .readEntityName(bundles[0].getProcessData()),
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime);
         InstanceUtil.validateResponse(r, 5, 3, 0, 2, 0);
 
         //suspend 3 running instances
-        r = prism.getProcessHelper().getProcessInstanceSuspend(Util
-                .readEntityName(bundles[0].getProcessData()),
+        r = prism.getProcessHelper().getProcessInstanceSuspend(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + midTime);
         InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
 
         //try to resume suspended instances by U2
-        r = prism.getProcessHelper().getProcessInstanceResume(Util.readEntityName(bundles[0]
-                .getProcessData()), "?start=" + startTime + "&end=" + midTime,
-            MerlinConstants.USER2_NAME);
+        r = prism.getProcessHelper().getProcessInstanceResume(bundles[0].getProcessName(), "?start=" + startTime
+                + "&end=" + midTime, MerlinConstants.USER2_NAME);
 
         //the state of above 3 instances should still be suspended
         InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
 
         //check the status of all instances
-        r = prism.getProcessHelper().getProcessInstanceStatus(Util
-                .readEntityName(bundles[0].getProcessData()),
+        r = prism.getProcessHelper().getProcessInstanceStatus(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime);
         InstanceUtil.validateResponse(r, 5, 0, 3, 2, 0);
     }
@@ -353,18 +349,16 @@ public class AuthorizationTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
 
         //check that there are 3 running instances
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-            .getProcessData()), 3, CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
         //3 instances should be running , other 2 should be waiting
-        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(Util
-                .readEntityName(bundles[0].getProcessData()),
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime);
         InstanceUtil.validateResponse(r, 5, 3, 0, 2, 0);
 
         //try to kill all instances by U2
-        r = prism.getProcessHelper().getProcessInstanceKill(Util
-                .readEntityName(bundles[0].getProcessData()),
+        r = prism.getProcessHelper().getProcessInstanceKill(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime, MerlinConstants.USER2_NAME);
 
         //number of instances should be the same as before
@@ -401,28 +395,25 @@ public class AuthorizationTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
 
         //check that there are 3 running instances
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-            .getProcessData()), 3, CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
         //check that there are 2 waiting instances
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-            .getProcessData()), 2, CoordinatorAction.Status.WAITING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 2,
+                CoordinatorAction.Status.WAITING, EntityType.PROCESS);
 
         //3 instances should be running , other 2 should be waiting
-        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(Util
-                .readEntityName(bundles[0].getProcessData()),
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime);
         InstanceUtil.validateResponse(r, 5, 3, 0, 2, 0);
 
         //suspend 3 running instances
-        r = prism.getProcessHelper().getProcessInstanceSuspend(Util
-                .readEntityName(bundles[0].getProcessData()),
+        r = prism.getProcessHelper().getProcessInstanceSuspend(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + midTime);
         InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
 
         //try to kill all instances by U2
-        r = prism.getProcessHelper().getProcessInstanceKill(Util
-                .readEntityName(bundles[0].getProcessData()),
+        r = prism.getProcessHelper().getProcessInstanceKill(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime, MerlinConstants.USER2_NAME);
 
         //3 should still be suspended, 2 should be waiting
@@ -465,29 +456,24 @@ public class AuthorizationTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
 
         //check that there are 4 running instances
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-            .getProcessData()), 4, CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 4,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
         //4 instances should be running , 1 should be waiting
-        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(Util
-                .readEntityName(bundles[0].getProcessData()),
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(bundles[0].getProcessName(),
             "?start=" + startTime + "&end=" + endTime);
         InstanceUtil.validateResponse(r, 5, 4, 0, 1, 0);
 
         //kill 3 running instances
-        r = prism.getProcessHelper().getProcessInstanceKill(Util
-            .readEntityName(bundles[0].getProcessData()), "?start=" + startTime + "&end="
-                +
-            midTime);
+        r = prism.getProcessHelper().getProcessInstanceKill(bundles[0].getProcessName(),
+                "?start=" + startTime + "&end=" + midTime);
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
 
         //generally 3 instances should be killed, 1 is running and 1 is waiting
 
         //try to rerun instances by U2
-        r = prism.getProcessHelper().getProcessInstanceRerun(Util
-            .readEntityName(bundles[0].getProcessData()), "?start=" + startTime + "&end="
-                +
-            midTime, MerlinConstants.USER2_NAME);
+        r = prism.getProcessHelper().getProcessInstanceRerun(bundles[0].getProcessName(),
+                "?start=" + startTime + "&end=" + midTime, MerlinConstants.USER2_NAME);
 
         //instances should still be killed
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
@@ -510,7 +496,7 @@ public class AuthorizationTest extends BaseTestClass {
         Assert.assertTrue(definition.contains(feed.getName()) && !definition.contains("(feed) not found"),
             "Feed should be already submitted");
         //update feed definition
-        FeedMerlin newFeed = new FeedMerlin(feed.toString());
+        FeedMerlin newFeed = new FeedMerlin(feed);
         newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
@@ -589,8 +575,7 @@ public class AuthorizationTest extends BaseTestClass {
     @Test(enabled = false)
     public void u1ScheduleFeedU2ScheduleDependantProcessU1UpdateFeed() throws Exception {
         FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
-        String process = bundles[0].getProcessData();
-        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
@@ -600,13 +585,13 @@ public class AuthorizationTest extends BaseTestClass {
 
         //by U2 schedule process dependant on scheduled feed by U1
         ServiceResponse serviceResponse = prism.getProcessHelper()
-            .submitAndSchedule(process, MerlinConstants.USER2_NAME);
+            .submitAndSchedule(bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //get old process details
         String oldProcessBundleId = InstanceUtil
-            .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+            .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         String oldProcessUser =
             getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
@@ -615,7 +600,7 @@ public class AuthorizationTest extends BaseTestClass {
         String oldFeedUser = getBundleUser(cluster, feed.getName(), EntityType.FEED);
 
         //update feed definition
-        FeedMerlin newFeed = new FeedMerlin(feed.toString());
+        FeedMerlin newFeed = new FeedMerlin(feed);
         newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
 
         //update feed by U1
@@ -630,7 +615,7 @@ public class AuthorizationTest extends BaseTestClass {
         Assert.assertEquals(oldFeedUser, newFeedUser, "User should be the same");
 
         //new process bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
         String newProcessUser =
             getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
@@ -641,8 +626,7 @@ public class AuthorizationTest extends BaseTestClass {
     @Test(enabled = false)
     public void u1ScheduleFeedU2ScheduleDependantProcessU2UpdateFeed() throws Exception {
         FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
-        String process = bundles[0].getProcessData();
-        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
@@ -651,18 +635,18 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed.toString(), Job.Status.RUNNING);
 
         //by U2 schedule process dependent on scheduled feed by U1
-        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process,
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData(),
                 MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //update feed definition
-        FeedMerlin newFeed = new FeedMerlin(feed.toString());
+        FeedMerlin newFeed = new FeedMerlin(feed);
         newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
 
         //get old process details
         String oldProcessBundleId = InstanceUtil
-                .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+                .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         String oldProcessUser =
                 getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
@@ -682,7 +666,7 @@ public class AuthorizationTest extends BaseTestClass {
         Assert.assertEquals(MerlinConstants.USER2_NAME, newFeedUser);
 
         //new process bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
         String newProcessUser =
                 getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
@@ -693,8 +677,7 @@ public class AuthorizationTest extends BaseTestClass {
     @Test(enabled = false)
     public void u1ScheduleFeedU1ScheduleDependantProcessU1UpdateProcess() throws Exception {
         String feed = bundles[0].getInputFeedFromBundle();
-        String process = bundles[0].getProcessData();
-        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
@@ -703,13 +686,13 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
 
         //by U1 schedule process dependent on scheduled feed by U1
-        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process);
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData());
         AssertUtil.assertSucceeded(serviceResponse);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //get old process details
         String oldProcessBundleId = InstanceUtil
-                .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+                .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         String oldProcessUser =
                 getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
@@ -718,16 +701,16 @@ public class AuthorizationTest extends BaseTestClass {
                 .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
 
         //update process by U1
-        ProcessMerlin processObj = new ProcessMerlin(process);
+        ProcessMerlin processObj = bundles[0].getProcessObject();
         processObj.setProperty("randomProp", "randomVal");
-        serviceResponse = prism.getProcessHelper().update(process, processObj.toString());
+        serviceResponse = prism.getProcessHelper().update(bundles[0].getProcessData(), processObj.toString());
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should not be created
         OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, false, false);
 
         //new process bundle should be created by U1
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
         String newProcessUser =
                 getBundleUser(cluster, processObj.getName(), EntityType.PROCESS);
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
@@ -738,8 +721,7 @@ public class AuthorizationTest extends BaseTestClass {
     @Test(enabled = false)
     public void u1ScheduleFeedU1ScheduleDependantProcessU2UpdateProcess() throws Exception {
         String feed = bundles[0].getInputFeedFromBundle();
-        String process = bundles[0].getProcessData();
-        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
@@ -748,13 +730,13 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
 
         //by U1 schedule process dependent on scheduled feed by U1
-        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process);
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData());
         AssertUtil.assertSucceeded(serviceResponse);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //get old process details
         String oldProcessBundleId = InstanceUtil
-                .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+                .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         String oldProcessUser =
                 getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
@@ -763,9 +745,9 @@ public class AuthorizationTest extends BaseTestClass {
                 .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
 
         //update process by U2
-        ProcessMerlin processObj = new ProcessMerlin(process);
+        ProcessMerlin processObj = bundles[0].getProcessObject();
         processObj.setProperty("randomProp", "randomVal");
-        serviceResponse = prism.getProcessHelper().update(process, processObj.toString(),
+        serviceResponse = prism.getProcessHelper().update(bundles[0].getProcessData(), processObj.toString(),
                 TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
@@ -773,7 +755,7 @@ public class AuthorizationTest extends BaseTestClass {
         OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, false, false);
 
         //new process bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
         String newProcessUser =
                 getBundleUser(cluster, processObj.getName(), EntityType.PROCESS);
         Assert.assertNotEquals(oldProcessUser, newProcessUser, "User should not be the same");

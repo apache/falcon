@@ -328,4 +328,50 @@ public class FeedMerlin extends Feed {
         this.setSla(sla);
     }
 
+    /**
+     * Sets new feed data path (for first location).
+     *
+     * @param path new feed data path
+     */
+    public void setFilePath(String path) {
+        getLocations().getLocations().get(0).setPath(path);
+    }
+
+
+    /**
+     * Retrieves prefix (main sub-folders) of first feed data path.
+     */
+    public String getFeedPrefix() {
+        String path = getLocations().getLocations().get(0).getPath();
+        return path.substring(0, path.indexOf('$'));
+    }
+
+    public void setValidity(String feedStart, String feedEnd) {
+        this.getClusters().getClusters().get(0).getValidity()
+            .setStart(TimeUtil.oozieDateToDate(feedStart).toDate());
+        this.getClusters().getClusters().get(0).getValidity()
+            .setEnd(TimeUtil.oozieDateToDate(feedEnd).toDate());
+
+    }
+
+    public void setDataLocationPath(String path) {
+        final List<Location> locations = this.getLocations().getLocations();
+        for (Location location : locations) {
+            if (location.getType() == LocationType.DATA) {
+                location.setPath(path);
+            }
+        }
+    }
+
+    public void setPeriodicity(int frequency, Frequency.TimeUnit periodicity) {
+        Frequency frq = new Frequency(String.valueOf(frequency), periodicity);
+        this.setFrequency(frq);
+    }
+
+    public void setTableUri(String tableUri) {
+        final CatalogTable catalogTable = new CatalogTable();
+        catalogTable.setUri(tableUri);
+        this.setTable(catalogTable);
+    }
+
 }

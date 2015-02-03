@@ -253,8 +253,7 @@ public class HCatProcessTest extends BaseTestClass {
         feedObj.setName(inputFeed2Name);
         feedObj.getTable().setUri(inputTableUri2);
 
-        String inputFeed2 = feedObj.toString();
-        bundles[0].addInputFeedToBundle("inputData2", inputFeed2, 0);
+        bundles[0].addInputFeedToBundle("inputData2", feedObj);
 
         String outputTableUri =
             "catalog:" + dbName + ":" + outputTableName + tableUriPartitionFragment;
@@ -347,7 +346,7 @@ public class HCatProcessTest extends BaseTestClass {
         FeedMerlin feedObj = new FeedMerlin(outputFeed1);
         feedObj.setName(outputFeed2Name);
         feedObj.getTable().setUri(outputTableUri2);
-        bundles[0].addOutputFeedToBundle("outputData2", feedObj.toString(), 0);
+        bundles[0].addOutputFeedToBundle("outputData2", feedObj);
 
         bundles[0].setProcessValidity(startDate, endDate);
         bundles[0].setProcessPeriodicity(1, Frequency.TimeUnit.hours);
@@ -433,8 +432,7 @@ public class HCatProcessTest extends BaseTestClass {
         FeedMerlin feedObj = new FeedMerlin(inputFeed1);
         feedObj.setName(inputFeed2Name);
         feedObj.getTable().setUri(inputTableUri2);
-        String inputFeed2 = feedObj.toString();
-        bundles[0].addInputFeedToBundle("inputData2", inputFeed2, 0);
+        bundles[0].addInputFeedToBundle("inputData2", feedObj);
 
         String outputTableUri =
             "catalog:" + dbName + ":" + outputTableName + tableUriPartitionFragment;
@@ -448,8 +446,7 @@ public class HCatProcessTest extends BaseTestClass {
         FeedMerlin feedObj2 = new FeedMerlin(outputFeed1);
         feedObj2.setName(outputFeed2Name);
         feedObj2.getTable().setUri(outputTableUri2);
-        String outputFeed2 = feedObj2.toString();
-        bundles[0].addOutputFeedToBundle("outputData2", outputFeed2, 0);
+        bundles[0].addOutputFeedToBundle("outputData2", feedObj2);
         bundles[0].setProcessValidity(startDate, endDate);
         bundles[0].setProcessPeriodicity(1, Frequency.TimeUnit.hours);
         bundles[0].setProcessInputStartEnd("now(0,0)", "now(0,0)");

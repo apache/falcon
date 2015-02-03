@@ -85,8 +85,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
         bundles[0].setOutputFeedPeriodicity(10, Frequency.TimeUnit.minutes);
         bundles[0].setProcessConcurrency(2);
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
-        String inputName = processMerlin.getInputs().getInputs().get(0).getName();
+        String inputName = bundles[0].getProcessObject().getFirstInputName();
         bundles[0].setProcessLatePolicy(getLateData(2, "minutes", "periodic", inputName, aggregateWorkflowDir));
 
         bundles[0].submitAndScheduleProcess();
@@ -126,8 +125,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
         bundles[0].setOutputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setProcessConcurrency(2);
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
-        String inputName = processMerlin.getInputs().getInputs().get(0).getName();
+        String inputName = bundles[0].getProcessObject().getFirstInputName();
 
         bundles[0].setProcessLatePolicy(getLateData(4, "minutes", "periodic", inputName, aggregateWorkflowDir));
         bundles[0].submitAndScheduleProcess();
@@ -166,8 +164,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].setProcessPeriodicity(10, Frequency.TimeUnit.minutes);
         bundles[0].setOutputFeedPeriodicity(10, Frequency.TimeUnit.minutes);
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
-        String inputName = processMerlin.getInputs().getInputs().get(0).getName();
+        String inputName = bundles[0].getProcessObject().getFirstInputName();
 
         bundles[0].setProcessLatePolicy(getLateData(4, "minutes", "periodic", inputName, aggregateWorkflowDir));
         bundles[0].setProcessConcurrency(2);
@@ -216,17 +213,17 @@ public class ProcessLateRerunTest extends BaseTestClass {
         // Increase the window of input for process
         bundles[0].setDatasetInstances(startInstance, endInstance);
 
-        ProcessMerlin processMerlin = new ProcessMerlin(bundles[0].getProcessData());
-        String inputName = processMerlin.getInputs().getInputs().get(0).getName();
-        Input tempFeed = processMerlin.getInputs().getInputs().get(0);
+        ProcessMerlin process = bundles[0].getProcessObject();
+        String inputName = process.getFirstInputName();
+        Input tempFeed = process.getInputs().getInputs().get(0);
 
         Input gateInput = new Input();
         gateInput.setName("Gate");
         gateInput.setFeed(tempFeed.getFeed());
         gateInput.setEnd("now(0,1)");
         gateInput.setStart("now(0,1)");
-        processMerlin.getInputs().getInputs().add(gateInput);
-        bundles[0].setProcessData(processMerlin.toString());
+        process.getInputs().getInputs().add(gateInput);
+        bundles[0].setProcessData(process.toString());
 
         bundles[0].setProcessLatePolicy(getLateData(4, "minutes", "periodic", inputName, aggregateWorkflowDir));
 

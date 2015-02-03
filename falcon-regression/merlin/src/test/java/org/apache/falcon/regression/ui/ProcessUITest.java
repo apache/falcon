@@ -141,7 +141,7 @@ public class ProcessUITest extends BaseUITestClass {
                 Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         int j = 0;
         for (FeedMerlin feed : inputFeeds) {
-            bundles[0].addInputFeedToBundle("inputFeed" + j, feed.toString(), j++);
+            bundles[0].addInputFeedToBundle("inputFeed" + j++, feed);
         }
 
         outputFeeds = LineageApiTest.generateFeeds(numOutputFeeds, outputMerlin,
@@ -150,7 +150,7 @@ public class ProcessUITest extends BaseUITestClass {
                 Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         j = 0;
         for (FeedMerlin feed : outputFeeds) {
-            bundles[0].addOutputFeedToBundle("outputFeed" + j, feed.toString(), j++);
+            bundles[0].addOutputFeedToBundle("outputFeed" + j++, feed);
         }
 
         AssertUtil.assertSucceeded(bundles[0].submitBundle(prism));

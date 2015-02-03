@@ -83,10 +83,9 @@ public class NoOutputProcessTest extends BaseTestClass {
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setProcessValidity("2010-01-03T02:30Z", "2010-01-03T02:45Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
+        ProcessMerlin process = bundles[0].getProcessObject();
         process.setOutputs(null);
         process.setLateProcess(null);
-        bundles[0].setProcessData(process.toString());
         bundles[0].submitFeedsScheduleProcess(prism);
     }
 

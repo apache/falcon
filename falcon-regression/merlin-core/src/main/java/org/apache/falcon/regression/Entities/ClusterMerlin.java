@@ -23,11 +23,17 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfaces;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.cluster.Location;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Class for representing a cluster xml. */
@@ -78,4 +84,24 @@ public class ClusterMerlin extends Cluster {
         acl.setPermission(permission);
         this.setACL(acl);
     }
+
+    public void setInterface(Interfacetype interfacetype, String value) {
+        final Interfaces interfaces = this.getInterfaces();
+        final List<Interface> interfaceList = interfaces.getInterfaces();
+        for (final Interface anInterface : interfaceList) {
+            if (anInterface.getType() == interfacetype) {
+                anInterface.setEndpoint(value);
+            }
+        }
+    }
+
+    public void setWorkingLocationPath(String path) {
+        for (Location location : getLocations().getLocations()) {
+            if (location.getName() == ClusterLocationType.WORKING) {
+                location.setPath(path);
+                break;
+            }
+        }
+    }
+
 }
