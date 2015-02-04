@@ -255,11 +255,10 @@ public class EntitySummaryTest extends BaseTestClass {
             LOGGER.info("Working with " + entityType + " : " + entityName);
             //get recent instances info by -getStatus API
             r = helper.getProcessInstanceStatus(entityName, null);
-            InstancesResult.Instance[] instancesR = r.getInstances();
-            LOGGER.info("Instances from InstancesResult: " + Arrays.toString(instancesR));
+            InstancesResult.Instance[] instancesFromStatus = r.getInstances();
+            LOGGER.info("Instances from -getStatus API: " + Arrays.toString(instancesFromStatus));
             //get recent instances info by -summary API
-            EntitySummaryResult.EntitySummary[] summaries =
-                helper.getEntitySummary(clusterName, null)
+            EntitySummaryResult.EntitySummary[] summaries = helper.getEntitySummary(clusterName, null)
                     .getEntitySummaryResult().getEntitySummaries();
             EntitySummaryResult.EntitySummary summaryItem = null;
             //get instances for specific process
@@ -270,13 +269,15 @@ public class EntitySummaryTest extends BaseTestClass {
                 }
             }
             Assert.assertNotNull(summaryItem, "Appropriate summary not found for : " + entityName);
-            EntitySummaryResult.Instance[] instancesS = summaryItem.getInstances();
-            LOGGER.info("Instances from SummaryResult: " + Arrays.toString(instancesS));
-            softAssert.assertEquals(instancesS.length, 7, "7 instances should be present in "
+            EntitySummaryResult.Instance[] instancesFromSummary = summaryItem.getInstances();
+            LOGGER.info("Instances from SummaryResult: " + Arrays.toString(instancesFromSummary));
+            softAssert.assertEquals(instancesFromSummary.length, 7, "7 instances should be present in "
                 + "summary.");
-            for (EntitySummaryResult.Instance instance : instancesS) {
-                softAssert.assertTrue(containsInstances(instancesR, instance), "Instance "
-                    + instance.toString() + " is absent in list : " + Arrays.toString(instancesR));
+            for (EntitySummaryResult.Instance instanceFromSummary : instancesFromSummary) {
+                softAssert.assertTrue(containsSummaryInstance(instancesFromStatus, instanceFromSummary),
+                    String.format("Instance {%s;%s;%s} is absent in list (or differs by its properties)\n%s",
+                        instanceFromSummary.getInstance(), instanceFromSummary.getStatus(),
+                        instanceFromSummary.getCluster(), Arrays.toString(instancesFromStatus)));
             }
         }
     }
@@ -285,15 +286,25 @@ public class EntitySummaryTest extends BaseTestClass {
      * Checks if array of instances of InstancesResult contains particular instance
      * from SummaryResult by common properties.
      */
-    private boolean containsInstances(InstancesResult.Instance[] instancesR,
-                                      EntitySummaryResult.Instance instanceS) {
-        for (InstancesResult.Instance instanceR : instancesR) {
-            if (instanceR.getInstance().equals(instanceS.getInstance())
-                && instanceR.getStatus().toString().equals(instanceS.getStatus().toString())
-                && instanceR.getCluster().equals(instanceS.getCluster())) {
+    private boolean containsSummaryInstance(InstancesResult.Instance[] instancesFromStatus,
+                                            EntitySummaryResult.Instance instanceFromSummary) {
+        for (InstancesResult.Instance instanceFromStatus : instancesFromStatus) {
+            if (instanceFromStatus.getInstance().equals(instanceFromSummary.getInstance())) {
+                String status1 = instanceFromStatus.getStatus().toString();
+                String status2 = instanceFromSummary.getStatus().toString();
+                if (!status1.equals(status2)) {
+                    LOGGER.info(String.format("Statuses comparison failed : %s and %s", status1, status2));
+                    return false;
+                }
+                if (!instanceFromStatus.getCluster().equals(instanceFromSummary.getCluster())) {
+                    LOGGER.info(String.format("Clusters comparison failed : %s and %s",
+                            instanceFromStatus.getCluster(), instanceFromSummary.getCluster()));
+                    return false;
+                }
                 return true;
             }
         }
+        LOGGER.info("Instance " + instanceFromSummary.getInstance() + " not found in list.");
         return false;
     }
 

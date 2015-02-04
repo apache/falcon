@@ -39,6 +39,7 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1007 Improve test output and variable names (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1009 InstanceUtil cleanup (Raghav Kumar Gautam)
 
