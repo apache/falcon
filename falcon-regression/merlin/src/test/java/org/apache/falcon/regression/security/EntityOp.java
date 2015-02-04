@@ -26,7 +26,6 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -85,22 +84,8 @@ enum EntityOp {
         public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final String entityName = Util.readEntityName(data);
             final List<String> entities;
-            try {
-                entities = CleanupUtil.getAllEntitiesOfOneType(helper, user);
-            } catch (IOException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (URISyntaxException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (AuthenticationException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (JAXBException e) {
-                logger.error("Caught exception: " + e);
-                return false;
-            } catch (InterruptedException e) {
-                logger.error("Caught exception: " + e);
+            entities = CleanupUtil.getAllEntitiesOfOneType(helper, user);
+            if (entities == null) {
                 return false;
             }
             logger.info("Checking for presence of " + entityName + " in " + entities);

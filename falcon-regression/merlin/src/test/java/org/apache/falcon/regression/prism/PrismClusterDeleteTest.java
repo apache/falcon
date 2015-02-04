@@ -44,7 +44,7 @@ public class PrismClusterDeleteTest extends BaseTestClass {
     private boolean restartRequired;
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismClusterDeleteTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -56,7 +56,7 @@ public class PrismClusterDeleteTest extends BaseTestClass {
         restartRequired = false;
         Bundle bundle = BundleUtil.readLateDataBundle();
         bundles[0] = new Bundle(bundle, cluster1);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
@@ -65,7 +65,7 @@ public class PrismClusterDeleteTest extends BaseTestClass {
         if (restartRequired) {
             Util.restartService(cluster1.getFeedHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
 

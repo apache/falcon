@@ -50,7 +50,7 @@ import java.util.List;
 @Test(groups = "embedded")
 public class ProcessInstanceRerunTest extends BaseTestClass {
 
-    private String baseTestDir = baseHDFSDir + "/ProcessInstanceRerunTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestDir + "/output-data" + MINUTE_DATE_PATTERN;
@@ -76,7 +76,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
@@ -86,7 +86,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

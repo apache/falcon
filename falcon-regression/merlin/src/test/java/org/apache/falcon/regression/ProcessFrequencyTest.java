@@ -52,7 +52,7 @@ public class ProcessFrequencyTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestHDFSDir = baseHDFSDir + "/ProcessFrequencyTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
@@ -60,7 +60,7 @@ public class ProcessFrequencyTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundles[0] = new Bundle(bundle, cluster);
     }
 
@@ -68,13 +68,13 @@ public class ProcessFrequencyTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

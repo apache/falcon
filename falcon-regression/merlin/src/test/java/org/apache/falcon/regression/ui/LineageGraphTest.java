@@ -62,7 +62,7 @@ import java.util.Map;
 public class LineageGraphTest extends BaseUITestClass {
 
     private ColoHelper cluster = servers.get(0);
-    private String baseTestDir = baseHDFSDir + "/LineageGraphTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(LineageGraphTest.class);
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
@@ -86,7 +86,7 @@ public class LineageGraphTest extends BaseUITestClass {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
@@ -127,7 +127,7 @@ public class LineageGraphTest extends BaseUITestClass {
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
         closeBrowser();
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

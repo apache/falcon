@@ -41,7 +41,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
 
-    private String baseTestDir = baseHDFSDir + "/FeedDelayParallelTimeoutTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestDir + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(FeedDelayParallelTimeoutTest.class);
@@ -57,15 +57,15 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         bundles[0] = new Bundle(bundle, cluster1);
         bundles[1] = new Bundle(bundle, cluster2);
 
-        bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[1].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(enabled = true, timeOut = 12000000)

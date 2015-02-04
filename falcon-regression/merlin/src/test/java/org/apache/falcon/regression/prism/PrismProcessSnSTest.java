@@ -47,7 +47,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
     private ColoHelper cluster2 = servers.get(1);
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessSnSTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismProcessSnSTest.class);
     private String process1;
     private String process2;
@@ -62,7 +62,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         process1 = bundles[0].getProcessData();
@@ -71,7 +71,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

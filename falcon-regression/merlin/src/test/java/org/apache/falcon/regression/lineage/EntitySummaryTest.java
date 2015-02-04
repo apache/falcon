@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
@@ -71,8 +70,7 @@ public class EntitySummaryTest extends BaseTestClass {
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private FileSystem cluster1FS = serverFS.get(0);
-    private String testDir = "/EntitySummaryTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String sourcePath = baseTestHDFSDir + "/source";
     private String feedDataLocation = baseTestHDFSDir + "/source" + MINUTE_DATE_PATTERN;
@@ -87,7 +85,7 @@ public class EntitySummaryTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i <= 1; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
             bundles[i].setInputFeedDataPath(feedDataLocation);
         }
@@ -100,7 +98,7 @@ public class EntitySummaryTest extends BaseTestClass {
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
         cleanTestsDirs();
-        CleanupUtil.cleanAllEntities(prism);
+        removeTestClassEntities();
     }
 
     /**

@@ -49,7 +49,7 @@ public class FeedResumeTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].submitClusters(prism);
         feed = bundles[0].getInputFeedFromBundle();
@@ -57,7 +57,7 @@ public class FeedResumeTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

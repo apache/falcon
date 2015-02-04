@@ -66,7 +66,7 @@ public class HCatRetentionTest extends BaseTestClass {
     private Bundle bundle;
     private static HCatClient cli;
     private final String testDir = "/HCatRetentionTest/";
-    private final String baseTestHDFSDir = baseHDFSDir + testDir;
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
     private final String dBName = "default";
     private final ColoHelper cluster = servers.get(0);
     private final FileSystem clusterFS = serverFS.get(0);
@@ -78,7 +78,7 @@ public class HCatRetentionTest extends BaseTestClass {
         HadoopUtil.recreateDir(clusterFS, baseTestHDFSDir);
         cli = cluster.getClusterHelper().getHCatClient();
         bundle = new Bundle(BundleUtil.readHCat2Bundle(), cluster);
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundle.submitClusters(prism);
     }
 

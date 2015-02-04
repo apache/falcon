@@ -44,36 +44,29 @@ public final class CleanupUtil {
     }
     private static final Logger LOGGER = Logger.getLogger(CleanupUtil.class);
 
-    public static List<String> getAllProcesses(ColoHelper prism)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException,
-        InterruptedException {
-        return getAllEntitiesOfOneType(prism.getProcessHelper(), null);
-    }
-
-    public static List<String> getAllFeeds(ColoHelper prism)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException,
-        InterruptedException {
-        return getAllEntitiesOfOneType(prism.getFeedHelper(), null);
-    }
-
-    public static List<String> getAllClusters(ColoHelper prism)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException,
-        InterruptedException {
-        return getAllEntitiesOfOneType(prism.getClusterHelper(), null);
-    }
-
     public static List<String> getAllEntitiesOfOneType(AbstractEntityHelper entityManagerHelper,
-                                                       String user)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException,
-        InterruptedException {
-        final EntityList entityList = getEntitiesResultOfOneType(entityManagerHelper, user);
-        List<String> clusters = new ArrayList<String>();
+                                                       String user) {
+        return getEntitiesWithPrefix(entityManagerHelper, user, "");
+    }
+
+    public static List<String> getEntitiesWithPrefix(AbstractEntityHelper entityHelper,
+                                                       String user, String namePrefix) {
+        final EntityList entityList;
+        try {
+            entityList = getEntitiesResultOfOneType(entityHelper, user);
+        } catch (Exception e) {
+            LOGGER.error("Caught exception: " + ExceptionUtils.getStackTrace(e));
+            return null;
+        }
+        List<String> entities = new ArrayList<String>();
         if (entityList.getElements() != null) {
             for (EntityList.EntityElement entity : entityList.getElements()) {
-                clusters.add(entity.name);
+                if (entity.name.startsWith(namePrefix)) {
+                    entities.add(entity.name);
+                }
             }
         }
-        return clusters;
+        return entities;
     }
 
     private static EntityList getEntitiesResultOfOneType(
@@ -87,67 +80,28 @@ public final class CleanupUtil {
             new StringReader(clusterResponse.getMessage()));
     }
 
-    public static void cleanAllClustersQuietly(ColoHelper prism) {
-        try {
-            final List<String> clusters = getAllClusters(prism);
-            for (String cluster : clusters) {
-                try {
-                    prism.getClusterHelper().deleteByName(cluster, null);
-                } catch (Exception e) {
-                    LOGGER.warn("Caught exception: " + ExceptionUtils.getStackTrace(e));
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Unable to get a list of clusters because of exception: "
-                    +
-                ExceptionUtils.getStackTrace(e));
+
+
+    public static void cleanEntitiesWithPrefix(ColoHelper prism, String namePrefix) {
+        final List<String> processes = getEntitiesWithPrefix(prism.getProcessHelper(), null, namePrefix);
+        final List<String> feeds = getEntitiesWithPrefix(prism.getFeedHelper(), null, namePrefix);
+        final List<String> clusters = getEntitiesWithPrefix(prism.getClusterHelper(), null, namePrefix);
+
+        for (String process : processes) {
+            deleteQuietlyByName(prism.getProcessHelper(), process);
+        }
+        for (String feed : feeds) {
+            deleteQuietlyByName(prism.getFeedHelper(), feed);
+        }
+
+        for (String cluster : clusters) {
+            deleteQuietlyByName(prism.getClusterHelper(), cluster);
         }
     }
 
-    public static void cleanAllFeedsQuietly(ColoHelper prism) {
+    private static void deleteQuietlyByName(AbstractEntityHelper helper, String entityName) {
         try {
-            final List<String> feeds = getAllFeeds(prism);
-            for (String feed : feeds) {
-                try {
-                    prism.getFeedHelper().deleteByName(feed, null);
-                } catch (Exception e) {
-                    LOGGER.warn("Caught exception: " + ExceptionUtils.getStackTrace(e));
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Unable to get a list of feeds because of exception: "
-                    +
-                ExceptionUtils.getStackTrace(e));
-        }
-    }
-
-    public static void cleanAllProcessesQuietly(ColoHelper prism,
-                                                AbstractEntityHelper entityManagerHelper) {
-        try {
-            final List<String> processes = getAllProcesses(prism);
-            for (String process : processes) {
-                try {
-                    entityManagerHelper.deleteByName(process, null);
-                } catch (Exception e) {
-                    LOGGER.warn("Caught exception: " + ExceptionUtils.getStackTrace(e));
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Unable to get a list of feeds because of exception: "
-                    +
-                ExceptionUtils.getStackTrace(e));
-        }
-    }
-
-    public static void cleanAllEntities(ColoHelper prism) {
-        cleanAllProcessesQuietly(prism, prism.getProcessHelper());
-        cleanAllFeedsQuietly(prism);
-        cleanAllClustersQuietly(prism);
-    }
-
-    public static void deleteQuietly(AbstractEntityHelper helper, String feed) {
-        try {
-            helper.delete(feed);
+            helper.deleteByName(entityName, null);
         } catch (Exception e) {
             LOGGER.info("Caught exception: " + ExceptionUtils.getStackTrace(e));
         }

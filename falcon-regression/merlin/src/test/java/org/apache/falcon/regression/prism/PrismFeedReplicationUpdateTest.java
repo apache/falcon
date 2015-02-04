@@ -59,7 +59,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
     private String cluster1Colo = cluster1.getClusterHelper().getColoName();
     private String cluster2Colo = cluster2.getClusterHelper().getColoName();
     private String cluster3Colo = cluster3.getClusterHelper().getColoName();
-    private final String baseTestDir = baseHDFSDir + "/PrismFeedReplicationUpdateTest";
+    private final String baseTestDir = cleanAndGetTestDir();
     private final String inputPath = baseTestDir + "/input-data" + MINUTE_DATE_PATTERN;
     private String alternativeInputPath = baseTestDir + "/newFeedPath/input-data"
         + MINUTE_DATE_PATTERN;
@@ -78,14 +78,14 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -205,8 +205,8 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
         outputFeed = FeedMerlin.fromString(outputFeed).clearFeedClusters().toString();
 
         //set new feed input data
-        feed01 = Util.setFeedPathValue(feed01, baseHDFSDir + "/feed01" + MINUTE_DATE_PATTERN);
-        feed02 = Util.setFeedPathValue(feed02, baseHDFSDir + "/feed02" + MINUTE_DATE_PATTERN);
+        feed01 = Util.setFeedPathValue(feed01, baseTestDir + "/feed01" + MINUTE_DATE_PATTERN);
+        feed02 = Util.setFeedPathValue(feed02, baseTestDir + "/feed02" + MINUTE_DATE_PATTERN);
 
         //generate data in both the colos ua1 and ua3
         String prefix = InstanceUtil.getFeedPrefix(feed01);

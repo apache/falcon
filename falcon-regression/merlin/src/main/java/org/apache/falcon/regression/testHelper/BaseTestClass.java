@@ -21,6 +21,7 @@ package org.apache.falcon.regression.testHelper;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,7 +47,7 @@ public class BaseTestClass {
     protected List<ColoHelper> servers;
     protected List<FileSystem> serverFS;
     protected List<OozieClient> serverOC;
-    protected String baseHDFSDir = "/tmp/falcon-regression";
+    private String baseHDFSDir = "/tmp/falcon-regression";
     public static final String PRISM_PREFIX = "prism";
     protected Bundle[] bundles;
     public static final String MINUTE_DATE_PATTERN = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
@@ -69,6 +70,17 @@ public class BaseTestClass {
         }
 
         bundles = new Bundle[serverNames.length];
+        removeTestClassEntities();
+    }
+
+    protected final String cleanAndGetTestDir() {
+        String dir = baseHDFSDir + '/' + this.getClass().getSimpleName();
+        try {
+            HadoopUtil.recreateDir(serverFS, dir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return dir;
     }
 
     private static void prepareProperties() {
@@ -96,20 +108,15 @@ public class BaseTestClass {
         }
     }
 
-    public final void removeBundles(Bundle... bundlesForDeletion) {
-        for (Bundle bundle : bundlesForDeletion) {
+    public final void removeTestClassEntities() {
+        for (Bundle bundle : this.bundles) {
             if (bundle != null) {
                 bundle.deleteBundle(prism);
             }
         }
-        if (bundlesForDeletion != this.bundles) {
-            for (Bundle bundle : this.bundles) {
-                if (bundle != null) {
-                    bundle.deleteBundle(prism);
-                }
-            }
-        }
+        CleanupUtil.cleanEntitiesWithPrefix(prism, this.getClass().getSimpleName());
     }
+
 
     public final void cleanTestsDirs() throws IOException {
         if (MerlinConstants.CLEAN_TESTS_DIR) {

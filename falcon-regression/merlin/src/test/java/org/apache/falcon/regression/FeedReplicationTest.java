@@ -68,7 +68,7 @@ public class FeedReplicationTest extends BaseTestClass {
     private FileSystem cluster3FS = serverFS.get(2);
     private OozieClient cluster2OC = serverOC.get(1);
     private OozieClient cluster3OC = serverOC.get(2);
-    private String baseTestDir = baseHDFSDir + "/FeedReplicationTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String sourcePath = baseTestDir + "/source";
     private String feedDataLocation = baseTestDir + "/source" + MINUTE_DATE_PATTERN;
     private String targetPath = baseTestDir + "/target";
@@ -83,14 +83,14 @@ public class FeedReplicationTest extends BaseTestClass {
         bundles[1] = new Bundle(bundle, cluster2);
         bundles[2] = new Bundle(bundle, cluster3);
 
-        bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
-        bundles[2].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
+        bundles[2].generateUniqueBundle(this);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

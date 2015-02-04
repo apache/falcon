@@ -51,7 +51,7 @@ import java.util.List;
 @Test(groups = "embedded")
 public class ProcessInstanceColoMixedTest extends BaseTestClass {
 
-    private final String baseTestHDFSDir = baseHDFSDir + "/ProcessInstanceColoMixedTest";
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
     private final String feedPath = baseTestHDFSDir + "/feed0%d" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private ColoHelper cluster1 = servers.get(0);
@@ -72,9 +72,9 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
 
         //get 3 unique bundles
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[1] = BundleUtil.readELBundle();
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
 
         //generate bundles according to config files
         bundles[0] = new Bundle(bundles[0], cluster1);
@@ -94,7 +94,7 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(timeOut = 12000000)

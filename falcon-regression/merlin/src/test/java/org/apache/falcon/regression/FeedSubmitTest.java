@@ -42,7 +42,7 @@ public class FeedSubmitTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0] = new Bundle(bundles[0], cluster);
 
         //submit the cluster
@@ -54,7 +54,7 @@ public class FeedSubmitTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

@@ -48,7 +48,7 @@ import java.io.IOException;
 @Test(groups = "embedded")
 public class ProcessInstanceSuspendTest extends BaseTestClass {
 
-    private String baseTestHDFSDir = baseHDFSDir + "/ProcessInstanceSuspendTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -62,7 +62,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
@@ -72,7 +72,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles();
+        removeTestClassEntities();
         HadoopUtil.deleteDirIfExists(baseTestHDFSDir, clusterFS);
     }
 

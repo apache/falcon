@@ -36,7 +36,6 @@ import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Retention;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
@@ -213,10 +212,11 @@ public class FeedMerlin extends Feed {
     /**
      * Sets unique names for the feed.
      * @return mapping of old name to new name
+     * @param prefix prefix of new name
      */
-    public Map<? extends String, ? extends String> setUniqueName() {
+    public Map<? extends String, ? extends String> setUniqueName(String prefix) {
         final String oldName = getName();
-        final String newName =  oldName + Util.getUniqueString();
+        final String newName = TestEntityUtil.generateUniqueName(prefix, oldName);
         setName(newName);
         final HashMap<String, String> nameMap = new HashMap<String, String>(1);
         nameMap.put(oldName, newName);

@@ -63,7 +63,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private String testDate = "/2012/10/01/12/";
-    private String baseTestDir = baseHDFSDir + "/PrismFeedReplicationPartitionExpTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String testBaseDir1 = baseTestDir + "/localDC/rc/billing";
     private String testBaseDir2 = baseTestDir + "/clusterPath/localDC/rc/billing";
     private String testBaseDir3 = baseTestDir + "/dataBillingRC/fetlrc/billing";
@@ -177,7 +177,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
 
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
         }
     }
 
@@ -187,7 +187,7 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
             HadoopUtil.deleteDirIfExists(dir, cluster1FS);
             HadoopUtil.deleteDirIfExists(dir, cluster2FS);
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
 

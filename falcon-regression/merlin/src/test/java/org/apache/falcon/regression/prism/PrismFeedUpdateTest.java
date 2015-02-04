@@ -60,9 +60,9 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     private ColoHelper cluster2 = servers.get(1);
     private FileSystem server1FS = serverFS.get(0);
     private OozieClient cluster1OC = serverOC.get(0);
-    private String baseTestDir = baseHDFSDir + "/PrismFeedUpdateTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
+    private String workflowForNoIpOp = baseTestDir + "/noinop";
     private final String cluster1colo = cluster1.getClusterHelper().getColoName();
     private final String cluster2colo = cluster2.getClusterHelper().getColoName();
     private static final Logger LOGGER = Logger.getLogger(PrismFeedUpdateTest.class);
@@ -79,7 +79,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
             bundles[i].setInputFeedDataPath(feedInputTimedOutPath);
         }
@@ -87,7 +87,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -187,7 +187,8 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         //get 2nd process
         String process02 = process01;
         process02 = InstanceUtil
-            .setProcessName(process02, "zeroInputProcess" + new Random().nextInt());
+            .setProcessName(process02, this.getClass().getSimpleName()
+                + "_zeroInputProcess" + new Random().nextInt());
         List<String> feed = new ArrayList<String>();
         feed.add(outputFeed);
         final ProcessMerlin processMerlin = new ProcessMerlin(process02);

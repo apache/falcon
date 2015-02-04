@@ -45,7 +45,7 @@ public class PrismProcessSuspendTest extends BaseTestClass {
     private  OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private  boolean restartRequired;
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessSuspendTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -58,7 +58,7 @@ public class PrismProcessSuspendTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
 
@@ -69,7 +69,7 @@ public class PrismProcessSuspendTest extends BaseTestClass {
         if (restartRequired) {
             Util.restartService(cluster1.getProcessHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
 

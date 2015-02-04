@@ -54,7 +54,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String baseTestDir = baseHDFSDir + "/RescheduleProcessInFinalStates";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String inputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private static final Logger LOGGER = Logger.getLogger(RescheduleProcessInFinalStatesTest.class);
@@ -64,7 +64,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         b.setProcessWorkflow(aggregateWorkflowDir);
 
@@ -85,7 +85,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:15Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
@@ -98,7 +98,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

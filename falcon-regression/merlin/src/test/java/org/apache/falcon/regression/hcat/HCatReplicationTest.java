@@ -81,7 +81,7 @@ public class HCatReplicationTest extends BaseTestClass {
     private OozieClient cluster3OC = serverOC.get(2);
     private HCatClient cluster3HC;
 
-    private final String baseTestHDFSDir = baseHDFSDir + "/HCatReplicationTest";
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
 
     private final String dbName = "default";
     private final String localHCatData = OSUtil.getPath(OSUtil.RESOURCES, "hcat", "data");
@@ -100,17 +100,17 @@ public class HCatReplicationTest extends BaseTestClass {
     public void setUp() throws Exception {
         Bundle bundle = BundleUtil.readHCatBundle();
         bundles[0] = new Bundle(bundle, cluster.getPrefix());
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setClusterInterface(Interfacetype.REGISTRY,
             cluster.getClusterHelper().getHCatEndpoint());
 
         bundles[1] = new Bundle(bundle, cluster2.getPrefix());
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
         bundles[1].setClusterInterface(Interfacetype.REGISTRY, cluster2.getClusterHelper()
             .getHCatEndpoint());
 
         bundles[2] = new Bundle(bundle, cluster3.getPrefix());
-        bundles[2].generateUniqueBundle();
+        bundles[2].generateUniqueBundle(this);
         bundles[2].setClusterInterface(Interfacetype.REGISTRY, cluster3.getClusterHelper()
             .getHCatEndpoint());
 
@@ -354,6 +354,6 @@ public class HCatReplicationTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 }

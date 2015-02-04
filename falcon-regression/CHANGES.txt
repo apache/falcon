@@ -39,6 +39,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-968 Remove only entities submitted by same test and baseHDFSDir usage refactored
+   (Ruslan Ostafiychuk via Raghav Kumar Gautam)
+
    FALCON-1007 Improve test output and variable names (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1009 InstanceUtil cleanup (Raghav Kumar Gautam)

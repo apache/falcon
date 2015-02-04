@@ -57,7 +57,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private LineageHelper lineageHelper;
-    private String baseTestHDFSDir = baseHDFSDir + "/LineageApiInstanceTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String feedInputPrefix = baseTestHDFSDir + "/input";
     private String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
@@ -81,7 +81,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
 
         bundles[0] = new Bundle(BundleUtil.readELBundle(), cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
 
         bundles[0].setInputFeedDataPath(feedInputPath);
 
@@ -119,7 +119,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true, lastTimeOnly = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

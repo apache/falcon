@@ -65,7 +65,7 @@ public class AuthorizationTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestDir = baseHDFSDir + "/AuthorizationTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
 
@@ -78,7 +78,7 @@ public class AuthorizationTest extends BaseTestClass {
     public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
@@ -509,7 +509,7 @@ public class AuthorizationTest extends BaseTestClass {
                 .readEntityName(feed)) && !definition.contains("(feed) not found"),
             "Feed should be already submitted");
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
             + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
@@ -529,7 +529,7 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
             + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
@@ -614,7 +614,7 @@ public class AuthorizationTest extends BaseTestClass {
             .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
             + MINUTE_DATE_PATTERN);
 
         //update feed by U1
@@ -652,7 +652,7 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath"
+        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
             + MINUTE_DATE_PATTERN);
 
         //update feed by U2
@@ -680,6 +680,6 @@ public class AuthorizationTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 }

@@ -69,7 +69,7 @@ import java.util.Random;
 @Test(groups = "distributed")
 public class NewPrismProcessUpdateTest extends BaseTestClass {
 
-    private String baseTestDir = baseHDFSDir + "/NewPrismProcessUpdateTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String inputFeedPath = baseTestDir + MINUTE_DATE_PATTERN;
     private String workflowPath = baseTestDir + "/falcon-oozie-wf";
     private String workflowPath2 = baseTestDir + "/falcon-oozie-wf2";
@@ -88,11 +88,11 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
     public void testSetup() throws Exception {
         Bundle b = BundleUtil.readUpdateBundle();
         bundles[0] = new Bundle(b, cluster1);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[1] = new Bundle(b, cluster2);
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
         bundles[2] = new Bundle(b, cluster3);
-        bundles[2].generateUniqueBundle();
+        bundles[2].generateUniqueBundle(this);
         setBundleWFPath(bundles[0], bundles[1], bundles[2]);
         bundles[1].addClusterToBundle(bundles[2].getClusters().get(0),
                 ClusterType.TARGET, null, null);
@@ -112,7 +112,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = { "multiCluster" }, timeOut = 1200000)
@@ -248,7 +248,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
     @Test(groups = { "multiCluster" }, timeOut = 1800000)
     public void updateProcessConcurrencyWorkflowExecutionInEachColoWithOneColoDown()
         throws Exception {
-        //bundles[1].generateUniqueBundle();
+        //bundles[1].generateUniqueBundle(this);
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
@@ -371,7 +371,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
     @Test(groups = { "multiCluster" }, timeOut = 1200000)
     public void updateProcessNameInEachColoWithOneProcessRunning() throws Exception {
-        //bundles[1].generateUniqueBundle();
+        //bundles[1].generateUniqueBundle(this);
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
@@ -386,7 +386,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         List<String> oldNominalTimes =
                 OozieUtil.getActionsNominalTime(cluster3, oldBundleId, EntityType.PROCESS);
-        bundles[1].setProcessName("myNewProcessName");
+        bundles[1].setProcessName(this.getClass().getSimpleName() + "-myNewProcessName");
 
         //now to update
         ServiceResponse response =
@@ -405,7 +405,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         String endTime = TimeUtil.getTimeWrtSystemTime(10);
         bundles[1].setProcessValidity(startTime, endTime);
 
-        //bundles[1].generateUniqueBundle();
+        //bundles[1].generateUniqueBundle(this);
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
@@ -1455,7 +1455,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
             b = new Bundle(b, cluster1);
             b.setProcessWorkflow(workflowPath);
-            b.generateUniqueBundle();
+            b.generateUniqueBundle(this);
 
             b.setProcessValidity(TimeUtil.getTimeWrtSystemTime(-10),
                     TimeUtil.getTimeWrtSystemTime(15));

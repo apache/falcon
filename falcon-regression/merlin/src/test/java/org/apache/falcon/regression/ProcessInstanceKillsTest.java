@@ -55,8 +55,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String testDir = "/ProcessInstanceKillsTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
@@ -68,7 +67,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         b.setInputFeedDataPath(feedInputPath);
     }
@@ -77,7 +76,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
@@ -88,7 +87,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

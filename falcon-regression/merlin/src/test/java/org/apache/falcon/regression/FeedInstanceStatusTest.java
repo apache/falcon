@@ -46,7 +46,7 @@ import org.testng.annotations.Test;
 @Test(groups = "embedded")
 public class FeedInstanceStatusTest extends BaseTestClass {
 
-    private String baseTestDir = baseHDFSDir + "/FeedInstanceStatusTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestDir + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
 
@@ -66,14 +66,14 @@ public class FeedInstanceStatusTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

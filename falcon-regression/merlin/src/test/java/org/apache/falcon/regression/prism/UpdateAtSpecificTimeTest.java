@@ -69,8 +69,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     private ColoHelper cluster2 = servers.get(1);
     private ColoHelper cluster3 = servers.get(2);
     private FileSystem cluster2FS = serverFS.get(1);
-    private final String baseTestDir = baseHDFSDir + "/UpdateAtSpecificTimeTest-data";
-    private String aggregateWorkflowDir = baseHDFSDir + "/aggregator";
+    private final String baseTestDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestDir + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -84,19 +84,19 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         bundles[1] = new Bundle(bundle, cluster2);
         bundles[2] = new Bundle(bundle, cluster3);
 
-        bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
-        bundles[2].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
+        bundles[2].generateUniqueBundle(this);
 
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster1);
-        processBundle.generateUniqueBundle();
+        processBundle.generateUniqueBundle(this);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles(processBundle);
+        removeTestClassEntities();
     }
 
     @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)

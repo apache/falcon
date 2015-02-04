@@ -47,7 +47,7 @@ public class FeedAclTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String baseTestDir = baseHDFSDir + "/FeedAclTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private final AbstractEntityHelper feedHelper = prism.getFeedHelper();
@@ -62,7 +62,7 @@ public class FeedAclTest extends BaseTestClass {
     public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setInputFeedACL(MerlinConstants.CURRENT_USER_NAME,
@@ -246,6 +246,6 @@ public class FeedAclTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 }

@@ -218,18 +218,26 @@ public class Bundle {
      * Generates unique entities within a bundle changing their names and names of dependant items
      * to unique.
      */
-    public void generateUniqueBundle() {
+    public void generateUniqueBundle(Object testClassObject) {
+        generateUniqueBundle(testClassObject.getClass().getSimpleName() + '-');
+    }
+
+    /**
+     * Generates unique entities within a bundle changing their names and names of dependant items
+     * to unique.
+     */
+    public void generateUniqueBundle(String prefix) {
         /* creating new names */
         List<ClusterMerlin> clusterMerlinList = ClusterMerlin.fromString(clusters);
         Map<String, String> clusterNameMap = new HashMap<String, String>();
         for (ClusterMerlin clusterMerlin : clusterMerlinList) {
-            clusterNameMap.putAll(clusterMerlin.setUniqueName());
+            clusterNameMap.putAll(clusterMerlin.setUniqueName(prefix));
         }
 
         List<FeedMerlin> feedMerlinList = FeedMerlin.fromString(dataSets);
         Map<String, String> feedNameMap = new HashMap<String, String>();
         for (FeedMerlin feedMerlin : feedMerlinList) {
-            feedNameMap.putAll(feedMerlin.setUniqueName());
+            feedNameMap.putAll(feedMerlin.setUniqueName(prefix));
         }
 
         /* setting new names in feeds and process */
@@ -249,7 +257,7 @@ public class Bundle {
 
         if (StringUtils.isNotEmpty(processData)) {
             ProcessMerlin processMerlin = new ProcessMerlin(processData);
-            processMerlin.setUniqueName();
+            processMerlin.setUniqueName(prefix);
             processMerlin.renameClusters(clusterNameMap);
             processMerlin.renameFeeds(feedNameMap);
             processData = processMerlin.toString();
@@ -820,12 +828,11 @@ public class Bundle {
      * @param endTime end of feeds and process validity on every cluster
      */
     public void generateRequiredBundle(int numberOfClusters, int numberOfInputs,
-                                    int numberOfOptionalInput,
-                                    String inputBasePaths, int numberOfOutputs, String startTime,
-                                    String endTime) {
+                                       int numberOfOptionalInput,
+                                       String inputBasePaths, int numberOfOutputs, String startTime,
+                                       String endTime) {
         //generate and set clusters
         ClusterMerlin c = new ClusterMerlin(getClusters().get(0));
-        c.setUniqueName();
         List<String> newClusters = new ArrayList<String>();
         final String clusterName = c.getName();
         for (int i = 0; i < numberOfClusters; i++) {
@@ -838,13 +845,13 @@ public class Bundle {
         List<String> newDataSets = new ArrayList<String>();
         for (int i = 0; i < numberOfInputs; i++) {
             final FeedMerlin feed = new FeedMerlin(getDataSets().get(0));
-            feed.setUniqueName();
+            feed.setName(feed.getName() + "-input" + i);
             feed.setFeedClusters(newClusters, inputBasePaths + "/input" + i, startTime, endTime);
             newDataSets.add(feed.toString());
         }
         for (int i = 0; i < numberOfOutputs; i++) {
             final FeedMerlin feed = new FeedMerlin(getDataSets().get(0));
-            feed.setUniqueName();
+            feed.setName(feed.getName() + "-output" + i);
             feed.setFeedClusters(newClusters, inputBasePaths + "/output" + i,  startTime, endTime);
             newDataSets.add(feed.toString());
         }
@@ -852,7 +859,6 @@ public class Bundle {
 
         //add clusters and feed to process
         ProcessMerlin processMerlin = new ProcessMerlin(getProcessData());
-        processMerlin.setUniqueName();
         processMerlin.setProcessClusters(newClusters, startTime, endTime);
         processMerlin.setProcessFeeds(newDataSets, numberOfInputs,
             numberOfOptionalInput, numberOfOutputs);

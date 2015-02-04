@@ -42,7 +42,7 @@ public class FalconClientTest extends BaseTestClass {
 
     private final ColoHelper cluster = servers.get(0);
     private final FileSystem clusterFS = serverFS.get(0);
-    private final String baseTestDir = baseHDFSDir + "/AuthorizationTest";
+    private final String baseTestDir = cleanAndGetTestDir();
     private final String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private final String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
 
@@ -55,7 +55,7 @@ public class FalconClientTest extends BaseTestClass {
     public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
@@ -89,6 +89,6 @@ public class FalconClientTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 }
