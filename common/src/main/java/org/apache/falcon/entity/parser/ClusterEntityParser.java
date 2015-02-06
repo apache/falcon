@@ -323,8 +323,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                 }
             } else {
                 if (fileStatus.getPermission().toShort() < expectedPermission.toShort()) {
-                    LOG.error(errorMessage + " atlease");
-                    throw new ValidationException(errorMessage + " atleast");
+                    LOG.error(errorMessage + " at least");
+                    throw new ValidationException(errorMessage + " at least");
                 }
             }
             // try to list to see if the user is able to write to this folder
