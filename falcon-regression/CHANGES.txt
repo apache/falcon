@@ -215,6 +215,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1018 Enable and fix FalconClientTest#badClusterSubmit (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-1005 In ProcessInstanceSuspendTest clean test dir after each method execution
    (Paul Isaychuk via Ruslan Ostafiychuk)
 
