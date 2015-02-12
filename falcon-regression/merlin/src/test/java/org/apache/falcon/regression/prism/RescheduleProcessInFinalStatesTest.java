@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -33,7 +34,9 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -54,6 +57,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String inputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
@@ -152,6 +156,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      */
     @Test(enabled = true)
     public void rescheduleDWE() throws Exception {
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
         prism.getProcessHelper()
             .getProcessInstanceKill(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:05Z&end=2010-01-02T01:11Z");

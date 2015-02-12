@@ -40,6 +40,8 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-1022 Wait for RUNNING status of instances before killing them (Ruslan Ostafiychuk)
+
    FALCON-968 Remove only entities submitted by same test and baseHDFSDir usage refactored
    (Ruslan Ostafiychuk via Raghav Kumar Gautam)
 
