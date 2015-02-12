@@ -21,10 +21,17 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.cli.SemanticAnalysis.HCatSemanticAnalyzer;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.testng.Assert;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * util methods for HCat.
@@ -48,6 +55,21 @@ public final class HCatUtil {
         hcatConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
         hcatConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
         return HCatClient.create(hcatConf);
+    }
+
+    public static void addPartitionsToTable(HCatClient clusterHC, List<String> partitions,
+        List<String> partitionLocations, String partitionCol, String dbName, String tableName) throws HCatException {
+        Assert.assertEquals(partitions.size(), partitionLocations.size(),
+                "Number of locations is not same as number of partitions.");
+        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<HCatAddPartitionDesc>();
+        for (int i = 0; i < partitions.size(); ++i) {
+            final String partition = partitions.get(i);
+            final Map<String, String> onePartition = new HashMap<String, String>();
+            onePartition.put(partitionCol, partition);
+            final String partitionLoc = partitionLocations.get(i);
+            partitionDesc.add(HCatAddPartitionDesc.create(dbName, tableName, partitionLoc, onePartition).build());
+        }
+        clusterHC.addPartitions(partitionDesc);
     }
 
     @SuppressWarnings("deprecation")

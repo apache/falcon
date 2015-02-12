@@ -83,6 +83,10 @@ public final class BundleUtil {
         return readBundleFromFolder("updateBundle");
     }
 
+    public static Bundle readCombinedActionsBundle() throws IOException {
+        return readBundleFromFolder("combinedActions");
+    }
+
     private static Bundle readBundleFromFolder(final String folderPath) throws IOException {
         LOGGER.info("Loading xmls from directory: " + folderPath);
         File directory = null;
