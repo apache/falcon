@@ -274,6 +274,29 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return consolidateResult(results, APIResult.class);
     }
 
+    @POST
+    @Path("touch/{type}/{entity}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "touch")
+    @Override
+    public APIResult touch(
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entityName,
+            @Dimension("colo") @QueryParam("colo") final String coloExpr) {
+        final Set<String> colosFromExp = getColosFromExpression(coloExpr, type, entityName);
+        return new EntityProxy(type, entityName) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return colosFromExp;
+            }
+
+            @Override
+            protected APIResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("touch", type, entityName, colo);
+            }
+        }.execute();
+    }
+
     @GET
     @Path("status/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})

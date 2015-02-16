@@ -84,6 +84,7 @@ public class FalconCLI {
     public static final String DEFINITION_OPT = "definition";
     public static final String DEPENDENCY_OPT = "dependency";
     public static final String LIST_OPT = "list";
+    public static final String TOUCH_OPT = "touch";
 
     public static final String FIELDS_OPT = "fields";
     public static final String FILTER_BY_OPT = "filterBy";
@@ -453,6 +454,10 @@ public class FalconCLI {
                                 entityType, cluster, start, end, fields, filterBy,
                                 filterTags,
                                 orderBy, sortOrder, offset, numResults, numInstances));
+        } else if (optionsList.contains(TOUCH_OPT)) {
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
+            colo = getColo(colo);
+            result = client.touch(entityType, entityName, colo).getMessage();
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
@@ -613,9 +618,11 @@ public class FalconCLI {
         Option dependency = new Option(DEPENDENCY_OPT, false,
                 "Gets the dependencies of entity");
         Option list = new Option(LIST_OPT, false,
-                "List entities registerd for a type");
+                "List entities registered for a type");
         Option entitySummary = new Option(SUMMARY_OPT, false,
                 "Get summary of instances for list of entities");
+        Option touch = new Option(TOUCH_OPT, false,
+                "Force update the entity in workflow engine(even without any changes to entity)");
 
         OptionGroup group = new OptionGroup();
         group.addOption(submit);
@@ -631,6 +638,7 @@ public class FalconCLI {
         group.addOption(dependency);
         group.addOption(list);
         group.addOption(entitySummary);
+        group.addOption(touch);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option entityType = new Option(ENTITY_TYPE_OPT, true,

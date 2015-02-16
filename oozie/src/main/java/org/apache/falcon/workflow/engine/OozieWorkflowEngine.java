@@ -1069,6 +1069,21 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return result.toString();
     }
 
+    @Override
+    public String touch(Entity entity, String cluster) throws FalconException {
+        BundleJob bundle = findLatestBundle(entity, cluster);
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        StringBuilder result = new StringBuilder();
+        if (bundle != MISSING) {
+            LOG.info("Updating entity {} for cluster: {}, bundle: {}", entity.toShortString(), cluster, bundle.getId());
+            String output = updateInternal(entity, entity, clusterEntity, bundle, CurrentUser.getUser());
+            result.append(output).append("\n");
+            LOG.info("Entity update complete: {} for cluster {}, bundle: {}", entity.toShortString(), cluster,
+                    bundle.getId());
+        }
+        return result.toString();
+    }
+
     private String getUpdateString(Entity entity, Date date, BundleJob oldBundle, BundleJob newBundle) {
         StringBuilder builder = new StringBuilder();
         builder.append(entity.toShortString()).append("/Effective Time: ").append(SchemaHelper.formatDateUTC(date));

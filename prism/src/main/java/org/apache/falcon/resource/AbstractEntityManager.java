@@ -121,10 +121,15 @@ public abstract class AbstractEntityManager {
 
     protected Set<String> getColosFromExpression(String coloExpr, String type, String entity) {
         Set<String> colos;
+        final Set<String> applicableColos = getApplicableColos(type, entity);
         if (coloExpr == null || coloExpr.equals("*") || coloExpr.isEmpty()) {
-            colos = getApplicableColos(type, entity);
+            colos = applicableColos;
         } else {
             colos = new HashSet<String>(Arrays.asList(coloExpr.split(",")));
+            if (!applicableColos.containsAll(colos)) {
+                throw FalconWebException.newException("Given colos not applicable for entity operation",
+                        Response.Status.BAD_REQUEST);
+            }
         }
         return colos;
     }

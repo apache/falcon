@@ -5,6 +5,7 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-949 Force update feature (pavan kumar kolamuri via Suhas Vasu)
 
   IMPROVEMENTS
    FALCON-263 Adding documentation for params api (Ajay Yadav via Srikanth 

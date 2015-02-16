@@ -151,4 +151,15 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         return super.validate(request, type);
     }
 
+    @POST
+    @Path("touch/{type}/{entity}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Monitored(event = "touch")
+    @Override
+    public APIResult touch(@Dimension("entityType") @PathParam("type") String type,
+                           @Dimension("entityName") @PathParam("entity") String entityName,
+                           @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.touch(type, entityName, colo);
+    }
+
 }

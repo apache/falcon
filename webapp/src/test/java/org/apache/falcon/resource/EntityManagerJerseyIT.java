@@ -140,6 +140,16 @@ public class EntityManagerJerseyIT {
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
     }
 
+    private ClientResponse touch(TestContext context, Entity entity) {
+        WebResource resource = context.service.path("api/entities/touch/"
+                + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
+        ClientResponse clientResponse = resource
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        return clientResponse;
+    }
+
     @Test
     public void testUpdateCheckUser() throws Exception {
         TestContext context = newContext();
@@ -341,6 +351,50 @@ public class EntityManagerJerseyIT {
         //Assert that update does not create new bundle
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
+    }
+
+    @Test
+    public void testTouchEntity() throws Exception {
+        TestContext context = newContext();
+        context.scheduleProcess();
+        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
+        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 1);
+        ProxyOozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
+        String bundle = bundles.get(0).getId();
+        String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
+
+        //Update end time of process required for touch
+        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        updateEndtime(process);
+        ClientResponse response = update(context, process, null);
+        context.assertSuccessful(response);
+        bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 1);
+
+        //Calling force update
+        response = touch(context, process);
+        context.assertSuccessful(response);
+        OozieTestUtils.waitForBundleStart(context, Status.PREP, Status.RUNNING);
+
+        //Assert that touch creates new bundle and old coord is running
+        bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 2);
+        CoordinatorJob coord = ozClient.getCoordJobInfo(coordId);
+        Assert.assertTrue(coord.getStatus() == Status.RUNNING || coord.getStatus() == Status.SUCCEEDED);
+
+        //Assert on new bundle/coord
+        String newBundle = null;
+        for (BundleJob myBundle : bundles) {
+            if (!myBundle.getId().equals(bundle)) {
+                newBundle = myBundle.getId();
+                break;
+            }
+        }
+
+        assert newBundle != null;
+        coord = ozClient.getCoordJobInfo(ozClient.getBundleJobInfo(newBundle).getCoordinators().get(0).getId());
+        Assert.assertTrue(coord.getStatus() == Status.RUNNING || coord.getStatus() == Status.PREP);
     }
 
     public void testStatus() throws Exception {

@@ -83,6 +83,12 @@ $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update -fil
 Example:
 $FALCON_HOME/bin/falcon entity -type process -name HourlyReportsGenerator -update -file /process/definition.xml
 
+---+++Touch
+
+Force Update operation allows an already submitted/scheduled entity to be updated.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -touch
 
 ---+++Status
 

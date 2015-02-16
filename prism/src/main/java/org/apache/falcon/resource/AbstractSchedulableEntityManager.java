@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.util.*;
@@ -223,6 +224,32 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         return new EntitySummaryResult("Entity Summary Result",
                 entitySummaries.toArray(new EntitySummaryResult.EntitySummary[entitySummaries.size()]));
     }
+
+    /**
+     * Force updates an entity.
+     *
+     * @param type
+     * @param entityName
+     * @return APIResult
+     */
+    public APIResult touch(@Dimension("entityType") @PathParam("type") String type,
+                           @Dimension("entityName") @PathParam("entity") String entityName,
+                           @Dimension("colo") @QueryParam("colo") String colo) {
+        checkColo(colo);
+        StringBuilder result = new StringBuilder();
+        try {
+            Entity entity = EntityUtil.getEntity(type, entityName);
+            Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
+            for (String cluster : clusters) {
+                result.append(getWorkflowEngine().touch(entity, cluster));
+            }
+        } catch (Throwable e) {
+            LOG.error("Touch failed", e);
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
+    }
+
 
     private void validateTypeForEntitySummary(String type) {
         EntityType entityType = EntityType.getEnum(type);

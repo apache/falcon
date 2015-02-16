@@ -190,7 +190,8 @@ public class FalconClient {
         DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML),
         SUMMARY("api/entities/summary", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML);
+        DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML),
+        TOUCH("api/entities/touch", HttpMethod.POST, MediaType.TEXT_XML);
 
         private String path;
         private String method;
@@ -379,6 +380,20 @@ public class FalconClient {
         throws FalconCLIException {
         return sendEntitySummaryRequest(Entities.SUMMARY, entityType, cluster, start, end, fields, filterBy, filterTags,
                 orderBy, sortOrder, offset, numResults, numInstances);
+    }
+
+    public APIResult touch(String entityType, String entityName, String colo) throws FalconCLIException {
+        Entities operation = Entities.TOUCH;
+        WebResource resource = service.path(operation.path).path(entityType).path(entityName);
+        if (colo != null) {
+            resource = resource.queryParam("colo", colo);
+        }
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(operation.mimeType).type(MediaType.TEXT_XML)
+                .method(operation.method, ClientResponse.class);
+        checkIfSuccessful(clientResponse);
+        return parseAPIResult(clientResponse);
     }
 
     public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
