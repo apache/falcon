@@ -79,6 +79,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-973 Add LogMover Service for yarn
+   (pavan kumar kolamuri via Suhas Vasu)
+
    FALCON-993 Falcon Oozie adaptor test case failed with umask issue
    (Peeyush Bishnoi via Srikanth Sundarrajan)
 
