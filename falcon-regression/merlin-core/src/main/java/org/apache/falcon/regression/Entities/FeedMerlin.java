@@ -35,6 +35,7 @@ import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Retention;
 import org.apache.falcon.entity.v0.feed.Validity;
+import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.testng.Assert;
 
@@ -242,6 +243,19 @@ public class FeedMerlin extends Feed {
         acl.setGroup(group);
         acl.setPermission(permission);
         this.setACL(acl);
+    }
+
+    /**
+     * Sel SLA.
+     * @param slaLow : low value of SLA
+     * @param slaHigh : high value of SLA
+     */
+
+    public void setSla(Frequency slaLow, Frequency slaHigh) {
+        Sla sla = new Sla();
+        sla.setSlaLow(slaLow);
+        sla.setSlaHigh(slaHigh);
+        this.setSla(sla);
     }
 
 }
