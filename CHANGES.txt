@@ -67,6 +67,8 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-944 Parallel update APIs create 2 coords (Suhas Vasu)
+
    FALCON-943 process update copying user lib is very slow. (Shwetha G S)
 
    FALCON-419 Update deprecated HCatalog API to use Hive Metastore API.

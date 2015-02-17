@@ -27,6 +27,7 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.lock.MemoryLocks;
 import org.apache.falcon.entity.parser.EntityParser;
 import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.ValidationException;
@@ -72,6 +73,7 @@ import java.util.Set;
  */
 public abstract class AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
+    private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     protected static final String DEFAULT_NUM_RESULTS = "10";
@@ -265,10 +267,9 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    // Parallel update can get very clumsy if two feeds are updated which
-    // are referred by a single process. Sequencing them.
-    public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
+    public APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
         checkColo(colo);
+        List<Entity> tokenList = null;
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
@@ -279,6 +280,8 @@ public abstract class AbstractEntityManager {
 
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
+
+            tokenList = obtainUpdateEntityLocks(oldEntity);
 
             StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
@@ -304,7 +307,46 @@ public abstract class AbstractEntityManager {
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
+            releaseUpdateEntityLocks(entityName, tokenList);
         }
+    }
+
+    private List<Entity> obtainUpdateEntityLocks(Entity entity)
+        throws FalconException {
+        List<Entity> tokenList = new ArrayList<Entity>();
+
+        //first obtain lock for the entity for which update is issued.
+        if (memoryLocks.acquireLock(entity)) {
+            tokenList.add(entity);
+        } else {
+            throw new FalconException("Looks like an update command is already issued for " + entity.toShortString());
+        }
+
+        //now obtain locks for all dependent entities.
+        Set<Entity> affectedEntities = EntityGraph.get().getDependents(entity);
+        for (Entity e : affectedEntities) {
+            if (memoryLocks.acquireLock(e)) {
+                tokenList.add(e);
+            } else {
+                LOG.error("Error while trying to acquire lock for {}. Releasing already obtained locks",
+                        e.toShortString());
+                throw new FalconException("There are multiple update commands running for dependent entity "
+                        + e.toShortString());
+            }
+        }
+        return tokenList;
+    }
+
+    private void releaseUpdateEntityLocks(String entityName, List<Entity> tokenList) {
+        if (tokenList != null && !tokenList.isEmpty()) {
+            for (Entity entity : tokenList) {
+                memoryLocks.releaseLock(entity);
+            }
+            LOG.info("All update locks released for {}", entityName);
+        } else {
+            LOG.info("No locks to release for " + entityName);
+        }
+
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException {

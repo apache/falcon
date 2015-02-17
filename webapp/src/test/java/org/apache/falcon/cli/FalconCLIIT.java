@@ -116,6 +116,7 @@ public class FalconCLIIT {
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(executeWithURL("entity -submitAndSchedule -type process -file " + filePath), 0);
+        OozieTestUtils.waitForProcessWFtoStart(context);
 
         Assert.assertEquals(executeWithURL("entity -update -name " + overlay.get("processName")
                 + " -type process -file " + filePath), 0);
