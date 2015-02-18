@@ -4,16 +4,22 @@
 ---+++ Building Falcon
 
 <verbatim>
+You would need the following installed to build Falcon
+
+* JDK 1.7
+* Maven 3.x
+
 git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 
 cd falcon
 
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie.
 Oozie versions >= 4 are supported]
+Falcon build with JDK 1.7 using -noverify option
 
 </verbatim>
 

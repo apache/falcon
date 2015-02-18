@@ -22,7 +22,7 @@ A. Building & Installing Falcon
 
 You would need the following installed:
 
-* JDK 1.6
+* JDK 1.7
 * Maven 3.x
 
 *Note:* To build Falcon on Ubuntu/Centos set umask to 022. To do so, add the following line in ~/.bashrc or
@@ -38,10 +38,11 @@ a. Building falcon from the source release
 * tar -xzvf apache-falcon-${project.version}-source.tar.gz
 * cd falcon-sources-${project.version}
 
-* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
+* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+        Falcon build with JDK 1.7 using -noverify option
 
 
 b. Building falcon from the source repository
@@ -49,10 +50,11 @@ b. Building falcon from the source repository
 
 * git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 * cd falcon
-* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
+* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+        Falcon build with JDK 1.7 using -noverify option
 
 
 2. Deploying Falcon
