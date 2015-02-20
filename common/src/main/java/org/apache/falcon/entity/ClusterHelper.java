@@ -113,6 +113,9 @@ public final class ClusterHelper {
 
     private static String getNormalizedUrl(Cluster cluster, Interfacetype type) {
         String normalizedUrl = getInterface(cluster, type).getEndpoint();
+        if (normalizedUrl.endsWith("///")){
+            return normalizedUrl;
+        }
         String normalizedPath = new Path(normalizedUrl + "/").toString();
         return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
