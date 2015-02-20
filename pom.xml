@@ -331,6 +331,7 @@
                                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                     <configLocation>falcon/checkstyle.xml</configLocation>
                                     <headerLocation>falcon/checkstyle-java-header.txt</headerLocation>
+                                    <suppressionsLocation>falcon/checkstyle-suppressions.xml</suppressionsLocation>
                                     <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>

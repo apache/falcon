@@ -63,6 +63,7 @@
     <!-- See http://checkstyle.sf.net/config_header.html   -->
     <module name="Header">
         <property name="headerFile" value="${checkstyle.header.file}"/>
+        <property name="fileExtensions" value="java"/>
     </module>
 
     <module name="FileLength"/>
@@ -172,7 +173,8 @@
         <!-- Checks for common coding problems               -->
         <!-- See http://checkstyle.sf.net/config_coding.html -->
         <!-- module name="AvoidInlineConditionals"/-->
-        <module name="DoubleCheckedLocking"/>
+        <!-- DoubleCheckedLocking check is no longer required. See http://checkstyle.sourceforge.net/releasenotes.html -->
+        <!-- module name="DoubleCheckedLocking"/-->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
         <module name="StringLiteralEquality"/>

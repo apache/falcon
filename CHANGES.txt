@@ -8,6 +8,9 @@ Trunk (Unreleased)
    FALCON-949 Force update feature (pavan kumar kolamuri via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1003 Update checkstyle to remove DoubleCheckedLocking
+   (Pallavi Rao via Suhas Vasu)
+
    FALCON-1012 Add support for MapR-FS (Roman Slysh via Suhas Vasu)
 
    FALCON-774 Discontinue support for JDK 1.6 and move to 1.7. (Peeyush 
