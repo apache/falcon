@@ -44,6 +44,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+  
+   FALCON-1014 Fix PrismProcessSnSTest in falcon regression . Contributed by Pragya M via 
+   Samarth G)
 
    FALCON-1022 Wait for RUNNING status of instances before killing them (Ruslan Ostafiychuk)
 
