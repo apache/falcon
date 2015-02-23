@@ -19,6 +19,9 @@
 package org.apache.falcon.regression;
 
 
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -114,5 +117,47 @@ public class FeedSubmitTest extends BaseTestClass {
 
         response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
+    }
+
+    /**
+     * Submit a feed with the path for location-data type empty. Feed submit should fail.
+     *      *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void submitFeedWithEmptyDataPath() throws Exception {
+        FeedMerlin feedObj = new FeedMerlin(feed);
+        feedObj.setLocation(LocationType.DATA, "");
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
+        AssertUtil.assertFailedWithStatus(response, HttpStatus.SC_BAD_REQUEST,
+                "Can not create a Path from an empty string");
+    }
+
+    /**
+     * Submit a feed no location type stats. Feed submit should succeed.
+     *
+     * @throws Exception
+     */
+
+    @Test(groups = {"singleCluster"})
+    public void submitFeedWithNoStatsPath() throws Exception {
+        FeedMerlin feedObj = new FeedMerlin(feed);
+        feedObj.getLocations().getLocations().set(1, null);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
+        AssertUtil.assertSucceeded(response);
+    }
+
+    /**
+     * Submit a feed with no location type data. Feed submit should fail.
+     *      *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void submitFeedWithNoDataPath() throws Exception {
+        FeedMerlin feedObj = new FeedMerlin(feed);
+        feedObj.getLocations().getLocations().set(0, null);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
+        AssertUtil.assertFailedWithStatus(response, HttpStatus.SC_BAD_REQUEST,
+                "FileSystem based feed but it doesn't contain location type - data");
     }
 }

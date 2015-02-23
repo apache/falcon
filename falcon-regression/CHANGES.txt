@@ -44,8 +44,11 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   
+   FALCON-1034 Add test for FALCON-677 - wherein feed data and stats paths no longer default
+   to /tmp/.(Karishma G via Samarth Gupta)
   
-   FALCON-1014 Fix PrismProcessSnSTest in falcon regression . Contributed by Pragya M via 
+   FALCON-1014 Fix PrismProcessSnSTest in falcon regression . (Contributed by Pragya M via 
    Samarth G)
 
    FALCON-1022 Wait for RUNNING status of instances before killing them (Ruslan Ostafiychuk)
