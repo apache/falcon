@@ -220,8 +220,27 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     }
 
     /**
-     * Schedule process with number of instances running. Perform -suspend action using only -start
-     * parameter with value which points to expected last time of instantiation. Check that only
+     * Schedule process. Perform -suspend action using only -end parameter.
+     * Should fail with appropriate status message.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceSuspendOnlyEnd() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
+        bundles[0].setProcessConcurrency(3);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
+                "?end=2010-01-02T01:05Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Schedule process with a number of instances running. Perform -suspend action using params
+     * such that they aim to suspend the last instance. Check that only
      * the last instance is suspended.
      *
      * @throws Exception

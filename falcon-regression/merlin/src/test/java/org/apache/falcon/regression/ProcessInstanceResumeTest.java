@@ -201,7 +201,39 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeNoParams() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, null);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Attempt to perform -resume action without -end parameter. Should fail with an
+     + appropriate status code or message.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceResumeWOEndParam() throws Exception {
+        bundles[0].submitFeedsScheduleProcess(prism);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, "?start=2010-01-02T01:00Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Attempt to perform -resume action without -start parameter. Should fail with an
+     + appropriate status code or message.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceResumeWOStartParam() throws Exception {
+        bundles[0].submitFeedsScheduleProcess(prism);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, "?end=2010-01-02T01:15Z");
         InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 

@@ -46,6 +46,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-1044 Add tests for the change that start and end are compulsory parameters for 
+   all instance POST apis.(Karishma G via Samarth)
    
    FALCON-1034 Add test for FALCON-677 - wherein feed data and stats paths no longer default
    to /tmp/.(Karishma G via Samarth Gupta)
