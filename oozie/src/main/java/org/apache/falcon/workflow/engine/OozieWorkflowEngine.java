@@ -1317,7 +1317,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             }
             //if user has set any of these oozie rerun properties then force rerun flag is ignored
             if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES) && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
-                jobprops.put(OozieClient.RERUN_FAIL_NODES, !isForced);
+                jobprops.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
             }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
