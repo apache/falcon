@@ -597,4 +597,16 @@ public abstract class AbstractEntityHelper {
             entityName + colo);
         return Util.sendRequest(url, "get", null, null);
     }
+
+    public ServiceResponse touchEntity(String data)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        return touchEntity(Util.readEntityName(data), data, null);
+    }
+
+    public ServiceResponse touchEntity(String entityName, String data, String user)
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.TOUCH_URL.getValue(), getEntityType(),
+                entityName + colo);
+        return Util.sendRequest(url, "post", data, user);
+    }
 }

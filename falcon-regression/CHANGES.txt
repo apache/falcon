@@ -6,6 +6,8 @@ Trunk (Unreleased)
 
   NEW FEATURES
 
+   FALCON-1043 Add test in falcon to test touch feature(Pragya Mittal via Samarth Gupta)   
+
    FALCON-1021 Add test in falcon to test feed SLA feature (Pragya Mittal via Raghav Kumar Gautam)
 
    FALCON-671 Add a test in falcon-regression where one oozie workflow has various actions like

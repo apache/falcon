@@ -596,7 +596,9 @@ public final class Util {
         INSTANCE_RERUN("/api/instance/rerun"),
         INSTANCE_SUMMARY("/api/instance/summary"),
         INSTANCE_PARAMS("/api/instance/params"),
-        INSTANCE_LIST("/api/instance/list");
+        INSTANCE_LIST("/api/instance/list"),
+        TOUCH_URL("/api/entities/touch");
+
         private final String url;
 
         URLS(String url) {
