@@ -276,11 +276,23 @@ public abstract class AbstractEntityHelper {
         return submitEntity(data, null);
     }
 
+    public ServiceResponse validateEntity(String data)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        return validateEntity(data, null);
+    }
+
     public ServiceResponse submitEntity(String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         LOGGER.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
         return Util.sendRequest(createUrl(this.hostname + URLS.SUBMIT_URL.getValue(),
             getEntityType() + colo), "post", data, user);
+    }
+
+    public ServiceResponse validateEntity(String data, String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        LOGGER.info("Validating " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
+        return Util.sendRequest(createUrl(this.hostname + URLS.VALIDATE_URL.getValue(),
+                getEntityType() + colo), "post", data, user);
     }
 
     public ServiceResponse schedule(String processData)
