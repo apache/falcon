@@ -52,6 +52,8 @@ import org.testng.annotations.Test;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Process instance status tests.
@@ -107,7 +109,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     /**
      * time out is set as 3 minutes .... getStatus is for a large range in past.
      * 6 instance should be materialized and one in running and other in waiting
-     *
+     * Adding logging information test as part of FALCON-813.
+     * In case status does not contain jobId of instance the test should fail.
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
@@ -118,12 +121,16 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(1, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1, Status.RUNNING, EntityType.PROCESS);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T10:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
         InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
@@ -157,13 +164,15 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:30Z");
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:30Z");
         InstanceUtil.validateResponse(r, 5, 0, 0, 5, 0);
     }
 
     /**
      * Schedule process and try to -getStatus without date parameters. Attempt should succeed. Start defaults
      * to start of entity and end defaults to end of entity.
+     * Adding logging information test as part of status information.
+     * In case status does not contain jobId of instance the test should fail.
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusDateEmpty()
@@ -172,35 +181,47 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:30Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 5,
                 CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
         InstanceUtil.validateResponse(r, 6, 5, 0, 1, 0);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
      * Schedule process with number of instances. Perform -getStatus request with valid
      * parameters. Attempt should succeed.
-     *
+     * Adding logging information test as part of status information.
+     * In case status does not contain jobId of instance the test should fail.
+    *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusStartAndEnd() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 1 ,
                 CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
      * Schedule process. Perform -getStatus using -start parameter which is out of process
      * validity range. Attempt should succeed, with start defaulted to entity start time.
+     * Adding logging information test as part of status information.
+     * In case status does not contain jobId of instance the test should fail.
      *
      * @throws Exception
      */
@@ -209,13 +230,17 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
@@ -267,6 +292,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     /**
      * Schedule process. Perform -getStatus using -start/-end parameters which are out of process
      * validity range. Attempt should succeed, with start/end defaulted to entity's start/end.
+     * Adding logging information test as part of status information.
+     * In case status does not contain jobId of instance the test should fail.
      *
      * @throws Exception
      */
@@ -276,13 +303,17 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(2);
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
         InstanceUtil.validateResponse(r, 5, 2, 0, 3, 0);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
@@ -316,19 +347,24 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
      * Schedule process. -getStatus of it's first instance using only -start parameter which
      * points to start time of process validity. Check that response reflects expected status of
      * instance.
-     *
+     * Adding logging information test as part of status information.
+     * In case status does not contain jobId of instance the test should fail.
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusOnlyStart() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z");
         InstanceUtil.validateResponse(r, 5, 1, 0, 4, 0);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
@@ -348,7 +384,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
 
     /**
      * Schedule process. Try to -getStatus without time range parameters. Attempt succeeds.
-     *
+     * Adding logging information test as part of status information.
+     * In case status does not contain jobId of instance the test should fail.
      *
      * @throws Exception
      */
@@ -357,12 +394,16 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessConcurrency(5);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].submitFeedsScheduleProcess(prism);
+        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
         InstanceUtil.validateResponse(r, 5, 5, 0, 0, 0);
+        List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
+        Assert.assertTrue(matchWorkflows(instanceWfIDs, oozieWfIDs), "No job ids exposed in status message");
     }
 
     /**
@@ -386,4 +427,22 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
         InstanceUtil.validateFailedInstances(r, 3);
     }
+
+    /*
+    * Function to match the workflows obtained from instance status and oozie.
+    */
+    private boolean matchWorkflows(List<String> instanceWf, List<String> oozieWf) {
+        Collections.sort(instanceWf);
+        Collections.sort(oozieWf);
+        if (instanceWf.size() != oozieWf.size()) {
+            return false;
+        }
+        for (int index = 0; index < instanceWf.size(); index++) {
+            if (!instanceWf.get(index).contains(oozieWf.get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

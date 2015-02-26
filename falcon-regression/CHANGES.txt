@@ -51,6 +51,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   
+   FALCON-1040 Modifying ProcessInstanceStatusTest to expose job id for running jobs in 
+   Falcon. (Pragya M via Samarth G)
 
    FALCON-1044 Add tests for the change that start and end are compulsory parameters for 
    all instance POST apis.(Karishma G via Samarth)

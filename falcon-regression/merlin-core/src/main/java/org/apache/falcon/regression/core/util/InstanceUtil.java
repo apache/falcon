@@ -202,7 +202,7 @@ public final class InstanceUtil {
         List<InstancesResult.WorkflowStatus> statuses = new ArrayList<InstancesResult.WorkflowStatus>();
         for (InstancesResult.Instance instance : instances) {
             final InstancesResult.WorkflowStatus status = instance.getStatus();
-            LOGGER.info("status: "+ status + ", instance: " + instance.getInstance());
+            LOGGER.info("status: " + status + ", instance: " + instance.getInstance());
             statuses.add(status);
         }
 
@@ -214,6 +214,24 @@ public final class InstanceUtil {
             waitingCount, "Waiting Instances");
         Assert.assertEquals(Collections.frequency(statuses, InstancesResult.WorkflowStatus.KILLED),
             killedCount, "Killed Instances");
+    }
+
+    public static List<String> getWorkflowJobIds(InstancesResult instancesResult) {
+        InstancesResult.Instance[] instances = instancesResult.getInstances();
+        LOGGER.info("instances: " + Arrays.toString(instances));
+        Assert.assertNotNull(instances, "instances should be not null");
+        List<String> wfids = new ArrayList<String>();
+        for (InstancesResult.Instance instance : instances) {
+            LOGGER.warn("instance: " + instance + " , status: "
+                    + instance.getStatus() +  ", logs : " + instance.getLogFile());
+            if (instance.getStatus().name().equals("RUNNING") || instance.getStatus().name().equals("SUCCEEDED")) {
+                wfids.add(instance.getLogFile());
+            }
+            if (instance.getStatus().name().equals("KILLED") || instance.getStatus().name().equals("WAITING")) {
+                Assert.assertNull(instance.getLogFile());
+            }
+        }
+        return wfids;
     }
 
     /**

@@ -306,6 +306,24 @@ public final class OozieUtil {
         return workflowIds;
     }
 
+    public static List<String> getWorkflow(ColoHelper coloHelper, String bundleID)
+        throws OozieClientException {
+        OozieClient oozieClient = coloHelper.getClusterHelper().getOozieClient();
+        waitForCoordinatorJobCreation(oozieClient, bundleID);
+        List<String> workflowIds = new ArrayList<String>();
+        String coordId = InstanceUtil.getDefaultCoordIDFromBundle(oozieClient, bundleID);
+        CoordinatorJob coordJobInfo = oozieClient.getCoordJobInfo(coordId);
+        for (CoordinatorAction action : coordJobInfo.getActions()) {
+            if (action.getStatus().name().equals("RUNNING") || action.getStatus().name().equals("SUCCEEDED")) {
+                workflowIds.add(action.getExternalId());
+            }
+            if (action.getStatus().name().equals("KILLED") || action.getStatus().name().equals("WAITING")) {
+                Assert.assertNull(action.getExternalId());
+            }
+        }
+        return workflowIds;
+    }
+
     public static Date getNominalTime(ColoHelper prismHelper, String bundleID)
         throws OozieClientException {
         OozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
