@@ -97,6 +97,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test demonstrates replication of stored data from one source cluster to one target cluster.
      * It checks the lifecycle of replication workflow instance including its creation. When
      * replication ends test checks if data was replicated correctly.
+     * Also checks for presence of _SUCCESS file in target directory.
      */
     @Test
     public void replicate1Source1Target()
@@ -164,12 +165,19 @@ public class FeedReplicationTest extends BaseTestClass {
             .getAllFilesRecursivelyHDFS(cluster2FS, toTarget);
 
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
+
+        //_SUCCESS does not exist in source
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster1FS, toSource, ""), false);
+
+        //_SUCCESS should exist in target
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
     }
 
     /**
      * Test demonstrates replication of stored data from one source cluster to two target clusters.
      * It checks the lifecycle of replication workflow instances including their creation on both
      * targets. When replication ends test checks if data was replicated correctly.
+     * Also checks for presence of _SUCCESS file in target directory.
      */
     @Test
     public void replicate1Source2Targets() throws Exception {
@@ -254,6 +262,13 @@ public class FeedReplicationTest extends BaseTestClass {
 
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster3ReplicatedData);
+
+        //_SUCCESS does not exist in source
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster1FS, toSource, ""), false);
+
+        //_SUCCESS should exist in target
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster3FS, toTarget, ""), true);
     }
 
     /**
@@ -262,6 +277,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * feed still waits for availability flag (file which name is defined as availability flag in
      * feed definition). As soon as mentioned file is got uploaded in data directory,
      * replication starts and when it ends test checks if data was replicated correctly.
+     * Also checks for presence of availability flag in target directory.
      */
     @Test
     public void availabilityFlagTest() throws Exception {
@@ -349,5 +365,11 @@ public class FeedReplicationTest extends BaseTestClass {
             .getAllFilesRecursivelyHDFS(cluster2FS, toTarget);
         LOGGER.info("Data on target cluster: " + cluster2ReplicatedData);
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
+
+        //availabilityFlag exists in source
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster1FS, toSource, availabilityFlagName), true);
+
+        //availabilityFlag should exist in target
+        Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, availabilityFlagName), true);
     }
 }

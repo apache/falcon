@@ -51,7 +51,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
-   
+
+   FALCON-1017 FeedReplicationTest modified to check for _SUCCESS getting created on 
+   target directory(Pragya M via Samarth G)   
    FALCON-1040 Modifying ProcessInstanceStatusTest to expose job id for running jobs in 
    Falcon. (Pragya M via Samarth G)
 
