@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   
+   FALCON-843 add test to support current & last week el expression(Pragya M via Samarth G)
 
    FALCON-1035 Add test in falcon regression for validate feature. Validate is exposed 
    via both server and prism (Karishma G via Samarth Gupta)
