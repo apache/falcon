@@ -19,6 +19,7 @@
 package org.apache.falcon.regression;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.entity.v0.EntityType;
@@ -589,6 +590,7 @@ public class AuthorizationTest extends BaseTestClass {
     public void u1ScheduleFeedU2ScheduleDependantProcessU1UpdateFeed() throws Exception {
         String feed = bundles[0].getInputFeedFromBundle();
         String process = bundles[0].getProcessData();
+        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
@@ -605,13 +607,14 @@ public class AuthorizationTest extends BaseTestClass {
         //get old process details
         String oldProcessBundleId = InstanceUtil
             .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
-
         String oldProcessUser =
             getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
         String oldFeedBundleId = InstanceUtil
             .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String oldFeedUser =
+                getBundleUser(cluster, Util.readEntityName(feed), EntityType.FEED);
 
         //update feed definition
         String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
@@ -622,8 +625,11 @@ public class AuthorizationTest extends BaseTestClass {
             TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.CURRENT_USER_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
-        //new feed bundle should be created by by U1
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, true, false);
+        //new feed bundle should be created by U1
+        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed, true, false);
+        String newFeedUser =
+                getBundleUser(cluster, Util.readEntityName(newFeed), EntityType.FEED);
+        Assert.assertEquals(oldFeedUser, newFeedUser, "User should be the same");
 
         //new process bundle should be created by U2
         OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
@@ -638,6 +644,7 @@ public class AuthorizationTest extends BaseTestClass {
     public void u1ScheduleFeedU2ScheduleDependantProcessU2UpdateFeed() throws Exception {
         String feed = bundles[0].getInputFeedFromBundle();
         String process = bundles[0].getProcessData();
+        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
@@ -647,7 +654,7 @@ public class AuthorizationTest extends BaseTestClass {
 
         //by U2 schedule process dependent on scheduled feed by U1
         ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process,
-            MerlinConstants.USER2_NAME);
+                MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
@@ -655,22 +662,139 @@ public class AuthorizationTest extends BaseTestClass {
         String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
             + MINUTE_DATE_PATTERN);
 
+        //get old process details
+        String oldProcessBundleId = InstanceUtil
+                .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+        String oldProcessUser =
+                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+
+        //get old feed details
+        String oldFeedBundleId = InstanceUtil
+                .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String oldFeedUser =
+                getBundleUser(cluster, Util.readEntityName(feed), EntityType.FEED);
+
         //update feed by U2
         serviceResponse = prism.getFeedHelper().update(feed, newFeed,
             TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
-        AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
-                 "Feed scheduled by first user should not be updated by second user");
+        AssertUtil.assertSucceeded(serviceResponse);
+
+        //new feed bundle should be created by U2
+        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed, true, false);
+        String newFeedUser =
+                getBundleUser(cluster, Util.readEntityName(newFeed), EntityType.FEED);
+        Assert.assertNotEquals(oldFeedUser, newFeedUser, "User should not be the same");
+        Assert.assertEquals(MerlinConstants.USER2_NAME, newFeedUser);
+
+        //new process bundle should be created by U2
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        String newProcessUser =
+                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
+    }
+
+    //disabled since, falcon does not have authorization https://issues.apache
+    // .org/jira/browse/FALCON-388
+    @Test(enabled = false)
+    public void u1ScheduleFeedU1ScheduleDependantProcessU1UpdateProcess() throws Exception {
+        String feed = bundles[0].getInputFeedFromBundle();
+        String process = bundles[0].getProcessData();
+        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
+        //submit both feeds
+        bundles[0].submitClusters(prism);
+        bundles[0].submitFeeds(prism);
+        //schedule input feed by U1
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
+        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
+
+        //by U1 schedule process dependent on scheduled feed by U1
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process);
+        AssertUtil.assertSucceeded(serviceResponse);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+
+        //get old process details
+        String oldProcessBundleId = InstanceUtil
+                .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+        String oldProcessUser =
+                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+
+        //get old feed details
+        String oldFeedBundleId = InstanceUtil
+                .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+
+        //update process by U1
+        ProcessMerlin processObj = new ProcessMerlin(process);
+        processObj.setProperty("randomProp", "randomVal");
+        serviceResponse = prism.getProcessHelper().update(process, processObj.toString());
+        AssertUtil.assertSucceeded(serviceResponse);
+
+        //new feed bundle should not be created
+        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, false, false);
+
+        //new process bundle should be created by U1
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        String newProcessUser =
+                getBundleUser(cluster, processObj.getName(), EntityType.PROCESS);
+        Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
+    }
+
+    //disabled since, falcon does not have authorization https://issues.apache
+    // .org/jira/browse/FALCON-388
+    @Test(enabled = false)
+    public void u1ScheduleFeedU1ScheduleDependantProcessU2UpdateProcess() throws Exception {
+        String feed = bundles[0].getInputFeedFromBundle();
+        String process = bundles[0].getProcessData();
+        process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
+        //submit both feeds
+        bundles[0].submitClusters(prism);
+        bundles[0].submitFeeds(prism);
+        //schedule input feed by U1
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
+        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
+
+        //by U1 schedule process dependent on scheduled feed by U1
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process);
+        AssertUtil.assertSucceeded(serviceResponse);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+
+        //get old process details
+        String oldProcessBundleId = InstanceUtil
+                .getLatestBundleID(cluster, Util.readEntityName(process), EntityType.PROCESS);
+        String oldProcessUser =
+                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+
+        //get old feed details
+        String oldFeedBundleId = InstanceUtil
+                .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+
+        //update process by U2
+        ProcessMerlin processObj = new ProcessMerlin(process);
+        processObj.setProperty("randomProp", "randomVal");
+        serviceResponse = prism.getProcessHelper().update(process, processObj.toString(),
+                TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
+        AssertUtil.assertSucceeded(serviceResponse);
+
+        //new feed bundle should not be created
+        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, false, false);
+
+        //new process bundle should be created by U2
+        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, process, true, false);
+        String newProcessUser =
+                getBundleUser(cluster, processObj.getName(), EntityType.PROCESS);
+        Assert.assertNotEquals(oldProcessUser, newProcessUser, "User should not be the same");
+        Assert.assertEquals(MerlinConstants.USER2_NAME, newProcessUser);
     }
 
     private String getBundleUser(ColoHelper coloHelper, String entityName, EntityType entityType)
         throws OozieClientException {
-        String newProcessBundleId = InstanceUtil.getLatestBundleID(coloHelper, entityName,
+        String newBundleId = InstanceUtil.getLatestBundleID(coloHelper, entityName,
             entityType);
-        BundleJob newProcessBundlejob =
-            coloHelper.getClusterHelper().getOozieClient().getBundleJobInfo(newProcessBundleId);
+        BundleJob newBundleJob =
+            coloHelper.getClusterHelper().getOozieClient().getBundleJobInfo(newBundleId);
         CoordinatorJob coordinatorJob = null;
-        for (CoordinatorJob coord : newProcessBundlejob.getCoordinators()) {
-            if (coord.getAppName().contains("DEFAULT")) {
+        for (CoordinatorJob coord : newBundleJob.getCoordinators()) {
+            if ((entityType == EntityType.PROCESS && coord.getAppName().contains("DEFAULT"))
+                || (entityType == EntityType.FEED && coord.getAppName().contains("RETENTION"))) {
                 coordinatorJob = coord;
             }
         }
