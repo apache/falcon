@@ -92,6 +92,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1057 recipes.twiki should be renamed Recipes.twiki for consistency 
+   and to fix a dead link (Aaron Dossett via Srikanth Sundarrajan)
+   
    FALCON-1052 pipeline feature is not able to group by through CLI
    (Pallavi Rao via Suhas Vasu)
 
