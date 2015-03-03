@@ -19,10 +19,8 @@
 package org.apache.falcon.resource;
 
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * Pojo for JAXB marshalling / unmarshalling.
@@ -116,8 +114,8 @@ public class InstancesResult extends APIResult {
         @XmlElement
         public InstanceAction[] actions;
 
-        @XmlElementWrapper(name="params")
-        public Map<String, String> wfParams;
+        @XmlElement(name="params")
+        public KeyValuePair[] wfParams;
 
         public Instance() {
         }
@@ -164,8 +162,7 @@ public class InstancesResult extends APIResult {
             return details;
         }
 
-        public Map<String, String> getWfParams() { return wfParams; }
-
+        public KeyValuePair[] getWfParams() { return wfParams; }
 
         @Override
         public String toString() {
@@ -219,6 +216,37 @@ public class InstancesResult extends APIResult {
             return "{action:" + this.action + ", status:" + this.status
                     + (this.logFile == null ? "" : ", log:" + this.logFile)
                     + "}";
+        }
+    }
+
+    /**
+     * POJO for key value parameters.
+     */
+    @XmlRootElement(name = "params")
+    public static class KeyValuePair {
+        @XmlElement
+        public String key;
+        @XmlElement
+        public String value;
+
+        public KeyValuePair(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public KeyValuePair() { }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "{key:" + this.key + ", value:" + this.value + "}";
         }
     }
 }

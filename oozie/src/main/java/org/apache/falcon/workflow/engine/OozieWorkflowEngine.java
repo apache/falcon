@@ -711,12 +711,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         instance.actions = instanceActions.toArray(new InstancesResult.InstanceAction[instanceActions.size()]);
     }
 
-    private Map<String, String> getWFParams(WorkflowJob jobInfo) {
-        Map<String, String> wfParams = new HashMap<String, String>();
+    private InstancesResult.KeyValuePair[] getWFParams(WorkflowJob jobInfo) {
         Configuration conf = new Configuration(false);
         conf.addResource(new ByteArrayInputStream(jobInfo.getConf().getBytes()));
+        InstancesResult.KeyValuePair[] wfParams = new InstancesResult.KeyValuePair[conf.size()];
+        int i = 0;
         for (Map.Entry<String, String> entry : conf) {
-            wfParams.put(entry.getKey(), entry.getValue());
+            wfParams[i++] = new InstancesResult.KeyValuePair(entry.getKey(), entry.getValue());
         }
         return wfParams;
     }

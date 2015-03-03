@@ -207,9 +207,9 @@ public final class ResponseHelper {
                 sb.append(toAppend).append("\n");
 
                 if (instance.getWfParams() != null) {
-                    Map<String, String> props = instance.getWfParams();
+                    InstancesResult.KeyValuePair[] props = instance.getWfParams();
                     sb.append("Workflow params").append("\n");
-                    for (Map.Entry<String, String> entry : props.entrySet()) {
+                    for (InstancesResult.KeyValuePair entry : props) {
                         sb.append(entry.getKey()).append("=")
                             .append(entry.getValue()).append("\n");
                     }

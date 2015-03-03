@@ -8,6 +8,9 @@ Trunk (Unreleased)
    FALCON-949 Force update feature (pavan kumar kolamuri via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-555 API response from instance "params" having multiple "entry" key
+   (Pallavi Rao via Suhas Vasu)
+
    FALCON-1003 Update checkstyle to remove DoubleCheckedLocking
    (Pallavi Rao via Suhas Vasu)
 
