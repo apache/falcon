@@ -65,10 +65,10 @@ public class EntityList {
         public String name;
         @XmlElement
         public String status;
-        @XmlElementWrapper(name = "list")
+        @XmlElementWrapper(name = "tags")
         public List<String> tag;
-        @XmlElementWrapper(name = "list")
-        public List<String> pipelines;
+        @XmlElementWrapper(name = "pipelines")
+        public List<String> pipeline;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
         @Override
@@ -82,8 +82,8 @@ public class EntityList {
                 outString += " - " + tag.toString();
             }
 
-            if (pipelines != null && !pipelines.isEmpty()) {
-                outString += " - " + pipelines.toString();
+            if (pipeline != null && !pipeline.isEmpty()) {
+                outString += " - " + pipeline.toString();
             }
             outString += "\n";
             return outString;
@@ -114,7 +114,7 @@ public class EntityList {
         element.name = e.getName();
         element.status = null;
         element.tag = new ArrayList<String>();
-        element.pipelines = new ArrayList<String>();
+        element.pipeline = new ArrayList<String>();
         return element;
     }
 

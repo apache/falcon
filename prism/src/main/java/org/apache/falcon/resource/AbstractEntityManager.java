@@ -923,7 +923,7 @@ public abstract class AbstractEntityManager {
             elem.status = getStatusString(entity);
         }
         if (fields.contains("pipelines")) {
-            elem.pipelines = EntityUtil.getPipelines(entity);
+            elem.pipeline = EntityUtil.getPipelines(entity);
         }
         if (fields.contains("tags")) {
             elem.tag = EntityUtil.getTags(entity);

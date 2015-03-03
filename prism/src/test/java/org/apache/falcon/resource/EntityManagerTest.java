@@ -203,8 +203,8 @@ public class EntityManagerTest extends AbstractEntityManager {
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
         Assert.assertEquals(entityList.getElements()[1].name, "process2");
-        Assert.assertEquals(entityList.getElements()[1].pipelines.size(), 2);
-        Assert.assertEquals(entityList.getElements()[1].pipelines.get(0), "testPipeline");
+        Assert.assertEquals(entityList.getElements()[1].pipeline.size(), 2);
+        Assert.assertEquals(entityList.getElements()[1].pipeline.get(0), "testPipeline");
         Assert.assertEquals(entityList.getElements()[0].tag, null);
 
         entityList = this.getEntityList("process", "pipelines", "",

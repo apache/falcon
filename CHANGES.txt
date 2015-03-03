@@ -89,6 +89,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1052 pipeline feature is not able to group by through CLI
+   (Pallavi Rao via Suhas Vasu)
+
    FALCON-1047 Feed Instance Listing doesn't return any output or error
    (Pallavi Rao via Suhas Vasu)
 
