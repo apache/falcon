@@ -809,7 +809,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
-            client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_ACTION_RERUN,
+            client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
                 Integer.toString(coordinatorAction.getActionNumber()), true, true);
             assertCoordActionStatus(cluster, coordinatorAction.getId(),
                 org.apache.oozie.client.CoordinatorAction.Status.RUNNING,

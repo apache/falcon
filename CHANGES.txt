@@ -89,6 +89,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1050 Falcon rerun is broken for timed out instances
+   (Suhas Vasu)
+
    FALCON-1045 Falcon rerun is broken in trunk (Suhas Vasu)
 
    FALCON-973 Add LogMover Service for yarn
