@@ -638,6 +638,13 @@ public class Bundle {
         writeFeedElement(feedElement, feedName);
     }
 
+    public void setOutputFeedAvailabilityFlag(String flag) {
+        String feedName = getOutputFeedNameFromBundle();
+        FeedMerlin feedElement = getFeedElement(feedName);
+        feedElement.setAvailabilityFlag(flag);
+        writeFeedElement(feedElement, feedName);
+    }
+
     public void setCLusterColo(String colo) {
         ClusterMerlin c = getClusterElement();
         c.setColo(colo);
