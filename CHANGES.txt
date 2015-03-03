@@ -89,6 +89,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1047 Feed Instance Listing doesn't return any output or error
+   (Pallavi Rao via Suhas Vasu)
+
    FALCON-1050 Falcon rerun is broken for timed out instances
    (Suhas Vasu)
 
