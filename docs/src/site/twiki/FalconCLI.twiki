@@ -226,7 +226,7 @@ Optional Args : -colo <<colo>> -lifecycle <<lifecycles>>
 Get falcon feed instance availability.
 
 Usage:
-$FALCON_HOME/bin/falcon instance -entity feed -name <<name>> -listing
+$FALCON_HOME/bin/falcon instance -type feed -name <<name>> -listing
 
 Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
 -colo <<colo>>
