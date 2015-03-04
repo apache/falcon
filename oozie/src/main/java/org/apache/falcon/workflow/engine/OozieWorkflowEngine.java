@@ -496,7 +496,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end,
-                                          Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+                                          Properties props, List<LifeCycle> lifeCycles,
+                                          Boolean isForced) throws FalconException {
+        if (isForced != null && isForced) {
+            props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+        }
         return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles);
     }
 
@@ -1317,7 +1321,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 jobprops.putAll(props);
             }
             //if user has set any of these oozie rerun properties then force rerun flag is ignored
-            if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES) && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
+            if (!jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && !jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
                 jobprops.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
             }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);

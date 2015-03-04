@@ -224,8 +224,9 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Context HttpServletRequest request,
             @Dimension("colo") @QueryParam("colo") String colo,
-            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles);
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles,
+            @Dimension("force") @QueryParam("force") Boolean isForced) {
+        return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles, isForced);
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

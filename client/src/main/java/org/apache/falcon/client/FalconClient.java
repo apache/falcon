@@ -461,7 +461,8 @@ public class FalconClient {
 
     public InstancesResult rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
-                                 String clusters, String sourceClusters, List<LifeCycle> lifeCycles)
+                                 String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                 Boolean isForced)
         throws FalconCLIException, IOException {
 
         StringBuilder buffer = new StringBuilder();
@@ -480,7 +481,7 @@ public class FalconClient {
         }
         String temp = (buffer.length() == 0) ? null : buffer.toString();
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, temp), null, colo, lifeCycles);
+                getServletInputStream(clusters, sourceClusters, temp), null, colo, lifeCycles, isForced);
     }
 
     public InstancesResult getLogsOfInstances(String type, String entity, String start,
@@ -605,7 +606,8 @@ public class FalconClient {
                                             String start, String end, String runId, String colo,
                                             String fields, String filterBy, String tags,
                                             String orderBy, String sortOrder, Integer offset,
-                                            Integer numResults, Integer numInstances, String searchPattern) {
+                                            Integer numResults, Integer numInstances, String searchPattern,
+                                            Boolean isForced) {
 
         if (!StringUtils.isEmpty(fields)) {
             resource = resource.queryParam("fields", fields);
@@ -647,6 +649,9 @@ public class FalconClient {
         if (!StringUtils.isEmpty(searchPattern)) {
             resource = resource.queryParam("pattern", searchPattern);
         }
+        if (isForced != null) {
+            resource = resource.queryParam("force", String.valueOf(isForced));
+        }
         return resource;
 
     }
@@ -664,7 +669,7 @@ public class FalconClient {
         resource = addParamsToResource(resource, start, end, null, null,
                 fields, filterBy, filterTags,
                 orderBy, sortOrder,
-                offset, numResults, numInstances, null);
+                offset, numResults, numInstances, null, null);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -734,16 +739,35 @@ public class FalconClient {
                 .getEntity(InstancesResult.class);
     }
 
+    private InstancesResult sendInstanceRequest(Instances instances, String type,
+                                                String entity, String start, String end, InputStream props,
+                                                String runid, String colo, List<LifeCycle> lifeCycles,
+                                                Boolean isForced) throws FalconCLIException {
+        return sendInstanceRequest(instances, type, entity, start, end, props,
+                runid, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS, isForced).getEntity(InstancesResult.class);
+    }
+
+
+
     private ClientResponse sendInstanceRequest(Instances instances, String type, String entity,
                                        String start, String end, InputStream props, String runid, String colo,
                                        List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder,
                                        Integer offset, Integer numResults) throws FalconCLIException {
+
+        return sendInstanceRequest(instances, type, entity, start, end, props,
+                runid, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, null);
+    }
+
+    private ClientResponse sendInstanceRequest(Instances instances, String type, String entity,
+                                       String start, String end, InputStream props, String runid, String colo,
+                                       List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder,
+                                       Integer offset, Integer numResults, Boolean isForced) throws FalconCLIException {
         checkType(type);
         WebResource resource = service.path(instances.path).path(type)
                 .path(entity);
 
         resource = addParamsToResource(resource, start, end, runid, colo,
-                null, filterBy, null, orderBy, sortOrder, offset, numResults, null, null);
+                null, filterBy, null, orderBy, sortOrder, offset, numResults, null, null, isForced);
 
         if (lifeCycles != null) {
             checkLifeCycleOption(lifeCycles, type);
@@ -800,7 +824,7 @@ public class FalconClient {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
         resource = addParamsToResource(resource, null, null, null, null, fields, filterBy, filterTags,
-                orderBy, sortOrder, offset, numResults, null, searchPattern);
+                orderBy, sortOrder, offset, numResults, null, searchPattern, null);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)

@@ -92,6 +92,8 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-950 Rerun does not work on succeeded instances (Suhas Vasu)
+
    FALCON-1048 Incorrect documentation for feed instacnce listing api. (Suhas
    Vasu via Srikanth Sundarrajan)
 

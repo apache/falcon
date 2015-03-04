@@ -74,7 +74,7 @@ public abstract class AbstractWorkflowEngine {
                                                   List<LifeCycle> lifeCycles) throws FalconException;
 
     public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
-                                                   List<LifeCycle> lifeCycles) throws FalconException;
+                                                   List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException;
 
     public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props,
                                                      List<LifeCycle> lifeCycles) throws FalconException;

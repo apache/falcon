@@ -95,6 +95,7 @@ public class FalconCLI {
     public static final String NUM_RESULTS_OPT = "numResults";
     public static final String NUM_INSTANCES_OPT = "numInstances";
     public static final String PATTERN_OPT = "pattern";
+    public static final String FORCE_RERUN_FLAG = "force";
 
     public static final String INSTANCE_CMD = "instance";
     public static final String START_OPT = "start";
@@ -286,11 +287,15 @@ public class FalconCLI {
         } else if (optionsList.contains(RERUN_OPT)) {
             validateNotEmpty(start, START_OPT);
             validateNotEmpty(end, END_OPT);
+            boolean isForced = false;
+            if (optionsList.contains(FORCE_RERUN_FLAG)) {
+                isForced = true;
+            }
             result =
                 ResponseHelper.getString(client
                         .rerunInstances(type, entity, start, end, filePath, colo,
                                 clusters, sourceClusters,
-                                lifeCycles));
+                                lifeCycles, isForced));
         } else if (optionsList.contains(LOG_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
@@ -353,6 +358,12 @@ public class FalconCLI {
                     || optionsList.contains(STATUS_OPT)
                     || optionsList.contains(SUMMARY_OPT) || !type.equals("feed")) {
                 throw new FalconCLIException("Invalid argument: sourceClusters");
+            }
+        }
+
+        if (optionsList.contains(FORCE_RERUN_FLAG)) {
+            if (!optionsList.contains(RERUN_OPT)) {
+                throw new FalconCLIException("Force option can be used only with instance rerun");
             }
         }
     }
@@ -797,6 +808,8 @@ public class FalconCLI {
                 "Start returning instances from this offset");
         Option numResults = new Option(NUM_RESULTS_OPT, true,
                 "Number of results to return per request");
+        Option forceRerun = new Option(FORCE_RERUN_FLAG, false,
+                "Flag to forcefully rerun entire workflow of an instance");
 
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);
@@ -815,6 +828,7 @@ public class FalconCLI {
         instanceOptions.addOption(orderBy);
         instanceOptions.addOption(sortOrder);
         instanceOptions.addOption(numResults);
+        instanceOptions.addOption(forceRerun);
 
         return instanceOptions;
     }
