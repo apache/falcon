@@ -55,10 +55,13 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1058 Test for Feed Replication with Empty Directories(Pragya M via Samarth Gupta)
 
    FALCON-1046 Add test for process update with user feature(Karishma G via Samarth Gupta)
+   
    FALCON-1017 FeedReplicationTest modified to check for _SUCCESS getting created on 
    target directory(Pragya M via Samarth G)   
+   
    FALCON-1040 Modifying ProcessInstanceStatusTest to expose job id for running jobs in 
    Falcon. (Pragya M via Samarth G)
 
