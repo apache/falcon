@@ -23,6 +23,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.process.Sla;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
@@ -261,6 +263,19 @@ public class ProcessMerlin extends Process {
         acl.setGroup(group);
         acl.setPermission(permission);
         this.setACL(acl);
+    }
+
+    /**
+     * Set SLA.
+     * @param slaStart : start value of SLA
+     * @param slaEnd : end value of SLA
+     */
+
+    public void setSla(Frequency slaStart, Frequency slaEnd) {
+        Sla sla = new Sla();
+        sla.setShouldStartIn(slaStart);
+        sla.setShouldEndIn(slaEnd);
+        this.setSla(sla);
     }
 
 }

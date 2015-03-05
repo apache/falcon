@@ -5,7 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-   
+  
+   FALCON-1066 Add test in falcon to test process SLA feature(Pragya M via Samarth G)
+ 
    FALCON-964 add test in falcon regression to test loading of jar present in user lib(Pragya M 
    via Samarth Gupta)
    
