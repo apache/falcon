@@ -42,13 +42,14 @@ public final class UpdateHelper {
     private static final Logger LOG = LoggerFactory.getLogger(UpdateHelper.class);
 
     private static final String[] FEED_FIELDS = new String[]{"partitions", "groups", "lateArrival.cutOff",
-                                                             "schema.location", "schema.provider",
+                                                             "schema.location", "schema.provider", "tags",
                                                              "group", "owner", "permission", };
     private static final String[] PROCESS_FIELDS = new String[]{"retry.policy", "retry.delay", "retry.attempts",
                                                                 "lateProcess.policy", "lateProcess.delay",
                                                                 "lateProcess.lateInputs[\\d+].input",
                                                                 "lateProcess.lateInputs[\\d+].workflowPath",
-                                                                "owner", "group", "permission", };
+                                                                "owner", "group", "permission", "tags",
+                                                                "pipelines", };
 
     private UpdateHelper() {}
 
