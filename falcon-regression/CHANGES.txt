@@ -6,6 +6,9 @@ Trunk (Unreleased)
 
   NEW FEATURES
    
+   FALCON-964 add test in falcon regression to test loading of jar present in user lib(Pragya M 
+   via Samarth Gupta)
+   
    FALCON-974 add test in falcon-regression for log mover feature(Pragya via Samarth Gupta)
    
    FALCON-843 add test to support current & last week el expression(Pragya M via Samarth G)

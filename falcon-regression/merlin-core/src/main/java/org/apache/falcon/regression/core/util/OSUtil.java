@@ -47,6 +47,10 @@ public final class OSUtil {
     public static final String OOZIE_COMBINED_ACTIONS =
             String.format(RESOURCES + "combinedWorkflow%s", SEPARATOR);
 
+    public static final String OOZIE_LIB_FOLDER =
+            String.format(RESOURCES + "oozieLib%s", SEPARATOR);
+
+
     public static String getPath(String... pathParts) {
         return StringUtils.join(pathParts, OSUtil.SEPARATOR);
     }
