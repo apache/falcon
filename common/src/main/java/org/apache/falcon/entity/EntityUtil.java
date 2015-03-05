@@ -317,6 +317,16 @@ public final class EntityUtil {
         return count + 1;
     }
 
+    public static Date getNextInstanceTime(Date instanceTime, Frequency frequency, TimeZone tz) {
+        Calendar insCal = Calendar.getInstance(tz);
+        insCal.setTime(instanceTime);
+
+        final int freq = frequency.getFrequencyAsInt();
+        insCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
+
+        return insCal.getTime();
+    }
+
     public static String md5(Entity entity) throws FalconException {
         return new String(Hex.encodeHex(DigestUtils.md5(stringOf(entity))));
     }

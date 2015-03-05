@@ -78,6 +78,9 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-987 params command inconsistent behavior
+   (pavan kumar kolamuri via Suhas Vasu)
+
    FALCON-944 Parallel update APIs create 2 coords (Suhas Vasu)
 
    FALCON-943 process update copying user lib is very slow. (Shwetha G S)

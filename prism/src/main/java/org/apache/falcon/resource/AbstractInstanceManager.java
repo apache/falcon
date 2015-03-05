@@ -365,9 +365,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startTime, null);
-
+            Date start = startAndEndDate.first;
+            Date end = EntityUtil.getNextInstanceTime(start, EntityUtil.getFrequency(entityObject),
+                    EntityUtil.getTimeZone(entityObject));
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getInstanceParams(entityObject, startAndEndDate.first, startAndEndDate.second, lifeCycles);
+            return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to display params of an instance", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);

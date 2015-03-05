@@ -746,7 +746,8 @@ public class FalconCLI {
         Option params = new Option(
                 PARARMS_OPT,
                 false,
-                "Displays the workflow parameters for a given instance of specified nominal time");
+                "Displays the workflow parameters for a given instance of specified nominal time"
+                        + "start time represents nominal time and end time is not considered");
 
         Option listing = new Option(
                 LISTING_OPT,
