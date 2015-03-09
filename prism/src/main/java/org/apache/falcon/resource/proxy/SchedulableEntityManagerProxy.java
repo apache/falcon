@@ -163,8 +163,27 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Override
-    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
-        return super.validate(request, type);
+    public APIResult validate(@Context final HttpServletRequest request, @PathParam("type") final String type) {
+        final HttpServletRequest bufferedRequest = getBufferedRequest(request);
+        EntityType entityType = EntityType.getEnum(type);
+        final Entity entity;
+        try {
+            entity = deserializeEntity(bufferedRequest, entityType);
+            bufferedRequest.getInputStream().reset();
+        } catch (Exception e) {
+            throw FalconWebException.newException("Unable to parse the request", Response.Status.BAD_REQUEST);
+        }
+        return new EntityProxy(type, entity.getName()) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return getApplicableColos(type, entity);
+            }
+
+            @Override
+            protected APIResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("validate", bufferedRequest, type);
+            }
+        }.execute();
     }
 
     @DELETE

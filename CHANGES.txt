@@ -81,6 +81,9 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-1063 Falcon CLI list entities operation throws NullPointerException
+   (Pallavi Rao via Suhas Vasu)
+
    FALCON-987 params command inconsistent behavior
    (pavan kumar kolamuri via Suhas Vasu)
 
@@ -98,6 +101,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1020 validate command produces different results when run
+   via prism and server (pavan kumar kolamuri via Suhas Vasu)
+
    FALCON-950 Rerun does not work on succeeded instances (Suhas Vasu)
 
    FALCON-1048 Incorrect documentation for feed instacnce listing api. (Suhas

@@ -286,7 +286,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:attribute type="location-type" name="type" use="required"/>
-        <xs:attribute type="xs:string" name="path" use="required"/>
+        <xs:attribute type="non-empty-string" name="path" use="required"/>
     </xs:complexType>
     <xs:complexType name="partition">
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
@@ -391,4 +391,9 @@
         </xs:annotation>
         <xs:attribute type="xs:string" name="uri" use="required"/>
     </xs:complexType>
+    <xs:simpleType name="non-empty-string">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>

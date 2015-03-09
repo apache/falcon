@@ -199,7 +199,7 @@ public class FileSystemStorage extends Configured implements Storage {
             }
         }
 
-        if (locationForType == null) {
+        if (locationForType == null || StringUtils.isEmpty(locationForType.getPath())) {
             return null;
         }
 
