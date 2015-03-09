@@ -406,21 +406,11 @@ public abstract class AbstractEntityManager {
                             + "Can't be submitted again. Try removing before submitting.");
         }
 
-        tryProxy(entity); // proxy before validating since FS/Oozie needs to be proxied
+        SecurityUtil.tryProxy(entity); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: ({}): {}", type, entity.getName());
         return entity;
-    }
-
-    private void tryProxy(Entity entity) throws IOException, FalconException {
-        final String aclOwner = entity.getACL().getOwner();
-        final String aclGroup = entity.getACL().getGroup();
-        if (SecurityUtil.isAuthorizationEnabled()
-                && SecurityUtil.getAuthorizationProvider().shouldProxy(
-                    CurrentUser.getAuthenticatedUGI(), aclOwner, aclGroup)) {
-            CurrentUser.proxy(aclOwner, aclGroup);
-        }
     }
 
     /**
@@ -646,7 +636,7 @@ public abstract class AbstractEntityManager {
                 // the user who requested list query has no permission to access this entity. Skip this entity
                 continue;
             }
-            tryProxy(entity);
+            SecurityUtil.tryProxy(entity);
 
             List<String> tags = EntityUtil.getTags(entity);
             List<String> pipelines = EntityUtil.getPipelines(entity);

@@ -141,14 +141,7 @@ public class FalconAuthorizationFilter implements Filter {
         try {
             EntityType type = EntityType.getEnum(entityType);
             Entity entity = EntityUtil.getEntity(type, entityName);
-            if (entity != null && entity.getACL() != null) {
-                final String aclOwner = entity.getACL().getOwner();
-                final String aclGroup = entity.getACL().getGroup();
-                if (authorizationProvider.shouldProxy(
-                        authenticatedUGI, aclOwner, aclGroup)) {
-                    CurrentUser.proxy(aclOwner, aclGroup);
-                }
-            }
+            SecurityUtil.tryProxy(entity);
         } catch (FalconException ignore) {
             // do nothing
         }

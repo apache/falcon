@@ -116,11 +116,11 @@ public abstract class AbstractCleanupHandler {
                                                   Entity entity) throws FalconException {
         try {
             final AccessControlList acl = entity.getACL();
-            if (acl == null) {
-                throw new FalconException("ACL for entity " + entity.getName() + " is empty");
+            // To support backward compatibility, will only use the ACL owner only if present
+            if (acl != null) {
+                CurrentUser.authenticate(acl.getOwner()); // proxy user
             }
 
-            CurrentUser.authenticate(acl.getOwner()); // proxy user
             return HadoopClientFactory.get().createProxiedFileSystem(
                     ClusterHelper.getConfiguration(cluster));
         } catch (Exception e) {
