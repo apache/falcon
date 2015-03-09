@@ -42,7 +42,7 @@ import java.util.List;
  */
 public final class LogUtil {
     private static final Logger LOGGER = Logger.getLogger(LogUtil.class);
-    private static final char NL = '\n';
+    private static final String NL = System.getProperty("line.separator");
     private static final String HR = StringUtils.repeat("-", 80);
     private static final String HR_2 = StringUtils.repeat("-", 120);
     private static final String HR_3 = StringUtils.repeat("-", 160);
