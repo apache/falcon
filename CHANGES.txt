@@ -10,6 +10,8 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1074 EntityUtil getInstanceSequence is buggy (Ajay Yadava via Suhas vasu)
+
    FALCON-1024 Updating tags and pipeline elements of the feed/process definition
    resubmits a new Oozie bundle (Pallavi Rao via Suhas Vasu)
 
