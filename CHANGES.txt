@@ -101,6 +101,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1025 lastWeek and CurrentWeek functions are getting
+   evaluated incorrect (pavan kumar kolamuri via Suhas Vasu)
+
    FALCON-1020 validate command produces different results when run
    via prism and server (pavan kumar kolamuri via Suhas Vasu)
 
