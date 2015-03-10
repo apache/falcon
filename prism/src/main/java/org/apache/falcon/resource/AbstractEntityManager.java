@@ -33,6 +33,7 @@ import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.store.EntityAlreadyExistsException;
+import org.apache.falcon.entity.store.FeedLocationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityIntegrityChecker;
@@ -943,6 +944,51 @@ public abstract class AbstractEntityManager {
 
         }
     }
+
+
+    /**
+     * Given the location of data, returns the feed.
+     * @param type type of the entity, is valid only for feeds.
+     * @param instancePath location of the data
+     * @return Feed Name, type of the data and cluster name.
+     */
+    public FeedLookupResult reverseLookup(String type, String instancePath) {
+        try {
+            EntityType entityType = EntityType.getEnum(type);
+            if (entityType != EntityType.FEED) {
+                LOG.error("Reverse Lookup is not supported for entitytype: {}", type);
+                throw new IllegalArgumentException("Reverse lookup is not supported for " + type);
+            }
+
+            instancePath = StringUtils.trim(instancePath);
+            String instancePathWithoutSlash =
+                    instancePath.endsWith("/") ? StringUtils.removeEnd(instancePath, "/") : instancePath;
+            // treat strings with and without trailing slash as same for purpose of searching e.g.
+            // /data/cas and /data/cas/ should be treated as same.
+            String instancePathWithSlash = instancePathWithoutSlash + "/";
+            FeedLocationStore store = FeedLocationStore.get();
+            Collection<FeedLookupResult.FeedProperties> feeds = new ArrayList<>();
+            Collection<FeedLookupResult.FeedProperties> res = store.reverseLookup(instancePathWithoutSlash);
+            if (res != null) {
+                feeds.addAll(res);
+            }
+            res = store.reverseLookup(instancePathWithSlash);
+            if (res != null) {
+                feeds.addAll(res);
+            }
+            FeedLookupResult result = new FeedLookupResult(APIResult.Status.SUCCEEDED, "SUCCESS");
+            FeedLookupResult.FeedProperties[] props = feeds.toArray(new FeedLookupResult.FeedProperties[0]);
+            result.setElements(props);
+            return result;
+
+        } catch (IllegalArgumentException e) {
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (Throwable throwable) {
+            LOG.error("reverse look up failed", throwable);
+            throw FalconWebException.newException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     protected AbstractWorkflowEngine getWorkflowEngine() {
         return this.workflowEngine;

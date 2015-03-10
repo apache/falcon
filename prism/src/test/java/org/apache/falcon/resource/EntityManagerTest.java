@@ -20,8 +20,14 @@ package org.apache.falcon.resource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.store.FeedLocationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Process;
@@ -31,7 +37,7 @@ import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -55,9 +61,11 @@ public class EntityManagerTest extends AbstractEntityManager {
     private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
     private static final long DAY_IN_MILLIS = 86400000L;
 
-    @BeforeClass
-    public void init() {
+    @BeforeTest
+    public void init() throws Exception {
         MockitoAnnotations.initMocks(this);
+        configStore.unregisterListener(FeedLocationStore.get());
+        configStore.registerListener(FeedLocationStore.get());
     }
 
     @SuppressWarnings("unused")
@@ -266,6 +274,53 @@ public class EntityManagerTest extends AbstractEntityManager {
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
 
+    }
+
+    @Test
+    public void testReverseLookup() throws Exception {
+        Feed f = buildFeed("sampleFeed");
+        configStore.publish(EntityType.FEED, f);
+        Assert.assertNotNull(reverseLookup("feed", "/falcon/test/input/2014/12/10/23"));
+    }
+
+    private Location createLocation(LocationType type, String path){
+        Location location = new Location();
+        location.setPath(path);
+        location.setType(type);
+        return location;
+    }
+
+    private Feed buildFeed(String name) {
+        org.apache.falcon.entity.v0.feed.ACL acl = new org.apache.falcon.entity.v0.feed.ACL();
+        acl.setOwner("user");
+        acl.setGroup("hdfs");
+        acl.setPermission("*");
+
+        Feed feed = new Feed();
+        feed.setName(name);
+        feed.setACL(acl);
+
+        feed.setClusters(createBlankClusters());
+        Locations locations = new Locations();
+        feed.setLocations(locations);
+
+        feed.getLocations().getLocations().add(createLocation(LocationType.DATA,
+                "/falcon/test/input/${YEAR}/${MONTH}/${DAY}/${HOUR}"));
+        return feed;
+    }
+
+    private org.apache.falcon.entity.v0.feed.Clusters createBlankClusters() {
+        org.apache.falcon.entity.v0.feed.Clusters clusters = new org.apache.falcon.entity.v0.feed.Clusters();
+
+        Cluster cluster = new Cluster();
+        cluster.setName("blankCluster1");
+        clusters.getClusters().add(cluster);
+
+        Cluster cluster2 = new Cluster();
+        cluster2.setName("blankCluster2");
+        clusters.getClusters().add(cluster2);
+
+        return clusters;
     }
 
     private Entity buildProcess(String name, String username, String tags, String pipelines) {

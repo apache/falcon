@@ -18,9 +18,9 @@
 
 package org.apache.falcon.util;
 
-import org.apache.falcon.entity.store.FeedLocationStore;
 import org.apache.falcon.entity.store.FeedPathStore;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -222,7 +222,15 @@ public class RadixTreeTest {
         Assert.assertTrue(tree.delete("key2", "value2"));
         tree.insert("water", "water");
         Assert.assertTrue(tree.find("water").contains("water"));
+    }
 
+    @Test
+    public void testDeleteFromListAndChildren() {
+        //check that a delete of a key with multiple values and children is handled
+        tree.insert("keyWithManyValuesAndChild", "value1");
+        tree.insert("keyWithManyValuesAndChild", "value2");
+        tree.insert("keyWithManyValuesAndChildren", "childValue");
+        Assert.assertTrue(tree.delete("keyWithManyValuesAndChild", "value1"));
     }
 
     @Test
@@ -268,15 +276,15 @@ public class RadixTreeTest {
 
     @Test
     public void testFeedPropertiesEquals() {
-        FeedLocationStore.FeedProperties f1 = new FeedLocationStore.FeedProperties("feed",
+        FeedLookupResult.FeedProperties f1 = new FeedLookupResult.FeedProperties("feed",
                 LocationType.DATA, "cluster");
-        FeedLocationStore.FeedProperties f1Copy = new FeedLocationStore.FeedProperties("feed",
+        FeedLookupResult.FeedProperties f1Copy = new FeedLookupResult.FeedProperties("feed",
                 LocationType.DATA, "cluster");
-        FeedLocationStore.FeedProperties f3 = new FeedLocationStore.FeedProperties("anotherFeed",
+        FeedLookupResult.FeedProperties f3 = new FeedLookupResult.FeedProperties("anotherFeed",
                 LocationType.DATA, "cluster");
-        FeedLocationStore.FeedProperties f4 = new FeedLocationStore.FeedProperties("feed",
+        FeedLookupResult.FeedProperties f4 = new FeedLookupResult.FeedProperties("feed",
                 LocationType.STATS, "cluster");
-        FeedLocationStore.FeedProperties f5 = new FeedLocationStore.FeedProperties("feed",
+        FeedLookupResult.FeedProperties f5 = new FeedLookupResult.FeedProperties("feed",
                 LocationType.DATA, "anotherCluster");
 
         Assert.assertTrue(f1.equals(f1Copy));

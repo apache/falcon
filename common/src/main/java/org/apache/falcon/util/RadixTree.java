@@ -264,6 +264,7 @@ public class RadixTree<T> implements FeedPathStore<T>, Formattable {
         }
 
         if (StringUtils.equals(key, currentNode.getKey())){
+            LOG.trace("Current node's key:{} and the input key:{} matched", currentNode.getKey(), key);
             if (currentNode.getValues().contains(value)){
                 LOG.debug("Given value is found in the collection of values against the given key");
                 currentNode.removeValue(value);
@@ -315,6 +316,7 @@ public class RadixTree<T> implements FeedPathStore<T>, Formattable {
                         return false;
                     }
                 }
+                return true;
             }else {
                 LOG.debug("Current value is not found in the collection of values against the given key, no-op");
                 return false;
@@ -326,6 +328,7 @@ public class RadixTree<T> implements FeedPathStore<T>, Formattable {
         RadixNode<T> newRoot = null;
         String remainingKey = key.substring(currentNode.getMatchLength(key));
         for(RadixNode<T> el : currentNode.getChildren()){
+            LOG.trace("Finding next child to follow. Current child's key:{}", el.getKey());
             if (el.getKey().charAt(0) == remainingKey.charAt(0)){
                 newRoot = el;
                 break;

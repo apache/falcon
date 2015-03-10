@@ -36,6 +36,7 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.LineageGraphResult;
@@ -190,6 +191,7 @@ public class FalconClient {
         DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML),
         SUMMARY("api/entities/summary", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LOOKUP("api/entities/lookup/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML),
         TOUCH("api/entities/touch", HttpMethod.POST, MediaType.TEXT_XML);
 
@@ -727,6 +729,17 @@ public class FalconClient {
 
         //remove this return parseAPIResult(clientResponse);
         return clientResponse.getEntity(APIResult.class);
+    }
+
+    public FeedLookupResult reverseLookUp(String type, String path) throws FalconCLIException {
+        Entities api = Entities.LOOKUP;
+        WebResource resource = service.path(api.path).path(type);
+        resource = resource.queryParam("path", path);
+        ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(api.mimeType)
+                .method(api.method, ClientResponse.class);
+        checkIfSuccessful(response);
+        return response.getEntity(FeedLookupResult.class);
     }
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck

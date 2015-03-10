@@ -52,6 +52,7 @@ See also: [[../Security.twiki][Security in Falcon]]
 | GET         | [[EntityList][api/entities/list/:entity-type]]                              | Get the list of entities           |
 | GET         | [[EntitySummary][api/entities/summary/:entity-type/:cluster]]               | Get instance summary of all entities |
 | GET         | [[EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity |
+| GET         | [[FeedLookup][api/entities/lookup/feed/]]                                   | Get feed for given path            |
 
 ---++ REST Call on Feed and Process Instances
 

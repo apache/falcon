@@ -75,6 +75,10 @@ public class FalconCLIIT {
                 "falcon/default/Submit successful (feed) "
                         + overlay.get("inputFeedName"));
 
+        // Test the lookup command
+        Assert.assertEquals(executeWithURL("entity -lookup -type feed -path "
+                + "/falcon/test/input/2014/11/23/23"), 0);
+
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
         Assert.assertEquals(

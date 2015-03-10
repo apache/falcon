@@ -32,6 +32,7 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 
@@ -482,6 +483,16 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @DefaultValue("7") @QueryParam("numInstances") final Integer numInstanceResults) {
         return super.getEntitySummary(type, cluster, startStr, endStr, entityFields, entityFilter,
                 entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults);
+    }
+
+    @GET
+    @Path("lookup/{type}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Monitored(event = "reverse-lookup")
+    public FeedLookupResult reverseLookup(
+            @Dimension("type") @PathParam("type") final String type,
+            @Dimension("path") @QueryParam("path") final String path) {
+        return super.reverseLookup(type, path);
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

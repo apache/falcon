@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.EntitySummaryResult;
@@ -261,6 +262,15 @@ public final class ResponseHelper {
         sb.append("\nAdditional Information:\n");
         sb.append("Response: ").append(result.getMessage());
         sb.append("Request Id: ").append(result.getRequestId());
+        return sb.toString();
+    }
+
+    public static String getString(FeedLookupResult feedLookupResult) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(feedLookupResult.toString());
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(feedLookupResult.getMessage());
+        sb.append("Request Id: ").append(feedLookupResult.getRequestId());
         return sb.toString();
     }
 }

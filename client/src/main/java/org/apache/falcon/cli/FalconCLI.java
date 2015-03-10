@@ -33,6 +33,7 @@ import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstancesResult;
 
 import java.io.IOException;
@@ -83,6 +84,8 @@ public class FalconCLI {
     public static final String SUMMARY_OPT = "summary";
     public static final String DEFINITION_OPT = "definition";
     public static final String DEPENDENCY_OPT = "dependency";
+    public static final String LOOKUP_OPT = "lookup";
+    public static final String PATH_OPT = "path";
     public static final String LIST_OPT = "list";
     public static final String TOUCH_OPT = "touch";
 
@@ -389,6 +392,7 @@ public class FalconCLI {
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
         String searchPattern = commandLine.getOptionValue(PATTERN_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
+        String feedInstancePath = commandLine.getOptionValue(PATH_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
@@ -402,6 +406,11 @@ public class FalconCLI {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.submit(entityType, filePath).getMessage();
+        } else if (optionsList.contains(LOOKUP_OPT)) {
+            validateNotEmpty(feedInstancePath, PATH_OPT);
+            FeedLookupResult resp = client.reverseLookUp(entityType, feedInstancePath);
+            result = ResponseHelper.getString(resp);
+
         } else if (optionsList.contains(UPDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
@@ -411,7 +420,7 @@ public class FalconCLI {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result =
-                client.submitAndSchedule(entityType, filePath).getMessage();
+                    client.submitAndSchedule(entityType, filePath).getMessage();
         } else if (optionsList.contains(VALIDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
@@ -436,7 +445,7 @@ public class FalconCLI {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
             result =
-                client.getStatus(entityTypeEnum, entityName, colo).getMessage();
+                    client.getStatus(entityTypeEnum, entityName, colo).getMessage();
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
@@ -460,11 +469,11 @@ public class FalconCLI {
             validateFilterBy(filterBy, entityAction);
             validateOrderBy(orderBy, entityAction);
             result =
-                ResponseHelper.getString(client
-                        .getEntitySummary(
-                                entityType, cluster, start, end, fields, filterBy,
-                                filterTags,
-                                orderBy, sortOrder, offset, numResults, numInstances));
+                    ResponseHelper.getString(client
+                            .getEntitySummary(
+                                    entityType, cluster, start, end, fields, filterBy,
+                                    filterTags,
+                                    orderBy, sortOrder, offset, numResults, numInstances));
         } else if (optionsList.contains(TOUCH_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
@@ -630,6 +639,7 @@ public class FalconCLI {
                 "Gets the dependencies of entity");
         Option list = new Option(LIST_OPT, false,
                 "List entities registered for a type");
+        Option lookup = new Option(LOOKUP_OPT, false, "Lookup a feed given its instance's path");
         Option entitySummary = new Option(SUMMARY_OPT, false,
                 "Get summary of instances for list of entities");
         Option touch = new Option(TOUCH_OPT, false,
@@ -648,6 +658,7 @@ public class FalconCLI {
         group.addOption(definition);
         group.addOption(dependency);
         group.addOption(list);
+        group.addOption(lookup);
         group.addOption(entitySummary);
         group.addOption(touch);
 
@@ -679,8 +690,10 @@ public class FalconCLI {
                 "Number of results to return per request");
         Option numInstances = new Option(NUM_INSTANCES_OPT, true,
                 "Number of instances to return per entity summary request");
+        Option path = new Option(PATH_OPT, true, "Path for a feed's instance");
 
         entityOptions.addOption(url);
+        entityOptions.addOption(path);
         entityOptions.addOptionGroup(group);
         entityOptions.addOption(entityType);
         entityOptions.addOption(entityName);
