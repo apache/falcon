@@ -60,6 +60,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1089 ProcessInstanceStatusTest improvement (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-1058 Test for Feed Replication with Empty Directories(Pragya M via Samarth Gupta)
 
    FALCON-1046 Add test for process update with user feature(Karishma G via Samarth Gupta)
