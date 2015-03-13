@@ -78,7 +78,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * util methods used across test.
@@ -195,13 +194,6 @@ public final class Util {
         } else {
             return new ClusterMerlin(data).getName();
         }
-    }
-
-    /**
-     * @return unique string
-     */
-    public static String getUniqueString() {
-        return "-" + UUID.randomUUID().toString().split("-")[0];
     }
 
     /**
@@ -604,7 +596,9 @@ public final class Util {
         INSTANCE_RERUN("/api/instance/rerun"),
         INSTANCE_SUMMARY("/api/instance/summary"),
         INSTANCE_PARAMS("/api/instance/params"),
-        INSTANCE_LIST("/api/instance/list");
+        INSTANCE_LIST("/api/instance/list"),
+        TOUCH_URL("/api/entities/touch");
+
         private final String url;
 
         URLS(String url) {

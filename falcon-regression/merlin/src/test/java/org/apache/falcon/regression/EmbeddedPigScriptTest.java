@@ -59,8 +59,8 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String pigTestDir = baseHDFSDir + "/EmbeddedPigScriptTest";
-    private String pigScriptDir = pigTestDir + "/EmbeddedPigScriptTest/pig";
+    private String pigTestDir = cleanAndGetTestDir();
+    private String pigScriptDir = pigTestDir + "/pig";
     private String pigScriptLocation = pigScriptDir + "/id.pig";
     private String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
     private static final Logger LOGGER = Logger.getLogger(EmbeddedPigScriptTest.class);
@@ -75,7 +75,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         //copy pig script
         HadoopUtil.uploadDir(clusterFS, pigScriptDir, OSUtil.RESOURCES + "pig");
         Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundle = new Bundle(bundle, cluster);
         String startDate = "2010-01-02T00:40Z";
         String endDate = "2010-01-02T01:10Z";
@@ -89,7 +89,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setOutputFeedLocationData(pigTestDir + "/output-data" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessWorkflow(pigScriptLocation);
@@ -115,7 +115,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = {"singleCluster"}, timeOut = 600000)

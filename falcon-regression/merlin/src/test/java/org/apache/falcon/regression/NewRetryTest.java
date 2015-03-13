@@ -73,7 +73,7 @@ public class NewRetryTest extends BaseTestClass {
     private OozieClient clusterOC = serverOC.get(0);
 
     private DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
-    private final String baseTestDir = baseHDFSDir + "/NewRetryTest";
+    private final String baseTestDir = cleanAndGetTestDir();
     private final String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private final String lateDir = baseTestDir + "/lateDataTest/testFolders";
     private final String latePath = lateDir + MINUTE_DATE_PATTERN;
@@ -88,7 +88,7 @@ public class NewRetryTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         bundles[0] = new Bundle(BundleUtil.readRetryBundle(), cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         startDate = new DateTime(DateTimeZone.UTC).plusMinutes(1);
         endDate = new DateTime(DateTimeZone.UTC).plusMinutes(2);
@@ -105,7 +105,7 @@ public class NewRetryTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(dataProvider = "DP", groups = {"0.2.2", "retry"}, enabled = true)

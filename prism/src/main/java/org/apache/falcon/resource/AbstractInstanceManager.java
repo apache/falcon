@@ -365,9 +365,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startTime, null);
-
+            Date start = startAndEndDate.first;
+            Date end = EntityUtil.getNextInstanceTime(start, EntityUtil.getFrequency(entityObject),
+                    EntityUtil.getTimeZone(entityObject));
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getInstanceParams(entityObject, startAndEndDate.first, startAndEndDate.second, lifeCycles);
+            return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to display params of an instance", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -443,9 +445,10 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public InstancesResult reRunInstance(String type, String entity, String startStr,
                                          String endStr, HttpServletRequest request,
-                                         String colo, List<LifeCycle> lifeCycles) {
+                                         String colo, List<LifeCycle> lifeCycles, Boolean isForced) {
         checkColo(colo);
         checkType(type);
         try {
@@ -458,12 +461,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.reRunInstances(entityObject,
-                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
+                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles, isForced);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private Properties getProperties(HttpServletRequest request) throws IOException {
         Properties props = new Properties();

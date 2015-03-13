@@ -69,7 +69,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     private String tableName = "hcatFeedOperationsTest";
     private String randomTblName = "randomTable_HcatFeedOperationsTest";
     private String feed;
-    private String aggregateWorkflowDir = baseHDFSDir + "/HCatFeedOperationsTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
 
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
@@ -95,18 +95,18 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     public void setUp() throws Exception {
         Bundle bundle = BundleUtil.readHCatBundle();
         bundles[0] = new Bundle(bundle, cluster.getPrefix());
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setClusterInterface(Interfacetype.REGISTRY, cluster.getClusterHelper().getHCatEndpoint());
 
 
         bundles[1] = new Bundle(bundle, cluster2.getPrefix());
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
         bundles[1].setClusterInterface(Interfacetype.REGISTRY, cluster2.getClusterHelper().getHCatEndpoint());
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws HCatException {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @AfterClass(alwaysRun = true)

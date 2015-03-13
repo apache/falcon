@@ -23,7 +23,6 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -52,8 +51,7 @@ import java.util.List;
 public class ProcessPipelineTest extends BaseTestClass{
     private static final Logger LOGGER = Logger.getLogger(ProcessPipelineTest.class);
     private ColoHelper cluster = servers.get(0);
-    private String testDir = "/ProcessPipelineTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
@@ -65,13 +63,13 @@ public class ProcessPipelineTest extends BaseTestClass{
     public void prepareData() throws IOException {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], servers.get(0));
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown(){
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -86,37 +84,33 @@ public class ProcessPipelineTest extends BaseTestClass{
         //match processes to pipelines
         HashMap<String, List<String>> map = new HashMap<String, List<String>>();
         //index for few different pipelines
-        try{
-            for(int p = 0, i = 0, n = 0, d = 3; p < 3; p++, d++){
-                n += d + 1;
-                String pipeline = "pipeline" + p;
-                map.put(pipeline, new ArrayList<String>());
-                //index for new processes for current pipeline
-                for(; i < n; i++){
-                    String processName = "process-" + i;
-                    bundles[0].setProcessName(processName);
-                    bundles[0].setProcessPipeline(pipeline);
-                    bundles[0].submitProcess(true);
-                    map.get(pipeline).add(processName);
-                }
+        for(int p = 0, i = 0, n = 0, d = 3; p < 3; p++, d++){
+            n += d + 1;
+            String pipeline = "pipeline" + p;
+            map.put(pipeline, new ArrayList<String>());
+            //index for new processes for current pipeline
+            for(; i < n; i++){
+                String processName = this.getClass().getSimpleName() + "-process-" + i;
+                bundles[0].setProcessName(processName);
+                bundles[0].setProcessPipeline(pipeline);
+                bundles[0].submitProcess(true);
+                map.get(pipeline).add(processName);
             }
-            LOGGER.info("Expected set of processes: " + map);
-            //now go through pipelines and check that their processes lists match to expected
-            for(int p = 0, n = 3; p < 3; p++, n++){
-                String pipeline = "pipeline" + p;
-                ServiceResponse response = prism.getProcessHelper().getListByPipeline(pipeline);
-                EntityElement[] processes = response.getEntityList().getElements();
-                //check that all retrieved processes match to expected list
-                List<String> expected = map.get(pipeline);
-                Assert.assertEquals(processes.length, expected.size(),
-                    String.format("Invalid number of processes for pipeline [%s].", pipeline));
-                for(EntityElement process : processes){
-                    Assert.assertTrue(expected.contains(process.name), String.format("Expected "
-                        + "list %s doesn't contain %s for %s.", expected, process.name, pipeline));
-                }
+        }
+        LOGGER.info("Expected set of processes: " + map);
+        //now go through pipelines and check that their processes lists match to expected
+        for(int p = 0, n = 3; p < 3; p++, n++){
+            String pipeline = "pipeline" + p;
+            ServiceResponse response = prism.getProcessHelper().getListByPipeline(pipeline);
+            EntityElement[] processes = response.getEntityList().getElements();
+            //check that all retrieved processes match to expected list
+            List<String> expected = map.get(pipeline);
+            Assert.assertEquals(processes.length, expected.size(),
+                String.format("Invalid number of processes for pipeline [%s].", pipeline));
+            for(EntityElement process : processes){
+                Assert.assertTrue(expected.contains(process.name), String.format("Expected "
+                    + "list %s doesn't contain %s for %s.", expected, process.name, pipeline));
             }
-        } finally {
-            CleanupUtil.cleanAllProcessesQuietly(prism, prism.getProcessHelper());
         }
     }
 

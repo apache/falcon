@@ -46,7 +46,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private OozieClient cluster1OC = serverOC.get(0);
     private FileSystem cluster1FS = serverFS.get(0);
-    private String aggregateWorkflowDir = baseHDFSDir + "/ProcessLateRerunTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(ProcessLateRerunTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -59,14 +59,14 @@ public class ProcessLateRerunTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 1; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

@@ -66,6 +66,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 /**
@@ -138,6 +142,16 @@ public class EntityManagerJerseyIT {
         return resource.header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
+    }
+
+    private ClientResponse touch(TestContext context, Entity entity) {
+        WebResource resource = context.service.path("api/entities/touch/"
+                + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
+        ClientResponse clientResponse = resource
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        return clientResponse;
     }
 
     @Test
@@ -341,6 +355,50 @@ public class EntityManagerJerseyIT {
         //Assert that update does not create new bundle
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
+    }
+
+    @Test
+    public void testTouchEntity() throws Exception {
+        TestContext context = newContext();
+        context.scheduleProcess();
+        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
+        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 1);
+        ProxyOozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
+        String bundle = bundles.get(0).getId();
+        String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
+
+        //Update end time of process required for touch
+        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        updateEndtime(process);
+        ClientResponse response = update(context, process, null);
+        context.assertSuccessful(response);
+        bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 1);
+
+        //Calling force update
+        response = touch(context, process);
+        context.assertSuccessful(response);
+        OozieTestUtils.waitForBundleStart(context, Status.PREP, Status.RUNNING);
+
+        //Assert that touch creates new bundle and old coord is running
+        bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 2);
+        CoordinatorJob coord = ozClient.getCoordJobInfo(coordId);
+        Assert.assertTrue(coord.getStatus() == Status.RUNNING || coord.getStatus() == Status.SUCCEEDED);
+
+        //Assert on new bundle/coord
+        String newBundle = null;
+        for (BundleJob myBundle : bundles) {
+            if (!myBundle.getId().equals(bundle)) {
+                newBundle = myBundle.getId();
+                break;
+            }
+        }
+
+        assert newBundle != null;
+        coord = ozClient.getCoordJobInfo(ozClient.getBundleJobInfo(newBundle).getCoordinators().get(0).getId());
+        Assert.assertTrue(coord.getStatus() == Status.RUNNING || coord.getStatus() == Status.PREP);
     }
 
     public void testStatus() throws Exception {
@@ -758,6 +816,49 @@ public class EntityManagerJerseyIT {
         }
     }
 
+    @Test
+    public void testDuplicateUpdateCommands() throws Exception {
+        TestContext context = newContext();
+        context.scheduleProcess();
+        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
+        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 1);
+
+        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+
+        String feed3 = "f3" + System.currentTimeMillis();
+        Map<String, String> overlay = new HashMap<String, String>();
+        overlay.put("inputFeedName", feed3);
+        overlay.put("cluster", context.clusterName);
+        overlay.put("user", System.getProperty("user.name"));
+        ClientResponse response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
+        context.assertSuccessful(response);
+
+        Input input = new Input();
+        input.setFeed(feed3);
+        input.setName("inputData2");
+        input.setStart("today(20,0)");
+        input.setEnd("today(20,20)");
+        process.getInputs().getInputs().add(input);
+
+        updateEndtime(process);
+        Date endTime = getEndTime();
+        ExecutorService service =  Executors.newSingleThreadExecutor();
+        Future<ClientResponse> future = service.submit(new UpdateCommand(context, process, endTime));
+        response = update(context, process, endTime);
+        ClientResponse duplicateUpdateThreadResponse = future.get();
+
+        // since there are duplicate threads for updates, there is no guarantee which request will succeed
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+            context.assertSuccessful(response);
+            context.assertFailure(duplicateUpdateThreadResponse);
+        } else {
+            context.assertFailure(response);
+            context.assertSuccessful(duplicateUpdateThreadResponse);
+        }
+
+    }
+
     public Date getEndTime() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.add(Calendar.DAY_OF_MONTH, 1);
@@ -766,5 +867,32 @@ public class EntityManagerJerseyIT {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
+    }
+
+    class UpdateCommand implements Callable<ClientResponse> {
+        private TestContext context;
+        private Process process;
+        private Date endTime;
+
+        public TestContext getContext() {
+            return context;
+        }
+        public Process getProcess() {
+            return process;
+        }
+        public Date getEndTime() {
+            return endTime;
+        }
+
+        public UpdateCommand(TestContext context, Process process, Date endTime) {
+            this.context = context;
+            this.process = process;
+            this.endTime = endTime;
+        }
+
+        @Override
+        public ClientResponse call() throws Exception {
+            return update(context, process, endTime);
+        }
     }
 }

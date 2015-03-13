@@ -5,6 +5,27 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+  
+   FALCON-1066 Add test in falcon to test process SLA feature(Pragya M via Samarth G)
+ 
+   FALCON-964 add test in falcon regression to test loading of jar present in user lib(Pragya M 
+   via Samarth Gupta)
+   
+   FALCON-974 add test in falcon-regression for log mover feature(Pragya via Samarth Gupta)
+   
+   FALCON-843 add test to support current & last week el expression(Pragya M via Samarth G)
+
+   FALCON-1035 Add test in falcon regression for validate feature. Validate is exposed 
+   via both server and prism (Karishma G via Samarth Gupta)
+
+   FALCON-1030 Test for Add option to search for Entities(Pragya Mittal Via Samarth Gupta)
+
+   FALCON-1043 Add test in falcon to test touch feature(Pragya Mittal via Samarth Gupta)   
+
+   FALCON-1021 Add test in falcon to test feed SLA feature (Pragya Mittal via Raghav Kumar Gautam)
+
+   FALCON-671 Add a test in falcon-regression where one oozie workflow has various actions like
+   mr, hive, pig (Karishma Gulati via Ruslan Ostafiychuk)
 
    FALCON-985 Upgrading jsch version in falcon regression pom (Pragya M via Samarth)
 
@@ -39,6 +60,35 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1089 ProcessInstanceStatusTest improvement (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1058 Test for Feed Replication with Empty Directories(Pragya M via Samarth Gupta)
+
+   FALCON-1046 Add test for process update with user feature(Karishma G via Samarth Gupta)
+   
+   FALCON-1017 FeedReplicationTest modified to check for _SUCCESS getting created on 
+   target directory(Pragya M via Samarth G)   
+   
+   FALCON-1040 Modifying ProcessInstanceStatusTest to expose job id for running jobs in 
+   Falcon. (Pragya M via Samarth G)
+
+   FALCON-1044 Add tests for the change that start and end are compulsory parameters for 
+   all instance POST apis.(Karishma G via Samarth)
+   
+   FALCON-1034 Add test for FALCON-677 - wherein feed data and stats paths no longer default
+   to /tmp/.(Karishma G via Samarth Gupta)
+  
+   FALCON-1014 Fix PrismProcessSnSTest in falcon regression . (Contributed by Pragya M via 
+   Samarth G)
+
+   FALCON-1022 Wait for RUNNING status of instances before killing them (Ruslan Ostafiychuk)
+
+   FALCON-968 Remove only entities submitted by same test and baseHDFSDir usage refactored
+   (Ruslan Ostafiychuk via Raghav Kumar Gautam)
+
+   FALCON-1007 Improve test output and variable names (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1009 InstanceUtil cleanup (Raghav Kumar Gautam)
 
    FALCON-1006 Add a property for inclusion of test (Raghav Kumar Gautam)
 
@@ -208,6 +258,10 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1072 Dumping of Oozie info should use os specific newline (Raghav Kumar Gautam)
+
+   FALCON-1018 Enable and fix FalconClientTest#badClusterSubmit (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-1005 In ProcessInstanceSuspendTest clean test dir after each method execution
    (Paul Isaychuk via Ruslan Ostafiychuk)
 

@@ -48,7 +48,7 @@ import java.io.IOException;
 @Test(groups = "embedded")
 public class ProcessInstanceSuspendTest extends BaseTestClass {
 
-    private String baseTestHDFSDir = baseHDFSDir + "/ProcessInstanceSuspendTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -62,7 +62,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
@@ -72,7 +72,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles();
+        removeTestClassEntities();
         HadoopUtil.deleteDirIfExists(baseTestHDFSDir, clusterFS);
     }
 
@@ -220,8 +220,27 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     }
 
     /**
-     * Schedule process with number of instances running. Perform -suspend action using only -start
-     * parameter with value which points to expected last time of instantiation. Check that only
+     * Schedule process. Perform -suspend action using only -end parameter.
+     * Should fail with appropriate status message.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceSuspendOnlyEnd() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
+        bundles[0].setProcessConcurrency(3);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
+                "?end=2010-01-02T01:05Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Schedule process with a number of instances running. Perform -suspend action using params
+     * such that they aim to suspend the last instance. Check that only
      * the last instance is suspended.
      *
      * @throws Exception

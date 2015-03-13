@@ -44,6 +44,12 @@ public final class OSUtil {
         String.format(OOZIE_EXAMPLE_INPUT_DATA + "normalInput%s", SEPARATOR);
     public static final String SINGLE_FILE =
         String.format(OOZIE_EXAMPLE_INPUT_DATA + "SingleFile%s", SEPARATOR);
+    public static final String OOZIE_COMBINED_ACTIONS =
+            String.format(RESOURCES + "combinedWorkflow%s", SEPARATOR);
+
+    public static final String OOZIE_LIB_FOLDER =
+            String.format(RESOURCES + "oozieLib%s", SEPARATOR);
+
 
     public static String getPath(String... pathParts) {
         return StringUtils.join(pathParts, OSUtil.SEPARATOR);

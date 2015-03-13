@@ -52,7 +52,7 @@ pushd ${FALCON_SRC}
 echo "Builing oozie-el-extension and oozie"
 mvn clean install -P $HADOOP_PROFILE -pl build-tools,hadoop-dependencies,oozie-el-extensions -am -Dhadoop.version=$HADOOP_VERSION -Doozie.version=$OOZIE_VERSION -Doozie.forcebuild=true -DskipTests
 pushd target/oozie-$OOZIE_VERSION
-bin/mkdistro.sh -DskipTests
+bin/mkdistro.sh -DjavaVersion=1.7 -DtargetJavaVersion=1.6 -DskipTests
 pushd distro/target/oozie-*
 mkdir -p WEB-INF/lib
 cp ${FALCON_SRC}/oozie-el-extensions/target/falcon-oozie-el-extension*.jar WEB-INF/lib/

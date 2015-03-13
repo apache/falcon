@@ -27,6 +27,7 @@ import javax.servlet.jsp.el.ExpressionEvaluator;
 import javax.servlet.jsp.el.FunctionMapper;
 import javax.servlet.jsp.el.VariableResolver;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
@@ -48,6 +49,15 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
     private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
+
+    public static final ThreadLocal<SimpleDateFormat> FORMATTER = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format;
+        }
+    };
 
     public static ExpressionHelper get() {
         return INSTANCE;
@@ -113,6 +123,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     private static int getDayOffset(String weekDayName) {
         int day;
         Calendar nominalTime = Calendar.getInstance();
+        nominalTime.setTime(referenceDate.get());
         int currentWeekDay = nominalTime.get(Calendar.DAY_OF_WEEK);
         int weekDay = DayOfWeek.valueOf(weekDayName).ordinal() + 1; //to map to Calendar.SUNDAY ...
         day = weekDay - currentWeekDay;
@@ -174,12 +185,12 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     public static Date currentWeek(String weekDay, int hour, int minute) {
         int day = getDayOffset(weekDay);
-        return getRelative(referenceDate.get(), Calendar.MONTH, 0, day, hour, minute);
+        return getRelative(referenceDate.get(), Calendar.DAY_OF_MONTH, 0, day, hour, minute);
     }
 
     public static Date lastWeek(String weekDay, int hour, int minute) {
         int day = getDayOffset(weekDay);
-        return getRelative(referenceDate.get(), Calendar.MONTH, -1, day, hour, minute);
+        return getRelative(referenceDate.get(), Calendar.DAY_OF_MONTH, 0, day - 7, hour, minute);
     }
 
     public static Date currentYear(int month, int day, int hour, int minute) {

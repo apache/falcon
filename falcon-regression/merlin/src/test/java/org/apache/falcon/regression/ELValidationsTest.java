@@ -57,7 +57,7 @@ public class ELValidationsTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private static final Logger LOGGER = Logger.getLogger(ELValidationsTest.class);
-    private String aggregateWorkflowDir = baseHDFSDir + "/ELTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
 
 
     @Test(groups = {"0.1", "0.2"})
@@ -124,7 +124,7 @@ public class ELValidationsTest extends BaseTestClass {
             aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle bundle = BundleUtil.readELBundle();
         bundle = new Bundle(bundle, cluster.getPrefix());
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundle.setProcessWorkflow(aggregateWorkflowDir);
         if (feedStart != null && feedEnd != null) {
             bundle.setFeedValidity(feedStart, feedEnd, bundle.getInputFeedNameFromBundle());

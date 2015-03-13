@@ -49,7 +49,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListProcessInstancesTest.class);
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestHDFSDir = baseHDFSDir + "/ListProcessInstancesTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String sourcePath = baseTestHDFSDir + "/source";
     private String feedDataLocation = sourcePath + MINUTE_DATE_PATTERN;
@@ -68,7 +68,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     public void prepareData() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], servers.get(0));
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         //prepare process
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setInputFeedDataPath(feedDataLocation);
@@ -86,7 +86,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

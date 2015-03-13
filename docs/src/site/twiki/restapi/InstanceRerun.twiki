@@ -5,7 +5,7 @@
    * <a href="#Examples">Examples</a>
 
 ---++ Description
-Rerun instances of an entity.
+Rerun instances of an entity. On issuing a rerun, by default the execution resumes from the last failed node in the workflow.
 
 ---++ Parameters
    * :entity-type can either be a feed or a process.
@@ -13,6 +13,7 @@ Rerun instances of an entity.
    * start is the start time of the instance that you want to refer to
    * end is the end time of the instance that you want to refer to
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
+   * force <optional param> can be used to forcefully rerun the entire instance.
 
 ---++ Results
 Results of the rerun command.
@@ -21,6 +22,28 @@ Results of the rerun command.
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2013-04-03T07:00Z&end=2014-04-03T07:00Z
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "details": "",
+            "startTime": "2013-10-21T15:10:47-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "status": "RUNNING",
+            "instance": "2012-04-03T07:00Z"
+        }
+    ],
+    "requestId": "default\/7a3582bd-608c-45a7-9b74-1837b51ba6d5\n",
+    "message": "default\/RERUN\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+<verbatim>
+POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2013-04-03T07:00Z&end=2014-04-03T07:00Z&force=true
 </verbatim>
 ---+++ Result
 <verbatim>

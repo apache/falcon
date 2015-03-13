@@ -48,7 +48,7 @@ import org.testng.annotations.Test;
 @Test(groups = "distributed")
 public class FeedClusterUpdateTest extends BaseTestClass {
 
-    private String baseTestDir = baseHDFSDir + "/FeedClusterUpdateTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
@@ -68,7 +68,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         try {
@@ -79,7 +79,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             HadoopUtil.deleteDirIfExists(baseTestDir, cluster3FS);
             HadoopUtil.lateDataReplenish(cluster3FS, 80, 1, baseTestDir, postFix);
         } finally {
-            removeBundles();
+            removeTestClassEntities();
         }
     }
 
@@ -88,7 +88,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         BundleUtil.submitAllClusters(prism, bundles[0], bundles[1], bundles[2]);
@@ -99,7 +99,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(enabled = false, groups = {"multiCluster"})

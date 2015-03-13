@@ -23,6 +23,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.process.Sla;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
@@ -34,7 +36,6 @@ import org.apache.falcon.entity.v0.process.Properties;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
@@ -175,10 +176,11 @@ public class ProcessMerlin extends Process {
     /**
      * Sets unique names for the process.
      * @return mapping of old name to new name
+     * @param prefix prefix of new name
      */
-    public Map<? extends String, ? extends String> setUniqueName() {
+    public Map<? extends String, ? extends String> setUniqueName(String prefix) {
         final String oldName = getName();
-        final String newName =  oldName + Util.getUniqueString();
+        final String newName = TestEntityUtil.generateUniqueName(prefix, oldName);
         setName(newName);
         final HashMap<String, String> nameMap = new HashMap<String, String>(1);
         nameMap.put(oldName, newName);
@@ -261,6 +263,19 @@ public class ProcessMerlin extends Process {
         acl.setGroup(group);
         acl.setPermission(permission);
         this.setACL(acl);
+    }
+
+    /**
+     * Set SLA.
+     * @param slaStart : start value of SLA
+     * @param slaEnd : end value of SLA
+     */
+
+    public void setSla(Frequency slaStart, Frequency slaEnd) {
+        Sla sla = new Sla();
+        sla.setShouldStartIn(slaStart);
+        sla.setShouldEndIn(slaEnd);
+        this.setSla(sla);
     }
 
 }

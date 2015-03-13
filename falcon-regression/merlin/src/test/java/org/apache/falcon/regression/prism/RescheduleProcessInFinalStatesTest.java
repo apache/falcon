@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -33,7 +34,9 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -54,7 +57,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String baseTestDir = baseHDFSDir + "/RescheduleProcessInFinalStates";
+    private OozieClient clusterOC = serverOC.get(0);
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String inputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private static final Logger LOGGER = Logger.getLogger(RescheduleProcessInFinalStatesTest.class);
@@ -64,7 +68,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         b.setProcessWorkflow(aggregateWorkflowDir);
 
@@ -85,7 +89,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:15Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
@@ -98,7 +102,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -152,6 +156,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      */
     @Test(enabled = true)
     public void rescheduleDWE() throws Exception {
+        InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
         prism.getProcessHelper()
             .getProcessInstanceKill(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:05Z&end=2010-01-02T01:11Z");

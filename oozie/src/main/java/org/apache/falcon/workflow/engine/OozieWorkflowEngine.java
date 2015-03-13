@@ -496,7 +496,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end,
-                                          Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+                                          Properties props, List<LifeCycle> lifeCycles,
+                                          Boolean isForced) throws FalconException {
+        if (isForced != null && isForced) {
+            props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+        }
         return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles);
     }
 
@@ -711,12 +715,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         instance.actions = instanceActions.toArray(new InstancesResult.InstanceAction[instanceActions.size()]);
     }
 
-    private Map<String, String> getWFParams(WorkflowJob jobInfo) {
-        Map<String, String> wfParams = new HashMap<String, String>();
+    private InstancesResult.KeyValuePair[] getWFParams(WorkflowJob jobInfo) {
         Configuration conf = new Configuration(false);
         conf.addResource(new ByteArrayInputStream(jobInfo.getConf().getBytes()));
+        InstancesResult.KeyValuePair[] wfParams = new InstancesResult.KeyValuePair[conf.size()];
+        int i = 0;
         for (Map.Entry<String, String> entry : conf) {
-            wfParams.put(entry.getKey(), entry.getValue());
+            wfParams[i++] = new InstancesResult.KeyValuePair(entry.getKey(), entry.getValue());
         }
         return wfParams;
     }
@@ -809,7 +814,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
-            client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_ACTION_RERUN,
+            client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
                 Integer.toString(coordinatorAction.getActionNumber()), true, true);
             assertCoordActionStatus(cluster, coordinatorAction.getId(),
                 org.apache.oozie.client.CoordinatorAction.Status.RUNNING,
@@ -1069,6 +1074,21 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return result.toString();
     }
 
+    @Override
+    public String touch(Entity entity, String cluster) throws FalconException {
+        BundleJob bundle = findLatestBundle(entity, cluster);
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        StringBuilder result = new StringBuilder();
+        if (bundle != MISSING) {
+            LOG.info("Updating entity {} for cluster: {}, bundle: {}", entity.toShortString(), cluster, bundle.getId());
+            String output = updateInternal(entity, entity, clusterEntity, bundle, CurrentUser.getUser());
+            result.append(output).append("\n");
+            LOG.info("Entity update complete: {} for cluster {}, bundle: {}", entity.toShortString(), cluster,
+                    bundle.getId());
+        }
+        return result.toString();
+    }
+
     private String getUpdateString(Entity entity, Date date, BundleJob oldBundle, BundleJob newBundle) {
         StringBuilder builder = new StringBuilder();
         builder.append(entity.toShortString()).append("/Effective Time: ").append(SchemaHelper.formatDateUTC(date));
@@ -1301,8 +1321,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 jobprops.putAll(props);
             }
             //if user has set any of these oozie rerun properties then force rerun flag is ignored
-            if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES) && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
-                jobprops.put(OozieClient.RERUN_FAIL_NODES, !isForced);
+            if (!jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && !jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                jobprops.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
             }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);

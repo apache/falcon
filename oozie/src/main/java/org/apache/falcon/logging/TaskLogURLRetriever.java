@@ -21,11 +21,12 @@ package org.apache.falcon.logging;
 import org.apache.hadoop.conf.Configurable;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Interface to abstract hadoop version specific task log url retrieval differences.
  */
 public interface TaskLogURLRetriever extends Configurable {
 
-    String retrieveTaskLogURL(String jobId) throws IOException;
+    List<String> retrieveTaskLogURL(String jobId) throws IOException;
 }

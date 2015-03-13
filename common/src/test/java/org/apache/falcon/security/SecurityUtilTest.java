@@ -18,9 +18,16 @@
 
 package org.apache.falcon.security;
 
+
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.util.StartupProperties;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
 
 /**
  * Unit test for Security utils.
@@ -80,5 +87,26 @@ public class SecurityUtilTest {
         Assert.assertNotNull(SecurityUtil.getAuthorizationProvider());
         Assert.assertEquals(SecurityUtil.getAuthorizationProvider().getClass(),
                 DefaultAuthorizationProvider.class);
+    }
+
+    @Test
+    public void testTryProxy() throws IOException, FalconException {
+        Process process = Mockito.mock(Process.class);
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        final String currentUser = System.getProperty("user.name");
+
+        // When ACL not specified
+        CurrentUser.authenticate(currentUser);
+        SecurityUtil.tryProxy(process);
+        Assert.assertEquals(CurrentUser.getUser(), currentUser);
+
+        ACL acl = new ACL();
+        acl.setOwner("testuser");
+        acl.setGroup("users");
+        Mockito.when(process.getACL()).thenReturn(acl);
+
+        // When ACL is specified
+        SecurityUtil.tryProxy(process);
+        Assert.assertEquals(CurrentUser.getUser(), "testuser");
     }
 }

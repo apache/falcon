@@ -35,7 +35,6 @@ import org.apache.falcon.regression.core.response.lineage.VertexResult;
 import org.apache.falcon.regression.core.response.lineage.VerticesResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.Generator;
 import org.apache.falcon.regression.core.util.GraphAssert;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -65,7 +64,7 @@ public class LineageApiTest extends BaseTestClass {
     private static final String INVALID_ARGUMENT_STR = "Invalid argument";
     private LineageHelper lineageHelper;
     private final ColoHelper cluster = servers.get(0);
-    private final String baseTestHDFSDir = baseHDFSDir + '/' + TEST_NAME;
+    private final String baseTestHDFSDir = cleanAndGetTestDir();
     private final String feedInputPath = baseTestHDFSDir + "/input";
     private final String feedOutputPath = baseTestHDFSDir + "/output";
     // use 5 <= x < 10 input feeds
@@ -83,9 +82,8 @@ public class LineageApiTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true, firstTimeOnly = true)
     public void setUp() throws Exception {
-        CleanupUtil.cleanAllEntities(prism);
         Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle();
+        bundle.generateUniqueBundle(this);
         bundles[0] = new Bundle(bundle, cluster);
         final List<String> clusterStrings = bundles[0].getClusters();
         Assert.assertEquals(clusterStrings.size(), 1, "Expecting only 1 clusterMerlin.");
@@ -96,8 +94,10 @@ public class LineageApiTest extends BaseTestClass {
         LOGGER.info("numOutputFeeds = " + numOutputFeeds);
         final FeedMerlin inputMerlin = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         inputMerlin.setTags(TEST_TAG);
+        String namePrefix = this.getClass().getSimpleName() + '-';
         inputFeeds = generateFeeds(numInputFeeds, inputMerlin,
-            Generator.getNameGenerator("infeed", inputMerlin.getName()),
+            Generator.getNameGenerator(namePrefix + "infeed",
+                inputMerlin.getName().replace(namePrefix, "")),
             Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : inputFeeds) {
             AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
@@ -106,7 +106,8 @@ public class LineageApiTest extends BaseTestClass {
         FeedMerlin outputMerlin = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
         outputMerlin.setTags(TEST_TAG);
         outputFeeds = generateFeeds(numOutputFeeds, outputMerlin,
-            Generator.getNameGenerator("outfeed", outputMerlin.getName()),
+            Generator.getNameGenerator(namePrefix + "outfeed",
+                outputMerlin.getName().replace(namePrefix, "")),
             Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : outputFeeds) {
             AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
@@ -130,13 +131,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true, lastTimeOnly = true)
     public void tearDown() {
-        for (FeedMerlin inputFeed : inputFeeds) {
-            CleanupUtil.deleteQuietly(prism.getFeedHelper(), inputFeed.toString());
-        }
-        for (FeedMerlin outputFeed : outputFeeds) {
-            CleanupUtil.deleteQuietly(prism.getFeedHelper(), outputFeed.toString());
-        }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

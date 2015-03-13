@@ -21,6 +21,7 @@ package org.apache.falcon.regression;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -55,8 +56,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String testDir = "/ProcessInstanceKillsTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
@@ -68,7 +68,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         b.setInputFeedDataPath(feedInputPath);
     }
@@ -77,7 +77,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
@@ -88,11 +88,11 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
-     * Schedule process. Perform -kill action using only -start parameter. Check that action
+     * Schedule process. Perform -kill action for only one instance. Check that action
      * succeeded and only one instance was killed.
      *
      * @throws Exception
@@ -152,7 +152,8 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
 
         //create data for first 5 instances, 6th should be non-materialized
-        String bundleId = InstanceUtil.getSequenceBundleID(cluster, processName, EntityType.PROCESS, 0);
+        String bundleId = InstanceUtil.getSequenceBundleID(clusterOC, processName,
+            EntityType.PROCESS, 0);
         for(CoordinatorJob c : clusterOC.getBundleJobInfo(bundleId).getCoordinators()) {
             List<CoordinatorAction> actions = clusterOC.getCoordJobInfo(c.getId()).getActions();
             if (actions.size() == 6) {
@@ -309,5 +310,65 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:04Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.SUCCEEDED);
+    }
+
+    /**
+     * Schedule process. Perform -kill action using only -start parameter. Check that action
+     * succeeded and only one instance was killed.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceKillWOEndParam() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
+        bundles[0].setProcessConcurrency(1);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
+                "?start=2010-01-02T01:00Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Schedule process. Perform -kill action using only -end parameter. Check that action
+     * succeeded and only one instance was killed.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceKillWOStartParam() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
+        bundles[0].setProcessConcurrency(1);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
+                "?end=2010-01-02T01:01Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Schedule process. Perform -kill action without start or end params. Check that action
+     * succeeded and only one instance was killed.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceKillWOParams() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
+        bundles[0].setProcessConcurrency(1);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
+                null);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 }

@@ -55,7 +55,9 @@ fi
 
 # default the heap size to 1GB
 DEFAULT_JAVA_HEAP_MAX=-Xmx1024m
-FALCON_OPTS="$DEFAULT_JAVA_HEAP_MAX $FALCON_OPTS"
+# setting -noverify option to skip bytecode verification due to JDK 1.7 (FALCON-774)
+NOVERIFY=-noverify
+FALCON_OPTS="$DEFAULT_JAVA_HEAP_MAX $NOVERIFY $FALCON_OPTS"
 
 type="$1"
 shift

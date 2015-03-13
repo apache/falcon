@@ -43,7 +43,7 @@ public class PrismFeedScheduleTest extends BaseTestClass {
 
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedScheduleTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismFeedScheduleTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -57,14 +57,14 @@ public class PrismFeedScheduleTest extends BaseTestClass {
 
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

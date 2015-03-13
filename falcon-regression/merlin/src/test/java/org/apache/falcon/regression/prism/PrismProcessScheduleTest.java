@@ -51,8 +51,9 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     private ColoHelper cluster2 = servers.get(1);
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessScheduleTest/aggregator";
-    private String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private String workflowForNoIpOp = baseTestHDFSDir + "/noinop";
     private String process1;
     private String process2;
 
@@ -67,7 +68,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         process1 = bundles[0].getProcessData();
@@ -76,7 +77,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

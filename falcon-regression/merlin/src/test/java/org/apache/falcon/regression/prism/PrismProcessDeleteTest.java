@@ -49,7 +49,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     private Bundle bundle;
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessDeleteTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismProcessDeleteTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -62,14 +62,14 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         bundle = BundleUtil.readLateDataBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /* NOTE: All test cases assume that there are two entities scheduled in each colo

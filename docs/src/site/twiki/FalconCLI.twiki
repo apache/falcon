@@ -83,6 +83,12 @@ $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update -fil
 Example:
 $FALCON_HOME/bin/falcon entity -type process -name HourlyReportsGenerator -update -file /process/definition.xml
 
+---+++Touch
+
+Force Update operation allows an already submitted/scheduled entity to be updated.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -touch
 
 ---+++Status
 
@@ -104,6 +110,19 @@ Definition option returns the entity definition submitted earlier during submit 
 
 Usage:
 $FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -name <<name>> -definition
+
+
+---+++Lookup
+
+Lookup option tells you which feed does a given path belong to. This can be useful in several scenarios e.g. generally you would want to have a single definition for common feeds like metadata with same location
+otherwise it can result in a problem (different retention durations can result in surprises for one team) If you want to check if there are multiple definitions of same metadata then you can pick
+an instance of that and run through the lookup command like below.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type feed -lookup -path /data/projects/my-hourly/2014/10/10/23/
+
+If you have multiple feeds with location as /data/projects/my-hourly/${YEAR}/${MONTH}/${DAY}/${HOUR} then this command will return all of them.
+
 
 ---++Instance Management Options
 
@@ -136,10 +155,12 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -continue
 
 ---+++Rerun
 
-Rerun option is used to rerun instances of a given process. This option is valid only for process instances in terminal state, i.e. SUCCEDDED, KILLED or FAILED. Optionally, you can specify the properties to override.
+Rerun option is used to rerun instances of a given process. On issuing a rerun, by default the execution resumes from the last failed node in the workflow. This option is valid only for process instances in terminal state, i.e. SUCCEEDED, KILLED or FAILED.
+If one wants to forcefully rerun the entire workflow, -force should be passed along with -rerun
+Additionally, you can also specify properties to override via a properties file.
 
 Usage:
-$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -rerun -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-file <<properties file>>]
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -rerun -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-force] [-file <<properties file>>]
 
 ---+++Resume
 
@@ -220,7 +241,7 @@ Optional Args : -colo <<colo>> -lifecycle <<lifecycles>>
 Get falcon feed instance availability.
 
 Usage:
-$FALCON_HOME/bin/falcon instance -entity feed -name <<name>> -listing
+$FALCON_HOME/bin/falcon instance -type feed -name <<name>> -listing
 
 Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
 -colo <<colo>>
@@ -250,7 +271,7 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -status -
 
 ---+++Params
 
-Displays the workflow params of a given instance. Where start time is considered as nominal time of that instance.
+Displays the workflow params of a given instance. Where start time is considered as nominal time of that instance and end time won't be considered.
 
 Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -start "yyyy-MM-dd'T'HH:mm'Z'"

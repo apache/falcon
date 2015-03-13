@@ -45,6 +45,9 @@ public final class MerlinConstants {
     public static final String WORKING_LOCATION = Config.getProperty("merlin.working.location",
         "/tmp/falcon-regression-working");
 
+    public static final String OOZIE_EXAMPLE_LIB = Config.getProperty("merlin.oozie_example_lib",
+            "https://repo1.maven.org/maven2/org/apache/oozie/oozie-examples/4.1.0/oozie-examples-4.1.0.jar");
+
     /** the user that is going to run tests. */
     public static final String CURRENT_USER_NAME = System.getProperty("user.name");
     /** keytab of current user. */

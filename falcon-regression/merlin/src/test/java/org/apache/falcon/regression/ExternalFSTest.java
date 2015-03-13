@@ -58,6 +58,7 @@ import org.testng.annotations.Test;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Tests for operations with external file systems.
@@ -73,11 +74,11 @@ public class ExternalFSTest extends BaseTestClass{
     private FileSystem wasbFS;
     private Bundle externalBundle;
 
-
-    private String baseTestDir = baseHDFSDir + "/ExternalFSTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String sourcePath = baseTestDir + "/source";
-    private String baseWasbDir = "/falcon-regression/" + Util.getUniqueString().substring(1);
-    private String testWasbTargetDir = baseWasbDir + "/"+ Util.getUniqueString().substring(1) + "/";
+    private String baseWasbDir = "/falcon-regression/" + UUID.randomUUID().toString().split("-")[0];
+    private String testWasbTargetDir = baseWasbDir + '/'
+        + UUID.randomUUID().toString().split("-")[0] + '/';
 
     private static final Logger LOGGER = Logger.getLogger(ExternalFSTest.class);
 
@@ -99,8 +100,8 @@ public class ExternalFSTest extends BaseTestClass{
         bundles[0] = new Bundle(bundle, cluster);
         externalBundle = new Bundle(bundle, cluster);
 
-        bundles[0].generateUniqueBundle();
-        externalBundle.generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        externalBundle.generateUniqueBundle(this);
 
         LOGGER.info("checking wasb credentials with location: " + testWasbTargetDir);
         wasbFS.create(new Path(testWasbTargetDir));
@@ -109,7 +110,7 @@ public class ExternalFSTest extends BaseTestClass{
 
     @AfterMethod
     public void tearDown() throws IOException {
-        removeBundles(externalBundle);
+        removeTestClassEntities();
         wasbFS.delete(new Path(testWasbTargetDir), true);
     }
 

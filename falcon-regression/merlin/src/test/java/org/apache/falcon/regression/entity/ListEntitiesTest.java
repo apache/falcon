@@ -27,9 +27,7 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -56,8 +54,7 @@ import java.util.Random;
 @Test(groups = "embedded")
 public class ListEntitiesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListEntitiesTest.class);
-    private String testDir = "/ListEntitiesTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String[] tags = {"first=yes", "second=yes", "third=yes", "wrong=no"};
     private static final Comparator<EntityElement> NAME_COMPARATOR = new Comparator<EntityElement>() {
@@ -75,11 +72,11 @@ public class ListEntitiesTest extends BaseTestClass {
         throws IOException, AuthenticationException, JAXBException, URISyntaxException,
         InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        CleanupUtil.cleanAllEntities(prism);
+        removeTestClassEntities();
 
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], servers.get(0));
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].submitBundle(prism);
 
@@ -87,8 +84,11 @@ public class ListEntitiesTest extends BaseTestClass {
         FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
         ClusterMerlin cluster = bundles[0].getClusterElement();
+        String clusterNamePrefix = bundles[0].getClusterElement().getName() + '-';
+        String processNamePrefix = bundles[0].getProcessName() + '-';
+        String feedNamePrefix = bundles[0].getInputFeedNameFromBundle() + '-';
         for (int i = 0; i < 10; i++) {
-            process.setName("process" + Util.getUniqueString());
+            process.setName(processNamePrefix + i);
             process.setTags(getRandomTags());
             if (i % 2 == 0) {
                 AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(process.toString()));
@@ -96,7 +96,7 @@ public class ListEntitiesTest extends BaseTestClass {
                 AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process.toString()));
             }
 
-            feed.setName("feed" + Util.getUniqueString());
+            feed.setName(feedNamePrefix + i);
             feed.setTags(getRandomTags());
             if (i % 2 == 0) {
                 AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
@@ -104,7 +104,7 @@ public class ListEntitiesTest extends BaseTestClass {
                 AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
             }
 
-            cluster.setName("cluster" + Util.getUniqueString());
+            cluster.setName(clusterNamePrefix + i);
             cluster.setTags(getRandomTags());
             AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster.toString()));
         }
@@ -112,7 +112,7 @@ public class ListEntitiesTest extends BaseTestClass {
 
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
-        CleanupUtil.cleanAllEntities(prism);
+        removeTestClassEntities();
     }
 
     /**

@@ -45,7 +45,8 @@ import java.util.Random;
 public class RescheduleKilledProcessTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
-    private String aggregateWorkflowDir = baseHDFSDir + "/RescheduleKilledProcessTest/aggregator";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(RescheduleKilledProcessTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -57,13 +58,13 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
     public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -76,7 +77,8 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-11);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(6);
         String process = bundles[0].getProcessData();
-        process = InstanceUtil.setProcessName(process, "zeroInputProcess" + new Random().nextInt());
+        process = InstanceUtil.setProcessName(process, this.getClass().getSimpleName()
+            + "zeroInputProcess" + new Random().nextInt());
         List<String> feed = new ArrayList<String>();
         feed.add(bundles[0].getOutputFeedFromBundle());
         final ProcessMerlin processMerlin = new ProcessMerlin(process);
@@ -110,7 +112,7 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
         bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-11),
             TimeUtil.getTimeWrtSystemTime(6));
 
-        bundles[0].setInputFeedDataPath(baseHDFSDir + "/rawLogs" + MINUTE_DATE_PATTERN);
+        bundles[0].setInputFeedDataPath(baseTestHDFSDir + "/rawLogs" + MINUTE_DATE_PATTERN);
 
         LOGGER.info("process: " + Util.prettyPrintXml(bundles[0].getProcessData()));
 

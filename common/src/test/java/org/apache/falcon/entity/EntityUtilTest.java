@@ -216,6 +216,17 @@ public class EntityUtilTest extends AbstractTestBase {
     }
 
     @Test
+    public void testGetNextStartTimeMonthly() throws Exception {
+        Date startDate = getDate("2012-06-02 10:00 UTC");
+        Date nextAfter = getDate("2136-06-02 10:00 UTC");
+        Frequency frequency = Frequency.fromString("months(1)");
+        TimeZone timeZone = TimeZone.getTimeZone("UTC");
+        Date expectedResult = nextAfter;
+        Date result = EntityUtil.getNextStartTime(startDate, frequency, tz, nextAfter);
+        Assert.assertEquals(result, expectedResult);
+    }
+
+    @Test
     public void testGetEntityStartEndDates() throws Exception {
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
                 getClass().getResourceAsStream(PROCESS_XML));

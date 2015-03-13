@@ -21,6 +21,7 @@ package org.apache.falcon.regression;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
@@ -50,7 +51,7 @@ import java.util.List;
 @Test(groups = "embedded")
 public class ProcessInstanceRerunTest extends BaseTestClass {
 
-    private String baseTestDir = baseHDFSDir + "/ProcessInstanceRerunTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestDir + "/output-data" + MINUTE_DATE_PATTERN;
@@ -76,7 +77,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
@@ -86,7 +87,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -112,6 +113,78 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         prism.getProcessHelper().getProcessInstanceRerun(processName,
             start + "&end=2010-01-02T01:11Z");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 5, 1, 0);
+    }
+
+    /**
+     * Schedule process. Kill some instances. Rerun some of these killed without using -start or
+     * -end parameters. Should fail.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceRerunKilledWOParams() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
+        bundles[0].setOutputFeedLocationData(feedOutputPath);
+        bundles[0].setProcessConcurrency(5);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
+                start + "&end=2010-01-02T01:16Z");
+        InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
+        r = prism.getProcessHelper().getProcessInstanceRerun(processName,
+                null);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Schedule process. Kill some instances. Rerun some of these killed using only
+     * -end parameter. Should fail.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceRerunKilledWOStartParam() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
+        bundles[0].setOutputFeedLocationData(feedOutputPath);
+        bundles[0].setProcessConcurrency(5);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
+                start + "&end=2010-01-02T01:16Z");
+        InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
+        r = prism.getProcessHelper().getProcessInstanceRerun(processName,
+                "?end=2010-01-02T01:11Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Schedule process. Kill some instances. Rerun some of these killed using only
+     * -start parameter. Should fail.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceRerunKilledWOEndParam() throws Exception {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
+        bundles[0].setOutputFeedLocationData(feedOutputPath);
+        bundles[0].setProcessConcurrency(5);
+        bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
+                start + "&end=2010-01-02T01:16Z");
+        InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
+        r = prism.getProcessHelper().getProcessInstanceRerun(processName,
+                start);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 
     /**

@@ -50,7 +50,7 @@ public class OptionalInputTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient oozieClient = serverOC.get(0);
-    private String baseTestDir = baseHDFSDir + "/OptionalInputTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String inputPath = baseTestDir + "/input";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(OptionalInputTest.class);
@@ -64,14 +64,14 @@ public class OptionalInputTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
         HadoopUtil.deleteDirIfExists(inputPath + "/", clusterFS);
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

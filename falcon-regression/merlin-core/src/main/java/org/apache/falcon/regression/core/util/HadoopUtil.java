@@ -136,6 +136,32 @@ public final class HadoopUtil {
         return returnList;
     }
 
+    /**
+     * Recursively retrieves all data file names from a given location and looks for presence of availabilityFlag.
+     * If availabilityFlag is null then it looks for _SUCCESS file(set as default).
+     * @param fs filesystem
+     * @param location given location
+     * @param availabilityFlag value of availability flag set in entity
+     * @return
+     * @throws IOException
+     */
+    public static boolean getSuccessFolder(
+            FileSystem fs, Path location, String availabilityFlag) throws IOException {
+        LOGGER.info("location : " + location);
+        for(FileStatus stat : fs.listStatus(location)) {
+            if (availabilityFlag.isEmpty()) {
+                if (stat.getPath().getName().equals("_SUCCESS")) {
+                    return true;
+                }
+            } else {
+                if (stat.getPath().getName().equals(availabilityFlag)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @SuppressWarnings("deprecation")
     private static boolean isDir(FileStatus stat) {
         return stat.isDir();

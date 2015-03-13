@@ -54,7 +54,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
     private FileSystem cluster1FS = serverFS.get(0);
     private FileSystem cluster2FS = serverFS.get(1);
     private FileSystem cluster3FS = serverFS.get(2);
-    private String baseTestDir = baseHDFSDir + "/PrismFeedLateReplicationTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String inputPath = baseTestDir + "/input-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismFeedLateReplicationTest.class);
@@ -69,14 +69,14 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = {"multiCluster"})

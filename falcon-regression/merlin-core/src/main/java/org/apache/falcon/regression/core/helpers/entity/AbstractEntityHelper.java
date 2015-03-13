@@ -41,7 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.AuthOozieClient;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -151,14 +151,14 @@ public abstract class AbstractEntityHelper {
     protected String namenodePrincipal;
     protected String hiveMetaStorePrincipal;
 
-    public AuthOozieClient getOozieClient() {
+    public OozieClient getOozieClient() {
         if (null == this.oozieClient) {
             this.oozieClient = OozieUtil.getClient(this.oozieURL);
         }
         return this.oozieClient;
     }
 
-    protected AuthOozieClient oozieClient;
+    protected OozieClient oozieClient;
 
     public FileSystem getHadoopFS() throws IOException {
         if (null == this.hadoopFS) {
@@ -276,11 +276,23 @@ public abstract class AbstractEntityHelper {
         return submitEntity(data, null);
     }
 
+    public ServiceResponse validateEntity(String data)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        return validateEntity(data, null);
+    }
+
     public ServiceResponse submitEntity(String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         LOGGER.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
         return Util.sendRequest(createUrl(this.hostname + URLS.SUBMIT_URL.getValue(),
             getEntityType() + colo), "post", data, user);
+    }
+
+    public ServiceResponse validateEntity(String data, String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        LOGGER.info("Validating " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
+        return Util.sendRequest(createUrl(this.hostname + URLS.VALIDATE_URL.getValue(),
+                getEntityType() + colo), "post", data, user);
     }
 
     public ServiceResponse schedule(String processData)
@@ -596,5 +608,17 @@ public abstract class AbstractEntityHelper {
         String url = createUrl(this.hostname + URLS.DEPENDENCIES.getValue(), getEntityType(),
             entityName + colo);
         return Util.sendRequest(url, "get", null, null);
+    }
+
+    public ServiceResponse touchEntity(String data)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        return touchEntity(Util.readEntityName(data), data, null);
+    }
+
+    public ServiceResponse touchEntity(String entityName, String data, String user)
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.TOUCH_URL.getValue(), getEntityType(),
+                entityName + colo);
+        return Util.sendRequest(url, "post", data, user);
     }
 }

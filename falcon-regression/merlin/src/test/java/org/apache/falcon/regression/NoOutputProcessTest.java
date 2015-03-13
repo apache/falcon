@@ -53,9 +53,9 @@ public class NoOutputProcessTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String testDir = baseHDFSDir + "/NoOutputProcessTest";
+    private String testDir = cleanAndGetTestDir();
     private String inputPath = testDir + "/input" + MINUTE_DATE_PATTERN;
-    private String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noInOp";
+    private String workflowForNoIpOp = cleanAndGetTestDir();
     private static final Logger LOGGER = Logger.getLogger(NoOutputProcessTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -63,7 +63,7 @@ public class NoOutputProcessTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
         Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle();
+        b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);
         String startDate = "2010-01-03T00:00Z";
         String endDate = "2010-01-03T03:00Z";
@@ -77,7 +77,7 @@ public class NoOutputProcessTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].setProcessWorkflow(workflowForNoIpOp);
         bundles[0].setInputFeedDataPath(inputPath);
@@ -92,7 +92,7 @@ public class NoOutputProcessTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

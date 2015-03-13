@@ -1,0 +1,110 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="aggregator-wf">
+    <start to="aggregator"/>
+    <action name="aggregator">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${OUTPUTMR}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>mapred.mapper.class</name>
+                    <value>org.apache.hadoop.mapred.lib.IdentityMapper</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.class</name>
+                    <value>org.apache.hadoop.mapred.lib.IdentityReducer</value>
+                </property>
+                <property>
+                    <name>mapred.map.tasks</name>
+                    <value>1</value>
+                </property>
+                <property>
+                    <name>mapred.input.dir</name>
+                    <value>${INPUT}</value>
+                </property>
+                <property>
+                    <name>mapred.output.dir</name>
+                    <value>${OUTPUTMR}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="pigAction"/>
+        <error to="failMapRed"/>
+    </action>
+
+    <action name="pigAction">
+        <pig>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <script>id.pig</script>
+            <param>INPUT=${INPUT}</param>
+            <param>OUTPUT=${OUTPUT}</param>
+        </pig>
+        <ok to="hiveAction"/>
+        <error to="failPig"/>
+    </action>
+
+    <action name="hiveAction">
+        <hive xmlns="uri:oozie:hive-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <job-xml>${wf:appPath()}/conf/hive-site.xml</job-xml>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>queueName</name>
+                    <value>default</value>
+                </property>
+            </configuration>
+            <script>script.hql</script>
+            <param>falcon_inputData_database=${falcon_inputData_database}</param>
+            <param>falcon_outputData_database=${falcon_outputData_database}</param>
+            <param>falcon_inputData_table=${falcon_inputData_table}</param>
+            <param>falcon_outputData_table=${falcon_outputData_table}</param>
+            <param>falcon_inputData_partition_filter_hive=${falcon_inputData_partition_filter_hive}</param>
+        </hive>
+
+        <ok to="end"/>
+        <error to="failHive"/>
+    </action>
+
+    <kill name="failMapRed">
+        <message>Map/Reduce failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <kill name="failHive">
+        <message>Hive action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <kill name="failPig">
+        <message>Pig action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>
+- 

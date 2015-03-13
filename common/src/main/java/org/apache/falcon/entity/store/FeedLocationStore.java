@@ -26,12 +26,14 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.service.ConfigurationChangeListener;
+import org.apache.falcon.util.FalconRadixUtils;
 import org.apache.falcon.util.RadixTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -64,7 +66,8 @@ import java.util.List;
 public final class FeedLocationStore implements ConfigurationChangeListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeedLocationStore.class);
-    protected final FeedPathStore<FeedProperties> store = new RadixTree<FeedProperties>();
+    protected final FeedPathStore<FeedLookupResult.FeedProperties> store = new
+            RadixTree<FeedLookupResult.FeedProperties>();
 
     private static FeedLocationStore instance = new FeedLocationStore();
 
@@ -75,55 +78,6 @@ public final class FeedLocationStore implements ConfigurationChangeListener {
         return instance;
     }
 
-    /**
-     * Object stored against each path.
-     */
-    public static class FeedProperties {
-        private final String feedName;
-
-        private final LocationType locationType;
-
-        private final String clusterName;
-
-        public FeedProperties(String feedName, LocationType locationType, String clusterName){
-            this.clusterName = clusterName;
-            this.locationType = locationType;
-            this.feedName = feedName;
-        }
-
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            FeedProperties that = (FeedProperties) o;
-            if (!StringUtils.equals(clusterName, that.clusterName)) {
-                return false;
-            }
-            if (locationType != that.locationType) {
-                return false;
-            }
-            if (!StringUtils.equals(feedName, that.feedName)) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = feedName.hashCode();
-            result = 31 * result + (locationType != null ? locationType.hashCode() : 0);
-            result = 31 * result + (clusterName != null ? clusterName.hashCode() : 0);
-            return result;
-        }
-
-    }
-
-
     @Override
     public void onAdd(Entity entity) throws FalconException {
         if (entity.getEntityType() == EntityType.FEED){
@@ -132,13 +86,15 @@ public final class FeedLocationStore implements ConfigurationChangeListener {
             for(Cluster cluster: clusters){
                 List<Location> clusterSpecificLocations = FeedHelper.getLocations(FeedHelper.getCluster(feed,
                         cluster.getName()), feed);
-                for(Location location: clusterSpecificLocations){
-                    if (location != null && StringUtils.isNotBlank(location.getPath())){
-                        FeedProperties value = new FeedProperties(feed.getName(), location.getType(),
-                                cluster.getName());
-                        store.insert(StringUtils.trim(location.getPath()), value);
-                        LOG.debug("Inserted location: {} for feed: {} and cluster: {}",
-                                location.getPath(), feed.getName(), cluster.getName());
+                if (clusterSpecificLocations != null) {
+                    for(Location location: clusterSpecificLocations){
+                        if (location != null && StringUtils.isNotBlank(location.getPath())){
+                            FeedLookupResult.FeedProperties value = new FeedLookupResult.FeedProperties(feed.getName(),
+                                    location.getType(), cluster.getName());
+                            store.insert(StringUtils.trim(location.getPath()), value);
+                            LOG.debug("Inserted location: {} for feed: {} and cluster: {}",
+                                    location.getPath(), feed.getName(), cluster.getName());
+                        }
                     }
                 }
             }
@@ -159,16 +115,19 @@ public final class FeedLocationStore implements ConfigurationChangeListener {
             for(Cluster cluster: clusters){
                 List<Location> clusterSpecificLocations = FeedHelper.getLocations(FeedHelper.getCluster(feed,
                         cluster.getName()), feed);
-                for(Location location: clusterSpecificLocations){
-                    if (location != null && StringUtils.isNotBlank(location.getPath())){
-                        FeedProperties value = new FeedProperties(feed.getName(), location.getType(),
-                                cluster.getName());
-                        store.delete(location.getPath(), value);
-                        LOG.debug("Deleted location: {} for feed: {} and cluster: {}",
-                                location.getPath(), feed.getName(), cluster.getName());
+                if (clusterSpecificLocations != null) {
+                    for(Location location: clusterSpecificLocations){
+                        if (location != null && StringUtils.isNotBlank(location.getPath())){
+                            FeedLookupResult.FeedProperties value = new FeedLookupResult.FeedProperties(feed.getName(),
+                                    location.getType(), cluster.getName());
+                            LOG.debug("Delete called for location: {} for feed: {} and cluster: {}",
+                                    location.getPath(), feed.getName(), cluster.getName());
+                            store.delete(location.getPath(), value);
+                            LOG.debug("Deleted location: {} for feed: {} and cluster: {}",
+                                    location.getPath(), feed.getName(), cluster.getName());
+                        }
                     }
                 }
-
             }
         }
 
@@ -189,5 +148,10 @@ public final class FeedLocationStore implements ConfigurationChangeListener {
     @Override
     public void onReload(Entity entity) throws FalconException {
         onAdd(entity);
+    }
+
+
+    public Collection<FeedLookupResult.FeedProperties> reverseLookup(String path) {
+        return store.find(path, new FalconRadixUtils.FeedRegexAlgorithm());
     }
 }

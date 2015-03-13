@@ -101,6 +101,10 @@ public class UpdateHelperTest extends AbstractTestBase {
         Path feedPath = EntityUtil.getNewStagingPath(clusterEntity, oldFeed);
         Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
 
+        //Add tags and ensure isEntityUpdated returns false
+        newFeed.setTags("category=test");
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
+
         newFeed.setGroups("newgroups");
         Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
         newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(8)"));
@@ -128,6 +132,12 @@ public class UpdateHelperTest extends AbstractTestBase {
         procCluster.setName("newcluster");
         procCluster.setValidity(newProcess.getClusters().getClusters().get(0).getValidity());
         newProcess.getClusters().getClusters().add(procCluster);
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+
+        //change pipelines and ensure it doesn't cause an update
+        oldProcess.setPipelines("test");
+        newProcess.setPipelines("newTest");
+        newProcess.setTags("category=test");
         Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
 
         //In the case of incomplete update, where new entity is scheduled but still not updated in config store,

@@ -57,7 +57,7 @@ import java.util.List;
 @Test(groups = "embedded")
 public class InstanceSummaryTest extends BaseTestClass {
 
-    private String baseTestHDFSDir = baseHDFSDir + "/InstanceSummaryTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String startTime;
@@ -84,14 +84,14 @@ public class InstanceSummaryTest extends BaseTestClass {
     public void setup() throws Exception {
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster3);
-        processBundle.generateUniqueBundle();
+        processBundle.generateUniqueBundle(this);
         processBundle.setInputFeedDataPath(feedInputPath);
         processBundle.setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
 
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(processBundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         processName = Util.readEntityName(processBundle.getProcessData());
@@ -263,6 +263,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles(processBundle);
+        removeTestClassEntities();
     }
 }

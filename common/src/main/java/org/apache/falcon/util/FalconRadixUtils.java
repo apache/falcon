@@ -98,7 +98,12 @@ public class FalconRadixUtils {
 
     }
 
-    static class FeedRegexAlgorithm implements INodeAlgorithm {
+    /**
+     * Regular Expression Algorithm for the radix tree.
+     *
+     * It traverses the radix tree and matches expressions like ${YEAR} etc. with their allowable values e.g. 2014
+     */
+    public static class FeedRegexAlgorithm implements INodeAlgorithm {
 
         /**
          * This function matches a feed path template with feed instance's path string.

@@ -1,0 +1,36 @@
+---++  GET api/entities/lookup/feed
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+
+---++ Parameters
+    * path path of the instance for which you want to determine the feed. e.g. /data/project1/2014/10/10/23/
+    Path has to be the complete path and can't be a part of it.
+
+---++ Results
+Returns the name of the feed along with the location type(meta/data/stats) and cluster on which the given path belongs to this feed.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/lookup/feed?path=/data/project1/2014/10/10/23
+</verbatim>
+---+++ Result
+{
+    "feeds":
+    [
+        {
+           "feedName": "My-Feed1",
+           "locationType": "DATA",
+           "clusterName": "My-cluster1"
+        },
+        {
+           "feedName": "My-Feed2",
+           "locationType": "DATA",
+           "clusterName": "My-cluster2"
+        }
+    ]
+}

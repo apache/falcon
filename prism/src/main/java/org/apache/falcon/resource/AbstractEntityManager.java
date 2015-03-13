@@ -27,11 +27,13 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.lock.MemoryLocks;
 import org.apache.falcon.entity.parser.EntityParser;
 import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.store.EntityAlreadyExistsException;
+import org.apache.falcon.entity.store.FeedLocationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityIntegrityChecker;
@@ -72,6 +74,7 @@ import java.util.Set;
  */
 public abstract class AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
+    private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     protected static final String DEFAULT_NUM_RESULTS = "10";
@@ -121,10 +124,15 @@ public abstract class AbstractEntityManager {
 
     protected Set<String> getColosFromExpression(String coloExpr, String type, String entity) {
         Set<String> colos;
+        final Set<String> applicableColos = getApplicableColos(type, entity);
         if (coloExpr == null || coloExpr.equals("*") || coloExpr.isEmpty()) {
-            colos = getApplicableColos(type, entity);
+            colos = applicableColos;
         } else {
             colos = new HashSet<String>(Arrays.asList(coloExpr.split(",")));
+            if (!applicableColos.containsAll(colos)) {
+                throw FalconWebException.newException("Given colos not applicable for entity operation",
+                        Response.Status.BAD_REQUEST);
+            }
         }
         return colos;
     }
@@ -260,10 +268,9 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    // Parallel update can get very clumsy if two feeds are updated which
-    // are referred by a single process. Sequencing them.
-    public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
+    public APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
         checkColo(colo);
+        List<Entity> tokenList = null;
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
@@ -274,6 +281,8 @@ public abstract class AbstractEntityManager {
 
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
+
+            tokenList = obtainUpdateEntityLocks(oldEntity);
 
             StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
@@ -299,7 +308,46 @@ public abstract class AbstractEntityManager {
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
+            releaseUpdateEntityLocks(entityName, tokenList);
         }
+    }
+
+    private List<Entity> obtainUpdateEntityLocks(Entity entity)
+        throws FalconException {
+        List<Entity> tokenList = new ArrayList<Entity>();
+
+        //first obtain lock for the entity for which update is issued.
+        if (memoryLocks.acquireLock(entity)) {
+            tokenList.add(entity);
+        } else {
+            throw new FalconException("Looks like an update command is already issued for " + entity.toShortString());
+        }
+
+        //now obtain locks for all dependent entities.
+        Set<Entity> affectedEntities = EntityGraph.get().getDependents(entity);
+        for (Entity e : affectedEntities) {
+            if (memoryLocks.acquireLock(e)) {
+                tokenList.add(e);
+            } else {
+                LOG.error("Error while trying to acquire lock for {}. Releasing already obtained locks",
+                        e.toShortString());
+                throw new FalconException("There are multiple update commands running for dependent entity "
+                        + e.toShortString());
+            }
+        }
+        return tokenList;
+    }
+
+    private void releaseUpdateEntityLocks(String entityName, List<Entity> tokenList) {
+        if (tokenList != null && !tokenList.isEmpty()) {
+            for (Entity entity : tokenList) {
+                memoryLocks.releaseLock(entity);
+            }
+            LOG.info("All update locks released for {}", entityName);
+        } else {
+            LOG.info("No locks to release for " + entityName);
+        }
+
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException {
@@ -359,21 +407,11 @@ public abstract class AbstractEntityManager {
                             + "Can't be submitted again. Try removing before submitting.");
         }
 
-        tryProxy(entity); // proxy before validating since FS/Oozie needs to be proxied
+        SecurityUtil.tryProxy(entity); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: ({}): {}", type, entity.getName());
         return entity;
-    }
-
-    private void tryProxy(Entity entity) throws IOException, FalconException {
-        final String aclOwner = entity.getACL().getOwner();
-        final String aclGroup = entity.getACL().getGroup();
-        if (SecurityUtil.isAuthorizationEnabled()
-                && SecurityUtil.getAuthorizationProvider().shouldProxy(
-                    CurrentUser.getAuthenticatedUGI(), aclOwner, aclGroup)) {
-            CurrentUser.proxy(aclOwner, aclGroup);
-        }
     }
 
     /**
@@ -599,7 +637,7 @@ public abstract class AbstractEntityManager {
                 // the user who requested list query has no permission to access this entity. Skip this entity
                 continue;
             }
-            tryProxy(entity);
+            SecurityUtil.tryProxy(entity);
 
             List<String> tags = EntityUtil.getTags(entity);
             List<String> pipelines = EntityUtil.getPipelines(entity);
@@ -876,7 +914,7 @@ public abstract class AbstractEntityManager {
             elem.status = getStatusString(entity);
         }
         if (fields.contains("pipelines")) {
-            elem.pipelines = EntityUtil.getPipelines(entity);
+            elem.pipeline = EntityUtil.getPipelines(entity);
         }
         if (fields.contains("tags")) {
             elem.tag = EntityUtil.getTags(entity);
@@ -906,6 +944,51 @@ public abstract class AbstractEntityManager {
 
         }
     }
+
+
+    /**
+     * Given the location of data, returns the feed.
+     * @param type type of the entity, is valid only for feeds.
+     * @param instancePath location of the data
+     * @return Feed Name, type of the data and cluster name.
+     */
+    public FeedLookupResult reverseLookup(String type, String instancePath) {
+        try {
+            EntityType entityType = EntityType.getEnum(type);
+            if (entityType != EntityType.FEED) {
+                LOG.error("Reverse Lookup is not supported for entitytype: {}", type);
+                throw new IllegalArgumentException("Reverse lookup is not supported for " + type);
+            }
+
+            instancePath = StringUtils.trim(instancePath);
+            String instancePathWithoutSlash =
+                    instancePath.endsWith("/") ? StringUtils.removeEnd(instancePath, "/") : instancePath;
+            // treat strings with and without trailing slash as same for purpose of searching e.g.
+            // /data/cas and /data/cas/ should be treated as same.
+            String instancePathWithSlash = instancePathWithoutSlash + "/";
+            FeedLocationStore store = FeedLocationStore.get();
+            Collection<FeedLookupResult.FeedProperties> feeds = new ArrayList<>();
+            Collection<FeedLookupResult.FeedProperties> res = store.reverseLookup(instancePathWithoutSlash);
+            if (res != null) {
+                feeds.addAll(res);
+            }
+            res = store.reverseLookup(instancePathWithSlash);
+            if (res != null) {
+                feeds.addAll(res);
+            }
+            FeedLookupResult result = new FeedLookupResult(APIResult.Status.SUCCEEDED, "SUCCESS");
+            FeedLookupResult.FeedProperties[] props = feeds.toArray(new FeedLookupResult.FeedProperties[0]);
+            result.setElements(props);
+            return result;
+
+        } catch (IllegalArgumentException e) {
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (Throwable throwable) {
+            LOG.error("reverse look up failed", throwable);
+            throw FalconWebException.newException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     protected AbstractWorkflowEngine getWorkflowEngine() {
         return this.workflowEngine;

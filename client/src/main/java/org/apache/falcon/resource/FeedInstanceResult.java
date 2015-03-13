@@ -58,6 +58,24 @@ public class FeedInstanceResult extends APIResult {
         this.instances = instances;
     }
 
+    @Override
+    public Object[] getCollection() {
+        return getInstances();
+    }
+
+    @Override
+    public void setCollection(Object[] items) {
+        if (items == null) {
+            setInstances(new Instance[0]);
+        } else {
+            Instance[] newInstances = new Instance[items.length];
+            for (int index = 0; index < items.length; index++) {
+                newInstances[index] = (Instance)items[index];
+            }
+            setInstances(newInstances);
+        }
+    }
+
     /**
      * A single instance object inside instance result.
      */

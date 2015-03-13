@@ -51,7 +51,8 @@ public class PrismFeedSnSTest extends BaseTestClass {
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private boolean restartRequired;
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedSnSTest/aggregator";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismFeedSnSTest.class);
     private String feed1, feed2;
 
@@ -66,7 +67,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         feed1 = bundles[0].getDataSets().get(0);
@@ -78,7 +79,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
         if (restartRequired) {
             Util.restartService(cluster1.getFeedHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -387,7 +388,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
                 .withValidity(startTimeUA1, "2099-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
-                .withDataLocation(baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .withDataLocation(baseTestHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build())
             .toString();
         feed = FeedMerlin.fromString(feed).addFeedCluster(
@@ -396,7 +397,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
                 .withValidity(startTimeUA2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(
-                    baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                    baseTestHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build()).toString();
         LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 

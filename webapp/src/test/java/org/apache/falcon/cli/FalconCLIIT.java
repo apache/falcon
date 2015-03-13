@@ -75,6 +75,10 @@ public class FalconCLIIT {
                 "falcon/default/Submit successful (feed) "
                         + overlay.get("inputFeedName"));
 
+        // Test the lookup command
+        Assert.assertEquals(executeWithURL("entity -lookup -type feed -path "
+                + "/falcon/test/input/2014/11/23/23"), 0);
+
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
         Assert.assertEquals(
@@ -116,9 +120,13 @@ public class FalconCLIIT {
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(executeWithURL("entity -submitAndSchedule -type process -file " + filePath), 0);
+        OozieTestUtils.waitForProcessWFtoStart(context);
 
         Assert.assertEquals(executeWithURL("entity -update -name " + overlay.get("processName")
                 + " -type process -file " + filePath), 0);
+
+        Assert.assertEquals(0,
+                executeWithURL("entity -touch -name " + overlay.get("processName") + " -type process"));
     }
 
     public void testValidateValidCommands() throws Exception {

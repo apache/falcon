@@ -21,6 +21,7 @@ package org.apache.falcon.entity.store;
 import org.apache.commons.io.FileUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -28,6 +29,7 @@ import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconRadixUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -143,6 +145,32 @@ public class FeedLocationStoreTest {
         Assert.assertEquals(FeedLocationStore.get().store.getSize(), initialSize);
     }
 
+
+    @Test
+    public void testFindWithRegularExpression() throws FalconException {
+        Feed f = createFeed("findUsingRegexFeed");
+        f.getLocations().getLocations().add(createLocation(LocationType.DATA,
+                "/falcon/test/input/${YEAR}/${MONTH}/${DAY}/${HOUR}"));
+        store.publish(EntityType.FEED, f);
+        Assert.assertNotNull(FeedLocationStore.get().store.find("/falcon/test/input/2014/12/12/23",
+                new FalconRadixUtils.FeedRegexAlgorithm()));
+    }
+
+    @Test
+    public void testAddCatalogStorageFeeds() throws FalconException {
+        //this test ensure that catalog feeds are ignored in FeedLocationStore
+        Feed f = createCatalogFeed("catalogFeed");
+        store.publish(EntityType.FEED, f);
+        Assert.assertTrue(true);
+    }
+
+    private Feed createCatalogFeed(String name) {
+        Feed f = new Feed();
+        f.setName(name);
+        f.setClusters(createBlankClusters());
+        f.setTable(new CatalogTable());
+        return f;
+    }
 
     private Feed createFeed(String name){
         Feed f = new Feed();

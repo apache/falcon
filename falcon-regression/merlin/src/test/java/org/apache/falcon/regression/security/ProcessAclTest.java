@@ -50,7 +50,7 @@ public class ProcessAclTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
-    private String baseTestDir = baseHDFSDir + "/ProcessAclTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private final AbstractEntityHelper processHelper = prism.getProcessHelper();
@@ -65,7 +65,7 @@ public class ProcessAclTest extends BaseTestClass {
     public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessACL(MerlinConstants.CURRENT_USER_NAME,
@@ -255,6 +255,6 @@ public class ProcessAclTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 }

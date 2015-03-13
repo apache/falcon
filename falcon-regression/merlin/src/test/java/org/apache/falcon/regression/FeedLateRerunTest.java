@@ -55,11 +55,10 @@ public class FeedLateRerunTest extends BaseTestClass {
     private FileSystem cluster1FS = serverFS.get(0);
     private FileSystem cluster2FS = serverFS.get(1);
     private OozieClient cluster2OC = serverOC.get(1);
-    private String dateTemplate = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    private String baseTestDir = baseHDFSDir + "/FeedLateRerunTest";
-    private String feedDataLocation = baseTestDir + "/source" + dateTemplate;
+    private String baseTestDir = cleanAndGetTestDir();
+    private String feedDataLocation = baseTestDir + "/source" + MINUTE_DATE_PATTERN;
     private String targetPath = baseTestDir + "/target";
-    private String targetDataLocation = targetPath + dateTemplate;
+    private String targetDataLocation = targetPath + MINUTE_DATE_PATTERN;
     private static final Logger LOGGER = Logger.getLogger(FeedLateRerunTest.class);
     private String source = null;
     private String target = null;
@@ -69,13 +68,13 @@ public class FeedLateRerunTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readFeedReplicationBundle();
         bundles[0] = new Bundle(bundle, cluster1);
         bundles[1] = new Bundle(bundle, cluster2);
-        bundles[0].generateUniqueBundle();
-        bundles[1].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(dataProvider = "dataFlagProvider")

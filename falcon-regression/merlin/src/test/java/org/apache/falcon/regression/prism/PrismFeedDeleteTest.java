@@ -56,7 +56,8 @@ public class PrismFeedDeleteTest extends BaseTestClass {
     private ColoHelper cluster2 = servers.get(1);
     private String cluster1Colo = cluster1.getClusterHelper().getColoName();
     private String cluster2Colo = cluster2.getClusterHelper().getColoName();
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedDeleteTest/aggregator";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismFeedDeleteTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -69,11 +70,11 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         restartRequired = false;
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster1);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
 
         bundles[1] = new Bundle(bundle, cluster2);
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
         bundles[1].setProcessWorkflow(aggregateWorkflowDir);
     }
 
@@ -82,7 +83,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
         if (restartRequired) {
             Util.restartService(cluster1.getFeedHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -386,7 +387,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 .withValidity(startTimeServer1, "2099-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
-                .withDataLocation(baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .withDataLocation(baseTestHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build())
             .toString();
 
@@ -396,7 +397,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 .withValidity(startTimeServer2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(
-                    baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                    baseTestHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build()).toString();
 
         Util.shutDownService(cluster1.getFeedHelper());
@@ -809,7 +810,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 .withValidity(startTimeServer1, "2099-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
-                .withDataLocation(baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .withDataLocation(baseTestHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build())
             .toString();
 
@@ -819,7 +820,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 .withValidity(startTimeServer2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(
-                    baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                    baseTestHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build()).toString();
 
         LOGGER.info("feed: " + Util.prettyPrintXml(feed));
@@ -913,7 +914,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 .withValidity(startTimeServer1, "2099-10-01T12:10Z")
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("${cluster.colo}")
-                .withDataLocation(baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                .withDataLocation(baseTestHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build())
             .toString();
         feed = FeedMerlin.fromString(feed).addFeedCluster(
@@ -922,7 +923,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
                 .withValidity(startTimeServer2, "2099-10-01T12:25Z")
                 .withClusterType(ClusterType.TARGET)
                 .withDataLocation(
-                    baseHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
+                    baseTestHDFSDir + "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN)
                 .build()).toString();
 
         LOGGER.info("feed: " + Util.prettyPrintXml(feed));

@@ -62,8 +62,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListFeedInstancesTest.class);
     private ColoHelper cluster2 = servers.get(1);
     private OozieClient cluster2OC = serverOC.get(1);
-    private String testDir = "/ListFeedInstancesTest";
-    private String baseTestHDFSDir = baseHDFSDir + testDir;
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String sourcePath = baseTestHDFSDir + "/source";
     private String feedDataLocation = sourcePath + MINUTE_DATE_PATTERN;
@@ -83,7 +82,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
         }
         prepareScenario();
     }
@@ -484,6 +483,6 @@ public class ListFeedInstancesTest extends BaseTestClass {
 
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles();
+        removeTestClassEntities();
     }
 }

@@ -23,7 +23,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.regression.core.util.Util;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
@@ -73,10 +72,11 @@ public class ClusterMerlin extends Cluster {
     /**
      * Sets unique names for the cluster.
      * @return mapping of old name to new name
+     * @param prefix prefix of new name
      */
-    public Map<? extends String, ? extends String> setUniqueName() {
+    public Map<? extends String, ? extends String> setUniqueName(String prefix) {
         final String oldName = getName();
-        final String newName =  oldName + Util.getUniqueString();
+        final String newName = TestEntityUtil.generateUniqueName(prefix, oldName);
         setName(newName);
         final HashMap<String, String> nameMap = new HashMap<String, String>(1);
         nameMap.put(oldName, newName);

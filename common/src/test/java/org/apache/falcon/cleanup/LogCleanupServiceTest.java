@@ -55,6 +55,8 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         + "sample2" + "/logs/job-2010-01-01-01-00/000");
     private final Path instanceLogPath4 = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/latedata/2010-01-01-01-00");
+    private final Path instanceLogPath5 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+            + "sample3" + "/logs/job-2010-01-01-01-00/000");
     private final Path feedInstanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/feed/"
         + "impressionFeed" + "/logs/job-2010-01-01-01-00/testCluster/000");
     private final Path feedInstanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/feed/"
@@ -90,15 +92,22 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         Process otherProcess = (Process) process.copy();
         otherProcess.setName("sample2");
         otherProcess.setFrequency(new Frequency("days(1)"));
+        Process noACLProcess = (Process) process.copy();
+        noACLProcess.setName("sample3");
+        noACLProcess.setACL(null);
         ConfigurationStore.get().remove(EntityType.PROCESS,
                 otherProcess.getName());
         ConfigurationStore.get().publish(EntityType.PROCESS, otherProcess);
+        ConfigurationStore.get().remove(EntityType.PROCESS,
+                noACLProcess.getName());
+        ConfigurationStore.get().publish(EntityType.PROCESS, noACLProcess);
 
         fs.mkdirs(instanceLogPath);
         fs.mkdirs(instanceLogPath1);
         fs.mkdirs(instanceLogPath2);
         fs.mkdirs(instanceLogPath3);
         fs.mkdirs(instanceLogPath4);
+        fs.mkdirs(instanceLogPath5);
 
         // fs.setTimes wont work on dirs
         fs.createNewFile(new Path(instanceLogPath, "oozie.log"));
@@ -138,6 +147,7 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         Assert.assertFalse(fs.exists(instanceLogPath));
         Assert.assertFalse(fs.exists(instanceLogPath1));
         Assert.assertFalse(fs.exists(instanceLogPath2));
+        Assert.assertFalse(fs.exists(instanceLogPath5));
         Assert.assertTrue(fs.exists(instanceLogPath3));
     }
 

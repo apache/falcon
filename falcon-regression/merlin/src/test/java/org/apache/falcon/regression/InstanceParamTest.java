@@ -55,7 +55,7 @@ public class InstanceParamTest extends BaseTestClass {
      * test cases for https://issues.apache.org/jira/browse/FALCON-263.
      */
 
-    private String baseTestHDFSDir = baseHDFSDir + "/InstanceParamTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String startTime;
@@ -77,12 +77,12 @@ public class InstanceParamTest extends BaseTestClass {
     public void setup() throws Exception {
         processBundle = BundleUtil.readELBundle();
         processBundle = new Bundle(processBundle, cluster1);
-        processBundle.generateUniqueBundle();
+        processBundle.generateUniqueBundle(this);
         processBundle.setInputFeedDataPath(feedInputPath);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
         for (int i = 0; i < 3; i++) {
             bundles[i] = new Bundle(processBundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         processName = processBundle.getProcessName();
@@ -153,7 +153,7 @@ public class InstanceParamTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeBundles(processBundle);
+        removeTestClassEntities();
         for (FileSystem fs : serverFS) {
             HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
         }

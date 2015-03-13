@@ -46,7 +46,7 @@ public class PrismFeedResumeTest extends BaseTestClass {
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private boolean restartRequired;
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismFeedResumeTest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -59,7 +59,7 @@ public class PrismFeedResumeTest extends BaseTestClass {
 
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
-            bundles[i].generateUniqueBundle();
+            bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
     }
@@ -69,7 +69,7 @@ public class PrismFeedResumeTest extends BaseTestClass {
         if (restartRequired) {
             Util.restartService(cluster1.getFeedHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = {"prism", "0.2"})

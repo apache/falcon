@@ -49,7 +49,7 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
     private OozieClient clusterOC = serverOC.get(0);
     private ThreadGroup brotherGrimm = null;
     private Brother[] brothers = null;
-    private String aggregateWorkflowDir = baseHDFSDir + "/PrismConcurrentRequest/aggregator";
+    private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(PrismConcurrentRequestTest.class);
     private String feed;
 
@@ -61,7 +61,7 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         brotherGrimm = new ThreadGroup("mixed");
@@ -71,7 +71,7 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

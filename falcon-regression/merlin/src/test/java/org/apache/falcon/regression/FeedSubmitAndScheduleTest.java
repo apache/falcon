@@ -53,13 +53,13 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
     public void setUp() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         feed = bundles[0].getDataSets().get(0);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = {"singleCluster"})

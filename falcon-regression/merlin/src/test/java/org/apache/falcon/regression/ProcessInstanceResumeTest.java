@@ -50,7 +50,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestHDFSDir = baseHDFSDir + "/ProcessInstanceResumeTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -71,7 +71,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
@@ -84,7 +84,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**
@@ -201,7 +201,39 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeNoParams() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, null);
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Attempt to perform -resume action without -end parameter. Should fail with an
+     + appropriate status code or message.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceResumeWOEndParam() throws Exception {
+        bundles[0].submitFeedsScheduleProcess(prism);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, "?start=2010-01-02T01:00Z");
+        InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
+    }
+
+    /**
+     * Attempt to perform -resume action without -start parameter. Should fail with an
+     + appropriate status code or message.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"singleCluster"})
+    public void testProcessInstanceResumeWOStartParam() throws Exception {
+        bundles[0].submitFeedsScheduleProcess(prism);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, "?end=2010-01-02T01:15Z");
         InstanceUtil.validateError(r, ResponseErrors.UNPARSEABLE_DATE);
     }
 

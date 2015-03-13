@@ -49,7 +49,7 @@ public class EntityDryRunTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String baseTestHDFSDir = baseHDFSDir + "/EntityDryRunTest";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -68,7 +68,7 @@ public class EntityDryRunTest extends BaseTestClass {
     public void setup() throws Exception {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
@@ -76,7 +76,7 @@ public class EntityDryRunTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

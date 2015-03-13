@@ -63,8 +63,8 @@ import java.util.Random;
  */
 @Test(groups = "embedded")
 public class RetentionTest extends BaseTestClass {
-    private static final String TEST_FOLDERS = "testFolders/";
-    private String baseTestHDFSDir = baseHDFSDir + "/RetentionTest/";
+    private static final String TEST_FOLDERS = "/testFolders/";
+    private String baseTestHDFSDir = cleanAndGetTestDir();
     private String testHDFSDir = baseTestHDFSDir + TEST_FOLDERS;
     private static final Logger LOGGER = Logger.getLogger(RetentionTest.class);
     private ColoHelper cluster = servers.get(0);
@@ -77,13 +77,13 @@ public class RetentionTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readRetentionBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].setInputFeedDataPath(testHDFSDir);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].submitClusters(prism);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
-        removeBundles();
+        removeTestClassEntities();
     }
 
     /**

@@ -42,7 +42,7 @@ public class FalconClientTest extends BaseTestClass {
 
     private final ColoHelper cluster = servers.get(0);
     private final FileSystem clusterFS = serverFS.get(0);
-    private final String baseTestDir = baseHDFSDir + "/AuthorizationTest";
+    private final String baseTestDir = cleanAndGetTestDir();
     private final String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private final String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
 
@@ -55,7 +55,7 @@ public class FalconClientTest extends BaseTestClass {
     public void setup() throws Exception {
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
@@ -64,13 +64,15 @@ public class FalconClientTest extends BaseTestClass {
      * Test error thrown by falcon client, when acl of the submitted cluster has bad values.
      * @throws Exception
      */
-    @Test (enabled = false)
+    @Test (enabled = true)
     public void badClusterSubmit() throws Exception {
         bundles[0].setCLusterACL(MerlinConstants.DIFFERENT_USER_NAME,
             MerlinConstants.CURRENT_USER_GROUP, "*");
         final String clusterXml = bundles[0].getClusters().get(0);
         final ExecResult execResult = prism.getClusterHelper().clientSubmit(clusterXml);
-        AssertUtil.assertFailed(execResult, "cluster submission failed");
+        AssertUtil.assertFailed(execResult, String.format(
+            "Invalid acl owner %s, does not exist or does not belong to group: %s",
+            MerlinConstants.DIFFERENT_USER_NAME, MerlinConstants.CURRENT_USER_GROUP));
     }
 
     /**
@@ -89,6 +91,6 @@ public class FalconClientTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeBundles();
+        removeTestClassEntities();
     }
 }

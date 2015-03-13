@@ -45,7 +45,7 @@ public class PrismSubmitTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
-    private String baseTestDir = baseHDFSDir + "/PrismSubmitTest";
+    private String baseTestDir = cleanAndGetTestDir();
     private String randomHDFSPath = baseTestDir + "/someRandomPath";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private boolean restartRequired;
@@ -61,7 +61,7 @@ public class PrismSubmitTest extends BaseTestClass {
         restartRequired = false;
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster1);
-        bundles[0].generateUniqueBundle();
+        bundles[0].generateUniqueBundle(this);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
     }
 
@@ -72,7 +72,7 @@ public class PrismSubmitTest extends BaseTestClass {
             Util.startService(prism.getFeedHelper());
             Util.startService(cluster1.getFeedHelper());
         }
-        removeBundles();
+        removeTestClassEntities();
     }
 
     @Test(groups = "distributed")
@@ -313,7 +313,7 @@ public class PrismSubmitTest extends BaseTestClass {
     public void submitClusterReSubmitAlreadyPartial() throws Exception {
         restartRequired = true;
         bundles[1] = new Bundle(bundles[0], cluster2);
-        bundles[1].generateUniqueBundle();
+        bundles[1].generateUniqueBundle(this);
         bundles[1].setProcessWorkflow(aggregateWorkflowDir);
 
         List<String> beforeCluster1 = cluster1.getClusterHelper().getStoreInfo();

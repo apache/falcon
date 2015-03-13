@@ -74,7 +74,7 @@ public abstract class AbstractWorkflowEngine {
                                                   List<LifeCycle> lifeCycles) throws FalconException;
 
     public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
-                                                   List<LifeCycle> lifeCycles) throws FalconException;
+                                                   List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException;
 
     public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props,
                                                      List<LifeCycle> lifeCycles) throws FalconException;
@@ -89,6 +89,8 @@ public abstract class AbstractWorkflowEngine {
                                                       List<LifeCycle> lifeCycles) throws FalconException;
 
     public abstract String update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException;
+
+    public abstract String touch(Entity entity, String cluster) throws FalconException;
 
     public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
 
