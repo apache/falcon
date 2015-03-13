@@ -258,21 +258,36 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             checkPathOwnerAndPermission(cluster.getName(), stagingLocation.getPath(), fs,
                     HadoopClientFactory.READ_EXECUTE_PERMISSION, false);
 
-            if (ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING) == null) {
+            if (!ClusterHelper.checkWorkingLocationExists(cluster)) {
                 //Creating location type of working in the sub dir of staging dir with perms 755. FALCON-910
-                Location workingLocation = new Location();
-                workingLocation.setName(ClusterLocationType.WORKING);
-                Path workingDirPath = new Path(stagingLocation.getPath());
-                workingDirPath = workingDirPath.suffix("/working");
-                workingLocation.setPath(workingDirPath.toString());
+
+                Path workingDirPath = new Path(stagingLocation.getPath(), ClusterHelper.WORKINGDIR);
                 try {
-                    HadoopClientFactory
-                            .mkdirs(fs, workingDirPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
-                    cluster.getLocations().getLocations().add(workingLocation);
+                    if (!fs.exists(workingDirPath)) {  //Checking if the staging dir has the working dir to be created
+                        HadoopClientFactory.mkdirs(fs, workingDirPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
+                    } else {
+                        if (fs.isDirectory(workingDirPath)) {
+                            FsPermission workingPerms = fs.getFileStatus(workingDirPath).getPermission();
+                            if (!workingPerms.equals(HadoopClientFactory.READ_EXECUTE_PERMISSION)) { //perms check
+                                throw new ValidationException(
+                                        "Falcon needs subdir " + ClusterHelper.WORKINGDIR + " inside staging dir:"
+                                                + stagingLocation.getPath()
+                                                + " when staging location not specified with "
+                                                + HadoopClientFactory.READ_EXECUTE_PERMISSION.toString() + " got "
+                                                + workingPerms.toString());
+                            }
+                        } else {
+                            throw new ValidationException(
+                                    "Falcon needs subdir " + ClusterHelper.WORKINGDIR + " inside staging dir:"
+                                            + stagingLocation.getPath()
+                                            + " when staging location not specified. Got a file at " + workingDirPath
+                                            .toString());
+                        }
+                    }
                 } catch (IOException e) {
                     throw new ValidationException(
-                            "Unable to create path for " + workingLocation.getName().value() + " with path: "
-                                    + workingLocation.getPath() + " for cluster " + cluster.getName(), e);
+                            "Unable to create path for " + workingDirPath.toString() + " with path: "
+                                    + workingDirPath.toString() + " for cluster " + cluster.getName(), e);
                 }
             } else {
                 Location workingLocation = ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING);
@@ -313,16 +328,26 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                         "Path [" + locationPath + "] has owner [" + locationOwner + "], should be the process user "
                                 + loginUser);
             }
-            String errorMessage =
-                    "Path " + locationPath + " has permissions: " + fileStatus.getPermission() + ", should be "
-                            + expectedPermission;
+            String errorMessage = "Path " + locationPath + " has permissions: " + fileStatus.getPermission().toString()
+                    + ", should be " + expectedPermission;
             if (exactPerms) {
                 if (fileStatus.getPermission().toShort() != expectedPermission.toShort()) {
                     LOG.error(errorMessage);
                     throw new ValidationException(errorMessage);
                 }
             } else {
-                if (fileStatus.getPermission().toShort() < expectedPermission.toShort()) {
+                if (expectedPermission.getUserAction().ordinal() > fileStatus.getPermission().getUserAction()
+                        .ordinal()) {
+                    LOG.error(errorMessage + " at least");
+                    throw new ValidationException(errorMessage + " at least");
+                }
+                if (expectedPermission.getGroupAction().ordinal() > fileStatus.getPermission().getGroupAction()
+                        .ordinal()) {
+                    LOG.error(errorMessage + " at least");
+                    throw new ValidationException(errorMessage + " at least");
+                }
+                if (expectedPermission.getOtherAction().ordinal() > fileStatus.getPermission().getOtherAction()
+                        .ordinal()) {
                     LOG.error(errorMessage + " at least");
                     throw new ValidationException(errorMessage + " at least");
                 }

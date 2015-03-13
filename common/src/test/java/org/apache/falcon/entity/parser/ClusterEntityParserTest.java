@@ -220,12 +220,6 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         cluster.setLocations(locations);
         try {
             clusterEntityParser.validate(cluster);
-        } catch (ValidationException e) {
-            String errorMessage =
-                    "Unable to find the mandatory location of name: " + ClusterLocationType.STAGING.value()
-                            + " for cluster " + cluster.getName();
-            Assert.assertEquals(e.getMessage(), errorMessage);
-            throw e;
         } finally {
             this.dfsCluster.shutdown();
             init();
@@ -284,13 +278,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
         try {
             clusterEntityParser.validate(cluster);
-        } catch (ValidationException e) {
-            String errorMessage =
-                    "Location with name: " + ClusterLocationType.STAGING.value() + " and " + ClusterLocationType.WORKING
-                            .value() + " cannot of same path: " + cluster.getLocations().getLocations().get(1).getPath()
-                            + " for cluster :" + cluster.getName();
-            Assert.assertEquals(e.getMessage(), errorMessage);
-            throw e;
+
         } finally {
             this.dfsCluster.shutdown();
             init();
@@ -315,7 +303,8 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         try {
             clusterEntityParser.validate(cluster);
             String workingDirPath = cluster.getLocations().getLocations().get(0).getPath() + "/working";
-            Assert.assertEquals(cluster.getLocations().getLocations().get(1).getPath(), workingDirPath);
+            Assert.assertEquals(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
+                    workingDirPath);
             FileStatus workingDirStatus = this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(workingDirPath));
             Assert.assertTrue(workingDirStatus.isDirectory());
             Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
@@ -323,6 +312,36 @@ public class ClusterEntityParserTest extends AbstractTestBase {
             this.dfsCluster.shutdown();
             init();
         }
+    }
+
+    /**
+     * A lightweight unit test for a cluster where location working is not there and staging
+     * has a subdir which will be used by cluster as working.
+     * Checking for wrong perms of this subdir
+     * Extensive tests are found in ClusterEntityValidationIT.
+     *
+     * @throws ValidationException
+     */
+    @Test(expectedExceptions = ValidationException.class)
+    public void testClusterWithSubdirInStaging() throws Exception {
+        ClusterEntityParser clusterEntityParser = Mockito
+                .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
+        Cluster cluster = this.dfsCluster.getCluster();
+        cluster.getLocations().getLocations().get(1).setPath("/projects/falcon/staging");
+        cluster.getLocations().getLocations().remove(1);
+        HadoopClientFactory.mkdirs(this.dfsCluster.getFileSystem(),
+                new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath()),
+                HadoopClientFactory.ALL_PERMISSION);
+        Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        try {
+            clusterEntityParser.validate(cluster);
+        } finally {
+            this.dfsCluster.shutdown();
+            init();
+        }
+        Assert.fail("Should have thrown a validation exception");
     }
 
     @BeforeClass

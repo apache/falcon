@@ -63,16 +63,17 @@ A messaging interface specifies the interface for sending feed availability mess
 A cluster has a list of locations defined:
 <verbatim>
 <location name="staging" path="/projects/falcon/staging" />
-<location name="working" path="/projects/falcon/working" />
+<location name="working" path="/projects/falcon/working" /> <!--optional-->
 </verbatim>
-Location has the name and the path, name is the type of locations like staging, temp and working.
-and path is the hdfs path for each location.
+Location has the name and the path, name is the type of locations .Allowed values of name are staging, temp and working.
+Path is the hdfs path for each location.
 Falcon would use the location to do intermediate processing of entities in hdfs and hence Falcon
 should have read/write/execute permission on these locations.
 These locations MUST be created prior to submitting a cluster entity to Falcon.
-*staging* must have 777 permissions and the parent dirs must have execute permissions so multiple
-users can write to this location
-*working* must have 755 permissions and the parent dirs must have execute permissions so multiple
+*staging* should have atleast 755 permissions and is a mandatory location .The parent dirs must have execute permissions so multiple
+users can write to this location. *working* must have 755 permissions and is a optional location.
+If *working* is not specified, falcon creates a sub directory in the *staging* location with 755 perms.
+The parent dir for *working* must have execute permissions so multiple
 users can read from this location
 
 ---+++ ACL
