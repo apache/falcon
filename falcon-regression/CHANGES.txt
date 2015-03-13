@@ -60,6 +60,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1094 getAllFilesRecursivelyHDFS without recursive call (Ruslan Ostafiychuk)
+
    FALCON-1093 Tag all new tests added to falcon-regression (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1089 ProcessInstanceStatusTest improvement (Paul Isaychuk via Ruslan Ostafiychuk)
