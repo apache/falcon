@@ -1092,7 +1092,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private String getUpdateString(Entity entity, Date date, BundleJob oldBundle, BundleJob newBundle) {
         StringBuilder builder = new StringBuilder();
         builder.append(entity.toShortString()).append("/Effective Time: ").append(SchemaHelper.formatDateUTC(date));
-        builder.append(". Old bundle id: ");
+        if (StringUtils.isNotEmpty(oldBundle.getId())) {
+            builder.append(". Old bundle id: " + oldBundle.getId());
+        }
+        builder.append(". Old coordinator id: ");
         List<String> coords = new ArrayList<String>();
         for (CoordinatorJob coord : oldBundle.getCoordinators()) {
             coords.add(coord.getId());
