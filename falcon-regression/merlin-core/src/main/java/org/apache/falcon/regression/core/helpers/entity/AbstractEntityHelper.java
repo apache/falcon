@@ -32,6 +32,7 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
+import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.conf.Configuration;
@@ -492,6 +493,20 @@ public abstract class AbstractEntityHelper {
             entityName, "");
         return (InstancesResult) InstanceUtil
             .createAndSendRequestProcessInstance(url, params, allColo, user);
+    }
+
+    public FeedInstanceResult getFeedInstanceListing(String entityName, String params)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        return getFeedInstanceListing(entityName, params, null);
+    }
+
+    public FeedInstanceResult getFeedInstanceListing(String entityName, String params,
+                                                     String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_LISTING.getValue(), getEntityType(),
+                entityName, "");
+        return (FeedInstanceResult) InstanceUtil
+                .createAndSendRequestProcessInstance(url, params, allColo, user);
     }
 
     public InstancesSummaryResult getInstanceSummary(String entityName, String params)
