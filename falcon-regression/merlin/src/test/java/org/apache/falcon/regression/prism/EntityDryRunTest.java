@@ -89,7 +89,7 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].submitProcess(true);
         ServiceResponse response = prism.getProcessHelper().schedule(bundles[0].getProcessData());
         validate(response,
-            "E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
+                "Entity schedule failed for process: " + bundles[0].getProcessName());
     }
 
     /**
@@ -120,7 +120,7 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].submitClusters(prism);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         validate(response,
-            "E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)");
+                "Entity schedule failed for feed: " + bundles[0].getInputFeedNameFromBundle());
     }
 
     /**
