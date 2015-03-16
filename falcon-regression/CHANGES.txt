@@ -64,6 +64,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-1010 Add documentation in falcon-regression's README.md, making it easy for 
+   contributors to add tests to falcon-regression(Karishma G via Samarth )
+ 
    FALCON-1011 Fix PrismProcessScheduleTest in falcon regression ( Pragya M via 
    Samarth G)
 
