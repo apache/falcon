@@ -61,6 +61,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-1011 Fix PrismProcessScheduleTest in falcon regression ( Pragya M via 
+   Samarth G)
+
    FALCON-1075 Fixing ProcessFrequencyTest, EntityDryRunTest, ProcessInstanceRerunTest 
    which are failing as part of falcon regression (Pragya M via Samarth G)
 

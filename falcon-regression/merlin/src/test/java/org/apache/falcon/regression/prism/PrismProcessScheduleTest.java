@@ -122,8 +122,8 @@ public class PrismProcessScheduleTest extends BaseTestClass {
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
 
-        AssertUtil.assertSucceeded(cluster2.getProcessHelper().schedule(process1));
-        AssertUtil.assertSucceeded(cluster1.getProcessHelper().schedule(process2));
+        AssertUtil.assertSucceeded(cluster1.getProcessHelper().schedule(process1));
+        AssertUtil.assertSucceeded(cluster2.getProcessHelper().schedule(process2));
 
         //now check if they have been scheduled correctly or not
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
@@ -146,18 +146,18 @@ public class PrismProcessScheduleTest extends BaseTestClass {
         bundles[1].submitAndScheduleProcess();
 
         //suspend process on colo-1
-        AssertUtil.assertSucceeded(cluster2.getProcessHelper().suspend(process1));
+        AssertUtil.assertSucceeded(cluster1.getProcessHelper().suspend(process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
 
         //now check if it has been scheduled correctly or not
-        AssertUtil.assertSucceeded(cluster2.getProcessHelper().schedule(process1));
+        AssertUtil.assertSucceeded(cluster1.getProcessHelper().schedule(process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.SUSPENDED);
-        AssertUtil.assertSucceeded(cluster2.getProcessHelper().resume(process1));
+        AssertUtil.assertSucceeded(cluster1.getProcessHelper().resume(process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
 
         //suspend process on colo-2
-        AssertUtil.assertSucceeded(cluster1.getProcessHelper().suspend(process2));
+        AssertUtil.assertSucceeded(cluster2.getProcessHelper().suspend(process2));
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
 
@@ -204,7 +204,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     }
 
     /**
-     * Submit process which has colo-2 in it definition through prism. Shutdown falcon on colo-2.
+     * Submit process which has colo-2 in it definition through prism. Shutdown falcon on colo-1.
      * Submit and schedule the same process through prism. Check that mentioned process is running
      * on colo-2.
      *
@@ -214,7 +214,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     public void testProcessScheduleOn1ColoWhileOtherColoIsDown() throws Exception {
         try {
             bundles[1].submitProcess(true);
-            Util.shutDownService(cluster2.getProcessHelper());
+            Util.shutDownService(cluster1.getProcessHelper());
             AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process2));
 
             //now check if they have been scheduled correctly or not
@@ -227,7 +227,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
             e.printStackTrace();
             throw new TestNGException(e.getMessage());
         } finally {
-            Util.restartService(cluster2.getProcessHelper());
+            Util.restartService(cluster1.getProcessHelper());
         }
     }
 
@@ -241,15 +241,15 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     public void testProcessScheduleOn1ColoWhileThatColoIsDown() throws Exception {
         try {
             bundles[0].submitProcess(true);
-            Util.shutDownService(cluster2.getProcessHelper());
+            Util.shutDownService(cluster1.getProcessHelper());
             AssertUtil.assertFailed(prism.getProcessHelper().schedule(process1));
             AssertUtil
-                .checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
+                .checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         } catch (Exception e) {
             e.printStackTrace();
             throw new TestNGException(e.getMessage());
         } finally {
-            Util.restartService(cluster2.getProcessHelper());
+            Util.restartService(cluster1.getProcessHelper());
         }
     }
 
@@ -319,7 +319,6 @@ public class PrismProcessScheduleTest extends BaseTestClass {
      */
     @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
     public void testRescheduleKilledProcess() throws Exception {
-        /* add test data generator pending */
         bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-1),
                TimeUtil.getTimeWrtSystemTime(1));
         HadoopFileEditor hadoopFileEditor = null;
@@ -327,14 +326,22 @@ public class PrismProcessScheduleTest extends BaseTestClass {
         try {
             hadoopFileEditor = new HadoopFileEditor(cluster1.getClusterHelper().getHadoopFS());
             hadoopFileEditor.edit(new ProcessMerlin(process).getWorkflow().getPath()
-                    + "/workflow.xml", "<value>${outputData}</value>",
-                                        "<property>\n"
+                    + "/workflow.xml", "<value>${outputData}</value>", "<property>\n"
                        + "                    <name>randomProp</name>\n"
                        + "                    <value>randomValue</value>\n"
                        + "                </property>");
+
             bundles[0].submitFeedsScheduleProcess(prism);
+
+            InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+            OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
+                    Util.readEntityName(bundles[0].getProcessData()), 0);
+            InstanceUtil.waitTillInstanceReachState(cluster1OC,
+                    Util.readEntityName(bundles[0].getProcessData()), 2,
+                    CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+
             InstanceUtil.waitForBundleToReachState(cluster1,
-                Util.readEntityName(process), Job.Status.KILLED);
+                    Util.readEntityName(process), Job.Status.KILLED);
             String oldBundleID = InstanceUtil.getLatestBundleID(cluster1,
                 Util.readEntityName(process), EntityType.PROCESS);
             prism.getProcessHelper().delete(process);
@@ -351,6 +358,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
 
     /**
     * Schedule a process that contains no inputs. The process should be successfully scheduled.
+    * Asserting that the instance is running after successfully scheduling.
     *
     * @throws Exception
     */
@@ -370,7 +378,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
 
     /**
     * Schedule a process that contains no inputs or outputs. The process should be successfully scheduled.
-    *
+    * Asserting that the instance is running after successfully scheduling.
     * @throws Exception
     */
     @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
