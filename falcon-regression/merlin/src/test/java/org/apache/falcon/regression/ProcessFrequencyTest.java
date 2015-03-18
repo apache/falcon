@@ -47,6 +47,7 @@ import org.testng.annotations.Test;
 /**
  * Test process with different frequency combinations.
  */
+@Test(groups = "embedded")
 public class ProcessFrequencyTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ProcessFrequencyTest.class);
     private ColoHelper cluster = servers.get(0);
@@ -94,10 +95,10 @@ public class ProcessFrequencyTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(freqAmount, freqType.getFalconTimeUnit());
         bundles[0].setProcessInputStartEnd("now(0,0)", "now(0,0)");
         bundles[0].setProcessValidity(startDate, endDate);
+        HadoopUtil.deleteDirIfExists(inputPath, clusterFS);
         bundles[0].submitFeedsScheduleProcess(prism);
 
         //upload data
-        HadoopUtil.deleteDirIfExists(inputPath, clusterFS);
         final String startPath = inputPath + freqType.getFormatter().print(
             TimeUtil.oozieDateToDate(startDate));
         HadoopUtil.copyDataToFolder(clusterFS, startPath, OSUtil.NORMAL_INPUT);

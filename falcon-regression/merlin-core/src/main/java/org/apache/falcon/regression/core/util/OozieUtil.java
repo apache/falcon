@@ -502,30 +502,40 @@ public final class OozieUtil {
         return missingPaths;
     }
 
-    public static void createMissingDependencies(ColoHelper helper, EntityType type,
+    public static List<List<String>> createMissingDependencies(ColoHelper helper, EntityType type,
                                                  String entityName, int bundleNumber)
         throws OozieClientException, IOException {
         final OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
         String bundleID = InstanceUtil.getSequenceBundleID(oozieClient, entityName, type,
             bundleNumber);
-        createMissingDependenciesForBundle(helper, bundleID);
-
+        List<List<String>> missingDependencies = createMissingDependenciesForBundle(helper, bundleID);
+        return missingDependencies;
     }
 
-    public static void createMissingDependenciesForBundle(ColoHelper helper, String bundleId)
+    public static List<List<String>> createMissingDependenciesForBundle(ColoHelper helper, String bundleId)
         throws OozieClientException, IOException {
         OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
         List<CoordinatorJob> coords = oozieClient.getBundleJobInfo(bundleId).getCoordinators();
-        for (CoordinatorJob coord : coords) {
+        List<List<String>> missingDependencies = getMissingDependenciesForBundle(oozieClient, coords);
+        for (List<String> missingDependencyPerInstance : missingDependencies) {
+            HadoopUtil.createHDFSFolders(helper, missingDependencyPerInstance);
+        }
+        return missingDependencies;
+    }
 
+    private static List<List<String>> getMissingDependenciesForBundle(OozieClient oozieClient,
+                                                                      List<CoordinatorJob> coords)
+        throws OozieClientException, IOException {
+        List<List<String>> missingDependencies = new ArrayList<List<String>>();
+        for (CoordinatorJob coord : coords) {
             CoordinatorJob temp = oozieClient.getCoordJobInfo(coord.getId());
             for (int instanceNumber = 0; instanceNumber < temp.getActions().size();
                  instanceNumber++) {
                 CoordinatorAction instance = temp.getActions().get(instanceNumber);
-                HadoopUtil.createHDFSFolders(helper,
-                    Arrays.asList(instance.getMissingDependencies().split("#")));
+                missingDependencies.add(Arrays.asList(instance.getMissingDependencies().split("#")));
             }
         }
+        return missingDependencies;
     }
 
     public static void validateRetryAttempts(ColoHelper helper, String bundleId, EntityType type,

@@ -597,6 +597,7 @@ public final class Util {
         INSTANCE_SUMMARY("/api/instance/summary"),
         INSTANCE_PARAMS("/api/instance/params"),
         INSTANCE_LIST("/api/instance/list"),
+        INSTANCE_LISTING("/api/instance/listing"),
         TOUCH_URL("/api/entities/touch");
 
         private final String url;

@@ -55,6 +55,7 @@ import java.util.List;
 /**
  * Tests with operations with hcat feed.
  */
+@Test(groups = "embedded")
 public class HCatFeedOperationsTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

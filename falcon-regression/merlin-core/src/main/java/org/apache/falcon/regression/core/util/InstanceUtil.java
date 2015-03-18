@@ -36,6 +36,7 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.request.BaseRequest;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -94,7 +95,9 @@ public final class InstanceUtil {
         APIResult result;
         if (url.contains("/summary/")) {
             result = new InstancesSummaryResult(APIResult.Status.FAILED, responseString);
-        } else {
+        }else if (url.contains("/listing/")) {
+            result = new FeedInstanceResult(APIResult.Status.FAILED, responseString);
+        }else {
             result = new InstancesResult(APIResult.Status.FAILED, responseString);
         }
         Assert.assertNotNull(result, "APIResult is null");
@@ -123,7 +126,8 @@ public final class InstanceUtil {
                     return new DateTime(json.getAsString()).toDate();
                 }
             }).create().fromJson(responseString,
-                    url.contains("/summary/") ? InstancesSummaryResult.class : InstancesResult.class);
+                    url.contains("/listing/") ? FeedInstanceResult.class : url.contains("/summary/")
+                        ? InstancesSummaryResult.class : InstancesResult.class);
         } catch (JsonSyntaxException e) {
             Assert.fail("Not a valid json:\n" + responseString);
         }

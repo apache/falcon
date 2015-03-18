@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * Test where a single workflow contains multiple actions.
  */
-
+@Test(groups = "embedded")
 public class CombinedActionsTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

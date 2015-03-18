@@ -28,9 +28,11 @@ import org.apache.falcon.entity.v0.feed.LateArrival;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -220,7 +222,6 @@ public class EntityUtilTest extends AbstractTestBase {
         Date startDate = getDate("2012-06-02 10:00 UTC");
         Date nextAfter = getDate("2136-06-02 10:00 UTC");
         Frequency frequency = Frequency.fromString("months(1)");
-        TimeZone timeZone = TimeZone.getTimeZone("UTC");
         Date expectedResult = nextAfter;
         Date result = EntityUtil.getNextStartTime(startDate, frequency, tz, nextAfter);
         Assert.assertEquals(result, expectedResult);
@@ -246,7 +247,7 @@ public class EntityUtilTest extends AbstractTestBase {
     }
 
     @Test
-    public void testGetLateProcessFeed() throws FalconException{
+    public void testGetLateProcessFeed() throws FalconException {
         Feed feed = new Feed();
 
         Assert.assertNull(EntityUtil.getLateProcess(feed));
@@ -254,6 +255,37 @@ public class EntityUtilTest extends AbstractTestBase {
         lateArrival.setCutOff(Frequency.fromString("days(1)"));
         feed.setLateArrival(lateArrival);
         Assert.assertNotNull(EntityUtil.getLateProcess(feed));
+    }
+
+    @Test(dataProvider = "NextInstanceExpressions")
+    public void testGetNextInstances(String instanceTimeStr, String frequencyStr, int instanceIncrementCount,
+                                     String expectedInstanceTimeStr) throws Exception {
+
+        Date instanceTime = getDate(instanceTimeStr);
+        Frequency frequency = Frequency.fromString(frequencyStr);
+
+        Date nextInstanceTime = EntityUtil.getNextInstanceTime(instanceTime, frequency, tz, instanceIncrementCount);
+
+        Assert.assertEquals(nextInstanceTime, getDate(expectedInstanceTimeStr));
+
+    }
+
+    @DataProvider(name = "NextInstanceExpressions")
+    public Object[][] nextInstanceExpressions() throws ParseException {
+        String instanceTimeStr = "2014-01-01 00:00 UTC";
+        return new Object[][] {
+            {instanceTimeStr, "minutes(1)", 1, "2014-01-01 00:01 UTC"},
+            {instanceTimeStr, "minutes(1)", 25, "2014-01-01 00:25 UTC"},
+
+            {instanceTimeStr, "hours(1)", 1, "2014-01-01 01:00 UTC"},
+            {instanceTimeStr, "hours(1)", 5, "2014-01-01 05:00 UTC"},
+
+            {instanceTimeStr, "days(1)", 1, "2014-01-02 00:00 UTC"},
+            {instanceTimeStr, "days(1)", 10, "2014-01-11 00:00 UTC"},
+
+            {instanceTimeStr, "months(1)", 1, "2014-02-01 00:00 UTC"},
+            {instanceTimeStr, "months(1)", 7, "2014-08-01 00:00 UTC"},
+        };
     }
 
 }

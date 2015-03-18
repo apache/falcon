@@ -284,7 +284,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 0, CoordinatorAction
             .Status.SUCCEEDED, EntityType.PROCESS);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:01Z");
+                start + "&end=2010-01-02T01:01Z&force=true");
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 
@@ -329,7 +329,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         List<String> wfIDs = InstanceUtil.getWorkflows(cluster, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            start + "&end=2010-01-02T01:11Z");
+                start + "&end=2010-01-02T01:11Z&force=true");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 3, 3, 0, 0);
     }
 

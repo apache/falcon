@@ -24,7 +24,9 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -114,23 +116,17 @@ public final class HadoopUtil {
     public static List<Path> getAllFilesRecursivelyHDFS(
         FileSystem fs, Path location) throws IOException {
         List<Path> returnList = new ArrayList<Path>();
-        FileStatus[] stats;
+        RemoteIterator<LocatedFileStatus> remoteIterator;
         try {
-            stats = fs.listStatus(location);
+            remoteIterator = fs.listFiles(location, true);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return new ArrayList<Path>();
-        }
-        if (stats == null) {
+            LOGGER.info("Path '" + location + "' is not found on " + fs.getUri());
             return returnList;
         }
-        for (FileStatus stat : stats) {
-            if (!isDir(stat)) {
-                if (!stat.getPath().toUri().toString().contains("_SUCCESS")) {
-                    returnList.add(stat.getPath());
-                }
-            } else {
-                returnList.addAll(getAllFilesRecursivelyHDFS(fs, stat.getPath()));
+        while(remoteIterator.hasNext()) {
+            Path path = remoteIterator.next().getPath();
+            if (!path.toUri().toString().contains("_SUCCESS")) {
+                returnList.add(path);
             }
         }
         return returnList;

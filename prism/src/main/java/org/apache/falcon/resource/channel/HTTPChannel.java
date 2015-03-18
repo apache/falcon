@@ -138,7 +138,7 @@ public class HTTPChannel extends AbstractChannel {
         Annotation[][] paramAnnotations = method.getParameterAnnotations();
         StringBuilder queryString = new StringBuilder("?");
         for (int index = 0; index < args.length; index++) {
-            if (args[index] instanceof String || args[index] instanceof Boolean) {
+            if (args[index] instanceof String || args[index] instanceof Boolean || args[index] instanceof Integer) {
                 String arg = String.valueOf(args[index]);
                 for (int annotation = 0; annotation < paramAnnotations[index].length; annotation++) {
                     Annotation paramAnnotation = paramAnnotations[index][annotation];

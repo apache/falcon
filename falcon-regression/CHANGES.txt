@@ -5,7 +5,10 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-  
+
+   FALCON-1067 Add test in falcon-regression for feed instance listing api(Karishma G 
+   via Samarth G) 
+ 
    FALCON-1066 Add test in falcon to test process SLA feature(Pragya M via Samarth G)
  
    FALCON-964 add test in falcon regression to test loading of jar present in user lib(Pragya M 
@@ -60,6 +63,20 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-1010 Add documentation in falcon-regression's README.md, making it easy for 
+   contributors to add tests to falcon-regression(Karishma G via Samarth )
+ 
+   FALCON-1011 Fix PrismProcessScheduleTest in falcon regression ( Pragya M via 
+   Samarth G)
+
+   FALCON-1075 Fixing ProcessFrequencyTest, EntityDryRunTest, ProcessInstanceRerunTest 
+   which are failing as part of falcon regression (Pragya M via Samarth G)
+
+   FALCON-1094 getAllFilesRecursivelyHDFS without recursive call (Ruslan Ostafiychuk)
+
+   FALCON-1093 Tag all new tests added to falcon-regression (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-1089 ProcessInstanceStatusTest improvement (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1058 Test for Feed Replication with Empty Directories(Pragya M via Samarth Gupta)

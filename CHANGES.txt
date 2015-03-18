@@ -10,6 +10,9 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1042 Misleading mesage received while performing touch operation
+   on scheduled entity (Suhas Vasu)
+
    FALCON-1074 EntityUtil getInstanceSequence is buggy (Ajay Yadava via Suhas vasu)
 
    FALCON-1024 Updating tags and pipeline elements of the feed/process definition
@@ -85,6 +88,9 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-1071 Feed Listing API default behaviour for start and end
+   not handled properly. (Suhas Vasu)
+
    FALCON-1063 Falcon CLI list entities operation throws NullPointerException
    (Pallavi Rao via Suhas Vasu)
 
@@ -105,6 +111,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1070 numResults and offset doesnot work for instance operations
+   (Suhas Vasu)
+
    FALCON-1025 lastWeek and CurrentWeek functions are getting
    evaluated incorrect (pavan kumar kolamuri via Suhas Vasu)
 
