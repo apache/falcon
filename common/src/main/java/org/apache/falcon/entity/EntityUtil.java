@@ -317,11 +317,14 @@ public final class EntityUtil {
         return count + 1;
     }
 
-    public static Date getNextInstanceTime(Date instanceTime, Frequency frequency, TimeZone tz) {
+    public static Date getNextInstanceTime(Date instanceTime, Frequency frequency, TimeZone tz, int instanceCount) {
+        if (tz == null) {
+            tz = TimeZone.getTimeZone("UTC");
+        }
         Calendar insCal = Calendar.getInstance(tz);
         insCal.setTime(instanceTime);
 
-        final int freq = frequency.getFrequencyAsInt();
+        final int freq = frequency.getFrequencyAsInt() * instanceCount;
         insCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
 
         return insCal.getTime();

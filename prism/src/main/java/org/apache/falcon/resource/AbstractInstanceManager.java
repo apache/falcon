@@ -200,6 +200,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
     private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy,
                                                     String orderBy, String sortOrder, Integer offset,
                                                     Integer numResults) throws FalconException {
@@ -330,8 +332,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return instanceSet;
     }
 
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
-
     public FeedInstanceResult getListing(String type, String entity, String startStr,
                                          String endStr, String colo) {
         checkColo(colo);
@@ -367,7 +367,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startTime, null);
             Date start = startAndEndDate.first;
             Date end = EntityUtil.getNextInstanceTime(start, EntityUtil.getFrequency(entityObject),
-                    EntityUtil.getTimeZone(entityObject));
+                    EntityUtil.getTimeZone(entityObject), 1);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
         } catch (Throwable e) {
@@ -496,7 +496,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         throws FalconException {
         Pair<Date, Date> clusterStartEndDates = EntityUtil.getEntityStartEndDates(entityObject);
         Frequency frequency = EntityUtil.getFrequency(entityObject);
-        Date endDate = getEndDate(endStr, clusterStartEndDates.second);
+        Date endDate = getEndDate(startStr, endStr, clusterStartEndDates.second, frequency);
         Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency);
 
         if (startDate.after(endDate)) {
@@ -506,8 +506,20 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return new Pair<Date, Date>(startDate, endDate);
     }
 
-    private Date getEndDate(String endStr, Date clusterEndDate) throws FalconException {
-        Date endDate = StringUtils.isEmpty(endStr) ? new Date() : EntityUtil.parseDateUTC(endStr);
+    private Date getEndDate(String startStr, String endStr, Date clusterEndDate,
+                            Frequency frequency) throws FalconException {
+        Date endDate;
+        if (StringUtils.isEmpty(endStr)) {
+            if (!StringUtils.isEmpty(startStr)) {
+                // set endDate to startDate + 10 times frequency
+                endDate = EntityUtil.getNextInstanceTime(EntityUtil.parseDateUTC(startStr), frequency, null, 10);
+            } else {
+                // set endDate to currentTime
+                endDate = new Date();
+            }
+        } else {
+            endDate = EntityUtil.parseDateUTC(endStr);
+        }
         if (endDate.after(clusterEndDate)) {
             endDate = clusterEndDate;
         }

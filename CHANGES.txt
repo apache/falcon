@@ -88,6 +88,9 @@ Trunk (Unreleased)
    Seetharam)
 
   OPTIMIZATIONS
+   FALCON-1071 Feed Listing API default behaviour for start and end
+   not handled properly. (Suhas Vasu)
+
    FALCON-1063 Falcon CLI list entities operation throws NullPointerException
    (Pallavi Rao via Suhas Vasu)
 
