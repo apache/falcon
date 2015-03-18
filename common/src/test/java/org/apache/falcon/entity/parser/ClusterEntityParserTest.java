@@ -208,7 +208,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     @Test(expectedExceptions = ValidationException.class) public void testClusterWithoutStaging() throws Exception {
         ClusterEntityParser clusterEntityParser = Mockito
                 .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
-        Cluster cluster = this.dfsCluster.getCluster();
+        Cluster cluster = (Cluster) this.dfsCluster.getCluster().copy();
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
@@ -218,12 +218,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Locations locations = new Locations();
         locations.getLocations().add(location);
         cluster.setLocations(locations);
-        try {
-            clusterEntityParser.validate(cluster);
-        } finally {
-            this.dfsCluster.shutdown();
-            init();
-        }
+        clusterEntityParser.validate(cluster);
         Assert.fail("Should have thrown a validation exception");
     }
 
@@ -237,7 +232,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     public void testClusterWithInvalidLocationsPaths() throws Exception {
         ClusterEntityParser clusterEntityParser = Mockito
                 .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
-        Cluster cluster = this.dfsCluster.getCluster();
+        Cluster cluster = (Cluster)this.dfsCluster.getCluster().copy();
         Location location = new Location();
         location.setName(ClusterLocationType.STAGING);
         location.setPath("/apps/non/existent/path");
@@ -254,9 +249,6 @@ public class ClusterEntityParserTest extends AbstractTestBase {
                     "Location " + location.getPath() + " for cluster " + cluster.getName() + " must exist.";
             Assert.assertEquals(e.getMessage(), errorMessage);
             throw e;
-        } finally {
-            this.dfsCluster.shutdown();
-            init();
         }
         Assert.fail("Should have thrown a validation exception");
     }
@@ -271,18 +263,12 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     public void testClusterWithSameWorkingAndStaging() throws Exception {
         ClusterEntityParser clusterEntityParser = Mockito
                 .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
-        Cluster cluster = this.dfsCluster.getCluster();
+        Cluster cluster = (Cluster) this.dfsCluster.getCluster().copy();
         cluster.getLocations().getLocations().get(1).setPath("/projects/falcon/staging");
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
-        try {
-            clusterEntityParser.validate(cluster);
-
-        } finally {
-            this.dfsCluster.shutdown();
-            init();
-        }
+        clusterEntityParser.validate(cluster);
         Assert.fail("Should have thrown a validation exception");
     }
 
@@ -294,24 +280,18 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     @Test public void testClusterWithOnlyStaging() throws Exception {
         ClusterEntityParser clusterEntityParser = Mockito
                 .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
-        Cluster cluster = this.dfsCluster.getCluster();
+        Cluster cluster = (Cluster) this.dfsCluster.getCluster().copy();
         cluster.getLocations().getLocations().remove(1);
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        clusterEntityParser.validate(cluster);
+        String workingDirPath = cluster.getLocations().getLocations().get(0).getPath() + "/working";
+        Assert.assertEquals(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), workingDirPath);
+        FileStatus workingDirStatus = this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(workingDirPath));
+        Assert.assertTrue(workingDirStatus.isDirectory());
+        Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
 
-        try {
-            clusterEntityParser.validate(cluster);
-            String workingDirPath = cluster.getLocations().getLocations().get(0).getPath() + "/working";
-            Assert.assertEquals(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
-                    workingDirPath);
-            FileStatus workingDirStatus = this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(workingDirPath));
-            Assert.assertTrue(workingDirStatus.isDirectory());
-            Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
-        } finally {
-            this.dfsCluster.shutdown();
-            init();
-        }
     }
 
     /**
@@ -326,7 +306,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     public void testClusterWithSubdirInStaging() throws Exception {
         ClusterEntityParser clusterEntityParser = Mockito
                 .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
-        Cluster cluster = this.dfsCluster.getCluster();
+        Cluster cluster = (Cluster) this.dfsCluster.getCluster().copy();
         cluster.getLocations().getLocations().get(1).setPath("/projects/falcon/staging");
         cluster.getLocations().getLocations().remove(1);
         HadoopClientFactory.mkdirs(this.dfsCluster.getFileSystem(),
@@ -335,12 +315,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
-        try {
-            clusterEntityParser.validate(cluster);
-        } finally {
-            this.dfsCluster.shutdown();
-            init();
-        }
+        clusterEntityParser.validate(cluster);
         Assert.fail("Should have thrown a validation exception");
     }
 
