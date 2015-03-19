@@ -1,0 +1,330 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+//------------clusterForms/feedFrom/processForm ----------------//
+.mt1 {
+  margin-top: 1px;
+}
+.mt10 {
+  margin-top: 10px;
+}
+.mt20 {
+  margin-top: 20px;
+}
+.mb10 {
+  margin-bottom: 10px;
+}
+.formViewContainer {
+  .mt10;
+}
+.feedBottomButtons {
+  .mt20; 
+}
+.formPage {
+  
+  h3 {
+    font-weight: bold;
+  }
+  .entypo {
+    font-size: 22px;
+    line-height: 10px;
+    vertical-align: middle;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 14px;
+    margin: 20px 0 5px;
+  }
+  h5 {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 14px;
+    margin: 10px 0 5px;
+    &.noSpecial { margin-left: 4%; margin-top:5px;}
+  }
+  label {
+    font-size: 12px;
+    line-height: 12px;
+    margin: 10px 0 2px 0;
+  }
+  .light {
+    font-weight: normal;
+  }
+  u {
+    line-height: 30px;
+    cursor: pointer;
+  }
+  input, select {
+    color: black;
+    font-size: 13px;
+  }
+  .input-group-addon {
+    height:13px;
+    border-radius:0;
+  }
+  
+}
+select {  
+  .form-control;  
+  padding:0;
+}
+#engineVersionField{ display: inline-block; width: auto; }
+.inlineInputsGroup {
+  input {   
+    display: inline-block;    
+    margin-right: 3px; 
+    &:last-child { margin-right:0;}   
+  }
+  input[type="text"] {
+    width: 20px;
+    //height: 18px;
+    //line-height: 18px;
+    vertical-align: top;
+  }
+  select {
+    display: inline-block;
+    width: auto;
+  }
+  input[type="checkbox"] {
+    margin:0;
+    vertical-align: middle;
+  }
+  div { margin-bottom: 5px;}
+  #availInput {
+    width: 60px;
+  }
+}
+
+.formTitle {
+  background-color: @gray-light2;
+  .border-bottom-radius(5px);
+  color: black;
+  padding: 5px;
+  font-size: 16px;
+  .entypo {
+    font-size: 35px;
+    line-height: 9px;
+  }
+  
+}
+.clusterSummaryRow {
+  padding: 0 10px;
+}
+.clusterForm, .feedForm, .entityForm {
+  input {
+    padding-left: 1px;
+    border-width: 1px;
+  }
+  select {
+    background-color: white;
+  }
+  > div {
+    &:first-child {
+      margin-top: 0;
+    }
+    margin-top: 5px;
+  }
+  
+  
+}
+#feedPropertiesBox {
+  label {
+    line-height: 25px;
+  }
+}
+#interfaces-detail, #feedPropertiesBox {
+  > div {
+    margin-top: 10px;
+  }
+  label {
+    font-size: 10px;
+    margin:0;
+  }
+  input[type="checkbox"] {
+    vertical-align: sub;
+  }
+}
+//---------------------------------//
+.feedForm, .entityForm {
+
+  .small {
+    display: inline-block;
+    width: 30px;
+    height: 20px;
+  }
+  .medium {
+    width: 80px;
+  }
+  .availFlagInput {
+    width: 85px;
+  }
+  .freqTitle {
+    margin: 0 0 5px 0;
+  }
+  .top-buffer {
+    margin-top: 8px;
+  }
+  .feedLocationNavBox {
+    margin-top:10px;
+    h4 {
+      margin-top: 10px;
+    }
+    &.nopointer .btn {
+      cursor: default;
+    }
+  }
+  .feedLocationNav {
+    color: black;
+    .btn {
+      background-color: @gray-light;
+    }
+    .active {
+      color: white;
+      background-color: @gray-dark;
+    }
+  }
+
+  .sourceReplicationButton {
+    width: 45px;
+    display: inline-block;
+    border-bottom: 3px solid @gray-light;
+    color: @gray-light;
+    cursor: pointer;
+    small {
+      font-size: 60%;
+      margin-bottom: -5px;
+      display: block;
+    }
+    &.active {
+      border-color: @gray-dark;
+      color: @gray-dark;
+    }
+
+  }
+  .addReplicationButton {
+    width: 70px;
+    display: inline-block;
+    border-bottom: 3px solid @gray-light;
+    color: @gray-light;
+    cursor: pointer;
+    small {
+      font-size: 60%;
+      margin-bottom: -5px;
+      display: block;
+    }
+    &.active {
+      border-color: @gray-dark;
+      color: @gray-dark;
+    }
+
+  }
+  .validityDateBox {
+    .light {
+      display: block;
+    }
+    input {
+      display: inline-block;
+
+    }
+  }
+  .input-group {
+    input {
+      font-size: 12px;
+    }
+    button {
+      padding: 2px 6px;
+    }
+    i {
+      font-size: 14px;
+    }
+  }
+  .timePicker {
+    margin-top: -22px;
+    .btn {
+      padding: 1px 5px;
+      border-radius: 0;
+    }
+  }
+  @media screen and (max-width: @grid-float-breakpoint) {
+    .timePicker {
+      margin-top: 0;
+    }
+  }
+  .TZSelect {
+    margin: 5px 0;
+  }
+  .addProperty {
+    margin: 12px 5px;
+    display: inline-block;
+  }
+}
+
+
+//----old entity details------------------//
+.detailsHeaders {
+  h3 { display: inline-block;}
+  small{
+    color: @gray-light;
+    display: block;
+    margin-bottom: -2px;
+  }
+  .btn {
+    margin-top: -2px;
+    background-color: @gray;
+    color: white;
+  }
+}
+.detailsBox {
+  border-radius: 5px;
+  border: 1px solid @gray-light2;
+  margin: 5px;
+  padding: 15px 5px;
+  font-size: 12px;
+  background-color: #ffffff;
+  h4 {
+    font-weight: bold;    
+    margin:5px 0;
+  }
+  h5 { 
+    font-weight: bold;
+    margin-top:2px;
+  }
+  table {
+    width: 100%;
+    border-spacing: 5px;
+    border-collapse: separate;
+  }
+  .tableHeader {
+    width: 70px;
+    font-weight: bold;
+  }
+  textarea {
+    width: 100%;
+  }
+  &.processCluster {
+    padding: 15px 4%;
+    margin: 5px auto;
+    h5 { 
+      margin-top:15px;
+      &:first-child {
+        margin-top:0;
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//------server messages ------//
+.alert {
+  position: relative;
+  margin:5px 0;
+  .box-shadow(~"1px 1px 5px black");
+  border: 1px solid white;
+  opacity: 1;
+  span {
+    display: inline-block;
+    margin: auto 5px;   
+  }
+  .entypo {
+    position: absolute;
+    top:10px;
+    right:5px;
+    cursor: pointer;
+  }
+}
+.alert.repeat-animation.ng-enter, 
+.alert.repeat-animation.ng-leave{ 
+ // .transition (all, 0.3s, ease); 
+} 
+ 
+//.alert.repeat-animation.ng-leave.repeat-animation.ng-leave-active,
+.alert.repeat-animation.ng-enter {   
+    .messageAnimation;
+}
+ 
+.alert.repeat-animation.ng-enter.repeat-animation.ng-enter-active, 
+.alert.repeat-animation.ng-leave {
+    //.messageAnimation;
+}
+
+@-webkit-keyframes messageAnimation { 0% { opacity: 0;} 20% { opacity: 1;} 40% { opacity: 0;}60% { opacity: 1;} 80% { opacity: 0;} 100% { opacity: 1;} }
+@-moz-keyframes messageAnimation { 0% { opacity: 0;} 20% { opacity: 1;} 40% { opacity: 0;}60% { opacity: 1;} 80% { opacity: 0;} 100% { opacity: 1;} }
+@-o-keyframes messageAnimation { 0% { opacity: 0;} 20% { opacity: 1;} 40% { opacity: 0;}60% { opacity: 1;} 80% { opacity: 0;} 100% { opacity: 1;} }
+@keyframes messageAnimation { 0% { opacity: 0;} 20% { opacity: 1;} 40% { opacity: 0;}60% { opacity: 1;} 80% { opacity: 0;} 100% { opacity: 1;} }
+
+.messageAnimation {
+  .animation(messageAnimation, 1.5s, ease-in-out, 1); 
+}
+
+ 
