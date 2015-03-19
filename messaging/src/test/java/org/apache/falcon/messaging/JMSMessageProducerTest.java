@@ -52,7 +52,6 @@ public class JMSMessageProducerTest {
     private List<MapMessage> mapMessages;
 
     private volatile AssertionError error;
-    private CountDownLatch latch = new CountDownLatch(1);
 
     @BeforeClass
     public void setup() throws Exception {
@@ -162,13 +161,14 @@ public class JMSMessageProducerTest {
                 "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), "corp"));
     }
 
-    private void testProcessMessageCreator(final List<String[]> messages,
-                                           final String topicsToListen) throws Exception {
+    private synchronized void testProcessMessageCreator(final List<String[]> messages,
+                                                        final String topicsToListen) throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
         Thread t = new Thread() {
             @Override
             public void run() {
                 try {
-                    consumer(messages.size(), topicsToListen);
+                    consumer(messages.size(), topicsToListen, latch);
                 } catch (AssertionError e) {
                     error = e;
                 } catch (Exception ignore) {
@@ -195,7 +195,7 @@ public class JMSMessageProducerTest {
         }
     }
 
-    private void consumer(int size, String topicsToListen) throws Exception {
+    private void consumer(int size, String topicsToListen, CountDownLatch latch) throws Exception {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);
         Connection connection = connectionFactory.createConnection();
         connection.start();

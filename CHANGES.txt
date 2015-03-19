@@ -114,6 +114,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1064 Build hangs at the following test: JMSMessageProducerTest
+   (Sowmya Ramesh via Suhas Vasu)
+
    FALCON-1070 numResults and offset doesnot work for instance operations
    (Suhas Vasu)
 
