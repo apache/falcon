@@ -21,6 +21,7 @@ package org.apache.falcon.regression.core.util;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
@@ -115,11 +116,11 @@ public final class BundleUtil {
                 //set staging and working locations
                 clusterMerlin.getLocations().getLocations().clear();
                 final Location staging = new Location();
-                staging.setName("staging");
+                staging.setName(ClusterLocationType.STAGING);
                 staging.setPath(MerlinConstants.STAGING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(staging);
                 final Location working = new Location();
-                working.setName("working");
+                working.setName(ClusterLocationType.WORKING);
                 working.setPath(MerlinConstants.WORKING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(working);
                 final String protectionPropName = "hadoop.rpc.protection";

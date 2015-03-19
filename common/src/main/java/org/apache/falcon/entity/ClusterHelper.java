@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
@@ -39,6 +40,7 @@ import java.util.Map;
  */
 public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
+    public static final String WORKINGDIR = "working";
 
     private ClusterHelper() {
     }
@@ -120,13 +122,42 @@ public final class ClusterHelper {
         return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
 
-    public static String getLocation(Cluster cluster, String locationKey) {
+    public static Location getLocation(Cluster cluster, ClusterLocationType clusterLocationType) {
         for (Location loc : cluster.getLocations().getLocations()) {
-            if (loc.getName().equals(locationKey)) {
-                return loc.getPath();
+            if (loc.getName().equals(clusterLocationType)) {
+                return loc;
+            }
+        }
+        //Mocking the working location FALCON-910
+        if (clusterLocationType.equals(ClusterLocationType.WORKING)) {
+            Location staging = getLocation(cluster, ClusterLocationType.STAGING);
+            if (staging != null) {
+                Location working = new Location();
+                working.setName(ClusterLocationType.WORKING);
+                working.setPath(staging.getPath().charAt(staging.getPath().length() - 1) == '/'
+                        ?
+                        staging.getPath().concat(WORKINGDIR)
+                        :
+                        staging.getPath().concat("/").concat(WORKINGDIR));
+                return working;
             }
         }
         return null;
+    }
+
+    /**
+     * Parsed the cluster object and checks for the working location.
+     *
+     * @param cluster
+     * @return
+     */
+    public static boolean checkWorkingLocationExists(Cluster cluster) {
+        for (Location loc : cluster.getLocations().getLocations()) {
+            if (loc.getName().equals(ClusterLocationType.WORKING)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String getPropertyValue(Cluster cluster, String propName) {

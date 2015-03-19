@@ -128,8 +128,9 @@
         <xs:annotation>
             <xs:documentation>
                 Location has the name and the path.
-                name: is the type of locations like
-                staging, temp and working.
+                name: is the type of locations which can be
+                staging, temp and working only.
+                staging is a mandatory type.
                 path: the hdfs path for each location.
                 Falcon would use the location to do intermediate
                 processing of entities in hdfs and hence Falcon
@@ -137,7 +138,7 @@
                 locations.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="cluster-location-type" name="name" use="required"/>
         <xs:attribute type="xs:string" name="path" use="required"/>
     </xs:complexType>
     <xs:complexType name="interfaces">
@@ -200,4 +201,11 @@
         <xs:attribute type="xs:string" name="group"/>
         <xs:attribute type="xs:string" name="permission" default="*"/>
     </xs:complexType>
+    <xs:simpleType name="cluster-location-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="staging"/>
+            <xs:enumeration value="working"/>
+            <xs:enumeration value="temp"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>

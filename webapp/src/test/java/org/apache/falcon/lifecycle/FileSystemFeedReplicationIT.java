@@ -20,6 +20,7 @@ package org.apache.falcon.lifecycle;
 
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.TestContext;
@@ -96,7 +97,7 @@ public class FileSystemFeedReplicationIT {
     private void copyLibsToHDFS(Cluster cluster) throws IOException {
         // set up kahadb to be sent as part of workflows
         StartupProperties.get().setProperty("libext.paths", "./target/libext");
-        String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
+        String libext = ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath() + "/libext";
         String targetStorageUrl = ClusterHelper.getStorageUrl(cluster);
         FSUtils.copyOozieShareLibsToHDFS("./target/libext", targetStorageUrl + libext);
     }

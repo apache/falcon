@@ -24,6 +24,7 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.CONFIGURATION;
@@ -122,7 +123,8 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
 
         properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
-        properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
+        properties.setProperty("falcon.libpath",
+                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath() + "/lib");
 
         if (EntityUtil.isTableStorageType(cluster, entity)) {
             Tag tag = EntityUtil.getWorkflowNameTag(coordName, entity);

@@ -42,9 +42,9 @@
         <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"  version="5.4.3"/>
     </interfaces>
     <locations>
-        <location name="staging" path="/projects/falcon/staging"/>
-        <location name="temp" path="/projects/falcon/tmp"/>
-        <location name="working" path="/projects/falcon/working"/>
+        <location name="staging" path="/projects/falcon/staging"/> <!--mandatory-->
+        <location name="temp" path="/projects/falcon/tmp"/> <!--optional-->
+        <location name="working" path="/projects/falcon/working"/> <!--optional-->
     </locations>
     <properties>
     </properties>
