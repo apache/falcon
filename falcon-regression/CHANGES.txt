@@ -63,6 +63,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1103 RetentionTest stabilization - remove check of all retention job actions
+   (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1010 Add documentation in falcon-regression's README.md, making it easy for 
    contributors to add tests to falcon-regression(Karishma G via Samarth )

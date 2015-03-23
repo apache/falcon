@@ -142,30 +142,23 @@ public final class OozieUtil {
         Assert.assertFalse(oozieClient.getCoordJobInfo(coordinatorId).getActions().isEmpty(),
             "Coordinator actions should have got created by now.");
 
-        final List<CoordinatorAction> actions =
-            oozieClient.getCoordJobInfo(coordinatorId).getActions();
-        LOGGER.info("actions: " + actions);
-
-        for (CoordinatorAction action : actions) {
-            for (int i = 0; i < 180; ++i) {
-                CoordinatorAction actionInfo = oozieClient.getCoordActionInfo(action.getId());
-                LOGGER.info("actionInfo: " + actionInfo);
-                if (EnumSet.of(CoordinatorAction.Status.SUCCEEDED, CoordinatorAction.Status.KILLED,
-                    CoordinatorAction.Status.FAILED).contains(actionInfo.getStatus())) {
-                    break;
-                }
-                TimeUtil.sleepSeconds(10);
+        CoordinatorAction action = oozieClient.getCoordJobInfo(coordinatorId).getActions().get(0);
+        for (int i = 0; i < 180; ++i) {
+            CoordinatorAction actionInfo = oozieClient.getCoordActionInfo(action.getId());
+            LOGGER.info("actionInfo: " + actionInfo);
+            if (EnumSet.of(CoordinatorAction.Status.SUCCEEDED, CoordinatorAction.Status.KILLED,
+                CoordinatorAction.Status.FAILED).contains(actionInfo.getStatus())) {
+                break;
             }
-            Assert.assertEquals(
-                oozieClient.getCoordActionInfo(action.getId()).getStatus(),
-                CoordinatorAction.Status.SUCCEEDED,
-                "Action did not succeed.");
-            jobIds.add(action.getId());
-
+            TimeUtil.sleepSeconds(10);
         }
+        Assert.assertEquals(
+            oozieClient.getCoordActionInfo(action.getId()).getStatus(),
+            CoordinatorAction.Status.SUCCEEDED,
+            "Action did not succeed.");
+        jobIds.add(action.getId());
 
         return jobIds;
-
     }
 
     public static void waitForCoordinatorJobCreation(OozieClient oozieClient, String bundleID)
