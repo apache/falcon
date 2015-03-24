@@ -72,13 +72,10 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
     private String testDirWithDate = testBaseDir1 + testDate;
     private String testDirWithDateSourceTarget = testBaseDir4 + testDate;
     private String testDirWithDateSource1 = testBaseDirServer1Source + testDate;
-    private String testFile1 = OSUtil.RESOURCES
-        + OSUtil.getPath("ReplicationResources", "feed-s4Replication.xml");
-    private String testFile2 = OSUtil.RESOURCES + OSUtil.getPath("ReplicationResources", "id.pig");
-    private String testFile3 = OSUtil.RESOURCES
-        + OSUtil.getPath("ReplicationResources", "cluster-0.1.xml");
-    private String testFile4 = OSUtil.RESOURCES
-        + OSUtil.getPath("ReplicationResources", "log4testng.properties");
+    private String testFile1 = OSUtil.NORMAL_INPUT + "dataFile.xml";
+    private String testFile2 = OSUtil.RESOURCES + OSUtil.getPath("pig", "id.pig");
+    private String testFile3 = OSUtil.RESOURCES + OSUtil.getPath("ELbundle", "cluster-0.1.xml");
+    private String testFile4 = OSUtil.NORMAL_INPUT + "dataFile.properties";
     private static final Logger LOGGER =
         Logger.getLogger(PrismFeedReplicationPartitionExpTest.class);
 

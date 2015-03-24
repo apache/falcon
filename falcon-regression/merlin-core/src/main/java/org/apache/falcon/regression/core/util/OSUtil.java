@@ -38,8 +38,6 @@ public final class OSUtil {
     public static final String RESOURCES_OOZIE = String.format(RESOURCES + "oozie%s", SEPARATOR);
     public static final String OOZIE_EXAMPLE_INPUT_DATA =
         String.format(RESOURCES + "OozieExampleInputData%s", SEPARATOR);
-    public static final String OOZIE_EXAMPLE_INPUT_LATE_INPUT =
-        OSUtil.OOZIE_EXAMPLE_INPUT_DATA + "lateData";
     public static final String NORMAL_INPUT =
         String.format(OOZIE_EXAMPLE_INPUT_DATA + "normalInput%s", SEPARATOR);
     public static final String SINGLE_FILE =

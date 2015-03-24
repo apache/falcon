@@ -146,8 +146,7 @@ public class RetentionTest extends BaseTestClass {
         LOGGER.info("dataDates = " + dataDates);
         dataDates.add(HadoopUtil.SOMETHING_RANDOM);
         if (withData) {
-            HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.RESOURCES + "log_01.txt",
-                testHDFSDir, dataDates);
+            HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.SINGLE_FILE, testHDFSDir, dataDates);
         } else {
             HadoopUtil.createFolders(clusterFS, testHDFSDir, dataDates);
         }

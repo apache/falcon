@@ -117,7 +117,7 @@ public class HCatRetentionTest extends BaseTestClass {
                 freqType.getFormatter());
             AssertUtil.checkForListSizes(dataDates, dataDateStrings);
             final List<String> dataFolders = HadoopUtil.flattenAndPutDataInFolder(clusterFS,
-                OSUtil.OOZIE_EXAMPLE_INPUT_LATE_INPUT, baseTestHDFSDir, dataDateStrings);
+                OSUtil.SINGLE_FILE, baseTestHDFSDir, dataDateStrings);
             addPartitionsToExternalTable(cli, dBName, tableName, freqType, dataDates, dataFolders);
             List<String> initialData =
                 getHadoopDataFromDir(clusterFS, baseTestHDFSDir, testDir, freqType);

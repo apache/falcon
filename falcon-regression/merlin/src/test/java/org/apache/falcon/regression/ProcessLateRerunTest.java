@@ -301,7 +301,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
                 for (String location : missingDependencies) {
                     if (tempCount==1) {
                         LOGGER.info("Transferring data to : " + location);
-                        HadoopUtil.copyDataToFolder(clusterFS, location, OSUtil.RESOURCES + "feed-s4Replication.xml");
+                        HadoopUtil.copyDataToFolder(clusterFS, location, OSUtil.NORMAL_INPUT + "dataFile.xml");
                         tempCount++;
                     }
                 }
@@ -320,7 +320,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
             for (String dependency : missingDependencies) {
                 if (tempCounter==dataFolder) {
                     LOGGER.info("Transferring late data to : " + dependency);
-                    HadoopUtil.copyDataToFolder(clusterFS, dependency, OSUtil.RESOURCES + "log4j.properties");
+                    HadoopUtil.copyDataToFolder(clusterFS, dependency, OSUtil.NORMAL_INPUT + "dataFile.properties");
                 }
                 tempCounter++;
             }

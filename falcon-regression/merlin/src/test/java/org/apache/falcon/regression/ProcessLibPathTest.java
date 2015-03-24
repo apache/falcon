@@ -118,7 +118,7 @@ public class ProcessLibPathTest extends BaseTestClass {
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
         HadoopUtil.recreateDir(clusterFS, workflowDir + "/lib");
         HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib/invalid.jar",
-            OSUtil.RESOURCES + "feed-s4Replication.xml");
+            OSUtil.NORMAL_INPUT + "dataFile.xml");
         bundles[0].setProcessWorkflow(workflowDir);
         LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);

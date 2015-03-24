@@ -147,9 +147,8 @@ public class FeedReplicationTest extends BaseTestClass {
         Path toSource = new Path(sourceLocation);
         Path toTarget = new Path(targetLocation);
         if (dataFlag) {
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
-                    OSUtil.RESOURCES + "feed-s4Replication.xml");
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.RESOURCES + "log_01.txt");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
         }
 
         //check if coordinator exists
@@ -236,9 +235,8 @@ public class FeedReplicationTest extends BaseTestClass {
         Path toTarget = new Path(targetLocation);
 
         if (dataFlag) {
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
-                    OSUtil.RESOURCES + "feed-s4Replication.xml");
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.RESOURCES + "log_01.txt");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
         }
 
         //check if all coordinators exist
@@ -336,9 +334,8 @@ public class FeedReplicationTest extends BaseTestClass {
         Path toSource = new Path(sourceLocation);
         Path toTarget = new Path(targetLocation);
         if (dataFlag) {
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
-                    OSUtil.RESOURCES + "feed-s4Replication.xml");
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.RESOURCES + "log_01.txt");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
         }
 
         //check while instance is got created
@@ -357,7 +354,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //create availability flag on source
         HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
-                OSUtil.RESOURCES + availabilityFlagName);
+                OSUtil.OOZIE_EXAMPLE_INPUT_DATA + availabilityFlagName);
 
         //check if instance become running
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
