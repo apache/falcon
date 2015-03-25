@@ -69,10 +69,14 @@ public class FeedReplicator extends Configured implements Tool {
         final boolean includePathSet = (includePathConf != null)
                 && !IGNORE.equalsIgnoreCase(includePathConf);
 
+        String availabilityFlagOpt = cmd.getOptionValue("availabilityFlag");
+        if (StringUtils.isEmpty(availabilityFlagOpt)) {
+            availabilityFlagOpt = "NA";
+        }
         String availabilityFlag = EntityUtil.SUCCEEDED_FILE_NAME;
         if (cmd.getOptionValue("falconFeedStorageType").equals(Storage.TYPE.FILESYSTEM.name())) {
-            availabilityFlag = cmd.getOptionValue("availabilityFlag").equals("NA")
-                    ? availabilityFlag : cmd.getOptionValue("availabilityFlag");
+            availabilityFlag = "NA".equals(availabilityFlagOpt)
+                    ? availabilityFlag : availabilityFlagOpt;
         }
 
         conf.set("falcon.feed.availability.flag", availabilityFlag);
@@ -136,7 +140,7 @@ public class FeedReplicator extends Configured implements Tool {
     }
 
     private List<Path> getPaths(String[] paths) {
-        List<Path> listPaths = new ArrayList<Path>();
+        List<Path> listPaths = new ArrayList<>();
         for (String path : paths) {
             listPaths.add(new Path(path));
         }
