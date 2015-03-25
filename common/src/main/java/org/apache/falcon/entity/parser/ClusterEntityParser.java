@@ -322,11 +322,11 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             FileStatus fileStatus = fs.getFileStatus(locationPath);
             final String locationOwner = fileStatus.getOwner();
             if (!locationOwner.equals(loginUser)) {
-                LOG.error("Location {} has owner {}, should be the process user {}", locationPath, locationOwner,
-                        loginUser);
-                throw new ValidationException(
-                        "Path [" + locationPath + "] has owner [" + locationOwner + "], should be the process user "
-                                + loginUser);
+                LOG.error("Owner of the location {} is {} for cluster {}. Current user {} is not the owner of the "
+                        + "location.", locationPath, locationOwner, clusterName, loginUser);
+                throw new ValidationException("Path [" + locationPath + "] on the cluster [" + clusterName + "] has "
+                        + "owner [" + locationOwner + "]. Current user [" + loginUser + "] is not the owner of the "
+                        + "path");
             }
             String errorMessage = "Path " + locationPath + " has permissions: " + fileStatus.getPermission().toString()
                     + ", should be " + expectedPermission;
