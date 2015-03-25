@@ -28,14 +28,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
-import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
-import org.apache.falcon.entity.v0.cluster.Interface;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.Property;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -125,15 +117,6 @@ public final class Util {
     }
 
     /**
-     * @param data process definition
-     * @return process name
-     */
-    public static String getProcessName(String data) {
-        ProcessMerlin processElement = new ProcessMerlin(data);
-        return processElement.getName();
-    }
-
-    /**
      * @param data string data
      * @return is data should be considered as XMl
      */
@@ -207,7 +190,7 @@ public final class Util {
     public static List<String> getHadoopDataFromDir(FileSystem fs, String feed, String dir)
         throws IOException {
         List<String> finalResult = new ArrayList<String>();
-        String feedPath = getFeedPath(feed);
+        String feedPath = new FeedMerlin(feed).getFeedPath();
         int depth = feedPath.split(dir)[1].split("/").length - 1;
         List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs, new Path(dir), depth);
         for (Path result : results) {
@@ -217,75 +200,6 @@ public final class Util {
             }
         }
         return finalResult;
-    }
-
-    /**
-     * Sets custom feed property.
-     * @param feed feed definition
-     * @param propertyName custom property name
-     * @param propertyValue custom property value
-     * @return updated feed
-     */
-    public static String setFeedProperty(String feed, String propertyName, String propertyValue) {
-        FeedMerlin feedObject = new FeedMerlin(feed);
-        boolean found = false;
-        for (Property prop : feedObject.getProperties().getProperties()) {
-            //check if it is present
-            if (prop.getName().equalsIgnoreCase(propertyName)) {
-                prop.setValue(propertyValue);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            Property property = new Property();
-            property.setName(propertyName);
-            property.setValue(propertyValue);
-            feedObject.getProperties().getProperties().add(property);
-        }
-        return feedObject.toString();
-    }
-
-    /**
-     * @param feed feed definition
-     * @return feed data path
-     */
-    public static String getFeedPath(String feed) {
-        FeedMerlin feedObject = new FeedMerlin(feed);
-        for (Location location : feedObject.getLocations().getLocations()) {
-            if (location.getType() == LocationType.DATA) {
-                return location.getPath();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Sets cut-off period.
-     * @param feed feed definition
-     * @param frequency cut-off period
-     * @return updated feed
-     */
-    public static String insertLateFeedValue(String feed, Frequency frequency) {
-        FeedMerlin feedObject = new FeedMerlin(feed);
-        feedObject.getLateArrival().setCutOff(frequency);
-        return feedObject.toString();
-    }
-
-    /**
-     * Sets data location for a feed.
-     * @param feed feed definition
-     * @param pathValue new path
-     * @return updated feed
-     */
-    public static String setFeedPathValue(String feed, String pathValue) {
-        FeedMerlin feedObject = new FeedMerlin(feed);
-        for (Location location : feedObject.getLocations().getLocations()) {
-            if (location.getType() == LocationType.DATA) {
-                location.setPath(pathValue);
-            }
-        }
-        return feedObject.toString();
     }
 
     /**
@@ -306,39 +220,6 @@ public final class Util {
             }
         }
         return null;
-    }
-
-    /**
-     * @param feedString feed definition
-     * @param newName new name
-     * @return feed with updated name
-     */
-    public static String setFeedName(String feedString, String newName) {
-        FeedMerlin feedObject = new FeedMerlin(feedString);
-        feedObject.setName(newName);
-        return feedObject.toString().trim();
-    }
-
-    /**
-     * Sets name for a cluster by given order number.
-     * @param feedString feed which contains a cluster
-     * @param clusterName new cluster name
-     * @param clusterIndex index of cluster which should be updated
-     * @return feed with cluster name updated
-     */
-    public static String setClusterNameInFeed(String feedString, String clusterName,
-                                              int clusterIndex) {
-        FeedMerlin feedObject = new FeedMerlin(feedString);
-        feedObject.getClusters().getClusters().get(clusterIndex).setName(clusterName);
-        return feedObject.toString().trim();
-    }
-
-    /**
-     * @param clusterXML cluster definition
-     * @return cluster definition converted to object representation
-     */
-    public static ClusterMerlin getClusterObject(String clusterXML) {
-        return new ClusterMerlin(clusterXML);
     }
 
     public static List<String> getInstanceFinishTimes(ColoHelper coloHelper, String workflowId)
@@ -436,14 +317,6 @@ public final class Util {
     }
 
     /**
-     * @param processData process definition
-     * @return process definition converted to object representation.
-     */
-    public static Process getProcessObject(String processData) {
-        return new ProcessMerlin(processData);
-    }
-
-    /**
      * Prints JMSConsumer messages content.
      * @param messageConsumer the source JMSConsumer
      * @throws JMSException
@@ -460,84 +333,6 @@ public final class Util {
             }
             LOGGER.info(stringBuilder);
         }
-    }
-
-    /**
-     * Configures cluster definition according to provided properties.
-     * @param cluster cluster which should be configured
-     * @param prefix current cluster prefix
-     * @return modified cluster definition
-     */
-    public static String getEnvClusterXML(String cluster, String prefix) {
-        ClusterMerlin clusterObject = getClusterObject(cluster);
-        if ((null == prefix) || prefix.isEmpty()) {
-            prefix = "";
-        } else {
-            prefix = prefix + ".";
-        }
-        String hcatEndpoint = Config.getProperty(prefix + "hcat_endpoint");
-
-        //now read and set relevant values
-        for (Interface iface : clusterObject.getInterfaces().getInterfaces()) {
-            if (iface.getType() == Interfacetype.READONLY) {
-                iface.setEndpoint(Config.getProperty(prefix + "cluster_readonly"));
-            } else if (iface.getType() == Interfacetype.WRITE) {
-                iface.setEndpoint(Config.getProperty(prefix + "cluster_write"));
-            } else if (iface.getType() == Interfacetype.EXECUTE) {
-                iface.setEndpoint(Config.getProperty(prefix + "cluster_execute"));
-            } else if (iface.getType() == Interfacetype.WORKFLOW) {
-                iface.setEndpoint(Config.getProperty(prefix + "oozie_url"));
-            } else if (iface.getType() == Interfacetype.MESSAGING) {
-                iface.setEndpoint(Config.getProperty(prefix + "activemq_url"));
-            } else if (iface.getType() == Interfacetype.REGISTRY) {
-                iface.setEndpoint(hcatEndpoint);
-            }
-        }
-        //set colo name:
-        clusterObject.setColo(Config.getProperty(prefix + "colo"));
-        // properties in the cluster needed when secure mode is on
-        if (MerlinConstants.IS_SECURE) {
-            // get the properties object for the cluster
-            org.apache.falcon.entity.v0.cluster.Properties clusterProperties =
-                clusterObject.getProperties();
-            // add the namenode principal to the properties object
-            clusterProperties.getProperties().add(getFalconClusterPropertyObject(
-                    "dfs.namenode.kerberos.principal",
-                    Config.getProperty(prefix + "namenode.kerberos.principal", "none")));
-
-            // add the hive meta store principal to the properties object
-            clusterProperties.getProperties().add(getFalconClusterPropertyObject(
-                    "hive.metastore.kerberos.principal",
-                    Config.getProperty(prefix + "hive.metastore.kerberos.principal", "none")));
-
-            // Until oozie has better integration with secure hive we need to send the properites to
-            // falcon.
-            // hive.metastore.sasl.enabled = true
-            clusterProperties.getProperties()
-                .add(getFalconClusterPropertyObject("hive.metastore.sasl.enabled", "true"));
-            // Only set the metastore uri if its not empty or null.
-            if (null != hcatEndpoint && !hcatEndpoint.isEmpty()) {
-                //hive.metastore.uris
-                clusterProperties.getProperties()
-                    .add(getFalconClusterPropertyObject("hive.metastore.uris", hcatEndpoint));
-            }
-        }
-        return clusterObject.toString();
-    }
-
-    /**
-     * Forms property object based on parameters.
-     * @param name property name
-     * @param value property value
-     * @return property object
-     */
-    public static org.apache.falcon.entity.v0.cluster.Property
-    getFalconClusterPropertyObject(String name, String value) {
-        org.apache.falcon.entity.v0.cluster.Property property = new org
-            .apache.falcon.entity.v0.cluster.Property();
-        property.setName(name);
-        property.setValue(value);
-        return property;
     }
 
     /**

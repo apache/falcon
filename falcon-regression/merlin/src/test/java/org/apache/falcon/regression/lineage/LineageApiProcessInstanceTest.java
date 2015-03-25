@@ -32,7 +32,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -105,8 +104,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         outputFeedName = bundles[0].getOutputFeedNameFromBundle();
         Job.Status status = null;
         for (int i = 0; i < 20; i++) {
-            status = InstanceUtil.getDefaultCoordinatorStatus(cluster,
-                Util.getProcessName(bundles[0].getProcessData()), 0);
+            status = InstanceUtil.getDefaultCoordinatorStatus(cluster, bundles[0].getProcessName(), 0);
             if (status == Job.Status.SUCCEEDED || status == Job.Status.KILLED) {
                 break;
             }

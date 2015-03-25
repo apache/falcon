@@ -76,23 +76,19 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
     public void rescheduleKilledProcess() throws Exception {
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-11);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(6);
-        String process = bundles[0].getProcessData();
-        process = InstanceUtil.setProcessName(process, this.getClass().getSimpleName()
-            + "zeroInputProcess" + new Random().nextInt());
+        ProcessMerlin process = new ProcessMerlin(InstanceUtil.setProcessName(bundles[0].getProcessData(),
+            this.getClass().getSimpleName() + "zeroInputProcess" + new Random().nextInt()));
         List<String> feed = new ArrayList<String>();
         feed.add(bundles[0].getOutputFeedFromBundle());
-        final ProcessMerlin processMerlin = new ProcessMerlin(process);
-        processMerlin.setProcessFeeds(feed, 0, 0, 1);
-        process = processMerlin.toString();
+        process.setProcessFeeds(feed, 0, 0, 1);
 
-        process = ProcessMerlin.fromString(process).clearProcessCluster().toString();
-        process = ProcessMerlin.fromString(process).addProcessCluster(
+        process.clearProcessCluster();
+        process.addProcessCluster(
             new ProcessMerlin.ProcessClusterBuilder(
                 Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withValidity(processStartTime, processEndTime)
-                .build()
-        ).toString();
-        bundles[0].setProcessData(process);
+                .build());
+        bundles[0].setProcessData(process.toString());
 
         bundles[0].submitFeedsScheduleProcess(prism);
 

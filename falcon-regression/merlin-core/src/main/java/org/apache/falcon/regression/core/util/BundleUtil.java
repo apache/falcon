@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
@@ -126,8 +128,8 @@ public final class BundleUtil {
                 final String protectionPropName = "hadoop.rpc.protection";
                 final String protectionPropValue = Config.getProperty(protectionPropName);
                 if (StringUtils.isNotEmpty(protectionPropValue)) {
-                    final Property property = Util.getFalconClusterPropertyObject(
-                            protectionPropName, protectionPropValue.trim());
+                    final Property property = getFalconClusterPropertyObject(
+                        protectionPropName, protectionPropValue.trim());
                     clusterMerlin.getProperties().getProperties().add(property);
                 }
                 clusterData = clusterMerlin.toString();
@@ -159,4 +161,87 @@ public final class BundleUtil {
         }
     }
 
+    /**
+     * Configures cluster definition according to provided properties.
+     * @param cluster cluster which should be configured
+     * @param prefix current cluster prefix
+     * @return modified cluster definition
+     */
+    public static ClusterMerlin getEnvClusterXML(String cluster, String prefix) {
+        ClusterMerlin clusterObject = new ClusterMerlin(cluster);
+        if ((null == prefix) || prefix.isEmpty()) {
+            prefix = "";
+        } else {
+            prefix = prefix + ".";
+        }
+        String hcatEndpoint = Config.getProperty(prefix + "hcat_endpoint");
+
+        //now read and set relevant values
+        for (Interface iface : clusterObject.getInterfaces().getInterfaces()) {
+            if (iface.getType() == Interfacetype.READONLY) {
+                iface.setEndpoint(Config.getProperty(prefix + "cluster_readonly"));
+            } else if (iface.getType() == Interfacetype.WRITE) {
+                iface.setEndpoint(Config.getProperty(prefix + "cluster_write"));
+            } else if (iface.getType() == Interfacetype.EXECUTE) {
+                iface.setEndpoint(Config.getProperty(prefix + "cluster_execute"));
+            } else if (iface.getType() == Interfacetype.WORKFLOW) {
+                iface.setEndpoint(Config.getProperty(prefix + "oozie_url"));
+            } else if (iface.getType() == Interfacetype.MESSAGING) {
+                iface.setEndpoint(Config.getProperty(prefix + "activemq_url"));
+            } else if (iface.getType() == Interfacetype.REGISTRY) {
+                iface.setEndpoint(hcatEndpoint);
+            }
+        }
+        //set colo name:
+        clusterObject.setColo(Config.getProperty(prefix + "colo"));
+        // properties in the cluster needed when secure mode is on
+        if (MerlinConstants.IS_SECURE) {
+            // get the properties object for the cluster
+            org.apache.falcon.entity.v0.cluster.Properties clusterProperties =
+                clusterObject.getProperties();
+            // add the namenode principal to the properties object
+            clusterProperties.getProperties().add(getFalconClusterPropertyObject(
+                    "dfs.namenode.kerberos.principal",
+                    Config.getProperty(prefix + "namenode.kerberos.principal", "none")));
+
+            // add the hive meta store principal to the properties object
+            clusterProperties.getProperties().add(getFalconClusterPropertyObject(
+                    "hive.metastore.kerberos.principal",
+                    Config.getProperty(prefix + "hive.metastore.kerberos.principal", "none")));
+
+            // Until oozie has better integration with secure hive we need to send the properites to
+            // falcon.
+            // hive.metastore.sasl.enabled = true
+            clusterProperties.getProperties()
+                .add(getFalconClusterPropertyObject("hive.metastore.sasl.enabled", "true"));
+            // Only set the metastore uri if its not empty or null.
+            if (null != hcatEndpoint && !hcatEndpoint.isEmpty()) {
+                //hive.metastore.uris
+                clusterProperties.getProperties()
+                    .add(getFalconClusterPropertyObject("hive.metastore.uris", hcatEndpoint));
+            }
+        }
+        return clusterObject;
+    }
+
+    /**
+     * Forms property object based on parameters.
+     * @param name property name
+     * @param value property value
+     * @return property object
+     */
+    private static Property getFalconClusterPropertyObject(String name, String value) {
+        Property property = new Property();
+        property.setName(name);
+        property.setValue(value);
+        return property;
+    }
+
+    public static List<ClusterMerlin> fromString(List<String> clusterStrings) {
+        List<ClusterMerlin> clusters = new ArrayList<ClusterMerlin>();
+        for (String clusterString : clusterStrings) {
+            clusters.add(new ClusterMerlin(clusterString));
+        }
+        return clusters;
+    }
 }

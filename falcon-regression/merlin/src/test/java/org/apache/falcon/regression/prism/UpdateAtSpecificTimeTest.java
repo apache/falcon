@@ -327,7 +327,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             Util.shutDownService(cluster2.getProcessHelper());
 
             //add some property to feed so that new bundle is created
-            String updatedFeed = Util.setFeedProperty(feed, "someProp", "someVal");
+            FeedMerlin updatedFeed = new FeedMerlin(feed).setFeedProperty("someProp", "someVal");
 
             //save old data
             String oldBundleCluster1 = InstanceUtil.getLatestBundleID(cluster1,
@@ -337,7 +337,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
             //send update command with +5 mins in future
             String updateTime = TimeUtil.getTimeWrtSystemTime(5);
-            r = prism.getFeedHelper().update(feed, updatedFeed, updateTime, null);
+            r = prism.getFeedHelper().update(feed, updatedFeed.toString(), updateTime, null);
             AssertUtil.assertPartial(r);
 
             //verify new bundle creation on cluster1 and new definition on cluster3
@@ -353,7 +353,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 Util.readEntityName(feed), EntityType.FEED);
 
             //send update again
-            r = prism.getFeedHelper().update(feed, updatedFeed, updateTime, null);
+            r = prism.getFeedHelper().update(feed, updatedFeed.toString(), updateTime, null);
             AssertUtil.assertSucceeded(r);
 
             //verify new bundle creation on cluster2 and no new bundle on cluster1
@@ -446,11 +446,11 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         String oldBundleID = InstanceUtil.getLatestBundleID(cluster1,
             Util.readEntityName(feed), EntityType.FEED);
         String updateTime = TimeUtil.addMinsToTime(endTime, 60);
-        String updatedFeed = Util.setFeedProperty(feed, "someProp", "someVal");
+        FeedMerlin updatedFeed = new FeedMerlin(feed).setFeedProperty("someProp", "someVal");
         LOGGER.info("Original Feed : " + Util.prettyPrintXml(feed));
-        LOGGER.info("Updated Feed :" + Util.prettyPrintXml(updatedFeed));
+        LOGGER.info("Updated Feed :" + Util.prettyPrintXml(updatedFeed.toString()));
         LOGGER.info("Update Time : " + updateTime);
-        r = prism.getFeedHelper().update(feed, updatedFeed, updateTime, null);
+        r = prism.getFeedHelper().update(feed, updatedFeed.toString(), updateTime, null);
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 1);
 

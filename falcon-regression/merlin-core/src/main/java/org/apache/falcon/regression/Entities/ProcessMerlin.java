@@ -40,7 +40,6 @@ import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,19 +52,10 @@ public class ProcessMerlin extends Process {
     public ProcessMerlin(final Process process) {
         try {
             PropertyUtils.copyProperties(this, process);
-        } catch (IllegalAccessException e) {
-            Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
-        } catch (InvocationTargetException e) {
-            Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
-        } catch (NoSuchMethodException e) {
-            Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
+        } catch (ReflectiveOperationException e) {
+            Assert.fail("Can't create ProcessMerlin: " + ExceptionUtils.getStackTrace(e));
         }
     }
-
-    public static ProcessMerlin fromString(String processString) {
-        return new ProcessMerlin(processString);
-    }
-
 
     public ProcessMerlin clearProcessCluster() {
         getClusters().getClusters().clear();

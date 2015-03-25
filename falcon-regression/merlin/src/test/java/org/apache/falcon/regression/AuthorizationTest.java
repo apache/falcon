@@ -19,6 +19,7 @@
 package org.apache.falcon.regression;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
@@ -501,19 +502,18 @@ public class AuthorizationTest extends BaseTestClass {
     public void u1SubmitU2UpdateFeed()
         throws URISyntaxException, IOException, AuthenticationException, JAXBException,
         InterruptedException {
-        String feed = bundles[0].getInputFeedFromBundle();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         //submit feed
         bundles[0].submitClusters(prism);
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed));
-        String definition = prism.getFeedHelper().getEntityDefinition(feed).getMessage();
-        Assert.assertTrue(definition.contains(Util
-                .readEntityName(feed)) && !definition.contains("(feed) not found"),
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
+        String definition = prism.getFeedHelper().getEntityDefinition(feed.toString()).getMessage();
+        Assert.assertTrue(definition.contains(feed.getName()) && !definition.contains("(feed) not found"),
             "Feed should be already submitted");
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
-            + MINUTE_DATE_PATTERN);
+        FeedMerlin newFeed = new FeedMerlin(feed.toString());
+        newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
         //try to update feed by U2
-        final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
+        final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
             TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -524,16 +524,16 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1ScheduleU2UpdateFeed() throws Exception {
-        String feed = bundles[0].getInputFeedFromBundle();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         //submit and schedule feed
         bundles[0].submitClusters(prism);
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
-        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
+        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed.toString(), Job.Status.RUNNING);
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
-            + MINUTE_DATE_PATTERN);
+        FeedMerlin newFeed = new FeedMerlin(feed);
+        newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
         //try to update feed by U2
-        final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
+        final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
             TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -588,15 +588,15 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1ScheduleFeedU2ScheduleDependantProcessU1UpdateFeed() throws Exception {
-        String feed = bundles[0].getInputFeedFromBundle();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         String process = bundles[0].getProcessData();
         process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
         //schedule input feed by U1
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
-        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed.toString()));
+        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed.toString(), Job.Status.RUNNING);
 
         //by U2 schedule process dependant on scheduled feed by U1
         ServiceResponse serviceResponse = prism.getProcessHelper()
@@ -611,24 +611,22 @@ public class AuthorizationTest extends BaseTestClass {
             getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
-        String oldFeedBundleId = InstanceUtil
-            .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
-        String oldFeedUser =
-                getBundleUser(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String oldFeedBundleId = InstanceUtil.getLatestBundleID(cluster, feed.getName(), EntityType.FEED);
+        String oldFeedUser = getBundleUser(cluster, feed.getName(), EntityType.FEED);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
-            + MINUTE_DATE_PATTERN);
+        FeedMerlin newFeed = new FeedMerlin(feed.toString());
+        newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
 
         //update feed by U1
-        serviceResponse = prism.getFeedHelper().update(feed, newFeed,
+        serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
             TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.CURRENT_USER_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should be created by U1
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed, true, false);
+        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed.toString(), true, false);
         String newFeedUser =
-                getBundleUser(cluster, Util.readEntityName(newFeed), EntityType.FEED);
+                getBundleUser(cluster, newFeed.getName(), EntityType.FEED);
         Assert.assertEquals(oldFeedUser, newFeedUser, "User should be the same");
 
         //new process bundle should be created by U2
@@ -642,15 +640,15 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1ScheduleFeedU2ScheduleDependantProcessU2UpdateFeed() throws Exception {
-        String feed = bundles[0].getInputFeedFromBundle();
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         String process = bundles[0].getProcessData();
         process = InstanceUtil.setProcessValidity(process, "2010-01-02T01:00Z", "2099-01-02T01:00Z");
         //submit both feeds
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
         //schedule input feed by U1
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
-        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed.toString()));
+        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed.toString(), Job.Status.RUNNING);
 
         //by U2 schedule process dependent on scheduled feed by U1
         ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process,
@@ -659,8 +657,8 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed, baseTestDir + "/randomPath"
-            + MINUTE_DATE_PATTERN);
+        FeedMerlin newFeed = new FeedMerlin(feed.toString());
+        newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
 
         //get old process details
         String oldProcessBundleId = InstanceUtil
@@ -669,20 +667,17 @@ public class AuthorizationTest extends BaseTestClass {
                 getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
-        String oldFeedBundleId = InstanceUtil
-                .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
-        String oldFeedUser =
-                getBundleUser(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String oldFeedBundleId = InstanceUtil.getLatestBundleID(cluster, feed.getName(), EntityType.FEED);
+        String oldFeedUser = getBundleUser(cluster, feed.getName(), EntityType.FEED);
 
         //update feed by U2
-        serviceResponse = prism.getFeedHelper().update(feed, newFeed,
+        serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
             TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed, true, false);
-        String newFeedUser =
-                getBundleUser(cluster, Util.readEntityName(newFeed), EntityType.FEED);
+        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed.toString(), true, false);
+        String newFeedUser = getBundleUser(cluster, newFeed.getName(), EntityType.FEED);
         Assert.assertNotEquals(oldFeedUser, newFeedUser, "User should not be the same");
         Assert.assertEquals(MerlinConstants.USER2_NAME, newFeedUser);
 

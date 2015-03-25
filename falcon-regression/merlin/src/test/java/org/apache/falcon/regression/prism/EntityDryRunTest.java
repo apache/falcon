@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.prism;
 
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -28,7 +29,6 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -115,10 +115,10 @@ public class EntityDryRunTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleFeed() throws Exception {
-        String feed = bundles[0].getInputFeedFromBundle();
-        feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        feed.setFeedProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed.toString());
         validate(response,
                 "Entity schedule failed for feed: " + bundles[0].getInputFeedNameFromBundle());
     }
@@ -129,15 +129,15 @@ public class EntityDryRunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateFeed() throws Exception {
         bundles[0].submitClusters(prism);
-        String feed = bundles[0].getInputFeedFromBundle();
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed.toString());
         AssertUtil.assertSucceeded(response);
-        feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
-        response = prism.getFeedHelper().update(feed, feed);
+        feed.setFeedProperty("EntityDryRunTestProp", "${coord:someEL(1)");
+        response = prism.getFeedHelper().update(feed.toString(), feed.toString());
         validate(response, "The new entity (feed) " + bundles[0].getInputFeedNameFromBundle()
             + " can't be scheduled");
         Assert.assertEquals(
-            OozieUtil.getNumberOfBundle(clusterOC, EntityType.FEED, Util.readEntityName(feed)), 1,
+            OozieUtil.getNumberOfBundle(clusterOC, EntityType.FEED, feed.getName()), 1,
             "more than one bundle found after failed update request");
     }
 

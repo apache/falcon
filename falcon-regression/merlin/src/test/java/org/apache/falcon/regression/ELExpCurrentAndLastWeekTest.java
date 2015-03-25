@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
@@ -148,7 +149,7 @@ public class ELExpCurrentAndLastWeekTest extends BaseTestClass {
 
     private List<String> getMissingDependencies(ColoHelper prismHelper, Bundle bundle) throws OozieClientException {
         List<String> bundles = OozieUtil.getBundles(prismHelper.getFeedHelper().getOozieClient(),
-                Util.getProcessName(bundle.getProcessData()), EntityType.PROCESS);
+                new ProcessMerlin(bundle.getProcessData()).getName(), EntityType.PROCESS);
         String coordID = bundles.get(0);
         List<String> missingDependencies =
                 OozieUtil.getMissingDependencies(prismHelper, coordID);

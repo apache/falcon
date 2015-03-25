@@ -113,105 +113,100 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster2Def));
 
         //get 2 unique feeds
-        String feed01 = bundles[0].getInputFeedFromBundle();
-        String outputFeed = bundles[0].getOutputFeedFromBundle();
+        FeedMerlin feed01 = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        FeedMerlin outputFeed = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
 
         /* set source and target for the 2 feeds */
         //set clusters to null;
-        feed01 = FeedMerlin.fromString(feed01).clearFeedClusters().toString();
-        outputFeed = FeedMerlin.fromString(outputFeed).clearFeedClusters().toString();
+        feed01.clearFeedClusters();
+        outputFeed.clearFeedClusters();
 
         //set new feed input data
-        feed01 = Util.setFeedPathValue(feed01, baseTestDir + "/feed01" + MINUTE_DATE_PATTERN);
+        feed01.setFeedPathValue(baseTestDir + "/feed01" + MINUTE_DATE_PATTERN);
 
         //generate data in both the colos cluster1colo and cluster2colo
-        String prefix = InstanceUtil.getFeedPrefix(feed01);
+        String prefix = InstanceUtil.getFeedPrefix(feed01.toString());
         String startTime = TimeUtil.getTimeWrtSystemTime(-40);
         System.out.println("Start time = " + startTime);
         HadoopUtil.deleteDirIfExists(prefix.substring(1), server1FS);
         HadoopUtil.lateDataReplenish(server1FS, 80, 20, prefix, null);
 
         //set clusters for feed01
-        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+        feed01.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
-        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+                .build());
+        feed01.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.TARGET)
-                .build()).toString();
+                .build());
 
         //set clusters for output feed
-        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+        outputFeed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster1Def))
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
-        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+                .build());
+        outputFeed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(cluster2Def))
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.TARGET)
-                .build()).toString();
+                .build());
 
         //submit and schedule feeds
-        LOGGER.info("feed01: " + Util.prettyPrintXml(feed01));
-        LOGGER.info("outputFeed: " + Util.prettyPrintXml(outputFeed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed));
+        LOGGER.info("feed01: " + Util.prettyPrintXml(feed01.toString()));
+        LOGGER.info("outputFeed: " + Util.prettyPrintXml(outputFeed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed.toString()));
 
         /* create 2 process with 2 clusters */
         //get first process
-        String process01 = bundles[0].getProcessData();
+        ProcessMerlin process01 = new ProcessMerlin(bundles[0].getProcessData());
 
         //add clusters to process
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-11);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(70);
-        process01 = ProcessMerlin.fromString(process01).clearProcessCluster().toString();
-        process01 = ProcessMerlin.fromString(process01).addProcessCluster(
+        process01.clearProcessCluster();
+        process01.addProcessCluster(
             new ProcessMerlin.ProcessClusterBuilder(Util.readEntityName(cluster1Def))
                 .withValidity(processStartTime, processEndTime)
-                .build()
-        ).toString();
-        process01 = ProcessMerlin.fromString(process01).addProcessCluster(
+                .build());
+        process01.addProcessCluster(
             new ProcessMerlin.ProcessClusterBuilder(Util.readEntityName(cluster2Def))
                 .withValidity(processStartTime, processEndTime)
-                .build()
-        ).toString();
+                .build());
 
         //get 2nd process
-        String process02 = process01;
-        process02 = InstanceUtil
-            .setProcessName(process02, this.getClass().getSimpleName()
-                + "_zeroInputProcess" + new Random().nextInt());
+        ProcessMerlin process02 = new ProcessMerlin(InstanceUtil
+            .setProcessName(process01.toString(), this.getClass().getSimpleName()
+                + "-zeroInputProcess" + new Random().nextInt()));
         List<String> feed = new ArrayList<String>();
-        feed.add(outputFeed);
-        final ProcessMerlin processMerlin = new ProcessMerlin(process02);
-        processMerlin.setProcessFeeds(feed, 0, 0, 1);
-        process02 = processMerlin.toString();
+        feed.add(outputFeed.toString());
+        process02.setProcessFeeds(feed, 0, 0, 1);
 
         //submit and schedule both process
-        LOGGER.info("process: " + Util.prettyPrintXml(process01));
-        LOGGER.info("process: " + Util.prettyPrintXml(process02));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process01));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process02));
+        LOGGER.info("process: " + Util.prettyPrintXml(process01.toString()));
+        LOGGER.info("process: " + Util.prettyPrintXml(process02.toString()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process01.toString()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process02.toString()));
         LOGGER.info("Wait till process goes into running ");
-        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(process01), 1,
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, process01.getName(), 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 1);
-        InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(process02), 1,
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, process02.getName(), 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 1);
 
         //change feed location path
-        outputFeed = Util.setFeedProperty(outputFeed, "queueName", "myQueue");
-        LOGGER.info("updated feed: " + Util.prettyPrintXml(outputFeed));
+        outputFeed.setFeedProperty("queueName", "myQueue");
+        LOGGER.info("updated feed: " + Util.prettyPrintXml(outputFeed.toString()));
 
         //update feed first time
-        AssertUtil.assertSucceeded(prism.getFeedHelper().update(outputFeed, outputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().update(outputFeed.toString(), outputFeed.toString()));
     }
 
     /**

@@ -27,10 +27,7 @@ import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /** Class for representing a cluster xml. */
@@ -41,21 +38,9 @@ public class ClusterMerlin extends Cluster {
                 clusterData);
         try {
             PropertyUtils.copyProperties(this, cluster);
-        } catch (IllegalAccessException e) {
-            Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
-        } catch (InvocationTargetException e) {
-            Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
-        } catch (NoSuchMethodException e) {
+        } catch (ReflectiveOperationException e) {
             Assert.fail("Can't create ClusterMerlin: " + ExceptionUtils.getStackTrace(e));
         }
-    }
-
-    public static List<ClusterMerlin> fromString(List<String> clusterStrings) {
-        List<ClusterMerlin> clusters = new ArrayList<ClusterMerlin>();
-        for (String clusterString : clusterStrings) {
-            clusters.add(new ClusterMerlin(clusterString));
-        }
-        return clusters;
     }
 
     @Override

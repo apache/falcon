@@ -73,12 +73,12 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         bundles[0].setInputFeedDataPath(feedInputPath);
 
         Bundle.submitCluster(bundles[0], bundles[1]);
-        String feedOutput01 = bundles[0].getDataSets().get(0);
+        FeedMerlin feedOutput01 = new FeedMerlin(bundles[0].getDataSets().get(0));
         org.apache.falcon.entity.v0.Frequency delay =
             new org.apache.falcon.entity.v0.Frequency(
                 "hours(5)");
 
-        feedOutput01 = FeedMerlin.fromString(feedOutput01).clearFeedClusters().toString();
+        feedOutput01.clearFeedClusters();
 
         // uncomment below 2 line when falcon in sync with falcon
 
@@ -104,10 +104,9 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         // Util.readClusterName(bundles[0].getClusters().get(0)),ClusterType.TARGET,"",
         // feedOutputPath);
 
-        feedOutput01 = Util.setFeedProperty(feedOutput01, "timeout", "minutes(35)");
-        feedOutput01 = Util.setFeedProperty(feedOutput01, "parallel", "3");
+        feedOutput01.setFeedProperty("timeout", "minutes(35)").setFeedProperty("parallel", "3");
 
-        LOGGER.info("feedOutput01: " + Util.prettyPrintXml(feedOutput01));
-        prism.getFeedHelper().submitAndSchedule(feedOutput01);
+        LOGGER.info("feedOutput01: " + Util.prettyPrintXml(feedOutput01.toString()));
+        prism.getFeedHelper().submitAndSchedule(feedOutput01.toString());
     }
 }

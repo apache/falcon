@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.prism;
 
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Property;
@@ -112,7 +113,7 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
             + "/input1/", dataDates);
 
         InstanceUtil.waitTillInstanceReachState(clusterOC,
-            Util.getProcessName(bundles[0].getProcessData()), 2,
+            new ProcessMerlin(bundles[0].getProcessData()).getName(), 2,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
     }
 

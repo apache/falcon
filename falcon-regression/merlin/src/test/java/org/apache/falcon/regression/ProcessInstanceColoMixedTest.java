@@ -101,109 +101,107 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
     public void mixed01C1sC2sC1eC2e() throws Exception {
         //ua1 and ua3 are source. ua2 target.   feed01 on ua1 , feed02 on ua3
         //get 2 unique feeds
-        String feed01 = bundles[0].getInputFeedFromBundle();
-        String feed02 = bundles[1].getInputFeedFromBundle();
-        String outputFeed = bundles[0].getOutputFeedFromBundle();
+        FeedMerlin feed01 = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        FeedMerlin feed02 = new FeedMerlin(bundles[1].getInputFeedFromBundle());
+        FeedMerlin outputFeed = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
         //set source and target for the 2 feeds
 
         //set clusters to null;
-        feed01 = FeedMerlin.fromString(feed01).clearFeedClusters().toString();
-        feed02 = FeedMerlin.fromString(feed02).clearFeedClusters().toString();
-        outputFeed = FeedMerlin.fromString(outputFeed).clearFeedClusters().toString();
+        feed01.clearFeedClusters();
+        feed02.clearFeedClusters();
+        outputFeed.clearFeedClusters();
 
         //set new feed input data
-        feed01 = Util.setFeedPathValue(feed01, String.format(feedPath, 1));
-        feed02 = Util.setFeedPathValue(feed02, String.format(feedPath, 2));
+        feed01.setFeedPathValue(String.format(feedPath, 1));
+        feed02.setFeedPathValue(String.format(feedPath, 2));
 
         //generate data in both the colos ua1 and ua3
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(
             TimeUtil.getTimeWrtSystemTime(-35), TimeUtil.getTimeWrtSystemTime(25), 1);
 
-        String prefix = InstanceUtil.getFeedPrefix(feed01);
+        String prefix = InstanceUtil.getFeedPrefix(feed01.toString());
         HadoopUtil.deleteDirIfExists(prefix.substring(1), cluster1FS);
         HadoopUtil.flattenAndPutDataInFolder(cluster1FS, OSUtil.SINGLE_FILE, prefix, dataDates);
 
-        prefix = InstanceUtil.getFeedPrefix(feed02);
+        prefix = InstanceUtil.getFeedPrefix(feed02.toString());
         HadoopUtil.deleteDirIfExists(prefix.substring(1), cluster2FS);
         HadoopUtil.flattenAndPutDataInFolder(cluster2FS, OSUtil.SINGLE_FILE, prefix, dataDates);
 
         String startTime = TimeUtil.getTimeWrtSystemTime(-70);
 
         //set clusters for feed01
-        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+        feed01.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(10000)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
-        feed01 = FeedMerlin.fromString(feed01).addFeedCluster(
+                .build());
+        feed01.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(10000)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.TARGET)
-                .build()).toString();
+                .build());
 
         //set clusters for feed02
-        feed02 = FeedMerlin.fromString(feed02).addFeedCluster(
+        feed02.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(10000)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.TARGET)
-                .build()).toString();
-        feed02 = FeedMerlin.fromString(feed02).addFeedCluster(
+                .build());
+        feed02.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(10000)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
+                .build());
 
         //set clusters for output feed
-        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+        outputFeed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withRetention("days(10000)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.SOURCE)
-                .build()).toString();
-        outputFeed = FeedMerlin.fromString(outputFeed).addFeedCluster(
+                .build());
+        outputFeed.addFeedCluster(
             new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withRetention("days(10000)", ActionType.DELETE)
                 .withValidity(startTime, "2099-01-01T00:00Z")
                 .withClusterType(ClusterType.TARGET)
-                .build()).toString();
+                .build());
 
         //submit and schedule feeds
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed02));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed02.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed.toString()));
 
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-16);
         // String processEndTime = InstanceUtil.getTimeWrtSystemTime(20);
 
-        String process = bundles[0].getProcessData();
-        process = ProcessMerlin.fromString(process).clearProcessCluster().toString();
-        process = ProcessMerlin.fromString(process).addProcessCluster(
+        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
+        process.clearProcessCluster();
+        process.addProcessCluster(
             new ProcessMerlin.ProcessClusterBuilder(
                 Util.readEntityName(bundles[0].getClusters().get(0)))
                 .withValidity(processStartTime, TimeUtil.addMinsToTime(processStartTime, 35))
-                .build())
-            .toString();
-        process = ProcessMerlin.fromString(process).addProcessCluster(
+                .build());
+        process.addProcessCluster(
             new ProcessMerlin.ProcessClusterBuilder(
                 Util.readEntityName(bundles[1].getClusters().get(0)))
                 .withValidity(TimeUtil.addMinsToTime(processStartTime, 16),
                     TimeUtil.addMinsToTime(processStartTime, 45))
-                .build())
-            .toString();
-        process = InstanceUtil.addProcessInputFeed(process, Util.readEntityName(feed02),
-            Util.readEntityName(feed02));
+                .build());
+        process = new ProcessMerlin(InstanceUtil.addProcessInputFeed(process.toString(), feed02.getName(),
+            feed02.getName()));
 
         //submit and schedule process
-        prism.getProcessHelper().submitAndSchedule(process);
+        prism.getProcessHelper().submitAndSchedule(process.toString());
 
         LOGGER.info("Wait till process goes into running ");
-        InstanceUtil.waitTillInstanceReachState(serverOC.get(0), Util.getProcessName(process), 1,
+        InstanceUtil.waitTillInstanceReachState(serverOC.get(0), process.getName(), 1,
             Status.RUNNING, EntityType.PROCESS);
-        InstanceUtil.waitTillInstanceReachState(serverOC.get(1), Util.getProcessName(process), 1,
+        InstanceUtil.waitTillInstanceReachState(serverOC.get(1), process.getName(), 1,
             Status.RUNNING, EntityType.PROCESS);
 
         final String processName = Util.readEntityName(bundles[0].getProcessData());

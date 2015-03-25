@@ -19,6 +19,7 @@
 package org.apache.falcon.regression;
 
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -156,7 +157,7 @@ public class ELValidationsTest extends BaseTestClass {
             List<String> bundles = null;
             for (int i = 0; i < 10; ++i) {
                 bundles = OozieUtil.getBundles(prismHelper.getFeedHelper().getOozieClient(),
-                    Util.getProcessName(bundle.getProcessData()), EntityType.PROCESS);
+                    new ProcessMerlin(bundle.getProcessData()).getName(), EntityType.PROCESS);
                 if (bundles.size() > 0) {
                     break;
                 }

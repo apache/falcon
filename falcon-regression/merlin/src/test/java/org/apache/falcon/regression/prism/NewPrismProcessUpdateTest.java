@@ -22,6 +22,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.process.ExecutionType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -154,8 +155,8 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         }
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getFrequency(),
-                Util.getProcessObject(updatedProcess).getFrequency());
+        Assert.assertEquals(new ProcessMerlin(prismString).getFrequency(),
+                new ProcessMerlin(updatedProcess).getFrequency());
         TimeUtil.sleepSeconds(60);
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -224,7 +225,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         // one is updated correctly.
         int finalNumberOfInstances =
                 InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                        bundles[1].getProcessName(), EntityType.PROCESS).size();
         Assert.assertEquals(finalNumberOfInstances,
                 getExpectedNumberOfWorkflowInstances(TimeUtil
                                 .dateToOozieDate(
@@ -268,19 +269,15 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         Util.shutDownService(cluster3.getProcessHelper());
 
         //now to update
-        AssertUtil.assertPartial(
-                prism.getProcessHelper()
-                        .update(bundles[1].getProcessData(), bundles[1].getProcessData()));
+        AssertUtil.assertPartial(prism.getProcessHelper()
+            .update(bundles[1].getProcessData(), bundles[1].getProcessData()));
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
-                initialConcurrency);
-        Assert.assertEquals(Util.getProcessObject(prismString).getWorkflow().getPath(),
-                workflowPath);
-        Assert.assertEquals(Util.getProcessObject(prismString).getOrder(),
-                bundles[1].getProcessObject().getOrder());
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(), initialConcurrency);
+        Assert.assertEquals(new ProcessMerlin(prismString).getWorkflow().getPath(), workflowPath);
+        Assert.assertEquals(new ProcessMerlin(prismString).getOrder(), bundles[1].getProcessObject().getOrder());
 
         String coloString = getResponse(cluster2, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(coloString).getWorkflow().getPath(),
+        Assert.assertEquals(new ProcessMerlin(coloString).getWorkflow().getPath(),
                 workflowPath2);
 
         Util.startService(cluster3.getProcessHelper());
@@ -300,11 +297,11 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
             TimeUtil.sleepSeconds(20);
         }
         prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(),
                 initialConcurrency + 3);
-        Assert.assertEquals(Util.getProcessObject(prismString).getWorkflow().getPath(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getWorkflow().getPath(),
                 workflowPath2);
-        Assert.assertEquals(Util.getProcessObject(prismString).getOrder(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getOrder(),
                 bundles[1].getProcessObject().getOrder());
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         AssertUtil
@@ -312,7 +309,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         waitingForBundleFinish(cluster3, oldBundleId);
         int finalNumberOfInstances =
                 InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                        bundles[1].getProcessName(), EntityType.PROCESS).size();
 
         int expectedInstances =
                 getExpectedNumberOfWorkflowInstances(TimeUtil.dateToOozieDate(
@@ -363,8 +360,8 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster3OC, bundles[1].getProcessData(), 1, 10);
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getFrequency(),
-                Util.getProcessObject(updatedProcess).getFrequency());
+        Assert.assertEquals(new ProcessMerlin(prismString).getFrequency(),
+                new ProcessMerlin(updatedProcess).getFrequency());
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
     }
@@ -433,7 +430,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         }
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(),
                 bundles[1].getProcessObject().getParallel() + 3);
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -552,7 +549,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         // correctly.
         int finalNumberOfInstances = InstanceUtil
                 .getProcessInstanceList(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS)
+                    bundles[1].getProcessName(), EntityType.PROCESS)
                 .size();
         Assert.assertEquals(finalNumberOfInstances,
                 getExpectedNumberOfWorkflowInstances(TimeUtil
@@ -601,7 +598,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         }
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(),
                 bundles[1].getProcessObject().getParallel() + 3);
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -639,7 +636,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
         int finalNumberOfInstances =
                 InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                        bundles[1].getProcessName(), EntityType.PROCESS).size();
 
         int expectedInstances =
                 getExpectedNumberOfWorkflowInstances(TimeUtil.dateToOozieDate(
@@ -690,7 +687,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
         dualComparison(prism, cluster3, bundles[1].getProcessData());
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(),
                 bundles[1].getProcessObject().getParallel());
 
         //ensure that the running process has new coordinators created; while the submitted
@@ -743,7 +740,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
         int finalNumberOfInstances =
                 InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                        bundles[1].getProcessName(), EntityType.PROCESS).size();
 
         int expectedInstances =
                 getExpectedNumberOfWorkflowInstances(TimeUtil.dateToOozieDate(
@@ -797,11 +794,11 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
             TimeUtil.sleepSeconds(10);
         }
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(),
                 initialConcurrency + 3);
-        Assert.assertEquals(Util.getProcessObject(prismString).getWorkflow().getPath(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getWorkflow().getPath(),
                 aggregator1Path);
-        Assert.assertEquals(Util.getProcessObject(prismString).getOrder(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getOrder(),
                 bundles[1].getProcessObject().getOrder());
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -812,7 +809,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
         int finalNumberOfInstances =
                 InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                        bundles[1].getProcessName(), EntityType.PROCESS).size();
         int expectedInstances =
                 getExpectedNumberOfWorkflowInstances(TimeUtil.dateToOozieDate(
                                 bundles[1].getProcessObject().getClusters().getClusters().get(0)
@@ -871,11 +868,11 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         AssertUtil.assertSucceeded(cluster3.getProcessHelper().resume(bundles[1].getProcessData()));
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
-        Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getParallel(),
                 initialConcurrency + 3);
-        Assert.assertEquals(Util.getProcessObject(prismString).getWorkflow().getPath(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getWorkflow().getPath(),
                 aggregator1Path);
-        Assert.assertEquals(Util.getProcessObject(prismString).getOrder(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getOrder(),
                 bundles[1].getProcessObject().getOrder());
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -886,7 +883,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         AssertUtil.checkNotStatus(cluster3OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
         int finalNumberOfInstances =
                 InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                        bundles[1].getProcessName(), EntityType.PROCESS).size();
 
         int expectedInstances =
                 getExpectedNumberOfWorkflowInstances(TimeUtil.dateToOozieDate(
@@ -924,13 +921,13 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 EntityType.PROCESS);
 
         String newFeedName = bundles[1].getInputFeedNameFromBundle() + "2";
-        String inputFeed = bundles[1].getInputFeedFromBundle();
+        FeedMerlin inputFeed = new FeedMerlin(bundles[1].getInputFeedFromBundle());
 
         bundles[1].addProcessInput(newFeedName, "inputData2");
-        inputFeed = Util.setFeedName(inputFeed, newFeedName);
+        inputFeed.setName(newFeedName);
 
         LOGGER.info(inputFeed);
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed.toString()));
 
         while (Util.parseResponse(
                 prism.getProcessHelper()
@@ -975,14 +972,14 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 EntityType.PROCESS);
 
         String newFeedName = bundles[1].getInputFeedNameFromBundle() + "2";
-        String inputFeed = bundles[1].getInputFeedFromBundle();
+        FeedMerlin inputFeed = new FeedMerlin(bundles[1].getInputFeedFromBundle());
 
         bundles[1].addProcessInput(newFeedName, "inputData2");
-        inputFeed = Util.setFeedName(inputFeed, newFeedName);
+        inputFeed.setName(newFeedName);
 
         AssertUtil.assertSucceeded(
                 cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed.toString()));
 
         while (Util.parseResponse(
                 prism.getProcessHelper()
@@ -1018,9 +1015,9 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         String originalProcess = bundles[1].getProcessData();
         String newFeedName = bundles[1].getInputFeedNameFromBundle() + "2";
-        String inputFeed = bundles[1].getInputFeedFromBundle();
+        FeedMerlin inputFeed = new FeedMerlin(bundles[1].getInputFeedFromBundle());
         bundles[1].addProcessInput(newFeedName, "inputData2");
-        inputFeed = Util.setFeedName(inputFeed, newFeedName);
+        inputFeed.setName(newFeedName);
         String updatedProcess = bundles[1].getProcessData();
 
         //now to schedule in 1 colo and let it remain in another
@@ -1038,7 +1035,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 EntityType.PROCESS);
 
         //submit new feed
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed.toString()));
 
         Util.shutDownService(cluster3.getProcessHelper());
 
@@ -1126,7 +1123,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         // one is updated correctly.
         int finalNumberOfInstances = InstanceUtil
                 .getProcessInstanceList(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS)
+                        bundles[1].getProcessName(), EntityType.PROCESS)
                 .size();
         Assert.assertEquals(finalNumberOfInstances,
                 getExpectedNumberOfWorkflowInstances(bundles[1]
@@ -1189,7 +1186,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         // one is updated correctly.
         int finalNumberOfInstances = InstanceUtil
                 .getProcessInstanceList(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS)
+                        bundles[1].getProcessName(), EntityType.PROCESS)
                 .size();
         Assert.assertEquals(finalNumberOfInstances,
                 getExpectedNumberOfWorkflowInstances(bundles[1]
@@ -1244,7 +1241,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(cluster3OC, bundles[1].getProcessData(), 1, 10);
 
         String prismString = dualComparison(prism, cluster2, bundles[1].getProcessData());
-        Assert.assertEquals(Util.getProcessObject(prismString).getFrequency(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getFrequency(),
                 new Frequency("" + 5, TimeUnit.minutes));
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -1297,7 +1294,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 prism.getProcessHelper().update(updatedProcess, updatedProcess);
         AssertUtil.assertSucceeded(response);
         String prismString = dualComparison(prism, cluster3, bundles[1].getProcessData());
-        Assert.assertEquals(Util.getProcessObject(prismString).getFrequency(),
+        Assert.assertEquals(new ProcessMerlin(prismString).getFrequency(),
                 new Frequency("" + 1, TimeUnit.months));
         dualComparison(prism, cluster3, bundles[1].getProcessData());
         //ensure that the running process has new coordinators created; while the submitted
@@ -1388,8 +1385,8 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         //ensure that the running process has new coordinators created; while the submitted
         // one is updated correctly.
         int finalNumberOfInstances =
-                InstanceUtil.getProcessInstanceListFromAllBundles(cluster3,
-                        Util.getProcessName(bundles[1].getProcessData()), EntityType.PROCESS).size();
+                InstanceUtil.getProcessInstanceListFromAllBundles(cluster3, bundles[1].getProcessName(),
+                   EntityType.PROCESS).size();
         Assert.assertEquals(finalNumberOfInstances,
                 getExpectedNumberOfWorkflowInstances(oldStartTime,
                         bundles[1].getProcessObject().getClusters().getClusters().get(0)

@@ -45,6 +45,7 @@ import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -157,7 +158,7 @@ public class Bundle {
         this.processData = bundle.getProcessData();
         this.clusters = new ArrayList<String>();
         for (String cluster : bundle.getClusters()) {
-            this.clusters.add(Util.getEnvClusterXML(cluster, prefix));
+            this.clusters.add(BundleUtil.getEnvClusterXML(cluster, prefix).toString());
         }
     }
 
@@ -192,9 +193,7 @@ public class Bundle {
     public List<String> getClusterNames() {
         List<String> clusterNames = new ArrayList<String>();
         for (String cluster : clusters) {
-            final org.apache.falcon.entity.v0.cluster.Cluster clusterObject =
-                Util.getClusterObject(cluster);
-            clusterNames.add(clusterObject.getName());
+            clusterNames.add(new ClusterMerlin(cluster).getName());
         }
         return clusterNames;
     }
@@ -229,7 +228,7 @@ public class Bundle {
      */
     public void generateUniqueBundle(String prefix) {
         /* creating new names */
-        List<ClusterMerlin> clusterMerlinList = ClusterMerlin.fromString(clusters);
+        List<ClusterMerlin> clusterMerlinList = BundleUtil.fromString(clusters);
         Map<String, String> clusterNameMap = new HashMap<String, String>();
         for (ClusterMerlin clusterMerlin : clusterMerlinList) {
             clusterNameMap.putAll(clusterMerlin.setUniqueName(prefix));
@@ -728,7 +727,7 @@ public class Bundle {
             FeedMerlin feedObject = new FeedMerlin(dataSets.get(i));
             org.apache.falcon.entity.v0.feed.Cluster cluster =
                 new org.apache.falcon.entity.v0.feed.Cluster();
-            cluster.setName(Util.getClusterObject(clusterData).getName());
+            cluster.setName(new ClusterMerlin(clusterData).getName());
             cluster.setValidity(feedObject.getClusters().getClusters().get(0).getValidity());
             cluster.setType(type);
             cluster.setRetention(feedObject.getClusters().getClusters().get(0).getRetention());
@@ -742,7 +741,7 @@ public class Bundle {
         //now to add cluster to process
         ProcessMerlin processObject = new ProcessMerlin(processData);
         Cluster cluster = new Cluster();
-        cluster.setName(Util.getClusterObject(clusterData).getName());
+        cluster.setName(new ClusterMerlin(clusterData).getName());
         org.apache.falcon.entity.v0.process.Validity v =
             processObject.getClusters().getClusters().get(0).getValidity();
         if (StringUtils.isNotEmpty(startTime)) {
@@ -791,8 +790,7 @@ public class Bundle {
     }
 
     public String getProcessName() {
-
-        return Util.getProcessName(this.getProcessData());
+        return new ProcessMerlin(this.processData).getName();
     }
 
     public void setProcessLibPath(String libPath) {

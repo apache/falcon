@@ -163,8 +163,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
         int counter = OSUtil.IS_WINDOWS ? 100 : 50;
-        InstanceUtil.waitForBundleToReachState(cluster, Util.getProcessName(bundles[0]
-            .getProcessData()), Job.Status.SUCCEEDED, counter);
+        InstanceUtil.waitForBundleToReachState(cluster, bundles[0].getProcessName(), Job.Status.SUCCEEDED, counter);
         r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }

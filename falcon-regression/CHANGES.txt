@@ -63,6 +63,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1112 Migrate methods related to *Merlin.java classes from Util.java to their respective
+    *Merlin.java (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-1113 Clean up data files in merlin resource directory. Create better names for them
    (Paul Isaychuk via Ruslan Ostafiychuk)
 

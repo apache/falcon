@@ -516,12 +516,12 @@ public class HCatProcessTest extends BaseTestClass {
         bundles[0].setInputFeedValidity(startDate, endDate);
 
         //
-        String nonHCatFeed = BundleUtil.readELBundle().getOutputFeedFromBundle();
+        FeedMerlin nonHCatFeed = new FeedMerlin(BundleUtil.readELBundle().getOutputFeedFromBundle());
         final String outputFeedName = bundles[0].getOutputFeedNameFromBundle();
-        nonHCatFeed = Util.setFeedName(nonHCatFeed, outputFeedName);
+        nonHCatFeed.setName(outputFeedName);
         final List<String> clusterNames = bundles[0].getClusterNames();
         Assert.assertEquals(clusterNames.size(), 1, "Expected only one cluster in the bundle.");
-        nonHCatFeed = Util.setClusterNameInFeed(nonHCatFeed, clusterNames.get(0), 0);
+        nonHCatFeed.setClusterNameInFeed(clusterNames.get(0), 0);
         bundles[0].writeFeedElement(nonHCatFeed, outputFeedName);
         bundles[0].setOutputFeedLocationData(outputHDFSDir + "/"
             + StringUtils.join(new String[]{"${YEAR}", "${MONTH}", "${DAY}", "${HOUR}"}, separator));
@@ -567,12 +567,12 @@ public class HCatProcessTest extends BaseTestClass {
                 .location(outputHDFSDir)
                 .build());
 
-        String nonHCatFeed = BundleUtil.readELBundle().getInputFeedFromBundle();
+        FeedMerlin nonHCatFeed = new FeedMerlin(BundleUtil.readELBundle().getInputFeedFromBundle());
         final String inputFeedName = bundles[0].getInputFeedNameFromBundle();
-        nonHCatFeed = Util.setFeedName(nonHCatFeed, inputFeedName);
+        nonHCatFeed.setName(inputFeedName);
         final List<String> clusterNames = bundles[0].getClusterNames();
         Assert.assertEquals(clusterNames.size(), 1, "Expected only one cluster in the bundle.");
-        nonHCatFeed = Util.setClusterNameInFeed(nonHCatFeed, clusterNames.get(0), 0);
+        nonHCatFeed.setClusterNameInFeed(clusterNames.get(0), 0);
         bundles[0].writeFeedElement(nonHCatFeed, inputFeedName);
         bundles[0].setInputFeedDataPath(inputHDFSDir + "/"
             + StringUtils.join(new String[]{"${YEAR}", "${MONTH}", "${DAY}", "${HOUR}"}, separator));

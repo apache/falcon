@@ -19,6 +19,7 @@
 package org.apache.falcon.regression;
 
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -94,11 +95,10 @@ public class NewRetryTest extends BaseTestClass {
         endDate = new DateTime(DateTimeZone.UTC).plusMinutes(2);
         bundles[0].setProcessValidity(startDate, endDate);
 
-        String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
-        feed = Util.insertLateFeedValue(feed, new Frequency("minutes(8)"));
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        feed.setFeedPathValue(latePath).insertLateFeedValue(new Frequency("minutes(8)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
-        bundles[0].getDataSets().add(feed);
+        bundles[0].getDataSets().add(feed.toString());
         bundles[0].setOutputFeedLocationData(baseTestDir + "/output" + MINUTE_DATE_PATTERN);
         bundles[0].submitClusters(prism);
     }
@@ -678,11 +678,11 @@ public class NewRetryTest extends BaseTestClass {
     @Test(dataProvider = "DP", groups = {"0.2.2", "retry"}, enabled = false)
     public void testRetryInSuspendedAndResumeCaseWithLateData(Retry retry) throws Exception {
 
-        String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
-        feed = Util.insertLateFeedValue(feed, new Frequency("minutes(10)"));
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        feed.setFeedPathValue(latePath);
+        feed.insertLateFeedValue(new Frequency("minutes(10)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
-        bundles[0].getDataSets().add(feed);
+        bundles[0].getDataSets().add(feed.toString());
         bundles[0].setRetry(retry);
 
         for (String data : bundles[0].getDataSets()) {
@@ -772,13 +772,13 @@ public class NewRetryTest extends BaseTestClass {
     @Test(dataProvider = "DP", groups = {"0.2.2", "retry"}, enabled = false)
     public void testRetryInLateDataCase(Retry retry) throws Exception {
 
-        String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        feed.setFeedPathValue(latePath);
 
-        feed = Util.insertLateFeedValue(feed, getFrequency(retry));
+        feed.insertLateFeedValue(getFrequency(retry));
 
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
-        bundles[0].getDataSets().add(feed);
+        bundles[0].getDataSets().add(feed.toString());
 
         bundles[0].setRetry(retry);
 
@@ -852,11 +852,11 @@ public class NewRetryTest extends BaseTestClass {
     @Test(dataProvider = "DP", groups = {"0.2.2", "retry"}, enabled = false)
     public void testRetryInDeleteAfterPartialRetryCase(Retry retry) throws Exception {
 
-        String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
-        feed = Util.insertLateFeedValue(feed, new Frequency("minutes(1)"));
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
+        feed.setFeedPathValue(latePath);
+        feed.insertLateFeedValue(new Frequency("minutes(1)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
-        bundles[0].getDataSets().add(feed);
+        bundles[0].getDataSets().add(feed.toString());
 
         bundles[0].setRetry(retry);
 
