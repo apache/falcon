@@ -117,6 +117,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1123 Stacktrace printed by Falcon CLI is not useful to user
+   (Pallavi Rao via Suhas Vasu)
+
    FALCON-1117 Falcon Client throws NPE on no emtpy result in
    reverse lookup (Ajay Yadava via Suhas Vasu)
 

@@ -208,6 +208,9 @@ public class FalconCLI {
             ERR.get().println("Stacktrace:");
             ex.printStackTrace();
             return -1;
+        } catch (FalconCLIException e) {
+            ERR.get().println("ERROR: " + e.getMessage());
+            return -1;
         } catch (Exception ex) {
             ERR.get().println("Stacktrace:");
             ex.printStackTrace();
