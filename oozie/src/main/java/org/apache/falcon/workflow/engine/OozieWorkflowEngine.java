@@ -808,7 +808,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             throw new IllegalArgumentException("Unhandled action " + action);
         }
 
-        instance.status = WorkflowStatus.valueOf(mapActionStatus(status));
+        // status can be CoordinatorAction.Status, WorkflowJob.Status or Job.Status
+        try {
+            instance.status = WorkflowStatus.valueOf(mapActionStatus(status));
+        } catch (IllegalArgumentException e) {
+            LOG.error("Job status not defined in Instance status: {}", status);
+            instance.status = WorkflowStatus.UNDEFINED;
+        }
     }
 
     private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
