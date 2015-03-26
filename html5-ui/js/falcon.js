@@ -31,7 +31,14 @@
   function add_user(url) {
      var paramSeparator = (url.indexOf('?') != -1) ? '&' : '?';
      var user_id = getQuery_params()['user.name'];
-     return (user_id == undefined) ? url : (url + paramSeparator + 'user.name=' + user_id);
+     if (user_id == undefined) {
+        user_id = localStorage.getItem('falconUserName');
+        if (user_id == undefined) {
+            user_id = prompt("Please enter user.name", "");
+        }
+     }
+     localStorage.setItem('falconUserName', user_id);
+     return (url + paramSeparator + 'user.name=' + user_id);
   }
 
   function getQuery_params() {
