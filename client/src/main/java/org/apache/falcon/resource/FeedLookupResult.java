@@ -57,8 +57,10 @@ public class FeedLookupResult extends APIResult {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        for (FeedProperties element : elements) {
-            buffer.append(element.toString());
+        if (elements != null) {
+            for (FeedProperties element : elements) {
+                buffer.append(element.toString());
+            }
         }
         return buffer.toString();
     }

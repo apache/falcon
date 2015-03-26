@@ -267,10 +267,14 @@ public final class ResponseHelper {
 
     public static String getString(FeedLookupResult feedLookupResult) {
         StringBuilder sb = new StringBuilder();
-        sb.append(feedLookupResult.toString());
-        sb.append("\nAdditional Information:\n");
-        sb.append("Response: ").append(feedLookupResult.getMessage());
-        sb.append("Request Id: ").append(feedLookupResult.getRequestId());
+        String results = feedLookupResult.toString();
+        if (StringUtils.isEmpty(results)) {
+            sb.append("No matching feeds found!");
+        } else {
+            sb.append(results);
+        }
+        sb.append("\n\nResponse: ").append(feedLookupResult.getMessage());
+        sb.append("\nRequest Id: ").append(feedLookupResult.getRequestId());
         return sb.toString();
     }
 }

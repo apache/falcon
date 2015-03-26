@@ -117,6 +117,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1117 Falcon Client throws NPE on no emtpy result in
+   reverse lookup (Ajay Yadava via Suhas Vasu)
+
    FALCON-1099 FeedReplicator: throws NPE (Sowmya Ramesh via Suhas Vasu)
 
    FALCON-1064 Build hangs at the following test: JMSMessageProducerTest
