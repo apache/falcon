@@ -10,6 +10,9 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1086 Support execution-order of a feed to be overridden
+   for replication coord (Shaik Idris Ali via Suhas Vasu)
+
    FALCON-915 Failed to load data. Error: 400 Param user.name
    can't be empty - Web UI/0.6 (Balu Vellanki via Suhas Vasu)
 

@@ -168,6 +168,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals("FALCON_FEED_REPLICATION_" + feed.getName() + "_"
                 + srcCluster.getName(), coord.getName());
         Assert.assertEquals("${coord:minutes(20)}", coord.getFrequency());
+        Assert.assertEquals("2", coord.getControls().getConcurrency());
+        Assert.assertEquals("120", coord.getControls().getTimeout());
+        Assert.assertEquals("FIFO", coord.getControls().getExecution());
         SYNCDATASET inputDataset = (SYNCDATASET) coord.getDatasets()
                 .getDatasetOrAsyncDataset().get(0);
         SYNCDATASET outputDataset = (SYNCDATASET) coord.getDatasets()
