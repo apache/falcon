@@ -28,6 +28,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.service.ConfigurationChangeListener;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.FalconRadixUtils;
 import org.apache.falcon.util.RadixTree;
 import org.slf4j.Logger;
@@ -83,17 +84,19 @@ public final class FeedLocationStore implements ConfigurationChangeListener {
         if (entity.getEntityType() == EntityType.FEED){
             Feed feed = (Feed) entity;
             List<Cluster> clusters = feed.getClusters().getClusters();
-            for(Cluster cluster: clusters){
-                List<Location> clusterSpecificLocations = FeedHelper.getLocations(FeedHelper.getCluster(feed,
-                        cluster.getName()), feed);
-                if (clusterSpecificLocations != null) {
-                    for(Location location: clusterSpecificLocations){
-                        if (location != null && StringUtils.isNotBlank(location.getPath())){
-                            FeedLookupResult.FeedProperties value = new FeedLookupResult.FeedProperties(feed.getName(),
-                                    location.getType(), cluster.getName());
-                            store.insert(StringUtils.trim(location.getPath()), value);
-                            LOG.debug("Inserted location: {} for feed: {} and cluster: {}",
-                                    location.getPath(), feed.getName(), cluster.getName());
+            for(Cluster cluster: clusters) {
+                if (DeploymentUtil.getCurrentClusters().contains(cluster.getName())) {
+                    List<Location> clusterSpecificLocations = FeedHelper.getLocations(FeedHelper.getCluster(feed,
+                            cluster.getName()), feed);
+                    if (clusterSpecificLocations != null) {
+                        for (Location location : clusterSpecificLocations) {
+                            if (location != null && StringUtils.isNotBlank(location.getPath())) {
+                                FeedLookupResult.FeedProperties value = new FeedLookupResult.FeedProperties(
+                                        feed.getName(), location.getType(), cluster.getName());
+                                store.insert(StringUtils.trim(location.getPath()), value);
+                                LOG.debug("Inserted location: {} for feed: {} and cluster: {}",
+                                        location.getPath(), feed.getName(), cluster.getName());
+                            }
                         }
                     }
                 }

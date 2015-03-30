@@ -20,6 +20,7 @@ package org.apache.falcon.entity.store;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
@@ -45,7 +46,7 @@ import java.util.Collection;
 /**
  * Tests for FeedLocationStore.
  */
-public class FeedLocationStoreTest {
+public class FeedLocationStoreTest extends AbstractTestBase {
     private ConfigurationStore store;
 
 
@@ -57,8 +58,11 @@ public class FeedLocationStoreTest {
         FileUtils.deleteDirectory(new File(location));
 
         cleanupStore();
+        String listeners = StartupProperties.get().getProperty("configstore.listeners");
         StartupProperties.get().setProperty("configstore.listeners",
-                "org.apache.falcon.entity.store.FeedLocationStore");
+                listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
+//        StartupProperties.get().setProperty("configstore.listeners",
+//                "org.apache.falcon.entity.store.FeedLocationStore");
         store = ConfigurationStore.get();
         store.init();
 
@@ -68,6 +72,7 @@ public class FeedLocationStoreTest {
     @BeforeMethod
     public void setUp() throws FalconException{
         cleanupStore();
+        createClusters();
     }
 
     @AfterMethod
@@ -200,7 +205,7 @@ public class FeedLocationStoreTest {
         return location;
     }
 
-    private void cleanupStore() throws FalconException {
+    protected void cleanupStore() throws FalconException {
         store = ConfigurationStore.get();
         for (EntityType type : EntityType.values()) {
             Collection<String> entities = store.getEntities(type);
@@ -244,5 +249,15 @@ public class FeedLocationStoreTest {
         clusters.getClusters().add(cluster2);
 
         return clusters;
+    }
+
+    private void createClusters() throws FalconException {
+        String[] clusterNames = {"cluster1WithLocations", "cluster2WithLocations", "blankCluster1", "blankCluster2"};
+        for (String name : clusterNames) {
+            org.apache.falcon.entity.v0.cluster.Cluster cluster = new org.apache.falcon.entity.v0.cluster.Cluster();
+            cluster.setName(name);
+            cluster.setColo("default");
+            store.publish(EntityType.CLUSTER, cluster);
+        }
     }
 }

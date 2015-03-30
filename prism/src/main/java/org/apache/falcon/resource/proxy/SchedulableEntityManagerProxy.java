@@ -42,6 +42,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -492,33 +493,62 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public FeedLookupResult reverseLookup(
             @Dimension("type") @PathParam("type") final String type,
             @Dimension("path") @QueryParam("path") final String path) {
-        return super.reverseLookup(type, path);
+        String entity = "DummyEntity"; // A dummy entity name to get around
+        return new EntityProxy<FeedLookupResult>(type, entity, FeedLookupResult.class) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return getAllColos();
+            }
+
+            @Override
+            protected FeedLookupResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("reverseLookup", type, path);
+            }
+        }.execute();
+
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private abstract class EntityProxy {
+    private abstract class EntityProxy<T extends APIResult> {
+        private final Class<T> clazz;
         private String type;
         private String name;
 
-        public EntityProxy(String type, String name) {
+        public EntityProxy(String type, String name, Class<T> resultClazz) {
+            this.clazz = resultClazz;
             this.type = type;
             this.name = name;
         }
 
-        public APIResult execute() {
+
+        private T getResultInstance(APIResult.Status status, String message) {
+            try {
+                Constructor<T> constructor = clazz.getConstructor(APIResult.Status.class, String.class);
+                return constructor.newInstance(status, message);
+            } catch (Exception e) {
+                throw new FalconRuntimException("Unable to consolidate result.", e);
+            }
+        }
+
+        public EntityProxy(String type, String name) {
+            this(type, name, (Class<T>) APIResult.class);
+        }
+
+        public T execute() {
             Set<String> colos = getColosToApply();
 
-            Map<String, APIResult> results = new HashMap<String, APIResult>();
+            Map<String, T> results = new HashMap();
 
             for (String colo : colos) {
                 try {
                     results.put(colo, doExecute(colo));
                 } catch (FalconException e) {
-                    results.put(colo,
-                            new APIResult(APIResult.Status.FAILED, e.getClass().getName() + "::" + e.getMessage()));
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, e.getClass().getName() + "::"
+                            + e.getMessage()));
                 }
             }
-            APIResult finalResult = consolidateResult(results, APIResult.class);
+
+            T finalResult = consolidateResult(results, clazz);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
                 throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
             } else {
@@ -530,6 +560,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return getApplicableColos(type, name);
         }
 
-        protected abstract APIResult doExecute(String colo) throws FalconException;
+        protected abstract T doExecute(String colo) throws FalconException;
     }
 }

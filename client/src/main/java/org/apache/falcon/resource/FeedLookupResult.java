@@ -54,6 +54,25 @@ public class FeedLookupResult extends APIResult {
         this.elements = elements;
     }
 
+
+    @Override
+    public Object[] getCollection() {
+        return getElements();
+    }
+
+    @Override
+    public void setCollection(Object[] items) {
+        if (items == null) {
+            setElements(new FeedProperties[0]);
+        } else {
+            FeedProperties[] newInstances = new FeedProperties[items.length];
+            for (int index = 0; index < items.length; index++) {
+                newInstances[index] = (FeedProperties)items[index];
+            }
+            setElements(newInstances);
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();

@@ -123,11 +123,14 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1125 Feed Lookup API doesnt work via prism
+   (Ajay Yadava via Suhas Vasu)
+
    FALCON-1119 Instance logs option is not returning the log location
    (Suhas Vasu)
 
    FALCON-1100 UI : Failed to load data. 404 not found
-   (Pallavi Rao via Suhas Vasu)
+   (Sowmya Ramesh via Suhas Vasu)
 
    FALCON-1123 Stacktrace printed by Falcon CLI is not useful to user
    (Pallavi Rao via Suhas Vasu)

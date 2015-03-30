@@ -952,7 +952,7 @@ public abstract class AbstractEntityManager {
      * @param instancePath location of the data
      * @return Feed Name, type of the data and cluster name.
      */
-    public FeedLookupResult reverseLookup(String type, String instancePath) {
+    public APIResult reverseLookup(String type, String instancePath) {
         try {
             EntityType entityType = EntityType.getEnum(type);
             if (entityType != EntityType.FEED) {
