@@ -123,6 +123,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1119 Instance logs option is not returning the log location
+   (Suhas Vasu)
+
    FALCON-1100 UI : Failed to load data. 404 not found
    (Pallavi Rao via Suhas Vasu)
 

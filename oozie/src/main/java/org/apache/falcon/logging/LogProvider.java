@@ -81,11 +81,11 @@ public final class LogProvider {
                     EntityUtil.getLogPath(cluster, entity) + "/job-"
                             + EntityUtil.fromUTCtoURIDate(instance.instance) + "/*");
 
-            FileStatus[] runs = fs.globStatus(jobPath);
-            if (runs.length > 0) {
-                // this is the latest run, dirs are sorted in increasing
-                // order of runs
-                return runs[runs.length - 1].getPath().getName();
+            //Assumption here is - Each wf run will have a directory
+            //the corresponding job logs are stored within the respective dir
+            Path maxRunPath = findMaxRunIdPath(fs, jobPath);
+            if (maxRunPath != null) {
+                return maxRunPath.getName();
             } else {
                 LOG.warn("No run dirs are available in logs dir: {}", jobPath);
                 return "-";
@@ -145,7 +145,7 @@ public final class LogProvider {
     }
 
     private String getActionStatus(String fileName) {
-        return fileName.contains("_SUCCEEDED.log") ? "SUCCEEDED" : "FAILED";
+        return fileName.matches("(.*)SUCCEEDED(.*).log") ? "SUCCEEDED" : "FAILED";
     }
 
     private String getDFSbrowserUrl(String hdfsPath, String logPath,
@@ -158,5 +158,17 @@ public final class LogProvider {
 
     private String getFormatedRunId(String runId) {
         return String.format("%03d", Integer.parseInt(runId));
+    }
+
+    private Path findMaxRunIdPath(FileSystem fs, Path jobLogPath) throws IOException{
+        // In case of multiple runs, dirs are sorted in increasing
+        // order of runs. If runId is not specified, return the max runId (whose dir exists)
+        Path maxRunIdPath = null;
+        for (FileStatus fileStatus : fs.globStatus(jobLogPath)) {
+            if (fs.isDirectory(fileStatus.getPath())) {
+                maxRunIdPath = fileStatus.getPath();
+            }
+        }
+        return maxRunIdPath;
     }
 }

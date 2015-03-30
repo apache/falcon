@@ -72,6 +72,8 @@ public class JobLogMover {
                 return 0;
             }
 
+            //Assumption is - Each wf run will have a directory
+            //the corresponding job logs are stored within the respective dir
             Path path = new Path(context.getLogDir() + "/"
                     + String.format("%03d", context.getWorkflowRunId()));
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri());
