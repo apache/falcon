@@ -63,6 +63,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-1088 Fixing FeedDelayParallelTimeoutTest and renaming it to FeedDelayTest(Pragya M via 
+   Samarth G)
+
    FALCON-1112 Migrate methods related to *Merlin.java classes from Util.java to their respective
     *Merlin.java (Paul Isaychuk via Ruslan Ostafiychuk)
 

@@ -211,6 +211,13 @@ public class FeedMerlin extends Feed {
             cluster.setLocations(feedLocations);
             return this;
         }
+
+        public FeedClusterBuilder withDelay(Frequency frequency) {
+            cluster.setDelay(frequency);
+            return this;
+        }
+
+
     }
 
     /**
