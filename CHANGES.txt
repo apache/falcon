@@ -13,7 +13,6 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
-
    FALCON-1128 Adding getter methods to FeedLookupResult(KArishma G 
    via Samarth)
 
@@ -130,6 +129,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1132 Falcon trunk is broken due to failure in IT test
+   (Ajay Yadava via Suhas Vasu)
+
    FALCON-1097 UT failure for ExpressionHelperTest
    (Ajay Yadava via Shaik Idris)
 

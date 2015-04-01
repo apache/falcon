@@ -88,6 +88,7 @@ public class FeedLookupResult extends APIResult {
      * A single instance in the result.
      */
     @XmlRootElement(name = "feed")
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class FeedProperties {
         @XmlElement
         private String feedName;
