@@ -44,6 +44,10 @@
                             <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
                             <webResources>
                                 <resource>
+                                    <directory>../falcon-ui/dist</directory>
+                                    <targetPath>public</targetPath>
+                                </resource>
+                                <resource>
                                     <directory>src/main/webapp/WEB-INF/distributed</directory>
                                     <targetPath>WEB-INF</targetPath>
                                 </resource>
@@ -239,6 +243,10 @@
                     <webResources>
                         <resource>
                             <directory>../html5-ui</directory>
+                        </resource>
+                        <resource>
+                            <directory>../falcon-ui/dist</directory>
+                            <targetPath>public</targetPath>
                         </resource>
                         <resource>
                             <directory>src/main/webapp/WEB-INF/embedded</directory>
@@ -478,6 +486,34 @@
                     </execution>
                 </executions>
             </plugin>
+
+	    <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                <excludes>
+		  <exclude>*.txt</exclude>
+	          <exclude>**/*.txt</exclude>
+	          <exclude>.git/**</exclude>
+	          <exclude>**/.idea/**</exclude>
+	          <exclude>**/*.twiki</exclude>
+	          <exclude>**/*.iml</exclude>
+	          <exclude>**/target/**</exclude>
+	          <exclude>**/activemq-data/**</exclude>
+	          <exclude>**/build/**</exclude>
+	          <exclude>**/*.patch</exclude>
+	          <exclude>derby.log</exclude>
+	          <exclude>**/logs/**</exclude>
+	          <exclude>**/.classpath</exclude>
+	          <exclude>**/.project</exclude>
+	          <exclude>**/.settings/**</exclude>
+	          <exclude>**/test-output/**</exclude>
+	          <exclude>**/data.txt</exclude>
+	          <exclude>**/maven-eclipse.xml</exclude>
+	          <exclude>**/.externalToolBuilders/**</exclude>
+                </excludes>
+              </configuration>
+      	    </plugin>	
 
         </plugins>
     </build>

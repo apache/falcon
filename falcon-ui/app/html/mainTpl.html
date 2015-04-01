@@ -1,0 +1,39 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+
+<div class="col-sm-24 dashboardBox"> 
+  <div class="row">   
+    <div class="col-sm-8">
+      <h3>Clusters</h3>
+      <entity-summary entities="lists.clusterList" type="cluster"></entity-summary>
+      <entities-list input="lists.clusterList" type="cluster" entity-details="entityDetails" clone="cloneEntity" remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity" resume="resumeEntity"></entities-list>
+    </div>
+    <div class="col-sm-8">
+      <h3>Feeds</h3>
+      <entity-summary entities="lists.feedList" type="feed"></entity-summary>    
+      <entities-list input="lists.feedList" type="feed" entity-details="entityDetails" clone="cloneEntity" remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity" resume="resumeEntity"></entities-list>
+    </div>
+    <div class="col-sm-8">
+      <h3>Processes</h3>
+      <entity-summary entities="lists.processList" type="process"></entity-summary>      
+      <entities-list input="lists.processList" entity-details="entityDetails" type="process" clone="cloneEntity" remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity" resume="resumeEntity"></entities-list>
+    </div>
+  </div>
+</div>

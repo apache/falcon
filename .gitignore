@@ -37,3 +37,8 @@ build
 #log files
 logs
 *.log
+
+#Falcon UI NPM files
+falcon-ui/dist
+falcon-ui/node
+falcon-ui/node_modules

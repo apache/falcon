@@ -1,0 +1,96 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<form name="processForm" class="mt10">
+  <div class="col-sm-offset-1 col-sm-22">
+    <div ng-repeat="cluster in process.clusters" class="row">
+      <div class="col-xs-24 detailsBox processCluster">       
+          
+        <h5>Cluster</h5>
+        <div class="row">
+          <div class="col-xs-24">
+            <label class="light">Name</label>
+            <select ng-model="cluster.name" ng-required="true" class="form-control padding0" validation-message="{{validations.messages.cluster}}">
+              <option value="" disabled selected style='display:none;'>-Select cluster-</option>
+              <option ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+        
+        <h5>Validity</h5>
+        <div class="row">
+          <div class="col-xs-12">
+       
+            <div>Start</div>
+           
+            <div class="input-group input-group-xs">
+              <span class="input-group-addon btn btn-default entypo calendar" ng-click="openDatePicker($event, cluster.validity.start)"></span>
+              <input type="text" class="form-control" placeholder="Start Date"
+                     datepicker-popup="{{dateFormat}}"
+                     ng-model="cluster.validity.start.date"
+                     is-open="cluster.validity.start.opened"
+                     ng-required="true">
+            </div>     
+          </div>
+    
+          <div class="col-xs-12">
+            <div>End</div>
+            
+            <div class="input-group input-group-xs">
+              <span class="input-group-addon btn btn-default entypo calendar" ng-click="openDatePicker($event, cluster.validity.end)"></span>
+              <input type="text" class="form-control" placeholder="End Date"
+                     datepicker-popup="{{dateFormat}}"
+                     ng-model="cluster.validity.end.date"
+                     is-open="cluster.validity.end.opened"
+                     ng-required="true">
+            </div>    
+          </div>
+          <div class="col-xs-24 mt10">
+            <div class="btn btn-default pull-right btn-xs" ng-click="removeCluster($index)" ng-if="!$first">
+              - delete
+            </div>
+          </div>
+        </div>
+        
+        
+        
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 mt10">
+    <div class="btn btn-default btn-xs" ng-click="addCluster()">
+      + add cluster
+    </div>
+  </div>
+  <div class="col-xs-24">
+    <div class="row feedBottomButtons">
+      <div class="btn btn-default col-xs-6" ng-click="goBack('forms.process.properties')" >
+        Previous
+      </div>
+      <div class="btn btn-default col-xs-6 pull-right" ng-click="goNext(processForm.$invalid, 'forms.process.io')" >
+        Next
+      </div>
+      <u class="col-xs-3 pull-right" ui-sref="main">
+        Cancel
+      </u>
+    </div>
+  </div>
+  
+</form>

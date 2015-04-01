@@ -1,0 +1,121 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<form name="feedForm">
+
+
+    <div class="col-sm-24">
+      <label class="light">Name</label>
+      <input type="text" class="form-control" ng-disabled="!cloningMode" ng-keydown="validations.acceptNoSpaces($event)"
+             check-name="{type:'feed', check:cloningMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
+             ng-model="feed.name" ng-required="true" ng-pattern="validations.patterns.name"/>
+    </div>
+    <div class="col-sm-24">
+      <label class="light">Description</label>
+      <input type="text" class="form-control"
+        ng-model="feed.description"
+        ng-pattern="validations.patterns.freeText"/>
+    </div>
+
+    <div class="col-sm-24">
+      <label class="light">Tags</label>
+    </div>
+
+    <div class="col-sm-24">
+      <div ng-repeat="tag in feed.tags">
+        <div class="row dynamic-table-spacer">
+          <div class="col-xs-10">
+            <input type="text" class="form-control" ng-model="tag.key"
+              ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
+          </div>
+          <div class="col-xs-11">
+            <input type="text" class="form-control"
+              ng-model="tag.value" ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
+          </div>
+          <div class="col-xs-3">
+            <div class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="$index>0">
+              <span class="entypo minus"></span> delete
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-24 dynamic-table-spacer">
+      <div class="btn btn-default btn-xs" ng-click="addTag()">
+        <span class="entypo plus"></span> add tag
+      </div>
+    </div>
+
+    <div class="col-sm-24">
+      <label class="light">Groups (comma separated)</label>
+      <input type="text" class="form-control"
+        ng-pattern="validations.patterns.commaSeparated"
+        ng-model="feed.groups"/>
+    </div>
+
+    <h4 class="col-sm-24"> Access Control List </h4>
+    <div class="col-sm-8">
+      <label class="light">Owner</label>
+      <input type="text" class="form-control"
+        ng-pattern="validations.patterns.unixId"
+        ng-model="feed.ACL.owner"/>
+    </div>
+    <div class="col-sm-8">
+      <label class="light">Group</label>
+      <input type="text" class="form-control"
+       ng-pattern="validations.patterns.unixId"
+       ng-model="feed.ACL.group"/>
+    </div>
+    <div class="col-sm-8">
+      <label class="light">Permissions</label>
+      <input type="text" class="form-control"
+        ng-pattern="validations.patterns.unixPermissions"
+        ng-model="feed.ACL.permission"/>
+    </div>
+
+    <h4 class="col-sm-24">Schema</h4>
+    <div class="col-sm-12">
+      <label class="light">Location</label>
+      <input type="text" class="form-control" validation-message="{{validations.messages.location}}"
+        ng-maxlength="200"
+        ng-pattern="validations.patterns.osPath"
+        ng-model="feed.schema.location"
+        ng-required="true"/>
+    </div>
+    <div class="col-sm-12">
+      <label class="light">Provider</label>
+      <input type="text" class="form-control" validation-message="{{validations.messages.provider}}"
+        ng-pattern="validations.patterns.osPath"
+        ng-model="feed.schema.provider"
+        ng-required="true"/>
+    </div>
+  
+
+  <div class="col-xs-24">
+    <div class="feedBottomButtons row">
+      <div class="btn btn-default col-xs-6 pull-right" ng-click="goNext(feedForm.$invalid, 'forms.feed.properties')">
+        Next
+      </div>
+      <u class="col-xs-3 pull-right" ng-click="cancel()" ui-sref="main">
+        Cancel
+      </u>
+    </div>
+  </div>
+
+</form>

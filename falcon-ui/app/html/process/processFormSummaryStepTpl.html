@@ -1,0 +1,168 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<form name="processForm" class="mt10">
+
+  <div class="row">
+    <h4 class="col-sm-24">Process</h4>
+
+    <div class="clearfix hidden-md">&nbsp</div>
+
+    <label class="col-sm-24">Name</label>
+    <label class="col-sm-24 light">{{process.name}}</label>
+
+    <div class="clearfix hidden-md">&nbsp</div>
+
+    <label class="col-sm-24">Tags</label>
+    <div class="col-sm-24">
+      <div ng-repeat="tag in process.tags | filter:{key: '!!'}">
+        {{tag.key}} = {{tag.value}}
+      </div>
+      <div ng-show="!hasTags()">No tags selected</div>
+    </div>
+
+    <div class="clearfix hidden-md">&nbsp</div>
+
+    <h4 class="col-sm-24">Workflow</h4>
+    <div class="clearfix hidden-md">&nbsp</div>
+    <div class="row">
+      <div class="col-sm-8">
+        <label class="col-sm-24">Name</label>
+        <label class="col-sm-24 light">{{process.workflow.name}}</label>
+      </div>
+      <div class="col-sm-8">
+        <label class="col-sm-24">Engine</label>
+        <label class="col-sm-24 light">{{process.workflow.engine}}</label>
+      </div>
+      <div class="col-sm-8">
+        <label class="col-sm-24">Version</label>
+        <label class="col-sm-24 light">{{process.workflow.version}}</label>
+      </div>
+    </div>
+    <label class="col-sm-24">Path</label>
+    <label class="col-sm-24 light">{{process.workflow.path}}</label>
+
+
+    <h4 class="col-sm-24">Timing</h4>
+    <div class="clearfix hidden-md">&nbsp</div>
+    <label class="col-sm-24">Timezone</label>
+    <label class="col-sm-24 light">{{optional(process.timezone)}}</label>
+    <div class="row">
+      <div class="col-sm-8">
+        <label class="col-sm-24">Frequency</label>
+        <label class="col-sm-24 light">Every {{process.frequency.quantity}} {{process.frequency.unit}}</label>
+      </div>
+      <div class="col-sm-8">
+        <label class="col-sm-24">Max. parallel instances</label>
+        <label class="col-sm-24 light">{{process.parallel}}</label>
+      </div>
+      <div class="col-sm-8">
+        <label class="col-sm-24">Order</label>
+        <label class="col-sm-24 light">{{optional(process.order)}}</label>
+      </div>
+    </div>
+    <div class="clearfix hidden-md">&nbsp</div>
+    <h4 class="col-sm-24">Retry</h4>
+    <div class="clearfix hidden-md">&nbsp</div>
+    <div class="row">
+      <div class="col-sm-8">
+        <label class="col-sm-24">Policy</label>
+        <label class="col-sm-24 light">{{process.retry.policy}}</label>
+      </div>
+      <div class="col-sm-8">
+        <label class="col-sm-24">Attempts</label>
+        <label class="col-sm-24 light">{{process.retry.attempts}}</label>
+      </div>
+      <div class="col-sm-8">
+        <label class="col-sm-24">Delay</label>
+        <label class="col-sm-24 light">Up to {{process.retry.delay.quantity}} {{process.retry.delay.unit}}</label>
+      </div>
+    </div>
+    <div class="clearfix hidden-md">&nbsp</div>
+    <h4 class="col-sm-24">Clusters</h4>
+    <div ng-repeat="cluster in process.clusters">
+      <div class="row col-sm-offset-1 col-sm-22 detailsBox">
+        <label class="col-sm-24">Name</label>
+        <label class="col-sm-24 light">{{cluster.name}}</label>
+        <div class="clearfix hidden-md">&nbsp</div>
+        <h4 class="col-sm-24">Validity</h4>
+        <div class="row">
+          <div class="col-sm-12">
+            <label class="col-sm-24">Start</label>
+            <label class="col-sm-24 light">{{cluster.validity.start.date}} {{cluster.validity.start.time}}</label>
+          </div>
+          <div class="col-sm-12">
+            <label class="col-sm-24">End</label>
+            <label class="col-sm-24 light">{{cluster.validity.end.date}} {{cluster.validity.end.time}}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="clearfix hidden-md">&nbsp</div>
+    <h4 class="col-sm-24">Inputs</h4>
+    <div ng-repeat="input in process.inputs">
+      <div class="row col-sm-offset-1 col-sm-22 detailsBox">
+        <label class="col-sm-24">Name</label>
+        <label class="col-sm-24 light">{{input.name}}</label>
+        <label class="col-sm-24">Feed</label>
+        <label class="col-sm-24 light">{{input.feed}}</label>
+        <div class="clearfix hidden-md">&nbsp</div>
+        <h4 class="col-sm-24">Instance</h4>
+        <div class="row">
+          <div class="col-sm-12">
+            <label class="col-sm-24">Start</label>
+            <label class="col-sm-24 light">{{input.start}}</label>
+          </div>
+          <div class="col-sm-12">
+            <label class="col-sm-24">End</label>
+            <label class="col-sm-24 light">{{input.end}}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h4 class="col-sm-24">Outputs</h4>
+    <div ng-repeat="output in process.outputs">
+      <div class="row col-sm-offset-1 col-sm-22 detailsBox">
+        <label class="col-sm-24">Name</label>
+        <label class="col-sm-24 light">{{output.name}}</label>
+        <label class="col-sm-24">Feed</label>
+        <label class="col-sm-24 light">{{output.feed}}</label>
+        <div class="clearfix hidden-md">&nbsp</div>
+        <h4 class="col-sm-24">Instance</h4>
+        <label class="col-sm-24">Instance</label>
+        <label class="col-sm-24 light">{{output.outputInstance}}</label>
+      </div>
+    </div>
+  </div>
+  <div class="clearfix hidden-md">&nbsp</div>
+
+  <div class="row feedBottomButtons">
+    <div class="btn btn-default col-sm-6" ng-click="goBack('forms.process.io')">
+      Previous
+    </div>
+    <div class="btn btn-default col-sm-6 pull-right"
+         ng-disabled="processForm.$invalid"
+         ng-click="saveEntity()">
+      Save
+    </div>
+    <u class="col-sm-3 pull-right" ui-sref="main">
+      Cancel
+    </u>
+  </div>
+</form>

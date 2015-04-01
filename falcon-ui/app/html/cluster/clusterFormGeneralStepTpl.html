@@ -1,0 +1,201 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<form name="clusterForm">
+  <div class="col-sm-24">
+    <label class="light">Name</label>
+    <input type="text" class="form-control nameInput" ng-pattern="validations.patterns.name"
+           ng-model="clusterEntity.clusterModel.cluster._name" ng-required="true"
+           ng-keydown="validations.acceptNoSpaces($event)"
+           check-name="{type:'cluster', check:true}" ng-class="{fakeInvalid:!validations.nameAvailable}"
+           ng-disabled="xmlPreview.edit" />
+           <!--check-type="cluster" check-name-flag="nameValid" check="true"-->
+
+  </div>
+  <div class="col-sm-12">
+    <label class="light">Colo</label>
+    <input type="text" class="form-control" ng-pattern="validations.patterns.freeText"
+           ng-required="true" ng-disabled="xmlPreview.edit"
+           ng-model="clusterEntity.clusterModel.cluster._colo" validation-message="{{validations.messages.colo}}"/>
+  </div>
+  <div class="col-sm-12">
+    <label class="light">Description</label>
+    <input type="text" class="form-control" ng-pattern="validations.patterns.freeText"
+           ng-required="true" ng-disabled="xmlPreview.edit" validation-message="{{validations.messages.description}}"
+           ng-model="clusterEntity.clusterModel.cluster._description" />
+  </div>
+  
+  <div class="col-xs-24">
+    <label class="light">Tags</label>
+  </div>
+  
+  <div class="col-xs-24">
+    <div ng-repeat="tag in tagsArray" class="row dynamic-table-spacer">   
+      <div class="col-xs-10">
+        <input type="text" class="form-control" ng-model="tag.key" ng-disabled="xmlPreview.edit" placeholder="key"
+               ng-pattern="validations.patterns.alpha" ng-required="tag.value"/>
+      </div>
+      <div class="col-xs-11">
+        <input type="text" class="form-control" ng-disabled="xmlPreview.edit" placeholder="value"
+               ng-model="tag.value" ng-pattern="validations.patterns.alpha" ng-required="tag.key"/>
+      </div>
+      <div class="col-xs-3">
+        <div class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="$index>0">
+          <span class="entypo minus"></span> delete
+        </div>
+      </div>
+    </div>   
+  </div>
+
+  <div class="col-sm-24 dynamic-table-spacer">
+    <div class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit">
+      <span class="entypo plus"></span> add tag
+    </div>
+  </div>
+  <h4 class="col-sm-24"> Access Control List </h4>
+  <div class="col-sm-8">
+    <label class="light">Owner</label>
+    <input type="text" class="form-control" ng-disabled="xmlPreview.edit" ng-pattern="validations.patterns.unixId"
+           ng-model="clusterEntity.clusterModel.cluster.ACL._owner"/>
+  </div>
+  <div class="col-sm-8">
+    <label class="light">Group</label>
+    <input type="text" class="form-control" ng-disabled="xmlPreview.edit" ng-pattern="validations.patterns.unixId"
+           ng-model="clusterEntity.clusterModel.cluster.ACL._group"/>
+  </div>
+  <div class="col-sm-8">
+    <label class="light">Permissions</label>
+    <input type="text" class="form-control" ng-disabled="xmlPreview.edit"
+           ng-pattern="validations.patterns.unixPermissions"
+           ng-model="clusterEntity.clusterModel.cluster.ACL._permission"/>
+  </div>
+  
+  <h4 class="col-sm-24"> Interfaces </h4> 
+  <label class="col-xs-4">
+    Type
+  </label>
+  <label class="col-xs-16">
+    Endpoint
+  </label>
+  <label class="col-xs-4">
+    Version
+  </label>
+  <div id="interfaces-detail" class="col-sm-24"
+       ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
+    <div class="row">
+      <div class="col-xs-4">
+        <label>
+          <input type="checkbox" ng-checked="registry.check" ng-model="registry.check"
+                 ng-if="_interface._type === 'registry'" ng-disabled="xmlPreview.edit"/> {{_interface._type}}
+        </label>
+      </div>
+      <div class="col-xs-16">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.osPath"
+               ng-model="_interface._endpoint"
+               ng-disabled="_interface._type === 'registry' && !registry.check || xmlPreview.edit"/>
+      </div>
+      <div class="col-xs-4">
+        <input type="text" class="form-control" ng-pattern="validations.patterns.versionNumbers"
+               ng-disabled="(_interface._type === 'registry' && !registry.check) || xmlPreview.edit"
+               ng-model="_interface._version">
+      </div>
+    </div>
+  </div>
+
+  <h4 class="col-xs-24"> Properties </h4>
+  <label class="col-xs-7">name</label><label class="col-xs-17">value</label>
+  <div ng-repeat="property in clusterEntity.clusterModel.cluster.properties.property">
+    <div class="col-xs-7 dynamic-table-spacer">
+      <input type="text" class="form-control" ng-model="property._name"
+             ng-pattern="validations.patterns.alpha" ng-disabled="xmlPreview.edit"
+             ng-required="property._value" placeholder="name" />
+    </div>
+    <div class="col-xs-15 dynamic-table-spacer">
+      <input type="text" class="form-control" ng-model="property._value" ng-pattern="validations.patterns.alpha"
+             ng-disabled="xmlPreview.edit" ng-required="property._name" placeholder="value" />
+    </div>
+    <div class="col-xs-2 dynamic-table-spacer">
+      <div class="btn btn-default btn-xs" ng-click="removeProperty($index)" ng-if="$index > 0"
+           ng-disabled="xmlPreview.edit">
+        <span class="entypo minus"></span> delete
+      </div>
+    </div>
+    <div class="clearfix hidden-md"></div>
+  </div>
+  <div class="col-xs-24 dynamic-table-spacer">
+    <div class="btn btn-default btn-xs" ng-click="addProperty()" ng-disabled="xmlPreview.edit">
+      <span class="entypo plus"></span> add property
+    </div>
+  </div>
+
+  <h4 class="col-xs-24"> Location </h4>
+  <label class="col-xs-7">name</label><label class="col-xs-17">path</label>
+  <div ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location" class="col-xs-24">
+
+    <div class="row" ng-if="location._name === 'staging' || location._name === 'working' || location._name === 'temp'">
+      <div class="col-xs-7 dynamic-table-spacer">
+        {{location._name}}
+      </div>
+      <div class="col-xs-15 dynamic-table-spacer">
+        <input type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
+               ng-disabled="xmlPreview.edit" ng-required="true" validation-message="{{validations.messages.location}}"/>
+      </div>
+      <div class="col-xs-2 dynamic-table-spacer"></div>     
+      <div class="clearfix hidden-md"></div>
+    </div>
+
+    <div class="row" ng-if="location._name !== 'staging' && location._name !== 'working' && location._name !== 'temp'">
+      <div class="col-xs-7 dynamic-table-spacer">
+        <input type="text" class="form-control" ng-model="location._name" ng-pattern="validations.patterns.alpha"
+               ng-disabled="xmlPreview.edit" ng-required="location._path" placeholder="name" />
+      </div>
+      <div class="col-xs-15 dynamic-table-spacer">   
+        <input type="text" class="form-control" ng-model="location._path" ng-pattern="validations.patterns.osPath"
+               ng-disabled="xmlPreview.edit" ng-required="location._name" placeholder="path" />
+      </div>
+      <div class="col-xs-2 dynamic-table-spacer">
+        <div class="btn btn-default btn-xs" ng-click="removeLocation($index)" ng-if="$index>3"
+             ng-disabled="xmlPreview.edit" >
+          <span class="entypo minus"></span> delete
+        </div>
+      </div>    
+      <div class="clearfix hidden-md"></div>
+    </div>
+    
+  </div>
+
+  <div class="col-xs-24 dynamic-table-spacer">
+    <div class="btn btn-default btn-xs" ng-click="addLocation()" ng-disabled="xmlPreview.edit">
+      <span class="entypo plus"></span> add location
+    </div>
+  </div>
+  <div class="col-xs-24">
+    <div class="row mt20">
+      <div class="btn btn-default col-xs-6 mt10" ui-sref="main">
+        Cancel
+      </div>
+      <div class="btn btn-default col-xs-6 pull-right mt10" ng-disabled="xmlPreview.edit"
+           ng-click="goSummaryStep(clusterForm.$invalid)">
+        Next
+      </div>
+
+    </div>
+  </div>
+
+</form>

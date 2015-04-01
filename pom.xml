@@ -371,6 +371,7 @@
     </profiles>
 
     <modules>
+	<module>falcon-ui</module>
         <module>checkstyle</module>
         <module>build-tools</module>
         <module>client</module>

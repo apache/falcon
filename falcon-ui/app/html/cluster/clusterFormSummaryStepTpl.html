@@ -1,0 +1,77 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="row clusterSummaryRow">
+  <div class="col-sm-24">
+    <label>Name</label>: {{clusterEntity.clusterModel.cluster._name}}
+  </div>
+  <div class="col-sm-24">
+    <label>Colo</label>: {{clusterEntity.clusterModel.cluster._colo}}
+  </div>
+  <div class="col-sm-24">
+    <label>Description</label>: {{clusterEntity.clusterModel.cluster._description}}
+  </div>
+  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.tags">
+    <label>Tags</label>: {{clusterEntity.clusterModel.cluster.tags}}
+  </div>
+  <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.ACL">
+    ACL
+  </h4>
+  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.ACL" >
+    <label>Owner</label>: {{clusterEntity.clusterModel.cluster.ACL._owner}}
+    <label>Group</label>: {{clusterEntity.clusterModel.cluster.ACL._group}}
+    <label>Permission</label>: {{clusterEntity.clusterModel.cluster.ACL._permission}}
+  </div>
+  <h4 class="col-sm-24">
+    Interfaces
+  </h4>
+
+  <div class="col-sm-24" ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
+    <label>{{_interface._type}}</label>: {{_interface._endpoint}} - {{ _interface._version }}
+  </div>
+
+  <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties">
+    Properties
+  </h4>
+
+  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0" 
+    ng-repeat="property in clusterEntity.clusterModel.cluster.properties.property">
+    <label>{{property._name}}</label>: {{property._value}}
+  </div>
+
+  <h4 class="col-sm-24">
+    Locations
+  </h4>
+
+  <div class="col-sm-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location">
+    <label>{{location._name}}</label>: {{location._path}}
+  </div>
+</div>
+
+
+<div class="row clusterSummaryRow mt20">
+  <div class="btn btn-default col-xs-6" ui-sref="forms.cluster.general" ng-click="goGeneralStep()">
+    Previous
+  </div>
+
+  <div class="btn btn-default col-xs-6 pull-right" ng-click="saveCluster()" ng-disabled="xmlPreview.edit">
+    Save
+  </div>
+
+</div>

@@ -225,3 +225,12 @@ MIT license. For details, see docs/license/dust-helpers-LICENSE.txt
 
 This product bundles jquery 1.11.0, which is available under a
 MIT license. For details, see docs/license/jquery-LICENSE.txt
+
+This product bundles npm 1.4.3, which is available under a
+MIT license. For details, see docs/license/npm-LICENSE.txt
+
+This product bundles node 0.10.30, which is available under a
+MIT license. For details, see docs/license/node-LICENSE.txt
+
+This product bundles grunt-cli, which is available under a
+MIT license. For details, see docs/license/grunt-cli-LICENSE.txt

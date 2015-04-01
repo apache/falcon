@@ -1,0 +1,95 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="col-sm-24 entityForm">
+  <div class="col-sm-22 col-sm-offset-2">
+    <div class="row">
+      <h3 id="formTitle" class="col-sm-24">
+        New Process
+      </h3>
+      <div class="col-sm-15 detailsBox">
+
+        <div class="processProgressBox" ng-class="{
+          general:isActive('forms.process.general'),
+          properties:isActive('forms.process.properties'),
+          clusters:isActive('forms.process.clusters'),
+          inputsAndOutputs: isActive('forms.process.io'),
+          summary:isActive('forms.process.summary')
+          }">
+          <div class="progressBar col-md-24">
+            <div>
+              <span>
+                <div class="fir">1<span class="entypo check"></span></div>
+                <h6>General</h6>
+              </span>
+              <span>
+                <div class="sec">2<span class="entypo check"></span></div>
+                <h6>Properties</h6>
+              </span>
+              <span>
+                <div class="thi">3<span class="entypo check"></span></div>
+                <h6>Clusters</h6>
+              </span>
+              <span>
+                <div class="fou">4<span class="entypo check"></span></div>
+                <h6>Inputs & Outputs</h6>
+              </span>
+              <span>
+                <div class="fif">5<span class="entypo check"></span></div>
+                <h6>Summary</h6>
+              </span>
+            </div>
+          </div>
+        </div>
+       
+        <div class="row">
+          <div class="col-sm-offset-1 col-sm-22">
+            <fieldset id="fieldWrapper" ng-disabled="!editXmlDisabled">
+              <div ui-view class="formViewContainer"></div>
+            </fieldset>
+          </div>
+        </div>
+        
+      </div>
+
+      <div class="col-sm-8 detailsBox col-sm-offset-1">
+        <div class="row">
+
+          <h5 class="col-xs-13 col-xs-offset-1 noSpecial">XML Preview</h5>  
+          <div class="col-xs-9">
+            <div id="editXmlButton" class="btn btn-default btn-xs pull-right" ng-click="toggleEditXml()" ng-class="{'btn-warning':!editXmlDisabled}">
+              Edit XML
+            </div>
+          </div>
+
+          <div class="col-sm-24">
+            <div class="row">
+              <div class="col-sm-22 col-sm-offset-1">
+                <textarea ng-model="prettyXml" rows="35" class="form-control" ng-disabled="editXmlDisabled">
+                </textarea>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
