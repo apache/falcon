@@ -10,6 +10,10 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+
+   FALCON-1128 Adding getter methods to FeedLookupResult(KArishma G 
+   via Samarth)
+
    FALCON-1086 Support execution-order of a feed to be overridden
    for replication coord (Shaik Idris Ali via Suhas Vasu)
 

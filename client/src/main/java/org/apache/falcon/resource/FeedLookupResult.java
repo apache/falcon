@@ -119,6 +119,18 @@ public class FeedLookupResult extends APIResult {
             this.clusterName = clusterName;
         }
 
+        public String getFeedName() {
+            return this.feedName;
+        }
+
+        public LocationType getLocationType() {
+            return this.locationType;
+        }
+
+        public String getClusterName() {
+            return this.clusterName;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) {
