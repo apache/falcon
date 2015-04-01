@@ -127,6 +127,9 @@ Trunk (Unreleased)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1097 UT failure for ExpressionHelperTest
+   (Ajay Yadava via Shaik Idris)
+
    FALCON-1125 Feed Lookup API doesnt work via prism
    (Ajay Yadava via Suhas Vasu)
 

@@ -123,6 +123,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     private static int getDayOffset(String weekDayName) {
         int day;
         Calendar nominalTime = Calendar.getInstance();
+        nominalTime.setTimeZone(TimeZone.getTimeZone("UTC"));
         nominalTime.setTime(referenceDate.get());
         int currentWeekDay = nominalTime.get(Calendar.DAY_OF_WEEK);
         int weekDay = DayOfWeek.valueOf(weekDayName).ordinal() + 1; //to map to Calendar.SUNDAY ...
