@@ -22,12 +22,16 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Factory for providing appropriate catalog service
  * implementation to the falcon service.
  */
 @SuppressWarnings("unchecked")
 public final class CatalogServiceFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(CatalogServiceFactory.class);
 
     public static final String CATALOG_SERVICE = "catalog.service.impl";
 
@@ -35,7 +39,11 @@ public final class CatalogServiceFactory {
     }
 
     public static boolean isEnabled() {
-        return StartupProperties.get().containsKey(CATALOG_SERVICE);
+        boolean isEnabled = StartupProperties.get().containsKey(CATALOG_SERVICE);
+        if (!isEnabled) {
+            LOG.info("Catalog service disabled. Partitions will not registered");
+        }
+        return isEnabled;
     }
 
     public static AbstractCatalogService getCatalogService() throws FalconException {

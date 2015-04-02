@@ -42,18 +42,7 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 
 /**
@@ -233,8 +222,22 @@ public final class FeedHelper {
             return clusterLocations.getLocations();
         }
 
-        final Locations feedLocations = feed.getLocations();
+        Locations feedLocations = feed.getLocations();
         return feedLocations == null ? null : feedLocations.getLocations();
+    }
+
+    public static Location getLocation(Feed feed, org.apache.falcon.entity.v0.cluster.Cluster cluster,
+                                       LocationType type) {
+        List<Location> locations = getLocations(getCluster(feed, cluster.getName()), feed);
+        if (locations != null) {
+            for (Location location : locations) {
+                if (location.getType() == type) {
+                    return location;
+                }
+            }
+        }
+
+        return null;
     }
 
     public static Sla getSLAs(Cluster cluster, Feed feed) {
@@ -348,89 +351,55 @@ public final class FeedHelper {
     }
 
     /**
-     * Replaces timed variables with corresponding time notations e.g., ${YEAR} with yyyy and so on.
-     * @param templatePath - template feed path
-     * @return time notations
-     */
-    public static String getDateFormatInPath(String templatePath) {
-        String mask = extractDatePartFromPathMask(templatePath, templatePath);
-        //yyyyMMddHHmm
-        return mask.replaceAll(FeedDataPath.VARS.YEAR.regex(), "yyyy")
-            .replaceAll(FeedDataPath.VARS.MONTH.regex(), "MM")
-            .replaceAll(FeedDataPath.VARS.DAY.regex(), "dd")
-            .replaceAll(FeedDataPath.VARS.HOUR.regex(), "HH")
-            .replaceAll(FeedDataPath.VARS.MINUTE.regex(), "mm");
-    }
-
-    /**
-     * Extracts the date part of the path and builds a date format mask.
-     * @param mask - Path pattern containing ${YEAR}, ${MONTH}...
-     * @param inPath - Path from which date part need to be extracted
-     * @return - Parts of inPath with non-date-part stripped out.
-     *
-     * Example: extractDatePartFromPathMask("/data/foo/${YEAR}/${MONTH}", "/data/foo/2012/${MONTH}");
-     *     Returns: 2012${MONTH}.
-     */
-    private static String extractDatePartFromPathMask(String mask, String inPath) {
-        String[] elements = FeedDataPath.PATTERN.split(mask);
-
-        String out = inPath;
-        for (String element : elements) {
-            out = out.replaceFirst(element, "");
-        }
-        return out;
-    }
-
-    private static Map<FeedDataPath.VARS, String> getDatePartMap(String path, String mask) {
-        Map<FeedDataPath.VARS, String> map = new TreeMap<FeedDataPath.VARS, String>();
-        Matcher matcher = FeedDataPath.DATE_FIELD_PATTERN.matcher(mask);
-        int start = 0;
-        while (matcher.find(start)) {
-            String subMask = mask.substring(matcher.start(), matcher.end());
-            String subPath = path.substring(matcher.start(), matcher.end());
-            FeedDataPath.VARS var = FeedDataPath.VARS.from(subMask);
-            if (!map.containsKey(var)) {
-                map.put(var, subPath);
-            }
-            start = matcher.start() + 1;
-        }
-        return map;
-    }
-
-    /**
      *  Extracts date from the actual data path e.g., /path/2014/05/06 maps to 2014-05-06T00:00Z.
-     * @param file - actual data path
+     * @param instancePath - actual data path
      * @param templatePath - template path from feed definition
-     * @param dateMask - path mask from getDateFormatInPath()
      * @param timeZone
      * @return date corresponding to the path
      */
     //consider just the first occurrence of the pattern
-    public static Date getDate(Path file, String templatePath, String dateMask, String timeZone) {
-        String path = extractDatePartFromPathMask(templatePath, file.toString());
-        Map<FeedDataPath.VARS, String> map = getDatePartMap(path, dateMask);
+    public static Date getDate(String templatePath, Path instancePath, TimeZone timeZone) {
+        String path = instancePath.toString();
+        Matcher matcher = FeedDataPath.PATTERN.matcher(templatePath);
+        Calendar cal = Calendar.getInstance(timeZone);
+        int lastEnd = 0;
 
-        if (map.isEmpty()) {
-            return null;
-        }
-
-        StringBuilder date = new StringBuilder();
-        int ordinal = 0;
-        for (Map.Entry<FeedDataPath.VARS, String> entry : map.entrySet()) {
-            if (ordinal++ == entry.getKey().ordinal()) {
-                date.append(entry.getValue());
-            } else {
+        Set<FeedDataPath.VARS> matchedVars = new HashSet<FeedDataPath.VARS>();
+        while (matcher.find()) {
+            FeedDataPath.VARS pathVar = FeedDataPath.VARS.from(matcher.group());
+            String pad = templatePath.substring(lastEnd, matcher.start());
+            if (!path.startsWith(pad)) {
+                //Template and path do not match
                 return null;
             }
+
+            int value;
+            try {
+                value = Integer.valueOf(path.substring(pad.length(), pad.length() + pathVar.getValueSize()));
+            } catch (NumberFormatException e) {
+                //Not a valid number for variable
+                return null;
+            }
+
+            pathVar.setCalendar(cal, value);
+            lastEnd = matcher.end();
+            path = path.substring(pad.length() + pathVar.getValueSize());
+            matchedVars.add(pathVar);
         }
 
-        try {
-            DateFormat dateFormat = new SimpleDateFormat(FORMAT.substring(0, date.length()));
-            dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-            return dateFormat.parse(date.toString());
-        } catch (ParseException e) {
+        //Match the remaining constant at the end
+        if (!templatePath.substring(lastEnd).equals(path)) {
             return null;
         }
+
+
+        //Reset other fields
+        for (FeedDataPath.VARS var : FeedDataPath.VARS.values()) {
+            if (!matchedVars.contains(var)) {
+                cal.set(var.getCalendarField(), 0);
+            }
+        }
+        return cal.getTime();
     }
 
     public static Path getFeedBasePath(String feedPath) throws IOException {

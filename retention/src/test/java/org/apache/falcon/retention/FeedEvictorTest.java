@@ -255,7 +255,7 @@ public class FeedEvictorTest {
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 
             stream.clear();
-            String dataPath = "/data/YYYY/feed4/dd/MM/02/more/hello";
+            String dataPath = "/data/YYYY/feed4/dd/MM/more/hello";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
             FeedEvictor.main(new String[] {
                 "-feedBasePath", LocationType.DATA.name() + "="
@@ -273,6 +273,7 @@ public class FeedEvictorTest {
 
             assertFailures(fs, pair);
         } catch (Exception e) {
+            e.printStackTrace();
             Assert.fail("Unknown exception", e);
         }
     }
@@ -308,7 +309,7 @@ public class FeedEvictorTest {
             stream.clear();
             String dataPath = LocationType.DATA.name() + "="
                     + cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
-                    + "/data/YYYY/feed4/dd/MM/02/more/hello";
+                    + "/data/YYYY/feed4/dd/MM/more/hello";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
             FeedEvictor.main(new String[]{
                 "-feedBasePath", dataPath,

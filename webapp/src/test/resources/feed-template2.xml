@@ -16,8 +16,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="clicks log" name="##outputFeedName##" xmlns="uri:falcon:feed:0.1"
-        >
+<feed description="clicks log" name="##outputFeedName##" xmlns="uri:falcon:feed:0.1">
     <groups>output</groups>
 
     <frequency>days(1)</frequency>
@@ -40,4 +39,8 @@
 
     <ACL owner="##user##" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
+
+    <properties>
+        <property name="catalog.table" value="catalog:falcon_db:output_table#ds={YEAR}-{MONTH}-{DAY}"/>
+    </properties>
 </feed>

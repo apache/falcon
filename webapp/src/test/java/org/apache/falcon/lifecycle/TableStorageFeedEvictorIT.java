@@ -34,7 +34,6 @@ import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -89,6 +88,12 @@ public class TableStorageFeedEvictorIT {
 
         client = TestContext.getHCatClient(METASTORE_URL);
 
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME);
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_EXTERNAL_TABLE_NAME);
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_TABLE_NAME);
+        HiveTestUtils.dropDatabase(METASTORE_URL, DATABASE_NAME);
+
         HiveTestUtils.createDatabase(METASTORE_URL, DATABASE_NAME);
         final List<String> partitionKeys = Arrays.asList("ds", "region");
         HiveTestUtils.createTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionKeys);
@@ -99,15 +104,6 @@ public class TableStorageFeedEvictorIT {
         HiveTestUtils.createTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_TABLE_NAME, multiColDatedPartitionKeys);
         HiveTestUtils.createExternalTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_EXTERNAL_TABLE_NAME,
                 multiColDatedPartitionKeys, MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION);
-    }
-
-    @AfterClass
-    public void close() throws Exception {
-        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME);
-        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
-        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_EXTERNAL_TABLE_NAME);
-        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_TABLE_NAME);
-        HiveTestUtils.dropDatabase(METASTORE_URL, DATABASE_NAME);
     }
 
     @DataProvider (name = "evictorTestDataProvider")

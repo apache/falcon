@@ -458,8 +458,7 @@ public class FileSystemStorageTest {
             instance.setStatus(FeedInstanceStatus.AvailabilityStatus.MISSING);
             instance.setSize(-1);
             instance.setCreationTime(0);
-            String dateMask = FeedHelper.getDateFormatInPath(basePath);
-            Date date = FeedHelper.getDate(new Path(path), basePath, dateMask, tz.getID());
+            Date date = FeedHelper.getDate(basePath, new Path(path), tz);
             instance.setInstance(SchemaHelper.formatDateUTC(date));
             Calendar cal = Calendar.getInstance();
             cal.setTime(dataStart);

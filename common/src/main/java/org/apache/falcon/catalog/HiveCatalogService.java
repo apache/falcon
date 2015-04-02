@@ -21,14 +21,11 @@ package org.apache.falcon.catalog;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
-import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.TableType;
-import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.thrift.DelegationTokenIdentifier;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.Credentials;
@@ -44,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -53,6 +51,8 @@ import java.util.List;
 public class HiveCatalogService extends AbstractCatalogService {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveCatalogService.class);
+    public static final String CREATE_TIME = "falcon.create_time";
+    public static final String UPDATE_TIME = "falcon.update_time";
 
 
     public static HiveConf createHiveConf(Configuration conf,
@@ -96,8 +96,6 @@ public class HiveCatalogService extends AbstractCatalogService {
                 UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
                 ugi.addCredentials(credentials); // credentials cannot be null
             }
-
-            OozieActionConfigurationHelper.dumpConf(hcatConf, "hive conf ");
 
             return new HiveMetaStoreClient(hcatConf);
         } catch (Exception e) {
@@ -176,7 +174,7 @@ public class HiveCatalogService extends AbstractCatalogService {
                                                                        String metaStoreServicePrincipal)
         throws IOException {
 
-        LOG.info("Creating delegation tokens for principal={}", metaStoreServicePrincipal);
+        LOG.debug("Creating delegation tokens for principal={}", metaStoreServicePrincipal);
         HCatClient hcatClient = HCatClient.create(hcatConf);
         String delegationToken = hcatClient.getDelegationToken(
                 CurrentUser.getUser(), metaStoreServicePrincipal);
@@ -211,6 +209,8 @@ public class HiveCatalogService extends AbstractCatalogService {
             HiveMetaStoreClient client = createProxiedClient(conf, catalogUrl);
             Table table = client.getTable(database, tableName);
             return table != null;
+        } catch (NoSuchObjectException e) {
+            return false;
         } catch (Exception e) {
             throw new FalconException("Exception checking if the table exists:" + e.getMessage(), e);
         }
@@ -227,6 +227,29 @@ public class HiveCatalogService extends AbstractCatalogService {
             return table.getTableType().equals(TableType.EXTERNAL_TABLE.name());
         } catch (Exception e) {
             throw new FalconException("Exception checking if the table is external:" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<CatalogPartition> listPartitions(Configuration conf, String catalogUrl,
+                                                         String database, String tableName,
+                                                         List<String> values) throws FalconException {
+        LOG.info("List partitions for: {}, partition filter: {}", tableName, values);
+
+        try {
+            List<CatalogPartition> catalogPartitionList = new ArrayList<CatalogPartition>();
+
+            HiveMetaStoreClient client = createClient(conf, catalogUrl);
+            List<Partition> hCatPartitions = client.listPartitions(database, tableName, values, (short) -1);
+            for (Partition hCatPartition : hCatPartitions) {
+                LOG.debug("Partition: " + hCatPartition.getValues());
+                CatalogPartition partition = createCatalogPartition(hCatPartition);
+                catalogPartitionList.add(partition);
+            }
+
+            return catalogPartitionList;
+        } catch (Exception e) {
+            throw new FalconException("Exception listing partitions:" + e.getMessage(), e);
         }
     }
 
@@ -267,6 +290,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         return catalogPartition;
     }
 
+    //Drop single partition
     @Override
     public boolean dropPartition(Configuration conf, String catalogUrl,
                                   String database, String tableName,
@@ -311,6 +335,75 @@ public class HiveCatalogService extends AbstractCatalogService {
             return createCatalogPartition(hCatPartition);
         } catch (Exception e) {
             throw new FalconException("Exception fetching partition:" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<String> getPartitionColumns(Configuration conf, String catalogUrl, String database,
+                                            String tableName) throws FalconException {
+        LOG.info("Fetching partition columns of table: " + tableName);
+
+        try {
+            HiveMetaStoreClient client = createClient(conf, catalogUrl);
+            Table table = client.getTable(database, tableName);
+            List<String> partCols = new ArrayList<String>();
+            for (FieldSchema part : table.getPartitionKeys()) {
+                partCols.add(part.getName());
+            }
+            return partCols;
+        } catch (Exception e) {
+            throw new FalconException("Exception fetching partition columns: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void addPartition(Configuration conf, String catalogUrl, String database,
+                             String tableName, List<String> partValues, String location) throws FalconException {
+        LOG.info("Adding partition {} for {}.{} with location {}", partValues, database, tableName, location);
+
+        try {
+            HiveMetaStoreClient client = createClient(conf, catalogUrl);
+            Table table = client.getTable(database, tableName);
+            org.apache.hadoop.hive.metastore.api.Partition part = new org.apache.hadoop.hive.metastore.api.Partition();
+            part.setDbName(database);
+            part.setTableName(tableName);
+            part.setValues(partValues);
+            part.setSd(table.getSd());
+            part.getSd().setLocation(location);
+            part.setParameters(table.getParameters());
+            if (part.getParameters() == null) {
+                part.setParameters(new HashMap<String, String>());
+            }
+            part.getParameters().put(CREATE_TIME, String.valueOf(System.currentTimeMillis()));
+            client.add_partition(part);
+
+        } catch (Exception e) {
+            throw new FalconException("Exception adding partition: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void updatePartition(Configuration conf, String catalogUrl, String database,
+                             String tableName, List<String> partValues, String location) throws FalconException {
+        LOG.info("Updating partition {} of {}.{} with location {}", partValues, database, tableName, location);
+
+        try {
+            HiveMetaStoreClient client = createClient(conf, catalogUrl);
+            Table table = client.getTable(database, tableName);
+            org.apache.hadoop.hive.metastore.api.Partition part = new org.apache.hadoop.hive.metastore.api.Partition();
+            part.setDbName(database);
+            part.setTableName(tableName);
+            part.setValues(partValues);
+            part.setSd(table.getSd());
+            part.getSd().setLocation(location);
+            part.setParameters(table.getParameters());
+            if (part.getParameters() == null) {
+                part.setParameters(new HashMap<String, String>());
+            }
+            part.getParameters().put(UPDATE_TIME, String.valueOf(System.currentTimeMillis()));
+            client.alter_partition(database, tableName, part);
+        } catch (Exception e) {
+            throw new FalconException("Exception updating partition: " + e.getMessage(), e);
         }
     }
 }

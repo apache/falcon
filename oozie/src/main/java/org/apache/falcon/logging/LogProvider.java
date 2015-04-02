@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClientException;
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +97,7 @@ public final class LogProvider {
             if (fs.exists(jobPath)) {
                 return getFormatedRunId(runId);
             } else {
-                Log.warn("No run dirs are available in logs dir:" + jobPath);
+                LOG.warn("No run dirs are available in logs dir:" + jobPath);
                 return "-";
             }
         }

@@ -184,4 +184,13 @@ public final class HiveTestUtils {
 
         return TestContext.getHCatClient(metastoreUrl).getPartition(databaseName, tableName, partitionSpec);
     }
+
+    public static List<HCatPartition> getPartitions(String metastoreUrl, String databaseName,
+                                                    String tableName, String partitionKey,
+                                                    String partitionValue) throws Exception {
+        Map<String, String> partitionSpec = new HashMap<String, String>();
+        partitionSpec.put(partitionKey, partitionValue);
+
+        return TestContext.getHCatClient(metastoreUrl).getPartitions(databaseName, tableName, partitionSpec);
+    }
 }

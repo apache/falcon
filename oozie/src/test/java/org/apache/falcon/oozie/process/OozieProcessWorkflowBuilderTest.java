@@ -731,7 +731,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         verifyBrokerProperties(cluster, props);
 
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName()), "clicks");
-        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "NONE");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "IGNORE");
     }
 
     @Test

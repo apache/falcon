@@ -16,8 +16,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="clicks log" name="##inputFeedName##" xmlns="uri:falcon:feed:0.1"
-        >
+<feed description="clicks log" name="##inputFeedName##" xmlns="uri:falcon:feed:0.1">
     <partitions>
         <partition name="timestamp"/>
     </partitions>

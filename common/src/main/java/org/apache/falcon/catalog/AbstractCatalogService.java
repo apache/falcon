@@ -65,6 +65,10 @@ public abstract class AbstractCatalogService {
     public abstract boolean isTableExternal(Configuration conf, String catalogUrl, String database,
                                             String tableName) throws FalconException;
 
+    public abstract List<CatalogPartition> listPartitions(Configuration conf, String catalogUrl,
+                                                          String database, String tableName,
+                                                          List<String> values) throws FalconException;
+
     /**
      * List partitions by filter. Executed in the workflow engine.
      *
@@ -132,4 +136,42 @@ public abstract class AbstractCatalogService {
                                                   String database, String tableName,
                                                   List<String> partitionValues)
         throws FalconException;
+
+    /**
+     * Gets the partition columns for the table in catalog service.
+     * @param conf
+     * @param catalogUrl url for the catalog service
+     * @param database
+     * @param tableName
+     * @return ordered list of partition columns for the table
+     * @throws FalconException
+     */
+    public abstract List<String> getPartitionColumns(Configuration conf, String catalogUrl, String database,
+                                                     String tableName) throws FalconException;
+
+    /**
+     * Adds the partition to the table.
+     * @param conf
+     * @param catalogUrl
+     * @param database
+     * @param tableName
+     * @param values
+     * @param location
+     * @throws FalconException
+     */
+    public abstract void addPartition(Configuration conf, String catalogUrl, String database,
+                                      String tableName, List<String> values, String location) throws FalconException;
+
+    /**
+     * Updates an existing partition in the table.
+     * @param conf
+     * @param catalogUrl
+     * @param database
+     * @param tableName
+     * @param partValues
+     * @param location
+     * @throws FalconException
+     */
+    public abstract void updatePartition(Configuration conf, String catalogUrl, String database, String tableName,
+                                         List<String> partValues, String location) throws FalconException;
 }

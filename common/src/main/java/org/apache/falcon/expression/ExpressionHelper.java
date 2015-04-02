@@ -21,6 +21,8 @@ package org.apache.falcon.expression;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
@@ -41,9 +43,10 @@ import java.util.regex.Pattern;
  */
 public final class ExpressionHelper implements FunctionMapper, VariableResolver {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ExpressionHelper.class);
     private static final ExpressionHelper INSTANCE = new ExpressionHelper();
 
-    private ThreadLocal<Properties> threadVariables = new ThreadLocal<Properties>();
+    private static final ThreadLocal<Properties> THREAD_VARIABLES = new ThreadLocal<Properties>();
 
     private static final Pattern SYS_PROPERTY_PATTERN = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
@@ -94,18 +97,20 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     }
 
     public void setPropertiesForVariable(Properties properties) {
-        threadVariables.set(properties);
+        THREAD_VARIABLES.set(properties);
     }
 
     @Override
     public Object resolveVariable(String field) {
-        return threadVariables.get().get(field);
+        return THREAD_VARIABLES.get().get(field);
     }
 
     private static ThreadLocal<Date> referenceDate = new ThreadLocal<Date>();
 
     public static void setReferenceDate(Date date) {
         referenceDate.set(date);
+        Properties variables = getTimeVariables(date, TimeZone.getTimeZone("UTC"));
+        THREAD_VARIABLES.set(variables);
     }
 
     public static Properties getTimeVariables(Date date, TimeZone tz) {

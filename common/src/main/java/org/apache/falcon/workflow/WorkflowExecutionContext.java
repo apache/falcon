@@ -96,7 +96,7 @@ public class WorkflowExecutionContext {
     private final Map<WorkflowExecutionArgs, String> context;
     private final long creationTime;
 
-    protected WorkflowExecutionContext(Map<WorkflowExecutionArgs, String> context) {
+    public WorkflowExecutionContext(Map<WorkflowExecutionArgs, String> context) {
         this.context = context;
         creationTime = System.currentTimeMillis();
     }

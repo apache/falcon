@@ -65,4 +65,8 @@
       </description>
     </property>
 
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>unittests</value>
+    </property>
 </configuration>

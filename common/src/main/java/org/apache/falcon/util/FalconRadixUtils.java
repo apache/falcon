@@ -18,6 +18,7 @@
 
 package org.apache.falcon.util;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.common.FeedDataPath;
 
@@ -192,7 +193,7 @@ public class FalconRadixUtils {
                     String regex = key.substring(0, key.indexOf("}") + 1);
                     // match the text and the regex
                     FeedDataPath.VARS var = getMatchingRegex(regex);
-                    if (matchPart(regex, input.substring(0, var.getDatePattern().length()))) {
+                    if (matchPart(regex, input.substring(0, var.getValueSize()))) {
                         newRoot = child; // if it matches then this is the newRoot
                         break;
                     }
@@ -214,9 +215,13 @@ public class FalconRadixUtils {
             if (StringUtils.isBlank(templateString)) {
                 return 0;
             }
+
+            // Since we are only interested in the length, can replace pattern with a random string
             for (FeedDataPath.VARS var : FeedDataPath.VARS.values()) {
-                templateString = templateString.replace("${" + var.name() + "}", var.getDatePattern());
+                templateString = templateString.replace("${" + var.name() + "}",
+                        RandomStringUtils.random(var.getValueSize()));
             }
+
             return templateString.length();
         }
 
@@ -246,11 +251,12 @@ public class FalconRadixUtils {
 
         private FeedDataPath.VARS getMatchingRegex(String inputPart) {
             //inputPart will be something like ${YEAR}
+
             inputPart = inputPart.replace("${", "\\$\\{");
             inputPart = inputPart.replace("}", "\\}");
 
             for (FeedDataPath.VARS var : FeedDataPath.VARS.values()) {
-                if (StringUtils.equals(inputPart, var.regex())) {
+                if (inputPart.equals("${" + var.name() + "}")) {
                     return var;
                 }
             }
@@ -298,8 +304,8 @@ public class FalconRadixUtils {
                 for (FeedDataPath.VARS var : FeedDataPath.VARS.values()) {//find which regex is this
                     if (StringUtils.equals(var.regex(), template)) {// regex found, do matching
                         //find part of the input string which should be matched against regex
-                        String desiredPart = input.substring(0, var.getDatePattern().length());
-                        Pattern pattern = Pattern.compile(var.getPatternRegularExpression());
+                        String desiredPart = input.substring(0, var.getValueSize());
+                        Pattern pattern = Pattern.compile(var.getValuePattern());
                         Matcher matcher = pattern.matcher(desiredPart);
                         if (!matcher.matches()) {
                             return false;

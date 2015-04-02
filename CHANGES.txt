@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1091 Monitoring plugin that registers catalog partition - code
+   (Suhas Vasu / PallaviRao / Shwetha GS via Suhas Vasu)
+
    FALCON-790 Falcon UI to enable entity/process/feed edits and 
    management. (Armando Reyna/Kenneth Ho via Srikanth Sundarrajan)
 

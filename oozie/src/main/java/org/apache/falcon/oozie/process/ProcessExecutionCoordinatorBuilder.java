@@ -260,7 +260,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
     private void initializeOutputPaths(Cluster cluster, COORDINATORAPP coord, Properties props) throws FalconException {
         if (entity.getOutputs() == null) {
-            props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "NONE");
+            props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), IGNORE);
             props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
             return;
         }

@@ -28,6 +28,7 @@ import org.apache.hive.hcatalog.api.HCatCreateDBDesc;
 import org.apache.hive.hcatalog.api.HCatCreateTableDesc;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -179,9 +180,9 @@ public class HiveCatalogServiceIT {
         hiveCatalogService.isAlive(conf, "thrift://localhost:9999");
     }
 
-    @Test (expectedExceptions = FalconException.class)
+    @Test
     public void testTableExistsNegative() throws Exception {
-        hiveCatalogService.tableExists(conf, METASTORE_URL, DATABASE_NAME, "blah");
+        Assert.assertFalse(hiveCatalogService.tableExists(conf, METASTORE_URL, DATABASE_NAME, "blah"));
     }
 
     @Test
@@ -244,6 +245,20 @@ public class HiveCatalogServiceIT {
         List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
                 conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, greaterThanFilter);
         Assert.assertEquals(filteredPartitions.size(), expectedPartitionCount);
+    }
+
+    @Test
+    public void testListPartititions() throws FalconException {
+        List<String> filters = new ArrayList<String>();
+        filters.add("20130903");
+        List<CatalogPartition> partitions = hiveCatalogService.listPartitions(
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, filters);
+        Assert.assertEquals(partitions.size(), 2);
+
+        filters.add("us");
+        partitions = hiveCatalogService.listPartitions(
+                conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, filters);
+        Assert.assertEquals(partitions.size(), 1);
     }
 
     @Test
@@ -328,5 +343,47 @@ public class HiveCatalogServiceIT {
             {TABLE_NAME},
             {EXTERNAL_TABLE_NAME},
         };
+    }
+
+    @Test
+    public void testGetPartitionColumns() throws FalconException {
+        AbstractCatalogService catalogService = CatalogServiceFactory.getCatalogService();
+        List<String> columns = catalogService.getPartitionColumns(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME);
+        Assert.assertEquals(columns, Arrays.asList("ds", "region"));
+    }
+
+    @Test
+    public void testAddPartition() throws FalconException {
+        AbstractCatalogService catalogService = CatalogServiceFactory.getCatalogService();
+        List<String> partitionValues = Arrays.asList("20130902", "us");
+        String location = EXTERNAL_TABLE_LOCATION + "/20130902";
+        catalogService.addPartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues, location);
+        CatalogPartition partition =
+                catalogService.getPartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues);
+        Assert.assertEquals(partition.getLocation(), location);
+
+        try {
+            catalogService.addPartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues, location);
+        } catch (FalconException e) {
+            if (!(e.getCause() instanceof AlreadyExistsException)) {
+                Assert.fail("Expected FalconException(AlreadyExistsException)");
+            }
+        }
+    }
+
+    @Test
+    public void testUpdatePartition() throws FalconException {
+        AbstractCatalogService catalogService = CatalogServiceFactory.getCatalogService();
+        List<String> partitionValues = Arrays.asList("20130902", "us");
+        String location = EXTERNAL_TABLE_LOCATION + "/20130902";
+        catalogService.addPartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues, location);
+        CatalogPartition partition =
+                catalogService.getPartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues);
+        Assert.assertEquals(partition.getLocation(), location);
+
+        String location2 = location + "updated";
+        catalogService.updatePartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues, location2);
+        partition = catalogService.getPartition(conf, METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionValues);
+        Assert.assertEquals(partition.getLocation(), location2);
     }
 }

@@ -29,7 +29,7 @@ public class FeedDataPathTest {
 
     @Test
     public void testMinutesRegularExpression() {
-        String monthPattern = FeedDataPath.VARS.MINUTE.getPatternRegularExpression();
+        String monthPattern = FeedDataPath.VARS.MINUTE.getValuePattern();
         Assert.assertFalse("0".matches(monthPattern));
         Assert.assertFalse("1".matches(monthPattern));
         Assert.assertFalse("61".matches(monthPattern));
@@ -45,7 +45,7 @@ public class FeedDataPathTest {
 
     @Test
     public void testHourRegularExpression() {
-        String hourPattern = FeedDataPath.VARS.HOUR.getPatternRegularExpression();
+        String hourPattern = FeedDataPath.VARS.HOUR.getValuePattern();
         Assert.assertFalse("0".matches(hourPattern));
         Assert.assertFalse("1".matches(hourPattern));
         Assert.assertFalse("2".matches(hourPattern));
@@ -67,7 +67,7 @@ public class FeedDataPathTest {
 
     @Test
     public void testDayRegularExpression() {
-        String dayPattern = FeedDataPath.VARS.DAY.getPatternRegularExpression();
+        String dayPattern = FeedDataPath.VARS.DAY.getValuePattern();
         Assert.assertFalse("0".matches(dayPattern));
         Assert.assertFalse("1".matches(dayPattern));
         Assert.assertFalse("32".matches(dayPattern));
@@ -86,7 +86,7 @@ public class FeedDataPathTest {
 
     @Test
     public void testMonthRegularExpression() {
-        String monthPattern = FeedDataPath.VARS.MONTH.getPatternRegularExpression();
+        String monthPattern = FeedDataPath.VARS.MONTH.getValuePattern();
         Assert.assertFalse("0".matches(monthPattern));
         Assert.assertFalse("1".matches(monthPattern));
         Assert.assertFalse("13".matches(monthPattern));
@@ -105,7 +105,7 @@ public class FeedDataPathTest {
 
     @Test
     public void testYearRegularExpression() {
-        String monthPattern = FeedDataPath.VARS.YEAR.getPatternRegularExpression();
+        String monthPattern = FeedDataPath.VARS.YEAR.getValuePattern();
         Assert.assertFalse("0".matches(monthPattern));
         Assert.assertFalse("1".matches(monthPattern));
         Assert.assertFalse("13".matches(monthPattern));

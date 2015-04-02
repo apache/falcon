@@ -26,6 +26,7 @@ import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
+import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
@@ -82,15 +83,30 @@ public final class OozieTestUtils {
         return false;
     }
 
-    public static void waitForProcessWFtoStart(TestContext context) throws Exception {
-        waitForWorkflowStart(context, context.getProcessName());
+    public static List<WorkflowJob> waitForProcessWFtoStart(TestContext context) throws Exception {
+        return waitForWorkflowStart(context, context.getProcessName());
     }
 
-    public static void waitForWorkflowStart(TestContext context, String entityName) throws Exception {
+    public static void waitForInstanceToComplete(TestContext context, String jobId) throws Exception {
+        ProxyOozieClient ozClient = getOozieClient(context);
+        String lastStatus = null;
+        for (int i = 0; i < 50; i++) {
+            WorkflowJob job = ozClient.getJobInfo(jobId);
+            lastStatus = job.getStatus().name();
+            if (OozieWorkflowEngine.WF_RERUN_PRECOND.contains(job.getStatus())) {
+                return;
+            }
+            System.out.println("Waiting for workflow to start");
+            Thread.sleep(i * 1000);
+        }
+        throw new Exception("Instance " + jobId + " hans't completed. Last known state " + lastStatus);
+    }
+
+    public static List<WorkflowJob> waitForWorkflowStart(TestContext context, String entityName) throws Exception {
         for (int i = 0; i < 10; i++) {
             List<WorkflowJob> jobs = getRunningJobs(context, entityName);
             if (jobs != null && !jobs.isEmpty()) {
-                return;
+                return jobs;
             }
 
             System.out.println("Waiting for workflow to start");

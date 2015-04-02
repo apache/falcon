@@ -165,6 +165,27 @@ In addition you can set any other environment variables you might need. This fil
 #export FALCON_EXPANDED_WEBAPP_DIR=
 </verbatim>
 
+*Configuring Monitoring plugin to register catalog partitions*
+Falcon comes with a monitoring plugin that registers catalog partition. This comes in really handy during migration from filesystem based feeds to hcatalog based feeds.
+This plugin enables the user to de-couple the partition registration and assume that all partitions are already on hcatalog even before the migration, simplifying the hcatalog migration.
+
+By default this plugin is disabled.
+To enable this plugin and leverage the feature, there are 3 pre-requisites:
+
+<verbatim>
+In {package dir}/conf/startup.properties, add
+*.workflow.execution.listeners=org.apache.falcon.catalog.CatalogPartitionHandler
+
+In the cluster definition, ensure registry endpoint is defined.
+Ex:
+<interface type="registry" endpoint="thrift://localhost:1109" version="0.13.3"/>
+
+In the feed definition, ensure the corresponding catalog table is mentioned in feed-properties
+Ex:
+<properties>
+    <property name="catalog.table" value="catalog:default:in_table#year={YEAR};month={MONTH};day={DAY};hour={HOUR};minute={MINUTE}"/>
+</properties>
+</verbatim>
 
 *NOTE for Mac OS users*
 <verbatim>

@@ -22,8 +22,14 @@ import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.protocol.ClientProtocol;
 import org.apache.hadoop.mapreduce.protocol.ClientProtocolProvider;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Classic protocol provider for Hadoop v2 based tests.
@@ -31,6 +37,10 @@ import java.net.InetSocketAddress;
 public class ClassicClientProtocolProvider extends ClientProtocolProvider {
 
     private static final String LOCALHOST = "localhost";
+
+    private static final ConcurrentHashMap<String, LocalJobRunner> CACHE = new ConcurrentHashMap<String, LocalJobRunner>();
+
+    private boolean initialised = false;
 
     @Override
     public ClientProtocol create(Configuration conf) throws IOException {
@@ -40,7 +50,16 @@ public class ClassicClientProtocolProvider extends ClientProtocolProvider {
         if (!"unittests".equals(framework) || !tracker.startsWith(LOCALHOST)) {
             return null;
         }
-        return new LocalJobRunner(conf);
+
+        if (!CACHE.containsKey(tracker)) {
+            CACHE.putIfAbsent(tracker, new LocalJobRunner(conf));
+        }
+
+        if (!initialised) {
+            System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("target/logs/system-out.log")), true));
+            initialised = true;
+        }
+        return CACHE.get(tracker);
     }
 
     @Override

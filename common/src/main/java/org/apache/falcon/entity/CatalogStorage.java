@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.retention.EvictionHelper;
@@ -43,15 +44,11 @@ import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 
 /**
@@ -90,7 +87,7 @@ public class CatalogStorage extends Configured implements Storage {
         this(CATALOG_URL, feed.getTable());
     }
 
-    protected CatalogStorage(Cluster cluster, CatalogTable table) throws URISyntaxException {
+    public CatalogStorage(Cluster cluster, CatalogTable table) throws URISyntaxException {
         this(ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint(), table);
     }
 
@@ -397,10 +394,7 @@ public class CatalogStorage extends Configured implements Storage {
         List<CatalogPartition> toBeDeleted;
         try {
             // get sorted date partition keys and values
-            List<String> datedPartKeys = new ArrayList<String>();
-            List<String> datedPartValues = new ArrayList<String>();
-            fillSortedDatedPartitionKVs(datedPartKeys, datedPartValues, retentionLimit, timeZone);
-            toBeDeleted = discoverPartitionsToDelete(datedPartKeys, datedPartValues);
+            toBeDeleted = discoverPartitionsToDelete(retentionLimit, timeZone);
         } catch (ELException e) {
             throw new FalconException("Couldn't find partitions to be deleted", e);
 
@@ -428,58 +422,30 @@ public class CatalogStorage extends Configured implements Storage {
         return instanceDates;
     }
 
-    private List<CatalogPartition> discoverPartitionsToDelete(List<String> datedPartKeys, List<String> datedPartValues)
+    private List<CatalogPartition> discoverPartitionsToDelete(String retentionLimit, String timezone)
         throws FalconException, ELException {
-
-        final String filter = createFilter(datedPartKeys, datedPartValues);
+        Pair<Date, Date> range = EvictionHelper.getDateRange(retentionLimit);
+        ExpressionHelper.setReferenceDate(range.first);
+        Map<String, String> partitionsToDelete = new LinkedHashMap<String, String>();
+        ExpressionHelper expressionHelper = ExpressionHelper.get();
+        for (Map.Entry<String, String> entry : getPartitions().entrySet()) {
+            if (FeedDataPath.PATTERN.matcher(entry.getValue()).find()) {
+                partitionsToDelete.put(entry.getKey(),
+                        expressionHelper.evaluateFullExpression(entry.getValue(), String.class));
+            }
+        }
+        final String filter = createFilter(partitionsToDelete);
         return CatalogServiceFactory.getCatalogService().listPartitionsByFilter(
             getConf(), getCatalogUrl(), getDatabase(), getTable(), filter);
     }
 
-    private void fillSortedDatedPartitionKVs(List<String> sortedPartKeys, List<String> sortedPartValues,
-                                             String retentionLimit, String timeZone) throws ELException {
-        Pair<Date, Date> range = EvictionHelper.getDateRange(retentionLimit);
-
-        // sort partition keys and values by the date pattern present in value
-        Map<FeedDataPath.VARS, String> sortedPartKeyMap = new TreeMap<FeedDataPath.VARS, String>();
-        Map<FeedDataPath.VARS, String> sortedPartValueMap = new TreeMap<FeedDataPath.VARS, String>();
-        for (Map.Entry<String, String> entry : getPartitions().entrySet()) {
-            String datePattern = entry.getValue();
-            String mask = datePattern.replaceAll(FeedDataPath.VARS.YEAR.regex(), "yyyy")
-                    .replaceAll(FeedDataPath.VARS.MONTH.regex(), "MM")
-                    .replaceAll(FeedDataPath.VARS.DAY.regex(), "dd")
-                    .replaceAll(FeedDataPath.VARS.HOUR.regex(), "HH")
-                    .replaceAll(FeedDataPath.VARS.MINUTE.regex(), "mm");
-
-            // find the first date pattern present in date mask
-            FeedDataPath.VARS vars = FeedDataPath.VARS.presentIn(mask);
-            // skip this partition if date mask doesn't contain any date format
-            if (vars == null) {
-                continue;
-            }
-
-            // construct dated partition value as per format
-            DateFormat dateFormat = new SimpleDateFormat(mask);
-            dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-            String partitionValue = dateFormat.format(range.first);
-
-            // add partition key and value in their sorted maps
-            if (!sortedPartKeyMap.containsKey(vars)) {
-                sortedPartKeyMap.put(vars, entry.getKey());
-            }
-
-            if (!sortedPartValueMap.containsKey(vars)) {
-                sortedPartValueMap.put(vars, partitionValue);
-            }
-        }
-
-        // add map entries to lists of partition keys and values
-        sortedPartKeys.addAll(sortedPartKeyMap.values());
-        sortedPartValues.addAll(sortedPartValueMap.values());
-    }
-
-    private String createFilter(List<String> datedPartKeys, List<String> datedPartValues) throws ELException {
-        int numPartitions = datedPartKeys.size();
+    /**
+     * Creates hive partition filter from inputs partition map.
+     * @param partitionsMap - ordered map of partition keys and values
+     * @return partition filter
+     * @throws ELException
+     */
+    private String createFilter(Map<String, String> partitionsMap) throws ELException {
 
         /* Construct filter query string. As an example, suppose the dated partition keys
          * are: [year, month, day, hour] and dated partition values are [2014, 02, 24, 10].
@@ -489,23 +455,26 @@ public class CatalogStorage extends Configured implements Storage {
          * or (year = '2014' and month = '02' and day = '24' and hour < '10')"
          */
         StringBuilder filterBuffer = new StringBuilder();
-        for (int curr = 0; curr < numPartitions; curr++) {
+        List<String> keys = new ArrayList<String>(partitionsMap.keySet());
+        for (int curr = 0; curr < partitionsMap.size(); curr++) {
             if (curr > 0) {
                 filterBuffer.append(FILTER_OR);
             }
             filterBuffer.append(FILTER_ST_BRACKET);
             for (int prev = 0; prev < curr; prev++) {
-                filterBuffer.append(datedPartKeys.get(prev))
+                String key = keys.get(prev);
+                filterBuffer.append(key)
                         .append(FILTER_EQUALS)
                         .append(FILTER_QUOTE)
-                        .append(datedPartValues.get(prev))
+                        .append(partitionsMap.get(key))
                         .append(FILTER_QUOTE)
                         .append(FILTER_AND);
             }
-            filterBuffer.append(datedPartKeys.get(curr))
+            String key = keys.get(curr);
+            filterBuffer.append(key)
                     .append(FILTER_LESS_THAN)
                     .append(FILTER_QUOTE)
-                    .append(datedPartValues.get(curr))
+                    .append(partitionsMap.get(key))
                     .append(FILTER_QUOTE)
                     .append(FILTER_END_BRACKET);
         }

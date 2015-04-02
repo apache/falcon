@@ -28,11 +28,6 @@
   </property>
 
   <property>
-    <name>mapreduce.framework.name</name>
-    <value>unittests</value>
-  </property>
-
-  <property>
     <name>yarn.resourcemanager.resource-tracker.address</name>
     <value>0.0.0.0:41025</value>
   </property>
