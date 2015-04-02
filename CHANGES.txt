@@ -2,6 +2,9 @@ Apache Falcon Change log
 
 Trunk (Unreleased)
 
+  FALCON-1134 Create branch 0.6.1 and update version to 0.6.1
+  (Shaik Idris Ali) 
+
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
