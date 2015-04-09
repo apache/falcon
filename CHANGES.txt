@@ -1,7 +1,19 @@
 Apache Falcon Change log
 
 Trunk (Unreleased)
+  INCOMPATIBLE CHANGES
 
+  NEW FEATURES
+
+  IMPROVEMENTS
+    FALCON-1142 ClusterEntityParserTest.testClusterWithOnlyStaging
+    fails when run alone(Pallavi Rao via Suhas Vasu)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+Branch: 0.6.1 (Proposed Release Version: 0.6.1)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
@@ -16,8 +28,11 @@ Trunk (Unreleased)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
-   FALCON-1128 Adding getter methods to FeedLookupResult(KArishma G 
-   via Samarth)
+   FALCON-1142 ClusterEntityParserTest.testClusterWithOnlyStaging
+   fails when run alone(Pallavi Rao via Suhas Vasu)
+
+   FALCON-1128 Adding getter methods to FeedLookupResult
+   (Karishma Gulati via Samarth)
 
    FALCON-1086 Support execution-order of a feed to be overridden
    for replication coord (Shaik Idris Ali via Suhas Vasu)

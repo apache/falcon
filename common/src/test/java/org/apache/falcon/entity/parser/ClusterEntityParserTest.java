@@ -285,13 +285,14 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        this.dfsCluster.getFileSystem().mkdirs(new Path(ClusterHelper.getLocation(cluster,
+                        ClusterLocationType.STAGING).getPath()), HadoopClientFactory.READ_EXECUTE_PERMISSION);
         clusterEntityParser.validate(cluster);
         String workingDirPath = cluster.getLocations().getLocations().get(0).getPath() + "/working";
         Assert.assertEquals(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), workingDirPath);
         FileStatus workingDirStatus = this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(workingDirPath));
         Assert.assertTrue(workingDirStatus.isDirectory());
         Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
-
     }
 
     /**
