@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.7-SNAPSHOT</version>
+        <version>0.6.1</version>
     </parent>
     <artifactId>falcon-oozie-el-extension</artifactId>
     <description>Apache Falcon Oozie EL Extension</description>
@@ -76,6 +76,11 @@
         <dependency>
             <groupId>net.sourceforge.findbugs</groupId>
             <artifactId>annotations</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
 

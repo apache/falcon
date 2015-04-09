@@ -20,7 +20,7 @@ package org.apache.falcon;
 
 import java.util.Date;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;

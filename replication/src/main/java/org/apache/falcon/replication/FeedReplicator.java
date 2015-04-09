@@ -18,7 +18,7 @@
 package org.apache.falcon.replication;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.Storage;

@@ -25,7 +25,7 @@ import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

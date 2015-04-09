@@ -18,7 +18,7 @@
 
 package org.apache.falcon.security;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityNotRegisteredException;
