@@ -19,7 +19,7 @@
 package org.apache.falcon.util;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.common.FeedDataPath;
 
 import java.util.ArrayList;
