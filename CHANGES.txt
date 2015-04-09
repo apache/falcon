@@ -12,6 +12,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1144 Dynamic partitions not getting registered in Hcat
+    (Suhas Vasu)
 
 Branch: 0.6.1 (Proposed Release Version: 0.6.1)
   INCOMPATIBLE CHANGES
@@ -147,6 +149,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1144 Dynamic partitions not getting registered in Hcat
+   (Suhas Vasu)
+
    FALCON-1132 Falcon trunk is broken due to failure in IT test
    (Ajay Yadava via Suhas Vasu)
 
