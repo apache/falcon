@@ -166,7 +166,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Path("lookup/{type}/")
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "reverse-lookup")
-    public APIResult reverseLookup(
+    public FeedLookupResult reverseLookup(
             @Dimension("type") @PathParam("type") String type,
             @Dimension("path") @QueryParam("path") String instancePath) {
         return super.reverseLookup(type, instancePath);

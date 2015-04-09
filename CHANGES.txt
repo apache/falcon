@@ -12,6 +12,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1141 Reverse Lookup for feed in prism fails with BadRequest
+    (Ajay Yadava via Suhas Vasu)
+
     FALCON-1143 Correcting order of entities on reload
     (Ajay Yadava via Suhas Vasu)
 
@@ -152,6 +155,12 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1141 Reverse Lookup for feed in prism fails with BadRequest
+   (Ajay Yadava via Suhas Vasu)
+
+   FALCON-1143 Correcting order of entities on reload
+   (Ajay Yadava via Suhas Vasu)
+
    FALCON-1144 Dynamic partitions not getting registered in Hcat
    (Suhas Vasu)
 
