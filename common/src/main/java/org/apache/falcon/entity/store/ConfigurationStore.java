@@ -55,6 +55,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ConfigurationStore implements FalconService {
 
+    private static final EntityType[] ENTITY_LOAD_ORDER = new EntityType[] {
+        EntityType.CLUSTER, EntityType.FEED, EntityType.PROCESS, };
+
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
@@ -135,7 +138,7 @@ public final class ConfigurationStore implements FalconService {
         }
 
         try {
-            for (EntityType type : EntityType.values()) {
+            for (EntityType type : ENTITY_LOAD_ORDER) {
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
                 FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
                 if (files != null) {

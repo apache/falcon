@@ -1,16 +1,5 @@
 Apache Falcon Change log
 
-Trunk (Unreleased)
-  INCOMPATIBLE CHANGES
-
-  NEW FEATURES
-
-  IMPROVEMENTS
-
-  OPTIMIZATIONS
-
-  BUG FIXES
-
 Branch: 0.6.1 (Proposed Release Version: 0.6.1)
   FALCON-1134 Create branch 0.6.1 and update version to 0.6.1
   (Shaik Idris Ali) 
@@ -148,6 +137,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1141 Reverse Lookup for feed in prism fails with BadRequest
+   (Ajay Yadava via Suhas Vasu)
+
    FALCON-1144 Dynamic partitions not getting registered in Hcat
    (Suhas Vasu)
 
