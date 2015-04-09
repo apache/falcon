@@ -63,6 +63,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1138: JDK requirement for merlin should be 1.7 (Raghav Kumar Gautam)
+
    FALCON-1135 Migrate methods related to *Merlin.java classes from InstanceUtil.java and
    Bundle.java (Ruslan Ostafiychuk)
 
