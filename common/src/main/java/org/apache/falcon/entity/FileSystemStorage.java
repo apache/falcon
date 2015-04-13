@@ -328,7 +328,7 @@ public class FileSystemStorage extends Configured implements Storage {
 
         DateFormat dateFormat = new SimpleDateFormat(FeedHelper.FORMAT);
         dateFormat.setTimeZone(timeZone);
-        Path feedBasePath = FeedHelper.getFeedBasePath(feedPath);
+        Path feedBasePath = fs.makeQualified(FeedHelper.getFeedBasePath(feedPath));
         for (Path path : toBeDeleted) {
             deleteInstance(fs, path, feedBasePath);
             Date date = FeedHelper.getDate(feedPath, new Path(path.toUri().getPath()), timeZone);
