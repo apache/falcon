@@ -20,12 +20,10 @@ package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
-import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
-import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 
 import java.util.Arrays;
@@ -57,6 +55,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
         //Add pre-processing
         if (shouldPreProcess()) {
             ACTION action = getPreProcessingAction(false, Tag.REPLICATION);
+            addHDFSServersConfig(action, src, target);
             addTransition(action, EXPORT_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(action);
             start = PREPROCESS_ACTION_NAME;
@@ -84,10 +83,12 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
 
         //Add post-processing actions
         ACTION success = getSuccessPostProcessAction();
+        addHDFSServersConfig(success, src, target);
         addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(success);
 
         ACTION fail = getFailPostProcessAction();
+        addHDFSServersConfig(fail, src, target);
         addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(fail);
 
@@ -130,14 +131,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
                     action.setCred(TARGET_HIVE_CREDENTIAL_NAME);
                 }
             } else if (REPLICATION_ACTION_NAME.equals(actionName)) {
-                if (isSecurityEnabled) {
-                    // this is to ensure that the delegation tokens are checked out for both clusters
-                    CONFIGURATION.Property property = new CONFIGURATION.Property();
-                    property.setName("mapreduce.job.hdfs-servers");
-                    property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
-                            + "," + ClusterHelper.getStorageUrl(targetCluster));
-                    action.getJava().getConfiguration().getProperty().add(property);
-                }
+                addHDFSServersConfig(action, sourceCluster, targetCluster);
             }
         }
     }
