@@ -24,6 +24,7 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -32,19 +33,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -370,7 +362,7 @@ public class FeedEvictorTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void testEvictionWithEmptyDirs() throws Exception {
         try {
             Configuration conf = cluster.getConf();
@@ -398,7 +390,7 @@ public class FeedEvictorTest {
 
             compare(map.get("feed1"), stream.getBuffer());
 
-            String expectedInstancePaths = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, ""));
+            String expectedInstancePaths = getExpectedInstancePaths(dataPath);
             Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
 
             String deletedPath = expectedInstancePaths.split(",")[0].split("=")[1];
@@ -415,6 +407,49 @@ public class FeedEvictorTest {
                 Assert.assertTrue(fs.exists(new Path(path)));
             }
 
+
+        } catch (Exception e) {
+            Assert.fail("Unknown exception", e);
+        }
+    }
+
+    @Test
+    public void testFeedBasePathExists() throws Exception {
+        try {
+            Configuration conf = cluster.getConf();
+            FileSystem fs = FileSystem.get(conf);
+            fs.delete(new Path("/"), true);
+            stream.clear();
+
+            Pair<List<String>, List<String>> pair = generateInstances(fs, "feed3",
+                    "yyyy/MM/dd/hh/mm", 1, TimeUnit.MINUTES, "/data", false);
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
+            String dataPath = LocationType.DATA.name() + "="
+                    + storageUrl + "/data/YYYY/feed3/mmHH/dd/MM/?{YEAR}/?{MONTH}/?{DAY}/?{HOUR}/?{MINUTE}";
+            String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
+            long beforeDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed3/mmHH/dd/MM/"))).getDirectoryCount();
+
+            FeedEvictor.main(new String[]{
+                "-feedBasePath", dataPath,
+                "-retentionType", "instance",
+                "-retentionLimit", "minutes(-1)",
+                "-timeZone", "UTC",
+                "-frequency", "minutes",
+                "-logFile", logFile,
+                "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
+            });
+
+            String expectedInstancePaths = getExpectedInstancePaths(dataPath);
+            Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
+
+            //Feed Base path must exist
+            Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed3/mmHH/dd/MM/")));
+            FileStatus[] files = fs.listStatus(new Path(("/data/YYYY/feed3/mmHH/dd/MM/")));
+            //Number of directories/files inside feed base path should be 0
+            Assert.assertEquals(files.length, 0);
+            long afterDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed3/mmHH/dd/MM/"))).getDirectoryCount();
+            //Number of directories deleted
+            Assert.assertEquals((beforeDelCount - afterDelCount), 11);
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);
