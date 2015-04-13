@@ -21,12 +21,15 @@ package org.apache.falcon.oozie.feed;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
+import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.hadoop.fs.Path;
 
@@ -55,6 +58,16 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         marshal(cluster, workflow, buildPath);
         return getProperties(buildPath, wfName);
     }
-
+    protected ACTION addHDFSServersConfig(ACTION action, Cluster sourceCluster, Cluster targetCluster) {
+        if (isSecurityEnabled) {
+            // this is to ensure that the delegation tokens are checked out for both clusters
+            CONFIGURATION.Property property = new CONFIGURATION.Property();
+            property.setName("mapreduce.job.hdfs-servers");
+            property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
+                    + "," + ClusterHelper.getStorageUrl(targetCluster));
+            action.getJava().getConfiguration().getProperty().add(property);
+        }
+        return action;
+    }
     protected abstract WORKFLOWAPP getWorkflow(Cluster src, Cluster target) throws FalconException;
 }

@@ -12,6 +12,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1129 In a secure cluster, feed replication fails because of
+    Authentication issues (Venkat Ranganathan via Suhas Vasu)
+
     FALCON-1141 Reverse Lookup for feed in prism fails with BadRequest
     (Ajay Yadava via Suhas Vasu)
 
@@ -155,6 +158,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1129 In a secure cluster, feed replication fails because of
+   Authentication issues (Venkat Ranganathan via Suhas Vasu)
+
    FALCON-1141 Reverse Lookup for feed in prism fails with BadRequest
    (Ajay Yadava via Suhas Vasu)
 
