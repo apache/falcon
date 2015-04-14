@@ -130,18 +130,17 @@ public class FeedDelayTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed), "REPLICATION"), 1);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed, 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, Util.readEntityName(feed), "REPLICATION"), 1);
 
         //Finding bundleId of replicated instance on target
-        String bundleId = InstanceUtil.getLatestBundleID(cluster2, Util.readEntityName(feed), EntityType.FEED);
+        String bundleId = OozieUtil.getLatestBundleID(cluster2OC, Util.readEntityName(feed), EntityType.FEED);
 
         //Finding startTime of replicated instance on target
-        String startTimeO0zie = OozieUtil.getCoordStartTime(cluster2, feed, 0);
+        String startTimeO0zie = OozieUtil.getCoordStartTime(cluster2OC, feed, 0);
         String startTimeExpected = getStartTime(sourceStartTime, targetStartTime, new Frequency(sourceDelay), flag);
 
-        List<String> missingDep = getAndCreateDependencies(cluster1, cluster1FS, cluster2, bundleId);
+        List<String> missingDep = getAndCreateDependencies(cluster1FS, cluster1.getPrefix(), cluster2OC, bundleId);
         List<String> qaDep = new ArrayList<String>();
 
         if (flag) {
@@ -176,25 +175,24 @@ public class FeedDelayTest extends BaseTestClass {
         };
     }
 
-    private List<String> getAndCreateDependencies(ColoHelper prismHelper1, FileSystem clusterFS1,
-        ColoHelper prismHelper2, String bundleId) throws OozieClientException, IOException {
-        List<String> missingDependencies = OozieUtil.getMissingDependencies(prismHelper2, bundleId);
+    private List<String> getAndCreateDependencies(FileSystem sourceFS, String sourcePrefix, OozieClient targetOC,
+                                                  String bundleId) throws OozieClientException, IOException {
+        List<String> missingDependencies = OozieUtil.getMissingDependencies(targetOC, bundleId);
         for (int i = 0; i < 10 && missingDependencies == null; ++i) {
             TimeUtil.sleepSeconds(30);
             LOGGER.info("sleeping...");
-            missingDependencies = OozieUtil.getMissingDependencies(prismHelper2, bundleId);
+            missingDependencies = OozieUtil.getMissingDependencies(targetOC, bundleId);
         }
         Assert.assertNotNull(missingDependencies, "Missing dependencies not found.");
 
         // Creating missing dependencies
-        HadoopUtil.createHDFSFolders(prismHelper1, missingDependencies);
+        HadoopUtil.createFolders(sourceFS, sourcePrefix, missingDependencies);
 
         //Adding data to empty folders
         for (String location : missingDependencies) {
             LOGGER.info("Transferring data to : " + location);
-            HadoopUtil.copyDataToFolder(clusterFS1, location, OSUtil.RESOURCES + "feed-s4Replication.xml");
+            HadoopUtil.copyDataToFolder(sourceFS, location, OSUtil.RESOURCES + "feed-s4Replication.xml");
         }
-
         return missingDependencies;
     }
 

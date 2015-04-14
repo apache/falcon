@@ -590,14 +590,13 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //get old process details
-        String oldProcessBundleId = InstanceUtil
-            .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        String oldProcessUser =
-            getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessBundleId = OozieUtil
+            .getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessUser = getBundleUser(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
-        String oldFeedBundleId = InstanceUtil.getLatestBundleID(cluster, feed.getName(), EntityType.FEED);
-        String oldFeedUser = getBundleUser(cluster, feed.getName(), EntityType.FEED);
+        String oldFeedBundleId = OozieUtil.getLatestBundleID(clusterOC, feed.getName(), EntityType.FEED);
+        String oldFeedUser = getBundleUser(clusterOC, feed.getName(), EntityType.FEED);
 
         //update feed definition
         FeedMerlin newFeed = new FeedMerlin(feed);
@@ -609,15 +608,15 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should be created by U1
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed.toString(), true, false);
-        String newFeedUser =
-                getBundleUser(cluster, newFeed.getName(), EntityType.FEED);
+        OozieUtil.verifyNewBundleCreation(clusterOC, oldFeedBundleId, null, newFeed.toString(), true, false);
+        String newFeedUser = getBundleUser(clusterOC, newFeed.getName(), EntityType.FEED);
         Assert.assertEquals(oldFeedUser, newFeedUser, "User should be the same");
 
         //new process bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
+        OozieUtil.verifyNewBundleCreation(
+            clusterOC, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
         String newProcessUser =
-            getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+            getBundleUser(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
     }
 
@@ -645,14 +644,13 @@ public class AuthorizationTest extends BaseTestClass {
         newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
 
         //get old process details
-        String oldProcessBundleId = InstanceUtil
-                .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        String oldProcessUser =
-                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessBundleId = OozieUtil
+                .getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessUser = getBundleUser(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
-        String oldFeedBundleId = InstanceUtil.getLatestBundleID(cluster, feed.getName(), EntityType.FEED);
-        String oldFeedUser = getBundleUser(cluster, feed.getName(), EntityType.FEED);
+        String oldFeedBundleId = OozieUtil.getLatestBundleID(clusterOC, feed.getName(), EntityType.FEED);
+        String oldFeedUser = getBundleUser(clusterOC, feed.getName(), EntityType.FEED);
 
         //update feed by U2
         serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
@@ -660,15 +658,15 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, newFeed.toString(), true, false);
-        String newFeedUser = getBundleUser(cluster, newFeed.getName(), EntityType.FEED);
+        OozieUtil.verifyNewBundleCreation(clusterOC, oldFeedBundleId, null, newFeed.toString(), true, false);
+        String newFeedUser = getBundleUser(clusterOC, newFeed.getName(), EntityType.FEED);
         Assert.assertNotEquals(oldFeedUser, newFeedUser, "User should not be the same");
         Assert.assertEquals(MerlinConstants.USER2_NAME, newFeedUser);
 
         //new process bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
-        String newProcessUser =
-                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        OozieUtil.verifyNewBundleCreation(
+            clusterOC, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
+        String newProcessUser = getBundleUser(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
     }
 
@@ -691,14 +689,12 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //get old process details
-        String oldProcessBundleId = InstanceUtil
-                .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        String oldProcessUser =
-                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessBundleId = OozieUtil
+                .getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessUser = getBundleUser(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
-        String oldFeedBundleId = InstanceUtil
-                .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String oldFeedBundleId = OozieUtil.getLatestBundleID(clusterOC, Util.readEntityName(feed), EntityType.FEED);
 
         //update process by U1
         ProcessMerlin processObj = bundles[0].getProcessObject();
@@ -707,12 +703,12 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should not be created
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, false, false);
+        OozieUtil.verifyNewBundleCreation(clusterOC, oldFeedBundleId, null, feed, false, false);
 
         //new process bundle should be created by U1
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
-        String newProcessUser =
-                getBundleUser(cluster, processObj.getName(), EntityType.PROCESS);
+        OozieUtil.verifyNewBundleCreation(
+            clusterOC, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
+        String newProcessUser = getBundleUser(clusterOC, processObj.getName(), EntityType.PROCESS);
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
     }
 
@@ -735,14 +731,12 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
         //get old process details
-        String oldProcessBundleId = InstanceUtil
-                .getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        String oldProcessUser =
-                getBundleUser(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessBundleId = OozieUtil
+                .getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        String oldProcessUser = getBundleUser(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
 
         //get old feed details
-        String oldFeedBundleId = InstanceUtil
-                .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String oldFeedBundleId = OozieUtil.getLatestBundleID(clusterOC, Util.readEntityName(feed), EntityType.FEED);
 
         //update process by U2
         ProcessMerlin processObj = bundles[0].getProcessObject();
@@ -752,22 +746,20 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should not be created
-        OozieUtil.verifyNewBundleCreation(cluster, oldFeedBundleId, null, feed, false, false);
+        OozieUtil.verifyNewBundleCreation(clusterOC, oldFeedBundleId, null, feed, false, false);
 
         //new process bundle should be created by U2
-        OozieUtil.verifyNewBundleCreation(cluster, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
-        String newProcessUser =
-                getBundleUser(cluster, processObj.getName(), EntityType.PROCESS);
+        OozieUtil.verifyNewBundleCreation(
+            clusterOC, oldProcessBundleId, null, bundles[0].getProcessData(), true, false);
+        String newProcessUser = getBundleUser(clusterOC, processObj.getName(), EntityType.PROCESS);
         Assert.assertNotEquals(oldProcessUser, newProcessUser, "User should not be the same");
         Assert.assertEquals(MerlinConstants.USER2_NAME, newProcessUser);
     }
 
-    private String getBundleUser(ColoHelper coloHelper, String entityName, EntityType entityType)
+    private String getBundleUser(OozieClient oozieClient, String entityName, EntityType entityType)
         throws OozieClientException {
-        String newBundleId = InstanceUtil.getLatestBundleID(coloHelper, entityName,
-            entityType);
-        BundleJob newBundleJob =
-            coloHelper.getClusterHelper().getOozieClient().getBundleJobInfo(newBundleId);
+        String newBundleId = OozieUtil.getLatestBundleID(oozieClient, entityName, entityType);
+        BundleJob newBundleJob = oozieClient.getBundleJobInfo(newBundleId);
         CoordinatorJob coordinatorJob = null;
         for (CoordinatorJob coord : newBundleJob.getCoordinators()) {
             if ((entityType == EntityType.PROCESS && coord.getAppName().contains("DEFAULT"))

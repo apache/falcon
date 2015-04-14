@@ -333,21 +333,21 @@ public class PrismProcessScheduleTest extends BaseTestClass {
 
             bundles[0].submitFeedsScheduleProcess(prism);
 
-            InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+            InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
             OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
                     bundles[0].getProcessName(), 0);
             InstanceUtil.waitTillInstanceReachState(cluster1OC,
                     bundles[0].getProcessName(), 2,
                     CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
 
-            InstanceUtil.waitForBundleToReachState(cluster1,
-                    Util.readEntityName(process), Job.Status.KILLED);
-            String oldBundleID = InstanceUtil.getLatestBundleID(cluster1,
+            OozieUtil.waitForBundleToReachState(cluster1OC,
+                Util.readEntityName(process), Job.Status.KILLED);
+            String oldBundleID = OozieUtil.getLatestBundleID(cluster1OC,
                 Util.readEntityName(process), EntityType.PROCESS);
             prism.getProcessHelper().delete(process);
 
             bundles[0].submitAndScheduleProcess();
-            OozieUtil.verifyNewBundleCreation(cluster1, oldBundleID,
+            OozieUtil.verifyNewBundleCreation(cluster1OC, oldBundleID,
                 new ArrayList<String>(), process, true, false);
         } finally {
             if (hadoopFileEditor != null) {

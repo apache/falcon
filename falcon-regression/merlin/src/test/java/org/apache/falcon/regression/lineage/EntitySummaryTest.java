@@ -66,7 +66,6 @@ import java.util.List;
 public class EntitySummaryTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(EntitySummaryTest.class);
     private ColoHelper cluster1 = servers.get(0);
-    private ColoHelper cluster2 = servers.get(1);
     private OozieClient cluster1OC = serverOC.get(0);
     private OozieClient cluster2OC = serverOC.get(1);
     private FileSystem cluster1FS = serverFS.get(0);
@@ -112,7 +111,7 @@ public class EntitySummaryTest extends BaseTestClass {
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
         String clusterName = Util.readEntityName(bundles[0].getClusters().get(0));
-        List<String> processes = scheduleEntityValidateWaitingInstances(cluster1,
+        List<String> processes = scheduleEntityValidateWaitingInstances(cluster1OC,
             bundles[0].getProcessData(), EntityType.PROCESS, clusterName);
 
         //create data for processes to run and wait some time for instances to make progress
@@ -161,8 +160,7 @@ public class EntitySummaryTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster2Def));
 
         //submit and schedule 7 feeds, check that 7 waiting instances are present for each feed
-        List<String> feeds = scheduleEntityValidateWaitingInstances(cluster2, feed,
-            EntityType.FEED, clusterName);
+        List<String> feeds = scheduleEntityValidateWaitingInstances(cluster2OC, feed, EntityType.FEED, clusterName);
 
         //create data for processes to run and wait some time for instances to make progress
         List<String> folders = TimeUtil.getMinuteDatesOnEitherSide(TimeUtil.oozieDateToDate(
@@ -180,9 +178,8 @@ public class EntitySummaryTest extends BaseTestClass {
      * Schedules 7 entities and checks that summary reflects info about the most recent 7
      * instances of each of them.
      */
-    private List<String> scheduleEntityValidateWaitingInstances(ColoHelper cluster, String entity,
-                                                                EntityType entityType,
-                                                                String clusterName)
+    private List<String> scheduleEntityValidateWaitingInstances(OozieClient oozieClient, String entity,
+                                                                EntityType entityType, String clusterName)
         throws AuthenticationException, IOException, URISyntaxException, JAXBException,
         OozieClientException, InterruptedException {
         String entityName = Util.readEntityName(entity);
@@ -203,8 +200,8 @@ public class EntitySummaryTest extends BaseTestClass {
             }
             entity = entityMerlin.toString();
             AssertUtil.assertSucceeded(helper.submitAndSchedule(entity));
-            InstanceUtil.waitTillInstancesAreCreated(cluster, entity, 0);
-            InstanceUtil.waitTillInstanceReachState(cluster.getClusterHelper().getOozieClient(),
+            InstanceUtil.waitTillInstancesAreCreated(oozieClient, entity, 0);
+            InstanceUtil.waitTillInstanceReachState(oozieClient,
                 uniqueName, 7, CoordinatorAction.Status.WAITING, entityType);
 
             //check that summary shows recent (i) number of feeds and their instances

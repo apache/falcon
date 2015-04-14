@@ -123,7 +123,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
 
         //submit and schedule feed
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed, 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed, 0);
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feedName, 12,
             CoordinatorAction.Status.WAITING, EntityType.FEED);
 

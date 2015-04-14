@@ -32,8 +32,8 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HCatUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.HCatCreateTableDesc;
@@ -212,9 +212,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
                 .build()).toString();
 
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
-                        "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, Util.readEntityName(feed), "REPLICATION"), 1);
         //This test doesn't wait for replication to succeed.
     }
 

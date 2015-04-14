@@ -33,6 +33,7 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -163,7 +164,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
         int counter = OSUtil.IS_WINDOWS ? 100 : 50;
-        InstanceUtil.waitForBundleToReachState(cluster, bundles[0].getProcessName(), Job.Status.SUCCEEDED, counter);
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Job.Status.SUCCEEDED, counter);
         r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }

@@ -24,7 +24,6 @@ import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.*;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job;
@@ -44,7 +43,6 @@ import java.util.List;
 public class ELExpCurrentAndLastWeekTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
-    private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
@@ -97,13 +95,11 @@ public class ELExpCurrentAndLastWeekTest extends BaseTestClass {
     public void currentAndLastWeekTest(String startInstance, String endInstance,
             String firstDep, String endDep) throws Exception {
         bundles[0].setDatasetInstances(startInstance, endInstance);
-
         bundles[0].submitFeedsScheduleProcess(prism);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
 
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
-
-        List<String> missingDependencies = getMissingDependencies(cluster, bundles[0]);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
+        List<String> missingDependencies = getMissingDependencies(clusterOC, bundles[0].getProcessName());
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, bundles[0].getProcessName(), 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
@@ -146,15 +142,14 @@ public class ELExpCurrentAndLastWeekTest extends BaseTestClass {
         return true;
     }
 
-    private List<String> getMissingDependencies(ColoHelper prismHelper, Bundle bundle) throws OozieClientException {
-        List<String> bundles = OozieUtil.getBundles(prismHelper.getFeedHelper().getOozieClient(),
-                bundle.getProcessName(), EntityType.PROCESS);
+    public List<String> getMissingDependencies(OozieClient oozieClient,
+                                              String processName) throws OozieClientException {
+        List<String> bundles = OozieUtil.getBundles(oozieClient, processName, EntityType.PROCESS);
         String coordID = bundles.get(0);
-        List<String> missingDependencies =
-                OozieUtil.getMissingDependencies(prismHelper, coordID);
+        List<String> missingDependencies = OozieUtil.getMissingDependencies(oozieClient, coordID);
         for (int i = 0; i < 10 && missingDependencies == null; ++i) {
             TimeUtil.sleepSeconds(30);
-            missingDependencies = OozieUtil.getMissingDependencies(prismHelper, coordID);
+            missingDependencies = OozieUtil.getMissingDependencies(oozieClient, coordID);
         }
         Assert.assertNotNull(missingDependencies, "Missing dependencies not found.");
         return missingDependencies;

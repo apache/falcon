@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
@@ -150,7 +149,7 @@ public class NewRetryTest extends BaseTestClass {
             LOGGER.info("going to update process at:" + DateTime.now(DateTimeZone.UTC));
             prism.getProcessHelper()
                 .update((bundles[0].getProcessData()), bundles[0].getProcessData());
-            String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+            String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                 bundles[0].getProcessName(), EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -205,7 +204,7 @@ public class NewRetryTest extends BaseTestClass {
                     .update((bundles[0].getProcessData()), bundles[0].getProcessData())
                     .getMessage().contains("updated successfully"),
                     "process was not updated successfully");
-                String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+                String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                     bundles[0].getProcessName(), EntityType.PROCESS);
 
                 Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -260,7 +259,7 @@ public class NewRetryTest extends BaseTestClass {
                     .update((bundles[0].getProcessData()), bundles[0].getProcessData())
                     .getMessage().contains("updated successfully"),
                 "process was not updated successfully");
-            String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+            String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                 bundles[0].getProcessName(), EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -316,7 +315,7 @@ public class NewRetryTest extends BaseTestClass {
                     .update((bundles[0].getProcessData()), bundles[0].getProcessData())
                     .getMessage().contains("updated successfully"),
                 "process was not updated successfully");
-            String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+            String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                 bundles[0].getProcessName(), EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -364,7 +363,7 @@ public class NewRetryTest extends BaseTestClass {
                 .update(bundles[0].getProcessName(),
                     null).getMessage()
                 .contains("updated successfully"), "process was not updated successfully");
-            String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+            String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                 bundles[0].getProcessName(), EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -412,7 +411,7 @@ public class NewRetryTest extends BaseTestClass {
                 prism.getProcessHelper().update(bundles[0].getProcessName(),
                     bundles[0].getProcessData()).getMessage()
                     .contains("updated successfully"), "process was not updated successfully");
-            String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+            String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                 bundles[0].getProcessName(), EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -465,8 +464,8 @@ public class NewRetryTest extends BaseTestClass {
                         bundles[0].getProcessData()).getMessage()
                     .contains("updated successfully"),
                 "process was not updated successfully");
-            String newBundleId = InstanceUtil
-                .getLatestBundleID(cluster, bundles[0].getProcessName(),
+            String newBundleId = OozieUtil
+                .getLatestBundleID(clusterOC, bundles[0].getProcessName(),
                     EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");
@@ -517,7 +516,7 @@ public class NewRetryTest extends BaseTestClass {
                 prism.getProcessHelper().update(bundles[0].getProcessName()
                     , bundles[0].getProcessData()).getMessage().contains("updated successfully"),
                 "process was updated successfully!!!");
-            String newBundleId = InstanceUtil.getLatestBundleID(cluster,
+            String newBundleId = OozieUtil.getLatestBundleID(clusterOC,
                 bundles[0].getProcessName(), EntityType.PROCESS);
 
             Assert.assertEquals(bundleId, newBundleId, "its creating a new bundle!!!");

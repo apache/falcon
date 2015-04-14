@@ -91,7 +91,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
         bundles[0].submitAndScheduleProcess();
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         TimeUtil.sleepSeconds(10);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
 
         getAndCreateDependencies(cluster1, bundles[0], cluster1OC, cluster1FS, false, 1);
 
@@ -107,7 +107,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
             bundles[0].getProcessName(), EntityType.PROCESS);
         String bundleID = bundleList.get(0);
 
-        OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 1);
+        OozieUtil.validateRetryAttempts(cluster1OC, bundleID, EntityType.PROCESS, 1);
     }
 
     /**
@@ -131,7 +131,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
         bundles[0].submitAndScheduleProcess();
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         TimeUtil.sleepSeconds(10);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
 
         getAndCreateDependencies(cluster1, bundles[0], cluster1OC, cluster1FS, true, 1);
 
@@ -147,7 +147,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
             bundles[0].getProcessName(), EntityType.PROCESS);
         String bundleID = bundleList.get(0);
 
-        OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 1);
+        OozieUtil.validateRetryAttempts(cluster1OC, bundleID, EntityType.PROCESS, 1);
     }
 
     /**
@@ -175,7 +175,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
 
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         TimeUtil.sleepSeconds(10);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
 
         getAndCreateDependencies(cluster1, bundles[0], cluster1OC, cluster1FS, false, 3);
 
@@ -191,7 +191,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
             bundles[0].getProcessName(), EntityType.PROCESS);
         String bundleID = bundleList.get(0);
 
-        OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 1);
+        OozieUtil.validateRetryAttempts(cluster1OC, bundleID, EntityType.PROCESS, 1);
     }
 
     /**
@@ -231,7 +231,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
 
         TimeUtil.sleepSeconds(10);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
 
         getAndCreateDependencies(cluster1, bundles[0], cluster1OC, cluster1FS, false, 7);
 
@@ -248,7 +248,7 @@ public class ProcessLateRerunTest extends BaseTestClass {
             bundles[0].getProcessName(), EntityType.PROCESS);
         String bundleID = bundleList.get(0);
 
-        OozieUtil.validateRetryAttempts(cluster1, bundleID, EntityType.PROCESS, 0);
+        OozieUtil.validateRetryAttempts(cluster1OC, bundleID, EntityType.PROCESS, 0);
     }
 
     /*
@@ -271,10 +271,10 @@ public class ProcessLateRerunTest extends BaseTestClass {
             Assert.assertTrue(bundles != null && bundles.size() > 0, "Bundle job not created.");
             String bundleID = bundles.get(0);
             LOGGER.info("bundle id: " + bundleID);
-            List<String> missingDependencies = OozieUtil.getMissingDependencies(prismHelper, bundleID);
+            List<String> missingDependencies = OozieUtil.getMissingDependencies(oozieClient, bundleID);
             for (int i = 0; i < 10 && missingDependencies == null; ++i) {
                 TimeUtil.sleepSeconds(30);
-                missingDependencies = OozieUtil.getMissingDependencies(prismHelper, bundleID);
+                missingDependencies = OozieUtil.getMissingDependencies(oozieClient, bundleID);
             }
             Assert.assertNotNull(missingDependencies, "Missing dependencies not found.");
 

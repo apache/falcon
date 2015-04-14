@@ -284,7 +284,7 @@ public class OptionalInputTest extends BaseTestClass {
         prism.getProcessHelper().update(process.toString(), process.toString());
 
         //from now on ... it should wait of input0 also
-        InstanceUtil.waitTillInstancesAreCreated(cluster, process.toString(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(serverOC.get(0), process.toString(), 0);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
                 2, CoordinatorAction.Status.WAITING, EntityType.PROCESS, 10);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.SINGLE_FILE,

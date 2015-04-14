@@ -192,16 +192,16 @@ public class ProcessUITest extends BaseUITestClass {
         ProcessPage processPage = new ProcessPage(getDriver(), cluster, processName);
         processPage.navigateTo();
 
-        String bundleID = InstanceUtil.getLatestBundleID(cluster, processName, EntityType.PROCESS);
-        Map<Date, CoordinatorAction.Status> actions = OozieUtil.getActionsNominalTimeAndStatus(prism, bundleID,
-                EntityType.PROCESS);
+        String bundleID = OozieUtil.getLatestBundleID(clusterOC, processName, EntityType.PROCESS);
+        Map<Date, CoordinatorAction.Status> actions = OozieUtil.getActionsNominalTimeAndStatus(
+            clusterOC, bundleID,   EntityType.PROCESS);
         checkActions(actions, processPage);
 
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         processPage.refresh();
-        actions = OozieUtil.getActionsNominalTimeAndStatus(prism, bundleID, EntityType.PROCESS);
+        actions = OozieUtil.getActionsNominalTimeAndStatus(clusterOC, bundleID, EntityType.PROCESS);
         checkActions(actions, processPage);
 
         softAssert.assertAll();

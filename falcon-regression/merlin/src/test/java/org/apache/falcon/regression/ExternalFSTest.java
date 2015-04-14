@@ -33,6 +33,7 @@ import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -130,7 +131,6 @@ public class ExternalFSTest extends BaseTestClass{
 
     }
 
-
     @Test(dataProvider = "getData")
     public void replicateToExternalFS(final FileSystem externalFS,
         final String separator, final boolean withData) throws Exception {
@@ -181,13 +181,10 @@ public class ExternalFSTest extends BaseTestClass{
         Path dstPath = new Path(endpoint + testWasbTargetDir + '/' + timePattern);
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster, feed.toString(), 0);
-
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster.getFeedHelper(), Util.readEntityName(feed.toString()),
-                "REPLICATION"), 1);
-
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, feed.toString(), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(clusterOC, feed.getName(), "REPLICATION"), 1);
         TimeUtil.sleepSeconds(10);
+
         //replication should start, wait while it ends
         InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(feed.toString()), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);

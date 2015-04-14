@@ -29,6 +29,7 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -152,11 +153,8 @@ public class FeedReplicationTest extends BaseTestClass {
         }
 
         //check if coordinator exists
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
-
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed.toString()),
-                "REPLICATION"), 1);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed.toString(), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feed.getName(), "REPLICATION"), 1);
 
         //replication should start, wait while it ends
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed.toString()), 1,
@@ -240,23 +238,18 @@ public class FeedReplicationTest extends BaseTestClass {
         }
 
         //check if all coordinators exist
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed.toString(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster3OC, feed.toString(), 0);
 
-        InstanceUtil.waitTillInstancesAreCreated(cluster3, feed.toString(), 0);
-
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), feed.getName(),
-                "REPLICATION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), feed.getName(),
-                "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feed.getName(), "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feed.getName(), "REPLICATION"), 1);
         //replication on cluster 2 should start, wait till it ends
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //replication on cluster 3 should start, wait till it ends
         InstanceUtil.waitTillInstanceReachState(cluster3OC, feed.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data has been replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -339,11 +332,10 @@ public class FeedReplicationTest extends BaseTestClass {
         }
 
         //check while instance is got created
-        InstanceUtil.waitTillInstancesAreCreated(cluster2, feed.toString(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed.toString(), 0);
 
         //check if coordinator exists
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(), feedName, "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 1);
 
         //replication should not start even after time
         TimeUtil.sleepSeconds(60);

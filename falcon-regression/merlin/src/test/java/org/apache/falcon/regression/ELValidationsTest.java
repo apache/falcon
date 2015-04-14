@@ -29,6 +29,7 @@ import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.TestNGException;
 import org.testng.annotations.DataProvider;
@@ -139,7 +140,7 @@ public class ELValidationsTest extends BaseTestClass {
             LOGGER.info("processData in try is: " + Util.prettyPrintXml(bundle.getProcessData()));
             TimeUtil.sleepSeconds(45);
             if (isMatch) {
-                getAndMatchDependencies(cluster, bundle);
+                getAndMatchDependencies(serverOC.get(0), bundle);
             }
             return submitResponse;
         } catch (Exception e) {
@@ -151,12 +152,11 @@ public class ELValidationsTest extends BaseTestClass {
         }
     }
 
-    private void getAndMatchDependencies(ColoHelper prismHelper, Bundle bundle) {
+    private void getAndMatchDependencies(OozieClient oozieClient, Bundle bundle) {
         try {
             List<String> bundles = null;
             for (int i = 0; i < 10; ++i) {
-                bundles = OozieUtil.getBundles(prismHelper.getFeedHelper().getOozieClient(),
-                    bundle.getProcessName(), EntityType.PROCESS);
+                bundles = OozieUtil.getBundles(oozieClient, bundle.getProcessName(), EntityType.PROCESS);
                 if (bundles.size() > 0) {
                     break;
                 }
@@ -165,17 +165,16 @@ public class ELValidationsTest extends BaseTestClass {
             Assert.assertTrue(bundles != null && bundles.size() > 0, "Bundle job not created.");
             String coordID = bundles.get(0);
             LOGGER.info("coord id: " + coordID);
-            List<String> missingDependencies =
-                OozieUtil.getMissingDependencies(prismHelper, coordID);
+            List<String> missingDependencies = OozieUtil.getMissingDependencies(oozieClient, coordID);
             for (int i = 0; i < 10 && missingDependencies == null; ++i) {
                 TimeUtil.sleepSeconds(30);
-                missingDependencies = OozieUtil.getMissingDependencies(prismHelper, coordID);
+                missingDependencies = OozieUtil.getMissingDependencies(oozieClient, coordID);
             }
             Assert.assertNotNull(missingDependencies, "Missing dependencies not found.");
             for (String dependency : missingDependencies) {
                 LOGGER.info("dependency from job: " + dependency);
             }
-            Date jobNominalTime = OozieUtil.getNominalTime(prismHelper, coordID);
+            Date jobNominalTime = OozieUtil.getNominalTime(oozieClient, coordID);
             Calendar time = Calendar.getInstance();
             time.setTime(jobNominalTime);
             LOGGER.info("nominalTime:" + jobNominalTime);
@@ -224,8 +223,7 @@ public class ELValidationsTest extends BaseTestClass {
     }
 
     private List<String> getQADepedencyList(Calendar nominalTime, Date startRef,
-                                            Date endRef, int frequency,
-                                            Bundle bundle) {
+                                            Date endRef, int frequency, Bundle bundle) {
         LOGGER.info("start ref:" + startRef);
         LOGGER.info("end ref:" + endRef);
         Calendar initialTime = Calendar.getInstance();

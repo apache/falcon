@@ -86,7 +86,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
@@ -111,7 +111,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
@@ -131,7 +131,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
@@ -170,7 +170,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
@@ -249,7 +249,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);

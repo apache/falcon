@@ -28,11 +28,13 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -51,6 +53,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
     private ColoHelper cluster3 = servers.get(2);
+    private OozieClient cluster1OC = serverOC.get(0);
     private FileSystem cluster1FS = serverFS.get(0);
     private FileSystem cluster2FS = serverFS.get(1);
     private FileSystem cluster3FS = serverFS.get(2);
@@ -124,23 +127,22 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
                 .withPartition("UK/${cluster.colo}")
                 .build()).toString();
 
-
         LOGGER.info("feed: " + Util.prettyPrintXml(feed));
 
         prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         String bundleId =
-            InstanceUtil.getLatestBundleID(cluster1, Util.readEntityName(feed), EntityType.FEED);
+            OozieUtil.getLatestBundleID(cluster1OC, Util.readEntityName(feed), EntityType.FEED);
 
         //wait till 1st instance of replication coord is SUCCEEDED
-        List<String> replicationCoordIDTarget = InstanceUtil
+        List<String> replicationCoordIDTarget = OozieUtil
             .getReplicationCoordID(bundleId, cluster1.getFeedHelper());
 
         for (int i = 0; i < 30; i++) {
-            if (InstanceUtil.getInstanceStatusFromCoord(cluster1, replicationCoordIDTarget.get(0),
+            if (InstanceUtil.getInstanceStatusFromCoord(cluster1OC, replicationCoordIDTarget.get(0),
                 0) == WorkflowJob.Status.SUCCEEDED
-                && InstanceUtil.getInstanceStatusFromCoord(cluster1,
+                && InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
                     replicationCoordIDTarget.get(1), 0)
                 == WorkflowJob.Status.SUCCEEDED) {
                 break;
@@ -151,10 +153,10 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         TimeUtil.sleepSeconds(15);
 
         List<String> inputFolderListForColo1 =
-            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1,
+            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1OC,
                 replicationCoordIDTarget.get(0), 1);
         List<String> inputFolderListForColo2 =
-            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1,
+            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1OC,
                 replicationCoordIDTarget.get(1), 1);
 
         HadoopUtil.flattenAndPutDataInFolder(cluster2FS, OSUtil.NORMAL_INPUT,
@@ -216,16 +218,15 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         TimeUtil.sleepSeconds(60);
 
         //wait till 1st instance of replication coord is SUCCEEDED
-        String bundleId = InstanceUtil
-            .getLatestBundleID(cluster1, Util.readEntityName(feed), EntityType.FEED);
-
-        List<String> replicationCoordIDTarget = InstanceUtil.getReplicationCoordID(bundleId,
+        String bundleId = OozieUtil
+            .getLatestBundleID(cluster1OC, Util.readEntityName(feed), EntityType.FEED);
+        List<String> replicationCoordIDTarget = OozieUtil.getReplicationCoordID(bundleId,
             cluster1.getFeedHelper());
 
         for (int i = 0; i < 30; i++) {
-            if (InstanceUtil.getInstanceStatusFromCoord(cluster1, replicationCoordIDTarget.get(0),
+            if (InstanceUtil.getInstanceStatusFromCoord(cluster1OC, replicationCoordIDTarget.get(0),
                 0) == WorkflowJob.Status.SUCCEEDED
-                && InstanceUtil.getInstanceStatusFromCoord(cluster1,
+                && InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
                     replicationCoordIDTarget.get(1), 0)
                 == WorkflowJob.Status.SUCCEEDED) {
                 break;
@@ -234,19 +235,19 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
             TimeUtil.sleepSeconds(20);
         }
 
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(0), 0),
             WorkflowJob.Status.SUCCEEDED);
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(1), 0),
             WorkflowJob.Status.SUCCEEDED);
 
         TimeUtil.sleepSeconds(15);
 
         List<String> inputFolderListForColo1 = InstanceUtil
-            .getInputFoldersForInstanceForReplication(cluster1, replicationCoordIDTarget.get(0), 1);
+            .getInputFoldersForInstanceForReplication(cluster1OC, replicationCoordIDTarget.get(0), 1);
         List<String> inputFolderListForColo2 = InstanceUtil
-            .getInputFoldersForInstanceForReplication(cluster1, replicationCoordIDTarget.get(1), 1);
+            .getInputFoldersForInstanceForReplication(cluster1OC, replicationCoordIDTarget.get(1), 1);
 
         HadoopUtil.flattenAndPutDataInFolder(cluster2FS, OSUtil.NORMAL_INPUT,
             inputFolderListForColo1);
@@ -258,17 +259,17 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         //check for run id to  be 1
         Assert.assertEquals(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(0), 0),
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(0), 0),
             1, "id has to be equal 1");
         Assert.assertEquals(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(1), 0),
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(1), 0),
             1, "id has to be equal 1");
 
         //wait for lates run to complete
         for (int i = 0; i < 30; i++) {
-            if (InstanceUtil.getInstanceStatusFromCoord(cluster1, replicationCoordIDTarget.get(0),
+            if (InstanceUtil.getInstanceStatusFromCoord(cluster1OC, replicationCoordIDTarget.get(0),
                 0) == WorkflowJob.Status.SUCCEEDED
-                && InstanceUtil.getInstanceStatusFromCoord(cluster1,
+                && InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
                     replicationCoordIDTarget.get(1), 0)
                 == WorkflowJob.Status.SUCCEEDED) {
                 break;
@@ -276,10 +277,10 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
             LOGGER.info("still in for loop");
             TimeUtil.sleepSeconds(20);
         }
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(0), 0),
             WorkflowJob.Status.SUCCEEDED);
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(1), 0),
             WorkflowJob.Status.SUCCEEDED);
 
@@ -296,10 +297,10 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         //check for run id to be 2
         Assert.assertEquals(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(0), 0),
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(0), 0),
             2, "id has to be equal 2");
         Assert.assertEquals(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(1), 0),
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(1), 0),
             2, "id has to be equal 2");
     }
 
@@ -381,15 +382,15 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         //wait till 1st instance of replication coord is SUCCEEDED
         String bundleId =
-            InstanceUtil.getLatestBundleID(cluster1, Util.readEntityName(feed), EntityType.FEED);
+            OozieUtil.getLatestBundleID(cluster1OC, Util.readEntityName(feed), EntityType.FEED);
 
         List<String> replicationCoordIDTarget =
-            InstanceUtil.getReplicationCoordID(bundleId, cluster1.getFeedHelper());
+            OozieUtil.getReplicationCoordID(bundleId, cluster1.getFeedHelper());
 
         for (int i = 0; i < 30; i++) {
-            if (InstanceUtil.getInstanceStatusFromCoord(cluster1, replicationCoordIDTarget.get(0),
+            if (InstanceUtil.getInstanceStatusFromCoord(cluster1OC, replicationCoordIDTarget.get(0),
                 0) == WorkflowJob.Status.SUCCEEDED
-                && InstanceUtil.getInstanceStatusFromCoord(cluster1,
+                && InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
                     replicationCoordIDTarget.get(1), 0)
                 == WorkflowJob.Status.SUCCEEDED) {
                 break;
@@ -398,10 +399,10 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
             TimeUtil.sleepSeconds(20);
         }
 
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(0), 0), WorkflowJob.Status.SUCCEEDED,
             "Replication job should have succeeded.");
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(1), 0), WorkflowJob.Status.SUCCEEDED,
             "Replication job should have succeeded.");
 
@@ -411,14 +412,14 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         // be present. both of them should have _success
 
         List<String> inputFolderListForColo1 = InstanceUtil
-            .getInputFoldersForInstanceForReplication(cluster1, replicationCoordIDTarget.get(0), 1);
+            .getInputFoldersForInstanceForReplication(cluster1OC, replicationCoordIDTarget.get(0), 1);
         List<String> inputFolderListForColo2 = InstanceUtil
-            .getInputFoldersForInstanceForReplication(cluster1, replicationCoordIDTarget.get(1), 1);
+            .getInputFoldersForInstanceForReplication(cluster1OC, replicationCoordIDTarget.get(1), 1);
 
         String outPutLocation = InstanceUtil
-            .getOutputFolderForInstanceForReplication(cluster1, replicationCoordIDTarget.get(0), 0);
+            .getOutputFolderForInstanceForReplication(cluster1OC, replicationCoordIDTarget.get(0), 0);
         String outPutBaseLocation = InstanceUtil
-            .getOutputFolderBaseForInstanceForReplication(cluster1,
+            .getOutputFolderBaseForInstanceForReplication(cluster1OC,
                 replicationCoordIDTarget.get(0), 0);
 
         List<String> subFolders = HadoopUtil.getHDFSSubFoldersName(cluster1FS, outPutBaseLocation);
@@ -439,17 +440,17 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         //check for run id to  be 1
         Assert.assertTrue(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(0), 0)
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(0), 0)
                 == 1
-                && InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(1),
+                && InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(1),
                 0) == 1,
             "id have to be equal 1");
 
         //wait for latest run to complete
         for (int i = 0; i < 30; i++) {
-            if (InstanceUtil.getInstanceStatusFromCoord(cluster1, replicationCoordIDTarget.get(0),
+            if (InstanceUtil.getInstanceStatusFromCoord(cluster1OC, replicationCoordIDTarget.get(0),
                 0) == WorkflowJob.Status.SUCCEEDED
-                && InstanceUtil.getInstanceStatusFromCoord(cluster1,
+                && InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
                     replicationCoordIDTarget.get(1), 0) == WorkflowJob.Status.SUCCEEDED) {
                 break;
             }
@@ -467,9 +468,9 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         TimeUtil.sleepTill(TimeUtil.addMinsToTime(startTime, 9));
         //check for run id to be 2
         Assert.assertTrue(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(0), 0)
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(0), 0)
                 == 2
-                && InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(1),
+                && InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(1),
                 0) == 2,
             "id have to be equal 2");
     }
@@ -571,15 +572,15 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         //wait till 1st instance of replication coord is SUCCEEDED
         String bundleId =
-            InstanceUtil.getLatestBundleID(cluster1, Util.readEntityName(feed), EntityType.FEED);
+            OozieUtil.getLatestBundleID(cluster1OC, Util.readEntityName(feed), EntityType.FEED);
 
         List<String> replicationCoordIDTarget =
-            InstanceUtil.getReplicationCoordID(bundleId, cluster1.getFeedHelper());
+            OozieUtil.getReplicationCoordID(bundleId, cluster1.getFeedHelper());
 
         for (int i = 0; i < 30; i++) {
-            if (InstanceUtil.getInstanceStatusFromCoord(cluster1, replicationCoordIDTarget.get(0),
+            if (InstanceUtil.getInstanceStatusFromCoord(cluster1OC, replicationCoordIDTarget.get(0),
                 0) == WorkflowJob.Status.SUCCEEDED
-                && InstanceUtil.getInstanceStatusFromCoord(cluster1,
+                && InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
                     replicationCoordIDTarget.get(1), 0) == WorkflowJob.Status.SUCCEEDED) {
                 break;
             }
@@ -588,10 +589,10 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
             TimeUtil.sleepSeconds(20);
         }
 
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(0), 0), WorkflowJob.Status.SUCCEEDED,
             "Replication job did not succeed");
-        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1,
+        Assert.assertEquals(InstanceUtil.getInstanceStatusFromCoord(cluster1OC,
             replicationCoordIDTarget.get(1), 0), WorkflowJob.Status.SUCCEEDED,
             "Replication job did not succeed");
 
@@ -601,17 +602,17 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
            be present. both of
            them should have _success */
         List<String> inputFolderListForColo1 =
-            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1,
+            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1OC,
                 replicationCoordIDTarget.get(0), 1);
         List<String> inputFolderListForColo2 =
-            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1,
+            InstanceUtil.getInputFoldersForInstanceForReplication(cluster1OC,
                 replicationCoordIDTarget.get(1), 1);
 
         String outPutLocation = InstanceUtil
-            .getOutputFolderForInstanceForReplication(cluster1, replicationCoordIDTarget.get(0),
+            .getOutputFolderForInstanceForReplication(cluster1OC, replicationCoordIDTarget.get(0),
                 0);
         String outPutBaseLocation = InstanceUtil
-            .getOutputFolderBaseForInstanceForReplication(cluster1,
+            .getOutputFolderBaseForInstanceForReplication(cluster1OC,
                 replicationCoordIDTarget.get(0), 0);
 
         List<String> subfolders = HadoopUtil.getHDFSSubFoldersName(cluster1FS, outPutBaseLocation);
@@ -634,9 +635,9 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         //check for run id to  be 1
         Assert.assertTrue(
-            InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(0), 0)
+            InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(0), 0)
                 == 1
-                && InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(1),
+                && InstanceUtil.getInstanceRunIdFromCoord(cluster1OC, replicationCoordIDTarget.get(1),
                 0) == 1,
             "id have to be equal 1");
     }

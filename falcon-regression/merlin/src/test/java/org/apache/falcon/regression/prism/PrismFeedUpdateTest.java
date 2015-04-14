@@ -220,11 +220,11 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         bundles[0].submitAndScheduleAllFeeds();
         bundles[0].submitAndScheduleProcess();
 
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
             bundles[0].getProcessName(),
             0, 0);
-        InstanceUtil.waitForBundleToReachState(cluster1, bundles[0].getProcessName(),
+        OozieUtil.waitForBundleToReachState(cluster1OC, bundles[0].getProcessName(),
             Job.Status.SUCCEEDED, 20);
 
         FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
@@ -250,7 +250,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         bundles[0].submitAndScheduleAllFeeds();
         bundles[0].submitAndScheduleProcess();
 
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
             bundles[0].getProcessName(),
             0, 0);

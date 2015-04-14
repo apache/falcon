@@ -33,6 +33,7 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -47,6 +48,7 @@ import java.util.List;
 public class ProcessLibPathTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private String testDir = cleanAndGetTestDir();
     private String testLibDir = testDir + "/TestLib";
@@ -102,9 +104,9 @@ public class ProcessLibPathTest extends BaseTestClass {
         bundles[0].setProcessWorkflow(workflowDir);
         LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
-        InstanceUtil.waitForBundleToReachState(cluster, processName, Status.SUCCEEDED);
+        OozieUtil.waitForBundleToReachState(clusterOC, processName, Status.SUCCEEDED);
     }
 
     /**
@@ -122,8 +124,8 @@ public class ProcessLibPathTest extends BaseTestClass {
         bundles[0].setProcessWorkflow(workflowDir);
         LOGGER.info("processData: " + Util.prettyPrintXml(process));
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
-        InstanceUtil.waitForBundleToReachState(cluster, processName, Status.SUCCEEDED);
+        OozieUtil.waitForBundleToReachState(clusterOC, processName, Status.SUCCEEDED);
     }
 }

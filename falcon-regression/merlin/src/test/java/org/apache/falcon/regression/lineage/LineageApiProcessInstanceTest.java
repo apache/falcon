@@ -28,7 +28,6 @@ import org.apache.falcon.regression.core.response.lineage.VerticesResult;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.GraphAssert;
 import org.apache.falcon.regression.core.util.HadoopUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -37,6 +36,7 @@ import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -55,6 +55,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private LineageHelper lineageHelper;
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -104,7 +105,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         outputFeedName = bundles[0].getOutputFeedNameFromBundle();
         Job.Status status = null;
         for (int i = 0; i < 20; i++) {
-            status = InstanceUtil.getDefaultCoordinatorStatus(cluster, bundles[0].getProcessName(), 0);
+            status = OozieUtil.getDefaultCoordinatorStatus(clusterOC, bundles[0].getProcessName(), 0);
             if (status == Job.Status.SUCCEEDED || status == Job.Status.KILLED) {
                 break;
             }

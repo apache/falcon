@@ -28,6 +28,7 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,16 +113,13 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      */
     @Test(enabled = true)
     public void rescheduleSucceeded() throws Exception {
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.SUCCEEDED);
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(bundles[0].getProcessData()));
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData()));
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
 
     /**
@@ -134,16 +132,13 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      */
     @Test(enabled = false)
     public void rescheduleFailed() throws Exception {
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.SUCCEEDED);
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(bundles[0].getProcessData()));
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData()));
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
 
     /**
@@ -157,21 +152,17 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void rescheduleDWE() throws Exception {
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
-        prism.getProcessHelper()
-            .getProcessInstanceKill(bundles[0].getProcessName(),
+        prism.getProcessHelper().getProcessInstanceKill(bundles[0].getProcessName(),
                 "?start=2010-01-02T01:05Z&end=2010-01-02T01:11Z");
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.DONEWITHERROR);
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.DONEWITHERROR);
 
         //delete the process
         prism.getProcessHelper().delete(bundles[0].getProcessData());
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(bundles[0].getProcessData()));
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData()));
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
 
     /**
@@ -181,15 +172,12 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     @Test(enabled = true)
     public void rescheduleKilled() throws Exception {
         prism.getProcessHelper().delete(bundles[0].getProcessData());
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.KILLED);
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.KILLED);
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(bundles[0].getProcessData()));
-        InstanceUtil
-            .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData()));
+        OozieUtil.waitForBundleToReachState(clusterOC, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
 
     /**

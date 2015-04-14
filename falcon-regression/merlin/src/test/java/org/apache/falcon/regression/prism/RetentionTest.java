@@ -221,7 +221,7 @@ public class RetentionTest extends BaseTestClass {
     private void validateDataFromFeedQueue(String feedName, List<MapMessage> messages,
         List<String> missingData) throws OozieClientException, JMSException {
         //just verify that each element in queue is same as deleted data!
-        List<String> workflowIds = OozieUtil.getWorkflowJobs(cluster,
+        List<String> workflowIds = OozieUtil.getWorkflowJobs(clusterOC,
                 OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0));
 
         //create queue data folderList:

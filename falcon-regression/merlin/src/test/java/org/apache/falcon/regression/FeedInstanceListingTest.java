@@ -51,7 +51,6 @@ import java.util.List;
 /**
  * Test for https://issues.apache.org/jira/browse/FALCON-761.
  */
-
 @Test(groups = "embedded", timeOut = 900000)
 public class FeedInstanceListingTest extends BaseTestClass{
     private String baseTestDir = cleanAndGetTestDir();
@@ -90,13 +89,12 @@ public class FeedInstanceListingTest extends BaseTestClass{
     /**
      * Test when all data is available for all instances.
      */
-
     @Test
     public void testFeedListingWhenAllAvailable() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:21Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         List<List<String>> missingDependencies = OozieUtil.createMissingDependencies(cluster,
                 EntityType.PROCESS, processName, 0);
         List<String> missingDependencyLastInstance = missingDependencies.get(missingDependencies.size()-1);
@@ -112,13 +110,12 @@ public class FeedInstanceListingTest extends BaseTestClass{
    /**
     *Test when only empty directories exist for all instances.
     */
-
     @Test
     public void testFeedListingWhenAllEmpty() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:21Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
                 CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
@@ -131,13 +128,12 @@ public class FeedInstanceListingTest extends BaseTestClass{
    /**
     * Test when no data is present for any instance.
     */
-
     @Test
     public void testFeedListingWhenAllMissing() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:21Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         FeedInstanceResult r = prism.getFeedHelper()
                 .getFeedInstanceListing(Util.readEntityName(bundles[0].getDataSets().get(0)),
                         "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
@@ -148,13 +144,12 @@ public class FeedInstanceListingTest extends BaseTestClass{
     * Initially no availability flag is set for the feed. And data is created, so instance status is available.
     * Then, set the availability flag and update the feed. The instance status should change to partial.
     */
-
     @Test
     public void testFeedListingAfterFeedAvailabilityFlagUpdate() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:21Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         List<List<String>> missingDependencies = OozieUtil.createMissingDependencies(cluster,
                 EntityType.PROCESS, processName, 0);
         List<String> missingDependencyLastInstance = missingDependencies.get(missingDependencies.size()-1);
@@ -181,13 +176,12 @@ public class FeedInstanceListingTest extends BaseTestClass{
     * Data is created for the feed, so instance status is available.
     * Then, change the data path and update the feed. The instance status should change to partial.
     */
-
     @Test
     public void testFeedListingAfterFeedDataPathUpdate() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:21Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         List<List<String>> missingDependencies = OozieUtil.createMissingDependencies(cluster,
                 EntityType.PROCESS, processName, 0);
         List<String> missingDependencyLastInstance = missingDependencies.get(missingDependencies.size()-1);
@@ -213,13 +207,12 @@ public class FeedInstanceListingTest extends BaseTestClass{
    /**
     * Submit the feeds on prism, and request for instance status on server. Request should succeed.
     */
-
     @Test
     public void testFeedListingFeedSubmitOnPrismRequestOnServer() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:21Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         FeedInstanceResult r = cluster.getFeedHelper()
                 .getFeedInstanceListing(Util.readEntityName(bundles[0].getDataSets().get(0)),
                         "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");

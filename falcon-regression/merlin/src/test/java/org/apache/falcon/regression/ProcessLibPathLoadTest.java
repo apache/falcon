@@ -28,6 +28,7 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
@@ -43,8 +44,8 @@ import java.util.Map;
 @Test(groups = "embedded")
 public class ProcessLibPathLoadTest extends BaseTestClass {
 
-
     private ColoHelper cluster = servers.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private String testDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = testDir + "/aggregator";
@@ -100,9 +101,9 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
     public void setRightJarInWorkflowLib() throws Exception {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
-        InstanceUtil.waitForBundleToReachState(cluster, processName, Status.SUCCEEDED);
+        OozieUtil.waitForBundleToReachState(clusterOC, processName, Status.SUCCEEDED);
     }
 
     /**
@@ -112,13 +113,13 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
      * @throws Exception
      */
     @Test
-    public void setNoJarInWorkflowLibLocaltion() throws Exception {
+    public void setNoJarInWorkflowLibLocation() throws Exception {
         HadoopUtil.deleteDirIfExists(aggregateWorkflowDir + "/lib/" + oozieLibName, clusterFS);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
-        InstanceUtil.waitForBundleToReachState(cluster, processName, Status.KILLED);
+        OozieUtil.waitForBundleToReachState(clusterOC, processName, Status.KILLED);
     }
 
     /**
@@ -149,7 +150,6 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
             output.write(buffer, 0, n);
         }
         output.close();
-
     }
 
     private static boolean isRedirected(Map<String, List<String>> header) {

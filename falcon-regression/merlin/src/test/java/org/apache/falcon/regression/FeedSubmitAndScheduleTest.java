@@ -24,7 +24,6 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -96,8 +95,7 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
 
         //get created bundle id
-        String bundleId = InstanceUtil
-            .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, Util.readEntityName(feed), EntityType.FEED);
 
         //try to submit and schedule the same process again
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
@@ -105,7 +103,7 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
 
         //check that new bundle wasn't created
-        OozieUtil.verifyNewBundleCreation(cluster, bundleId, null, feed, false, false);
+        OozieUtil.verifyNewBundleCreation(clusterOC, bundleId, null, feed, false, false);
     }
 
     /**

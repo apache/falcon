@@ -30,12 +30,14 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -53,6 +55,9 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
     private ColoHelper cluster3 = servers.get(2);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private OozieClient cluster3OC = serverOC.get(2);
     private FileSystem cluster1FS = serverFS.get(0);
     private FileSystem cluster2FS = serverFS.get(1);
     private FileSystem cluster3FS = serverFS.get(2);
@@ -156,25 +161,12 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
         //update feed
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed.toString(), feed.toString()));
-
-        Assert.assertEquals(InstanceUtil.checkIfFeedCoordExist(cluster2.getFeedHelper(),
-            Util.readEntityName(feed.toString()),
-            "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil.checkIfFeedCoordExist(cluster2.getFeedHelper(),
-            Util.readEntityName(feed.toString()),
-            "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil.checkIfFeedCoordExist(cluster3.getFeedHelper(),
-            Util.readEntityName(feed.toString()),
-            "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil.checkIfFeedCoordExist(cluster3.getFeedHelper(),
-            Util.readEntityName(feed.toString()),
-            "RETENTION"), 2);
-        Assert.assertEquals(
-            InstanceUtil.checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feed.toString()),
-                "REPLICATION"), 4);
-        Assert.assertEquals(
-            InstanceUtil.checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feed.toString()),
-                "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feed.getName(), "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feed.getName(), "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feed.getName(), "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feed.getName(), "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feed.getName(), "REPLICATION"), 4);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feed.getName(), "RETENTION"), 2);
     }
 
     /**

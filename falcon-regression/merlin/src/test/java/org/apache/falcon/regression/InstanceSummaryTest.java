@@ -106,7 +106,7 @@ public class InstanceSummaryTest extends BaseTestClass {
         OozieClientException, AuthenticationException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster3, processBundle.getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(serverOC.get(2), processBundle.getProcessData(), 0);
 
         // start only at start time
         InstancesSummaryResult r = prism.getProcessHelper()

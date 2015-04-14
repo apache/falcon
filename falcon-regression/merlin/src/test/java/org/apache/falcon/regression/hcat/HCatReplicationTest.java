@@ -33,6 +33,7 @@ import org.apache.falcon.regression.core.util.HCatUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -113,7 +114,6 @@ public class HCatReplicationTest extends BaseTestClass {
         bundles[2].generateUniqueBundle(this);
         bundles[2].setClusterInterface(Interfacetype.REGISTRY, cluster3.getClusterHelper()
             .getHCatEndpoint());
-
     }
 
     @DataProvider
@@ -189,9 +189,7 @@ public class HCatReplicationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
         //check if all coordinators exist
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
-                "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, Util.readEntityName(feed), "REPLICATION"), 1);
 
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.
@@ -206,7 +204,6 @@ public class HCatReplicationTest extends BaseTestClass {
             .getAllFilesRecursivelyHDFS(cluster2FS, new Path(testHdfsDir));
         LOGGER.info("Data on target cluster: " + cluster2ReplicatedData);
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
-
     }
 
     // make sure oozie changes mentioned FALCON-389 are done on the clusters. Otherwise the test
@@ -285,14 +282,10 @@ public class HCatReplicationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
         //check if all coordinators exist
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
-                "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, Util.readEntityName(feed), "REPLICATION"), 1);
 
         //check if all coordinators exist
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feed),
-                "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, Util.readEntityName(feed), "REPLICATION"), 1);
 
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.
@@ -317,7 +310,6 @@ public class HCatReplicationTest extends BaseTestClass {
         LOGGER.info("Data on target cluster: " + cluster3TargetData);
         AssertUtil.checkForListSizes(srcData, cluster3TargetData);
     }
-
 
     private void addPartitionsToTable(List<String> partitions, List<String> partitionLocations,
                                       String partitionCol,

@@ -27,14 +27,15 @@ import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
-import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -53,12 +54,19 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private ColoHelper cluster2 = servers.get(1);
     private ColoHelper cluster3 = servers.get(2);
+    private OozieClient cluster1OC = serverOC.get(0);
+    private OozieClient cluster2OC = serverOC.get(1);
+    private OozieClient cluster3OC = serverOC.get(2);
     private FileSystem cluster2FS = serverFS.get(1);
     private FileSystem cluster3FS = serverFS.get(2);
     private String feed;
+    private String feedName;
     private String startTime;
     private String feedOriginalSubmit;
     private String feedUpdated;
+    private String cluster1Name;
+    private String cluster2Name;
+    private String cluster3Name;
     private static final Logger LOGGER = Logger.getLogger(FeedClusterUpdateTest.class);
 
 
@@ -95,6 +103,10 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         feed = bundles[0].getDataSets().get(0);
         feed = FeedMerlin.fromString(feed).clearFeedClusters().toString();
         startTime = TimeUtil.getTimeWrtSystemTime(-50);
+        feedName = Util.readEntityName(feed);
+        cluster1Name = Util.readEntityName(bundles[0].getClusters().get(0));
+        cluster2Name = Util.readEntityName(bundles[1].getClusters().get(0));
+        cluster3Name = Util.readEntityName(bundles[2].getClusters().get(0));
     }
 
     @AfterMethod(alwaysRun = true)
@@ -106,16 +118,14 @@ public class FeedClusterUpdateTest extends BaseTestClass {
     public void addSourceCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -124,7 +134,6 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
@@ -134,41 +143,23 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit), "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
 
         //prepare updated Feed
         feedUpdated = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -176,7 +167,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -190,40 +181,26 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         AssertUtil.assertSucceeded(response);
 
         prism.getFeedHelper().submitAndSchedule(feedUpdated);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 2);
     }
 
     @Test(enabled = false, groups = {"multiCluster"})
     public void addTargetCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -233,7 +210,6 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
@@ -243,44 +219,24 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
 
         //prepare updated Feed
         feedUpdated = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("US/${cluster.colo}")
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -288,7 +244,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -298,48 +254,32 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
-
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
         prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
     @Test(enabled = false, groups = {"multiCluster"})
     public void add2SourceCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
@@ -349,44 +289,24 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
 
         //prepare updated Feed
         feedUpdated = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("US/${cluster.colo}")
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -394,7 +314,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -404,39 +324,25 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
-
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
         prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
     @Test(enabled = false, groups = {"multiCluster"})
     public void add2TargetCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
@@ -444,53 +350,32 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-
         response = cluster2.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
 
         //prepare updated Feed
         feedUpdated = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -498,7 +383,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -507,48 +392,32 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
-
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
         prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
     @Test(enabled = false, groups = {"multiCluster"})
     public void add1Source1TargetCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
@@ -558,44 +427,24 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
 
         //prepare updated Feed
         feedUpdated = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .withPartition("US/${cluster.colo}")
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -603,7 +452,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -613,39 +462,25 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Updated Feed: " + Util.prettyPrintXml(feedUpdated));
-
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
         prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
     @Test(enabled = false, groups = {"multiCluster"})
     public void deleteSourceCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
@@ -653,7 +488,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -661,7 +496,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -671,53 +506,32 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-
         response = prism.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit), "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
 
         //prepare updated Feed
         feedUpdated = FeedMerlin.fromString(feed)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
-                .withValidity(startTime,
-                    TimeUtil.addMinsToTime(startTime, 65))
+                .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -733,29 +547,16 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         AssertUtil.assertFailed(response);
 
         prism.getFeedHelper().submitAndSchedule(feedUpdated);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
     }
 
     @Test(enabled = true, groups = {"multiCluster"})
     public void deleteTargetCluster() throws Exception {
-
         /*
         this test creates a multiCluster feed. Cluster1 is the target cluster
          and cluster3 and Cluster2 are the source cluster.
@@ -777,12 +578,10 @@ public class FeedClusterUpdateTest extends BaseTestClass {
          */
 
         //add two source and one target
-
         feedOriginalSubmit = FeedMerlin.fromString(feed).clearFeedClusters().toString();
 
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit)
-            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(
-                Util.readEntityName(bundles[1].getClusters().get(0)))
+            .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
@@ -790,7 +589,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster1Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 20),
                     TimeUtil.addMinsToTime(startTime, 85))
@@ -798,7 +597,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .build())
             .toString();
         feedOriginalSubmit = FeedMerlin.fromString(feedOriginalSubmit).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -808,7 +607,6 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
-
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
@@ -818,37 +616,17 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster2.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster3.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                Util.readEntityName(feedOriginalSubmit),
-                "REPLICATION"), 2);
-        Assert.assertEquals(InstanceUtil
-                .checkIfFeedCoordExist(cluster1.getFeedHelper(),
-                    Util.readEntityName(feedOriginalSubmit), "RETENTION"),
-            1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
 
         //prepare updated Feed
-
         feedUpdated = FeedMerlin.fromString(feed).clearFeedClusters().toString();
-
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+            new FeedMerlin.FeedClusterBuilder(cluster3Name)
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(TimeUtil.addMinsToTime(startTime, 40),
                     TimeUtil.addMinsToTime(startTime, 110))
@@ -858,11 +636,9 @@ public class FeedClusterUpdateTest extends BaseTestClass {
             .toString();
 
         LOGGER.info("Feed: " + Util.prettyPrintXml(feedUpdated));
-
         response = prism.getFeedHelper().update(feedUpdated, feedUpdated);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
-
 
         //verify xmls definitions
         response = cluster1.getFeedHelper().getEntityDefinition(feedUpdated);
@@ -874,24 +650,12 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         response = prism.getFeedHelper().getEntityDefinition(feedUpdated);
         Assert.assertTrue(XmlUtil.isIdentical(feedUpdated, response.getMessage()));
 
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 0);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster3.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "REPLICATION"), 2);
-        Assert.assertEquals(InstanceUtil
-            .checkIfFeedCoordExist(cluster1.getFeedHelper(), Util.readEntityName(feedUpdated),
-                "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
     /*

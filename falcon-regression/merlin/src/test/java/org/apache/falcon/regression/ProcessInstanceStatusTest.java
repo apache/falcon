@@ -120,11 +120,11 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(1, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1, Status.RUNNING, EntityType.PROCESS);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T10:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
@@ -146,7 +146,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(1, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T05:00Z");
         AssertUtil.assertSucceeded(r);
@@ -164,7 +164,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         HadoopUtil.deleteDirIfExists(baseTestHDFSDir + "/input", clusterFS);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:30Z");
         InstanceUtil.validateResponse(r, 5, 0, 0, 5, 0);
@@ -183,12 +183,12 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:30Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 5,
             Status.RUNNING, EntityType.PROCESS);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
         InstanceUtil.validateResponse(r, 6, 5, 0, 1, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
@@ -206,12 +206,12 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusStartAndEnd() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 1 ,
                Status.RUNNING, EntityType.PROCESS);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
@@ -232,12 +232,12 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             Status.RUNNING, EntityType.PROCESS, 5);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
@@ -288,7 +288,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusReverseDateRange() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 1,
             Status.RUNNING, EntityType.PROCESS);
@@ -311,12 +311,12 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(2);
         bundles[0].submitFeedsScheduleProcess(prism);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
             Status.RUNNING, EntityType.PROCESS, 5);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
         InstanceUtil.validateResponse(r, 5, 2, 0, 3, 0);
@@ -337,7 +337,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
         String process = bundles[0].getProcessData();
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             Status.RUNNING, EntityType.PROCESS, 5);
@@ -364,12 +364,12 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusOnlyStart() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             Status.RUNNING, EntityType.PROCESS, 5);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z");
         InstanceUtil.validateResponse(r, 5, 1, 0, 4, 0);
@@ -404,12 +404,12 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessConcurrency(5);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].submitFeedsScheduleProcess(prism);
-        String bundleId = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
-        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
             Status.RUNNING, EntityType.PROCESS, 5);
-        List<String> oozieWfIDs = OozieUtil.getWorkflow(cluster, bundleId);
+        List<String> oozieWfIDs = OozieUtil.getWorkflow(clusterOC, bundleId);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
         InstanceUtil.validateResponse(r, 5, 5, 0, 0, 0);
         List<String> instanceWfIDs = InstanceUtil.getWorkflowJobIds(r);
