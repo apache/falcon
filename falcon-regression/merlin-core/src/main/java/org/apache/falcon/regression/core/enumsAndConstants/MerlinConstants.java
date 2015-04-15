@@ -85,6 +85,9 @@ public final class MerlinConstants {
     public static final boolean CLEAN_TESTS_DIR =
         Boolean.valueOf(Config.getProperty("clean_tests_dir", "true"));
 
+    public static final boolean IS_DEPRECATE=
+            Boolean.valueOf(Config.getProperty("is_deprecate", "false"));
+
     /* initialize keyTabMap */
     static {
         final String currentUserKeytab = Config.getProperty(CURRENT_USER_KEYTAB_STR);
