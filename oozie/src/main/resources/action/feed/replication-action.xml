@@ -37,6 +37,10 @@
                 <name>oozie.action.sharelib.for.java</name>
                 <value>distcp</value>
             </property>
+            <property>
+                <name>oozie.launcher.oozie.libpath</name>
+                <value>${wf:conf("falcon.libpath")}</value>
+            </property>
         </configuration>
         <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
         <arg>-Dfalcon.include.path=${sourceRelativePaths}</arg>
