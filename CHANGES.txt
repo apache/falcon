@@ -161,6 +161,8 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1159 Falcon build is broken (Suhas Vasu)
+
    FALCON-1146 feed retention policy deleted everything all the way up
    to the root (Peeyush Bishnoi via Suhas Vasu)
 
