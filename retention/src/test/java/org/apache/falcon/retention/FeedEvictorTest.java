@@ -362,7 +362,7 @@ public class FeedEvictorTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testEvictionWithEmptyDirs() throws Exception {
         try {
             Configuration conf = cluster.getConf();
