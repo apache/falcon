@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class FeedLookupResult extends APIResult {
 
-    @XmlElement(name = "feed")
+    @XmlElement(name = "elements")
     private FeedProperties[] elements;
 
     //For JAXB

@@ -114,7 +114,7 @@ public class InstancesResult extends APIResult {
         @XmlElement
         public InstanceAction[] actions;
 
-        @XmlElement(name="params")
+        @XmlElement(name="wfParams")
         public KeyValuePair[] wfParams;
 
         public Instance() {

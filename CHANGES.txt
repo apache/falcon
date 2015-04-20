@@ -8,6 +8,8 @@ Trunk (Unreleased)
   IMPROVEMENTS
     FALCON-1142 ClusterEntityParserTest.testClusterWithOnlyStaging
     fails when run alone(Pallavi Rao via Suhas Vasu)
+    FALCON-1152 Names of Xml attributes and Class member variables
+    are inconsistent(Ajay Yadava)
 
   OPTIMIZATIONS
 
