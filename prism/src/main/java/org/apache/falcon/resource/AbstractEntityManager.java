@@ -577,14 +577,14 @@ public abstract class AbstractEntityManager {
      */
     public EntityList getEntityList(String type, String fieldStr, String filterBy, String filterTags,
                                     String orderBy, String sortOrder, Integer offset, Integer resultsPerPage,
-                                    String pattern) {
+                                    String nameseq) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
         validateEntityFilterByClause(filterBy);
         List<Entity> entities;
         try {
             entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, sortOrder, offset,
-                    resultsPerPage, pattern);
+                    resultsPerPage, nameseq);
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -609,7 +609,7 @@ public abstract class AbstractEntityManager {
 
     protected List<Entity> getEntities(String type, String startDate, String endDate, String cluster,
                                        String filterBy, String filterTags, String orderBy, String sortOrder, int offset,
-                                       int resultsPerPage, String pattern) throws FalconException, IOException {
+                                       int resultsPerPage, String nameseq) throws FalconException, IOException {
         final Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         final List<String> filterByTags = getFilterByTags(filterTags);
 
@@ -648,7 +648,7 @@ public abstract class AbstractEntityManager {
                 continue;
             }
 
-            if (StringUtils.isNotBlank(pattern) && !fuzzySearch(entity.getName(), pattern)) {
+            if (StringUtils.isNotBlank(nameseq) && !fuzzySearch(entity.getName(), nameseq)) {
                 continue;
             }
             entities.add(entity);
@@ -665,16 +665,16 @@ public abstract class AbstractEntityManager {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    boolean fuzzySearch(String enityName, String pattern) {
-        int currentIndex = 0; // current index in pattern which is to be matched
-        char[] searchPattern = pattern.toLowerCase().toCharArray();
+    boolean fuzzySearch(String enityName, String nameseq) {
+        int currentIndex = 0; // current index in name subsequence which is to be matched
+        char[] nameseqArray = nameseq.toLowerCase().toCharArray();
         String name = enityName.toLowerCase();
 
         for (Character c : name.toCharArray()) {
-            if (currentIndex < searchPattern.length && c == searchPattern[currentIndex]) {
+            if (currentIndex < nameseqArray.length && c == nameseqArray[currentIndex]) {
                 currentIndex++;
             }
-            if (currentIndex == searchPattern.length) {
+            if (currentIndex == nameseqArray.length) {
                 return true;
             }
         }

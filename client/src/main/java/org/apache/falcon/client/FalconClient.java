@@ -370,9 +370,9 @@ public class FalconClient {
 
     public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
                                     String orderBy, String sortOrder, Integer offset,
-                                    Integer numResults, String searchPattern) throws FalconCLIException {
+                                    Integer numResults, String nameseq) throws FalconCLIException {
         return sendListRequest(Entities.LIST, entityType, fields, filterBy,
-                filterTags, orderBy, sortOrder, offset, numResults, searchPattern);
+                filterTags, orderBy, sortOrder, offset, numResults, nameseq);
     }
 
     public EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
@@ -608,7 +608,7 @@ public class FalconClient {
                                             String start, String end, String runId, String colo,
                                             String fields, String filterBy, String tags,
                                             String orderBy, String sortOrder, Integer offset,
-                                            Integer numResults, Integer numInstances, String searchPattern,
+                                            Integer numResults, Integer numInstances, String nameseq,
                                             Boolean isForced) {
 
         if (!StringUtils.isEmpty(fields)) {
@@ -648,8 +648,8 @@ public class FalconClient {
             resource = resource.queryParam("numInstances", numInstances.toString());
         }
 
-        if (!StringUtils.isEmpty(searchPattern)) {
-            resource = resource.queryParam("pattern", searchPattern);
+        if (!StringUtils.isEmpty(nameseq)) {
+            resource = resource.queryParam("nameseq", nameseq);
         }
         if (isForced != null) {
             resource = resource.queryParam("force", String.valueOf(isForced));
@@ -833,11 +833,11 @@ public class FalconClient {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     private EntityList sendListRequest(Entities entities, String entityType, String fields, String filterBy,
                                        String filterTags, String orderBy, String sortOrder, Integer offset,
-                                       Integer numResults, String searchPattern) throws FalconCLIException {
+                                       Integer numResults, String nameseq) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
         resource = addParamsToResource(resource, null, null, null, null, fields, filterBy, filterTags,
-                orderBy, sortOrder, offset, numResults, null, searchPattern, null);
+                orderBy, sortOrder, offset, numResults, null, nameseq, null);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)

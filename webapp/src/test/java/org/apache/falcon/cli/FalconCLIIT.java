@@ -558,7 +558,7 @@ public class FalconCLIIT {
 
         Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
                 + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name "
-                + " -sortOrder asc -offset 1 -numResults 1 -pattern abc"), 0);
+                + " -sortOrder asc -offset 1 -numResults 1 -nameseq abc"), 0);
 
         Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
                 + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name "
