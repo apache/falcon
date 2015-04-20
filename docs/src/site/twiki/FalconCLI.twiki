@@ -51,7 +51,8 @@ Entities of a particular type can be listed with list sub-command.
 Usage:
 $FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -list
 
-Optional Args : -fields <<field1,field2>> -filterBy <<field1:value1,field2:value2>> -tags <<tagkey=tagvalue,tagkey=tagvalue>>
+Optional Args : -fields <<field1,field2>> -filterBy <<field1:value1,field2:value2>>
+-tags <<tagkey=tagvalue,tagkey=tagvalue>> -nameseq <<namesubsequence>>
 -orderBy <<field>> -sortOrder <<sortOrder>> -offset 0 -numResults 10
 
 <a href="./Restapi/EntityList.html">Optional params described here.</a>

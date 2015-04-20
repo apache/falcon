@@ -68,8 +68,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage,
-                                    @QueryParam("pattern") String pattern) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage, pattern);
+                                    @QueryParam("nameseq") String nameseq) {
+        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage, nameseq);
     }
 
     @GET
