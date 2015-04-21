@@ -114,7 +114,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         removeTestClassEntities();
     }
 
-    @Test(enabled = false, groups = {"multiCluster"})
+    @Test(enabled = true, groups = {"multiCluster"})
     public void addSourceCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
@@ -156,6 +156,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
                 .withRetention("hours(10)", ActionType.DELETE)
                 .withValidity(startTime, TimeUtil.addMinsToTime(startTime, 65))
                 .withClusterType(ClusterType.SOURCE)
+                .withPartition("UK/${cluster.colo}")
                 .build())
             .toString();
         feedUpdated = FeedMerlin.fromString(feedUpdated).addFeedCluster(
@@ -185,11 +186,11 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
-        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 1);
-        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
-    @Test(enabled = false, groups = {"multiCluster"})
+    @Test(enabled = true, groups = {"multiCluster"})
     public void addTargetCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
@@ -268,9 +269,9 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
-    @Test(enabled = false, groups = {"multiCluster"})
+    @Test(enabled = true, groups = {"multiCluster"})
     public void add2SourceCluster() throws Exception {
-        //add one source and one target , schedule only on source
+        //add one source , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
             .addFeedCluster(new FeedMerlin.FeedClusterBuilder(cluster2Name)
                 .withRetention("hours(10)", ActionType.DELETE)
@@ -338,7 +339,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
-    @Test(enabled = false, groups = {"multiCluster"})
+    @Test(enabled = true, groups = {"multiCluster"})
     public void add2TargetCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
@@ -406,7 +407,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
-    @Test(enabled = false, groups = {"multiCluster"})
+    @Test(enabled = true, groups = {"multiCluster"})
     public void add1Source1TargetCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
@@ -476,7 +477,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }
 
-    @Test(enabled = false, groups = {"multiCluster"})
+    @Test(enabled = true, groups = {"multiCluster"})
     public void deleteSourceCluster() throws Exception {
         //add one source and one target , schedule only on source
         feedOriginalSubmit = FeedMerlin.fromString(feed)
@@ -551,8 +552,8 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 2);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
-        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 0);
-        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 3);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 2);
     }
 
     @Test(enabled = true, groups = {"multiCluster"})
@@ -653,7 +654,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "REPLICATION"), 0);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feedName, "RETENTION"), 1);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "REPLICATION"), 0);
-        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 2);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, feedName, "RETENTION"), 1);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "REPLICATION"), 2);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster1OC, feedName, "RETENTION"), 1);
     }

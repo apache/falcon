@@ -63,7 +63,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
-   
+  
+   FALCON-1131 Fixing FeedClusterUpdateTest and name confilcts in FALCON-1113(Pragya M 
+   via Samarth Gupta) 
+
    FALCON-1145 Changing entity name if it exceeds defined length(Pragya M via Samarth G)
 
    FALCON-1151 Migrate oozie related methods from InstanceUtil.java to OozieUtil.java

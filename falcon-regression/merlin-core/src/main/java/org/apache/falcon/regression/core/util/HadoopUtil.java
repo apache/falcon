@@ -431,7 +431,7 @@ public final class HadoopUtil {
     }
 
     /**
-     * Uploads either _SUCCESS or log_01.txt file to remote directories with names within date
+     * Uploads either _SUCCESS or dataFile4.txt file to remote directories with names within date
      * ranges.
      * @param fs target filesystem
      * @param interval dates ranges before and after current date
@@ -449,12 +449,12 @@ public final class HadoopUtil {
         if (fileToBePut.equals("_SUCCESS")) {
             copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "_SUCCESS");
         } else {
-            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "log_01.txt");
+            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "dataFile4.txt");
         }
     }
 
     /**
-     * Uploads log_01.txt file to remote directories with names within date ranges.
+     * Uploads dataFile4.txt file to remote directories with names within date ranges.
      * @param fs target filesystem
      * @param interval dates ranges before and after current date
      * @param minuteSkip time to skip within a range to get intermediate directories
@@ -472,11 +472,11 @@ public final class HadoopUtil {
             }
         }
         createFolders(fs, folderPrefix, folderPaths);
-        copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "log_01.txt");
+        copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "dataFile4.txt");
     }
 
     /**
-     * Uploads both log_01.txt and _SUCCESS files to remote directories with names within date
+     * Uploads both dataFile4.txt and _SUCCESS files to remote directories with names within date
      * ranges.
      * @param fs target filesystem
      * @param interval dates ranges before and after current date
@@ -496,7 +496,7 @@ public final class HadoopUtil {
         }
         createFolders(fs, folderPrefix, folderPaths);
         copyDataToFolders(fs, folderPrefix, folderPaths,
-            OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "log_01.txt");
+            OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "dataFile4.txt");
     }
 
     /**
