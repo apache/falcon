@@ -35,6 +35,11 @@ public final class MerlinConstants {
 
     private static final Logger LOGGER = Logger.getLogger(MerlinConstants.class);
 
+    public static final String PRISM_URL = Config.getProperty("prism.hostname");
+
+    public static final String HELP_URL =
+        Config.getProperty("falcon.help.url", "http://falcon.apache.org/");
+
     public static final boolean IS_SECURE =
         "kerberos".equals(new Configuration().get("hadoop.security.authentication", "simple"));
 

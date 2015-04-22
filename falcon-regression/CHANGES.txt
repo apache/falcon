@@ -6,6 +6,8 @@ Trunk (Unreleased)
 
   NEW FEATURES
 
+   FALCON-1167 Homepage & Login test for search-ui (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
    FALCON-1067 Add test in falcon-regression for feed instance listing api(Karishma G 
    via Samarth G) 
  

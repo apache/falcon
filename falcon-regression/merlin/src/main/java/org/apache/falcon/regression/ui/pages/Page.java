@@ -48,6 +48,9 @@ public abstract class Page {
         url = helper.getClusterHelper().getHostname();
     }
 
+    public Page(WebDriver driver) {
+        this.driver = driver;
+    }
     /**
      * Go to page in browser.
      */
