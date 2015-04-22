@@ -94,10 +94,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private static final List<Job.Status> BUNDLE_ACTIVE_STATUS =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED,
-            Job.Status.DONEWITHERROR);
+            Job.Status.RUNNINGWITHERROR, Job.Status.PAUSED, Status.PREPPAUSED, Status.PAUSEDWITHERROR);
     private static final List<Job.Status> BUNDLE_SUSPENDED_STATUS =
-        Arrays.asList(Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED);
-    private static final List<Job.Status> BUNDLE_RUNNING_STATUS = Arrays.asList(Job.Status.PREP, Job.Status.RUNNING);
+        Arrays.asList(Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED, Status.SUSPENDEDWITHERROR);
+    private static final List<Job.Status> BUNDLE_RUNNING_STATUS = Arrays.asList(Job.Status.PREP, Job.Status.RUNNING,
+            Job.Status.RUNNINGWITHERROR);
 
     private static final List<Job.Status> BUNDLE_SUSPEND_PRECOND =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.DONEWITHERROR);

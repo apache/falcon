@@ -6,8 +6,12 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1127 Falcon entity status is submitted when corresponding Bundle
+    is runningwitherror(Pallavi Rao via Suhas Vasu)
+
     FALCON-1142 ClusterEntityParserTest.testClusterWithOnlyStaging
     fails when run alone(Pallavi Rao via Suhas Vasu)
+
     FALCON-1152 Names of Xml attributes and Class member variables
     are inconsistent(Ajay Yadava)
 
