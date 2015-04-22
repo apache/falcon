@@ -19,7 +19,9 @@
 package org.apache.falcon.regression.ui.search;
 
 import org.apache.falcon.regression.core.util.UIAssert;
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -28,6 +30,7 @@ import org.testng.Assert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /** Page object for the Search Page. */
@@ -106,31 +109,53 @@ public class SearchPage extends AbstractSearchPage {
     }
 
     public List<SearchResult> doSearch(String searchString) {
-        getSearchBox().sendKeys(searchString + "\n");
+        clearSearch();
+        return appendAndSearch(searchString);
+    }
+
+    public List<SearchResult> appendAndSearch(String appendedPart) {
+        for(String queryParam : appendedPart.split("\\s+")) {
+            getSearchBox().sendKeys(queryParam);
+            getSearchBox().sendKeys(Keys.SPACE);
+        }
+        String activeAlert = getActiveAlertText();
+        if (activeAlert != null) {
+            Assert.assertEquals(activeAlert.trim(), "No results matched the search criteria.");
+            return Collections.emptyList();
+        }
         UIAssert.assertDisplayed(resultBlock, "Search result block");
         return getSearchResults();
+
+    }
+
+    private String getActiveAlertText() {
+        List<WebElement> alerts = driver.findElements(By.className("ng-animate"));
+        if (!alerts.isEmpty()) {
+            WebElement last = alerts.get(alerts.size() - 1);
+            if (last.isDisplayed()) {
+                return last.getText();
+            }
+        }
+        return null;
     }
 
     public SearchQuery getSearchQuery() {
-        final WebElement queryGroup = searchBlock.findElement(By.className("tag-list"));
-        final List<WebElement> queryParts = queryGroup.findElements(By.tagName("li"));
-        if (queryParts.size() == 0) {
-            return SearchQuery.create(null);
-        } else {
-            final WebElement namePart = queryParts.remove(0);
-            final WebElement nameLabel = namePart.findElement(By.tagName("strong"));
-            Assert.assertEquals(nameLabel.getText(), "NAME: ", "Name label of query");
-            final WebElement nameElem = namePart.findElement(By.tagName("span"));
-            SearchQuery searchQuery = SearchQuery.create(nameElem.getText());
-            for (WebElement tagPart : queryParts) {
-                final WebElement tagLabel = tagPart.findElement(By.tagName("strong"));
-                Assert.assertEquals(tagLabel.getText(), "TAG: ", "Tag label of query");
-                final WebElement tagElem = tagPart.findElement(By.tagName("span"));
-                searchQuery.withTag(tagElem.getText());
-            }
-            return searchQuery;
+        return new SearchQuery(searchBlock);
+    }
+
+    public void clearSearch() {
+        getSearchBox().clear();
+        SearchQuery query = getSearchQuery();
+        for (int i = 0; i < query.getElementsNumber(); i++) {
+            removeLastParam();
         }
     }
+
+    public void removeLastParam() {
+        getSearchBox().sendKeys(Keys.BACK_SPACE);
+        getSearchBox().sendKeys(Keys.BACK_SPACE);
+    }
+
 
     public void checkNoResult() {
         UIAssert.assertNotDisplayed(resultBlock, "Search result block");
@@ -138,21 +163,56 @@ public class SearchPage extends AbstractSearchPage {
 
     /** Class representing search query displayed in the search box. */
     public static final class SearchQuery {
-        private final String name;
-
+        private WebElement searchBlock;
+        private String name;
+        private String type;
+        private int elementsNumber;
         private final List<String> tags = new ArrayList<>();
+        private static final Logger LOGGER = Logger.getLogger(SearchQuery.class);
 
-        private SearchQuery(String name) {
-            this.name = name;
+        public SearchQuery(WebElement searchBlock) {
+            this.searchBlock = searchBlock;
+            updateElements();
         }
 
-        public static SearchQuery create(String name) {
-            return new SearchQuery(name);
-        }
-
-        public SearchQuery withTag(String tag) {
-            tags.add(tag);
+        private SearchQuery updateElements() {
+            name = null;
+            type = null;
+            tags.clear();
+            final WebElement queryGroup = searchBlock.findElement(By.className("tag-list"));
+            final List<WebElement> queryParts = queryGroup.findElements(By.tagName("li"));
+            elementsNumber = queryParts.size();
+            for (WebElement queryPart : queryParts) {
+                final WebElement queryLabel = queryPart.findElement(By.tagName("strong"));
+                final String queryText = queryPart.findElement(By.tagName("span")).getText();
+                switch (queryLabel.getText().trim()) {
+                case "NAME:":
+                    if (name != null) {
+                        LOGGER.warn(String.format("NAME block is already added: '%s' => '%s'",
+                            name, queryText));
+                    }
+                    name = queryText;
+                    break;
+                case "TAG:":
+                    tags.add(queryText);
+                    break;
+                case "TYPE:":
+                    if (type != null) {
+                        LOGGER.warn(String.format("TYPE block is already added: '%s' => '%s'",
+                            type, queryText));
+                    }
+                    type = queryText;
+                    break;
+                default:
+                    Assert.fail("There should be only TAGs or TYPE");
+                }
+            }
             return this;
+        }
+
+
+        public String getType() {
+            return type;
         }
 
         public String getName() {
@@ -161,6 +221,35 @@ public class SearchPage extends AbstractSearchPage {
 
         public List<String> getTags() {
             return tags;
+        }
+
+        public int getElementsNumber() {
+            return elementsNumber;
+        }
+
+        /**
+         * Delete element by index (1, 2, 3,..).
+         * @param index of element in search query.
+         * @return true if deletion was successful
+         */
+        public boolean deleteByIndex(int index) {
+            if (index > elementsNumber || index < 1) {
+                LOGGER.warn("There is no element with index=" + index);
+                return false;
+            }
+            int oldElementsNumber = elementsNumber;
+            final WebElement queryGroup = searchBlock.findElement(By.className("tag-list"));
+            final List<WebElement> queryParts = queryGroup.findElements(By.tagName("li"));
+            queryParts.get(index - 1).findElement(By.className("remove-button")).click();
+            this.updateElements();
+            boolean result = oldElementsNumber == elementsNumber + 1;
+            LOGGER.info(String.format(
+                "Element with index=%d was%s deleted", index, result ? "" : "n't"));
+            return result;
+        }
+
+        public boolean deleteLast() {
+            return deleteByIndex(elementsNumber);
         }
     }
 

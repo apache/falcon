@@ -116,8 +116,11 @@ public class TestngListener implements ITestListener, IExecutionListener {
             byte[] scrFile =
                 ((TakesScreenshot)BaseUITestClass.getDriver()).getScreenshotAs(OutputType.BYTES);
             try {
-                String filename = OSUtil.getPath("target", "surefire-reports", "screenshots", String.format("%s.%s.png",
-                        result.getTestClass().getRealClass().getSimpleName(), result.getName()));
+                String params = Arrays.toString(result.getParameters());
+                params = params.replaceAll("[<>\":\\\\/\\|\\?\\*]", ""); //remove <>:"/\|?*
+                String filename = OSUtil.getPath("target", "surefire-reports", "screenshots",
+                    String.format("%s.%s.(%s).png", result.getTestClass().getRealClass()
+                        .getSimpleName(), result.getName(), params));
                 FileUtils.writeByteArrayToFile(new File(filename), scrFile);
             } catch (IOException e) {
                 LOGGER.info("Saving screenshot FAILED: " + e.getCause());
