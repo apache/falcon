@@ -107,6 +107,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
     private static final String FALCON_INSTANCE_SOURCE_CLUSTERS = "falcon.instance.source.clusters";
 
+    private static final int WORKFLOW_STATUS_RETRY_DELAY_MS = 100; // milliseconds
+    private static final String WORKFLOW_STATUS_RETRY_COUNT = "workflow.status.retry.count";
+
     private static final List<String> PARENT_WF_ACTION_NAMES = Arrays.asList(
             "pre-processing",
             "recordsize",
@@ -1348,18 +1351,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private void assertStatus(String cluster, String jobId, Status... statuses) throws FalconException {
 
-        String actualStatus = getWorkflowStatus(cluster, jobId);
-        for (int counter = 0; counter < 3; counter++) {
+        String actualStatus = null;
+        int retryCount;
+        String retry = RuntimeProperties.get().getProperty(WORKFLOW_STATUS_RETRY_COUNT, "30");
+        try {
+            retryCount = Integer.valueOf(retry);
+        } catch (NumberFormatException nfe) {
+            throw new FalconException("Invalid value provided for runtime property \""
+                    + WORKFLOW_STATUS_RETRY_COUNT + "\". Please provide an integer value.");
+        }
+        for (int counter = 0; counter < retryCount; counter++) {
+            actualStatus = getWorkflowStatus(cluster, jobId);
             if (!statusEquals(actualStatus, statuses)) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(WORKFLOW_STATUS_RETRY_DELAY_MS);
                 } catch (InterruptedException ignore) {
                     //ignore
                 }
             } else {
                 return;
             }
-            actualStatus = getWorkflowStatus(cluster, jobId);
         }
         throw new FalconException("For Job" + jobId + ", actual statuses: " + actualStatus + ", expected statuses: "
             + Arrays.toString(statuses));
