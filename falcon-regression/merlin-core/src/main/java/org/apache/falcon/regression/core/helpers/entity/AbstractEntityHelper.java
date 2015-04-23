@@ -252,14 +252,16 @@ public abstract class AbstractEntityHelper {
 
     public ServiceResponse listEntities()
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        return listEntities(null, null);
+        return listEntities(null, null, null);
     }
 
-    public ServiceResponse listEntities(String params, String user)
+    public ServiceResponse listEntities(String entityType, String params, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        LOGGER.info("fetching " + getEntityType() + " list");
-        String url = createUrl(this.hostname + URLS.LIST_URL.getValue(),
-            getEntityType() + colo);
+        if (StringUtils.isEmpty(entityType)) {
+            entityType = getEntityType();
+        }
+        LOGGER.info("fetching " + entityType + " list");
+        String url = createUrl(this.hostname + URLS.LIST_URL.getValue(), entityType + colo);
         if (StringUtils.isNotEmpty(params)){
             url += colo.isEmpty() ? "?" + params : "&" + params;
         }
@@ -268,7 +270,7 @@ public abstract class AbstractEntityHelper {
 
     public ServiceResponse listAllEntities(String params, String user)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
-        return listEntities((params == null ? "" : params + '&')
+        return listEntities(null, (params == null ? "" : params + '&')
             + "numResults=" + Integer.MAX_VALUE, user);
     }
 

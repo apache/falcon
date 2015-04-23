@@ -5,6 +5,7 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1171 Adding search API tests (Paul Isaychuk via Raghav Kumar Gautam)
 
    FALCON-1167 Homepage & Login test for search-ui (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 

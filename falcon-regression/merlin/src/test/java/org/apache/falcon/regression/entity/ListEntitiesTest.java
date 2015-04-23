@@ -178,7 +178,7 @@ public class ListEntitiesTest extends BaseTestClass {
         for (int i = 0; i <= allEntitiesCount; i++) {
 
             EntityElement[] entities =
-                helper.listEntities("offset=" + i, null).getEntityList().getElements();
+                helper.listEntities(null, "offset=" + i, null).getEntityList().getElements();
             LOGGER.info(String.format("%s entities with offset %d: %s",
                 helper.getEntityType(), i, Arrays.toString(entities)));
 
@@ -206,7 +206,7 @@ public class ListEntitiesTest extends BaseTestClass {
 
         for (int i = 1; i <= allEntitiesCount; i++) {
             EntityElement[] entities =
-                helper.listEntities("numResults=" + i, null).getEntityList().getElements();
+                helper.listEntities(null, "numResults=" + i, null).getEntityList().getElements();
             Assert.assertEquals(entities.length, i,
                 "Number of entities is not equal to numResults parameter");
             for (int j = 0; j < i; j++) {
@@ -261,7 +261,7 @@ public class ListEntitiesTest extends BaseTestClass {
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] entities = helper.listEntities(
-            "numResults=2&fields=status,tags&filterBy=STATUS:SUBMITTED&orderBy=name&tags=" + tags[2],
+            null, "numResults=2&fields=status,tags&filterBy=STATUS:SUBMITTED&orderBy=name&tags=" + tags[2],
             null).getEntityList().getElements();
         if (entities != null) {
             SoftAssert softAssert = new SoftAssert();
