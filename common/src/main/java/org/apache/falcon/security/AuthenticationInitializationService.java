@@ -18,8 +18,10 @@
 
 package org.apache.falcon.security;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
@@ -29,7 +31,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Date;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 /**
@@ -49,15 +54,23 @@ public class AuthenticationInitializationService implements FalconService {
      * Constant for the configuration property that indicates the keytab file path.
      */
     protected static final String KERBEROS_KEYTAB = CONFIG_PREFIX + KerberosAuthenticationHandler.KEYTAB;
+
     /**
      * Constant for the configuration property that indicates the kerberos principal.
      */
     protected static final String KERBEROS_PRINCIPAL = CONFIG_PREFIX + KerberosAuthenticationHandler.PRINCIPAL;
 
+    /**
+     * Constant for the configuration property that indicates the authentication token validity time in seconds.
+     */
+    protected static final String AUTH_TOKEN_VALIDITY_SECONDS = CONFIG_PREFIX + "token.validity";
+
+    private Timer timer = new Timer();
+    private static final String SERVICE_NAME = "Authentication initialization service";
 
     @Override
     public String getName() {
-        return "Authentication initialization service";
+        return SERVICE_NAME;
     }
 
     @Override
@@ -66,6 +79,17 @@ public class AuthenticationInitializationService implements FalconService {
         if (SecurityUtil.isSecurityEnabled()) {
             LOG.info("Falcon Kerberos Authentication Enabled!");
             initializeKerberos();
+
+            String authTokenValidity = StartupProperties.get().getProperty(AUTH_TOKEN_VALIDITY_SECONDS);
+            long validateFrequency;
+            try {
+                validateFrequency = (StringUtils.isNotEmpty(authTokenValidity))
+                        ? Long.valueOf(authTokenValidity) : 86400;
+            } catch (NumberFormatException nfe) {
+                throw new FalconException("Invalid value provided for startup property \""
+                        + AUTH_TOKEN_VALIDITY_SECONDS + "\", please provide a valid long number", nfe);
+            }
+            timer.schedule(new TokenValidationThread(), 0, validateFrequency*1000);
         } else {
             LOG.info("Falcon Simple Authentication Enabled!");
             Configuration ugiConf = new Configuration();
@@ -74,7 +98,7 @@ public class AuthenticationInitializationService implements FalconService {
         }
     }
 
-    protected void initializeKerberos() throws FalconException {
+    protected static void initializeKerberos() throws FalconException {
         try {
             Properties configuration = StartupProperties.get();
             String principal = configuration.getProperty(KERBEROS_PRINCIPAL);
@@ -96,7 +120,7 @@ public class AuthenticationInitializationService implements FalconService {
 
             LOG.info("Got Kerberos ticket, keytab: {}, Falcon principal: {}", keytabFilePath, principal);
         } catch (Exception ex) {
-            throw new FalconException("Could not initialize " + getName()
+            throw new FalconException("Could not initialize " + SERVICE_NAME
                     + ": " + ex.getMessage(), ex);
         }
     }
@@ -118,5 +142,22 @@ public class AuthenticationInitializationService implements FalconService {
 
     @Override
     public void destroy() throws FalconException {
+        timer.cancel();
     }
+
+    private static class TokenValidationThread extends TimerTask {
+        @Override
+        public void run() {
+            try {
+                LOG.info("Validating Auth Token: {}", new Date());
+                initializeKerberos();
+            } catch (Throwable t) {
+                LOG.error("Error in Auth Token Validation task: ", t);
+                GenericAlert.initializeKerberosFailed(
+                        "Exception in Auth Token Validation : ", t);
+            }
+        }
+    }
+
+
 }

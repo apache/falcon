@@ -92,6 +92,13 @@ public final class GenericAlert {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
+    @Monitored(event = "init-kerberos-failed")
+    public static String initializeKerberosFailed(
+            @Dimension(value = "message") String message,
+            @Dimension(value = "exception") Throwable throwable) {
+        return "IGNORE";
+    }
+
     @Monitored(event = "rerun-queue-failed")
     public static String alertRerunConsumerFailed(
             @Dimension(value = "message") String message,

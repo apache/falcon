@@ -178,6 +178,9 @@ Following is the Server Side Configuration Setup for Authentication.
 # name node principal to talk to config store
 *.dfs.namenode.kerberos.principal=nn/_HOST@EXAMPLE.COM
 
+# Indicates how long (in seconds) falcon authentication token is valid before it has to be renewed.
+*.falcon.service.authentication.token.validity=86400
+
 ##### SPNEGO Configuration
 
 # Authentication type must be specified: simple|kerberos|<class>

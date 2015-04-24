@@ -18,6 +18,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-954 Secure Kerberos setup : Falcon should periodically revalidate 
+    auth token (Balu Vellanki via Ajay Yadava)
+
     FALCON-1146 feed retention policy deleted everything all the way up
     to the root (Peeyush Bishnoi via Suhas Vasu)
 
