@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
@@ -60,6 +61,7 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
+        FileUtils.forceMkdir(new File(OSUtil.OOZIE_LIB_FOLDER + "lib"));
         saveUrlToFile(oozieLib);
     }
 
@@ -86,9 +88,10 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
     }
 
     @AfterClass(alwaysRun = true)
-    public void deleteJar() {
+    public void deleteJar() throws IOException {
         File file = new File(filename);
         Assert.assertEquals(file.delete(), true, filename + " is not present.");
+        FileUtils.deleteDirectory(new File(OSUtil.OOZIE_LIB_FOLDER + "lib"));
     }
 
     /**
@@ -144,7 +147,7 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
 
         InputStream input = http.getInputStream();
         byte[] buffer = new byte[4096];
-        int n = -1;
+        int n;
         OutputStream output = new FileOutputStream(new File(filename));
         while ((n = input.read(buffer)) != -1) {
             output.write(buffer, 0, n);

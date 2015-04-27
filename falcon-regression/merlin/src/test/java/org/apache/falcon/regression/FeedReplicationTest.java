@@ -346,7 +346,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //create availability flag on source
         HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
-                OSUtil.OOZIE_EXAMPLE_INPUT_DATA + availabilityFlagName);
+                OSUtil.RESOURCES + availabilityFlagName);
 
         //check if instance become running
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,

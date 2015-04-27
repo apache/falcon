@@ -305,6 +305,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1166 Fixing FeedReplicationTest, TouchAPIPrismAndServerTest, ProcessLibPathLoadTest
+   (Pragya Mittal via Ruslan Ostafiychuk)
+
    FALCON-1155 Unwanted character at the end of workflow.xml (Karishma Gulati via Ruslan Ostafiychuk)
 
    FALCON-1072 Dumping of Oozie info should use os specific newline (Raghav Kumar Gautam)

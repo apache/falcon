@@ -95,7 +95,7 @@ public class TouchAPIPrismAndServerTest extends BaseTestClass {
         ServiceResponse response = prism.getProcessHelper().touchEntity(bundles[0].getProcessData());
         String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertNotEquals(oldbundleId, bundleId, "Bundle ids are same. No new bundle generated.");
-        validate(response, "Old bundle id: " + coordId + ". New bundle id: " + bundleId);
+        validate(response, "Old coordinator id: " + coordId + ". New bundle id: " + bundleId);
 
         // via server
         oldbundleId = bundleId;
@@ -103,7 +103,7 @@ public class TouchAPIPrismAndServerTest extends BaseTestClass {
         response = cluster.getProcessHelper().touchEntity(bundles[0].getProcessData());
         bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertNotEquals(oldbundleId, bundleId, "Bundle ids are same. No new bundle generated.");
-        validate(response, "Old bundle id: " + coordId + ". New bundle id: " + bundleId);
+        validate(response, "Old coordinator id: " + coordId + ". New bundle id: " + bundleId);
     }
 
     /**
@@ -125,7 +125,7 @@ public class TouchAPIPrismAndServerTest extends BaseTestClass {
         ServiceResponse response = prism.getFeedHelper().touchEntity(bundles[0].getDataSets().get(0));
         String bundleId = OozieUtil.getLatestBundleID(clusterOC, clusterName, EntityType.FEED);
         Assert.assertNotEquals(oldbundleId, bundleId, "Bundle ids are same. No new bundle generated.");
-        validate(response, "Old bundle id: " + coordId + ". New bundle id: " + bundleId);
+        validate(response, "Old coordinator id: " + coordId + ". New bundle id: " + bundleId);
 
         // via server
         oldbundleId = bundleId;
@@ -134,7 +134,7 @@ public class TouchAPIPrismAndServerTest extends BaseTestClass {
         response = cluster.getFeedHelper().touchEntity(bundles[0].getDataSets().get(0));
         bundleId = OozieUtil.getLatestBundleID(clusterOC, clusterName, EntityType.FEED);
         Assert.assertNotEquals(oldbundleId, bundleId, "Bundle ids are same. No new bundle generated.");
-        validate(response, "Old bundle id: " + coordId + ". New bundle id: " + bundleId);
+        validate(response, "Old coordinator id: " + coordId + ". New bundle id: " + bundleId);
 
     }
 
@@ -160,14 +160,14 @@ public class TouchAPIPrismAndServerTest extends BaseTestClass {
         ServiceResponse response = prism.getProcessHelper().touchEntity(bundles[0].getProcessData());
         String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertEquals(oldbundleId, bundleId, "New bundle generated");
-        validate(response, "Old bundle id: " + coordId);
+        validate(response, "Old coordinator id: " + coordId);
 
         //via server
         oldbundleId = bundleId;
         response = cluster.getProcessHelper().touchEntity(bundles[0].getProcessData());
         bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         Assert.assertEquals(oldbundleId, bundleId, "New bundle generated");
-        validate(response, "Old bundle id: " + coordId);
+        validate(response, "Old coordinator id: " + coordId);
     }
 
     private void validate(ServiceResponse response, String message) throws JAXBException {
