@@ -305,6 +305,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1176 Fixing EntitiesPatternSearchTest failing as a result of FALCON-1158 (Pragya Mittal
+   via Ruslan Ostafiychuk)
+
    FALCON-1177 Changing method modifier to make it be not concerned as a test (Paul Isaychuk via
    Ruslan Ostafiychuk)
 

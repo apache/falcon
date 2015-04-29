@@ -97,7 +97,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
     public void listEntitiesWithPattern(AbstractEntityHelper helper, String patternParam)
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         EntityElement[] entities =
-                helper.listAllEntities("pattern=" + patternParam, null).getEntityList().getElements();
+                helper.listAllEntities("nameseq=" + patternParam, null).getEntityList().getElements();
         LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(entities));
         validateOutputPatternList(helper.listEntities().getEntityList().getElements(), entities, patternParam);
     }
@@ -110,7 +110,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
         mismatchPatternParam = mismatchPatternParam.replaceAll(" ", "%20");
         EntityElement[] entities =
-                helper.listAllEntities("pattern=" + mismatchPatternParam, null).getEntityList().getElements();
+                helper.listAllEntities("nameseq=" + mismatchPatternParam, null).getEntityList().getElements();
         LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(entities));
         Assert.assertNull(entities, "No pattern matches");
     }
