@@ -322,10 +322,10 @@ public class PrismFeedSnSTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
 
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(
-            feed1)).getMessage(), cluster1.getClusterHelper().getColoName() + "/RUNNING");
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(
-            feed2)).getMessage(), cluster2.getClusterHelper().getColoName() + "/RUNNING");
+        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(feed1))
+            .getMessage().trim(), cluster1.getClusterHelper().getColoName() + "/RUNNING");
+        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(feed2))
+            .getMessage().trim(), cluster2.getClusterHelper().getColoName() + "/RUNNING");
     }
 
     /**
