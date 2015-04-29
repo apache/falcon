@@ -173,6 +173,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1161 Test case feedFeedBasePathExists fails intermittently
+   (Suhas Vasu)
+
    FALCON-1154 Replication is broken (Sowmya Ramesh via Suhas Vasu)
 
    FALCON-1159 Falcon build is broken (Suhas Vasu)

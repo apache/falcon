@@ -24,7 +24,6 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -362,7 +361,7 @@ public class FeedEvictorTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void testEvictionWithEmptyDirs() throws Exception {
         try {
             Configuration conf = cluster.getConf();
@@ -370,13 +369,14 @@ public class FeedEvictorTest {
             fs.delete(new Path("/"), true);
             stream.clear();
 
-            Pair<List<String>, List<String>> pair = generateInstances(fs, "feed1",
-                "yyyy/MM/dd/'more'/yyyy", 10, TimeUnit.DAYS, "/data", false);
+            String feedBasePathString = "/data/YYYY/feed1/mmHH/dd/MM/";
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            generateInstances(fs, "feed1", dateFormat.toPattern(), 12, TimeUnit.DAYS, "/data", false);
+
             final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
-            String dataPath = LocationType.DATA.name() + "="
-                + storageUrl + "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}/?{MONTH}/?{DAY}/more/?{YEAR}";
+            String dataPath = LocationType.DATA.name() + "=" + storageUrl + feedBasePathString
+                    + "?{YEAR}-?{MONTH}-?{DAY}";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
-            long beforeDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount();
 
             FeedEvictor.main(new String[]{
                 "-feedBasePath", dataPath,
@@ -388,25 +388,22 @@ public class FeedEvictorTest {
                 "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
             });
 
-            compare(map.get("feed1"), stream.getBuffer());
+            Date dateToday = new Date();
+            Date dateTenDaysAgo = new Date(dateToday.getTime() - 9 * 24 * 3600 * 1000L);
+            String maxExpectedDataPath = feedBasePathString + dateFormat.format(dateToday);
+            String minExpectedDataPath = feedBasePathString + dateFormat.format(dateTenDaysAgo);
 
             String expectedInstancePaths = getExpectedInstancePaths(dataPath);
             Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
 
-            String deletedPath = expectedInstancePaths.split(",")[0].split("=")[1];
-            Assert.assertFalse(fs.exists(new Path(deletedPath)));
-            //empty parents
-            Assert.assertFalse(fs.exists(new Path(deletedPath).getParent()));
-            Assert.assertFalse(fs.exists(new Path(deletedPath).getParent().getParent()));
-            //base path not deleted
-            Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed1/mmHH/dd/MM/")));
-            //non-eligible empty dirs
-            long afterDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount();
-            Assert.assertEquals((beforeDelCount - afterDelCount), 19);
-            for(String path: pair.second){
-                Assert.assertTrue(fs.exists(new Path(path)));
-            }
-
+            // The base directory has to exist
+            Assert.assertTrue(fs.exists(new Path(feedBasePathString)));
+            // Directory with today's date has to exist
+            Assert.assertTrue(fs.exists(new Path(maxExpectedDataPath)));
+            // Directory with ten days ago date has to exist
+            Assert.assertTrue(fs.exists(new Path(minExpectedDataPath)));
+            // 10 directories have to exist as the feed retention is for 10 days
+            Assert.assertEquals(fs.listStatus(new Path(feedBasePathString)).length, 10);
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);
@@ -421,20 +418,21 @@ public class FeedEvictorTest {
             fs.delete(new Path("/"), true);
             stream.clear();
 
-            Pair<List<String>, List<String>> pair = generateInstances(fs, "feed3",
-                    "yyyy/MM/dd/hh/mm", 1, TimeUnit.MINUTES, "/data", false);
+            String feedBasePathString = "/data/YYYY/feed1/mmHH/dd/MM/";
+            Pair<List<String>, List<String>> pair =
+                    generateInstances(fs, "feed1", "yyyy-MM-dd/", 10, TimeUnit.DAYS, "/data", true);
+
             final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
-            String dataPath = LocationType.DATA.name() + "="
-                    + storageUrl + "/data/YYYY/feed3/mmHH/dd/MM/?{YEAR}/?{MONTH}/?{DAY}/?{HOUR}/?{MINUTE}";
+            String dataPath = LocationType.DATA.name() + "=" + storageUrl + feedBasePathString
+                    + "?{YEAR}-?{MONTH}-?{DAY}";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
-            long beforeDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed3/mmHH/dd/MM/"))).getDirectoryCount();
 
             FeedEvictor.main(new String[]{
                 "-feedBasePath", dataPath,
                 "-retentionType", "instance",
-                "-retentionLimit", "minutes(-1)",
+                "-retentionLimit", "days(0)",
                 "-timeZone", "UTC",
-                "-frequency", "minutes",
+                "-frequency", "daily",
                 "-logFile", logFile,
                 "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
             });
@@ -442,14 +440,11 @@ public class FeedEvictorTest {
             String expectedInstancePaths = getExpectedInstancePaths(dataPath);
             Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
 
-            //Feed Base path must exist
-            Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed3/mmHH/dd/MM/")));
-            FileStatus[] files = fs.listStatus(new Path(("/data/YYYY/feed3/mmHH/dd/MM/")));
-            //Number of directories/files inside feed base path should be 0
-            Assert.assertEquals(files.length, 0);
-            long afterDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed3/mmHH/dd/MM/"))).getDirectoryCount();
-            //Number of directories deleted
-            Assert.assertEquals((beforeDelCount - afterDelCount), 11);
+            // The base directory has to exist
+            Assert.assertTrue(fs.exists(new Path(feedBasePathString)));
+
+            // There should not be any sub directories under the base path
+            Assert.assertEquals(fs.listStatus(new Path(feedBasePathString)).length, 0);
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);
