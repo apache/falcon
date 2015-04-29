@@ -286,7 +286,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
         this.dfsCluster.getFileSystem().mkdirs(new Path(ClusterHelper.getLocation(cluster,
-                        ClusterLocationType.STAGING).getPath()), HadoopClientFactory.READ_EXECUTE_PERMISSION);
+                ClusterLocationType.STAGING).getPath()), HadoopClientFactory.ALL_PERMISSION);
         clusterEntityParser.validate(cluster);
         String workingDirPath = cluster.getLocations().getLocations().get(0).getPath() + "/working";
         Assert.assertEquals(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), workingDirPath);
@@ -316,6 +316,30 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        clusterEntityParser.validate(cluster);
+        Assert.fail("Should have thrown a validation exception");
+    }
+
+    /**
+     * A lightweight unit test for a cluster where staging location
+     * does not have ALL_PERMISSION (777).
+     * Staging has permission less than ALL_PERMISSION
+     * ValidationException should be thrown
+     *
+     * @throws ValidationException
+     */
+    @Test(expectedExceptions = ValidationException.class)
+    public void testClusterWithStagingPermission() throws Exception {
+        ClusterEntityParser clusterEntityParser = Mockito
+                .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
+        Cluster cluster = (Cluster) this.dfsCluster.getCluster().copy();
+        cluster.getLocations().getLocations().get(0).setPath("/projects/falcon/staging2");
+        cluster.getLocations().getLocations().remove(1);
+        Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        this.dfsCluster.getFileSystem().mkdirs(new Path(ClusterHelper.getLocation(cluster,
+                ClusterLocationType.STAGING).getPath()), HadoopClientFactory.READ_EXECUTE_PERMISSION);
         clusterEntityParser.validate(cluster);
         Assert.fail("Should have thrown a validation exception");
     }
