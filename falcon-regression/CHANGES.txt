@@ -305,6 +305,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1177 Changing method modifier to make it be not concerned as a test (Paul Isaychuk via
+   Ruslan Ostafiychuk)
+
    FALCON-1166 Fixing FeedReplicationTest, TouchAPIPrismAndServerTest, ProcessLibPathLoadTest
    (Pragya Mittal via Ruslan Ostafiychuk)
 

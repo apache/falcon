@@ -72,12 +72,9 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     private String feed;
     private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
 
-    public void uploadWorkflow() throws Exception {
-        uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-    }
-
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
+        uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         clusterHC = cluster.getClusterHelper().getHCatClient();
         cluster2HC = cluster2.getClusterHelper().getHCatClient();
         //create an empty table for feed operations
@@ -98,7 +95,6 @@ public class HCatFeedOperationsTest extends BaseTestClass {
         bundles[0] = new Bundle(bundle, cluster.getPrefix());
         bundles[0].generateUniqueBundle(this);
         bundles[0].setClusterInterface(Interfacetype.REGISTRY, cluster.getClusterHelper().getHCatEndpoint());
-
 
         bundles[1] = new Bundle(bundle, cluster2.getPrefix());
         bundles[1].generateUniqueBundle(this);
@@ -256,7 +252,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     }
 
 
-    public static void createEmptyTable(HCatClient cli, String dbName, String tabName,
+    private static void createEmptyTable(HCatClient cli, String dbName, String tabName,
                                         List<HCatFieldSchema> partitionCols) throws HCatException{
 
         ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
