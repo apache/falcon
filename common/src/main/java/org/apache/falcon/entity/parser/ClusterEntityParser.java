@@ -256,7 +256,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         } else {
 
             checkPathOwnerAndPermission(cluster.getName(), stagingLocation.getPath(), fs,
-                    HadoopClientFactory.READ_EXECUTE_PERMISSION, false);
+                    HadoopClientFactory.ALL_PERMISSION);
 
             if (!ClusterHelper.checkWorkingLocationExists(cluster)) {
                 //Creating location type of working in the sub dir of staging dir with perms 755. FALCON-910
@@ -299,7 +299,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                 } else {
 
                     checkPathOwnerAndPermission(cluster.getName(), workingLocation.getPath(), fs,
-                            HadoopClientFactory.READ_EXECUTE_PERMISSION, true);
+                            HadoopClientFactory.READ_EXECUTE_PERMISSION);
 
                 }
             }
@@ -309,7 +309,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     private void checkPathOwnerAndPermission(String clusterName, String location, FileSystem fs,
-            FsPermission expectedPermission, Boolean exactPerms) throws ValidationException {
+            FsPermission expectedPermission) throws ValidationException {
 
         Path locationPath = new Path(location);
         try {
@@ -330,27 +330,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             }
             String errorMessage = "Path " + locationPath + " has permissions: " + fileStatus.getPermission().toString()
                     + ", should be " + expectedPermission;
-            if (exactPerms) {
-                if (fileStatus.getPermission().toShort() != expectedPermission.toShort()) {
-                    LOG.error(errorMessage);
-                    throw new ValidationException(errorMessage);
-                }
-            } else {
-                if (expectedPermission.getUserAction().ordinal() > fileStatus.getPermission().getUserAction()
-                        .ordinal()) {
-                    LOG.error(errorMessage + " at least");
-                    throw new ValidationException(errorMessage + " at least");
-                }
-                if (expectedPermission.getGroupAction().ordinal() > fileStatus.getPermission().getGroupAction()
-                        .ordinal()) {
-                    LOG.error(errorMessage + " at least");
-                    throw new ValidationException(errorMessage + " at least");
-                }
-                if (expectedPermission.getOtherAction().ordinal() > fileStatus.getPermission().getOtherAction()
-                        .ordinal()) {
-                    LOG.error(errorMessage + " at least");
-                    throw new ValidationException(errorMessage + " at least");
-                }
+            if (fileStatus.getPermission().toShort() != expectedPermission.toShort()) {
+                LOG.error(errorMessage);
+                throw new ValidationException(errorMessage);
             }
             // try to list to see if the user is able to write to this folder
             fs.listStatus(locationPath);

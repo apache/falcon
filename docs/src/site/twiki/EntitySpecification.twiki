@@ -70,7 +70,7 @@ Path is the hdfs path for each location.
 Falcon would use the location to do intermediate processing of entities in hdfs and hence Falcon
 should have read/write/execute permission on these locations.
 These locations MUST be created prior to submitting a cluster entity to Falcon.
-*staging* should have atleast 755 permissions and is a mandatory location .The parent dirs must have execute permissions so multiple
+*staging* should have 777 permissions and is a mandatory location .The parent dirs must have execute permissions so multiple
 users can write to this location. *working* must have 755 permissions and is a optional location.
 If *working* is not specified, falcon creates a sub directory in the *staging* location with 755 perms.
 The parent dir for *working* must have execute permissions so multiple
