@@ -129,7 +129,8 @@ public class SearchPage extends AbstractSearchPage {
     }
 
     private String getActiveAlertText() {
-        List<WebElement> alerts = driver.findElements(By.className("ng-animate"));
+        WebElement alertsBlock = driver.findElement(By.className("messages-to-show"));
+        List<WebElement> alerts = alertsBlock.findElements(By.className("ng-animate"));
         if (!alerts.isEmpty()) {
             WebElement last = alerts.get(alerts.size() - 1);
             if (last.isDisplayed()) {
@@ -260,7 +261,7 @@ public class SearchPage extends AbstractSearchPage {
         private String tags = "";
         private String clusterName;
         private String type;
-        private String status;
+        private EntityStatus status;
 
         public static SearchResult create(String entityName) {
             return new SearchResult(entityName);
@@ -291,7 +292,7 @@ public class SearchPage extends AbstractSearchPage {
         }
 
         public SearchResult withStatus(String pStatus) {
-            this.status = pStatus;
+            this.status = EntityStatus.valueOf(pStatus);
             return this;
         }
 
@@ -315,7 +316,7 @@ public class SearchPage extends AbstractSearchPage {
             return type;
         }
 
-        public String getStatus() {
+        public EntityStatus getStatus() {
             return status;
         }
     }

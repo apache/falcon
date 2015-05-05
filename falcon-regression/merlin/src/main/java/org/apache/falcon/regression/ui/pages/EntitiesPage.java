@@ -119,10 +119,4 @@ public class EntitiesPage extends Page {
         return entities;
     }
 
-    /**
-     * Status of entity that can be shown on Falcon UI.
-     */
-    public enum EntityStatus {
-        UNKNOWN, SUBMITTED, RUNNING, SUSPENDED
-    }
 }

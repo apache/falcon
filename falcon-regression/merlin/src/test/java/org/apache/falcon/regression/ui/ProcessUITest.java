@@ -38,6 +38,7 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.lineage.LineageApiTest;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.falcon.regression.ui.pages.EntitiesPage;
+import org.apache.falcon.regression.ui.pages.Page;
 import org.apache.falcon.regression.ui.pages.ProcessPage;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -180,14 +181,14 @@ public class ProcessUITest extends BaseUITestClass {
         String process = bundles[0].getProcessData();
         String processName = Util.readEntityName(process);
         softAssert.assertEquals(page.getEntityStatus(processName),
-                EntitiesPage.EntityStatus.SUBMITTED, "Process status should be SUBMITTED");
+                Page.EntityStatus.SUBMITTED, "Process status should be SUBMITTED");
         prism.getProcessHelper().schedule(process);
 
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
         softAssert.assertEquals(page.getEntityStatus(processName),
-                EntitiesPage.EntityStatus.RUNNING, "Process status should be RUNNING");
+                Page.EntityStatus.RUNNING, "Process status should be RUNNING");
 
         ProcessPage processPage = new ProcessPage(getDriver(), cluster, processName);
         processPage.navigateTo();

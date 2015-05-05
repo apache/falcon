@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1187 Test that changes made via API are reflected on UI (Ruslan Ostafiychuk
+   via Raghav Kumar Gautam)
+
    FALCON-1173 Tests for entities table of search-ui (Ruslan Ostafiychuk)
 
    FALCON-1171 Adding search API tests (Paul Isaychuk via Raghav Kumar Gautam)

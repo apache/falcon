@@ -130,6 +130,13 @@ public abstract class Page {
         }
     }
 
+    /**
+     * Status of entity that can be shown on Falcon UI.
+     */
+    public enum EntityStatus {
+        UNKNOWN, SUBMITTED, RUNNING, SUSPENDED
+    }
+
     static class Condition implements ExpectedCondition<Boolean> {
 
         private final boolean isPresent;
