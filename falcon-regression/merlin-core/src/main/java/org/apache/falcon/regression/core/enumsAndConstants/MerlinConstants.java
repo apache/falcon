@@ -19,7 +19,6 @@
 package org.apache.falcon.regression.core.enumsAndConstants;
 
 import org.apache.falcon.regression.core.util.Config;
-import org.apache.falcon.request.RequestKeys;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
 import org.apache.log4j.Logger;
@@ -54,7 +53,8 @@ public final class MerlinConstants {
             "https://repo1.maven.org/maven2/org/apache/oozie/oozie-examples/4.1.0/oozie-examples-4.1.0.jar");
 
     /** the user that is going to run tests. */
-    public static final String CURRENT_USER_NAME = System.getProperty("user.name");
+    public static final String CURRENT_USER_NAME = Config.getProperty("current_user_name",
+        System.getProperty("user.name"));
     /** keytab of current user. */
     private static final String CURRENT_USER_KEYTAB_STR = "current_user_keytab";
     /** group of the current user. */
@@ -80,8 +80,6 @@ public final class MerlinConstants {
     public static final String USER2_NAME;
     private static HashMap<String, String> keyTabMap;
     private static HashMap<String, String> passwordMap;
-    public static final String ACL_OWNER = Config.getProperty("ACL.OWNER", RequestKeys.CURRENT_USER);
-    public static final String ACL_GROUP = Config.getProperty("ACL.GROUP", "default");
     public static final String USER_REALM = Config.getProperty("USER.REALM", "");
     public static final String WASB_CONTAINER = Config.getProperty("wasb.container", "");
     public static final String WASB_SECRET = Config.getProperty("wasb.secret", "");

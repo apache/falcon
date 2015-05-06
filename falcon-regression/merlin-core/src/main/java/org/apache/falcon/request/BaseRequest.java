@@ -19,6 +19,7 @@
 package org.apache.falcon.request;
 
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.security.FalconAuthorizationToken;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
@@ -96,7 +97,7 @@ public class BaseRequest {
         this.method = method;
         this.url = url;
         this.requestData = null;
-        this.user = (null == user) ? RequestKeys.CURRENT_USER : user;
+        this.user = (null == user) ? MerlinConstants.CURRENT_USER_NAME : user;
         this.uri = new URI(url);
         target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
         this.headers = new ArrayList<>();

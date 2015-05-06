@@ -32,6 +32,4 @@ public final class RequestKeys {
     public static final String COOKIE = "Cookie";
     public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     public static final String NEGOTIATE = "Negotiate";
-    public static final String CURRENT_USER = System
-        .getProperty("user.name");
 }

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.ui.search;
 
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -31,10 +32,16 @@ import org.testng.Assert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /** Page object for the Search Page. */
 public class SearchPage extends AbstractSearchPage {
+
+    private static final String CLASS_OF_SELECTED_ROW = "rowSelected";
+    private static final int ANIMATION_DELAY = 2;
+
     public SearchPage(WebDriver driver) {
         super(driver);
     }
@@ -78,8 +85,7 @@ public class SearchPage extends AbstractSearchPage {
             final SearchResult searchResult = SearchResult.create(entityName);
 
             final String[] allClasses = oneResultElement.getAttribute("class").split(" ");
-            final String classOfSelectedRow = "rowSelected";
-            if (Arrays.asList(allClasses).contains(classOfSelectedRow)) {
+            if (Arrays.asList(allClasses).contains(CLASS_OF_SELECTED_ROW)) {
                 searchResult.withChecked(true);
             }
 
@@ -161,6 +167,26 @@ public class SearchPage extends AbstractSearchPage {
     public void checkNoResult() {
         UIAssert.assertNotDisplayed(resultBlock, "Search result block");
     }
+
+    public void selectRow(int row) {
+        changeRowClickedStatus(row, true);
+    }
+
+    public void deselectRow(int row) {
+        changeRowClickedStatus(row, false);
+    }
+
+    private void changeRowClickedStatus(int row, boolean checked) {
+        WebElement checkboxBlock = resultBlock.findElements(By.className("entityRow")).get(row - 1);
+        if (checked != checkboxBlock.getAttribute("class").contains(CLASS_OF_SELECTED_ROW)) {
+            checkboxBlock.findElement(By.xpath("./td/input")).click();
+        }
+    }
+
+    public void clickSelectAll() {
+        resultBlock.findElement(By.xpath(".//input[@ng-model='selectedAll']")).click();
+    }
+
 
     /** Class representing search query displayed in the search box. */
     public static final class SearchQuery {
@@ -252,6 +278,37 @@ public class SearchPage extends AbstractSearchPage {
         public boolean deleteLast() {
             return deleteByIndex(elementsNumber);
         }
+    }
+
+    public Set<Button> getButtons(boolean active) {
+        List<WebElement> buttons = resultBlock.findElement(By.className("buttonsRow"))
+            .findElements(By.className("btn"));
+        Set<Button> result = EnumSet.noneOf(Button.class);
+        for (WebElement button : buttons) {
+            if ((button.getAttribute("disabled") == null) == active) {
+                result.add(Button.valueOf(button.getText()));
+            }
+        }
+        return result;
+    }
+
+    public void clickButton(Button button) {
+        resultBlock.findElement(By.className("buttonsRow"))
+            .findElements(By.className("btn")).get(button.ordinal()).click();
+        TimeUtil.sleepSeconds(ANIMATION_DELAY);
+    }
+
+    /**
+     * Buttons available for entities in result box.
+     */
+    public enum Button {
+        Schedule,
+        Resume,
+        Suspend,
+        Edit,
+        Copy,
+        Delete,
+        XML
     }
 
     /** Class representing search result displayed on the entity table page. */
