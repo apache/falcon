@@ -142,10 +142,10 @@ public class HCatProcessTest extends BaseTestClass {
         final List<String> dataset = HadoopUtil
             .flattenAndPutDataInFolder(clusterFS, localHCatData, inputHDFSDir, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
         clusterHC.createTable(HCatCreateTableDesc
@@ -204,10 +204,10 @@ public class HCatProcessTest extends BaseTestClass {
         final List<String> dataset2 = HadoopUtil
             .flattenAndPutDataInFolder(clusterFS, localHCatData, inputHDFSDir2, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
         clusterHC.createTable(HCatCreateTableDesc
@@ -295,10 +295,10 @@ public class HCatProcessTest extends BaseTestClass {
         final List<String> dataset = HadoopUtil
             .flattenAndPutDataInFolder(clusterFS, localHCatData, inputHDFSDir, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
         clusterHC.createTable(HCatCreateTableDesc
@@ -377,10 +377,10 @@ public class HCatProcessTest extends BaseTestClass {
         final List<String> dataset2 = HadoopUtil
             .flattenAndPutDataInFolder(clusterFS, localHCatData, inputHDFSDir2, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
         clusterHC.createTable(HCatCreateTableDesc
@@ -488,10 +488,10 @@ public class HCatProcessTest extends BaseTestClass {
         final List<String> dataset = HadoopUtil
             .flattenAndPutDataInFolder(clusterFS, localHCatData, inputHDFSDir, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
         clusterHC.createTable(HCatCreateTableDesc
@@ -550,10 +550,10 @@ public class HCatProcessTest extends BaseTestClass {
         final List<String> dataset = HadoopUtil.
             flattenAndPutDataInFolder(clusterFS, localHCatData, inputHDFSDir, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
         clusterHC.createTable(HCatCreateTableDesc
@@ -603,10 +603,10 @@ public class HCatProcessTest extends BaseTestClass {
                                       String databaseName, String tableName) throws HCatException {
         Assert.assertEquals(partitions.size(), partitionLocations.size(),
             "Number of locations is not same as number of partitions.");
-        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<HCatAddPartitionDesc>();
+        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<>();
         for (int i = 0; i < partitions.size(); ++i) {
             final String partition = partitions.get(i);
-            final Map<String, String> onePartition = new HashMap<String, String>();
+            final Map<String, String> onePartition = new HashMap<>();
             onePartition.put(partitionCol, partition);
             final String partitionLoc = partitionLocations.get(i);
             partitionDesc.add(
@@ -622,7 +622,7 @@ public class HCatProcessTest extends BaseTestClass {
         DateTimeFormatter formatter = DateTimeFormat.forPattern(datePattern);
         LOGGER.info("generating data between " + formatter.print(startDateJoda) + " and "
             + formatter.print(endDateJoda));
-        List<String> dates = new ArrayList<String>();
+        List<String> dates = new ArrayList<>();
         dates.add(formatter.print(startDateJoda));
         while (!startDateJoda.isAfter(endDateJoda)) {
             startDateJoda = startDateJoda.plusMinutes(skipMinutes);

@@ -70,7 +70,7 @@ public final class HadoopUtil {
      * @throws IOException
      */
     public static List<String> getAllFilesHDFS(FileSystem fs, Path location) throws IOException {
-        List<String> files = new ArrayList<String>();
+        List<String> files = new ArrayList<>();
         if (!fs.exists(location)) {
             return files;
         }
@@ -93,7 +93,7 @@ public final class HadoopUtil {
      */
     public static List<Path> getAllDirsRecursivelyHDFS(
         FileSystem fs, Path location, int depth) throws IOException {
-        List<Path> returnList = new ArrayList<Path>();
+        List<Path> returnList = new ArrayList<>();
         FileStatus[] stats = fs.listStatus(location);
         for (FileStatus stat : stats) {
             if (isDir(stat)) {
@@ -115,7 +115,7 @@ public final class HadoopUtil {
      */
     public static List<Path> getAllFilesRecursivelyHDFS(
         FileSystem fs, Path location) throws IOException {
-        List<Path> returnList = new ArrayList<Path>();
+        List<Path> returnList = new ArrayList<>();
         RemoteIterator<LocatedFileStatus> remoteIterator;
         try {
             remoteIterator = fs.listFiles(location, true);
@@ -203,7 +203,7 @@ public final class HadoopUtil {
      */
     public static List<String> getHDFSSubFoldersName(FileSystem fs,
                                                      String baseDir) throws IOException {
-        List<String> returnList = new ArrayList<String>();
+        List<String> returnList = new ArrayList<>();
         FileStatus[] stats = fs.listStatus(new Path(baseDir));
         for (FileStatus stat : stats) {
             if (isDir(stat)) {
@@ -242,7 +242,7 @@ public final class HadoopUtil {
      */
     private static List<String> getAllFileNamesFromHDFS(
         FileSystem fs, String hdfsPath) throws IOException {
-        List<String> returnList = new ArrayList<String>();
+        List<String> returnList = new ArrayList<>();
         LOGGER.info("getting file from folder: " + hdfsPath);
         FileStatus[] stats = fs.listStatus(new Path(hdfsPath));
         for (FileStatus stat : stats) {
@@ -325,7 +325,7 @@ public final class HadoopUtil {
         LOGGER.info("Creating data in folders: \n" + remoteLocations);
         File input = new File(inputPath);
         File[] files = input.isDirectory() ? input.listFiles() : new File[]{input};
-        List<Path> filePaths = new ArrayList<Path>();
+        List<Path> filePaths = new ArrayList<>();
         assert files != null;
         for (final File file : files) {
             if (!file.isDirectory()) {
@@ -336,7 +336,7 @@ public final class HadoopUtil {
         if (!remotePathPrefix.endsWith("/") && !remoteLocations.get(0).startsWith("/")) {
             remotePathPrefix += "/";
         }
-        List<String> locations = new ArrayList<String>();
+        List<String> locations = new ArrayList<>();
         for (String remoteDir : remoteLocations) {
             String remoteLocation = remotePathPrefix + remoteDir;
             remoteLocation = cutProtocol(remoteLocation);

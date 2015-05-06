@@ -82,7 +82,7 @@ public class ProcessPipelineTest extends BaseTestClass{
         throws URISyntaxException, IOException, AuthenticationException, JAXBException,
         InterruptedException {
         //match processes to pipelines
-        HashMap<String, List<String>> map = new HashMap<String, List<String>>();
+        HashMap<String, List<String>> map = new HashMap<>();
         //index for few different pipelines
         for(int p = 0, i = 0, n = 0, d = 3; p < 3; p++, d++){
             n += d + 1;

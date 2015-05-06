@@ -212,13 +212,7 @@ public class LineageHelper {
         String responseString = null;
         try {
             responseString = runGetRequestSuccessfully(url);
-        } catch (URISyntaxException e) {
-            AssertUtil.fail(e);
-        } catch (IOException e) {
-            AssertUtil.fail(e);
-        } catch (AuthenticationException e) {
-            AssertUtil.fail(e);
-        } catch (InterruptedException e) {
+        } catch (URISyntaxException | InterruptedException | AuthenticationException | IOException e) {
             AssertUtil.fail(e);
         }
         return new GsonBuilder().create().fromJson(responseString, clazz);
@@ -260,7 +254,7 @@ public class LineageHelper {
     }
 
     public VerticesResult getVertices(Vertex.FilterKey key, String value) {
-        Map<String, String> params = new TreeMap<String, String>();
+        Map<String, String> params = new TreeMap<>();
         params.put("key", key.toString());
         params.put("value", value);
         return getVerticesResult(getUrl(URL.VERTICES, params));

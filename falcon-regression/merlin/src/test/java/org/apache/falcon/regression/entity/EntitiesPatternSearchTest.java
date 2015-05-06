@@ -142,8 +142,8 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
 
     private void validateOutputPatternList(EntityElement[] entityElements,
             EntityElement[] outputelements, String pattern) {
-        List<String> actualOutputElements = new ArrayList<String>();
-        List<String> expectedOutputElements = new ArrayList<String>();
+        List<String> actualOutputElements = new ArrayList<>();
+        List<String> expectedOutputElements = new ArrayList<>();
         for(EntityElement e : entityElements) {
             if (getOutputEntity(e.name, pattern)) {
                 expectedOutputElements.add(e.name);
@@ -184,7 +184,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
     }
 
     private List<String> getPatternName() {
-        List<String> nameList = new ArrayList<String>();
+        List<String> nameList = new ArrayList<>();
         nameList.add("New-Entity-Definition");
         nameList.add("NewEntityDefinition");
         nameList.add("newentitydefine");

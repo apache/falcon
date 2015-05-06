@@ -58,7 +58,7 @@ public final class CleanupUtil {
             LOGGER.error("Caught exception: " + ExceptionUtils.getStackTrace(e));
             return null;
         }
-        List<String> entities = new ArrayList<String>();
+        List<String> entities = new ArrayList<>();
         if (entityList.getElements() != null) {
             for (EntityList.EntityElement entity : entityList.getElements()) {
                 if (entity.name.startsWith(namePrefix)) {

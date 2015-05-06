@@ -61,10 +61,10 @@ public final class HCatUtil {
         List<String> partitionLocations, String partitionCol, String dbName, String tableName) throws HCatException {
         Assert.assertEquals(partitions.size(), partitionLocations.size(),
                 "Number of locations is not same as number of partitions.");
-        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<HCatAddPartitionDesc>();
+        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<>();
         for (int i = 0; i < partitions.size(); ++i) {
             final String partition = partitions.get(i);
-            final Map<String, String> onePartition = new HashMap<String, String>();
+            final Map<String, String> onePartition = new HashMap<>();
             onePartition.put(partitionCol, partition);
             final String partitionLoc = partitionLocations.get(i);
             partitionDesc.add(HCatAddPartitionDesc.create(dbName, tableName, partitionLoc, onePartition).build());

@@ -157,10 +157,10 @@ public class HCatReplicationTest extends BaseTestClass {
         final String col2Name = "value";
         final String partitionColumn = "dt";
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         // create table on cluster 1 and add data to it.
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
@@ -241,10 +241,10 @@ public class HCatReplicationTest extends BaseTestClass {
         final String col2Name = "value";
         final String partitionColumn = "dt";
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(col1Name, col1Name + " comment"));
         cols.add(HCatUtil.getStringSchema(col2Name, col2Name + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         // create table on cluster 1 and add data to it.
         partitionCols.add(HCatUtil.getStringSchema(partitionColumn, partitionColumn + " partition"));
@@ -317,10 +317,10 @@ public class HCatReplicationTest extends BaseTestClass {
         HCatException {
         Assert.assertEquals(partitions.size(), partitionLocations.size(),
             "Number of locations is not same as number of partitions.");
-        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<HCatAddPartitionDesc>();
+        final List<HCatAddPartitionDesc> partitionDesc = new ArrayList<>();
         for (int i = 0; i < partitions.size(); ++i) {
             final String partition = partitions.get(i);
-            final Map<String, String> onePartition = new HashMap<String, String>();
+            final Map<String, String> onePartition = new HashMap<>();
             onePartition.put(partitionCol, partition);
             final String partitionLoc = partitionLocations.get(i);
             partitionDesc

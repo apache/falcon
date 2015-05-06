@@ -136,14 +136,14 @@ public class Bundle {
     public Bundle(String clusterData, List<String> dataSets, String processData) {
         this.dataSets = dataSets;
         this.processData = processData;
-        this.clusters = new ArrayList<String>();
+        this.clusters = new ArrayList<>();
         this.clusters.add(clusterData);
     }
 
     public Bundle(Bundle bundle, String prefix) {
-        this.dataSets = new ArrayList<String>(bundle.getDataSets());
+        this.dataSets = new ArrayList<>(bundle.getDataSets());
         this.processData = bundle.getProcessData();
-        this.clusters = new ArrayList<String>();
+        this.clusters = new ArrayList<>();
         for (String cluster : bundle.getClusters()) {
             this.clusters.add(BundleUtil.getEnvClusterXML(cluster, prefix).toString());
         }
@@ -154,7 +154,7 @@ public class Bundle {
     }
 
     public void setClusterData(List<String> pClusters) {
-        this.clusters = new ArrayList<String>(pClusters);
+        this.clusters = new ArrayList<>(pClusters);
     }
     /**
      * Unwraps cluster element to string and writes it to bundle.
@@ -162,7 +162,7 @@ public class Bundle {
      * @param c      Cluster object to be unwrapped and set into bundle
      */
     public void writeClusterElement(org.apache.falcon.entity.v0.cluster.Cluster c) {
-        final List<String> newClusters = new ArrayList<String>();
+        final List<String> newClusters = new ArrayList<>();
         newClusters.add(c.toString());
         setClusterData(newClusters);
     }
@@ -178,7 +178,7 @@ public class Bundle {
 
 
     public List<String> getClusterNames() {
-        List<String> clusterNames = new ArrayList<String>();
+        List<String> clusterNames = new ArrayList<>();
         for (String cluster : clusters) {
             clusterNames.add(new ClusterMerlin(cluster).getName());
         }
@@ -216,13 +216,13 @@ public class Bundle {
     public void generateUniqueBundle(String prefix) {
         /* creating new names */
         List<ClusterMerlin> clusterMerlinList = BundleUtil.getClustersFromStrings(clusters);
-        Map<String, String> clusterNameMap = new HashMap<String, String>();
+        Map<String, String> clusterNameMap = new HashMap<>();
         for (ClusterMerlin clusterMerlin : clusterMerlinList) {
             clusterNameMap.putAll(clusterMerlin.setUniqueName(prefix));
         }
 
         List<FeedMerlin> feedMerlinList = FeedMerlin.fromString(dataSets);
-        Map<String, String> feedNameMap = new HashMap<String, String>();
+        Map<String, String> feedNameMap = new HashMap<>();
         for (FeedMerlin feedMerlin : feedMerlinList) {
             feedNameMap.putAll(feedMerlin.setUniqueName(prefix));
         }
@@ -726,7 +726,7 @@ public class Bundle {
                                        String endTime) {
         //generate and set clusters
         ClusterMerlin c = new ClusterMerlin(getClusters().get(0));
-        List<String> newClusters = new ArrayList<String>();
+        List<String> newClusters = new ArrayList<>();
         final String clusterName = c.getName();
         for (int i = 0; i < numberOfClusters; i++) {
             c.setName(clusterName + i);
@@ -735,7 +735,7 @@ public class Bundle {
         setClusterData(newClusters);
 
         //generate and set newDataSets
-        List<String> newDataSets = new ArrayList<String>();
+        List<String> newDataSets = new ArrayList<>();
         for (int i = 0; i < numberOfInputs; i++) {
             final FeedMerlin feed = new FeedMerlin(getDataSets().get(0));
             feed.setName(feed.getName() + "-input" + i);

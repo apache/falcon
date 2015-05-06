@@ -157,7 +157,7 @@ public class ELExpCurrentAndLastWeekTest extends BaseTestClass {
 
     private List<String> getQADepedencyList(Bundle bundle, String firstDep, String endDep) {
         String path = baseTestDir + "/testData/";
-        List<String> returnList = new ArrayList<String>();
+        List<String> returnList = new ArrayList<>();
         List<String> dataSets = TimeUtil.getMinuteDatesOnEitherSide(firstDep,
                 endDep, bundle.getInitialDatasetFrequency());
         for (String str : dataSets) {

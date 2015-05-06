@@ -367,7 +367,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVerticesFilterBlankValue() throws Exception {
-        Map<String, String> params = new TreeMap<String, String>();
+        Map<String, String> params = new TreeMap<>();
         params.put("key", Vertex.FilterKey.name.toString());
         params.put("value", "");
         HttpResponse response = lineageHelper
@@ -383,7 +383,7 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testVerticesFilterBlankKey() throws Exception {
-        Map<String, String> params = new TreeMap<String, String>();
+        Map<String, String> params = new TreeMap<>();
         params.put("key", "");
         params.put("value", "someValue");
         HttpResponse response = lineageHelper.runGetRequest(

@@ -57,8 +57,8 @@ public class BaseTestClass {
         // loginFromKeytab as the current user
         prism = new ColoHelper(PRISM_PREFIX);
         servers = getServers();
-        serverFS = new ArrayList<FileSystem>();
-        serverOC = new ArrayList<OozieClient>();
+        serverFS = new ArrayList<>();
+        serverOC = new ArrayList<>();
         try {
             for (ColoHelper server : servers) {
                 serverFS.add(server.getClusterHelper().getHadoopFS());
@@ -92,7 +92,7 @@ public class BaseTestClass {
     }
 
     private List<ColoHelper> getServers() {
-        ArrayList<ColoHelper> returnList = new ArrayList<ColoHelper>();
+        ArrayList<ColoHelper> returnList = new ArrayList<>();
         for (String serverName : serverNames) {
             returnList.add(new ColoHelper(serverName));
         }

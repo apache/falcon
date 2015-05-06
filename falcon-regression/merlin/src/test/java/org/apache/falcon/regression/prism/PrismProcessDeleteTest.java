@@ -922,7 +922,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     private void compareDataStoreStates(List<String> initialState, List<String> finalState,
                                         String filename) {
 
-        List<String> temp = new ArrayList<String>(initialState);
+        List<String> temp = new ArrayList<>(initialState);
         temp.removeAll(finalState);
         Assert.assertEquals(temp.size(), 1);
         Assert.assertTrue(temp.get(0).contains(filename));
@@ -952,7 +952,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             ua2 = cluster1.getProcessHelper();
         }
 
-        HashMap<String, List<String>> temp = new HashMap<String, List<String>>();
+        HashMap<String, List<String>> temp = new HashMap<>();
         temp.put("prismArchive", prizm.getArchiveInfo());
         temp.put("prismStore", prizm.getStoreInfo());
         temp.put("ua1Archive", ua1.getArchiveInfo());

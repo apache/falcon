@@ -39,7 +39,7 @@ public class EdgesResult extends GraphResult {
     }
 
     public List<Edge> filterEdgesByType(List<Edge> edges, Edge.LabelType edgeLabel) {
-        final List<Edge> result = new ArrayList<Edge>();
+        final List<Edge> result = new ArrayList<>();
         for (Edge edge : edges) {
             if (edge.getLabel() == edgeLabel) {
                 result.add(edge);

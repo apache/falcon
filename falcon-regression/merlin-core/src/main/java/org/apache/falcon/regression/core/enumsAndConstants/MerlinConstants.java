@@ -103,13 +103,13 @@ public final class MerlinConstants {
         LOGGER.info("user2Name: " + user2Name);
         LOGGER.info("user2Keytab: " + user2Keytab);
         USER2_NAME = user2Name;
-        keyTabMap = new HashMap<String, String>();
+        keyTabMap = new HashMap<>();
         keyTabMap.put(CURRENT_USER_NAME, currentUserKeytab);
         keyTabMap.put(user2Name, user2Keytab);
         keyTabMap.put(FALCON_SUPER_USER_NAME, Config.getProperty("falcon.super.user.keytab"));
         keyTabMap.put(FALCON_SUPER_USER2_NAME, Config.getProperty("falcon.super.user2.keytab"));
         keyTabMap.put(DIFFERENT_USER_NAME, Config.getProperty("other.user.keytab"));
-        passwordMap = new HashMap<String, String>();
+        passwordMap = new HashMap<>();
         passwordMap.put(DIFFERENT_USER_NAME, Config.getProperty("other.user.password"));
     }
 

@@ -72,7 +72,7 @@ public final class ExecUtil {
         session.connect();
         Assert.assertTrue(session.isConnected(), "The session was not connected correctly!");
 
-        List<String> data = new ArrayList<String>();
+        List<String> data = new ArrayList<>();
 
         ChannelExec channel = (ChannelExec) session.openChannel("exec");
         channel.setPty(true);

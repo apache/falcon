@@ -141,7 +141,7 @@ public class FeedDelayTest extends BaseTestClass {
         String startTimeExpected = getStartTime(sourceStartTime, targetStartTime, new Frequency(sourceDelay), flag);
 
         List<String> missingDep = getAndCreateDependencies(cluster1FS, cluster1.getPrefix(), cluster2OC, bundleId);
-        List<String> qaDep = new ArrayList<String>();
+        List<String> qaDep = new ArrayList<>();
 
         if (flag) {
             qaDep.add(sourcePath + "/" + sourceStartTime.replaceAll("-", "/").

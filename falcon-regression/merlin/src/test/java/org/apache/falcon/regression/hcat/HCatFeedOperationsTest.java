@@ -78,7 +78,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
         clusterHC = cluster.getClusterHelper().getHCatClient();
         cluster2HC = cluster2.getClusterHelper().getHCatClient();
         //create an empty table for feed operations
-        ArrayList<HCatFieldSchema> partitions = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitions = new ArrayList<>();
         partitions.add(HCatUtil.getStringSchema("year", "yearPartition"));
         createEmptyTable(clusterHC, dbName, tableName, partitions);
 
@@ -255,7 +255,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     private static void createEmptyTable(HCatClient cli, String dbName, String tabName,
                                         List<HCatFieldSchema> partitionCols) throws HCatException{
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema("id", "id comment"));
         HCatCreateTableDesc tableDesc = HCatCreateTableDesc
                 .create(dbName, tabName, cols)

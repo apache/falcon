@@ -44,7 +44,7 @@ public final class FalconAuthorizationToken {
 
     // Use a hashmap so that we can cache the tokens.
     private final ConcurrentHashMap<String, AuthenticatedURL.Token> tokens =
-        new ConcurrentHashMap<String, AuthenticatedURL.Token>();
+        new ConcurrentHashMap<>();
 
     private FalconAuthorizationToken() {
     }

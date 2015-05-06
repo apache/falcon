@@ -103,7 +103,7 @@ public final class TimeUtil {
         if (minuteSkip == 0) {
             minuteSkip = 1;
         }
-        List<String> dates = new ArrayList<String>();
+        List<String> dates = new ArrayList<>();
         while (!startDate.isAfter(endDate)) {
             dates.add(formatter.print(startDate));
             startDate = startDate.plusMinutes(minuteSkip);
@@ -120,7 +120,7 @@ public final class TimeUtil {
      */
     public static List<String> convertDatesToString(List<DateTime> dates,
                                                     DateTimeFormatter formatter) {
-        List<String> dateString = new ArrayList<String>();
+        List<String> dateString = new ArrayList<>();
         formatter.withZoneUTC();
         for (DateTime date : dates) {
             dateString.add(formatter.print(date));
@@ -154,7 +154,7 @@ public final class TimeUtil {
      */
     public static List<DateTime> getDatesOnEitherSide(DateTime startDate, DateTime endDate,
                                                       int skip, FreqType freqType) {
-        final List<DateTime> dates = new ArrayList<DateTime>();
+        final List<DateTime> dates = new ArrayList<>();
         if (!startDate.isAfter(endDate)) {
             dates.add(startDate);
         }

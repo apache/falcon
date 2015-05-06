@@ -239,7 +239,7 @@ public class FeedInstanceListingTest extends BaseTestClass{
         LOGGER.info("instances: " + Arrays.toString(instances));
         Assert.assertNotNull(instances, "instances should be not null");
         Assert.assertEquals(instances.length, totalCount, "Total Instances");
-        List<String> statuses = new ArrayList<String>();
+        List<String> statuses = new ArrayList<>();
         for (FeedInstanceResult.Instance instance : instances) {
             Assert.assertNotNull(instance.getCluster());
             Assert.assertNotNull(instance.getInstance());

@@ -198,7 +198,7 @@ public class RetentionTest extends BaseTestClass {
         LOGGER.info("finalData = " + finalData);
         LOGGER.info("expectedOutput = " + expectedOutput);
 
-        final List<String> missingData = new ArrayList<String>(initialData);
+        final List<String> missingData = new ArrayList<>(initialData);
         missingData.removeAll(expectedOutput);
         validateDataFromFeedQueue(feedName, messageConsumer.getReceivedMessages(), missingData);
         Assert.assertEquals(finalData.size(), expectedOutput.size(),
@@ -225,7 +225,7 @@ public class RetentionTest extends BaseTestClass {
                 OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0));
 
         //create queue data folderList:
-        List<String> deletedFolders = new ArrayList<String>();
+        List<String> deletedFolders = new ArrayList<>();
         for (MapMessage message : messages) {
             if (message != null) {
                 Assert.assertEquals(message.getString("entityName"), feedName);
@@ -258,7 +258,7 @@ public class RetentionTest extends BaseTestClass {
      */
     private List<String> filterDataOnRetention(List<String> inputData, DateTime currentTime,
         RetentionUnit retentionUnit, int retentionPeriod, FreqType freqType) {
-        final List<String> finalData = new ArrayList<String>();
+        final List<String> finalData = new ArrayList<>();
         //end date is today's date
         final String startLimit = freqType.getFormatter().print(
                 retentionUnit.minusTime(currentTime, retentionPeriod));

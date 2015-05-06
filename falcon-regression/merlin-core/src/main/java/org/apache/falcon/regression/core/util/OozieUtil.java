@@ -71,7 +71,7 @@ public final class OozieUtil {
     }
 
     public static List<String> getBundleIds(List<BundleJob> bundles) {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         for (BundleJob bundle : bundles) {
             LOGGER.info("Bundle Id: " + bundle.getId());
             ids.add(bundle.getId());
@@ -85,7 +85,7 @@ public final class OozieUtil {
     }
 
     public static List<Job.Status> getBundleStatuses(List<BundleJob> bundles) {
-        List<Job.Status> statuses = new ArrayList<Job.Status>();
+        List<Job.Status> statuses = new ArrayList<>();
         for (BundleJob bundle : bundles) {
             LOGGER.info("bundle: " + bundle);
             statuses.add(bundle.getStatus());
@@ -129,7 +129,7 @@ public final class OozieUtil {
                                                                  OozieClient oozieClient)
         throws OozieClientException {
         LOGGER.info("Connecting to oozie: " + oozieClient.getOozieUrl());
-        List<String> jobIds = new ArrayList<String>();
+        List<String> jobIds = new ArrayList<>();
         LOGGER.info("using bundleId:" + bundleID);
         waitForCoordinatorJobCreation(oozieClient, bundleID);
         final String coordinatorId =
@@ -195,7 +195,7 @@ public final class OozieUtil {
     public static List<DateTime> getStartTimeForRunningCoordinators(ColoHelper prismHelper,
                                                                     String bundleID)
         throws OozieClientException {
-        List<DateTime> startTimes = new ArrayList<DateTime>();
+        List<DateTime> startTimes = new ArrayList<>();
 
         OozieClient oozieClient = prismHelper.getClusterHelper().getOozieClient();
         BundleJob bundleJob = oozieClient.getBundleJobInfo(bundleID);
@@ -282,13 +282,13 @@ public final class OozieUtil {
         if (actions != null) {
             missingDependencies = actions.get(0).getMissingDependencies().split("#");
         }
-        return new ArrayList<String>(Arrays.asList(missingDependencies));
+        return new ArrayList<>(Arrays.asList(missingDependencies));
     }
 
     public static List<String> getWorkflowJobs(OozieClient oozieClient, String bundleID)
         throws OozieClientException {
         waitForCoordinatorJobCreation(oozieClient, bundleID);
-        List<String> workflowIds = new ArrayList<String>();
+        List<String> workflowIds = new ArrayList<>();
         List<CoordinatorJob> coordJobs = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
         CoordinatorJob coordJobInfo = oozieClient.getCoordJobInfo(coordJobs.get(0).getId());
 
@@ -301,7 +301,7 @@ public final class OozieUtil {
     public static List<String> getWorkflow(OozieClient oozieClient, String bundleID)
         throws OozieClientException {
         waitForCoordinatorJobCreation(oozieClient, bundleID);
-        List<String> workflowIds = new ArrayList<String>();
+        List<String> workflowIds = new ArrayList<>();
         String coordId = getDefaultCoordIDFromBundle(oozieClient, bundleID);
         CoordinatorJob coordJobInfo = oozieClient.getCoordJobInfo(coordId);
         for (CoordinatorAction action : coordJobInfo.getActions()) {
@@ -349,7 +349,7 @@ public final class OozieUtil {
                                                      String bundleId, EntityType type)
         throws OozieClientException {
         Map<Date, CoordinatorAction.Status> actions = getActionsNominalTimeAndStatus(oozieClient, bundleId, type);
-        List<String> nominalTime = new ArrayList<String>();
+        List<String> nominalTime = new ArrayList<>();
         for (Date date : actions.keySet()) {
             nominalTime.add(date.toString());
         }
@@ -358,7 +358,7 @@ public final class OozieUtil {
 
     public static Map<Date, CoordinatorAction.Status> getActionsNominalTimeAndStatus(OozieClient oozieClient,
             String bundleId, EntityType type) throws OozieClientException {
-        Map<Date, CoordinatorAction.Status> result = new TreeMap<Date, CoordinatorAction.Status>();
+        Map<Date, CoordinatorAction.Status> result = new TreeMap<>();
         List<CoordinatorAction> actions = getDefaultOozieCoord(oozieClient, bundleId, type).getActions();
         for (CoordinatorAction action : actions) {
             result.put(action.getNominalTime(), action.getStatus());
@@ -449,7 +449,7 @@ public final class OozieUtil {
     private static List<String> getMissingDependenciesForInstance(OozieClient oozieClient,
             List<CoordinatorJob> coords, int instanceNumber)
         throws OozieClientException {
-        ArrayList<String> missingPaths = new ArrayList<String>();
+        ArrayList<String> missingPaths = new ArrayList<>();
         for (CoordinatorJob coord : coords) {
             CoordinatorJob temp = oozieClient.getCoordJobInfo(coord.getId());
             CoordinatorAction instance = temp.getActions().get(instanceNumber);
@@ -481,7 +481,7 @@ public final class OozieUtil {
     private static List<List<String>> getMissingDependenciesForBundle(OozieClient oozieClient,
                                                                       List<CoordinatorJob> coords)
         throws OozieClientException, IOException {
-        List<List<String>> missingDependencies = new ArrayList<List<String>>();
+        List<List<String>> missingDependencies = new ArrayList<>();
         for (CoordinatorJob coord : coords) {
             CoordinatorJob temp = oozieClient.getCoordJobInfo(coord.getId());
             for (int instanceNumber = 0; instanceNumber < temp.getActions().size();
@@ -533,7 +533,7 @@ public final class OozieUtil {
         throws OozieClientException {
         final OozieClient oozieClient = helper.getOozieClient();
         List<CoordinatorJob> coords = getBundleCoordinators(oozieClient, bundleId);
-        List<String> replicationCoordID = new ArrayList<String>();
+        List<String> replicationCoordID = new ArrayList<>();
         for (CoordinatorJob coord : coords) {
             if (coord.getAppName().contains("FEED_REPLICATION")) {
                 replicationCoordID.add(coord.getId());
@@ -556,7 +556,7 @@ public final class OozieUtil {
         //sequence start from 0
         List<String> bundleIds = getBundles(oozieClient,
                 entityName, entityType);
-        Map<Integer, String> bundleMap = new TreeMap<Integer, String>();
+        Map<Integer, String> bundleMap = new TreeMap<>();
         String bundleID;
         for (String strID : bundleIds) {
             LOGGER.info("getSequenceBundleID: " + strID);

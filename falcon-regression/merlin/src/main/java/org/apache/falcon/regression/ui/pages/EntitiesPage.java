@@ -110,7 +110,7 @@ public class EntitiesPage extends Page {
     private Map<String, String> getEntitiesOnPage() {
         LOGGER.info("Reading all entities on page...");
         List<WebElement> lines = driver.findElements(By.xpath(ENTITIES_TABLE));
-        Map<String, String> entities = new HashMap<String, String>();
+        Map<String, String> entities = new HashMap<>();
         for (WebElement line : lines) {
             WebElement name = line.findElement(By.xpath("./td[1]/a"));
             WebElement status = line.findElement(By.xpath("./td[2]"));

@@ -1061,7 +1061,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
 
     private void compareDataStoreStates(List<String> initialState, List<String> finalState,
                                         String filename) {
-        List<String> temp = new ArrayList<String>();
+        List<String> temp = new ArrayList<>();
         temp.addAll(initialState);
         temp.removeAll(finalState);
         Assert.assertEquals(temp.size(), 1);
@@ -1092,7 +1092,7 @@ public class PrismFeedDeleteTest extends BaseTestClass {
             server2Helper = cluster2.getProcessHelper();
         }
 
-        HashMap<String, List<String>> temp = new HashMap<String, List<String>>();
+        HashMap<String, List<String>> temp = new HashMap<>();
         temp.put("prismArchive", prismHelper.getArchiveInfo());
         temp.put("prismStore", prismHelper.getStoreInfo());
         temp.put("Server1Archive", server1Helper.getArchiveInfo());

@@ -168,7 +168,7 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
         Assert.assertEquals(piVertices.size(), piResult.getInstances().length,
             "Number of process instances should be same weather it is retrieved from lineage api "
                 + "or falcon rest api");
-        final List<String> allowedPITimes = new ArrayList<String>();
+        final List<String> allowedPITimes = new ArrayList<>();
         for (InstancesResult.Instance processInstance : piResult.getInstances()) {
             allowedPITimes.add(processInstance.getInstance());
         }

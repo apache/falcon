@@ -184,7 +184,7 @@ public class EntitySummaryTest extends BaseTestClass {
         OozieClientException, InterruptedException {
         String entityName = Util.readEntityName(entity);
         AbstractEntityHelper helper;
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         for (int i = 1; i <= 7; i++) {
             String uniqueName = entityName + i;
             names.add(uniqueName);
@@ -322,7 +322,7 @@ public class EntitySummaryTest extends BaseTestClass {
         bundles[0].submitFeeds(prism);
         String clusterName = Util.readEntityName(bundles[0].getClusters().get(0));
         String originName = bundles[0].getProcessName();
-        List<String> pNames = new ArrayList<String>();
+        List<String> pNames = new ArrayList<>();
         //schedule 3 processes with different pipelines. 1st and 3d processes have same tag value.
         for (int i = 1; i <= 3; i++) {
             String uniqueName = originName + "-" + i;

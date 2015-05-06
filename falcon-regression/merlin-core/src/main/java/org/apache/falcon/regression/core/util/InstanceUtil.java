@@ -156,7 +156,7 @@ public final class InstanceUtil {
         InstancesResult.Instance[] instances = instancesResult.getInstances();
         LOGGER.info("instances: " + Arrays.toString(instances));
         List<InstancesResult.WorkflowStatus> statuses =
-            new ArrayList<InstancesResult.WorkflowStatus>();
+            new ArrayList<>();
         for (InstancesResult.Instance instance : instances) {
             LOGGER.info("instance: " + instance + " status = " + instance.getStatus());
             statuses.add(instance.getStatus());
@@ -203,7 +203,7 @@ public final class InstanceUtil {
         LOGGER.info("instances: " + Arrays.toString(instances));
         Assert.assertNotNull(instances, "instances should be not null");
         Assert.assertEquals(instances.length, totalCount, "Total Instances");
-        List<InstancesResult.WorkflowStatus> statuses = new ArrayList<InstancesResult.WorkflowStatus>();
+        List<InstancesResult.WorkflowStatus> statuses = new ArrayList<>();
         for (InstancesResult.Instance instance : instances) {
             final InstancesResult.WorkflowStatus status = instance.getStatus();
             LOGGER.info("status: " + status + ", instance: " + instance.getInstance());
@@ -228,7 +228,7 @@ public final class InstanceUtil {
         InstancesResult.Instance[] instances = instancesResult.getInstances();
         LOGGER.info("Instances: " + Arrays.toString(instances));
         Assert.assertNotNull(instances, "Instances should be not null");
-        List<String> wfIds = new ArrayList<String>();
+        List<String> wfIds = new ArrayList<>();
         for (InstancesResult.Instance instance : instances) {
             LOGGER.warn(String.format(
                 "instance: %s, status: %s, logs : %s", instance, instance.getStatus(), instance.getLogFile()));
@@ -274,7 +274,7 @@ public final class InstanceUtil {
         String bundleID = OozieUtil.getBundles(oozieClient, processName, EntityType.PROCESS).get(0);
         List<String> workflowJobIds = OozieUtil.getWorkflowJobs(oozieClient, bundleID);
 
-        List<String> toBeReturned = new ArrayList<String>();
+        List<String> toBeReturned = new ArrayList<>();
         for (String jobId : workflowJobIds) {
             WorkflowJob wfJob = oozieClient.getJobInfo(jobId);
             LOGGER.info("wfJob.getId(): " + wfJob.getId() + " wfJob.getStartTime(): "
@@ -298,7 +298,7 @@ public final class InstanceUtil {
         if (totalWorkflows != -1) {
             Assert.assertEquals(workflowIds.size(), totalWorkflows);
         }
-        final List<WorkflowJob.Status> statuses = new ArrayList<WorkflowJob.Status>();
+        final List<WorkflowJob.Status> statuses = new ArrayList<>();
         for (String wfId : workflowIds) {
             final WorkflowJob.Status status = oozieClient.getJobInfo(wfId).getStatus();
             LOGGER.info("wfId: " + wfId + " status: " + status);
@@ -329,7 +329,7 @@ public final class InstanceUtil {
     public static int getInstanceCountWithStatus(OozieClient oozieClient, String processName,
             CoordinatorAction.Status status, EntityType entityType) throws OozieClientException {
         List<CoordinatorAction> coordActions = getProcessInstanceList(oozieClient, processName, entityType);
-        List<CoordinatorAction.Status> statuses = new ArrayList<CoordinatorAction.Status>();
+        List<CoordinatorAction.Status> statuses = new ArrayList<>();
         for (CoordinatorAction action : coordActions) {
             statuses.add(action.getStatus());
         }
@@ -415,7 +415,7 @@ public final class InstanceUtil {
         conf = runConf.substring(runConf.indexOf("falconInPaths</name>") + 20);
         conf = conf.substring(conf.indexOf("<value>") + 7);
         conf = conf.substring(0, conf.indexOf("</value>"));
-        return new ArrayList<String>(Arrays.asList(conf.split(",")));
+        return new ArrayList<>(Arrays.asList(conf.split(",")));
     }
 
     public static int getInstanceRunIdFromCoord(OozieClient oozieClient, String coordID, int instanceNumber)
@@ -455,7 +455,7 @@ public final class InstanceUtil {
     public static List<CoordinatorAction> getProcessInstanceListFromAllBundles(
             OozieClient oozieClient, String processName, EntityType entityType)
         throws OozieClientException {
-        List<CoordinatorAction> list = new ArrayList<CoordinatorAction>();
+        List<CoordinatorAction> list = new ArrayList<>();
         final List<String> bundleIds = OozieUtil.getBundles(oozieClient, processName, entityType);
         LOGGER.info("bundle size for process is " + bundleIds.size());
         for (String bundleId : bundleIds) {
@@ -526,7 +526,7 @@ public final class InstanceUtil {
         } else {
             filter = "name=FALCON_PROCESS_" + entityName;
         }
-        List<BundleJob> bundleJobs = new ArrayList<BundleJob>();
+        List<BundleJob> bundleJobs = new ArrayList<>();
         for (int retries = 0; retries < 20; ++retries) {
             bundleJobs = OozieUtil.getBundles(client, filter, 0, 10);
             if (bundleJobs.size() > 0) {
@@ -546,7 +546,7 @@ public final class InstanceUtil {
                 String.format("Bundle job %s is should be prep/running but is %s", bundleId, bundleStatus));
         OozieUtil.waitForCoordinatorJobCreation(client, bundleId);
         List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
-        List<String> cIds = new ArrayList<String>();
+        List<String> cIds = new ArrayList<>();
         if (entityType == EntityType.PROCESS) {
             for (CoordinatorJob coord : coords) {
                 cIds.add(coord.getId());

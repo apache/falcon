@@ -127,10 +127,10 @@ public class CombinedActionsTest extends BaseTestClass {
         final List<String> dataset = HadoopUtil.flattenAndPutDataInFolder(clusterFS, LOCALHCATDATA,
                 inputHDFSDir, dataDates);
 
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
         cols.add(HCatUtil.getStringSchema(COL1NAME, COL1NAME + " comment"));
         cols.add(HCatUtil.getStringSchema(COL2NAME, COL2NAME + " comment"));
-        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> partitionCols = new ArrayList<>();
 
         partitionCols.add(HCatUtil.getStringSchema(PARTITIONCOLUMN, PARTITIONCOLUMN + " partition"));
         clusterHC.createTable(HCatCreateTableDesc

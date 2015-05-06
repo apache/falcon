@@ -291,7 +291,7 @@ public class ListEntitiesTest extends BaseTestClass {
     }
 
     private String getRandomTags() {
-        List<String> tagsList = new ArrayList<String>();
+        List<String> tagsList = new ArrayList<>();
         Random r = new Random();
         if (r.nextInt(4) == 0) {
             tagsList.add(tags[0]);

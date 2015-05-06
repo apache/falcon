@@ -95,7 +95,7 @@ public final class FalconClientBuilder implements Builder<CommandLine> {
 
     private FalconClientBuilder(String user) {
         this.user = user;
-        args = new ArrayList<String>();
+        args = new ArrayList<>();
         if (user == null) {
             suType = SuType.NONE;
             commandLine = suType.getCommandLine(null);

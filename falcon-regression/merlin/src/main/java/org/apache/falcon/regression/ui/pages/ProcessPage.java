@@ -118,7 +118,7 @@ public class ProcessPage extends EntityPage<Process> {
                 "Vertices blocks with names not found");
             List<WebElement> blocks = driver.findElements(By.xpath(VERTICES_TEXT));
             LOGGER.info(blocks.size() + " elements found");
-            map = new HashMap<String, List<String>>();
+            map = new HashMap<>();
             for (WebElement block : blocks) {
                 waitForElement(block, ".[contains(.,'/')]", DEFAULT_TIMEOUT,
                     "Expecting text to contain '/' :" + block.getText());
@@ -130,7 +130,7 @@ public class ProcessPage extends EntityPage<Process> {
                 if (map.containsKey(name)) {
                     map.get(name).add(nominalTime);
                 } else {
-                    List<String> instances = new ArrayList<String>();
+                    List<String> instances = new ArrayList<>();
                     instances.add(nominalTime);
                     map.put(name, instances);
                 }
@@ -144,7 +144,7 @@ public class ProcessPage extends EntityPage<Process> {
      */
     public List<String> getAllVerticesNames() {
         LOGGER.info("Getting all vertices names from lineage graph...");
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         if (isLineageOpened) {
             waitForElement(CLOSE_LINEAGE_LINK_TEMPLATE, DEFAULT_TIMEOUT,
                 "Close Lineage button not found");
@@ -185,7 +185,7 @@ public class ProcessPage extends EntityPage<Process> {
             waitForElement(LINEAGE_INFO_PANEL_LIST, DEFAULT_TIMEOUT, "Info panel not found");
             List<WebElement> infoBlocks = driver.findElements(By.xpath(LINEAGE_INFO_PANEL_LIST));
             LOGGER.info(infoBlocks.size() + " values found");
-            map = new HashMap<String, String>();
+            map = new HashMap<>();
             for (WebElement infoBlock : infoBlocks) {
                 String text = infoBlock.getText();
                 String[] values = text.split("\n");
@@ -202,7 +202,7 @@ public class ProcessPage extends EntityPage<Process> {
     public HashMap<String, String> getLegends() {
         HashMap<String, String> map = null;
         if (isLineageOpened) {
-            map = new HashMap<String, String>();
+            map = new HashMap<>();
             List<WebElement> legends = driver.findElements(By.xpath(LINEAGE_LEGENDS_ELEMENTS));
             for (WebElement legend : legends) {
                 String value = legend.getText();
@@ -245,7 +245,7 @@ public class ProcessPage extends EntityPage<Process> {
         List<Point[]> pathsEndpoints = null;
         LOGGER.info("Getting edges from lineage graph...");
         if (isLineageOpened) {
-            pathsEndpoints = new ArrayList<Point[]>();
+            pathsEndpoints = new ArrayList<>();
             List<WebElement> paths = driver.findElements(By.xpath(EDGE));
             LOGGER.info(paths.size() + " edges found");
             for (WebElement path : paths) {

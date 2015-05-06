@@ -237,7 +237,7 @@ public class ELValidationsTest extends BaseTestClass {
         nominalTime.setTimeZone(tz);
         LOGGER.info("nominalTime: " + initialTime.getTime());
         LOGGER.info("finalTime: " + finalTime.getTime());
-        List<String> returnList = new ArrayList<String>();
+        List<String> returnList = new ArrayList<>();
         while (!initialTime.getTime().equals(finalTime.getTime())) {
             LOGGER.info("initialTime: " + initialTime.getTime());
             returnList.add(getPath(path, initialTime));

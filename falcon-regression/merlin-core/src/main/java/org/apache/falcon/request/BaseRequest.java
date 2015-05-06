@@ -99,7 +99,7 @@ public class BaseRequest {
         this.user = (null == user) ? RequestKeys.CURRENT_USER : user;
         this.uri = new URI(url);
         target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
-        this.headers = new ArrayList<Header>();
+        this.headers = new ArrayList<>();
         this.requestData = data;
     }
 

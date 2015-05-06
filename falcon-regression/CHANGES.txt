@@ -72,6 +72,8 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-1197 Use diamond operator in merlin and merlin-core (Ruslan Ostafiychuk)
+
    FALCON-1131 Fixing FeedClusterUpdateTest and name confilcts in FALCON-1113(Pragya M 
    via Samarth Gupta) 
 

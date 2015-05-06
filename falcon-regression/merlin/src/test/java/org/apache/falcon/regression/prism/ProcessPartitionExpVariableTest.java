@@ -132,7 +132,7 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
         LOGGER.info("generating data between " + formatter.print(startDate) + " and "
             + formatter.print(endDate));
 
-        List<String> dates = new ArrayList<String>();
+        List<String> dates = new ArrayList<>();
         while (!startDate.isAfter(endDate)) {
             final DateTime nextDate = startDate.plusMinutes(minuteSkip);
             dates.add(formatter.print(nextDate) + formatter2.print(nextDate.plusDays(1)));

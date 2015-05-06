@@ -222,7 +222,7 @@ public class LineageGraphTest extends BaseUITestClass {
      */
     @Test
     public void testTitlesAndDescriptions() {
-        HashMap<String, String> expectedDescriptions = new HashMap<String, String>();
+        HashMap<String, String> expectedDescriptions = new HashMap<>();
         expectedDescriptions.put("lineage-legend-process-inst", "Process instance");
         expectedDescriptions.put("lineage-legend-process-inst lineage-legend-terminal",
             "Process instance (terminal)");
@@ -295,7 +295,7 @@ public class LineageGraphTest extends BaseUITestClass {
             String nominalTime = piVertex.getNominalTime();
             processPage.openLineage(nominalTime);
             /**get expected edges */
-            List<Edge> expectedEdgesAPI = new ArrayList<Edge>();
+            List<Edge> expectedEdgesAPI = new ArrayList<>();
             List<Edge> incEdges = lineageHelper.getEdgesByDirection(piVertex.getId(),
                 Direction.inComingEdges).getResults();
             List<Edge> outcEdges = lineageHelper.getEdgesByDirection(piVertex.getId(),
@@ -342,7 +342,7 @@ public class LineageGraphTest extends BaseUITestClass {
     public void testLineageOpenClose() {
         ProcessPage processPage = new ProcessPage(getDriver(), prism, processName);
         processPage.navigateTo();
-        List<String> previous = new ArrayList<String>();
+        List<String> previous = new ArrayList<>();
         for (Vertex piVertex : piVertices) {
             String nominalTime = piVertex.getNominalTime();
             processPage.openLineage(nominalTime);

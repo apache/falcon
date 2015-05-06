@@ -189,7 +189,7 @@ public final class Util {
      */
     public static List<String> getHadoopDataFromDir(FileSystem fs, String feed, String dir)
         throws IOException {
-        List<String> finalResult = new ArrayList<String>();
+        List<String> finalResult = new ArrayList<>();
         String feedPath = new FeedMerlin(feed).getFeedPath();
         int depth = feedPath.split(dir)[1].split("/").length - 1;
         List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs, new Path(dir), depth);
@@ -232,7 +232,7 @@ public final class Util {
             coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getIdentityFile()
         );
-        List<String> finalList = new ArrayList<String>();
+        List<String> finalList = new ArrayList<>();
         for (String line : raw) {
             finalList.add(line.split(",")[0]);
         }
@@ -250,7 +250,7 @@ public final class Util {
             coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getIdentityFile()
         );
-        List<String> finalList = new ArrayList<String>();
+        List<String> finalList = new ArrayList<>();
         for (String line : raw) {
             finalList.add(line.split(",")[0]);
         }
@@ -428,7 +428,7 @@ public final class Util {
      * @return request type
      */
     public static String getMethodType(String url) {
-        List<String> postList = new ArrayList<String>();
+        List<String> postList = new ArrayList<>();
         postList.add("/entities/validate");
         postList.add("/entities/submit");
         postList.add("/entities/submitAndSchedule");
@@ -443,7 +443,7 @@ public final class Util {
                 return "post";
             }
         }
-        List<String> deleteList = new ArrayList<String>();
+        List<String> deleteList = new ArrayList<>();
         deleteList.add("/entities/delete");
         for (String item : deleteList) {
             if (url.toLowerCase().contains(item)) {

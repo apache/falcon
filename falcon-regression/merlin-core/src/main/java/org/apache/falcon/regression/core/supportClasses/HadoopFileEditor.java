@@ -42,8 +42,8 @@ public class HadoopFileEditor {
 
     public HadoopFileEditor(FileSystem fs) {
         this.fs = fs;
-        paths = new ArrayList<String>();
-        files = new ArrayList<String>();
+        paths = new ArrayList<>();
+        files = new ArrayList<>();
     }
 
     /**

@@ -102,7 +102,7 @@ public final class BundleUtil {
         File[] files = list.toArray(new File[list.size()]);
         Arrays.sort(files);
         String clusterData = "";
-        final List<String> dataSets = new ArrayList<String>();
+        final List<String> dataSets = new ArrayList<>();
         String processData = "";
 
         for (File file : files) {
@@ -238,7 +238,7 @@ public final class BundleUtil {
     }
 
     public static List<ClusterMerlin> getClustersFromStrings(List<String> clusterStrings) {
-        List<ClusterMerlin> clusters = new ArrayList<ClusterMerlin>();
+        List<ClusterMerlin> clusters = new ArrayList<>();
         for (String clusterString : clusterStrings) {
             clusters.add(new ClusterMerlin(clusterString));
         }

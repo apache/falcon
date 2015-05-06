@@ -53,7 +53,7 @@ public class EntityPage<T> extends Page {
      * @return page of defined CLUSTER entity
      */
     public static EntityPage<Cluster> getClusterPage(WebDriver driver, ColoHelper helper, String entityName) {
-        return new EntityPage<Cluster>(driver, helper, EntityType.CLUSTER, Cluster.class, entityName);
+        return new EntityPage<>(driver, helper, EntityType.CLUSTER, Cluster.class, entityName);
     }
 
     /**
@@ -62,7 +62,7 @@ public class EntityPage<T> extends Page {
      * @return page of defined FEED entity
      */
     public static EntityPage<Feed> getFeedPage(WebDriver driver, ColoHelper helper, String entityName) {
-        return new EntityPage<Feed>(driver, helper, EntityType.FEED, Feed.class, entityName);
+        return new EntityPage<>(driver, helper, EntityType.FEED, Feed.class, entityName);
     }
 
     /**

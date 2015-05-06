@@ -152,7 +152,7 @@ public class HCatRetentionTest extends BaseTestClass {
     private static List<String> getHadoopDataFromDir(FileSystem fs, String hadoopPath,
                                                      String dir, FreqType freqType)
         throws IOException {
-        List<String> finalResult = new ArrayList<String>();
+        List<String> finalResult = new ArrayList<>();
         final int dirDepth = freqType.getDirDepth();
 
         List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs,
@@ -183,7 +183,7 @@ public class HCatRetentionTest extends BaseTestClass {
                                                   FreqType freqType,
                                                   DateTime endDateUTC,
                                                   List<String> inputData) {
-        List<String> finalData = new ArrayList<String>();
+        List<String> finalData = new ArrayList<>();
 
         //convert the end date to the same format
         final String endLimit =
@@ -200,8 +200,8 @@ public class HCatRetentionTest extends BaseTestClass {
     private static void createPartitionedTable(HCatClient client, String dbName, String tableName,
                                                String tableLoc, FreqType dataType)
         throws HCatException {
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
-        ArrayList<HCatFieldSchema> ptnCols = new ArrayList<HCatFieldSchema>();
+        ArrayList<HCatFieldSchema> cols = new ArrayList<>();
+        ArrayList<HCatFieldSchema> ptnCols = new ArrayList<>();
 
         //client.dropDatabase("sample_db", true, HCatClient.DropDBMode.CASCADE);
 
@@ -240,7 +240,7 @@ public class HCatRetentionTest extends BaseTestClass {
                                                      List<String> dataFolders)
         throws HCatException {
         //Adding specific partitions that map to an external location
-        Map<String, String> ptn = new HashMap<String, String>();
+        Map<String, String> ptn = new HashMap<>();
         for (int i = 0; i < dataDates.size(); ++i) {
             final String dataFolder = dataFolders.get(i);
             final DateTime dataDate = dataDates.get(i);

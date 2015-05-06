@@ -174,7 +174,7 @@ public class ProcessMerlin extends Process {
         final String oldName = getName();
         final String newName = TestEntityUtil.generateUniqueName(prefix, oldName);
         setName(newName);
-        final HashMap<String, String> nameMap = new HashMap<String, String>(1);
+        final HashMap<String, String> nameMap = new HashMap<>(1);
         nameMap.put(oldName, newName);
         return nameMap;
     }

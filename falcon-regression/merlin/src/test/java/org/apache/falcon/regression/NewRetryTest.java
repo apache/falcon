@@ -933,7 +933,7 @@ public class NewRetryTest extends BaseTestClass {
             maxNumberOfRetries = 0;
         }
         LOGGER.info("coordinator: " + coordinator);
-        HashMap<String, Boolean> workflowMap = new HashMap<String, Boolean>();
+        HashMap<String, Boolean> workflowMap = new HashMap<>();
 
         if (coordinator == null || coordinator.getActions().size() == 0) {
             return false;
@@ -1052,7 +1052,7 @@ public class NewRetryTest extends BaseTestClass {
     private HashMap<String, Integer> getFailureRetriesForEachWorkflow(OozieClient oozieClient,
                                                                       CoordinatorJob coordinator)
         throws Exception {
-        HashMap<String, Integer> workflowRetryMap = new HashMap<String, Integer>();
+        HashMap<String, Integer> workflowRetryMap = new HashMap<>();
         for (CoordinatorAction action : coordinator.getActions()) {
 
             if (null == action.getExternalId()) {
@@ -1068,7 +1068,7 @@ public class NewRetryTest extends BaseTestClass {
 
     private DateTime[] getFailureTimeBoundaries(OozieClient oozieClient, String bundleId)
         throws Exception {
-        List<DateTime> dateList = new ArrayList<DateTime>();
+        List<DateTime> dateList = new ArrayList<>();
 
         CoordinatorJob coordinator = getDefaultOozieCoordinator(oozieClient, bundleId);
 

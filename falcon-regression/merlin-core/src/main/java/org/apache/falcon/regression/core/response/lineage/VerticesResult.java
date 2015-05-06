@@ -40,7 +40,7 @@ public class VerticesResult extends GraphResult {
 
     public List<Vertex> filterVerticesByType(Vertex.VERTEX_TYPE vertexType,
                                              List<Vertex> vertexList) {
-        List<Vertex> result = new ArrayList<Vertex>();
+        List<Vertex> result = new ArrayList<>();
         for (Vertex vertex : vertexList) {
             if (vertex.getType() == vertexType) {
                 result.add(vertex);
@@ -54,7 +54,7 @@ public class VerticesResult extends GraphResult {
     }
 
     public List<Vertex> filterVerticesByName(String name, List<Vertex> vertexList) {
-        List<Vertex> result = new ArrayList<Vertex>();
+        List<Vertex> result = new ArrayList<>();
         for (Vertex vertex : vertexList) {
             if (vertex.getName().equals(name)) {
                 result.add(vertex);
