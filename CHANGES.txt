@@ -6,6 +6,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1059 Lineage should support bootstrapping(Ajay Yadava)
+
     FALCON-75 Falcon CLI for deleting entities should inform user if entity does not exist(Ajay Yadava)
 
     FALCON-1127 Falcon entity status is submitted when corresponding Bundle

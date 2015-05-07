@@ -250,8 +250,7 @@ public class MetadataMappingService
 
     @Override
     public void onReload(Entity entity) throws FalconException {
-        // do nothing since entities are being loaded from store into memory and
-        // are already added to the graph
+        onAdd(entity);
     }
 
     @Override

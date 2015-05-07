@@ -5,6 +5,12 @@
 Apache Falcon provides various tools to operationalize Falcon consisting of Alerts for
 unrecoverable errors, Audits of user actions, Metrics, and Notifications. They are detailed below.
 
+++ Lineage
+
+Currently Lineage has no way to access or restore information about entity instances created during the time lineage
+was disabled. Information about entities however, is preserved and bootstrapped when lineage is enabled. If you have to
+reset the graph db then you can delete the graph db files as specified in the startup.properties and restart the falcon.
+Please note: you will loose all the information about the instances if you delete the graph db.
 
 ---++ Monitoring
 
