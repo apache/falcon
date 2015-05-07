@@ -208,7 +208,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                     EntityUtil.getEntity(type, entity);
                     return super.execute();
                 } catch (EntityNotRegisteredException e) {
-                    return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully");
+                    return new APIResult(APIResult.Status.SUCCEEDED,
+                            entity + "(" + type + ") doesn't exist. Nothing to do");
                 } catch (FalconException e) {
                     throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
                 }
