@@ -7,6 +7,8 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali)
+
    FALCON-1091 Monitoring plugin that registers catalog partition - code
    (Suhas Vasu / PallaviRao / Shwetha GS via Suhas Vasu)
 
