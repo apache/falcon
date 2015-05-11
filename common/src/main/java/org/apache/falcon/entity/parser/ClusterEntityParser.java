@@ -294,7 +294,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                 if (stagingLocation.getPath().equals(workingLocation.getPath())) {
                     throw new ValidationException(
                             "Location with name: " + stagingLocation.getName().value() + " and " + workingLocation
-                                    .getName().value() + " cannot of same path: " + stagingLocation.getPath()
+                                    .getName().value() + " cannot have same path: " + stagingLocation.getPath()
                                     + " for cluster :" + cluster.getName());
                 } else {
 
