@@ -53,4 +53,12 @@ public abstract class AbstractSearchPage extends Page {
      * A rough check to make sure that we are indeed on the correct page.
      */
     public abstract void checkPage();
+
+    // Utility method to enter the data slowly on an element
+    public void sendKeysSlowly(WebElement webElement, String data){
+        for (String str : data.split("")) {
+            webElement.sendKeys(str);
+        }
+
+    }
 }

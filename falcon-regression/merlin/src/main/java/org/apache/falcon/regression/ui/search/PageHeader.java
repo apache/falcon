@@ -174,12 +174,12 @@ public class PageHeader {
         return clusterPage;
     }
 
-    public NewFeedPage doCreateFeed() {
+    public FeedWizardPage doCreateFeed() {
         UIAssert.assertDisplayed(feedCreateButton, "Feed create button");
         Assert.assertEquals(feedCreateButton.getText(), "Feed",
             "Unexpected text on create feed button");
         feedCreateButton.click();
-        final NewFeedPage feedPage = PageFactory.initElements(driver, NewFeedPage.class);
+        final FeedWizardPage feedPage = PageFactory.initElements(driver, FeedWizardPage.class);
         feedPage.checkPage();
         return feedPage;
     }

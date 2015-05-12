@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1201 Feed Setup tests for testing header and default scenario (Namit Maheshwari)
+
    FALCON-1198 Test buttons available on search results page (Ruslan Ostafiychuk)
 
    FALCON-1187 Test that changes made via API are reflected on UI (Ruslan Ostafiychuk
