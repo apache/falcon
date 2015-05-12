@@ -54,7 +54,7 @@ import java.io.StringWriter;
 public class ClusterEntityParserTest extends AbstractTestBase {
 
     private final ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
-    private final String CLUSTER_LOCATIONS_BASE_DIR = "/projects/falcon/ClusterEntityParserTestLocations/";
+    private static final String CLUSTER_LOCATIONS_BASE_DIR = "/projects/falcon/ClusterEntityParserTestLocations/";
 
     @Test
     public void testParse() throws IOException, FalconException, JAXBException {
@@ -64,7 +64,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Cluster cluster = parser.parse(stream);
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE)
                 .setEndpoint(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
-        Locations locations = getClusterLocations("staging0","working0");
+        Locations locations = getClusterLocations("staging0", "working0");
         cluster.setLocations(locations);
 
         Assert.assertNotNull(cluster);
