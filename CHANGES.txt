@@ -24,6 +24,15 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1195 ClusterEntityParserTest fails intermittently
+    (Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1162 Cluster submit succeeds when staging HDFS dir does not have
+    777 (ALL) permission (Venkat Ramachandran via Sowmya Ramesh)
+
+    FALCON-1153 Instance kill fails intermittently
+    (Balu Vellanki via Sowmya Ramesh)
+
     FALCON-954 Secure Kerberos setup : Falcon should periodically revalidate 
     auth token (Balu Vellanki via Ajay Yadava)
 
