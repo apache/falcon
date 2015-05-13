@@ -142,6 +142,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1195 ClusterEntityParserTest fails intermittently. 
+   (Balu Vellanki via Shaik Idris Ali)
+
    FALCON-1162 Cluster submit succeeds when staging HDFS dir does not
    have 777 (ALL) permission (Venkat Ramachandran via Suhas Vasu)
 
