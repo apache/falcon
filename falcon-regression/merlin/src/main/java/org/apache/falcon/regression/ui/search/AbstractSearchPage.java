@@ -30,6 +30,7 @@ import org.openqa.selenium.support.PageFactory;
 public abstract class AbstractSearchPage extends Page {
 
     public static final String UI_URL = MerlinConstants.PRISM_URL;
+    public static final long PAGELOAD_TIMEOUT_THRESHOLD = 10;
 
     public AbstractSearchPage(WebDriver driver) {
         super(driver);

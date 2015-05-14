@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1210 Process Setup tests for testing header and general step default scenario (Raghav Kumar Gautam)
+
    FALCON-1201 Feed Setup tests for testing header and default scenario (Namit Maheshwari)
 
    FALCON-1198 Test buttons available on search results page (Ruslan Ostafiychuk)

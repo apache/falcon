@@ -184,12 +184,12 @@ public class PageHeader {
         return feedPage;
     }
 
-    public NewProcessPage doCreateProcess() {
+    public ProcessWizardPage doCreateProcess() {
         UIAssert.assertDisplayed(processCreateButton, "Process create button");
         Assert.assertEquals(processCreateButton.getText(), "Process",
             "Unexpected text on create process button");
         processCreateButton.click();
-        final NewProcessPage processPage = PageFactory.initElements(driver, NewProcessPage.class);
+        final ProcessWizardPage processPage = PageFactory.initElements(driver, ProcessWizardPage.class);
         processPage.checkPage();
         return processPage;
     }
