@@ -73,6 +73,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1220 Exclude downloaded directories from falcon-ui modules
+   (Shaik Idris Ali)
+
    FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali)
 
    FALCON-1158 Rename the parameter "pattern" in LIST API to "nameseq"
