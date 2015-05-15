@@ -24,6 +24,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1165 Falcon restart failed, if defined service in cluster entity is unreachable
+    (Peeyush Bishnoi via Ajay Yadava)
+     
     FALCON-1195 ClusterEntityParserTest fails intermittently
     (Balu Vellanki via Sowmya Ramesh)
 

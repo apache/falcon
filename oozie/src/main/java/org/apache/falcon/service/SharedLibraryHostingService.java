@@ -70,12 +70,20 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     };
 
     private void addLibsTo(Cluster cluster) throws FalconException {
-        Path lib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "lib");
-        Path libext = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), "libext");
+        FileSystem fs = null;
         try {
-            FileSystem fs = HadoopClientFactory.get().createFalconFileSystem(
-                    ClusterHelper.getConfiguration(cluster));
+            LOG.info("Initializing FS: {} for cluster: {}", ClusterHelper.getStorageUrl(cluster), cluster.getName());
+            fs = HadoopClientFactory.get().createFalconFileSystem(ClusterHelper.getConfiguration(cluster));
+            fs.getStatus();
+        } catch (Exception e) {
+            throw new FalconException("Failed to initialize FS for cluster : " + cluster.getName(), e);
+        }
 
+        try {
+            Path lib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
+                    "lib");
+            Path libext = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
+                    "libext");
             Properties properties = StartupProperties.get();
             pushLibsToHDFS(fs, properties.getProperty("system.lib.location"), lib,
                     NON_FALCON_JAR_FILTER);
@@ -183,7 +191,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         try {
             onAdd(entity);
         } catch (FalconException e) {
-            throw new FalconException(e);
+            LOG.error(e.getMessage(), e);
         }
     }
 }
