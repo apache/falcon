@@ -6,9 +6,10 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1211 Source tarball are not generated in mvn assembly when profile is distributed
+    (Shaik Idris Ali)
+
     FALCON-1219 Minor doc fix(Raghav Kumar Gautam via Ajay Yadava)
-    
-    FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali) 
 
     FALCON-1059 Lineage should support bootstrapping(Ajay Yadava)
 

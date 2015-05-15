@@ -254,7 +254,8 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>src/main/assemblies/distributed-package.xml</descriptor>
-                            </descriptors>
+                                <descriptor>src/main/assemblies/src-package.xml</descriptor>
+			    </descriptors>
                             <finalName>apache-falcon-distributed-${project.version}</finalName>
                         </configuration>
                     </plugin>
