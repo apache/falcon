@@ -36,6 +36,9 @@
                 <exclude>**/.idea/**</exclude>
                 <exclude>**/*.iml</exclude>
                 <exclude>**/*.log</exclude>
+		<exclude>**/dist/**</exclude>
+		<exclude>**/node_modules/**</exclude>
+		<exclude>**/node/**</exclude>
             </excludes>
         </fileSet>
     </fileSets>
