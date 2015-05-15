@@ -673,7 +673,7 @@ be in lib folder inside the workflow path.
 The properties defined in the cluster and cluster properties(nameNode and jobTracker) will also
 be available for the workflow.
 
-There are 2 engines supported today.
+There are 3 engines supported today.
 
 ---++++ Oozie
 

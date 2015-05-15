@@ -6,6 +6,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1219 Minor doc fix(Raghav Kumar Gautam via Ajay Yadava)
+    
     FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali) 
 
     FALCON-1059 Lineage should support bootstrapping(Ajay Yadava)
