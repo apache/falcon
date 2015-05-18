@@ -163,7 +163,7 @@ public class FeedInstanceListingTest extends BaseTestClass{
         String inputFeed = bundles[0].getInputFeedFromBundle();
         bundles[0].setInputFeedAvailabilityFlag("_SUCCESS");
         ServiceResponse serviceResponse = prism.getFeedHelper().update(inputFeed, bundles[0].getInputFeedFromBundle(),
-                TimeUtil.getTimeWrtSystemTime(0));
+                TimeUtil.getTimeWrtSystemTime(0), null);
         AssertUtil.assertSucceeded(serviceResponse);
         //Since we have not created availability flag on HDFS, the feed instance status should be partial
         r = prism.getFeedHelper()
@@ -195,7 +195,7 @@ public class FeedInstanceListingTest extends BaseTestClass{
         String inputFeed = bundles[0].getInputFeedFromBundle();
         bundles[0].setInputFeedDataPath(baseTestDir + "/inputNew" + MINUTE_DATE_PATTERN);
         ServiceResponse serviceResponse = prism.getFeedHelper().update(inputFeed, bundles[0].getInputFeedFromBundle(),
-                TimeUtil.getTimeWrtSystemTime(0));
+                TimeUtil.getTimeWrtSystemTime(0), null);
         AssertUtil.assertSucceeded(serviceResponse);
         //Since we have not created directories for new path, the feed instance status should be missing
         r = prism.getFeedHelper()
