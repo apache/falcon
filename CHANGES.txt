@@ -20,6 +20,10 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+
+   FALCON-1225 remove text line containing "Copyright" from regression 
+   log4j.properties(Samarth Gupta)
+
    FALCON-1220 Exclude downloaded directories from falcon-ui modules
    (Shaik Idris Ali)
 
