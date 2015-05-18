@@ -28,6 +28,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.FindBys;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
 import java.util.ArrayList;
@@ -106,6 +108,17 @@ public class PageHeader {
             "Unexpected text on logout button");
     }
 
+    public SearchPage gotoHome() {
+        homeButton.click();
+        final SearchPage searchPage = PageFactory.initElements(driver, SearchPage.class);
+        searchPage.checkPage();
+        final PageHeader searchHeader = searchPage.getPageHeader();
+        searchHeader.checkLoggedIn();
+        Assert.assertEquals(searchHeader.getLoggedInUser(), LoginPage.UI_DEFAULT_USER,
+            "Unexpected user is displayed");
+        return searchPage;
+    }
+
     public void checkLoggedOut() {
         UIAssert.assertNotDisplayed(getLogoutButton(), "logout button");
     }
@@ -119,13 +132,10 @@ public class PageHeader {
         UIAssert.assertDisplayed(homeButton, "falcon logo");
         Assert.assertEquals(homeButton.getText(), "Falcon", "Unexpected home button text");
         UIAssert.assertDisplayed(falconLogo, "falcon logo");
+        final WebElement helpLink = loginHeaderBox.findElement(By.tagName("a"));
+        UIAssert.assertDisplayed(helpLink, "help link");
+
         final String oldUrl = driver.getCurrentUrl();
-
-        homeButton.click();
-        Assert.assertTrue(getHomeUrls().contains(driver.getCurrentUrl()),
-            "home button navigate to: " + driver.getCurrentUrl() + " instead of: " + getHomeUrls());
-        driver.get(oldUrl);
-
         //displayed if user is logged in: create entity buttons, upload entity button, username
         if (getLogoutButton().isDisplayed()) {
             //checking create entity box
@@ -133,15 +143,6 @@ public class PageHeader {
             final WebElement createEntityLabel = createEntityBox.findElement(By.tagName("h4"));
             Assert.assertEquals(createEntityLabel.getText(), "Create an entity",
                 "Unexpected create entity text");
-            doCreateCluster();
-            driver.get(oldUrl);
-            doCreateFeed();
-            driver.get(oldUrl);
-            doCreateProcess();
-            driver.get(oldUrl);
-            doCreateMirror();
-            driver.get(oldUrl);
-
             //checking upload entity part
             UIAssert.assertDisplayed(uploadEntityBox, "Create entity box");
             final WebElement uploadEntityLabel = uploadEntityBox.findElement(By.tagName("h4"));
@@ -152,13 +153,28 @@ public class PageHeader {
                 "Unexpected text on upload entity button");
             //checking if logged-in username is displayed
             AssertUtil.assertNotEmpty(getLoggedInUser(), "Expecting logged-in username.");
-        }
 
-        //help link is always displayed
-        final WebElement helpLink = loginHeaderBox.findElement(By.tagName("a"));
-        UIAssert.assertDisplayed(helpLink, "help link");
+            //create button navigation
+            doCreateCluster();
+            driver.get(oldUrl);
+            doCreateFeed();
+            driver.get(oldUrl);
+            doCreateProcess();
+            driver.get(oldUrl);
+            doCreateMirror();
+            driver.get(oldUrl);
+        }
+        //home button navigation
+        homeButton.click();
+        Assert.assertTrue(getHomeUrls().contains(driver.getCurrentUrl()),
+            "home button navigate to: " + driver.getCurrentUrl() + " instead of: " + getHomeUrls());
+        driver.get(oldUrl);
+
+        //help link navigation
         Assert.assertEquals(helpLink.getText(), "Help", "Help link expected to have text 'Help'");
         helpLink.click();
+        new WebDriverWait(driver, AbstractSearchPage.PAGELOAD_TIMEOUT_THRESHOLD).until(
+            ExpectedConditions.stalenessOf(helpLink));
         Assert.assertEquals(driver.getCurrentUrl(), MerlinConstants.HELP_URL,
             "Unexpected help url");
         driver.get(oldUrl);

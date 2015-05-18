@@ -22,6 +22,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Base class for UI test classes.
  */
@@ -39,6 +41,7 @@ public class BaseUITestClass extends BaseTestClass{
         profile.setPreference("network.negotiate-auth.trusted-uris", "http://, https://");
 
         driver = new FirefoxDriver(profile);
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         driver.manage().window().maximize();
 
     }

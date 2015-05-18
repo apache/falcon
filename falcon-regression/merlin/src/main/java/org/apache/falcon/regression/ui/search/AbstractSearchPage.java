@@ -19,8 +19,11 @@
 package org.apache.falcon.regression.ui.search;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.ui.pages.Page;
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -30,17 +33,19 @@ import org.openqa.selenium.support.PageFactory;
 public abstract class AbstractSearchPage extends Page {
 
     public static final String UI_URL = MerlinConstants.PRISM_URL;
-    public static final long PAGELOAD_TIMEOUT_THRESHOLD = 10;
+    private static final Logger LOGGER = Logger.getLogger(AbstractSearchPage.class);
+    public static final int PAGELOAD_TIMEOUT_THRESHOLD = 10;
 
     public AbstractSearchPage(WebDriver driver) {
         super(driver);
+        waitForAngularToFinish();
         pageHeader = PageFactory.initElements(driver, PageHeader.class);
     }
 
     private PageHeader pageHeader;
 
     @FindBy(className = "mainUIView")
-    private WebElement mainUI;
+    protected WebElement mainUI;
 
     public PageHeader getPageHeader() {
         return pageHeader;
@@ -56,10 +61,25 @@ public abstract class AbstractSearchPage extends Page {
     public abstract void checkPage();
 
     // Utility method to enter the data slowly on an element
-    public void sendKeysSlowly(WebElement webElement, String data){
+    public static void sendKeysSlowly(WebElement webElement, String data){
         for (String str : data.split("")) {
             webElement.sendKeys(str);
         }
 
     }
+
+    protected void waitForAngularToFinish() {
+        final String javaScript = "return (window.angular != null) && "
+            + "(angular.element(document).injector() != null) && "
+            + "(angular.element(document).injector().get('$http').pendingRequests.length === 0)";
+        boolean isLoaded = false;
+        for (int i = 0; i < PAGELOAD_TIMEOUT_THRESHOLD && !isLoaded; i++) {
+            final Object output = ((JavascriptExecutor) driver).executeScript(javaScript);
+            isLoaded = Boolean.valueOf(output.toString());
+            LOGGER.info(i+1 + ". waiting on angular to finish.");
+            TimeUtil.sleepSeconds(1);
+        }
+        LOGGER.info("angular is done continuing...");
+    }
+
 }

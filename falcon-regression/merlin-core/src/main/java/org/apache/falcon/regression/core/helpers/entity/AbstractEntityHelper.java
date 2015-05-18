@@ -295,7 +295,7 @@ public abstract class AbstractEntityHelper {
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         LOGGER.info("Validating " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
         return Util.sendRequest(createUrl(this.hostname + URLS.VALIDATE_URL.getValue(),
-                getEntityType() + colo), "post", data, user);
+            getEntityType() + colo), "post", data, user);
     }
 
     public ServiceResponse schedule(String processData)
@@ -410,6 +410,23 @@ public abstract class AbstractEntityHelper {
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         String url = createUrl(this.hostname + URLS.INSTANCE_STATUS.getValue(), getEntityType(),
             entityName, "");
+        return (InstancesResult) InstanceUtil
+            .createAndSendRequestProcessInstance(url, params, allColo, user);
+    }
+
+    public InstancesResult getProcessInstanceLogs(String entityName, String params)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        return getProcessInstanceLogs(entityName, params, null);
+    }
+
+    public InstancesResult getProcessInstanceLogs(String entityName, String params,
+                                                  String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_LOGS.getValue(), getEntityType(),
+            entityName);
+        if (StringUtils.isNotEmpty(params)) {
+            url += "?";
+        }
         return (InstancesResult) InstanceUtil
             .createAndSendRequestProcessInstance(url, params, allColo, user);
     }

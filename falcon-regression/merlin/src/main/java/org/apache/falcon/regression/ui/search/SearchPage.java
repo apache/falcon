@@ -18,6 +18,10 @@
 
 package org.apache.falcon.regression.ui.search;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.regression.Entities.FeedMerlin;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
@@ -27,6 +31,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.FindBys;
+import org.openqa.selenium.support.PageFactory;
 import org.testng.Assert;
 
 import java.util.ArrayList;
@@ -41,6 +46,8 @@ public class SearchPage extends AbstractSearchPage {
 
     private static final String CLASS_OF_SELECTED_ROW = "rowSelected";
     private static final int ANIMATION_DELAY = 2;
+
+    private static final Logger LOGGER = Logger.getLogger(SearchPage.class);
 
     public SearchPage(WebDriver driver) {
         super(driver);
@@ -103,6 +110,25 @@ public class SearchPage extends AbstractSearchPage {
             searchResults.add(searchResult);
         }
         return searchResults;
+    }
+
+
+    public EntityPage openEntityPage(String entityName) {
+        return click(doSearch(entityName).get(0));
+    }
+
+    public EntityPage click(SearchResult result) {
+        LOGGER.info("attempting to click: " + result + " on search page.");
+        for (WebElement oneResultElement : getSearchResultElements()) {
+            final List<WebElement> resultParts = oneResultElement.findElements(By.tagName("td"));
+            final WebElement entityNameElement = resultParts.get(1);
+            final String entityName = entityNameElement.getText();
+            if (entityName.equals(result.getEntityName())) {
+                entityNameElement.findElement(By.tagName("button")).click();
+                return PageFactory.initElements(driver, EntityPage.class);
+            }
+        }
+        return  null;
     }
 
     @Override
@@ -366,8 +392,15 @@ public class SearchPage extends AbstractSearchPage {
         }
 
         public String getClusterName() {
+            Assert.assertFalse(clusterName.contains(","), "getClusterName() called"
+                + " in multi-cluster setup: " + clusterName + ", maybe use getClusterNames()");
             return clusterName;
         }
+
+        public List<String> getClusterNames() {
+            return Arrays.asList(clusterName.split(","));
+        }
+
 
         public String getType() {
             return type;
@@ -376,6 +409,70 @@ public class SearchPage extends AbstractSearchPage {
         public EntityStatus getStatus() {
             return status;
         }
+
+        @Override
+        public String toString() {
+            return "SearchResult{"
+                + "isChecked=" + isChecked
+                + ", entityName='" + entityName + '\''
+                + ", tags='" + tags + '\''
+                + ", clusterName='" + clusterName + '\''
+                + ", type='" + type + '\''
+                + ", status='" + status + '\''
+                + '}';
+        }
+
+        public static void assertEqual(List<SearchResult> searchResults,
+                                       List<Entity> expectedEntities, String errorMessage) {
+            Assert.assertEquals(searchResults.size(), expectedEntities.size(), errorMessage
+                + "(Length of lists don't match, searchResults: " + searchResults
+                + " expectedEntities: " + expectedEntities + ")");
+            for (Entity entity : expectedEntities) {
+                boolean found = false;
+                for (SearchResult result : searchResults) {
+                    //entities are same if they have same name & type
+                    if (entity.getName().equals(result.entityName)) {
+                        //entity type in SearchResults has a different meaning
+                        //so, not comparing entity types
+
+                        //equality of cluster names
+                        List<String> entityClusters = null;
+                        switch (entity.getEntityType()) {
+                        case FEED:
+                            final FeedMerlin feed = (FeedMerlin) entity;
+                            entityClusters = feed.getClusterNames();
+                            // tags equality check
+                            Assert.assertEquals(result.getTags(),
+                                StringUtils.trimToEmpty(feed.getTags()),
+                                errorMessage + "(tags mismatch: " + result.entityName
+                                    + " & " + entity.toShortString() + ")");
+                            break;
+                        case PROCESS:
+                            final ProcessMerlin process = (ProcessMerlin) entity;
+                            entityClusters = process.getClusterNames();
+                            // tags equality check
+                            Assert.assertEquals(result.getTags(),
+                                StringUtils.trimToEmpty(process.getTags()),
+                                errorMessage + "(tags mismatch: " + result.entityName
+                                    + " & " + entity.toShortString() + ")");
+                            break;
+                        default:
+                            Assert.fail("Cluster entity is unexpected: " + entity);
+                            break;
+                        }
+                        Collections.sort(entityClusters);
+                        final List<String> actualClusters = result.getClusterNames();
+                        Collections.sort(actualClusters);
+                        Assert.assertEquals(actualClusters, entityClusters, errorMessage
+                            + "(cluster names mismatch: " + result + " " + entity + ")");
+                        found = true;
+                    }
+                }
+                Assert.assertTrue(found,
+                    "Entity: " + entity.toShortString() + " not found in: " + searchResults);
+            }
+        }
+
     }
 
 }

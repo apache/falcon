@@ -74,6 +74,14 @@ public class FeedMerlin extends Feed {
         return new FeedMerlin(feedString);
     }
 
+    public List<String> getClusterNames() {
+        List<String> names = new ArrayList<>();
+        for (Cluster cluster : getClusters().getClusters()) {
+            names.add(cluster.getName());
+        }
+        return names;
+    }
+
     /**
      * Sets custom feed property.
      * @param propertyName custom property name
@@ -99,11 +107,13 @@ public class FeedMerlin extends Feed {
     }
 
     /**
+     * Return feed path of the specified type.
      * @return feed data path
+     * @param locationType the type of the location
      */
-    public String getFeedPath() {
+    public String getFeedPath(LocationType locationType) {
         for (Location location : this.getLocations().getLocations()) {
-            if (location.getType() == LocationType.DATA) {
+            if (location.getType() == locationType) {
                 return location.getPath();
             }
         }
@@ -372,6 +382,11 @@ public class FeedMerlin extends Feed {
         final CatalogTable catalogTable = new CatalogTable();
         catalogTable.setUri(tableUri);
         this.setTable(catalogTable);
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.FEED;
     }
 
 }

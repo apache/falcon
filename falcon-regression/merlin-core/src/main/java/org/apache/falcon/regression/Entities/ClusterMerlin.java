@@ -104,4 +104,9 @@ public class ClusterMerlin extends Cluster {
         }
     }
 
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.CLUSTER;
+    }
+
 }

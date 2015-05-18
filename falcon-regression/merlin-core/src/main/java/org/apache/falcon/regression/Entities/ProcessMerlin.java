@@ -42,6 +42,7 @@ import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,41 @@ public class ProcessMerlin extends Process {
     public ProcessMerlin addProcessCluster(Cluster cluster) {
         getClusters().getClusters().add(cluster);
         return this;
+    }
+
+    public List<String> getClusterNames() {
+        List<String> names = new ArrayList<>();
+        for (Cluster cluster : getClusters().getClusters()) {
+            names.add(cluster.getName());
+        }
+        return names;
+    }
+
+    public Cluster getClusterByName(String name) {
+        for (Cluster cluster : getClusters().getClusters()) {
+            if (name.equals(cluster.getName())) {
+                return cluster;
+            }
+        }
+        return null;
+    }
+
+    public Input getInputByName(String name) {
+        for (Input input : getInputs().getInputs()) {
+            if (input.getName().equals(name)) {
+                return input;
+            }
+        }
+        return null;
+    }
+
+    public Output getOutputByName(String name) {
+        for (Output output : getOutputs().getOutputs()) {
+            if (output.getName().equals(name)) {
+                return output;
+            }
+        }
+        return null;
     }
 
     /** Fluent builder wrapper for cluster fragment of process entity . */
@@ -413,6 +449,12 @@ public class ProcessMerlin extends Process {
     public String getFirstInputName() {
         return getInputs().getInputs().get(0).getName();
     }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.PROCESS;
+    }
+
 }
 
 
