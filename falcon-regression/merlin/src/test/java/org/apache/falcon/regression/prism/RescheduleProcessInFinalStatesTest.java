@@ -194,7 +194,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
         throws URISyntaxException, IOException, AuthenticationException, JAXBException,
         InterruptedException {
         ServiceResponse r = prism.getProcessHelper().getEntityDefinition(process);
-        Assert.assertTrue(r.getMessage().contains("(process) not found"));
+        Assert.assertTrue(r.getMessage().toLowerCase().contains("(process) not found"));
         AssertUtil.assertFailed(r);
     }
 }

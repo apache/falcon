@@ -321,6 +321,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1221 RescheduleProcessInFinalStatesTest.checkNotFoundDefinition() needs to be case flexible
+   (Raghav Kumar Gautam)
+
    FALCON-1218 Minor fix for testFeedListingAfterFeedDataPathUpdate & testFeedListingAfterFeedAvailabilityFlagUpdate
    (Raghav Kumar Gautam)
 
