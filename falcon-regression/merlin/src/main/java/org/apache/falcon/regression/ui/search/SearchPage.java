@@ -22,7 +22,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
-import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -45,7 +44,6 @@ import java.util.Set;
 public class SearchPage extends AbstractSearchPage {
 
     private static final String CLASS_OF_SELECTED_ROW = "rowSelected";
-    private static final int ANIMATION_DELAY = 2;
 
     private static final Logger LOGGER = Logger.getLogger(SearchPage.class);
 
@@ -321,7 +319,7 @@ public class SearchPage extends AbstractSearchPage {
     public void clickButton(Button button) {
         resultBlock.findElement(By.className("buttonsRow"))
             .findElements(By.className("btn")).get(button.ordinal()).click();
-        TimeUtil.sleepSeconds(ANIMATION_DELAY);
+        waitForAngularToFinish();
     }
 
     /**

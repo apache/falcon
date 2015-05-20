@@ -154,7 +154,7 @@ public class EntitiesTableReflectionTest extends BaseUITestClass {
         String secondProcess = processesMap.get(results.get(1).getEntityName());
 
         Assert.assertEquals(results.get(0).getStatus(), EntityStatus.RUNNING,
-            "Status of scheduled process should be RUNNING");
+            "Unexpected status after 'Schedule' was clicked");
         Assert.assertTrue(prism.getProcessHelper().getStatus(firstProcess).getMessage()
             .contains("RUNNING"), "First process should be RUNNING via API");
         //select two processes
@@ -166,7 +166,7 @@ public class EntitiesTableReflectionTest extends BaseUITestClass {
         searchPage.clickButton(Button.Schedule);
 
         Assert.assertEquals(searchPage.getSearchResults().get(1).getStatus(), EntityStatus.RUNNING,
-            "Status of scheduled process should be RUNNING");
+            "Unexpected status after 'Schedule' was clicked");
         Assert.assertTrue(prism.getProcessHelper().getStatus(secondProcess).getMessage()
             .contains("RUNNING"), "Second process should be RUNNING via API");
 
@@ -175,12 +175,12 @@ public class EntitiesTableReflectionTest extends BaseUITestClass {
         searchPage.clickButton(Button.Suspend);
 
         Assert.assertEquals(searchPage.getSearchResults().get(0).getStatus(), EntityStatus.SUSPENDED,
-            "Status of scheduled process should be SUSPENDED");
+            "Unexpected status after 'Suspend' was clicked");
         Assert.assertTrue(prism.getProcessHelper().getStatus(firstProcess).getMessage()
             .contains("SUSPENDED"), "First process should be SUSPENDED via API");
 
-        Assert.assertEquals(results.get(1).getStatus(), EntityStatus.SUSPENDED,
-            "Status of scheduled process should be RUNNING");
+        Assert.assertEquals(searchPage.getSearchResults().get(1).getStatus(), EntityStatus.SUSPENDED,
+            "Unexpected status after 'Suspend' was clicked");
         Assert.assertTrue(prism.getProcessHelper().getStatus(secondProcess).getMessage()
             .contains("SUSPENDED"), "Second process should be SUSPENDED via API");
 

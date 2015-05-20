@@ -79,6 +79,7 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1226 Stabilize testActionsPauseResume()
 
    FALCON-1225 remove text line containing "Copyright" from regression 
    log4j.properties(Samarth Gupta)
