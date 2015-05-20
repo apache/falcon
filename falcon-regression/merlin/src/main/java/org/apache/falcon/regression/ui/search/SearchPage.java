@@ -158,18 +158,6 @@ public class SearchPage extends AbstractSearchPage {
 
     }
 
-    private String getActiveAlertText() {
-        WebElement alertsBlock = driver.findElement(By.className("messages-to-show"));
-        List<WebElement> alerts = alertsBlock.findElements(By.className("ng-animate"));
-        if (!alerts.isEmpty()) {
-            WebElement last = alerts.get(alerts.size() - 1);
-            if (last.isDisplayed()) {
-                return last.getText();
-            }
-        }
-        return null;
-    }
-
     public SearchQuery getSearchQuery() {
         return new SearchQuery(searchBlock);
     }

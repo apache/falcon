@@ -125,6 +125,10 @@ public final class BundleUtil {
                 working.setName(ClusterLocationType.WORKING);
                 working.setPath(MerlinConstants.WORKING_LOCATION);
                 clusterMerlin.getLocations().getLocations().add(working);
+                final Location temp = new Location();
+                temp.setName(ClusterLocationType.TEMP);
+                temp.setPath(MerlinConstants.TEMP_LOCATION);
+                clusterMerlin.getLocations().getLocations().add(temp);
                 final String protectionPropName = "hadoop.rpc.protection";
                 final String protectionPropValue = Config.getProperty(protectionPropName);
                 if (StringUtils.isNotEmpty(protectionPropValue)) {

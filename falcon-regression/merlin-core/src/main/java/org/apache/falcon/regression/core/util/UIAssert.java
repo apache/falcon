@@ -31,7 +31,6 @@ public final class UIAssert {
     }
     private static final Logger LOGGER = Logger.getLogger(UIAssert.class);
 
-
     public static void assertDisplayed(WebElement element, String webElementName) {
         LOGGER.info(String.format("Checking if WebElement '%s' is displayed", webElementName));
         int timeoutSeconds = 2;

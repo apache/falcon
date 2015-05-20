@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1216 Cluster setup wizard multiple tests (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-1202 Add tests for EntityPage (Raghav Kumar Gautam)
 
    FALCON-1210 Process Setup tests for testing header and general step default scenario (Raghav Kumar Gautam)
@@ -79,7 +81,7 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
-   FALCON-1226 Stabilize testActionsPauseResume()
+   FALCON-1226 Stabilize testActionsPauseResume() (Ruslan Ostafiychuk)
 
    FALCON-1225 remove text line containing "Copyright" from regression 
    log4j.properties(Samarth Gupta)

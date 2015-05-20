@@ -29,6 +29,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
+import java.util.List;
+
 /** Parent page object for all the search ui pages. */
 public abstract class AbstractSearchPage extends Page {
 
@@ -82,4 +84,15 @@ public abstract class AbstractSearchPage extends Page {
         LOGGER.info("angular is done continuing...");
     }
 
+    public String getActiveAlertText() {
+        WebElement alertsBlock = driver.findElement(By.className("messages-to-show"));
+        List<WebElement> alerts = alertsBlock.findElements(By.className("ng-animate"));
+        if (!alerts.isEmpty()) {
+            WebElement last = alerts.get(alerts.size() - 1);
+            if (last.isDisplayed()) {
+                return last.getText();
+            }
+        }
+        return null;
+    }
 }

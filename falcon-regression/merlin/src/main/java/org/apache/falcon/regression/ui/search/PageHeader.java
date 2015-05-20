@@ -180,12 +180,12 @@ public class PageHeader {
         driver.get(oldUrl);
     }
 
-    public NewClusterPage doCreateCluster() {
+    public ClusterWizardPage doCreateCluster() {
         UIAssert.assertDisplayed(clusterCreateButton, "Cluster create button");
         Assert.assertEquals(clusterCreateButton.getText(), "Cluster",
             "Unexpected text on create cluster button");
         clusterCreateButton.click();
-        final NewClusterPage clusterPage = PageFactory.initElements(driver, NewClusterPage.class);
+        final ClusterWizardPage clusterPage = PageFactory.initElements(driver, ClusterWizardPage.class);
         clusterPage.checkPage();
         return clusterPage;
     }
