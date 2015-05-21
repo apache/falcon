@@ -29,6 +29,9 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1224 cannot build falcon - codehaus close service and repo - fail error 503
+    (Suhas Vasu)
+
     FALCON-1051 Lineage apis broken for falcon setup in distributed mode
     (Pavan Kumar Kolamuri via Ajay Yadava)
     
