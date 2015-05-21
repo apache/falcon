@@ -76,8 +76,6 @@ public class JMSMessageConsumerTest {
         for (int i = 0; i < 3; i++) {
             WorkflowExecutionContext context = WorkflowExecutionContext.create(
                     getMockFalconMessage(i), WorkflowExecutionContext.Type.POST_PROCESSING);
-            context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1",
-                    "process", WorkflowExecutionContext.EntityOperations.GENERATE));
 
             MapMessage message = session.createMapMessage();
             for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {
@@ -90,8 +88,6 @@ public class JMSMessageConsumerTest {
 
         WorkflowExecutionContext context = WorkflowExecutionContext.create(
                 getMockFalconMessage(5), WorkflowExecutionContext.Type.POST_PROCESSING);
-        context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1",
-                "process", WorkflowExecutionContext.EntityOperations.GENERATE));
 
         MapMessage mapMessage = session.createMapMessage();
         for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {
@@ -113,7 +109,7 @@ public class JMSMessageConsumerTest {
                 "/clicks/hour/00/0" + i);
         message.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "clicks");
         message.put(WorkflowExecutionArgs.LOG_FILE.getName(), "/logfile");
-        message.put(WorkflowExecutionArgs.LOG_DIR.getName(), "/tmp/log");
+        message.put(WorkflowExecutionArgs.LOG_DIR.getName(), "/tmp/falcon-log");
         message.put(WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2012-10-10-10-10");
         message.put(WorkflowExecutionArgs.OPERATION.getName(), "GENERATE");
         message.put(WorkflowExecutionArgs.RUN_ID.getName(), "0");

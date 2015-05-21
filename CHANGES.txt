@@ -25,9 +25,12 @@ Trunk (Unreleased)
     are inconsistent(Ajay Yadava)
 
   OPTIMIZATIONS
+    FALCON-1228 testSubscriber test of JMSMessageConsumerTest fails at a particular scenario
+    (Suhas Vasu)
 
   BUG FIXES
-    FALCON-1051 Lineage apis broken for falcon setup in distributed mode(Pavan Kumar Kolamuri via Ajay Yadava)
+    FALCON-1051 Lineage apis broken for falcon setup in distributed mode
+    (Pavan Kumar Kolamuri via Ajay Yadava)
     
     FALCON-1165 Falcon restart failed, if defined service in cluster entity is unreachable
     (Peeyush Bishnoi via Ajay Yadava)
