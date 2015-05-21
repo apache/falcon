@@ -38,6 +38,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.FindBys;
+import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.Select;
 import org.testng.asserts.SoftAssert;
 
@@ -587,6 +588,12 @@ public class EntityPage extends AbstractSearchPage {
         public WebElement getSelectAllCheckBox(List<WebElement> summaryHeadParts) {
             return summaryHeadParts.get(0).findElement(By.tagName("input"));
         }
+    }
+
+
+    public InstancePage openInstance(String nominalTime) {
+        instanceListBox.findElement(By.xpath("//button[contains(.,'" + nominalTime + "')]")).click();
+        return PageFactory.initElements(driver, InstancePage.class);
     }
 
     /**
