@@ -29,9 +29,6 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
-    FALCON-1224 cannot build falcon - codehaus close service and repo - fail error 503
-    (Suhas Vasu)
-
     FALCON-1051 Lineage apis broken for falcon setup in distributed mode
     (Pavan Kumar Kolamuri via Ajay Yadava)
     
@@ -207,6 +204,12 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1238 Add apache license header to .less css in falcon-ui/app
+   (Shaik Idris Ali)
+
+   FALCON-1224 cannot build falcon - codehaus close service and repo - 
+   fail error 503 (Suhas Vasu)
+
    FALCON-1161 Test case feedFeedBasePathExists fails intermittently
    (Suhas Vasu)
 
