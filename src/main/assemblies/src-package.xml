@@ -35,6 +35,8 @@
                 <exclude>backlog</exclude>
                 <exclude>**/.idea/**</exclude>
                 <exclude>**/*.iml</exclude>
+                <exclude>**/*.ipr</exclude>
+                <exclude>**/*.iws</exclude>
                 <exclude>**/*.log</exclude>
 		<exclude>**/dist/**</exclude>
 		<exclude>**/node_modules/**</exclude>
