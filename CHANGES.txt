@@ -145,6 +145,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    (Suhas vasu)
 
   BUG FIXES
+   FALCON-1224 cannot build falcon - codehaus close service and repo 
+   - fail error 503 (Suhas Vasu via Shaik Idris Ali)
+
    FALCON-1195 ClusterEntityParserTest fails intermittently. 
    (Balu Vellanki via Shaik Idris Ali)
 
