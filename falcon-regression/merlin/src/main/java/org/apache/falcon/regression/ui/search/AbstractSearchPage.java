@@ -33,8 +33,6 @@ import org.openqa.selenium.support.ui.Select;
 import java.util.ArrayList;
 import java.util.List;
 
-import java.util.List;
-
 /** Parent page object for all the search ui pages. */
 public abstract class AbstractSearchPage extends Page {
 

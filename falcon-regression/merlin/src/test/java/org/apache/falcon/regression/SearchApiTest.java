@@ -283,19 +283,19 @@ public class SearchApiTest extends BaseTestClass {
             {new QueryParams().forType("process").withNameSeq("bundle").withTagkey("bundle,b1b2").withNumResults(3)
                 .withOrder(true).withSortOrder("desc"), new Result().withExpBundles(1, 2)
                     .withExpTypes("process", "mirror").withExpTotal(3), },
-            {new QueryParams().forType("schedulable").withNameSeq("bundle").withTagkey("partial,common")
+            {new QueryParams().forType("feed,process").withNameSeq("bundle").withTagkey("partial,common")
                 .withOrder(true), new Result().withExpBundles(1, 2).withExpTypes("feed", "process", "mirror")
                 .withExpTotal(6), },
             {new QueryParams().forType("feed").withNameSeq("bundlefeed").withNumResults(2).withOrder(true)
                 .withSortOrder("asc"), new Result().withExpBundles(0, 1, 2, 3)
                     .withExpTypes("feed").withExpTotal(2), },
-            {new QueryParams().forType("schedulable").withNameSeq("bundleproc").withTagkey("_falcon_mirroring_type")
+            {new QueryParams().forType("feed,process").withNameSeq("bundleproc").withTagkey("_falcon_mirroring_type")
                 .withOrder(true).withSortOrder("desc"), new Result().withExpBundles(1, 2, 3)
                     .withExpTypes("process", "mirror").withExpTotal(3), },
             //one option excludes another
             {new QueryParams().forType("process").withNameSeq("bundlefeed"), new Result(), },
             {new QueryParams().forType("feed").withNameSeq("bundleprocess"), new Result(), },
-            {new QueryParams().forType("schedulable").withNameSeq("bundle3").withTagkey("b1b2").withOrder(true),
+            {new QueryParams().forType("feed,process").withNameSeq("bundle3").withTagkey("b1b2").withOrder(true),
                 new Result(), },
         };
     }
@@ -304,7 +304,7 @@ public class SearchApiTest extends BaseTestClass {
      * Contains all required params for search api request.
      */
     private class QueryParams {
-        private String type = "schedulable";
+        private String type = "feed,process";
         private String nameSeq = null;
         private String tagKey = null;
         private String orderBy = null;

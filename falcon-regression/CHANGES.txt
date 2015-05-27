@@ -85,6 +85,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1241 Fix SearchApiTest according to changes in API, tag ClusterSetupTest,
+   PrismProcessScheduleTest#testScheduleDeletedProcessOnBothColos (Paul Isaychuk)
+
    FALCON-1226 Stabilize testActionsPauseResume() (Ruslan Ostafiychuk)
 
    FALCON-1225 remove text line containing "Copyright" from regression 

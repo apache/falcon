@@ -43,6 +43,7 @@ import java.util.List;
 /**
  * Tests for cluster setup page.
  */
+@Test(groups = "search-api")
 public class ClusterSetupTest extends BaseUITestClass{
     private ClusterWizardPage clusterSetup = null;
     private ColoHelper cluster = servers.get(0);

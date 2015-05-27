@@ -174,7 +174,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "distributed"})
     public void testScheduleDeletedProcessOnBothColos() throws Exception {
         //schedule both bundles
         bundles[0].submitAndScheduleProcess();
