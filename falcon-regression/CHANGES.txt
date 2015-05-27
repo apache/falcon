@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1222 Feed Wizard multiple tests (Namit Maheshwari)
+
    FALCON-1229 Tests for instance page on SearchUI (Ruslan Ostafiychuk)
 
    FALCON-1216 Cluster setup wizard multiple tests (Paul Isaychuk via Ruslan Ostafiychuk)

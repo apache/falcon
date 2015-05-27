@@ -28,6 +28,10 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.Select;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.List;
 
@@ -69,6 +73,17 @@ public abstract class AbstractSearchPage extends Page {
         }
 
     }
+
+    // Utility method to get Dropdown Values
+    public List<String> getDropdownValues(Select element){
+        List<WebElement> allOptions = element.getOptions();
+        List<String> values = new ArrayList<>();
+        for (WebElement option:allOptions){
+            values.add(option.getText());
+        }
+        return values;
+    }
+
 
     protected void waitForAngularToFinish() {
         final String javaScript = "return (window.angular != null) && "
