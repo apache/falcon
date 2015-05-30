@@ -446,4 +446,23 @@ public class ClusterWizardPage extends AbstractSearchPage {
         WebElement version = clusterBox.findElement(By.xpath("(//input[@ng-model='_interface._version'])[6]"));
         return endpoint.isEnabled() && version.isEnabled();
     }
+
+    private WebElement getNameUnavailable(){
+        return clusterBox.findElement(By.xpath(
+            "//div[contains(@class, 'nameInputDisplay') and contains(@class, 'custom-danger')]"));
+    }
+
+    public void checkNameUnavailableDisplayed(boolean isDisplayed) {
+        if (isDisplayed){
+            UIAssert.assertDisplayed(getNameUnavailable(), "Name Unavailable not displayed");
+        }else {
+            try{
+                getNameUnavailable();
+                Assert.fail("Name Unavailable found");
+            } catch (Exception ex){
+                LOGGER.info("Name Unavailable not found");
+            }
+        }
+    }
+
 }

@@ -22,16 +22,23 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.FileUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
+import org.apache.falcon.regression.ui.search.ClusterWizardPage;
 import org.apache.falcon.regression.ui.search.LoginPage;
 import org.apache.falcon.regression.ui.search.SearchPage;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 /** UI tests for Search UI Homepage. */
@@ -39,6 +46,11 @@ import java.util.List;
 public class HomePageTest extends BaseUITestClass {
     private static final Logger LOGGER = Logger.getLogger(HomePageTest.class);
     private SearchPage homePage = null;
+    private ColoHelper cluster = servers.get(0);
+    private FileSystem clusterFS = serverFS.get(0);
+    private String baseTestHDFSDir = cleanAndGetTestDir();
+    private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
+    private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
@@ -61,8 +73,8 @@ public class HomePageTest extends BaseUITestClass {
     public void testNavigationToEntitiesTable() throws Exception {
         homePage.checkNoResult();
         bundles[0] = BundleUtil.readELBundle();
-        ColoHelper cluster = servers.get(0);
-        bundles[0] = new Bundle(bundles[0], cluster);
+        ColoHelper coloHelper = servers.get(0);
+        bundles[0] = new Bundle(bundles[0], coloHelper);
         bundles[0].generateUniqueBundle(this);
         String pigTestDir = cleanAndGetTestDir();
         String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
@@ -80,5 +92,111 @@ public class HomePageTest extends BaseUITestClass {
         final List<SearchPage.SearchResult> searchResults = homePage.getSearchResults();
         Assert.assertEquals(searchResults.size(), 0, "Expecting no search results");
     }
+
+    /**
+     * Upload cluster, feed, process entity through upload entity button.
+     * The entity should get created.
+     * @throws Exception
+     */
+    @Test
+    public void testUploadEntity() throws Exception{
+
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
+        Bundle bundle = BundleUtil.readELBundle();
+        bundle.generateUniqueBundle(this);
+        bundle = new Bundle(bundle, cluster);
+        bundle.setInputFeedDataPath(feedInputPath);
+        bundle.setProcessWorkflow(aggregateWorkflowDir);
+
+
+        final String clusterXml = bundle.getClusterElement().toString();
+        homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(clusterXml));
+        AssertUtil.assertSucceeded(prism.getClusterHelper().getEntityDefinition(clusterXml));
+
+        final String feedXml = bundle.getInputFeedFromBundle();
+        homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(feedXml));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().getEntityDefinition(feedXml));
+
+        final String outputFeedXml = bundle.getOutputFeedFromBundle();
+        homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(outputFeedXml));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().getEntityDefinition(outputFeedXml));
+
+        final String processXml = bundle.getProcessObject().toString();
+        homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(processXml));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().getEntityDefinition(processXml));
+
+    }
+
+    /**
+     * Upload bad cluster, feed, process entity through upload entity button.
+     * We should get an error.
+     * @throws Exception
+     */
+    @Test
+    public void testUploadBadEntity() throws Exception{
+
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
+        Bundle bundle = BundleUtil.readELBundle();
+        bundle.generateUniqueBundle(this);
+        bundle = new Bundle(bundle, cluster);
+        bundle.setInputFeedDataPath(feedInputPath);
+        bundle.setProcessWorkflow(aggregateWorkflowDir);
+
+        // Create a text file, with some text
+        File textFile = new File("invalid.txt");
+        PrintWriter writer = new PrintWriter(textFile, "UTF-8");
+        String text = "Some random text";
+        writer.println(text);
+        writer.close();
+        homePage.getPageHeader().uploadXml(textFile.getAbsolutePath());
+        String alertText = homePage.getActiveAlertText();
+        Assert.assertEquals(alertText, "Invalid xml. File not uploaded",
+            "Text file was allowed to be uploaded");
+
+        // Create a xml file with proper name, but invalid text contents
+        File xmlFile = new File("cluster.xml");
+        writer = new PrintWriter(xmlFile, "UTF-8");
+        text = "The first line\nThe second line";
+        writer.println(text);
+        writer.close();
+
+        homePage.getPageHeader().uploadXml(xmlFile.getAbsolutePath());
+        Thread.sleep(1000);
+        alertText = homePage.getActiveAlertText();
+        Assert.assertEquals(alertText, "Invalid xml. File not uploaded",
+            "XML file with invalid text was allowed to be uploaded");
+
+
+    }
+
+    /**
+     * Submit cluster with name e.g. myCluster.
+     * Select "create cluster". Try to populate name field with the name of previously submitted cluster.
+     * Check that "name unavailable" has appeared.
+     * @throws Exception
+     */
+    @Test
+    public void clusterSetupNameAvailability() throws Exception{
+
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
+        Bundle bundle = BundleUtil.readELBundle();
+        bundle.generateUniqueBundle(this);
+        bundle = new Bundle(bundle, cluster);
+
+        // Submit Cluster
+        final String clusterXml = bundle.getClusterElement().toString();
+        homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(clusterXml));
+        AssertUtil.assertSucceeded(prism.getClusterHelper().getEntityDefinition(clusterXml));
+
+        // Get cluster name and try to set it again
+        String clusterName = bundle.getClusterElement().getName();
+        ClusterWizardPage clusterWizardPage = homePage.getPageHeader().doCreateCluster();
+        clusterWizardPage.setName(clusterName);
+
+        // Assert that name unavailable is displayed
+        clusterWizardPage.checkNameUnavailableDisplayed(true);
+    }
+
+
 
 }

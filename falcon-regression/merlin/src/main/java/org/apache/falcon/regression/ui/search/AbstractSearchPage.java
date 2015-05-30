@@ -98,8 +98,8 @@ public abstract class AbstractSearchPage extends Page {
     }
 
     public String getActiveAlertText() {
-        WebElement alertsBlock = driver.findElement(By.className("messages-to-show"));
-        List<WebElement> alerts = alertsBlock.findElements(By.className("ng-animate"));
+        WebElement alertsBlock = driver.findElement(By.className("messages"));
+        List<WebElement> alerts = alertsBlock.findElements(By.className("message"));
         if (!alerts.isEmpty()) {
             WebElement last = alerts.get(alerts.size() - 1);
             if (last.isDisplayed()) {
