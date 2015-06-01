@@ -447,16 +447,16 @@ public class FeedMerlin extends Feed {
         softAssert.assertEquals(newFeed.getAvailabilityFlag(),
             getAvailabilityFlag(),
             "Feed Availability Flag is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(5).getName(),
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(0).getName(),
             getProperties().getProperties().get(0).getName(),
             "Feed Property1 Name is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(5).getValue(),
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(0).getValue(),
             getProperties().getProperties().get(0).getValue(),
             "Feed Property1 Value is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(6).getName(),
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(1).getName(),
             getProperties().getProperties().get(1).getName(),
             "Feed Property2 Name is different");
-        softAssert.assertEquals(newFeed.getProperties().getProperties().get(6).getValue(),
+        softAssert.assertEquals(newFeed.getProperties().getProperties().get(1).getValue(),
             getProperties().getProperties().get(1).getValue(),
             "Feed Property2 Value is different");
 

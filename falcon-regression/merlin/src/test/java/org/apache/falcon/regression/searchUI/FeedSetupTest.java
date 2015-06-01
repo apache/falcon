@@ -556,7 +556,9 @@ public class FeedSetupTest extends BaseUITestClass{
         Assert.assertEquals(jobPriorities, dropdownValues, "Job Priority Unit Values Are Not Equal");
 
         dropdownValues = feedWizardPage.getTimeoutUnitValues();
-        Assert.assertEquals(timeUnits, dropdownValues, "Timeout Unit Values Are Not Equal");
+        ArrayList<String> timeUnitsWithSelect = new ArrayList<String>(timeUnits);
+        timeUnitsWithSelect.add(0, "-Select timeout-");
+        Assert.assertEquals(timeUnitsWithSelect, dropdownValues, "Timeout Unit Values Are Not Equal");
     }
 
 
@@ -592,16 +594,16 @@ public class FeedSetupTest extends BaseUITestClass{
         FeedMerlin feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
 
         // Assert Property values in the XML Preview
-        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(5).getName(),
+        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(0).getName(),
             feed.getProperties().getProperties().get(0).getName(),
             "Unexpected Property1 Name on the XML preview");
-        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(5).getValue(),
+        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(0).getValue(),
             feed.getProperties().getProperties().get(0).getValue(),
             "Unexpected Property1 Value on the XML preview");
-        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(6).getName(),
+        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(1).getName(),
             feed.getProperties().getProperties().get(1).getName(),
             "Unexpected Property2 Name on the XML preview");
-        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(6).getValue(),
+        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(1).getValue(),
             feed.getProperties().getProperties().get(1).getValue(),
             "Unexpected Property2 Value on the XML preview");
 
@@ -618,14 +620,14 @@ public class FeedSetupTest extends BaseUITestClass{
         feedFromXML = feedWizardPage.getFeedMerlinFromFeedXml();
 
         // Assert Property value in the XML Preview
-        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(5).getName(),
+        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(0).getName(),
             feed.getProperties().getProperties().get(0).getName(),
             "Unexpected Property1 Name on the XML preview");
-        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(5).getValue(),
+        Assert.assertEquals(feedFromXML.getProperties().getProperties().get(0).getValue(),
             feed.getProperties().getProperties().get(0).getValue(),
             "Unexpected Property1 Value on the XML preview");
         try{
-            feedFromXML.getProperties().getProperties().get(6);
+            feedFromXML.getProperties().getProperties().get(1);
             Assert.fail("Second Property found in the XML Preview");
         } catch (Exception ex){
             LOGGER.info("Second Property not found in the XML Preview");
