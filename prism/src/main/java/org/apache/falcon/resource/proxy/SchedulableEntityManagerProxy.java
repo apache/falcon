@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource.proxy;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -449,20 +450,26 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list/{type}")
+    @Path("list{type : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    @Monitored(event = "list")
     @Override
     public EntityList getEntityList(@PathParam("type") String type,
                                     @DefaultValue("") @QueryParam("fields") String fields,
-                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
+                                    @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
+                                    @DefaultValue("") @QueryParam("tagkeys") String tagKeywords,
                                     @DefaultValue("") @QueryParam("tags") String tags,
+                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
-                                    @QueryParam("numResults") Integer resultsPerPage,
-                                    @QueryParam("nameseq") String nameseq) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage, nameseq);
+                                    @QueryParam("numResults") Integer resultsPerPage) {
+        if (StringUtils.isNotEmpty(type)) {
+            type = type.substring(1);
+        }
+        return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
+                orderBy, sortOrder, offset, resultsPerPage);
     }
 
     @GET
