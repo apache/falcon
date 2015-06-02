@@ -29,6 +29,9 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1252 The parameter "tagkey" should be "tagkeys" in EntityList and FalconCLI twiki
+    (Ying Zheng via Sowmya Ramesh)
+
     FALCON-1244 numResults query param in listInstances is ignored when start and end params are not specified
     (Balu Vellanki via Sowmya Ramesh)
 

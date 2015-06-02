@@ -15,7 +15,7 @@ Get list of the entities.
       * The entity name needs to contain all the characters in the subsequence in the same order.
       * Example 1: "sample1" will match the entity named "SampleFeed1-2".
       * Example 2: "mhs" will match the entity named "New-My-Hourly-Summary".
-   * tagkey <optional param> Keywords in tags, separated by comma. Not case sensitive.
+   * tagkeys <optional param> Keywords in tags, separated by comma. Not case sensitive.
       * The returned entities will have tags that match all the tag keywords.
    * filterBy <optional param> Filter results by list of field:value pairs. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
       * Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
@@ -28,7 +28,7 @@ Get list of the entities.
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
    * Note:
-      * We have two filtering parameters for entity tags: "tags" and "tagkey". "tags" does the exact match in key=value fashion, while "tagkey" finds all the entities with the given key as a substring in the tags. This "tagkey" filter is introduced for the user who doesn't remember the exact tag but some keywords in the tag. It also helps users to save the time of typing long tags.
+      * We have two filtering parameters for entity tags: "tags" and "tagkeys". "tags" does the exact match in key=value fashion, while "tagkeys" finds all the entities with the given key as a substring in the tags. This "tagkeys" filter is introduced for the user who doesn't remember the exact tag but some keywords in the tag. It also helps users to save the time of typing long tags.
       * The returned entities will match all the filtering criteria.
 
 ---++ Results
@@ -137,7 +137,7 @@ GET http://localhost:15000/api/entities/list/process?filterBy=STATUS:RUNNING,PIP
 
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/list/feed,process?nameseq=samplebill&tagkey=billing,healthcare&numResults=2&offset=1&fields=status,clusters,tags
+GET http://localhost:15000/api/entities/list/feed,process?nameseq=samplebill&tagkeys=billing,healthcare&numResults=2&offset=1&fields=status,clusters,tags
 </verbatim>
 ---+++ Result
 <verbatim>

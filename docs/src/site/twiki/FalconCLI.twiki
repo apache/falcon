@@ -53,7 +53,7 @@ $FALCON_HOME/bin/falcon entity -list
 
 Optional Args : -fields <<field1,field2>>
 -type <<[cluster|feed|process],[cluster|feed|process]>>
--nameseq <<namesubsequence>> -tagkey <<tagkeyword1,tagkeyword2>>
+-nameseq <<namesubsequence>> -tagkeys <<tagkeyword1,tagkeyword2>>
 -filterBy <<field1:value1,field2:value2>> -tags <<tagkey=tagvalue,tagkey=tagvalue>>
 -orderBy <<field>> -sortOrder <<sortOrder>> -offset 0 -numResults 10
 
