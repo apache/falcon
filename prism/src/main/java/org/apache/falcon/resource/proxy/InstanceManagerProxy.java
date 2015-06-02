@@ -45,7 +45,6 @@ import java.util.*;
  */
 @Path("instance")
 public class InstanceManagerProxy extends AbstractInstanceManager {
-    private static final String DEFAULT_NUM_RESULTS = "10";
     private final Map<String, Channel> processInstanceManagerChannels = new HashMap<String, Channel>();
 
     public InstanceManagerProxy() {

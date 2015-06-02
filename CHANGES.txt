@@ -29,6 +29,12 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1244 numResults query param in listInstances is ignored when start and end params are not specified
+    (Balu Vellanki via Sowmya Ramesh)
+
+    FALCON-1121 Backend support for free-text entity search
+    (Ying Zheng via Sowmya Ramesh)
+
     FALCON-1051 Lineage apis broken for falcon setup in distributed mode
     (Pavan Kumar Kolamuri via Ajay Yadava)
     

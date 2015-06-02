@@ -49,6 +49,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final long HOUR_IN_MILLIS = 3600000L;
     protected static final long DAY_IN_MILLIS = 86400000L;
     private static final long MONTH_IN_MILLIS = 2592000000L;
+    protected static final String DEFAULT_NUM_RESULTS = "10";
 
     protected EntityType checkType(String type) {
         if (StringUtils.isEmpty(type)) {
@@ -145,7 +146,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             validateParams(type, entity);
             validateInstanceFilterByClause(filterBy);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr, numResults);
 
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
@@ -494,10 +495,15 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr)
         throws FalconException {
+        return getStartAndEndDate(entityObject, startStr, endStr, Integer.parseInt(DEFAULT_NUM_RESULTS));
+    }
+
+    private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr, int numResults)
+        throws FalconException {
         Pair<Date, Date> clusterStartEndDates = EntityUtil.getEntityStartEndDates(entityObject);
         Frequency frequency = EntityUtil.getFrequency(entityObject);
-        Date endDate = getEndDate(startStr, endStr, clusterStartEndDates.second, frequency);
-        Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency);
+        Date endDate = getEndDate(startStr, endStr, clusterStartEndDates.second, frequency, numResults);
+        Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency, numResults);
 
         if (startDate.after(endDate)) {
             throw new FalconException("Specified End date " + SchemaHelper.getDateFormat().format(endDate)
@@ -507,12 +513,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     private Date getEndDate(String startStr, String endStr, Date clusterEndDate,
-                            Frequency frequency) throws FalconException {
+                            Frequency frequency, final int numResults) throws FalconException {
         Date endDate;
         if (StringUtils.isEmpty(endStr)) {
             if (!StringUtils.isEmpty(startStr)) {
-                // set endDate to startDate + 10 times frequency
-                endDate = EntityUtil.getNextInstanceTime(EntityUtil.parseDateUTC(startStr), frequency, null, 10);
+                // set endDate to startDate + numResults times frequency
+                endDate = EntityUtil.getNextInstanceTime(EntityUtil.parseDateUTC(startStr),
+                        frequency, null, numResults);
             } else {
                 // set endDate to currentTime
                 endDate = new Date();
@@ -526,12 +533,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return endDate;
     }
 
-    private Date getStartDate(String startStr, Date end,
-                              Date clusterStartDate, Frequency frequency) throws FalconException {
+    private Date getStartDate(String startStr, Date end, Date clusterStartDate,
+                              Frequency frequency, final int dateMultiplier) throws FalconException {
         Date start;
-        final int dateMultiplier = 10;
         if (StringUtils.isEmpty(startStr)) {
-            // set startDate to endDate - 10 times frequency
+            // set startDate to endDate - dateMultiplier times frequency
             long startMillis = end.getTime();
 
             switch (frequency.getTimeUnit().getCalendarUnit()){
