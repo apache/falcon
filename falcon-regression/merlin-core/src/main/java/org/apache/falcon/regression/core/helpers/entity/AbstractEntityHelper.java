@@ -460,18 +460,6 @@ public abstract class AbstractEntityHelper {
         return Util.sendRequest(url + colo, "post", newEntity, user);
     }
 
-    public ServiceResponse update(String oldEntity, String newEntity, String updateTime,
-                                  String user)
-        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
-        LOGGER.info("Updating " + getEntityType() + ": \n" + Util.prettyPrintXml(oldEntity));
-        LOGGER.info("To " + getEntityType() + ": \n" + Util.prettyPrintXml(newEntity));
-        String url = this.hostname + URLS.UPDATE.getValue() + "/" + getEntityType() + "/"
-            + Util.readEntityName(oldEntity);
-        String urlPart = colo == null || colo.isEmpty() ? "?" : colo + "&";
-        return Util.sendRequest(url + urlPart + "effective=" + updateTime, "post",
-            newEntity, user);
-    }
-
     public InstancesResult getProcessInstanceKill(String readEntityName, String params)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return getProcessInstanceKill(readEntityName, params, null);

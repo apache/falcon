@@ -29,7 +29,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.FeedInstanceResult;
@@ -162,8 +161,7 @@ public class FeedInstanceListingTest extends BaseTestClass{
         validateResponse(r, 5, 0, 0, 0, 5);
         String inputFeed = bundles[0].getInputFeedFromBundle();
         bundles[0].setInputFeedAvailabilityFlag("_SUCCESS");
-        ServiceResponse serviceResponse = prism.getFeedHelper().update(inputFeed, bundles[0].getInputFeedFromBundle(),
-                TimeUtil.getTimeWrtSystemTime(0), null);
+        ServiceResponse serviceResponse = prism.getFeedHelper().update(inputFeed, bundles[0].getInputFeedFromBundle());
         AssertUtil.assertSucceeded(serviceResponse);
         //Since we have not created availability flag on HDFS, the feed instance status should be partial
         r = prism.getFeedHelper()
@@ -194,8 +192,7 @@ public class FeedInstanceListingTest extends BaseTestClass{
         validateResponse(r, 5, 0, 0, 0, 5);
         String inputFeed = bundles[0].getInputFeedFromBundle();
         bundles[0].setInputFeedDataPath(baseTestDir + "/inputNew" + MINUTE_DATE_PATTERN);
-        ServiceResponse serviceResponse = prism.getFeedHelper().update(inputFeed, bundles[0].getInputFeedFromBundle(),
-                TimeUtil.getTimeWrtSystemTime(0), null);
+        ServiceResponse serviceResponse = prism.getFeedHelper().update(inputFeed, bundles[0].getInputFeedFromBundle());
         AssertUtil.assertSucceeded(serviceResponse);
         //Since we have not created directories for new path, the feed instance status should be missing
         r = prism.getFeedHelper()

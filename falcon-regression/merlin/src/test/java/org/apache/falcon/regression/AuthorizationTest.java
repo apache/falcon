@@ -500,7 +500,6 @@ public class AuthorizationTest extends BaseTestClass {
         newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
-            TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
             "Feed submitted by first user should not be updated by second user");
@@ -520,7 +519,6 @@ public class AuthorizationTest extends BaseTestClass {
         newFeed.setFeedPathValue(baseTestDir + "/randomPath" + MINUTE_DATE_PATTERN);
         //try to update feed by U2
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
-            TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
             "Feed scheduled by first user should not be updated by second user");
@@ -544,7 +542,6 @@ public class AuthorizationTest extends BaseTestClass {
         //try to update process by U2
         final ServiceResponse serviceResponse = prism.getProcessHelper().update(bundles[0]
                 .getProcessData(), bundles[0].getProcessData(),
-            TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
             "Process submitted by first user should not be updated by second user");
@@ -564,7 +561,6 @@ public class AuthorizationTest extends BaseTestClass {
         //try to update process by U2
         final ServiceResponse serviceResponse = prism.getProcessHelper().update(bundles[0]
                 .getProcessData(), bundles[0].getProcessData(),
-            TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
             "Process scheduled by first user should not be updated by second user");
@@ -604,7 +600,7 @@ public class AuthorizationTest extends BaseTestClass {
 
         //update feed by U1
         serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
-            TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.CURRENT_USER_NAME);
+            MerlinConstants.CURRENT_USER_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should be created by U1
@@ -654,7 +650,7 @@ public class AuthorizationTest extends BaseTestClass {
 
         //update feed by U2
         serviceResponse = prism.getFeedHelper().update(feed.toString(), newFeed.toString(),
-            TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
+            MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should be created by U2
@@ -742,7 +738,7 @@ public class AuthorizationTest extends BaseTestClass {
         ProcessMerlin processObj = bundles[0].getProcessObject();
         processObj.setProperty("randomProp", "randomVal");
         serviceResponse = prism.getProcessHelper().update(bundles[0].getProcessData(), processObj.toString(),
-                TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
+            MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
 
         //new feed bundle should not be created

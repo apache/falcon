@@ -87,12 +87,6 @@ public class ClusterEntityHelper extends AbstractEntityHelper {
     }
 
     @Override
-    public ServiceResponse update(String oldEntity, String newEntity, String updateTime,
-                                  String user) throws IOException {
-        throw new UnsupportedOperationException(INVALID_ERR);
-    }
-
-    @Override
     public InstancesResult getProcessInstanceKill(String readEntityName,
                                                          String string, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);

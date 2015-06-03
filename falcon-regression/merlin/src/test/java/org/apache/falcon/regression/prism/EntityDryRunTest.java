@@ -102,7 +102,7 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].submitAndScheduleProcess();
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         ServiceResponse response = prism.getProcessHelper().update(bundles[0].getProcessData(),
-            bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
+            bundles[0].getProcessData());
         validate(response,
             "The new entity (process) " + bundles[0].getProcessName() + " can't be scheduled");
         Assert.assertEquals(

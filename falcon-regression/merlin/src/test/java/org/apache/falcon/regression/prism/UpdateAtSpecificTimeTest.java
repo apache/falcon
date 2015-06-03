@@ -104,40 +104,6 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     }
 
     @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
-    public void invalidCharProcess()
-        throws JAXBException, IOException, URISyntaxException,
-        AuthenticationException, OozieClientException, InterruptedException {
-        processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(0),
-            TimeUtil.getTimeWrtSystemTime(20));
-        processBundle.submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, processBundle.getProcessData(), 0);
-        String oldProcess =
-            processBundle.getProcessData();
-        processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(5),
-            TimeUtil.getTimeWrtSystemTime(100));
-        ServiceResponse r = prism.getProcessHelper().update(oldProcess,
-            processBundle.getProcessData(), "abc", null);
-        Assert.assertTrue(r.getMessage()
-            .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
-    }
-
-    @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
-    public void invalidCharFeed()
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-        OozieClientException, InterruptedException {
-
-        String feed = submitAndScheduleFeed(processBundle);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, feed, 0);
-
-        //update frequency
-        FeedMerlin updatedFeed = new FeedMerlin(feed);
-        updatedFeed.setFrequency(new Frequency("21", Frequency.TimeUnit.minutes));
-        ServiceResponse r = prism.getFeedHelper().update(feed, updatedFeed.toString(), "abc", null);
-        Assert.assertTrue(r.getMessage()
-            .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
-    }
-
-    @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void updateTimeInPastProcess()
         throws JAXBException, IOException, URISyntaxException,
         OozieClientException, AuthenticationException, InterruptedException {
@@ -157,8 +123,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
         // update process by adding property
         processBundle.setProcessProperty("someProp", "someValue");
-        ServiceResponse r = prism.getProcessHelper().update(oldProcess,
-            processBundle.getProcessData(), TimeUtil.getTimeWrtSystemTime(-10000), null);
+        ServiceResponse r = prism.getProcessHelper().update(oldProcess, processBundle.getProcessData());
         AssertUtil.assertSucceeded(r);
 
         //check new coord created with current time
@@ -188,8 +153,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         //update frequency
         FeedMerlin updatedFeed = new FeedMerlin(feed);
         updatedFeed.setFrequency(new Frequency("7", Frequency.TimeUnit.minutes));
-        r = prism.getFeedHelper().update(feed, updatedFeed.toString(),
-            TimeUtil.getTimeWrtSystemTime(-10000), null);
+        r = prism.getFeedHelper().update(feed, updatedFeed.toString());
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1OC, feed, 1);
 
@@ -250,8 +214,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
             //send update request
             String updateTime = TimeUtil.getTimeWrtSystemTime(5);
-            ServiceResponse r = prism.getProcessHelper()
-                .update(oldProcess, processBundle.getProcessData(), updateTime);
+            ServiceResponse r = prism.getProcessHelper().update(oldProcess, processBundle.getProcessData());
             AssertUtil.assertPartial(r);
             InstanceUtil.waitTillInstancesAreCreated(cluster1OC, processBundle.getProcessData(), 1);
 
@@ -274,8 +237,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 Util.readEntityName(oldProcess), EntityType.PROCESS);
 
             //send second update request
-            r = prism.getProcessHelper().update(oldProcess, processBundle.getProcessData(),
-                updateTime, null);
+            r = prism.getProcessHelper().update(oldProcess, processBundle.getProcessData());
             AssertUtil.assertSucceeded(r);
             String defCluster2 = Util.getEntityDefinition(cluster2,
                 processBundle.getProcessData(), true);
@@ -331,8 +293,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 oldBundleCluster1, EntityType.FEED);
 
             //send update command with +5 mins in future
-            String updateTime = TimeUtil.getTimeWrtSystemTime(5);
-            r = prism.getFeedHelper().update(feed, updatedFeed.toString(), updateTime, null);
+            r = prism.getFeedHelper().update(feed, updatedFeed.toString());
             AssertUtil.assertPartial(r);
 
             //verify new bundle creation on cluster1 and new definition on cluster3
@@ -348,7 +309,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 Util.readEntityName(feed), EntityType.FEED);
 
             //send update again
-            r = prism.getFeedHelper().update(feed, updatedFeed.toString(), updateTime, null);
+            r = prism.getFeedHelper().update(feed, updatedFeed.toString());
             AssertUtil.assertSucceeded(r);
 
             //verify new bundle creation on cluster2 and no new bundle on cluster1
@@ -396,8 +357,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         LOGGER.info("Original Feed : " + Util.prettyPrintXml(oldProcess));
         LOGGER.info("Updated Feed :" + Util.prettyPrintXml(processBundle.getProcessData()));
         LOGGER.info("Update Time : " + updateTime);
-        ServiceResponse r = prism.getProcessHelper().update(oldProcess,
-            processBundle.getProcessData(), updateTime, null);
+        ServiceResponse r = prism.getProcessHelper().update(oldProcess, processBundle.getProcessData());
         AssertUtil.assertSucceeded(r);
 
         //verify new bundle creation with instances matching
@@ -442,7 +402,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         LOGGER.info("Original Feed : " + Util.prettyPrintXml(feed));
         LOGGER.info("Updated Feed :" + Util.prettyPrintXml(updatedFeed.toString()));
         LOGGER.info("Update Time : " + updateTime);
-        r = prism.getFeedHelper().update(feed, updatedFeed.toString(), updateTime, null);
+        r = prism.getFeedHelper().update(feed, updatedFeed.toString());
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1OC, feed, 1);
 
@@ -469,9 +429,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         List<String> oldNominalTimes = OozieUtil.getActionsNominalTime(cluster1OC, oldBundleID,
             EntityType.PROCESS);
         processBundle.setProcessValidity(TimeUtil.addMinsToTime(startTime, -4), endTime);
-        String updateTime = TimeUtil.getTimeWrtSystemTime(2);
-        ServiceResponse r = prism.getProcessHelper().update(oldProcess,
-            processBundle.getProcessData(), updateTime, null);
+        ServiceResponse r = prism.getProcessHelper().update(oldProcess, processBundle.getProcessData());
         AssertUtil.assertSucceeded(r);
         TimeUtil.sleepSeconds(10);
 
@@ -523,7 +481,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         String updateTime = TimeUtil.addMinsToTime(endTimeCluster1, 3);
         processBundle.setProcessProperty("someProp", "someVal");
         ServiceResponse r = prism.getProcessHelper().update(processBundle.getProcessData(),
-            processBundle.getProcessData(), updateTime, null);
+            processBundle.getProcessData());
         AssertUtil.assertSucceeded(r);
 
         //check for new bundle to be created

@@ -337,6 +337,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1246 Remove wrong parameter from update signature, delete related tests (Paul Isaychuk)
+
    FALCON-1221 RescheduleProcessInFinalStatesTest.checkNotFoundDefinition() needs to be case flexible
    (Raghav Kumar Gautam)
 
