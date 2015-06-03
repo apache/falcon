@@ -387,8 +387,11 @@ public final class FeedHelper {
             matchedVars.add(pathVar);
         }
 
+        String remTemplatePath = templatePath.substring(lastEnd);
         //Match the remaining constant at the end
-        if (!templatePath.substring(lastEnd).equals(path)) {
+        //Handling case where feed instancePath has partitions
+        if (StringUtils.isNotEmpty(path) && StringUtils.isNotEmpty(remTemplatePath)
+                && !path.contains(remTemplatePath)) {
             return null;
         }
 

@@ -35,10 +35,13 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Instance Metadata relationship mapping helper.
@@ -304,9 +307,12 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             instance = instance.replaceFirst(element, "");
         }
 
+        Date instanceTime = FeedHelper.getDate(feedPathTemplate,
+                new Path(feedInstancePath), TimeZone.getTimeZone("UTC"));
+
         return StringUtils.isEmpty(instance)
                 ? feed.getName() + "/" + nominalTime
                 : feed.getName() + "/"
-                        + SchemaHelper.formatDateUTCToISO8601(instance, FEED_INSTANCE_FORMAT);
+                        + SchemaHelper.formatDateUTC(instanceTime);
     }
 }

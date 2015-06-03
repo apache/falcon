@@ -70,6 +70,8 @@ public class FeedHelperTest {
             {"/data/${YEAR}/${MONTH}/${DAY}/data", "/data/2015/01/01/data", "2015-01-01T00:00Z"},
             {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}", "/data/2015-01-01/00/30", null},
             {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/data", "/data/2015-01-01/00/30", null},
+            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/data", "/data/2015/05/25/00/data/{p1}/p2", "2015-05-25T00:00Z"},
+            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/data", "/data/2015/05/25/00/00/{p1}/p2", null},
         };
     }
 

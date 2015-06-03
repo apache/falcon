@@ -31,6 +31,9 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1104 Exception while adding process instance to graphdb when feed has partition expression
+    (Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1252 The parameter "tagkey" should be "tagkeys" in EntityList and FalconCLI twiki
     (Ying Zheng via Sowmya Ramesh)
 
