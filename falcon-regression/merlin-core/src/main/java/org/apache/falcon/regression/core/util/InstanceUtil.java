@@ -538,28 +538,34 @@ public final class InstanceUtil {
             Assert.fail("Could not retrieve bundles");
         }
         List<String> bundleIds = OozieUtil.getBundleIds(bundleJobs);
-        String bundleId = OozieUtil.getMaxId(bundleIds);
-        LOGGER.info(String.format("Using bundle %s", bundleId));
-        final String coordId;
-        final Status bundleStatus = client.getBundleJobInfo(bundleId).getStatus();
-        Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(bundleStatus),
-                String.format("Bundle job %s is should be prep/running but is %s", bundleId, bundleStatus));
-        OozieUtil.waitForCoordinatorJobCreation(client, bundleId);
-        List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
-        List<String> cIds = new ArrayList<>();
-        if (entityType == EntityType.PROCESS) {
-            for (CoordinatorJob coord : coords) {
-                cIds.add(coord.getId());
-            }
-            coordId = OozieUtil.getMinId(cIds);
-        } else {
-            for (CoordinatorJob coord : coords) {
-                if (coord.getAppName().contains("FEED_REPLICATION")) {
+        Collections.sort(bundleIds, Collections.reverseOrder());
+        String coordId = null;
+        for (String bundleId : bundleIds) {
+            LOGGER.info(String.format("Using bundle %s", bundleId));
+            final Status status = client.getBundleJobInfo(bundleId).getStatus();
+            Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(status),
+                String.format("Bundle job %s is should be prep/running but is %s", bundleId, status));
+            OozieUtil.waitForCoordinatorJobCreation(client, bundleId);
+            List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
+            List<String> cIds = new ArrayList<>();
+            if (entityType == EntityType.PROCESS) {
+                for (CoordinatorJob coord : coords) {
                     cIds.add(coord.getId());
                 }
+                coordId = OozieUtil.getMinId(cIds);
+            } else {
+                for (CoordinatorJob coord : coords) {
+                    if (coord.getAppName().contains("FEED_REPLICATION")) {
+                        cIds.add(coord.getId());
+                    }
+                }
+                if (!cIds.isEmpty()) {
+                    coordId = cIds.get(0);
+                    break;
+                }
             }
-            coordId = cIds.get(0);
         }
+        Assert.assertNotNull(coordId, "Coordinator id not found");
         LOGGER.info(String.format("Using coordinator id: %s", coordId));
         int maxTries = 50;
         int totalSleepTime = totalMinutesToWait * 60;

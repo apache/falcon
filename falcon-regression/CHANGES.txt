@@ -87,6 +87,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1253 Fortify ExternalFSTest (Ruslan Ostafiychuk)
+
    FALCON-1243 Feed test update as per new UI changes (Namit Maheshwari)
 
    FALCON-1241 Fix SearchApiTest according to changes in API, tag ClusterSetupTest,
