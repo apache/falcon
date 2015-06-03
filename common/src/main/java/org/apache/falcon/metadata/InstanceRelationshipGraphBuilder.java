@@ -128,9 +128,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex entityVertex = findVertex(entityName, entityType);
         LOG.info("Vertex exists? name={}, type={}, v={}", entityName, entityType, entityVertex);
         if (entityVertex == null) {
-            // todo - throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
             LOG.error("Illegal State: {} vertex must exist for {}", entityType, entityName);
-            return;
+            throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
         }
 
         addEdge(instanceVertex, entityVertex, edgeLabel.getName(), timestamp);

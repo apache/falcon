@@ -21,6 +21,8 @@ package org.apache.falcon.metadata;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.ProcessHelper;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -50,6 +52,23 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         super(graph, preserveHistory);
     }
 
+    public void addEntity(Entity entity) {
+        EntityType entityType = entity.getEntityType();
+        switch (entityType) {
+        case CLUSTER:
+            addClusterEntity((Cluster) entity);
+            break;
+        case PROCESS:
+            addProcessEntity((Process) entity);
+            break;
+        case FEED:
+            addFeedEntity((Feed) entity);
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid EntityType " + entityType);
+        }
+    }
+
     public void addClusterEntity(Cluster clusterEntity) {
         LOG.info("Adding cluster entity: {}", clusterEntity.getName());
         Vertex clusterVertex = addVertex(clusterEntity.getName(), RelationshipType.CLUSTER_ENTITY);
@@ -73,13 +92,31 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
     }
 
+    public void updateEntity(Entity oldEntity, Entity newEntity) {
+        EntityType entityType = oldEntity.getEntityType();
+        switch (entityType) {
+        case CLUSTER:
+            // a cluster cannot be updated
+            break;
+        case PROCESS:
+            updateProcessEntity((Process) oldEntity, (Process) newEntity);
+            break;
+        case FEED:
+            updateFeedEntity((Feed) oldEntity, (Feed) newEntity);
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid EntityType " + entityType);
+        }
+    }
+
+
+
     public void updateFeedEntity(Feed oldFeed, Feed newFeed) {
         LOG.info("Updating feed entity: {}", newFeed.getName());
         Vertex feedEntityVertex = findVertex(oldFeed.getName(), RelationshipType.FEED_ENTITY);
         if (feedEntityVertex == null) {
-            // todo - throw new IllegalStateException(oldFeed.getName() + " entity vertex must exist.");
             LOG.error("Illegal State: Feed entity vertex must exist for {}", oldFeed.getName());
-            return;
+            throw new IllegalStateException(oldFeed.getName() + " entity vertex must exist.");
         }
 
         updateDataClassification(oldFeed.getTags(), newFeed.getTags(), feedEntityVertex);
@@ -110,9 +147,8 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LOG.info("Updating process entity: {}", newProcess.getName());
         Vertex processEntityVertex = findVertex(oldProcess.getName(), RelationshipType.PROCESS_ENTITY);
         if (processEntityVertex == null) {
-            // todo - throw new IllegalStateException(oldProcess.getName() + " entity vertex must exist");
             LOG.error("Illegal State: Process entity vertex must exist for {}", oldProcess.getName());
-            return;
+            throw new IllegalStateException(oldProcess.getName() + " entity vertex must exist");
         }
 
         updateWorkflowProperties(oldProcess.getWorkflow(), newProcess.getWorkflow(),
@@ -133,9 +169,8 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addRelationToCluster(Vertex fromVertex, String clusterName, RelationshipLabel edgeLabel) {
         Vertex clusterVertex = findVertex(clusterName, RelationshipType.CLUSTER_ENTITY);
         if (clusterVertex == null) { // cluster must exist before adding other entities
-            // todo - throw new IllegalStateException("Cluster entity vertex must exist: " + clusterName);
             LOG.error("Illegal State: Cluster entity vertex must exist for {}", clusterName);
-            return;
+            throw new IllegalStateException("Cluster entity vertex must exist: " + clusterName);
         }
 
         addEdge(fromVertex, clusterVertex, edgeLabel.getName());
@@ -164,9 +199,8 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addProcessFeedEdge(Vertex processVertex, String feedName, RelationshipLabel edgeLabel) {
         Vertex feedVertex = findVertex(feedName, RelationshipType.FEED_ENTITY);
         if (feedVertex == null) {
-            // todo - throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
             LOG.error("Illegal State: Feed entity vertex must exist for {}", feedName);
-            return;
+            throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
         }
 
         addProcessFeedEdge(processVertex, feedVertex, edgeLabel);
@@ -405,9 +439,8 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void removeProcessFeedEdge(Vertex processVertex, String feedName, RelationshipLabel edgeLabel) {
         Vertex feedVertex = findVertex(feedName, RelationshipType.FEED_ENTITY);
         if (feedVertex == null) {
-            // todo - throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
             LOG.error("Illegal State: Feed entity vertex must exist for {}", feedName);
-            return;
+            throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
         }
 
         if (edgeLabel == RelationshipLabel.FEED_PROCESS_EDGE) {

@@ -25,15 +25,14 @@ import com.tinkerpop.blueprints.GraphFactory;
 import com.tinkerpop.blueprints.KeyIndexableGraph;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.TransactionRetryHelper;
+import com.tinkerpop.blueprints.util.TransactionWork;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.service.Services;
@@ -73,6 +72,9 @@ public class MetadataMappingService
     private EntityRelationshipGraphBuilder entityGraphBuilder;
     private InstanceRelationshipGraphBuilder instanceGraphBuilder;
 
+    private int transactionRetries;
+    private long transactionRetryDelayInMillis;
+
     @Override
     public String getName() {
         return SERVICE_NAME;
@@ -99,6 +101,14 @@ public class MetadataMappingService
         ConfigurationStore.get().registerListener(this);
         Services.get().<WorkflowJobEndNotificationService>getService(
                 WorkflowJobEndNotificationService.SERVICE_NAME).registerListener(this);
+        try {
+            transactionRetries = Integer.parseInt(StartupProperties.get().getProperty(
+                    "falcon.graph.transaction.retry.count", "3"));
+            transactionRetryDelayInMillis = Long.parseLong(StartupProperties.get().getProperty(
+                    "falcon.graph.transaction.retry.delay", "5"));
+        } catch (NumberFormatException e) {
+            throw new FalconException("Invalid values for graph transaction retry delay/count " + e);
+        }
     }
 
     protected Graph initializeGraphDB() {
@@ -194,27 +204,23 @@ public class MetadataMappingService
     }
 
     @Override
-    public void onAdd(Entity entity) throws FalconException {
+    public void onAdd(final Entity entity) throws FalconException {
         EntityType entityType = entity.getEntityType();
         LOG.info("Adding lineage for entity: {}, type: {}", entity.getName(), entityType);
+        try {
+            new TransactionRetryHelper.Builder<Void>(getTransactionalGraph())
+                    .perform(new TransactionWork<Void>() {
+                        @Override
+                        public Void execute(TransactionalGraph transactionalGraph) throws Exception {
+                            entityGraphBuilder.addEntity(entity);
+                            transactionalGraph.commit();
+                            return null;
+                        }
+                    }).build().exponentialBackoff(transactionRetries, transactionRetryDelayInMillis);
 
-        switch (entityType) {
-        case CLUSTER:
-            entityGraphBuilder.addClusterEntity((Cluster) entity);
-            getTransactionalGraph().commit();
-            break;
-
-        case FEED:
-            entityGraphBuilder.addFeedEntity((Feed) entity);
-            getTransactionalGraph().commit();
-            break;
-
-        case PROCESS:
-            entityGraphBuilder.addProcessEntity((Process) entity);
-            getTransactionalGraph().commit();
-            break;
-
-        default:
+        } catch (Exception e) {
+            getTransactionalGraph().rollback();
+            throw new FalconException(e);
         }
     }
 
@@ -225,26 +231,23 @@ public class MetadataMappingService
     }
 
     @Override
-    public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
+    public void onChange(final Entity oldEntity, final Entity newEntity) throws FalconException {
         EntityType entityType = newEntity.getEntityType();
         LOG.info("Updating lineage for entity: {}, type: {}", newEntity.getName(), entityType);
+        try {
+            new TransactionRetryHelper.Builder<Void>(getTransactionalGraph())
+                    .perform(new TransactionWork<Void>() {
+                        @Override
+                        public Void execute(TransactionalGraph transactionalGraph) throws Exception {
+                            entityGraphBuilder.updateEntity(oldEntity, newEntity);
+                            transactionalGraph.commit();
+                            return null;
+                        }
+                    }).build().exponentialBackoff(transactionRetries, transactionRetryDelayInMillis);
 
-        switch (entityType) {
-        case CLUSTER:
-            // a cluster cannot be updated
-            break;
-
-        case FEED:
-            entityGraphBuilder.updateFeedEntity((Feed) oldEntity, (Feed) newEntity);
-            getTransactionalGraph().commit();
-            break;
-
-        case PROCESS:
-            entityGraphBuilder.updateProcessEntity((Process) oldEntity, (Process) newEntity);
-            getTransactionalGraph().commit();
-            break;
-
-        default:
+        } catch (Exception e) {
+            getTransactionalGraph().rollback();
+            throw new FalconException(e);
         }
     }
 
@@ -254,27 +257,38 @@ public class MetadataMappingService
     }
 
     @Override
-    public void onSuccess(WorkflowExecutionContext context) throws FalconException {
-        WorkflowExecutionContext.EntityOperations entityOperation = context.getOperation();
-
+    public void onSuccess(final WorkflowExecutionContext context) throws FalconException {
         LOG.info("Adding lineage for context {}", context);
+        try {
+            new TransactionRetryHelper.Builder<Void>(getTransactionalGraph())
+                    .perform(new TransactionWork<Void>() {
+                        @Override
+                        public Void execute(TransactionalGraph transactionalGraph) throws Exception {
+                            onSuccessfulExecution(context);
+                            transactionalGraph.commit();
+                            return null;
+                        }
+                    }).build().exponentialBackoff(transactionRetries, transactionRetryDelayInMillis);
+        } catch (Exception e) {
+            getTransactionalGraph().rollback();
+            throw new FalconException(e);
+        }
+    }
+
+    private void onSuccessfulExecution(final WorkflowExecutionContext context) throws FalconException {
+        WorkflowExecutionContext.EntityOperations entityOperation = context.getOperation();
         switch (entityOperation) {
         case GENERATE:
             onProcessInstanceExecuted(context);
-            getTransactionalGraph().commit();
             break;
-
         case REPLICATE:
             onFeedInstanceReplicated(context);
-            getTransactionalGraph().commit();
             break;
-
         case DELETE:
             onFeedInstanceEvicted(context);
-            getTransactionalGraph().commit();
             break;
-
         default:
+            throw new IllegalArgumentException("Invalid EntityOperation" + entityOperation);
         }
     }
 
@@ -282,6 +296,8 @@ public class MetadataMappingService
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
         // do nothing since lineage is only recorded for successful workflow
     }
+
+
 
     private void onProcessInstanceExecuted(WorkflowExecutionContext context) throws FalconException {
         Vertex processInstance = instanceGraphBuilder.addProcessInstance(context);

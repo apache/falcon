@@ -23,6 +23,7 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -205,7 +206,7 @@ public class MetadataMappingServiceTest {
     public void testOnAddProcessEntity() throws Exception {
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
                 "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
-                WORKFLOW_VERSION);
+                WORKFLOW_VERSION, inputFeeds, outputFeeds);
 
         verifyEntityWasAddedToGraph(processEntity.getName(), RelationshipType.PROCESS_ENTITY);
         verifyProcessEntityEdges();
@@ -303,8 +304,7 @@ public class MetadataMappingServiceTest {
     public void testLineageForReplicationForNonGeneratedInstances() throws Exception {
         cleanUp();
         service.init();
-
-        addClusterAndFeedForReplication();
+        addClusterAndFeedForReplication(inputFeeds);
         // Get the vertices before running replication WF
         long beforeVerticesCount = getVerticesCount(service.getGraph());
         long beforeEdgesCount = getEdgesCount(service.getGraph());
@@ -425,6 +425,31 @@ public class MetadataMappingServiceTest {
         verifyUpdatedEdges(newFeed);
         Assert.assertEquals(getVerticesCount(service.getGraph()), 22); //+2 = 2 new tags
         Assert.assertEquals(getEdgesCount(service.getGraph()), 35); // +2 = 1 new cluster, 1 new tag
+    }
+
+    @Test
+    public void testLineageForTransactionFailure() throws Exception {
+        clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
+                "classification=production");
+        verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY);
+        verifyClusterEntityEdges();
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 3); // +3 = cluster, colo, tag
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 2); // +2 = cluster to colo and tag
+
+        Feed feed = EntityBuilderTestUtil.buildFeed("feed-name", new Cluster[]{clusterEntity}, null, null);
+        inputFeeds.add(feed);
+        outputFeeds.add(feed);
+
+        try {
+            processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
+                    "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
+                    WORKFLOW_VERSION, inputFeeds, outputFeeds);
+            Assert.fail();
+        } catch (FalconException e) {
+            Assert.assertEquals(getVerticesCount(service.getGraph()), 3);
+            Assert.assertEquals(getEdgesCount(service.getGraph()), 2);
+        }
+
     }
 
     private void verifyUpdatedEdges(Feed newFeed) {
@@ -556,24 +581,26 @@ public class MetadataMappingServiceTest {
         return feed;
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public Process addProcessEntity(String processName, Cluster cluster,
                                     String tags, String pipelineTags, String workflowName,
-                                    String version) throws Exception {
+                                    String version, List<Feed> inFeeds, List<Feed> outFeeds) throws Exception {
         Process process = EntityBuilderTestUtil.buildProcess(processName, cluster,
                 tags, pipelineTags);
         EntityBuilderTestUtil.addProcessWorkflow(process, workflowName, version);
 
-        for (Feed inputFeed : inputFeeds) {
+        for (Feed inputFeed : inFeeds) {
             EntityBuilderTestUtil.addInput(process, inputFeed);
         }
 
-        for (Feed outputFeed : outputFeeds) {
+        for (Feed outputFeed : outFeeds) {
             EntityBuilderTestUtil.addOutput(process, outputFeed);
         }
 
         configStore.publish(EntityType.PROCESS, process);
         return process;
     }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private static void addStorage(Feed feed, Storage.TYPE storageType, String uriTemplate) {
         if (storageType == Storage.TYPE.FILESYSTEM) {
@@ -926,39 +953,44 @@ public class MetadataMappingServiceTest {
         Feed impressionsFeed = addFeedEntity("impression-feed", cluster,
                 "classified-as=Secure", "analytics", Storage.TYPE.FILESYSTEM,
                 "/falcon/impression-feed/${YEAR}/${MONTH}/${DAY}");
-        inputFeeds.add(impressionsFeed);
+        List<Feed> inFeeds = new ArrayList<>();
+        List<Feed> outFeeds = new ArrayList<>();
+        inFeeds.add(impressionsFeed);
         Feed clicksFeed = addFeedEntity("clicks-feed", cluster,
                 "classified-as=Secure,classified-as=Financial", "analytics", Storage.TYPE.FILESYSTEM,
                 "/falcon/clicks-feed/${YEAR}-${MONTH}-${DAY}");
-        inputFeeds.add(clicksFeed);
+        inFeeds.add(clicksFeed);
         Feed join1Feed = addFeedEntity("imp-click-join1", cluster,
                 "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
-        outputFeeds.add(join1Feed);
+        outFeeds.add(join1Feed);
         Feed join2Feed = addFeedEntity("imp-click-join2", cluster,
                 "classified-as=Secure,classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
-        outputFeeds.add(join2Feed);
+        outFeeds.add(join2Feed);
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
                 "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
-                WORKFLOW_VERSION);
+                WORKFLOW_VERSION, inFeeds, outFeeds);
     }
 
     private void setupForLineageReplication() throws Exception {
         cleanUp();
         service.init();
 
-        addClusterAndFeedForReplication();
+        List<Feed> inFeeds = new ArrayList<>();
+        List<Feed> outFeeds = new ArrayList<>();
+
+        addClusterAndFeedForReplication(inFeeds);
 
         // Add output feed
         Feed join1Feed = addFeedEntity("imp-click-join1", clusterEntity,
                 "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
-        outputFeeds.add(join1Feed);
+        outFeeds.add(join1Feed);
 
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
                 "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
-                WORKFLOW_VERSION);
+                WORKFLOW_VERSION, inFeeds, outFeeds);
 
         // GENERATE WF should have run before this to create all instance related vertices
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
@@ -969,7 +1001,7 @@ public class MetadataMappingServiceTest {
         service.onSuccess(context);
     }
 
-    private void addClusterAndFeedForReplication() throws Exception {
+    private void addClusterAndFeedForReplication(List<Feed> inFeeds) throws Exception {
         // Add cluster
         clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
                 "classification=production");
@@ -1000,7 +1032,7 @@ public class MetadataMappingServiceTest {
         } finally {
             configStore.cleanupUpdateInit();
         }
-        inputFeeds.add(rawFeed);
+        inFeeds.add(rawFeed);
     }
 
     private void setupForLineageEviction() throws Exception {
@@ -1021,27 +1053,28 @@ public class MetadataMappingServiceTest {
         // Add cluster
         clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
                 "classification=production");
-
+        List<Feed> inFeeds = new ArrayList<>();
+        List<Feed> outFeeds = new ArrayList<>();
         // Add input and output feeds
         Feed impressionsFeed = addFeedEntity("impression-feed", clusterEntity,
                 "classified-as=Secure", "analytics", Storage.TYPE.FILESYSTEM,
                 "/falcon/impression-feed");
-        inputFeeds.add(impressionsFeed);
+        inFeeds.add(impressionsFeed);
         Feed clicksFeed = addFeedEntity("clicks-feed", clusterEntity,
                 "classified-as=Secure,classified-as=Financial", "analytics", Storage.TYPE.FILESYSTEM,
                 "/falcon/clicks-feed");
-        inputFeeds.add(clicksFeed);
+        inFeeds.add(clicksFeed);
         Feed join1Feed = addFeedEntity("imp-click-join1", clusterEntity,
                 "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join1");
-        outputFeeds.add(join1Feed);
+        outFeeds.add(join1Feed);
         Feed join2Feed = addFeedEntity("imp-click-join2", clusterEntity,
                 "classified-as=Secure,classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join2");
-        outputFeeds.add(join2Feed);
+        outFeeds.add(join2Feed);
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
                 "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
-                WORKFLOW_VERSION);
+                WORKFLOW_VERSION, inFeeds, outFeeds);
 
     }
 
