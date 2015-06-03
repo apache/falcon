@@ -61,13 +61,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.tinkerpop.gremlin</groupId>
-            <artifactId>gremlin-java</artifactId>
-        </dependency>
-
-
-
-        <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-test-util</artifactId>
             <scope>test</scope>

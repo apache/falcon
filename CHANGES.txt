@@ -6,6 +6,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1212 Remove dependency on Gremlin (Ajay Yadava via Suhas Vasu)
+
     FALCON-1211 Source tarball are not generated in mvn assembly when profile is distributed
     (Shaik Idris Ali)
 
