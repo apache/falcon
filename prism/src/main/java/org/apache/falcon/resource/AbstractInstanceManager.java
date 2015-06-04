@@ -19,16 +19,24 @@
 package org.apache.falcon.resource;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.*;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.LifeCycle;
+import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.resource.InstancesResult.Instance;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +45,17 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * A base class for managing Entity's Instance operations.
@@ -158,6 +176,63 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             throw FalconWebException
                     .newInstanceException(e, Response.Status.BAD_REQUEST);
         }
+    }
+
+
+    public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName,
+                                                  String instanceTimeString, String colo) {
+        checkColo(colo);
+        EntityType type = checkType(entityType);
+        Set<SchedulableEntityInstance> result = new HashSet<>();
+
+        try {
+            Date instanceTime = EntityUtil.parseDateUTC(instanceTimeString);
+            for (String clusterName : DeploymentUtil.getCurrentClusters()) {
+                Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+                switch (type) {
+
+                case PROCESS:
+                    Process process = EntityUtil.getEntity(EntityType.PROCESS, entityName);
+                    org.apache.falcon.entity.v0.process.Cluster pCluster = ProcessHelper.getCluster(process,
+                            clusterName);
+                    if (pCluster != null) {
+                        Set<SchedulableEntityInstance> inputFeeds = ProcessHelper.getInputFeedInstances(process,
+                                instanceTime, cluster, true);
+                        Set<SchedulableEntityInstance> outputFeeds = ProcessHelper.getOutputFeedInstances(process,
+                                instanceTime, cluster);
+                        result.addAll(inputFeeds);
+                        result.addAll(outputFeeds);
+                    }
+                    break;
+
+                case FEED:
+                    Feed feed = EntityUtil.getEntity(EntityType.FEED, entityName);
+                    org.apache.falcon.entity.v0.feed.Cluster fCluster = FeedHelper.getCluster(feed, clusterName);
+                    if (fCluster != null) {
+                        Set<SchedulableEntityInstance> consumers = FeedHelper.getConsumerInstances(feed, instanceTime,
+                                cluster);
+                        SchedulableEntityInstance producer = FeedHelper.getProducerInstance(feed, instanceTime,
+                                cluster);
+                        result.addAll(consumers);
+                        if (producer != null) {
+                            result.add(producer);
+                        }
+                    }
+                    break;
+
+                default:
+                    throw FalconWebException.newInstanceException("Instance dependency isn't supported for type: "
+                                + entityType, Response.Status.BAD_REQUEST);
+                }
+            }
+
+        } catch (Throwable throwable) {
+            throw FalconWebException.newInstanceException(throwable, Response.Status.BAD_REQUEST);
+        }
+
+        InstanceDependencyResult res = new InstanceDependencyResult(APIResult.Status.SUCCEEDED, "Success!");
+        res.setDependencies(result.toArray(new SchedulableEntityInstance[0]));
+        return res;
     }
 
     public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr,

@@ -28,6 +28,7 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.WorkflowNameBuilder.WorkflowName;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -35,9 +36,13 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.LateInput;
+import org.apache.falcon.entity.v0.process.LateProcess;
+import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -53,7 +58,19 @@ import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Helper to get entity object.
@@ -65,6 +82,7 @@ public final class EntityUtil {
     private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
     private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
     private static final long MONTH_IN_MS = 31 * DAY_IN_MS;
+    private static final long ONE_MS = 1;
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
 
@@ -244,8 +262,8 @@ public final class EntityUtil {
         return feed.getTimezone();
     }
 
-    public static Date getNextStartTime(Date startTime, Frequency frequency, TimeZone timezone, Date now) {
-        if (startTime.after(now)) {
+    public static Date getNextStartTime(Date startTime, Frequency frequency, TimeZone timezone, Date referenceTime) {
+        if (startTime.after(referenceTime)) {
             return startTime;
         }
 
@@ -255,16 +273,16 @@ public final class EntityUtil {
         int count = 0;
         switch (frequency.getTimeUnit()) {
         case months:
-            count = (int) ((now.getTime() - startTime.getTime()) / MONTH_IN_MS);
+            count = (int) ((referenceTime.getTime() - startTime.getTime()) / MONTH_IN_MS);
             break;
         case days:
-            count = (int) ((now.getTime() - startTime.getTime()) / DAY_IN_MS);
+            count = (int) ((referenceTime.getTime() - startTime.getTime()) / DAY_IN_MS);
             break;
         case hours:
-            count = (int) ((now.getTime() - startTime.getTime()) / HOUR_IN_MS);
+            count = (int) ((referenceTime.getTime() - startTime.getTime()) / HOUR_IN_MS);
             break;
         case minutes:
-            count = (int) ((now.getTime() - startTime.getTime()) / MINUTE_IN_MS);
+            count = (int) ((referenceTime.getTime() - startTime.getTime()) / MINUTE_IN_MS);
             break;
         default:
         }
@@ -273,7 +291,7 @@ public final class EntityUtil {
         if (count > 2) {
             startCal.add(frequency.getTimeUnit().getCalendarUnit(), ((count - 2) / freq) * freq);
         }
-        while (startCal.getTime().before(now)) {
+        while (startCal.getTime().before(referenceTime)) {
             startCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
         }
         return startCal.getTime();
@@ -747,6 +765,12 @@ public final class EntityUtil {
         return pipelines;
     }
 
+    public static EntityList getEntityDependencies(Entity entity) throws FalconException {
+        Set<Entity> dependents = EntityGraph.get().getDependents(entity);
+        Entity[] dependentEntities = dependents.toArray(new Entity[dependents.size()]);
+        return new EntityList(dependentEntities, entity);
+    }
+
     public static Pair<Date, Date> getEntityStartEndDates(Entity entityObject) {
         Set<String> clusters = EntityUtil.getClustersDefined(entityObject);
         Pair<Date, String> clusterMinStartDate = null;
@@ -761,4 +785,104 @@ public final class EntityUtil {
         }
         return new Pair<Date, Date>(clusterMinStartDate.first, clusterMaxEndDate.first);
     }
+
+    /**
+     * Returns the previous instance(before or on) for a given referenceTime
+     *
+     * Example: For a feed in "UTC" with startDate "2014-01-01 00:00" and frequency of  "days(1)" a referenceTime
+     * of "2015-01-01 00:00" will return "2015-01-01 00:00".
+     *
+     * Similarly for the above feed if we give a reference Time of "2015-01-01 04:00" will also result in
+     * "2015-01-01 00:00"
+     *
+     * @param startTime start time of the entity
+     * @param frequency frequency of the entity
+     * @param tz timezone of the entity
+     * @param referenceTime time before which the instanceTime is desired
+     * @return  instance(before or on) the referenceTime
+     */
+    public static Date getPreviousInstanceTime(Date startTime, Frequency frequency, TimeZone tz, Date referenceTime) {
+        if (tz == null) {
+            tz = TimeZone.getTimeZone("UTC");
+        }
+        Calendar insCal = Calendar.getInstance(tz);
+        insCal.setTime(startTime);
+
+        int instanceCount = getInstanceSequence(startTime, frequency, tz, referenceTime);
+        final int freq = frequency.getFrequencyAsInt() * instanceCount;
+        insCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
+
+        while (insCal.getTime().after(referenceTime)) {
+            insCal.add(frequency.getTimeUnit().getCalendarUnit(), -1);
+        }
+        return insCal.getTime();
+    }
+
+    /**
+     * Find the times at which the given entity will run in a given time range.
+     * <p/>
+     * Both start and end Date are inclusive.
+     *
+     * @param entity      feed or process entity whose instance times are to be found
+     * @param clusterName name of the cluster
+     * @param startRange  start time for the input range
+     * @param endRange    end time for the input range
+     * @return List of instance times at which the entity will run in the given time range
+     */
+    public static List<Date> getEntityInstanceTimes(Entity entity, String clusterName, Date startRange, Date endRange) {
+        Date start = null;
+        switch (entity.getEntityType()) {
+
+        case FEED:
+            Feed feed = (Feed) entity;
+            start = FeedHelper.getCluster(feed, clusterName).getValidity().getStart();
+            return getInstanceTimes(start, feed.getFrequency(), feed.getTimezone(),
+                    startRange, endRange);
+
+        case PROCESS:
+            Process process = (Process) entity;
+            start = ProcessHelper.getCluster(process, clusterName).getValidity().getStart();
+            return getInstanceTimes(start, process.getFrequency(),
+                    process.getTimezone(), startRange, endRange);
+
+        default:
+            throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+        }
+    }
+
+
+    /**
+     * Find instance times given first instance start time and frequency till a given end time.
+     *
+     * It finds the first valid instance time in the given time range, it then uses frequency to find next instances
+     * in the given time range.
+     *
+     * @param startTime startTime of the entity (time of first instance ever of the given entity)
+     * @param frequency frequency of the entity
+     * @param timeZone  timeZone of the entity
+     * @param startRange start time for the input range of interest.
+     * @param endRange end time for the input range of interest.
+     * @return list of instance run times of the given entity in the given time range.
+     */
+    public static List<Date> getInstanceTimes(Date startTime, Frequency frequency, TimeZone timeZone,
+                                              Date startRange, Date endRange) {
+        List<Date> result = new LinkedList<>();
+        if (timeZone == null) {
+            timeZone = TimeZone.getTimeZone("UTC");
+        }
+
+        while(true){
+            Date nextStartTime = getNextStartTime(startTime, frequency, timeZone, startRange);
+            if (nextStartTime.before(startRange) || nextStartTime.after(endRange)){
+                break;
+            }
+
+            result.add(nextStartTime);
+            // this is required because getNextStartTime returns greater than or equal to referenceTime
+            startRange = new Date(nextStartTime.getTime() + ONE_MS); // 1 milli seconds later
+        }
+        return result;
+    }
+
+
 }

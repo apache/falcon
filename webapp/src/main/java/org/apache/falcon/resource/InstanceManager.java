@@ -23,7 +23,13 @@ import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -230,4 +236,16 @@ public class InstanceManager extends AbstractInstanceManager {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
+
+    @GET
+    @Path("dependencies/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-dependency")
+    public InstanceDependencyResult instanceDependencies(
+            @Dimension("type") @PathParam("type") String entityType,
+            @Dimension("entityName") @PathParam("entity") String entityName,
+            @Dimension("instanceTime") @QueryParam("instanceTime") String instanceTimeStr,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.getInstanceDependencies(entityType, entityName, instanceTimeStr, colo);
+    }
 }

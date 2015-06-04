@@ -37,6 +37,7 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.LineageGraphResult;
@@ -242,6 +243,7 @@ public class FalconClient {
         LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DEPENDENCY("api/instance/dependencies/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
@@ -803,6 +805,22 @@ public class FalconClient {
         }
         checkIfSuccessful(clientResponse);
         return clientResponse;
+    }
+
+    public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName, String instanceTime,
+                                                            String colo) throws FalconCLIException {
+        checkType(entityType);
+        Instances api = Instances.DEPENDENCY;
+
+        WebResource resource = service.path(api.path).path(entityType).path(entityName);
+        resource = resource.queryParam("instanceTime", instanceTime);
+        resource = resource.queryParam("colo", colo);
+        ClientResponse clientResponse = resource
+                    .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(api.mimeType)
+                    .method(api.method, ClientResponse.class);
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(InstanceDependencyResult.class);
     }
 
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck

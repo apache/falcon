@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.EntitySummaryResult;
@@ -275,6 +276,19 @@ public final class ResponseHelper {
         }
         sb.append("\n\nResponse: ").append(feedLookupResult.getMessage());
         sb.append("\nRequest Id: ").append(feedLookupResult.getRequestId());
+        return sb.toString();
+    }
+
+    public static String getString(InstanceDependencyResult dependencyResult) {
+        StringBuilder sb = new StringBuilder();
+        String results = dependencyResult.toString();
+        if (StringUtils.isEmpty(results)) {
+            sb.append("No dependencies found!");
+        } else {
+            sb.append(results);
+        }
+        sb.append("\n\nResponse: ").append(dependencyResult.getMessage());
+        sb.append("\nRequest Id: ").append(dependencyResult.getRequestId());
         return sb.toString();
     }
 }

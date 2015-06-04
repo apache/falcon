@@ -27,18 +27,28 @@ import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractInstanceManager;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Constructor;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A proxy implementation of the entity instance operations.
@@ -338,6 +348,29 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             }
         }.execute(colo, type, entity);
     }
+
+
+    @GET
+    @Path("dependencies/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-dependency")
+    public InstanceDependencyResult instanceDependencies(
+            @Dimension("type") @PathParam("type") final String entityType,
+            @Dimension("entityName") @PathParam("entity") final String entityName,
+            @Dimension("instanceTime") @QueryParam("instanceTime") final String instanceTimeStr,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+
+        return new InstanceProxy<InstanceDependencyResult>(InstanceDependencyResult.class) {
+
+            @Override
+            protected InstanceDependencyResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("instanceDependencies",
+                        entityType, entityName, instanceTimeStr, colo);
+            }
+
+        }.execute(colo, entityType, entityName);
+    }
+
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private abstract class InstanceProxy<T extends APIResult> {

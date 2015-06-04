@@ -18,7 +18,6 @@
 
 package org.apache.falcon.cli;
 
-import org.apache.falcon.ResponseHelper;
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -28,12 +27,14 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.LifeCycle;
+import org.apache.falcon.ResponseHelper;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.FeedLookupResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 
 import java.io.IOException;
@@ -102,6 +103,7 @@ public class FalconCLI {
     public static final String FORCE_RERUN_FLAG = "force";
 
     public static final String INSTANCE_CMD = "instance";
+    public static final String INSTANCE_TIME_OPT = "instanceTime";
     public static final String START_OPT = "start";
     public static final String END_OPT = "end";
     public static final String RUNNING_OPT = "running";
@@ -229,6 +231,7 @@ public class FalconCLI {
         String result;
         String type = commandLine.getOptionValue(ENTITY_TYPE_OPT);
         String entity = commandLine.getOptionValue(ENTITY_NAME_OPT);
+        String instanceTime = commandLine.getOptionValue(INSTANCE_TIME_OPT);
         String start = commandLine.getOptionValue(START_OPT);
         String end = commandLine.getOptionValue(END_OPT);
         String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
@@ -250,7 +253,12 @@ public class FalconCLI {
         validateInstanceCommands(optionsList, entity, type, colo);
 
 
-        if (optionsList.contains(RUNNING_OPT)) {
+        if (optionsList.contains(DEPENDENCY_OPT)) {
+            validateNotEmpty(instanceTime, INSTANCE_TIME_OPT);
+            InstanceDependencyResult response = client.getInstanceDependencies(type, entity, instanceTime, colo);
+            result = ResponseHelper.getString(response);
+
+        } else if (optionsList.contains(RUNNING_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
             result =
@@ -785,6 +793,11 @@ public class FalconCLI {
                 false,
                 "Displays feed listing and their status between a start and end time range.");
 
+        Option dependency = new Option(
+                DEPENDENCY_OPT,
+                false,
+                "Displays dependent instances for a specified instance.");
+
         OptionGroup group = new OptionGroup();
         group.addOption(running);
         group.addOption(list);
@@ -798,6 +811,7 @@ public class FalconCLI {
         group.addOption(logs);
         group.addOption(params);
         group.addOption(listing);
+        group.addOption(dependency);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option start = new Option(START_OPT, true,
@@ -843,6 +857,8 @@ public class FalconCLI {
         Option forceRerun = new Option(FORCE_RERUN_FLAG, false,
                 "Flag to forcefully rerun entire workflow of an instance");
 
+        Option instanceTime = new Option(INSTANCE_TIME_OPT, true, "Time for an instance");
+
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);
         instanceOptions.addOption(start);
@@ -861,6 +877,7 @@ public class FalconCLI {
         instanceOptions.addOption(sortOrder);
         instanceOptions.addOption(numResults);
         instanceOptions.addOption(forceRerun);
+        instanceOptions.addOption(instanceTime);
 
         return instanceOptions;
     }

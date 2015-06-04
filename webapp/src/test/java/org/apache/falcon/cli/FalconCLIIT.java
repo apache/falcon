@@ -287,6 +287,10 @@ public class FalconCLIIT {
         Assert.assertEquals(executeWithURL("entity -schedule -type feed -name " + overlay.get("outputFeedName")), 0);
         OozieTestUtils.waitForProcessWFtoStart(context);
 
+        //Test the dependency command
+        Assert.assertEquals(executeWithURL("instance -dependency -type feed -name " + overlay.get("inputFeedName")
+                + " -instanceTime 2010-01-01T00:00Z"), 0);
+
         Assert.assertEquals(executeWithURL("instance -status -type feed -name "
                 + overlay.get("outputFeedName")
                 + " -start " + START_INSTANCE), 0);
