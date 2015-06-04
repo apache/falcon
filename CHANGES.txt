@@ -7,6 +7,8 @@ Trunk (Unreleased)
     FALCON-1039 Add instance dependency API in falcon(Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-676 Enable metrics for Titan(Ajay Yadava)
+
     FALCON-1060 Handle transaction failures in Lineage(Pavan Kumar Kolamuri via Ajay Yadava)
     
     FALCON-1212 Remove dependency on Gremlin (Ajay Yadava via Suhas Vasu)

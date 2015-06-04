@@ -18,6 +18,8 @@ Falcon provides monitoring of various events by capturing metrics of those event
 The metric numbers can then be used to monitor performance and health of the Falcon system and
 the entire processing pipelines.
 
+Falcon also exposes [[https://github.com/thinkaurelius/titan/wiki/Titan-Performance-and-Monitoring][metrics for titandb]]
+
 Users can view the logs of these events in the metric.log file, by default this file is created
 under ${user.dir}/logs/ directory. Users may also extend the Falcon monitoring framework to send
 events to systems like Mondemand/lwes by implementingorg.apache.falcon.plugin.MonitoringPlugin
