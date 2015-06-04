@@ -576,7 +576,7 @@ public class EntityPage extends AbstractSearchPage {
         public Select getStatusDropDown() {
             final WebElement statusBox = getSummaryHeadParts().get(4);
             assertEquals(statusBox.getText(),
-                "Status \nALL\nRUNNING\nSUCCEEDED\nSUSPENDED\nKILLED",
+                "Status \nALL\nRUNNING\nSUCCEEDED\nSUSPENDED\nWAITING\nKILLED",
                 "Unexpected label in instance summary heading");
             return new Select(statusBox.findElement(By.tagName("select")));
         }
