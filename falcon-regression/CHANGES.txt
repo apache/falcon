@@ -89,6 +89,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1258 Fix feed validity and fortify ELExpFutureAndLatestTest (Ruslan Ostafiychuk)
+
    FALCON-1253 Fortify ExternalFSTest (Ruslan Ostafiychuk)
 
    FALCON-1243 Feed test update as per new UI changes (Namit Maheshwari)
