@@ -267,25 +267,25 @@ public class Bundle {
      * Submit all the entities and schedule the process.
      *
      * @param helper helper of prism host
-     * @return message from schedule response
+     * @return schedule response or cluster submit response if it fails
      * @throws IOException
      * @throws JAXBException
      * @throws URISyntaxException
      * @throws AuthenticationException
      */
-    public String submitFeedsScheduleProcess(ColoHelper helper)
+    public ServiceResponse submitFeedsScheduleProcess(ColoHelper helper)
         throws IOException, JAXBException, URISyntaxException,
         AuthenticationException, InterruptedException {
         ServiceResponse submitResponse = submitBundle(helper);
         if (submitResponse.getCode() == 400) {
-            return submitResponse.getMessage();
+            return submitResponse;
         }
 
         //lets schedule the damn thing now :)
         ServiceResponse scheduleResult = helper.getProcessHelper().schedule(getProcessData());
         AssertUtil.assertSucceeded(scheduleResult);
         TimeUtil.sleepSeconds(7);
-        return scheduleResult.getMessage();
+        return scheduleResult;
     }
 
     /**

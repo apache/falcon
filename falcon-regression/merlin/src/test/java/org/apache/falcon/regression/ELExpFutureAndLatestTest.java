@@ -22,6 +22,7 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
@@ -78,12 +79,10 @@ public class ELExpFutureAndLatestTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle(this);
-        bundles[0].setInputFeedDataPath(baseTestDir + "/testData"
-            + MINUTE_DATE_PATTERN);
-        bundles[0].setOutputFeedLocationData(baseTestDir + "/output"
-            + MINUTE_DATE_PATTERN);
+        bundles[0].setInputFeedDataPath(baseTestDir + "/testData" + MINUTE_DATE_PATTERN);
+        bundles[0].setOutputFeedLocationData(baseTestDir + "/output" + MINUTE_DATE_PATTERN);
         bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setInputFeedValidity("2010-04-01T00:00Z", "2015-04-01T00:00Z");
+        bundles[0].setInputFeedValidity("2010-04-01T00:00Z", "2099-04-01T00:00Z");
         String processStart = TimeUtil.getTimeWrtSystemTime(-3);
         String processEnd = TimeUtil.getTimeWrtSystemTime(8);
         LOGGER.info("processStart: " + processStart + " processEnd: " + processEnd);
@@ -100,7 +99,7 @@ public class ELExpFutureAndLatestTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void latestTest() throws Exception {
         bundles[0].setDatasetInstances("latest(-3)", "latest(0)");
-        bundles[0].submitFeedsScheduleProcess(prism);
+        AssertUtil.assertSucceeded(bundles[0].submitFeedsScheduleProcess(prism));
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
     }
@@ -108,7 +107,7 @@ public class ELExpFutureAndLatestTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void futureTest() throws Exception {
         bundles[0].setDatasetInstances("future(0,10)", "future(3,10)");
-        bundles[0].submitFeedsScheduleProcess(prism);
+        AssertUtil.assertSucceeded(bundles[0].submitFeedsScheduleProcess(prism));
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
     }

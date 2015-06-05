@@ -339,6 +339,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1258 Fix feed validity and fortify ELExpFutureAndLatestTest (Ruslan Ostafiychuk)
+
    FALCON-1257 Fix feedAclUpdate and processAclUpdate (Ruslan Ostafiychuk)
 
    FALCON-1255 Fix list of expected statuses in drop down on Entity Page (Ruslan Ostafiychuk)

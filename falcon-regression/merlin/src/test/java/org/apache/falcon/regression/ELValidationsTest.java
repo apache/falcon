@@ -136,7 +136,7 @@ public class ELValidationsTest extends BaseTestClass {
         try {
             bundle.setInvalidData();
             bundle.setDatasetInstances(startInstance, endInstance);
-            String submitResponse = bundle.submitFeedsScheduleProcess(prism);
+            String submitResponse = bundle.submitFeedsScheduleProcess(prism).getMessage();
             LOGGER.info("processData in try is: " + Util.prettyPrintXml(bundle.getProcessData()));
             TimeUtil.sleepSeconds(45);
             if (isMatch) {
