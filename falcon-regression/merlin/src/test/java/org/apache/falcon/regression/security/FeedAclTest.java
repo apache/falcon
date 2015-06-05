@@ -18,7 +18,6 @@
 
 package org.apache.falcon.regression.security;
 
-import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
@@ -207,33 +206,8 @@ public class FeedAclTest extends BaseTestClass {
         final FeedMerlin feedMerlin = new FeedMerlin(oldFeed);
         feedMerlin.setACL(newOwner, newGroup, "*");
         final String newFeed = feedMerlin.toString();
-        AssertUtil.assertSucceeded(feedHelper.update(oldFeed, newFeed));
-        //check that current user can access the feed
-        for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
-            EntityOp.definition, }) {
-            final boolean executeRes =
-                op.executeAs(MerlinConstants.CURRENT_USER_NAME, feedHelper, newFeed);
-            Assert.assertEquals(executeRes, newGroup.equals(MerlinConstants.CURRENT_USER_GROUP),
-                "Unexpected result user "+ MerlinConstants.CURRENT_USER_NAME
-                    + " performing: " + op);
-        }
-        //check that second user can access the feed
-        for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
-            EntityOp.definition, }) {
-            final boolean executeRes =
-                op.executeAs(newOwner, feedHelper, newFeed);
-            Assert.assertTrue(executeRes, "Unexpected result: user " + newOwner
-                + " was not able to perform: " + op);
-        }
-        //check modified permissions
-        final String retrievedFeed = feedHelper.getEntityDefinition(newFeed).getMessage();
-        final ACL retrievedFeedAcl = new FeedMerlin(retrievedFeed).getACL();
-        Assert.assertEquals(retrievedFeedAcl.getOwner(), newOwner,
-            "Expecting " + newOwner + " to be the acl owner.");
-        Assert.assertEquals(retrievedFeedAcl.getGroup(), newGroup,
-            "Expecting " + newGroup + " to be the acl group.");
-        //check that second user can modify feed acl
-        AssertUtil.assertSucceeded(feedHelper.update(newFeed, oldFeed, newOwner));
+        AssertUtil.assertFailed(feedHelper.update(oldFeed, newFeed),
+            "AuthorizationException: Permission denied");
     }
 
     @DataProvider(name = "generateAclOwnerAndGroup")
