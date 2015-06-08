@@ -24,17 +24,14 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
-import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.*;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -126,7 +123,7 @@ public class LogMoverTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
-        Assert.assertTrue(validate(true), "Success logs are not present");
+        AssertUtil.assertLogMoverPath(true, processName, clusterFS, "process", "Success logs are not present");
     }
 
     /**
@@ -143,28 +140,7 @@ public class LogMoverTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 1,
                         CoordinatorAction.Status.KILLED, EntityType.PROCESS);
 
-        Assert.assertTrue(validate(false), "Filed logs are not present");
-    }
-
-    private boolean validate(boolean logFlag) throws Exception {
-        String stagingDir= MerlinConstants.STAGING_LOCATION;
-        String path=stagingDir+"/falcon/workflows/process/"+processName+"/logs";
-        List<Path> logmoverPaths = HadoopUtil
-                .getAllFilesRecursivelyHDFS(clusterFS, new Path(HadoopUtil.cutProtocol(path)));
-        if (logFlag) {
-            for (Path logmoverPath : logmoverPaths) {
-                if (logmoverPath.toString().contains("SUCCEEDED")) {
-                    return true;
-                }
-            }
-        } else {
-            for (Path logmoverPath : logmoverPaths) {
-                if (logmoverPath.toString().contains("FAILED")) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        AssertUtil.assertLogMoverPath(false, processName, clusterFS, "process", "Failed logs are not present");
     }
 
 }

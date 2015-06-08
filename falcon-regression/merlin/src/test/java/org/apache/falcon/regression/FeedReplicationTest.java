@@ -36,11 +36,9 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -53,7 +51,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -105,8 +102,7 @@ public class FeedReplicationTest extends BaseTestClass {
      */
     @Test(dataProvider = "dataFlagProvider")
     public void replicate1Source1Target(boolean dataFlag)
-        throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException, InterruptedException {
+        throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
@@ -158,7 +154,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //replication should start, wait while it ends
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed.toString()), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data has been replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -173,6 +169,9 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //_SUCCESS should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
+
+        AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                cluster2FS, "feed", "Success logs are not present");
     }
 
     /**
@@ -195,27 +194,27 @@ public class FeedReplicationTest extends BaseTestClass {
         feed.clearFeedClusters();
         //set cluster1 as source
         feed.addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
-                .withRetention("days(1000000)", ActionType.DELETE)
-                .withValidity(startTime, endTime)
-                .withClusterType(ClusterType.SOURCE)
-                .build());
+                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                        .withRetention("days(1000000)", ActionType.DELETE)
+                        .withValidity(startTime, endTime)
+                        .withClusterType(ClusterType.SOURCE)
+                        .build());
         //set cluster2 as target
         feed.addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
-                .withRetention("days(1000000)", ActionType.DELETE)
-                .withValidity(startTime, endTime)
-                .withClusterType(ClusterType.TARGET)
-                .withDataLocation(targetDataLocation)
-                .build());
+                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                        .withRetention("days(1000000)", ActionType.DELETE)
+                        .withValidity(startTime, endTime)
+                        .withClusterType(ClusterType.TARGET)
+                        .withDataLocation(targetDataLocation)
+                        .build());
         //set cluster3 as target
         feed.addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
-                .withRetention("days(1000000)", ActionType.DELETE)
-                .withValidity(startTime, endTime)
-                .withClusterType(ClusterType.TARGET)
-                .withDataLocation(targetDataLocation)
-                .build());
+                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[2].getClusters().get(0)))
+                        .withRetention("days(1000000)", ActionType.DELETE)
+                        .withValidity(startTime, endTime)
+                        .withClusterType(ClusterType.TARGET)
+                        .withDataLocation(targetDataLocation)
+                        .build());
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
@@ -268,6 +267,9 @@ public class FeedReplicationTest extends BaseTestClass {
         //_SUCCESS should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster3FS, toTarget, ""), true);
+
+        AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                cluster2FS, "feed", "Success logs are not present");
     }
 
     /**
@@ -354,7 +356,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //wait till instance succeed
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+                CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
 
         //check if data was replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -370,8 +372,78 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //availabilityFlag should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, availabilityFlagName), true);
+
+        AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                cluster2FS, "feed", "Success logs are not present");
     }
 
+    /**
+     * Test demonstrates failure pf replication of stored data from one source cluster to one target cluster.
+     * When replication job fails test checks if failed logs are present in staging directory or not.
+     */
+    @Test
+    public void replicate1Source1TargetFail()
+        throws Exception {
+        Bundle.submitCluster(bundles[0], bundles[1]);
+        String startTime = TimeUtil.getTimeWrtSystemTime(0);
+        String endTime = TimeUtil.addMinsToTime(startTime, 5);
+        LOGGER.info("Time range between : " + startTime + " and " + endTime);
+
+        //configure feed
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
+        feed.setFilePath(feedDataLocation);
+        //erase all clusters from feed definition
+        feed.clearFeedClusters();
+        //set cluster1 as source
+        feed.addFeedCluster(
+                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[0].getClusters().get(0)))
+                        .withRetention("days(1000000)", ActionType.DELETE)
+                        .withValidity(startTime, endTime)
+                        .withClusterType(ClusterType.SOURCE)
+                        .build());
+        //set cluster2 as target
+        feed.addFeedCluster(
+                new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
+                        .withRetention("days(1000000)", ActionType.DELETE)
+                        .withValidity(startTime, endTime)
+                        .withClusterType(ClusterType.TARGET)
+                        .withDataLocation(targetDataLocation)
+                        .build());
+
+        //submit and schedule feed
+        LOGGER.info("Feed : " + Util.prettyPrintXml(feed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed.toString()));
+
+        //upload necessary data
+        DateTime date = new DateTime(startTime, DateTimeZone.UTC);
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy'/'MM'/'dd'/'HH'/'mm'");
+        String timePattern = fmt.print(date);
+        String sourceLocation = sourcePath + "/" + timePattern + "/";
+        String targetLocation = targetPath + "/" + timePattern + "/";
+        HadoopUtil.recreateDir(cluster1FS, sourceLocation);
+
+        Path toSource = new Path(sourceLocation);
+        Path toTarget = new Path(targetLocation);
+        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
+        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
+
+        //check if coordinator exists
+        InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed.toString(), 0);
+        Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster2OC, feed.getName(), "REPLICATION"), 1);
+
+        //check if instance become running
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
+                CoordinatorAction.Status.RUNNING, EntityType.FEED);
+
+        HadoopUtil.deleteDirIfExists(sourceLocation, cluster1FS);
+
+        //check if instance became killed
+        InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
+                CoordinatorAction.Status.KILLED, EntityType.FEED);
+
+        AssertUtil.assertLogMoverPath(false, Util.readEntityName(feed.toString()),
+                cluster2FS, "feed", "Success logs are not present");
+    }
 
     /* Flag value denotes whether to add data for replication or not.
      * flag=true : add data for replication.

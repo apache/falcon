@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.resource.APIResult;
@@ -409,4 +410,43 @@ public final class AssertUtil {
             Assert.fail(String.format("%s expected non-empty string found [%s]", message, str));
         }
     }
+
+    /**
+     * Checks that job logs are copied to user defined cluster staging path.
+     *
+     * @param logFlag     denotes whether is is failed/succeeded log
+     * @param entityName  name of entity
+     * @param clusterFS   hadoop file system for the locations
+     * @param entityType  feed or process
+     */
+    public static boolean assertPath(boolean logFlag, String entityName, FileSystem clusterFS,
+                                     String entityType) throws Exception {
+        String stagingDir= MerlinConstants.STAGING_LOCATION;
+        String path=stagingDir+"/falcon/workflows/"+ entityType + "/" + entityName +"/logs";
+        List<Path> logmoverPaths = HadoopUtil
+                .getAllFilesRecursivelyHDFS(clusterFS, new Path(HadoopUtil.cutProtocol(path)));
+        String part = logFlag ? "SUCCEEDED" : "FAILED";
+        for (Path logmoverPath : logmoverPaths) {
+            if (logmoverPath.toString().contains(part)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks that job logs are copied to user defined cluster staging path.
+     *
+     * @param logFlag     denotes whether is is failed/succeeded log
+     * @param entityName  name of entity
+     * @param clusterFS   hadoop file system for the locations
+     * @param entityType  feed or process
+     * @param message     message returned if assert fails
+     */
+    public static void assertLogMoverPath(boolean logFlag, String entityName, FileSystem clusterFS,
+                                          String entityType, String message) throws Exception {
+        Assert.assertTrue(assertPath(logFlag, entityName, clusterFS, entityType), message);
+    }
+
+
 }
