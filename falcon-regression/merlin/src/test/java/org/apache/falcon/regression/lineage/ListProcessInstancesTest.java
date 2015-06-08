@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.lineage;
 
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -74,12 +75,15 @@ public class ListProcessInstancesTest extends BaseTestClass {
         bundles[0].setInputFeedDataPath(feedDataLocation);
         bundles[0].setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessValidity(startTime, endTime);
+        bundles[0].setInputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitAndScheduleProcess();
         processName = bundles[0].getProcessName();
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         //create data for processes to run and wait some time for instances to make progress
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 1);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 2);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
     }

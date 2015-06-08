@@ -92,6 +92,7 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1256 ListProcessInstancesTest needs to be stabilized (Raghav Kumar Gautam)
 
    FALCON-1227 Add logMover check in FeedReplication test(Pragya M via Samarth G)
 

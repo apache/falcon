@@ -405,7 +405,9 @@ public final class HadoopUtil {
     public static void createFolders(FileSystem fs, final String folderPrefix,
                                              List<String> folderList) throws IOException {
         for (final String folder : folderList) {
-            fs.mkdirs(new Path(cutProtocol(folderPrefix + folder)));
+            final String pathString = cutProtocol(folderPrefix + folder);
+            LOGGER.info("Creating " + fs.getUri() + "/" + pathString);
+            fs.mkdirs(new Path(pathString));
         }
     }
 
