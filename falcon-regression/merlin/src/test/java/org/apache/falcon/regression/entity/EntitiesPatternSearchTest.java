@@ -23,7 +23,10 @@ import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
-import org.apache.falcon.regression.core.util.*;
+import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -42,7 +45,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Testing the pattern serach of entities. Falcon-914
+ * Testing the pattern search of entities. Falcon-914
  */
 @Test(groups = "embedded")
 public class EntitiesPatternSearchTest extends BaseTestClass {
@@ -131,7 +134,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
 
     @DataProvider
     public Object[][] getMismatchPattern(){
-        String[] mismatchPatternParam = new String[]{"abc", "ne d", "newss", "new*", "NewEntityDefinitions"};
+        String[] mismatchPatternParam = new String[]{"akm", "ne d", "newss", "new*", "NewEntityDefinitions"};
         AbstractEntityHelper[] helper = new AbstractEntityHelper[] {
                 prism.getProcessHelper(),
                 prism.getFeedHelper(),
@@ -174,9 +177,9 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
         String patternCheck="";
         String regexString=".*";
         StringBuffer newString = new StringBuffer();
-        char[] searchPattern = pattern.toLowerCase().toCharArray();
-        for(int i=0; i <searchPattern.length; i++) {
-            newString = newString.append(regexString).append(searchPattern[i]);
+        char[] searchPatterns = pattern.toLowerCase().toCharArray();
+        for (char searchPattern : searchPatterns) {
+            newString = newString.append(regexString).append(searchPattern);
         }
         patternCheck = newString.append(regexString).toString();
         LOGGER.info("patternCheck : " + patternCheck);
