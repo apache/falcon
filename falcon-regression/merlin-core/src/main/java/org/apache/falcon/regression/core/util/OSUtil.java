@@ -47,6 +47,10 @@ public final class OSUtil {
 
     public static final String OOZIE_LIB_FOLDER =
             String.format(RESOURCES + "oozieLib%s", SEPARATOR);
+    public static final String MULTIPLE_ACTION_WORKFLOW =
+            String.format(RESOURCES + "MultipleActionWorkflow%s", SEPARATOR);
+    public static final String PIG_DIR =
+            String.format(RESOURCES + "pig%s", SEPARATOR);
 
 
     public static String getPath(String... pathParts) {

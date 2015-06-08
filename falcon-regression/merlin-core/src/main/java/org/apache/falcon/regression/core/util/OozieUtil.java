@@ -23,11 +23,12 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.Job;
+import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.WorkflowAction;
 import org.joda.time.DateTime;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTimeZone;
@@ -49,6 +50,8 @@ import java.util.TreeMap;
  * helper methods for oozie .
  */
 public final class OozieUtil {
+
+    public static final String FAIL_MSG = "NO_such_workflow_exists";
     private OozieUtil() {
         throw new AssertionError("Instantiating utility class...");
     }
@@ -704,5 +707,47 @@ public final class OozieUtil {
         default:
             return OSUtil.IS_WINDOWS ? 60 : 30;
         }
+    }
+
+    public static String getActionStatus(OozieClient oozieClient, String workflowId, String actionName)
+        throws OozieClientException {
+        List<WorkflowAction> wfAction = oozieClient.getJobInfo(workflowId).getActions();
+        for (WorkflowAction wf : wfAction) {
+            if (wf.getName().contains(actionName)) {
+                return wf.getExternalStatus();
+            }
+        }
+        return "";
+    }
+
+    public static String getWorkflowActionStatus(OozieClient oozieClient, String bundleId, String actionName)
+        throws OozieClientException {
+        List<String> workflowIds = getWorkflowJobs(oozieClient, bundleId);
+        if (workflowIds.get(0).isEmpty()) {
+            return FAIL_MSG;
+        }
+        return getActionStatus(oozieClient, workflowIds.get(0), actionName);
+    }
+
+    public static String getSubWorkflowActionStatus(OozieClient oozieClient, String bundleId,
+                                                    String actionName, String subAction)
+        throws OozieClientException {
+        List<String> workflowIds = getWorkflowJobs(oozieClient, bundleId);
+        if (workflowIds.get(0).isEmpty()) {
+            return FAIL_MSG;
+        }
+
+        String wid="";
+        List<WorkflowAction> wfAction = oozieClient.getJobInfo(workflowIds.get(0)).getActions();
+        for (WorkflowAction wf : wfAction) {
+            if (wf.getName().contains(actionName)) {
+                wid = wf.getExternalId();
+            }
+        }
+
+        if (!wid.isEmpty()) {
+            return getActionStatus(oozieClient, wid, subAction);
+        }
+        return FAIL_MSG;
     }
 }

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.entity.v0.process.*;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
@@ -51,6 +52,7 @@ import java.util.List;
 @Test(groups = "embedded")
 public class ProcessInstanceRerunTest extends BaseTestClass {
 
+    private boolean restartRequired;
     private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
@@ -111,7 +113,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            start + "&end=2010-01-02T01:11Z");
+                start + "&end=2010-01-02T01:11Z");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 5, 1, 0);
     }
 
@@ -203,7 +205,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
-            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper()
             .getProcessInstanceKill(processName, start + "&end=2010-01-02T01:11Z");
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
@@ -234,7 +236,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            start + "&end=2010-01-02T01:11Z");
+                start + "&end=2010-01-02T01:11Z");
         TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 6, 0, 0);
     }
@@ -253,7 +255,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
-            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         prism.getProcessHelper().getProcessInstanceKill(processName,
                 start + "&end=2010-01-02T01:01Z");
         String wfID = InstanceUtil.getWorkflows(clusterOC, processName, Status.KILLED).get(0);
@@ -282,7 +284,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         String wfID = InstanceUtil.getWorkflows(clusterOC, processName, Status.RUNNING,
             Status.SUCCEEDED).get(0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 0, CoordinatorAction
-            .Status.SUCCEEDED, EntityType.PROCESS);
+                .Status.SUCCEEDED, EntityType.PROCESS);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
                 start + "&end=2010-01-02T01:01Z&force=true");
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
@@ -305,9 +307,9 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         prism.getProcessHelper().getProcessInstanceSuspend(processName,
-            start + "&end=2010-01-02T01:06Z");
+                start + "&end=2010-01-02T01:06Z");
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            start + "&end=2010-01-02T01:06Z");
+                start + "&end=2010-01-02T01:06Z");
         Assert.assertEquals(InstanceUtil.getInstanceStatus(clusterOC, processName, 0, 1),
                 CoordinatorAction.Status.SUSPENDED);
     }
@@ -326,7 +328,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+                CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
                 start + "&end=2010-01-02T01:11Z&force=true");
@@ -351,9 +353,99 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
                 CoordinatorAction.Status.TIMEDOUT, EntityType.PROCESS);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            start + "&end=2010-01-02T01:11Z");
+                start + "&end=2010-01-02T01:11Z");
         s = InstanceUtil.getInstanceStatus(clusterOC, processName, 0, 0);
         Assert.assertEquals(s, CoordinatorAction.Status.WAITING,
-            "instance should have been in WAITING state");
+                "instance should have been in WAITING state");
+    }
+
+    @Test(groups = {"singleCluster"}, timeOut = 1200000)
+    public void testProcessInstanceRerunFailedPostProcessing() throws Exception {
+        restartRequired=true;
+        bundles[0].setProcessValidity("2015-01-02T01:00Z", "2015-01-02T01:04Z");
+        bundles[0].setOutputFeedLocationData(feedOutputPath);
+        bundles[0].setProcessConcurrency(1);
+        bundles[0].submitFeedsScheduleProcess(prism);
+
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
+
+        //bring down Server1 colo
+        Util.shutDownService(cluster.getClusterHelper());
+
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+
+        //wait for instance to go in killing state
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+                CoordinatorAction.Status.KILLED, EntityType.PROCESS, 5);
+
+        Assert.assertEquals(OozieUtil.getWorkflowActionStatus(clusterOC, bundleId, "post-processing")
+                .contains("KILLED"), true);
+        Assert.assertEquals(OozieUtil.getWorkflowActionStatus(clusterOC, bundleId, "user-action")
+                .contains("SUCCEEDED"), true);
+
+        //start Server1 colo
+        Util.startService(cluster.getClusterHelper());
+        TimeUtil.sleepSeconds(10);
+
+        prism.getProcessHelper().getProcessInstanceRerun(processName, "?start=2015-01-02T01:00Z&end=2015-01-02T01:04Z");
+
+        while (!OozieUtil.getWorkflowActionStatus(clusterOC, bundleId, "post-processing").contains("SUCCEEDED")) {
+            TimeUtil.sleepSeconds(10);
+        }
+    }
+
+    @Test(groups = {"singleCluster"}, timeOut = 1200000)
+    public void testProcessInstanceRerunFailedWorkflowAction() throws Exception {
+
+        // Defining path to be used in pig script
+        String propPath = cleanAndGetTestDir() + "/rerun";
+        org.apache.falcon.entity.v0.process.Process processElement = bundles[0].getProcessObject();
+        Properties properties = new Properties();
+        Property propertyInput = new Property();
+        propertyInput.setName("inputPath");
+        propertyInput.setValue(propPath);
+
+        Property propertyOutput = new Property();
+        propertyOutput.setName("outputPath");
+        propertyOutput.setValue(propPath + "/output");
+        properties.getProperties().add(propertyInput);
+        properties.getProperties().add(propertyOutput);
+        processElement.setProperties(properties);
+        bundles[0].setProcessData(processElement.toString());
+
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.MULTIPLE_ACTION_WORKFLOW);
+        HadoopUtil.copyDataToFolder(clusterFS, aggregateWorkflowDir, OSUtil.PIG_DIR + "id.pig");
+
+        bundles[0].setProcessValidity("2015-01-02T01:00Z", "2015-01-02T01:04Z");
+        bundles[0].setOutputFeedLocationData(feedOutputPath);
+        bundles[0].setProcessConcurrency(1);
+        bundles[0].submitFeedsScheduleProcess(prism);
+
+        String bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
+
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
+
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+
+        //wait for instance to get killed
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+                CoordinatorAction.Status.KILLED, EntityType.PROCESS, 5);
+
+        Assert.assertEquals(OozieUtil.getWorkflowActionStatus(clusterOC, bundleId, "user-action")
+                .contains("KILLED"), true);
+        Assert.assertEquals(OozieUtil.getSubWorkflowActionStatus(clusterOC, bundleId, "user-action", "pig")
+                .contains("KILLED"), true);
+        Assert.assertEquals(OozieUtil.getSubWorkflowActionStatus(clusterOC, bundleId, "user-action", "aggregator")
+                .contains("SUCCEEDED"), true);
+
+        HadoopUtil.uploadDir(clusterFS, propPath, OSUtil.MULTIPLE_ACTION_WORKFLOW);
+
+        prism.getProcessHelper().getProcessInstanceRerun(processName, "?start=2015-01-02T01:00Z&end=2015-01-02T01:04Z");
+
+        while (!OozieUtil.getSubWorkflowActionStatus(clusterOC, bundleId, "user-action", "pig").contains("SUCCEEDED")) {
+            TimeUtil.sleepSeconds(10);
+        }
     }
 }

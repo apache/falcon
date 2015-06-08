@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   
+   FALCON-1215 Adding new test cases related to rerun feature (Pragya M via Samarth Gupta)
+
    FALCON-1249 Tests for process setup wizard (Namit Maheshwari and Paul Isaychuk)
 
    FALCON-1242 Search UI test for entity upload button (Namit Maheshwari)
