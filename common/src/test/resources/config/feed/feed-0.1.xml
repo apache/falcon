@@ -18,6 +18,7 @@
   -->
 <feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1"
         >
+    <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting</tags>
     <partitions>
         <partition name="fraud"/>
         <partition name="good"/>

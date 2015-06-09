@@ -378,7 +378,7 @@
 
     <xs:simpleType name="KEY_VALUE_PAIR">
         <xs:restriction base="xs:string">
-            <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
+            <xs:pattern value="([\w_]+=[^,]+)?([,]?[ ]*[\w_]+=[^,]+)*"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="PIPELINE_LIST">

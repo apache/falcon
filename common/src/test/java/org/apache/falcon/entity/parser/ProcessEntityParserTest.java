@@ -96,7 +96,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
 
         Assert.assertEquals(process.getTags(),
-                "consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting");
+                "consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting");
         Assert.assertEquals(process.getPipelines(), "testPipeline,dataReplication_Pipeline");
 
         Assert.assertEquals(process.getInputs().getInputs().get(0).getName(), "impression");

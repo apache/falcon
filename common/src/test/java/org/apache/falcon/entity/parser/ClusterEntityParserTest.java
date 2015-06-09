@@ -147,9 +147,9 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Cluster cluster = parser.parse(stream);
 
         final String tags = cluster.getTags();
-        Assert.assertEquals("consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting", tags);
+        Assert.assertEquals("consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting", tags);
 
-        final String[] keys = {"consumer", "owner", "department", };
+        final String[] keys = {"consumer", "owner", "_department_type", };
         final String[] values = {"consumer@xyz.com", "producer@xyz.com", "forecasting", };
 
         final String[] pairs = tags.split(",");

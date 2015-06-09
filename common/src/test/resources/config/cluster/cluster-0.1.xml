@@ -18,7 +18,7 @@
   -->
 
 <cluster colo="default" description="" name="testCluster" xmlns="uri:falcon:cluster:0.1">
-    <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting</tags>
+    <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting</tags>
     <interfaces>
         <interface type="readonly" endpoint="hftp://localhost:50010"
                    version="0.20.2"/>
