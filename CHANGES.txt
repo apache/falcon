@@ -7,6 +7,8 @@ Trunk (Unreleased)
     FALCON-1039 Add instance dependency API in falcon(Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1207 Falcon checkstyle allows wildcard imports(Pallavi Rao via Ajay Yadava)
+    
     FALCON-1147 Allow _ in the names for name value pair(Sowmya Ramesh via Ajay Yadava)
 
     FALCON-676 Enable metrics for Titan(Ajay Yadava)

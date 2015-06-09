@@ -22,7 +22,8 @@ import org.apache.falcon.monitors.Alert;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.monitors.TimeTaken;
 
-import java.awt.*;
+
+import java.awt.Dimension;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;

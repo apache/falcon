@@ -20,7 +20,7 @@ package org.apache.falcon.security;
 
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mockito;

@@ -107,6 +107,9 @@
         <!-- defaults to sun.* packages -->
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
+        <module name="AvoidStarImport">
+            <property name="allowClassImports" value="false"/>
+        </module>
 
 
         <!-- Checks for Size Violations.                    -->
