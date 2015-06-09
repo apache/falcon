@@ -553,6 +553,7 @@ public final class InstanceUtil {
                     cIds.add(coord.getId());
                 }
                 coordId = OozieUtil.getMinId(cIds);
+                break;
             } else {
                 for (CoordinatorJob coord : coords) {
                     if (coord.getAppName().contains("FEED_REPLICATION")) {

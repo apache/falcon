@@ -98,8 +98,6 @@ Trunk (Unreleased)
 
    FALCON-1227 Add logMover check in FeedReplication test(Pragya M via Samarth G)
 
-   FALCON-1258 Fix feed validity and fortify ELExpFutureAndLatestTest (Ruslan Ostafiychuk)
-
    FALCON-1253 Fortify ExternalFSTest (Ruslan Ostafiychuk)
 
    FALCON-1243 Feed test update as per new UI changes (Namit Maheshwari)
@@ -350,6 +348,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1263 Fix waitTillInstanceReachState for EntityType.PROCESS (Ruslan Ostafiychuk)
+
    FALCON-1258 Fix feed validity and fortify ELExpFutureAndLatestTest (Ruslan Ostafiychuk)
 
    FALCON-1257 Fix feedAclUpdate and processAclUpdate (Ruslan Ostafiychuk)
