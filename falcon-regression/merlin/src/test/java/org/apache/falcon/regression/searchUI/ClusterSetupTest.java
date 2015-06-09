@@ -17,8 +17,10 @@
  */
 package org.apache.falcon.regression.searchUI;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
@@ -228,14 +230,16 @@ public class ClusterSetupTest extends BaseUITestClass{
         //reverse staging and working location dirs
         String staging = sourceCluster.getLocation(ClusterLocationType.STAGING).get(0).getPath();
         String working = sourceCluster.getLocation(ClusterLocationType.WORKING).get(0).getPath();
+        //set working to dir which has 777 permissions
         sourceCluster.getLocation(ClusterLocationType.WORKING).get(0).setPath(staging);
+        //set staging to dir which has 755 permissions
         sourceCluster.getLocation(ClusterLocationType.STAGING).get(0).setPath(working);
         clusterSetup.fillForm(sourceCluster);
         clusterSetup.clickNext();
         clusterSetup.clickSave();
         String alertMessage = clusterSetup.getActiveAlertText();
         Assert.assertEquals(alertMessage,
-            String.format("Path %s has permissions: rwxrwxrwx, should be rwxr-xr-x", staging));
+            String.format("Path %s has permissions: rwxr-xr-x, should be rwxrwxrwx", working));
     }
 
     /**
@@ -252,6 +256,75 @@ public class ClusterSetupTest extends BaseUITestClass{
         String alertMessage = clusterSetup.getActiveAlertText();
         Assert.assertEquals(alertMessage,
             String.format("Location %s for cluster %s must exist.", nonExistent, sourceCluster.getName()));
+    }
+
+    /**
+     * Populate cluster with properties. Click Edit XML. Change cluster name and
+     * description, add registry interface. Check that they were enabled and populated
+     * in wizard.
+     */
+    @Test
+    public void testEditXml() {
+        clusterSetup.fillForm(sourceCluster);
+        //check that registry is empty
+        String registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
+        Assert.assertTrue(StringUtils.isEmpty(registryEndpoint), "Registry endpoint should be empty");
+        String registryVersion = clusterSetup.getInterfaceVersion(Interfacetype.REGISTRY);
+        Assert.assertTrue(StringUtils.isEmpty(registryVersion), "Registry version should be empty");
+        Assert.assertFalse(clusterSetup.isRegistryEnabled(), "Registry should be disabled.");
+
+        //change cluster xml
+        sourceCluster.setName(sourceCluster.getName() + "-new");
+        sourceCluster.setDescription("newDescription");
+        Interface iFace = new Interface();
+        iFace.setEndpoint(cluster.getClusterHelper().getHostname());
+        iFace.setVersion("1.0.0");
+        iFace.setType(Interfacetype.REGISTRY);
+        sourceCluster.getInterfaces().getInterfaces().add(iFace);
+
+        //populate it to xmlPreview
+        clusterSetup.setClusterXml(sourceCluster.toString());
+
+        //check values on wizard
+        registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
+        Assert.assertEquals(registryEndpoint, sourceCluster.getInterfaces().getInterfaces().get(5).getEndpoint(),
+            "Registry endpoint on wizard should match to endpoint on preview xml.");
+        registryVersion = clusterSetup.getInterfaceVersion(Interfacetype.REGISTRY);
+        Assert.assertEquals(registryVersion, sourceCluster.getInterfaces().getInterfaces().get(5).getVersion(),
+            "Registry version on wizard should match to endpoint on preview xml.");
+        Assert.assertTrue(clusterSetup.isRegistryEnabled(), "Registry should be enabled.");
+    }
+
+    /**
+     * Populate cluster with properties. Click Edit XML. Break the XML (delete closing tag).
+     * Check that malformed cluster is not accepted by the form.
+     * Undo the change. Change cluster name to malformed one.
+     * Check that value is accepted.
+     */
+    @Test
+    public void testEditXmlInvalidValues(){
+        clusterSetup.fillForm(sourceCluster);
+        ClusterMerlin initialPreview = clusterSetup.getXmlPreview();
+
+        //break xml
+        String brokenXml = new ClusterMerlin(sourceCluster.toString()).toString();
+        brokenXml = brokenXml.substring(0, brokenXml.length() - 3);
+
+        //enter it into xml preview form
+        clusterSetup.setClusterXml(brokenXml);
+
+        //compare preview before and after changes
+        ClusterMerlin finalPreview = clusterSetup.getXmlPreview();
+        Assert.assertEquals(initialPreview, finalPreview, "Broken xml shouldn't be accepted.");
+
+        //change properties to malformed
+        sourceCluster.setName("abc123!@#");
+
+        //enter it into xml preview form
+        clusterSetup.setClusterXml(sourceCluster.toString());
+
+        //check the value on a wizard
+        Assert.assertEquals(clusterSetup.getName(), sourceCluster.getName(), "Malformed name should be accepted.");
     }
 
     @AfterMethod(alwaysRun = true)

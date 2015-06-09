@@ -26,11 +26,9 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
-import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -96,9 +94,17 @@ public class ClusterWizardPage extends AbstractSearchPage {
      * Methods to fill specific wizard fields.
      */
     public void setName(String name) {
-        WebElement nameInput = driver.findElement(By.xpath("//div[label[text()='Name']]/input"));
+        WebElement nameInput = getNameInput();
         nameInput.clear();
         sendKeysSlowly(nameInput, name);
+    }
+
+    public String getName() {
+        return getNameInput().getAttribute("value");
+    }
+
+    private WebElement getNameInput() {
+        return driver.findElement(By.xpath("//div[label[text()='Name']]/input"));
     }
 
     public void setColo(String colo) {
@@ -172,7 +178,7 @@ public class ClusterWizardPage extends AbstractSearchPage {
     public void addTag(String key, String value) {
         List<WebElement> tagInputs = clusterBox.findElements(By.xpath("//input[@ng-model='tag.key']"));
         List<WebElement> valueInputs = clusterBox.findElements(By.xpath("//input[@ng-model='tag.value']"));
-        WebElement tagInput = tagInputs.get(tagInputs.size()-1);
+        WebElement tagInput = tagInputs.get(tagInputs.size() - 1);
         sendKeysSlowly(tagInput, key);
         WebElement valueInput = valueInputs.get(valueInputs.size() - 1);
         sendKeysSlowly(valueInput, value);
@@ -268,9 +274,17 @@ public class ClusterWizardPage extends AbstractSearchPage {
 
     public ClusterMerlin getXmlPreview() {
         //preview block fetches changes slower then they appear on the form
-        TimeUtil.sleepSeconds(1);
+        waitForAngularToFinish();
         String previewData = xmlPreview.getAttribute("value");
         return new ClusterMerlin(previewData);
+    }
+
+    public void setClusterXml(String clusterXml) {
+        clickEditXml(true);
+        xmlPreview.clear();
+        xmlPreview.sendKeys(clusterXml);
+        waitForAngularToFinish();
+        clickEditXml(false);
     }
 
     /**
@@ -352,8 +366,10 @@ public class ClusterWizardPage extends AbstractSearchPage {
             propsLeft = propsLeft.split("Properties")[1];
             String properties = propsLeft.split("Locations")[0].trim();
             for (String line : properties.split("\\n")) {
-                slices = line.split(":");
-                cluster.addProperty(slices[0].trim(), slices[1].trim());
+                int indx = line.indexOf(":");
+                String name = line.substring(0, indx).trim();
+                String value = line.substring(indx + 1, line.length()).trim();
+                cluster.addProperty(name, value);
             }
         }
         //retrieve locations
@@ -387,10 +403,11 @@ public class ClusterWizardPage extends AbstractSearchPage {
     /**
      * Clicks on editXml button.
      */
-    private void clickEditXml() {
+    public void clickEditXml(boolean shouldBeEnabled) {
         editXML.click();
         String disabled = xmlPreview.getAttribute("disabled");
-        Assert.assertEquals(disabled, null, "Xml preview should be enabled.");
+        Assert.assertEquals(disabled == null, shouldBeEnabled,
+            "Xml preview should be " + (shouldBeEnabled ? "enabled" : "disabled"));
     }
 
     /**
@@ -409,24 +426,6 @@ public class ClusterWizardPage extends AbstractSearchPage {
     }
 
     /**
-     * Checks whether alert has appeared and does it contains expected message.
-     * @param alertMessage expected message
-     */
-    public void checkSubmissionAlert(boolean shouldSucceed, String alertMessage) {
-        String className = "alert ng-binding bg-danger";
-        if (shouldSucceed) {
-            className = "alert ng-binding bg-success";
-        }
-        waitForElement(String.format("//div[contains(@class, '%s')]", className), DEFAULT_TIMEOUT, "Alert not found.");
-        //alert message is not a content of a div, but is product of the script
-        //so we can't just retrieve it as usually
-        String alertText = ((JavascriptExecutor)driver).executeScript(String.format(
-            "return (function(){return document.getElementsByClassName('%s')[0].textContent;})();",
-            className)).toString().trim();
-        Assert.assertEquals(alertText, alertMessage);
-    }
-
-    /**
      * Clicks on previous button.
      */
     public void clickPrevious() {
@@ -436,6 +435,18 @@ public class ClusterWizardPage extends AbstractSearchPage {
 
     public void checkRegistry() {
         clusterBox.findElement(By.xpath("//input[@type='checkbox']")).click();
+    }
+
+    public String getInterfaceEndpoint(Interfacetype interfacetype) {
+        String xpath = String.format("(//input[@ng-model='_interface._endpoint'])[%s]", interfacetype.ordinal() + 1);
+        WebElement endpoint = clusterBox.findElement(By.xpath(xpath));
+        return endpoint.getAttribute("value");
+    }
+
+    public String getInterfaceVersion(Interfacetype interfacetype) {
+        String xpath = String.format("(//input[@ng-model='_interface._version'])[%s]", interfacetype.ordinal() + 1);
+        WebElement version = clusterBox.findElement(By.xpath(xpath));
+        return version.getAttribute("value");
     }
 
     /**
