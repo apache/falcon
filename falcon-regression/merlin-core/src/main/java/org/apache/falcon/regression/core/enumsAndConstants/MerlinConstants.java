@@ -66,7 +66,7 @@ public final class MerlinConstants {
     public static final String DIFFERENT_USER_NAME = Config.getProperty("other.user.name", "root");
 
     /** a user that does not belong to the group of current user. */
-    public static final String DIFFERENT_USER_GROUP = Config.getProperty("other.user.name", "root");
+    public static final String DIFFERENT_USER_GROUP = Config.getProperty("other.user.group", "root");
 
     /** falcon super user. */
     public static final String FALCON_SUPER_USER_NAME =

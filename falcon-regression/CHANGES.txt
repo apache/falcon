@@ -93,6 +93,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1259 Fix property picked for DIFFERENT_USER_GROUP (Raghav Kumar Gautam)
+
    FALCON-1261 ProcessSetupTest, EntitiesPatternSearchTest stabilization (Paul Isaychuk via Raghav Kumar Gautam)
 
    FALCON-1256 ListProcessInstancesTest needs to be stabilized (Raghav Kumar Gautam)
