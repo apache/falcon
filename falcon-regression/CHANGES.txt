@@ -351,6 +351,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1267 Fix Processsetuptest#testinoutstepdropdownfeeds (Namit Maheshwari via Raghav Kumar Gautam)
+
    FALCON-1264 Fix validity parsing in ProcessWizardPage (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-1263 Fix waitTillInstanceReachState for EntityType.PROCESS (Ruslan Ostafiychuk)

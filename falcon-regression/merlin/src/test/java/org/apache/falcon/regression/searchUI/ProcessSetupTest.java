@@ -750,6 +750,7 @@ public class ProcessSetupTest extends BaseUITestClass {
             "Input Feed Dropdown Values Are Not Equal");
 
         actualDropdownValues = processWizardPage.getOutputValues(0);
+        Collections.sort(actualDropdownValues);
         Assert.assertEquals(expectedDropdownValues, actualDropdownValues,
             "Output Feed Dropdown Values Are Not Equal");
     }
