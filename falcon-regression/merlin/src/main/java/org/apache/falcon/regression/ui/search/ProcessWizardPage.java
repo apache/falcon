@@ -891,15 +891,14 @@ public class ProcessWizardPage extends AbstractSearchPage {
             //remove the part which was used
             currentBlock = currentBlock.substring(currentBlock.indexOf("Validity"));
             //get validity
-            String start = getProperty(currentBlock, "Validity", "End", 2).split(" ")[1];
+            String start = getProperty(currentBlock, "Validity", "End", 2);
             //check if there are other clusters
             last = currentBlock.indexOf("Name");
             String innerBlock = currentBlock.substring(currentBlock.indexOf("End"),
                 last != -1 ? last : currentBlock.length() - 1).trim();
-            parts = innerBlock.trim().split("\\n");
-            String end = parts[1].split(" ")[1];
+            String end = innerBlock.trim().split("\\n")[1];
             Validity validity = new Validity();
-            DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'SSS'Z'");
+            DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy'-'MM'-'dd' 'HH':'mm'");
             validity.setStart(formatter.parseDateTime(start.replaceAll("\"", "")).toDate());
             validity.setEnd(formatter.parseDateTime(end.replaceAll("\"", "")).toDate());
             cluster.setValidity(validity);
@@ -942,6 +941,8 @@ public class ProcessWizardPage extends AbstractSearchPage {
             output.setInstance(getProperty(currentBlock, "Instance", "Name", 2));
             draft.getOutputs().getOutputs().add(output);
         }
+        //check compulsory process properties
+        Assert.assertNotNull(draft.getACL(), "ACL is empty (null).");
         return draft;
     }
 
