@@ -172,12 +172,12 @@ public class ListProcessInstancesTest extends BaseTestClass {
 
         //use start option without numResults. 10 instances expected
         r = prism.getProcessHelper().listInstances(processName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
+        InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
 
         //use start option with numResults value which is smaller then default.
         r = prism.getProcessHelper().listInstances(processName,
             "start=" + startTime + "&numResults=8", null);
-        InstanceUtil.validateResponse(r, 8, 0, 0, 8, 0);
+        InstanceUtil.validateResponse(r, 8, 3, 0, 5, 0);
 
         //use start option with numResults value greater then default. All 12 instances expected
         r = prism.getProcessHelper().listInstances(processName,
@@ -242,6 +242,8 @@ public class ListProcessInstancesTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
 
         //wait till new instances be RUNNING and total status count be stable
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
 
@@ -300,7 +302,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
 
         //only start, actual startTime, should get 10 most recent instances
         r = prism.getProcessHelper().listInstances(processName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
+        InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
 
         //only start, greater then actual startTime
         r = prism.getProcessHelper().listInstances(processName,
