@@ -93,7 +93,6 @@ public class LoginTest extends BaseUITestClass {
 
         loginPage.tryLogin();
 
-        Assert.assertEquals(loginPage.getPasswdVisibleWarning(), "Please enter your password.");
     }
 
     @Test
