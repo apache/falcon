@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.ui.search;
 
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -31,7 +32,7 @@ import org.testng.Assert;
 /** Page object for the Login Page. */
 public class LoginPage extends AbstractSearchPage {
     private static final Logger LOGGER = Logger.getLogger(LoginPage.class);
-    public static final String UI_DEFAULT_USER = "hrt_qa";
+    public static final String UI_DEFAULT_USER = MerlinConstants.CURRENT_USER_NAME;
 
     public LoginPage(WebDriver driver) {
         super(driver);

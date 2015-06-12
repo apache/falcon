@@ -198,11 +198,11 @@ public final class BundleUtil {
         }
         //set colo name:
         clusterObject.setColo(Config.getProperty(prefix + "colo"));
+        // get the properties object for the cluster
+        org.apache.falcon.entity.v0.cluster.Properties clusterProperties =
+            clusterObject.getProperties();
         // properties in the cluster needed when secure mode is on
         if (MerlinConstants.IS_SECURE) {
-            // get the properties object for the cluster
-            org.apache.falcon.entity.v0.cluster.Properties clusterProperties =
-                clusterObject.getProperties();
             // add the namenode principal to the properties object
             clusterProperties.getProperties().add(getFalconClusterPropertyObject(
                     "dfs.namenode.kerberos.principal",
@@ -219,11 +219,18 @@ public final class BundleUtil {
             clusterProperties.getProperties()
                 .add(getFalconClusterPropertyObject("hive.metastore.sasl.enabled", "true"));
             // Only set the metastore uri if its not empty or null.
-            if (null != hcatEndpoint && !hcatEndpoint.isEmpty()) {
-                //hive.metastore.uris
-                clusterProperties.getProperties()
-                    .add(getFalconClusterPropertyObject("hive.metastore.uris", hcatEndpoint));
-            }
+        }
+        String hiveMetastoreUris = Config.getProperty(prefix + "hive.metastore.uris");
+        if (StringUtils.isNotBlank(hiveMetastoreUris)) {
+            //hive.metastore.uris
+            clusterProperties.getProperties()
+                .add(getFalconClusterPropertyObject("hive.metastore.uris", hiveMetastoreUris));
+        }
+        String hiveServer2Uri = Config.getProperty(prefix + "hive.server2.uri");
+        if (StringUtils.isNotBlank(hiveServer2Uri)) {
+            //hive.metastore.uris
+            clusterProperties.getProperties()
+                .add(getFalconClusterPropertyObject("hive.server2.uri", hiveServer2Uri));
         }
         return clusterObject;
     }

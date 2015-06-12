@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -76,13 +77,19 @@ public class EntitiesTableTest extends BaseUITestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         ProcessMerlin process = bundles[0].getProcessObject();
         baseProcessName = process.getName();
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= tags.length; i++) {
             process.setName(baseProcessName + '-' + i);
             process.setTags(StringUtils.join(Arrays.copyOfRange(tags, 0, i), ','));
             AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(process.toString()));
         }
 
     }
+
+    @BeforeMethod(alwaysRun = true)
+    public void refresh() {
+        searchPage.refresh();
+    }
+
 
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
@@ -117,9 +124,9 @@ public class EntitiesTableTest extends BaseUITestClass {
     @Test
     public void testSearchBoxManyParams() {
         searchPage.doSearch(baseProcessName);
-        for (int i = 0; i < 10; i++) {
-            Assert.assertEquals(searchPage.appendAndSearch(tags[i]).size(), 10 - i,
-                "There should be " + (10 - i) + " results");
+        for (int i = 0; i < tags.length; i++) {
+            Assert.assertEquals(searchPage.appendAndSearch(tags[i]).size(), tags.length - i,
+                "There should be " + (tags.length - i) + " results");
         }
     }
 
@@ -130,7 +137,7 @@ public class EntitiesTableTest extends BaseUITestClass {
     @Test(dataProvider = "getBoolean")
     public void testSearchBoxCleanSingleParam(boolean deleteByClick) {
         searchPage.doSearch(this.getClass().getSimpleName() + ' ' + StringUtils.join(tags, ' '));
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= tags.length; i++) {
             Assert.assertEquals(searchPage.getSearchResults().size(), i,
                 "There should be " + i + " results");
             if (deleteByClick) {

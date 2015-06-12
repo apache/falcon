@@ -42,6 +42,7 @@ public class InstancePage extends AbstractSearchPage {
      */
     public enum Button {
         Resume,
+        Rerun,
         Suspend,
         Stop
     }

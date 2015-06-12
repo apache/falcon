@@ -145,8 +145,9 @@ public class SearchPage extends AbstractSearchPage {
 
     public List<SearchResult> appendAndSearch(String appendedPart) {
         for(String queryParam : appendedPart.split("\\s+")) {
+            focusOnSearchBox();
             getSearchBox().sendKeys(queryParam);
-            getSearchBox().sendKeys(Keys.SPACE);
+            getSearchBox().sendKeys(Keys.ENTER);
         }
         String activeAlert = getActiveAlertText();
         if (activeAlert != null) {
@@ -163,6 +164,7 @@ public class SearchPage extends AbstractSearchPage {
     }
 
     public void clearSearch() {
+        focusOnSearchBox();
         getSearchBox().clear();
         SearchQuery query = getSearchQuery();
         for (int i = 0; i < query.getElementsNumber(); i++) {
@@ -171,10 +173,14 @@ public class SearchPage extends AbstractSearchPage {
     }
 
     public void removeLastParam() {
+        focusOnSearchBox();
         getSearchBox().sendKeys(Keys.BACK_SPACE);
         getSearchBox().sendKeys(Keys.BACK_SPACE);
     }
 
+    private void focusOnSearchBox() {
+        searchBlock.findElement(By.className("tags")).click();
+    }
 
     public void checkNoResult() {
         UIAssert.assertNotDisplayed(resultBlock, "Search result block");
@@ -216,7 +222,6 @@ public class SearchPage extends AbstractSearchPage {
 
         private SearchQuery updateElements() {
             name = null;
-            type = null;
             tags.clear();
             final WebElement queryGroup = searchBlock.findElement(By.className("tag-list"));
             final List<WebElement> queryParts = queryGroup.findElements(By.tagName("li"));
@@ -225,34 +230,22 @@ public class SearchPage extends AbstractSearchPage {
                 final WebElement queryLabel = queryPart.findElement(By.tagName("strong"));
                 final String queryText = queryPart.findElement(By.tagName("span")).getText();
                 switch (queryLabel.getText().trim()) {
-                case "NAME:":
+                case "Name:":
                     if (name != null) {
                         LOGGER.warn(String.format("NAME block is already added: '%s' => '%s'",
                             name, queryText));
                     }
                     name = queryText;
                     break;
-                case "TAG:":
+                case "Tag:":
                     tags.add(queryText);
                     break;
-                case "TYPE:":
-                    if (type != null) {
-                        LOGGER.warn(String.format("TYPE block is already added: '%s' => '%s'",
-                            type, queryText));
-                    }
-                    type = queryText;
-                    break;
                 default:
-                    Assert.fail("There should be only TAGs or TYPE");
                 }
             }
             return this;
         }
 
-
-        public String getType() {
-            return type;
-        }
 
         public String getName() {
             return name;

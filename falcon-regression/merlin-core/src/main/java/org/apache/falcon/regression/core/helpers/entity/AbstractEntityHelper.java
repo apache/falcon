@@ -164,6 +164,7 @@ public abstract class AbstractEntityHelper {
     public FileSystem getHadoopFS() throws IOException {
         if (null == this.hadoopFS) {
             Configuration conf = new Configuration();
+            conf.setBoolean("fs.hdfs.impl.disable.cache", true);
             conf.set("fs.default.name", "hdfs://" + this.hadoopURL);
             this.hadoopFS = FileSystem.get(conf);
         }

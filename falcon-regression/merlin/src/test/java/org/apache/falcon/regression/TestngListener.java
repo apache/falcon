@@ -119,7 +119,7 @@ public class TestngListener implements ITestListener, IExecutionListener {
                 String params = Arrays.toString(result.getParameters());
                 params = params.replaceAll("[<>\":\\\\/\\|\\?\\*]", ""); //remove <>:"/\|?*
                 String filename = OSUtil.getPath("target", "surefire-reports", "screenshots",
-                    String.format("%s.%s.(%s).png", result.getTestClass().getRealClass()
+                    String.format("%s.%s(%s).png", result.getTestClass().getRealClass()
                         .getSimpleName(), result.getName(), params));
                 FileUtils.writeByteArrayToFile(new File(filename), scrFile);
             } catch (IOException e) {

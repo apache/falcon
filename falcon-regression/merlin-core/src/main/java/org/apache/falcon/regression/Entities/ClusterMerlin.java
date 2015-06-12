@@ -111,6 +111,40 @@ public class ClusterMerlin extends Cluster {
         }
     }
 
+    public String getInterfaceEndpoint(final Interfacetype interfaceType) {
+        String value = null;
+        for (Interface anInterface : getInterfaces().getInterfaces()) {
+            if (anInterface.getType() == interfaceType) {
+                value = anInterface.getEndpoint();
+            }
+        }
+        LOGGER.info("Cluster: " + getName() + " interfaceType: " + interfaceType
+            + " value:" + value);
+        return value;
+    }
+
+    public String getProperty(final String propName) {
+        String value = null;
+        for (Property property : getProperties().getProperties()) {
+            if (property.getName().trim().equals(propName.trim())) {
+                value = property.getValue();
+            }
+        }
+        LOGGER.info("Cluster: " + getName() + " property: " + propName + " value:" + value);
+        return value;
+    }
+
+    public String getLocation(final String locationType) {
+        String value = null;
+        for (Location location : getLocations().getLocations()) {
+            if (location.getName().name().trim().equalsIgnoreCase(locationType.trim().toLowerCase())) {
+                value = location.getPath();
+            }
+        }
+        LOGGER.info("Cluster: " + getName() + " locationType: " + locationType + " value:" + value);
+        return value;
+    }
+
     /**
      * Cleans all properties and returns empty cluster as a draft (as we can't create cluster e.g from empty string).
      */
@@ -251,14 +285,15 @@ public class ClusterMerlin extends Cluster {
         return true;
     }
 
-    public List<Location> getLocation(ClusterLocationType type) {
+    public Location getLocation(ClusterLocationType type) {
         List<Location> locationsOfType = new ArrayList<>();
         for(Location location : locations.getLocations()) {
             if (location.getName() == type) {
                 locationsOfType.add(location);
             }
         }
-        return locationsOfType;
+        Assert.assertEquals(locationsOfType.size(), 1, "Unexpected number of " + type + " locations in: " + this);
+        return locationsOfType.get(0);
     }
     @Override
     public EntityType getEntityType() {

@@ -26,6 +26,7 @@ import org.apache.falcon.regression.core.util.*;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.falcon.regression.ui.search.EntityPage;
 import org.apache.falcon.regression.ui.search.InstancePage;
+import org.apache.falcon.regression.ui.search.InstancePage.Button;
 import org.apache.falcon.regression.ui.search.LoginPage;
 import org.apache.falcon.regression.ui.search.SearchPage;
 import org.apache.falcon.resource.InstancesResult;
@@ -90,7 +91,7 @@ public class InstancePageTest extends BaseUITestClass {
         instancePage = searchPage.openEntityPage(processName).openInstance(instance);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.WAITING);
 
-        Assert.assertEquals(instancePage.getButtons(false), EnumSet.allOf(InstancePage.Button.class),
+        Assert.assertEquals(instancePage.getButtons(false), EnumSet.allOf(Button.class),
             "All buttons should be disabled for WAITING instance");
 
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
@@ -100,8 +101,8 @@ public class InstancePageTest extends BaseUITestClass {
 
         instancePage = instancePage.refreshPage();
         checkInstanceStatuses(InstancesResult.WorkflowStatus.RUNNING);
-        Assert.assertEquals(instancePage.getButtons(false), EnumSet.of(InstancePage.Button.Resume),
-                "Only 'Resume' button should be disabled for RUNNING instance");
+        Assert.assertEquals(instancePage.getButtons(false), EnumSet.of(Button.Resume, Button.Rerun),
+                "'Rerun' and 'Resume' buttons should be disabled for RUNNING instance");
     }
 
     @Test
@@ -113,13 +114,13 @@ public class InstancePageTest extends BaseUITestClass {
         instancePage = searchPage.openEntityPage(processName).openInstance(instance);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.RUNNING);
 
-        instancePage.clickButton(InstancePage.Button.Suspend);
+        instancePage.clickButton(Button.Suspend);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.SUSPENDED);
 
-        Assert.assertEquals(instancePage.getButtons(false), EnumSet.of(InstancePage.Button.Suspend),
-                "Only 'Suspend' button should be disabled for SUSPENDED instance");
+        Assert.assertEquals(instancePage.getButtons(false), EnumSet.of(Button.Rerun, Button.Suspend),
+                "'Rerun' and 'Suspend' buttons should be disabled for SUSPENDED instance");
 
-        instancePage.clickButton(InstancePage.Button.Resume);
+        instancePage.clickButton(Button.Resume);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.RUNNING);
     }
 
@@ -132,13 +133,13 @@ public class InstancePageTest extends BaseUITestClass {
         instancePage = searchPage.openEntityPage(processName).openInstance(instance);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.RUNNING);
 
-        instancePage.clickButton(InstancePage.Button.Stop);
+        instancePage.clickButton(Button.Stop);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.KILLED);
 
-        Assert.assertEquals(instancePage.getButtons(true), EnumSet.of(InstancePage.Button.Resume),
-                "Only 'Resume' button should be active for KILLED instance");
+        Assert.assertEquals(instancePage.getButtons(true), EnumSet.of(Button.Rerun),
+                "Only 'Rerun' button should be active for KILLED instance");
 
-        instancePage.clickButton(InstancePage.Button.Resume);
+        instancePage.clickButton(Button.Rerun);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.RUNNING);
     }
 
@@ -171,13 +172,13 @@ public class InstancePageTest extends BaseUITestClass {
 
 
     private void checkInstanceStatuses(InstancesResult.WorkflowStatus status) throws Exception {
+        Assert.assertEquals(instancePage.getStatus(), status.toString(), "Unexpected status on UI");
+
         InstancesResult.Instance[] instances = prism.getProcessHelper()
                 .listInstances(processName, "start=" + instance, null).getInstances();
         Assert.assertNotNull(instance, "Instances not found via API");
         Assert.assertEquals(instances.length, 1, "Only one instance expected via API");
         Assert.assertEquals(instances[0].getStatus(), status, "Unexpected status via API");
-
-        Assert.assertEquals(instancePage.getStatus(), status.toString(), "Unexpected status on UI");
     }
 
 

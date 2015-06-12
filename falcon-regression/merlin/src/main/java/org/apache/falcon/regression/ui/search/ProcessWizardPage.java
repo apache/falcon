@@ -822,7 +822,7 @@ public class ProcessWizardPage extends AbstractSearchPage {
 
     public void clickSave(){
         getSaveProcessButton().click();
-        waitForAngularToFinish();
+        waitForAlert();
     }
 
     /**

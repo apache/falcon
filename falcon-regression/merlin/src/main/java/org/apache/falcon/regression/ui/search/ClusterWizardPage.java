@@ -423,6 +423,7 @@ public class ClusterWizardPage extends AbstractSearchPage {
      */
     public void clickSave() {
         save.click();
+        waitForAlert();
     }
 
     /**

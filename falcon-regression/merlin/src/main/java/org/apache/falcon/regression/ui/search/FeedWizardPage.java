@@ -641,6 +641,7 @@ public class FeedWizardPage extends AbstractSearchPage {
         setFeedClustersInfo(feed);
         nextButton.click();
         saveFeedButton.click();
+        waitForAlert();
     }
 
     public FeedMerlin getFeedMerlinFromFeedXml() throws Exception{

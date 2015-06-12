@@ -90,6 +90,7 @@ public class ExternalFSTest extends BaseTestClass{
         conf.set("fs.defaultFS", WASB_END_POINT);
         conf.set("fs.azure.account.key." + MerlinConstants.WASB_ACCOUNT,
                 MerlinConstants.WASB_SECRET);
+        conf.setBoolean("fs.hdfs.impl.disable.cache", false);
         wasbFS = FileSystem.get(conf);
         LOGGER.info("creating base wasb dir" + baseWasbDir);
     }
