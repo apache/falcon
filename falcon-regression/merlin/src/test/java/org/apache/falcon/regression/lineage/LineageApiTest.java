@@ -406,32 +406,33 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertEdgeSanity(bothEdges);
         Assert.assertEquals(bothEdges.filterByType(Edge.LabelType.STORED_IN).size(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge between the cluster and inputFeeds, outputFeeds");
+            "Expecting edge between the cluster and inputFeeds, outputFeeds");
         Assert.assertEquals(bothEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
-            1, "There should be an edge from the cluster to colo");
-        Assert.assertEquals(bothEdges.getTotalSize(), inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds,"
-                + " one between cluster and colo, one between cluster and classification");
+            1, "Expecting an edge from the cluster to colo");
+        Assert.assertEquals(bothEdges.getTotalSize(), inputFeeds.length + outputFeeds.length + 3,
+            "Expecting edge from the cluster to inputFeeds & outputFeeds,"
+                + "one between cluster and owner, one between cluster and colo and one between cluster and tags");
 
         final EdgesResult inComingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.inComingEdges);
         GraphAssert.assertEdgeSanity(inComingEdges);
         Assert.assertEquals(inComingEdges.getTotalSize(), inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds");
+            "Expecting edge from the cluster to inputFeeds & outputFeeds");
         Assert.assertEquals(inComingEdges.filterByType(Edge.LabelType.STORED_IN).size(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds");
+            "Expecting edge from the cluster to inputFeeds & outputFeeds");
 
 
         final EdgesResult outGoingEdges =
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
         Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
-            1, "There should be an edge from the cluster to colo");
+            1, "Expecting an edge from the cluster to colo");
         Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.TESTNAME).size(),
-            1, "There should be an edge from the cluster to classification");
-        Assert.assertEquals(outGoingEdges.getTotalSize(), 2,
-            "There should be an edge from the cluster to colo");
+            1, "Expecting an edge from the cluster to classification");
+        Assert.assertEquals(outGoingEdges.getTotalSize(), 3,
+            "Expecting one edge between cluster and owner, one between cluster and colo and "
+                + "one between cluster and tags");
     }
 
     @Test
@@ -443,23 +444,23 @@ public class LineageApiTest extends BaseTestClass {
         GraphAssert.assertVertexSanity(bothVertices);
         Assert.assertEquals(bothVertices.filterByType(Vertex.VERTEX_TYPE.FEED_ENTITY).size(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds");
+            "Expecting edge from the cluster to inputFeeds & outputFeeds");
         Assert.assertEquals(bothVertices.filterByType(Vertex.VERTEX_TYPE.COLO).size(), 1,
             "The should be one edge between cluster and colo");
         Assert.assertEquals(bothVertices.getTotalSize(),
-            inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds,"
-                + " one between cluster and colo, one between cluster and classification");
+            inputFeeds.length + outputFeeds.length + 3,
+            "Expecting edge from the cluster to inputFeeds & outputFeeds, "
+                + "one between cluster and owner, one between cluster and colo and one between cluster and tags");
 
         final VerticesResult inComingVertices =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.inComingVertices);
         GraphAssert.assertVertexSanity(inComingVertices);
         Assert.assertEquals(inComingVertices.filterByType(Vertex.VERTEX_TYPE.FEED_ENTITY).size(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds");
+            "Expecting edge from the cluster to inputFeeds & outputFeeds");
         Assert.assertEquals(inComingVertices.getTotalSize(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds and one "
+            "Expecting edge from the cluster to inputFeeds & outputFeeds and one "
                 + "between cluster and colo");
 
         final VerticesResult outgoingVertices =
@@ -468,9 +469,10 @@ public class LineageApiTest extends BaseTestClass {
         Assert.assertEquals(outgoingVertices.filterByType(Vertex.VERTEX_TYPE.COLO).size(), 1,
             "The should be one edge between cluster and colo");
         Assert.assertEquals(outgoingVertices.filterByName(TEST_NAME).size(),
-            1, "There should be an edge from the cluster to classification");
-        Assert.assertEquals(outgoingVertices.getTotalSize(), 2,
-            "There should be an edge from the cluster to colo");
+            1, "Expecting an edge from the cluster to classification");
+        Assert.assertEquals(outgoingVertices.getTotalSize(), 3,
+            "Expecting one edge between cluster and owner, one between cluster and colo and "
+                + "one between cluster and tags");
     }
 
     @Test
@@ -480,21 +482,22 @@ public class LineageApiTest extends BaseTestClass {
         final VerticesResult bothCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.bothCount);
         Assert.assertEquals(bothCount.getTotalSize(),
-            inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds,"
-                + " one between cluster and colo, one between cluster and classification");
+            inputFeeds.length + outputFeeds.length + 1 + 2,
+            "Expecting edge from the cluster to inputFeeds & outputFeeds, "
+                + "one between cluster and owner, one between cluster and colo and one between cluster and tags");
 
         final VerticesResult inCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.inCount);
         Assert.assertEquals(inCount.getTotalSize(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds and one "
+            "Expecting edge from the cluster to inputFeeds & outputFeeds and one "
                 + "between cluster and colo");
 
         final VerticesResult outCount =
             lineageHelper.getVerticesByDirection(clusterVertexId, Direction.outCount);
-        Assert.assertEquals(outCount.getTotalSize(), 2,
-            "There should be an edge from the cluster to colo");
+        Assert.assertEquals(outCount.getTotalSize(), 3,
+            "Expecting one edge between cluster and owner, one between cluster and "
+                + "colo and one between cluster and tags");
     }
 
     @Test
@@ -507,9 +510,9 @@ public class LineageApiTest extends BaseTestClass {
             Assert.assertTrue(vertexId > 0, "Vertex id should be valid.");
         }
         Assert.assertEquals(bothVerticesIds.getTotalSize(),
-            inputFeeds.length + outputFeeds.length + 2,
-            "There should be edge from the cluster to inputFeeds & outputFeeds,"
-                + " one between cluster and colo, one between cluster and classification");
+            inputFeeds.length + outputFeeds.length + 3,
+            "Expecting edge from the cluster to inputFeeds & outputFeeds,"
+                + " one between cluster and owner, one between cluster and colo and one between cluster and tags");
 
         final VertexIdsResult incomingVerticesIds =
             lineageHelper.getVertexIdsByDirection(clusterVertexId, Direction.incomingVerticesIds);
@@ -518,17 +521,17 @@ public class LineageApiTest extends BaseTestClass {
         }
         Assert.assertEquals(incomingVerticesIds.getTotalSize(),
             inputFeeds.length + outputFeeds.length,
-            "There should be edge from the cluster to inputFeeds & outputFeeds and one "
-                + "between cluster and colo");
+            "Expecting edge from the cluster to inputFeeds & outputFeeds, "
+                + "one between cluster and owner, one between cluster and colo and one between cluster and tags");
 
         final VertexIdsResult outgoingVerticesIds =
             lineageHelper.getVertexIdsByDirection(clusterVertexId, Direction.outgoingVerticesIds);
         for (Integer vertexId : outgoingVerticesIds.getResults()) {
             Assert.assertTrue(vertexId > 0, "Vertex id should be valid.");
         }
-        Assert.assertEquals(outgoingVerticesIds.getTotalSize(), 2,
-            "There should be an edge from the cluster to colo and one from cluster to "
-                + "classification");
+        Assert.assertEquals(outgoingVerticesIds.getTotalSize(), 3,
+            "Expecting one edge between cluster and owner, one between cluster and colo and "
+                + "one between cluster and tags");
     }
 
     @Test
@@ -567,7 +570,7 @@ public class LineageApiTest extends BaseTestClass {
             lineageHelper.getEdgesByDirection(clusterVertexId, Direction.outGoingEdges);
         GraphAssert.assertEdgeSanity(outGoingEdges);
         Assert.assertEquals(outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).size(),
-            1, "There should be an edge from the cluster to colo");
+            1, "Expecting an edge from the cluster to colo");
 
         final String clusterColoEdgeId =
             outGoingEdges.filterByType(Edge.LabelType.CLUSTER_COLO).get(0).getId();

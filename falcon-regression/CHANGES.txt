@@ -351,6 +351,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1266 LineageApiTest test fixes (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
    FALCON-1265 ListProcessInstancesTest test fixes (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 
    FALCON-1267 Fix Processsetuptest#testinoutstepdropdownfeeds (Namit Maheshwari via Raghav Kumar Gautam)
