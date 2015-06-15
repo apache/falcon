@@ -9,7 +9,7 @@ Trunk (Unreleased)
   IMPROVEMENTS
     FALCON-1114 Oozie findBundles lists a directory and tries to match with the bundle's appPath
     (Pallavi Rao via Ajay Yadava)
-    
+
     FALCON-1207 Falcon checkstyle allows wildcard imports(Pallavi Rao via Ajay Yadava)
     
     FALCON-1147 Allow _ in the names for name value pair(Sowmya Ramesh via Ajay Yadava)
@@ -43,6 +43,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1101 Cluster submission in falcon does not create an owned-by edge(Sowmya Ramesh via Ajay Yadava)
+
     FALCON-1104 Exception while adding process instance to graphdb when feed has partition expression
     (Pavan Kumar Kolamuri via Ajay Yadava)
 

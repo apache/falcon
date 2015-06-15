@@ -73,7 +73,6 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LOG.info("Adding cluster entity: {}", clusterEntity.getName());
         Vertex clusterVertex = addVertex(clusterEntity.getName(), RelationshipType.CLUSTER_ENTITY);
 
-        addUserRelation(clusterVertex);
         addColoRelation(clusterEntity.getColo(), clusterVertex);
         addDataClassification(clusterEntity.getTags(), clusterVertex);
     }

@@ -211,7 +211,7 @@ public class MetadataDiscoveryResourceTest {
         Assert.assertEquals(inVertices.size(), 10);
         Assert.assertNotNull(((Map) inVertices.get(0)).get("name"));
         List outVertices = (List) results.get("outVertices");
-        Assert.assertEquals(outVertices.size(), 2);
+        Assert.assertEquals(outVertices.size(), 3);
         Assert.assertNotNull(((Map) outVertices.get(0)).get("name"));
     }
 
@@ -251,7 +251,7 @@ public class MetadataDiscoveryResourceTest {
         Assert.assertEquals(results.get("type"), RelationshipType.USER.toString());
         Assert.assertEquals(results.get("name"), "falcon-user");
         List inVertices = (List) results.get("inVertices");
-        Assert.assertEquals(inVertices.size(), 10);
+        Assert.assertEquals(inVertices.size(), 11);
         Assert.assertNotNull(((Map) inVertices.get(0)).get("name"));
         List outVertices = (List) results.get("outVertices");
         Assert.assertEquals(outVertices.size(), 0);
