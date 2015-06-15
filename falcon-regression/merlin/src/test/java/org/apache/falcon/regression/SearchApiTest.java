@@ -211,63 +211,63 @@ public class SearchApiTest extends BaseTestClass {
 
             /*Tagkey test cases*/
             /* Full tagkey name*/
-            {new QueryParams().withTagkey("bundle1"), new Result().withExpBundles(1)
+            {new QueryParams().withTagkeys("bundle1"), new Result().withExpBundles(1)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("bundle2"), new Result().withExpBundles(2)
+            {new QueryParams().withTagkeys("bundle2"), new Result().withExpBundles(2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("bundle3"), new Result().withExpBundles(3)
+            {new QueryParams().withTagkeys("bundle3"), new Result().withExpBundles(3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("bUnDlE1"), new Result().withExpBundles(1)
+            {new QueryParams().withTagkeys("bUnDlE1"), new Result().withExpBundles(1)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("_falcon_mirroring_type"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("_falcon_mirroring_type"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("process", "mirror").withExpTotal(3), },
             /* Special, utf-8 symbols*/
-            {new QueryParams().withTagkey("bun@le#"), new Result()},
-            {new QueryParams().withTagkey("bundl€"), new Result()},
+            {new QueryParams().withTagkeys("bun@le#"), new Result()},
+            {new QueryParams().withTagkeys("bundl€"), new Result()},
             /* Common for a pair of bundles; use both tag and value as tagkey*/
-            {new QueryParams().withTagkey("b1b2"), new Result().withExpBundles(1, 2)
+            {new QueryParams().withTagkeys("b1b2"), new Result().withExpBundles(1, 2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(6), },
-            {new QueryParams().withTagkey("partial"), new Result().withExpBundles(1, 2)
+            {new QueryParams().withTagkeys("partial"), new Result().withExpBundles(1, 2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(6), },
             /* Common for 1,2,3 bundles*/
-            {new QueryParams().withTagkey("common"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("common"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(9), },
-            {new QueryParams().withTagkey("bundle"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("bundle"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(9), },
-            {new QueryParams().withTagkey("undle"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("undle"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(9), },
-            {new QueryParams().withTagkey("undle,undle"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("undle,undle"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(9), },
             /* Multiple full tags*/
-            {new QueryParams().withTagkey("common,bundle1"), new Result().withExpBundles(1)
+            {new QueryParams().withTagkeys("common,bundle1"), new Result().withExpBundles(1)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("common,bundle2"), new Result().withExpBundles(2)
+            {new QueryParams().withTagkeys("common,bundle2"), new Result().withExpBundles(2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("common,bundle3"), new Result().withExpBundles(3)
+            {new QueryParams().withTagkeys("common,bundle3"), new Result().withExpBundles(3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("common,bundle1,b1b2"), new Result().withExpBundles(1)
+            {new QueryParams().withTagkeys("common,bundle1,b1b2"), new Result().withExpBundles(1)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("common,bundle2,b1b2"), new Result().withExpBundles(2)
+            {new QueryParams().withTagkeys("common,bundle2,b1b2"), new Result().withExpBundles(2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
             /* Multiple, diff case*/
-            {new QueryParams().withTagkey("cOmMoN,bUnDlE2,B1b2"), new Result().withExpBundles(2)
+            {new QueryParams().withTagkeys("cOmMoN,bUnDlE2,B1b2"), new Result().withExpBundles(2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
             /* Multiple partial tags*/
-            {new QueryParams().withTagkey("common,undle"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("common,undle"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(9), },
-            {new QueryParams().withTagkey("ommo,undle"), new Result().withExpBundles(1, 2, 3)
+            {new QueryParams().withTagkeys("ommo,undle"), new Result().withExpBundles(1, 2, 3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(9), },
-            {new QueryParams().withTagkey("ommo,ndle1"), new Result().withExpBundles(1)
+            {new QueryParams().withTagkeys("ommo,ndle1"), new Result().withExpBundles(1)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("oMMon,ndle2"), new Result().withExpBundles(2)
+            {new QueryParams().withTagkeys("oMMon,ndle2"), new Result().withExpBundles(2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
-            {new QueryParams().withTagkey("oMMon,b1b"), new Result().withExpBundles(1, 2)
+            {new QueryParams().withTagkeys("oMMon,b1b"), new Result().withExpBundles(1, 2)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(6), },
-            {new QueryParams().withTagkey("comm,ndle3"), new Result().withExpBundles(3)
+            {new QueryParams().withTagkeys("comm,ndle3"), new Result().withExpBundles(3)
                 .withExpTypes("feed", "process", "mirror").withExpTotal(3), },
             /* Non existent*/
-            {new QueryParams().withTagkey("bundle9"), new Result(), },
-            {new QueryParams().withTagkey("common,undle,zero"), new Result(), },
+            {new QueryParams().withTagkeys("bundle9"), new Result(), },
+            {new QueryParams().withTagkeys("common,undle,zero"), new Result(), },
 
             /*Custom filter test cases*/
             //different types
@@ -280,22 +280,22 @@ public class SearchApiTest extends BaseTestClass {
             {new QueryParams().forType("MEGAFEED"), new Result()
                 .withExpError("Invalid entity type: MEGAFEED. Expected [feed, process, cluster]"), },
             //custom filters
-            {new QueryParams().forType("process").withNameSeq("bundle").withTagkey("bundle,b1b2").withNumResults(3)
+            {new QueryParams().forType("process").withNameSeq("bundle").withTagkeys("bundle,b1b2").withNumResults(3)
                 .withOrder(true).withSortOrder("desc"), new Result().withExpBundles(1, 2)
                     .withExpTypes("process", "mirror").withExpTotal(3), },
-            {new QueryParams().forType("feed,process").withNameSeq("bundle").withTagkey("partial,common")
+            {new QueryParams().forType("feed,process").withNameSeq("bundle").withTagkeys("partial,common")
                 .withOrder(true), new Result().withExpBundles(1, 2).withExpTypes("feed", "process", "mirror")
                 .withExpTotal(6), },
             {new QueryParams().forType("feed").withNameSeq("bundlefeed").withNumResults(2).withOrder(true)
                 .withSortOrder("asc"), new Result().withExpBundles(0, 1, 2, 3)
                     .withExpTypes("feed").withExpTotal(2), },
-            {new QueryParams().forType("feed,process").withNameSeq("bundleproc").withTagkey("_falcon_mirroring_type")
+            {new QueryParams().forType("feed,process").withNameSeq("bundleproc").withTagkeys("_falcon_mirroring_type")
                 .withOrder(true).withSortOrder("desc"), new Result().withExpBundles(1, 2, 3)
                     .withExpTypes("process", "mirror").withExpTotal(3), },
             //one option excludes another
             {new QueryParams().forType("process").withNameSeq("bundlefeed"), new Result(), },
             {new QueryParams().forType("feed").withNameSeq("bundleprocess"), new Result(), },
-            {new QueryParams().forType("feed,process").withNameSeq("bundle3").withTagkey("b1b2").withOrder(true),
+            {new QueryParams().forType("feed,process").withNameSeq("bundle3").withTagkeys("b1b2").withOrder(true),
                 new Result(), },
         };
     }
@@ -306,7 +306,7 @@ public class SearchApiTest extends BaseTestClass {
     private class QueryParams {
         private String type = "feed,process";
         private String nameSeq = null;
-        private String tagKey = null;
+        private String tagKeys = null;
         private String orderBy = null;
         private String sortOrder = null;
         private Integer numResults = null;
@@ -322,8 +322,8 @@ public class SearchApiTest extends BaseTestClass {
             return this;
         }
 
-        public QueryParams withTagkey(String paramTagkey) {
-            this.tagKey = paramTagkey;
+        public QueryParams withTagkeys(String paramTagkey) {
+            this.tagKeys = paramTagkey;
             return this;
         }
 
@@ -349,7 +349,7 @@ public class SearchApiTest extends BaseTestClass {
          */
         public String getParams() {
             return (nameSeq != null ? "&nameseq=" + nameSeq : "")
-                + (tagKey != null ? "&tagkey=" + tagKey : "")
+                + (tagKeys != null ? "&tagkeys=" + tagKeys : "")
                 + (numResults != null ? "&numResults=" + numResults : "")
                 + (orderBy != null ? "&orderBy=name" + orderBy : "")
                 + (sortOrder != null ? "&sortOrder=" + sortOrder : "") + fields;
@@ -365,7 +365,7 @@ public class SearchApiTest extends BaseTestClass {
         @Override
         public String toString() {
             return "[type: " + type + (nameSeq != null ? "; nseq: " + nameSeq : "")
-                + (tagKey != null ? "; tagkey: " + tagKey : "")
+                + (tagKeys != null ? "; tagkeys: " + tagKeys : "")
                 + (numResults != null ? "; n:" + numResults : "")
                 + (orderBy != null ? "; ordered" : "")
                 + (sortOrder != null ? "; " + sortOrder : "") + "]";
