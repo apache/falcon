@@ -54,6 +54,8 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String workflowForNoIpOp = baseTestHDFSDir + "/noinop";
+    private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN;
     private String process1;
     private String process2;
 
@@ -70,6 +72,8 @@ public class PrismProcessScheduleTest extends BaseTestClass {
             bundles[i] = new Bundle(bundle, servers.get(i));
             bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
+            bundles[i].setInputFeedDataPath(feedInputPath);
+            bundles[i].setOutputFeedLocationData(feedOutputPath);
         }
         process1 = bundles[0].getProcessData();
         process2 = bundles[1].getProcessData();
