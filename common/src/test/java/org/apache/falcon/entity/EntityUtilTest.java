@@ -20,6 +20,9 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.Pair;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.parser.ClusterEntityParser;
+import org.apache.falcon.entity.parser.EntityParserFactory;
+import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -27,10 +30,14 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LateArrival;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -288,4 +295,33 @@ public class EntityUtilTest extends AbstractTestBase {
         };
     }
 
+    @Test(dataProvider = "bundlePaths")
+    public void testIsStagingPath(Path path, boolean createPath, boolean expected) throws Exception {
+        ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
+        InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
+        org.apache.falcon.entity.v0.cluster.Cluster cluster = parser.parse(stream);
+
+        ProcessEntityParser processParser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+        stream = this.getClass().getResourceAsStream(PROCESS_XML);
+        Process process = processParser.parse(stream);
+
+        FileSystem fs = HadoopClientFactory.get().
+                createFalconFileSystem(ClusterHelper.getConfiguration(cluster));
+        if (createPath && !fs.exists(path)) {
+            fs.create(path);
+        }
+
+        Assert.assertEquals(EntityUtil.isStagingPath(cluster, process, path), expected);
+    }
+
+    @DataProvider(name = "bundlePaths")
+    public Object[][] getBundlePaths() {
+        return new Object[][] {
+            {new Path("/projects/falcon/staging/ivory/workflows/process/sample/"), true, true},
+            {new Path("/projects/falcon/staging/falcon/workflows/process/sample/"), true, true},
+            {new Path("/projects/abc/falcon/workflows/process/sample/"), true, false},
+            {new Path("/projects/falcon/staging/falcon/workflows/process/test-process/"), false, false},
+            {new Path("/projects/falcon/staging/falcon/workflows/process/test-process/"), true, false},
+        };
+    }
 }

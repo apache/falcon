@@ -48,7 +48,6 @@ import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
@@ -276,23 +275,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     //Return all bundles for the entity in the requested cluster
     private List<BundleJob> findBundles(Entity entity, String clusterName) throws FalconException {
         Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
-        FileStatus[] stgPaths = EntityUtil.getAllStagingPaths(cluster, entity);
         List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
-        if (stgPaths == null) {
-            return filteredJobs;
-        }
-
-        List<String> appPaths = new ArrayList<String>();
-        for (FileStatus file : stgPaths) {
-            appPaths.add(file.getPath().toUri().getPath());
-        }
-
         try {
             List<BundleJob> jobs = OozieClientFactory.get(cluster.getName()).getBundleJobsInfo(OozieClient.FILTER_NAME
                 + "=" + EntityUtil.getWorkflowName(entity) + ";", 0, 256);
             if (jobs != null) {
                 for (BundleJob job : jobs) {
-                    if (appPaths.contains(new Path(job.getAppPath()).toUri().getPath())) {
+                    if (EntityUtil.isStagingPath(cluster, entity, new Path(job.getAppPath()))) {
                         //Load bundle as coord info is not returned in getBundleJobsInfo()
                         BundleJob bundle = getBundleInfo(clusterName, job.getId());
                         filteredJobs.add(bundle);

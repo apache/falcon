@@ -45,14 +45,11 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
@@ -606,27 +603,20 @@ public final class EntityUtil {
             md5(clusterView) + "_" + String.valueOf(System.currentTimeMillis()));
     }
 
-    //Returns all staging paths for the entity
-    public static FileStatus[] getAllStagingPaths(org.apache.falcon.entity.v0.cluster.Cluster cluster,
-                                                  Entity entity) throws FalconException {
-        Path basePath = getBaseStagingPath(cluster, entity);
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
+    // Given an entity and a cluster, determines if the supplied path is the staging path for that entity.
+    public static boolean isStagingPath(Cluster cluster,
+                                        Entity entity, Path path) throws FalconException {
+        String basePath = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING)
+                .getPath()).toUri().getPath();
         try {
-            return fs.listStatus(basePath, new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    return !path.getName().equals("logs");
-                }
-            });
-
-        } catch (FileNotFoundException e) {
-            LOG.info("Staging path " + basePath + " doesn't exist, entity is not scheduled");
-            //Staging path doesn't exist if entity is not scheduled
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                    ClusterHelper.getConfiguration(cluster));
+            String pathString = path.toUri().getPath();
+            String entityPath = entity.getEntityType().name().toLowerCase() + "/" + entity.getName();
+            return fs.exists(path) && pathString.startsWith(basePath) && pathString.contains(entityPath);
         } catch (IOException e) {
             throw new FalconException(e);
         }
-        return null;
     }
 
     public static LateProcess getLateProcess(Entity entity)
