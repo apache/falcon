@@ -7,8 +7,6 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-   FALCON-1182 Remove reference to com.google.code.findbugs:annotations(Shaik Idris Ali)
-
    FALCON-1091 Monitoring plugin that registers catalog partition - code
    (Suhas Vasu / PallaviRao / Shwetha GS via Suhas Vasu)
 
@@ -20,6 +18,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1276 Verify licensing in html5-ui module
+   (Shaik Idris Ali)
+
    FALCON-1245 Verify licensing and update license.txt in falcon-ui module
    (Shaik Idris Ali)
 
@@ -27,6 +28,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    log4j.properties(Samarth Gupta)
 
    FALCON-1220 Exclude downloaded directories from falcon-ui modules
+   (Shaik Idris Ali)
+
+   FALCON-1182 Remove reference to com.google.code.findbugs:annotations
    (Shaik Idris Ali)
 
    FALCON-1158 Rename the parameter "pattern" in LIST API to "nameseq"
