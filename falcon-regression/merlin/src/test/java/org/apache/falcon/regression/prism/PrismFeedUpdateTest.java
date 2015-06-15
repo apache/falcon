@@ -67,6 +67,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     private final String cluster2colo = cluster2.getClusterHelper().getColoName();
     private static final Logger LOGGER = Logger.getLogger(PrismFeedUpdateTest.class);
     private String feedInputTimedOutPath = baseTestDir + "/timedout" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestDir + "/output" + MINUTE_DATE_PATTERN;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -82,6 +83,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
             bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
             bundles[i].setInputFeedDataPath(feedInputTimedOutPath);
+            bundles[i].setOutputFeedLocationData(feedOutputPath);
         }
     }
 
