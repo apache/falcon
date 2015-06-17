@@ -351,6 +351,16 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1277 Fix SearchApiTest according to api changes (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-1275 PrismFeedUpdateTest is using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1274 PrismProcessScheduleTest is using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1273 ProcessLateRerunTest still using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
+   FALCON-1272 InstanceParamTest still using root directory (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
    FALCON-1269 Update InstancePageTest and other after UI changes (Ruslan Ostafiychuk)
 
    FALCON-1270 SearchUI. Login screen changed to not have password field (Namit Maheshwari via Ruslan Ostafiychuk)
