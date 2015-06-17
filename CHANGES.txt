@@ -105,6 +105,9 @@ Branch: 0.6.1 (Proposed Release Version: 0.6.1)
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1280 Update docs/license licenses with right copyright 
+   information (Shaik Idris Ali)
+
    FALCON-1276 Verify licensing in html5-ui module. 
    (Shaik Idris Ali)
 
