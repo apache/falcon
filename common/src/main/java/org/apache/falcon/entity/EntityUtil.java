@@ -428,6 +428,11 @@ public final class EntityUtil {
                         if (!key.equals("class")) {
                             mapToProperties(map.get(key), name != null ? name + "." + key : key, propMap,
                                     filterProps);
+                        } else {
+                            // Just add the parent element to the list too.
+                            // Required to detect addition/removal of optional elements with child nodes.
+                            // For example, late-process
+                            propMap.put(((Class)map.get(key)).getSimpleName(), "");
                         }
                     }
                 } catch (Exception e1) {

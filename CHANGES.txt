@@ -43,6 +43,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-99 Adding late data to process doesn't create new coord (Pallavi Rao via Suhas Vasu)
+
     FALCON-1101 Cluster submission in falcon does not create an owned-by edge(Sowmya Ramesh via Ajay Yadava)
 
     FALCON-1104 Exception while adding process instance to graphdb when feed has partition expression

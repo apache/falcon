@@ -39,6 +39,7 @@ import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
+import org.apache.falcon.entity.v0.process.LateProcess;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.hadoop.fs.FileSystem;
@@ -251,7 +252,6 @@ public class UpdateHelperTest extends AbstractTestBase {
         Path feedPath = EntityUtil.getNewStagingPath(clusterEntity, oldFeed);
         Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
 
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
         newFeed.getACL().setOwner("new-user");
         newFeed.getACL().setGroup("new-group");
         Assert.assertNotEquals(oldFeed.getACL().getOwner(), newFeed.getACL().getOwner());
@@ -270,6 +270,35 @@ public class UpdateHelperTest extends AbstractTestBase {
         processACL.setOwner("group");
         newProcess.setACL(processACL);
         Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+    }
+
+    @Test
+    public void testIsEntityLateProcessUpdated() throws Exception {
+        String cluster = "testCluster";
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        Process oldProcess = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
+        prepare(oldProcess);
+        Path procPath = EntityUtil.getNewStagingPath(clusterEntity, oldProcess);
+
+        // The Process should not be updated when late processing is updated.
+        // As the definition does not affect the Oozie workflow.
+        Process newProcess = (Process) oldProcess.copy();
+        newProcess.getLateProcess().setPolicy(PolicyType.FINAL);
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+
+        LateProcess lateProcess = newProcess.getLateProcess();
+        newProcess.setLateProcess(null);
+
+        // The Process should be updated when late processing is removed.
+        // Pre-processing needs to be removed from the workflow
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+
+        Process newerProcess = (Process) newProcess.copy();
+        newerProcess.setLateProcess(lateProcess);
+
+        // The Process should be updated when late processing is added.
+        // Pre-processing needs to be added to the workflow
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(newProcess, newerProcess, cluster, procPath));
     }
 
     private static Location getLocation(Feed feed, LocationType type, String cluster) {
