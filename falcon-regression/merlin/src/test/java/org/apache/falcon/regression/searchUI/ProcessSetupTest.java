@@ -117,8 +117,6 @@ public class ProcessSetupTest extends BaseUITestClass {
         processWizardPage = searchPage.getPageHeader().doCreateProcess();
         processWizardPage.checkPage();
         process = bundles[0].getProcessObject();
-        //we need to reduce name size to 39 symbols
-        process.setName(process.getName().substring(0, 39));
         process.setTags("first=yes,second=yes,third=no");
     }
 
