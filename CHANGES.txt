@@ -7,6 +7,8 @@ Trunk (Unreleased)
     FALCON-1039 Add instance dependency API in falcon(Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1116 Rule for Oozie 4+ doesn't match 5+ versions (Ruslan Ostafiychuk)
+
     FALCON-1114 Oozie findBundles lists a directory and tries to match with the bundle's appPath
     (Pallavi Rao via Ajay Yadava)
 

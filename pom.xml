@@ -1110,7 +1110,7 @@
                             <rules>
                                 <requireProperty>
                                     <property>oozie.version</property>
-                                    <regex>^(4.*)</regex>
+                                    <regex>^([4-9].*)</regex>
                                     <regexMessage>Oozie version 3.* is not supported. Use a higher version of oozie</regexMessage>
                                 </requireProperty>
                             </rules>
