@@ -64,6 +64,13 @@ public class TestngListener implements ITestListener, IExecutionListener {
     }
 
     private void endOfTestHook(ITestResult result, RunResult outcome) {
+        if (outcome != RunResult.SUCCESS) {
+            try {
+                takeScreenShot(result);
+            } catch (Exception e) {
+                LOGGER.info("Saving screenshot FAILED: " + e.getCause());
+            }
+        }
         try {
             dumpFalconStore(result);
         } catch (Exception e) {
@@ -105,30 +112,23 @@ public class TestngListener implements ITestListener, IExecutionListener {
     @Override
     public void onTestFailure(ITestResult result) {
         endOfTestHook(result, RunResult.FAILED);
-        takeScreenShot(result);
 
         LOGGER.info(ExceptionUtils.getStackTrace(result.getThrowable()));
         LOGGER.info(hr);
     }
 
-    private void takeScreenShot(ITestResult result) {
+    private void takeScreenShot(ITestResult result) throws IOException {
+        String logs = Config.getProperty("log.capture.location", OSUtil.getPath("target", "surefire-reports"));
         if (BaseUITestClass.getDriver() != null) {
-            byte[] scrFile =
-                ((TakesScreenshot)BaseUITestClass.getDriver()).getScreenshotAs(OutputType.BYTES);
-            try {
-                String params = Arrays.toString(result.getParameters());
-                params = params.replaceAll("[<>\":\\\\/\\|\\?\\*]", ""); //remove <>:"/\|?*
-                String filename = OSUtil.getPath("target", "surefire-reports", "screenshots",
-                    String.format("%s.%s(%s).png", result.getTestClass().getRealClass()
-                        .getSimpleName(), result.getName(), params));
-                FileUtils.writeByteArrayToFile(new File(filename), scrFile);
-            } catch (IOException e) {
-                LOGGER.info("Saving screenshot FAILED: " + e.getCause());
-            }
+            byte[] scrFile = ((TakesScreenshot)BaseUITestClass.getDriver()).getScreenshotAs(OutputType.BYTES);
+            String params = Arrays.toString(result.getParameters());
+            params = params.replaceAll("[<>\":\\\\/\\|\\?\\*]", ""); //remove <>:"/\|?*
+            String filename = OSUtil.getPath(logs, "screenshots",
+                String.format("%s.%s(%s).png", result .getTestClass().getRealClass().getSimpleName(),
+                    result.getName(), params));
+            LOGGER.info("Saving screenshot to: " + filename);
+            FileUtils.writeByteArrayToFile(new File(filename), scrFile);
         }
-
-        LOGGER.info(ExceptionUtils.getStackTrace(result.getThrowable()));
-        LOGGER.info(hr);
     }
 
     @Override
