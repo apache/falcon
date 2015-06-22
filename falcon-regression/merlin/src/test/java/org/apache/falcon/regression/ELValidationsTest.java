@@ -238,7 +238,7 @@ public class ELValidationsTest extends BaseTestClass {
         LOGGER.info("nominalTime: " + initialTime.getTime());
         LOGGER.info("finalTime: " + finalTime.getTime());
         List<String> returnList = new ArrayList<>();
-        while (!initialTime.getTime().equals(finalTime.getTime())) {
+        while (initialTime.getTime().before(finalTime.getTime())) {
             LOGGER.info("initialTime: " + initialTime.getTime());
             returnList.add(getPath(path, initialTime));
             initialTime.add(Calendar.MINUTE, frequency);
