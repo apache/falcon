@@ -44,7 +44,7 @@ public class InstancePage extends AbstractSearchPage {
         Resume,
         Rerun,
         Suspend,
-        Stop
+        Kill
     }
 
     public InstancePage(WebDriver driver) {

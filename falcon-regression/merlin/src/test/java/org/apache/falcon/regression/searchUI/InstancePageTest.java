@@ -133,7 +133,7 @@ public class InstancePageTest extends BaseUITestClass {
         instancePage = searchPage.openEntityPage(processName).openInstance(instance);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.RUNNING);
 
-        instancePage.clickButton(Button.Stop);
+        instancePage.clickButton(Button.Kill);
         checkInstanceStatuses(InstancesResult.WorkflowStatus.KILLED);
 
         Assert.assertEquals(instancePage.getButtons(true), EnumSet.of(Button.Rerun),

@@ -355,6 +355,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1281 Fix InstancePageTest#testInstancePageStatusWaitingRunning (Namit Maheshwari via Ruslan Ostafiychuk)
+
    FALCON-1287 Use listAllEntities() instead of listEntities() (Ruslan Ostafiychuk via Paul Isaychuk)
 
    FALCON-1288 Fortify expressionLanguageTest (Ruslan Ostafiychuk via Paul Isaychuk)
