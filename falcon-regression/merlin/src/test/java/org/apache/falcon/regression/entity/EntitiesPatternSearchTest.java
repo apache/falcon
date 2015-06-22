@@ -102,7 +102,7 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
         EntityElement[] entities =
                 helper.listAllEntities("nameseq=" + patternParam, null).getEntityList().getElements();
         LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(entities));
-        validateOutputPatternList(helper.listEntities().getEntityList().getElements(), entities, patternParam);
+        validateOutputPatternList(helper.listAllEntities().getEntityList().getElements(), entities, patternParam);
     }
 
     /**

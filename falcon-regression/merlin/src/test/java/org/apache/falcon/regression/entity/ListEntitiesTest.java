@@ -172,7 +172,7 @@ public class ListEntitiesTest extends BaseTestClass {
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
-            helper.listAllEntities(null, null).getEntityList().getElements();
+            helper.listAllEntities().getEntityList().getElements();
         LOGGER.info(helper.getEntityType() + " entities: " + Arrays.toString(allEntities));
         int allEntitiesCount = allEntities.length;
         for (int i = 0; i <= allEntitiesCount; i++) {
@@ -201,7 +201,7 @@ public class ListEntitiesTest extends BaseTestClass {
         throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
 
         EntityElement[] allEntities =
-            helper.listAllEntities(null, null).getEntityList().getElements();
+            helper.listAllEntities().getEntityList().getElements();
         int allEntitiesCount = allEntities.length;
 
         for (int i = 1; i <= allEntitiesCount; i++) {
