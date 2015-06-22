@@ -24,6 +24,7 @@ import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.EntityList.EntityElement;
@@ -90,7 +91,7 @@ public class ProcessPipelineTest extends BaseTestClass{
             map.put(pipeline, new ArrayList<String>());
             //index for new processes for current pipeline
             for(; i < n; i++){
-                String processName = this.getClass().getSimpleName() + "-process-" + i;
+                String processName = Util.getEntityPrefix(this) + "-process-" + i;
                 bundles[0].setProcessName(processName);
                 bundles[0].setProcessPipeline(pipeline);
                 bundles[0].submitProcess(true);

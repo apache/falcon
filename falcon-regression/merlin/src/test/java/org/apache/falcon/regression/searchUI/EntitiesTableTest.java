@@ -24,6 +24,7 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.falcon.regression.ui.search.LoginPage;
 import org.apache.falcon.regression.ui.search.SearchPage;
@@ -136,7 +137,7 @@ public class EntitiesTableTest extends BaseUITestClass {
      */
     @Test(dataProvider = "getBoolean")
     public void testSearchBoxCleanSingleParam(boolean deleteByClick) {
-        searchPage.doSearch(this.getClass().getSimpleName() + ' ' + StringUtils.join(tags, ' '));
+        searchPage.doSearch(Util.getEntityPrefix(this) + ' ' + StringUtils.join(tags, ' '));
         for (int i = 1; i <= tags.length; i++) {
             Assert.assertEquals(searchPage.getSearchResults().size(), i,
                 "There should be " + i + " results");

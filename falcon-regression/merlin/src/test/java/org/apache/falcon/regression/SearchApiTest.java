@@ -26,6 +26,7 @@ import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -60,7 +61,7 @@ public class SearchApiTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    private final String base = getClass().getSimpleName();
+    private final String base = Util.getEntityPrefix(this);
     private static final Comparator<EntityElement> ASC = new Comparator<EntityElement>() {
         @Override
         public int compare(EntityElement o1, EntityElement o2) {
@@ -101,7 +102,7 @@ public class SearchApiTest extends BaseTestClass {
         bundles[0] = new Bundle(bundles[0], servers.get(0));
         bundles[0].generateUniqueBundle(this);
         bundles[0].submitClusters(cluster);
-        String prefix = getClass().getSimpleName() + "-bundle";
+        String prefix = base + "-bundle";
 
         FeedMerlin basicFeed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         basicFeed.setName(prefix + "0-input-feed");

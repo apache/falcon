@@ -186,7 +186,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
 
         //get 2nd process
         ProcessMerlin process02 = new ProcessMerlin(process01);
-        process02.setName(this.getClass().getSimpleName() + "-zeroInputProcess"
+        process02.setName(Util.getEntityPrefix(this) + "-zeroInputProcess"
             + new Random().nextInt());
         List<String> feed = new ArrayList<>();
         feed.add(outputFeed.toString());

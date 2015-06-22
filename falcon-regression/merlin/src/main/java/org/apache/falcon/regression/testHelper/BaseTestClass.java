@@ -114,7 +114,10 @@ public class BaseTestClass {
                 bundle.deleteBundle(prism);
             }
         }
-        CleanupUtil.cleanEntitiesWithPrefix(prism, this.getClass().getSimpleName());
+        String className = this.getClass().getSimpleName();
+        CleanupUtil.cleanEntitiesWithPrefix(prism, className);
+        String deprecatedPrefix = 'A' + Integer.toHexString(className.hashCode());
+        CleanupUtil.cleanEntitiesWithPrefix(prism, deprecatedPrefix);
     }
 
 

@@ -76,7 +76,7 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
         String processStartTime = TimeUtil.getTimeWrtSystemTime(-11);
         String processEndTime = TimeUtil.getTimeWrtSystemTime(6);
         ProcessMerlin process = bundles[0].getProcessObject();
-        process.setName(this.getClass().getSimpleName() + "-zeroInputProcess"
+        process.setName(Util.getEntityPrefix(this) + "-zeroInputProcess"
             + new Random().nextInt());
         List<String> feed = new ArrayList<>();
         feed.add(bundles[0].getOutputFeedFromBundle());

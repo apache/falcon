@@ -29,6 +29,7 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.falcon.regression.ui.search.LoginPage;
 import org.apache.falcon.regression.ui.search.ProcessWizardPage;
@@ -450,9 +451,9 @@ public class ProcessSetupTest extends BaseUITestClass {
         List<String> dropdownValues = new ArrayList<>(processWizardPage.getClustersFromDropDown());
 
         //clean all clusters which belong to anything else then current test class
-        String testClassName = ProcessSetupTest.class.getSimpleName();
+        String entitiesPrefix = Util.getEntityPrefix(this);
         for(int i = 0; i < dropdownValues.size(); i++) {
-            if (!dropdownValues.get(i).contains(testClassName)) {
+            if (!dropdownValues.get(i).contains(entitiesPrefix)) {
                 dropdownValues.remove(i);
             }
         }

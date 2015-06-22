@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -543,5 +544,19 @@ public final class Util {
         String result = response.getMessage();
         Assert.assertNotNull(result);
         return result;
+    }
+
+    /**
+     * Get prefix for test entities.
+     * @param testClass object of test class
+     * @return test class name if is_deprecate=false or 'A' and hash if is_deprecate=true
+     */
+    public static String getEntityPrefix(Object testClass) {
+        String className = testClass.getClass().getSimpleName();
+        if (MerlinConstants.IS_DEPRECATE) {
+            return 'A' + Integer.toHexString(className.hashCode());
+        } else {
+            return className;
+        }
     }
 }

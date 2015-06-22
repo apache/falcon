@@ -376,7 +376,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         List<String> oldNominalTimes =
                 OozieUtil.getActionsNominalTime(cluster3OC, oldBundleId, EntityType.PROCESS);
-        bundles[1].setProcessName(this.getClass().getSimpleName() + "-myNewProcessName");
+        bundles[1].setProcessName(Util.getEntityPrefix(this) + "-myNewProcessName");
 
         //now to update
         ServiceResponse response =

@@ -135,7 +135,7 @@ public class ProcessUITest extends BaseUITestClass {
         final FeedMerlin inputMerlin = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         final FeedMerlin outputMerlin = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
 
-        String namePrefix = this.getClass().getSimpleName() + '-';
+        String namePrefix = Util.getEntityPrefix(this) + '-';
         inputFeeds = LineageApiTest.generateFeeds(numInputFeeds, inputMerlin,
                 Generator.getNameGenerator(namePrefix + "infeed",
                     inputMerlin.getName().replace(namePrefix, "")),

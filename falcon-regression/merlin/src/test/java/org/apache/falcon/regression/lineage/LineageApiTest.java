@@ -37,6 +37,7 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.Generator;
 import org.apache.falcon.regression.core.util.GraphAssert;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -94,7 +95,7 @@ public class LineageApiTest extends BaseTestClass {
         LOGGER.info("numOutputFeeds = " + numOutputFeeds);
         final FeedMerlin inputMerlin = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         inputMerlin.setTags(TEST_TAG);
-        String namePrefix = this.getClass().getSimpleName() + '-';
+        String namePrefix = Util.getEntityPrefix(this) + '-';
         inputFeeds = generateFeeds(numInputFeeds, inputMerlin,
             Generator.getNameGenerator(namePrefix + "infeed",
                 inputMerlin.getName().replace(namePrefix, "")),

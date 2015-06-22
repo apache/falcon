@@ -49,16 +49,16 @@ final class TestEntityUtil {
     }
 
     /*
-    Deprecating entity name if its length >= 30 and is_deprecate is set.
+    Deprecating entity name if is_deprecate is set.
     Useful when oozie uses embedded database(derby)
      */
     public static String generateUniqueName(String prefix, String oldName) {
         Assert.assertNotNull(prefix, "name prefix shouldn't be null!");
-        String name=prefix + '-' + oldName + '-' + UUID.randomUUID().toString().split("-")[0];
-        if (name.length()>=30 && MerlinConstants.IS_DEPRECATE) {
-            LOGGER.warn("Entity name " + name + " length exceeds 30 character");
-            name=oldName + '-' + UUID.randomUUID().toString().split("-")[0];
+        String randomPart = UUID.randomUUID().toString().split("-")[0];
+        if (MerlinConstants.IS_DEPRECATE) {
+            return  'A' + Integer.toHexString(prefix.hashCode()) + '-' + randomPart;
+        } else {
+            return prefix + '-' + oldName + '-' + randomPart;
         }
-        return name;
     }
 }
