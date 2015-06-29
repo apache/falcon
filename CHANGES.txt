@@ -7,6 +7,8 @@ Trunk (Unreleased)
     FALCON-1039 Add instance dependency API in falcon(Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1293 Update CHANGES.txt to change 0.6.1 branch to release (Shaik Idris Ali via Ajay Yadava)
+
     FALCON-1116 Rule for Oozie 4+ doesn't match 5+ versions (Ruslan Ostafiychuk)
 
     FALCON-1114 Oozie findBundles lists a directory and tries to match with the bundle's appPath
@@ -98,7 +100,7 @@ Trunk (Unreleased)
     FALCON-1144 Dynamic partitions not getting registered in Hcat
     (Suhas Vasu)
 
-Branch: 0.6.1 (Proposed Release Version: 0.6.1)
+Release Version: 0.6.1
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
