@@ -1,0 +1,44 @@
+---++  GET api/instance/triage/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Given a feed/process instance this command traces it's ancestors to find what all ancestors have failed. It's useful if
+lot of instances are failing in a pipeline as it then finds out the root cause of the pipeline being stuck.
+
+
+---++ Parameters
+   * :entity-type type of entity(feed/process).
+   * :entity-name name of the feed/process.
+   * :start instance time of the entity instance.
+   * :colo <optional param> name of the colo on which you want to triage
+
+---++ Results
+It returns a json graph
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/feed/my-feed?start=2015-03-02T00:00Z&colo=local
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "vertices": ["(FEED) my-feed (2015-03-02T00:00Z) [Unavailable]", "(PROCESS) producer-process (2015-03-01T10:00Z) [TIMEDOUT]", "(FEED) input-feed-for-producer (2015-03-01T00:00Z) [Available]"],
+    "edges":
+    [
+        {
+         "from"  : "(PROCESS) producer-process (2015-03-01T10:00Z) [TIMEDOUT]",
+         "to"    : "(FEED) my-feed (2015-03-02T00:00Z) [Unavailable]",
+         "label" : "produces"
+        },
+        {
+         "from"  : "(FEED) input-feed-for-producer (2015-03-01T00:00Z) [Available]",
+         "to"    : "(PROCESS) producer-process (2015-03-01T10:00Z) [TIMEDOUT]",
+         "label" : "consumed by"
+        }
+    ]
+}
+</verbatim>

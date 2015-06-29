@@ -118,6 +118,7 @@ public class FalconCLI {
     public static final String LIFECYCLE_OPT = "lifecycle";
     public static final String PARARMS_OPT = "params";
     public static final String LISTING_OPT = "listing";
+    public static final String TRIAGE_OPT = "triage";
 
     // Recipe Command
     public static final String RECIPE_CMD = "recipe";
@@ -252,8 +253,14 @@ public class FalconCLI {
         validateSortOrder(sortOrder);
         validateInstanceCommands(optionsList, entity, type, colo);
 
-
-        if (optionsList.contains(DEPENDENCY_OPT)) {
+        if (optionsList.contains(TRIAGE_OPT)) {
+            validateNotEmpty(colo, COLO_OPT);
+            validateNotEmpty(start, START_OPT);
+            validateNotEmpty(type, ENTITY_TYPE_OPT);
+            validateEntityTypeForSummary(type);
+            validateNotEmpty(entity, ENTITY_NAME_OPT);
+            result = client.triage(type, entity, start, colo).toString();
+        } else if (optionsList.contains(DEPENDENCY_OPT)) {
             validateNotEmpty(instanceTime, INSTANCE_TIME_OPT);
             InstanceDependencyResult response = client.getInstanceDependencies(type, entity, instanceTime, colo);
             result = ResponseHelper.getString(response);
@@ -798,6 +805,9 @@ public class FalconCLI {
                 false,
                 "Displays dependent instances for a specified instance.");
 
+        Option triage = new Option(TRIAGE_OPT, false,
+                "Triage a feed or process instance and find the failures in it's lineage.");
+
         OptionGroup group = new OptionGroup();
         group.addOption(running);
         group.addOption(list);
@@ -812,6 +822,7 @@ public class FalconCLI {
         group.addOption(params);
         group.addOption(listing);
         group.addOption(dependency);
+        group.addOption(triage);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option start = new Option(START_OPT, true,

@@ -41,6 +41,7 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
@@ -244,6 +245,7 @@ public class FalconClient {
         SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DEPENDENCY("api/instance/dependencies/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        TRIAGE("api/instance/triage/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
@@ -369,6 +371,19 @@ public class FalconClient {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
+    public TriageResult triage(String entityType, String entityName, String instanceTime, String colo)
+        throws FalconCLIException {
+        ClientResponse clientResponse = service
+                .path(Instances.TRIAGE.path).path(entityType).path(entityName)
+                .queryParam("start", instanceTime).queryParam("colo", colo)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(Instances.TRIAGE.mimeType).type(MediaType.TEXT_XML)
+                .method(Instances.TRIAGE.method, ClientResponse.class);
+
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(TriageResult.class);
+    }
 
     public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,

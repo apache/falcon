@@ -18,16 +18,18 @@
 
 package org.apache.falcon;
 
-import java.util.Date;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.TriageResult;
+
+import java.util.Date;
+import java.util.Map;
 
 /**
  * Helpers for response object to string conversion.
@@ -263,6 +265,17 @@ public final class ResponseHelper {
         sb.append("\nAdditional Information:\n");
         sb.append("Response: ").append(result.getMessage());
         sb.append("Request Id: ").append(result.getRequestId());
+        return sb.toString();
+    }
+
+    public static String getString(TriageResult triageResult) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(triageResult.toString());
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(triageResult.getMessage());
+        sb.append("Request Id: ").append(triageResult.getRequestId());
+
         return sb.toString();
     }
 

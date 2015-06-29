@@ -66,6 +66,7 @@ See also: [[../Security.twiki][Security in Falcon]]
 | POST        | [[InstanceResume][api/instance/resume/:entity-type/:entity-name]]           | Resume a given instance      |
 | POST        | [[InstanceRerun][api/instance/rerun/:entity-type/:entity-name]]             | Rerun a given instance       |
 | GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance |
+| GET         | [[Triage][api/instance/triage/:entity-type/:entity-name]]                   | Triage an instance to see it's stuck lineage |
 | GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name]]         | Return summary of instances for an entity |
 | GET         | [[InstanceDependency][api/instance/dependency/:entity-type/:entity-name]]   | Return dependent instances for a given instance |
 

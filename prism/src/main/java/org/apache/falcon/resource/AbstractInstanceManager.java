@@ -23,16 +23,21 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Pair;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.FeedInstanceStatus;
 import org.apache.falcon.entity.ProcessHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.resource.InstancesResult.Instance;
@@ -51,10 +56,13 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -523,6 +531,172 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    /**
+     * Triage method returns the graph of the ancestors in "UNSUCCESSFUL" state.
+     *
+     * It will traverse all the ancestor feed instances and process instances in the current instance's lineage.
+     * It stops traversing a lineage line once it encounters a "SUCCESSFUL" instance as this feature is intended
+     * to find the root cause of a pipeline failure.
+     *
+     * @param entityType type of the entity. Only feed and process are valid entity types for triage.
+     * @param entityName name of the entity.
+     * @param instanceTime time of the instance which should be used to triage.
+     * @return Returns a list of ancestor entity instances which have failed.
+     */
+    public TriageResult triageInstance(String entityType, String entityName, String instanceTime, String colo) {
+
+        checkColo(colo);
+        checkType(entityType); // should be only process/feed
+        checkName(entityName);
+        try {
+            EntityType type = EntityType.valueOf(entityType.toUpperCase());
+            Entity entity = ConfigurationStore.get().get(type, entityName);
+            TriageResult result = new TriageResult(APIResult.Status.SUCCEEDED, "Success");
+            List<LineageGraphResult> triageGraphs = new LinkedList<>();
+            for (String clusterName : DeploymentUtil.getCurrentClusters()) {
+                Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+                triageGraphs.add(triage(type, entity, instanceTime, cluster));
+            }
+            LineageGraphResult[] triageGraphsArray = new LineageGraphResult[triageGraphs.size()];
+            result.setTriageGraphs(triageGraphs.toArray(triageGraphsArray));
+            return result;
+        } catch (IllegalArgumentException e) { // bad entityType
+            LOG.error("Bad Entity Type: {}", entityType);
+            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        } catch (EntityNotRegisteredException e) { // bad entityName
+            LOG.error("Bad Entity Name : {}", entityName);
+            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        } catch (Throwable e) {
+            LOG.error("Failed to triage", e);
+            throw FalconWebException.newInstanceException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void checkName(String entityName) {
+        if (StringUtils.isBlank(entityName)) {
+            throw FalconWebException.newInstanceException("Instance name is mandatory and shouldn't be blank",
+                    Response.Status.BAD_REQUEST);
+        }
+    }
+
+    private LineageGraphResult triage(EntityType entityType, Entity entity, String instanceTime, Cluster cluster)
+        throws FalconException {
+
+        Date instanceDate = SchemaHelper.parseDateUTC(instanceTime);
+        LineageGraphResult result = new LineageGraphResult();
+        Set<String> vertices = new HashSet<>();
+        Set<LineageGraphResult.Edge> edges = new HashSet<>();
+        Map<String, String> instanceStatusMap = new HashMap<>();
+
+        // queue containing all instances which need to be triaged
+        Queue<SchedulableEntityInstance> remainingInstances = new LinkedList<>();
+        SchedulableEntityInstance currentInstance = new SchedulableEntityInstance(entity.getName(), cluster.getName(),
+                instanceDate, entityType);
+        remainingInstances.add(currentInstance);
+
+        while (!remainingInstances.isEmpty()) {
+            currentInstance = remainingInstances.remove();
+            if (currentInstance.getEntityType() == EntityType.FEED) {
+                Feed feed = ConfigurationStore.get().get(EntityType.FEED, currentInstance.getEntityName());
+                FeedInstanceStatus.AvailabilityStatus status = getFeedInstanceStatus(feed,
+                        currentInstance.getInstanceTime(), cluster);
+
+                // add vertex to the graph
+                vertices.add(currentInstance.toString());
+                instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
+                if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
+                    continue;
+                }
+
+                // find producer process instance and add it to the queue
+                SchedulableEntityInstance producerInstance = FeedHelper.getProducerInstance(feed,
+                        currentInstance.getInstanceTime(), cluster);
+                if (producerInstance != null) {
+                    remainingInstances.add(producerInstance);
+
+                    //add edge from producerProcessInstance to the feedInstance
+                    LineageGraphResult.Edge edge = new LineageGraphResult.Edge(producerInstance.toString(),
+                            currentInstance.toString(), "produces");
+                    edges.add(edge);
+                }
+            } else { // entity type is PROCESS
+                Process process = ConfigurationStore.get().get(EntityType.PROCESS, currentInstance.getEntityName());
+                InstancesResult.WorkflowStatus status = getProcessInstanceStatus(process,
+                        currentInstance.getInstanceTime());
+
+                // add current process instance as a vertex
+                vertices.add(currentInstance.toString());
+                if (status == null) {
+                    instanceStatusMap.put(currentInstance.toString(), "[ Not Available ]");
+                } else {
+                    instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
+                    if (status == InstancesResult.WorkflowStatus.SUCCEEDED) {
+                        continue;
+                    }
+                }
+
+                // find list of input feed instances - only mandatory ones and not optional ones
+                Set<SchedulableEntityInstance> inputFeedInstances = ProcessHelper.getInputFeedInstances(process,
+                        currentInstance.getInstanceTime(), cluster, false);
+                for (SchedulableEntityInstance inputFeedInstance : inputFeedInstances) {
+                    remainingInstances.add(inputFeedInstance);
+
+                    //Add edge from inputFeedInstance to consumer processInstance
+                    LineageGraphResult.Edge edge = new LineageGraphResult.Edge(inputFeedInstance.toString(),
+                            currentInstance.toString(), "consumed by");
+                    edges.add(edge);
+                }
+            }
+        }
+
+        // append status to each vertex
+        Set<String> relabeledVertices = new HashSet<>();
+        for (String instance : vertices) {
+            String status = instanceStatusMap.get(instance);
+            relabeledVertices.add(instance + status);
+        }
+
+        // append status to each edge
+        for (LineageGraphResult.Edge edge : edges) {
+            String oldTo = edge.getTo();
+            String oldFrom = edge.getFrom();
+
+            String newFrom = oldFrom + instanceStatusMap.get(oldFrom);
+            String newTo = oldTo + instanceStatusMap.get(oldTo);
+
+            edge.setFrom(newFrom);
+            edge.setTo(newTo);
+        }
+
+        result.setEdges(edges.toArray(new LineageGraphResult.Edge[0]));
+        result.setVertices(relabeledVertices.toArray(new String[0]));
+        return result;
+    }
+
+    private FeedInstanceStatus.AvailabilityStatus getFeedInstanceStatus(Feed feed, Date instanceTime, Cluster cluster)
+        throws FalconException {
+        Storage storage = FeedHelper.createStorage(cluster, feed);
+        Date endRange = new Date(instanceTime.getTime() + 200);
+        List<FeedInstanceStatus> feedListing = storage.getListing(feed, cluster.getName(), LocationType.DATA,
+                instanceTime, endRange);
+        return feedListing.get(0).getStatus();
+    }
+
+    private InstancesResult.WorkflowStatus getProcessInstanceStatus(Process process, Date instanceTime)
+        throws FalconException {
+        AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+        List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
+        lifeCycles.add(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
+        Date endRange = new Date(instanceTime.getTime() + 200);
+        Instance[] response = wfEngine.getStatus(process, instanceTime, endRange, lifeCycles).getInstances();
+        if (response.length > 0) {
+            return response[0].getStatus();
+        }
+        LOG.warn("No instances were found for the given process: {} & instanceTime: {}", process, instanceTime);
+        return null;
+    }
+
+
     public InstancesResult reRunInstance(String type, String entity, String startStr,
                                          String endStr, HttpServletRequest request,
                                          String colo, List<LifeCycle> lifeCycles, Boolean isForced) {

@@ -30,6 +30,7 @@ import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 import org.slf4j.Logger;
@@ -374,6 +375,25 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
 
         }.execute(colo, entityType, entityName);
     }
+
+    @GET
+    @Path("triage/{type}/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "triage-instance")
+    @Override
+    public TriageResult triageInstance(
+            @Dimension("type") @PathParam("type") final String entityType,
+            @Dimension("name") @PathParam("name") final String entityName,
+            @Dimension("instanceTime") @QueryParam("start") final String instanceTime,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return new InstanceProxy<TriageResult>(TriageResult.class) {
+            @Override
+            protected TriageResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("triageInstance", entityType, entityName, instanceTime, colo);
+            }
+        }.execute(colo, entityType, entityName);
+    }
+
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

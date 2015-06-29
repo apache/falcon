@@ -218,6 +218,19 @@ public class InstanceManager extends AbstractInstanceManager {
         return super.resumeInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
     }
 
+    @GET
+    @Path("triage/{type}/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "triage-instance")
+    @Override
+    public TriageResult triageInstance(
+            @Dimension("type") @PathParam("type") String entityType,
+            @Dimension("name") @PathParam("name") String entityName,
+            @Dimension("instanceTime") @QueryParam("start") String instanceTime,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.triageInstance(entityType, entityName, instanceTime, colo);
+    }
+
     @POST
     @Path("rerun/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
