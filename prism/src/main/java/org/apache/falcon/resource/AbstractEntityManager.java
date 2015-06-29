@@ -581,10 +581,10 @@ public abstract class AbstractEntityManager {
                                     String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         validateEntityFilterByClause(filterByFieldsValues);
         if (StringUtils.isNotEmpty(filterTags)) {
-            filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), filterTags);
+            filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), Arrays.asList(filterTags));
         }
 
         // get filtered entities
@@ -634,8 +634,8 @@ public abstract class AbstractEntityManager {
         return entitiesReturn;
     }
 
-    protected Map<String, String> validateEntityFilterByClause(Map<String, String> filterByFieldsValues) {
-        for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
+    protected Map<String, List<String>> validateEntityFilterByClause(Map<String, List<String>> filterByFieldsValues) {
+        for (Map.Entry<String, List<String>> entry : filterByFieldsValues.entrySet()) {
             try {
                 EntityList.EntityFilterByFields.valueOf(entry.getKey().toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -646,14 +646,15 @@ public abstract class AbstractEntityManager {
         return filterByFieldsValues;
     }
 
-    protected Map<String, String> validateEntityFilterByClause(String entityFilterByClause) {
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+    protected Map<String, List<String>> validateEntityFilterByClause(String entityFilterByClause) {
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
         return validateEntityFilterByClause(filterByFieldsValues);
     }
 
     protected List<Entity> getFilteredEntities(
-            EntityType entityType, String nameSubsequence, String tagKeywords, Map<String, String> filterByFieldsValues,
-            String startDate, String endDate, String cluster) throws FalconException, IOException {
+            EntityType entityType, String nameSubsequence, String tagKeywords,
+            Map<String, List<String>> filterByFieldsValues, String startDate, String endDate, String cluster)
+        throws FalconException, IOException {
         Collection<String> entityNames = configStore.getEntities(entityType);
         if (entityNames.isEmpty()) {
             return Collections.emptyList();
@@ -661,7 +662,12 @@ public abstract class AbstractEntityManager {
 
         List<Entity> entities = new ArrayList<Entity>();
         char[] subsequence = nameSubsequence.toLowerCase().toCharArray();
-        final List<String> tagKeywordsList = getFilterByTags(tagKeywords.toLowerCase());
+        List<String> tagKeywordsList;
+        if (StringUtils.isEmpty(tagKeywords)) {
+            tagKeywordsList = new ArrayList<>();
+        } else {
+            tagKeywordsList = getFilterByTags(Arrays.asList(tagKeywords.toLowerCase()));
+        }
         for (String entityName : entityNames) {
             Entity entity;
             try {
@@ -765,16 +771,21 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
-    protected static Map<String, String> getFilterByFieldsValues(String filterBy) {
+    protected static Map<String, List<String>> getFilterByFieldsValues(String filterBy) {
         // Filter the results by specific field:value, eliminate empty values
-        Map<String, String> filterByFieldValues = new HashMap<String, String>();
+        Map<String, List<String>> filterByFieldValues = new HashMap<String, List<String>>();
         if (StringUtils.isNotEmpty(filterBy)) {
             String[] fieldValueArray = filterBy.split(",");
             for (String fieldValue : fieldValueArray) {
                 String[] splits = fieldValue.split(":", 2);
                 String filterByField = splits[0];
                 if (splits.length == 2 && !splits[1].equals("")) {
-                    filterByFieldValues.put(filterByField, splits[1]);
+                    List<String> currentValue = filterByFieldValues.get(filterByField);
+                    if (currentValue == null) {
+                        currentValue = new ArrayList<String>();
+                        filterByFieldValues.put(filterByField, currentValue);
+                    }
+                    currentValue.add(splits[1]);
                 }
             }
         }
@@ -782,13 +793,16 @@ public abstract class AbstractEntityManager {
         return filterByFieldValues;
     }
 
-    private static List<String> getFilterByTags(String filterTags) {
+    private static List<String> getFilterByTags(List<String> filterTags) {
         ArrayList<String> filterTagsList = new ArrayList<String>();
-        if (StringUtils.isNotEmpty(filterTags)) {
-            String[] splits = filterTags.split(",");
-            for (String tag : splits) {
-                filterTagsList.add(tag.trim());
+        if (filterTags!= null && !filterTags.isEmpty()) {
+            for (String filterTag: filterTags) {
+                String[] splits = filterTag.split(",");
+                for (String tag : splits) {
+                    filterTagsList.add(tag.trim());
+                }
             }
+
         }
         return filterTagsList;
     }
@@ -834,12 +848,12 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
-    private boolean isFilteredByFields(Entity entity, Map<String, String> filterKeyVals) {
+    private boolean isFilteredByFields(Entity entity, Map<String, List<String>> filterKeyVals) {
         if (filterKeyVals.isEmpty()) {
             return false;
         }
 
-        for (Map.Entry<String, String> pair : filterKeyVals.entrySet()) {
+        for (Map.Entry<String, List<String>> pair : filterKeyVals.entrySet()) {
             EntityList.EntityFilterByFields filter =
                     EntityList.EntityFilterByFields.valueOf(pair.getKey().toUpperCase());
             if (isEntityFiltered(entity, filter, pair)) {
@@ -851,16 +865,16 @@ public abstract class AbstractEntityManager {
     }
 
     private boolean isEntityFiltered(Entity entity, EntityList.EntityFilterByFields filter,
-                                     Map.Entry<String, String> pair) {
+                                     Map.Entry<String, List<String>> pair) {
         switch (filter) {
         case TYPE:
-            return !entity.getEntityType().toString().equalsIgnoreCase(pair.getValue());
+            return !containsIgnoreCase(pair.getValue(), entity.getEntityType().toString());
 
         case NAME:
-            return !entity.getName().equalsIgnoreCase(pair.getValue());
+            return !containsIgnoreCase(pair.getValue(), entity.getName());
 
         case STATUS:
-            return !getStatusString(entity).equalsIgnoreCase(pair.getValue());
+            return !containsIgnoreCase(pair.getValue(), getStatusString(entity));
 
         case PIPELINES:
             if (!entity.getEntityType().equals(EntityType.PROCESS)) {
@@ -868,10 +882,10 @@ public abstract class AbstractEntityManager {
                         "Invalid filterBy key for non process entities " + pair.getKey(),
                         Response.Status.BAD_REQUEST);
             }
-            return !EntityUtil.getPipelines(entity).contains(pair.getValue());
+            return !EntityUtil.getPipelines(entity).contains(pair.getValue().get(0));
 
         case CLUSTER:
-            return !EntityUtil.getClustersDefined(entity).contains(pair.getValue());
+            return !EntityUtil.getClustersDefined(entity).contains(pair.getValue().get(0));
 
         case TAGS:
             return isFilteredByTags(getFilterByTags(pair.getValue()), EntityUtil.getTags(entity));
@@ -1081,5 +1095,14 @@ public abstract class AbstractEntityManager {
         } catch (Exception e) {
             throw new FalconRuntimException("Unable to consolidate result.", e);
         }
+    }
+
+    private boolean containsIgnoreCase(List<String> strList, String str) {
+        for (String s : strList) {
+            if (s.equalsIgnoreCase(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

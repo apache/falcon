@@ -437,10 +437,12 @@ public class FalconClient {
 
     public InstancesSummaryResult getSummaryOfInstances(String type, String entity,
                                         String start, String end,
-                                        String colo, List<LifeCycle> lifeCycles) throws FalconCLIException {
+                                        String colo, List<LifeCycle> lifeCycles,
+                                        String filterBy, String orderBy, String sortOrder) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.SUMMARY, type, entity, start, end, null,
-            null, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS).getEntity(InstancesSummaryResult.class);
+            null, colo, lifeCycles, filterBy, orderBy, sortOrder, 0, DEFAULT_NUM_RESULTS)
+                .getEntity(InstancesSummaryResult.class);
     }
 
     public FeedInstanceResult getFeedListing(String type, String entity, String start,

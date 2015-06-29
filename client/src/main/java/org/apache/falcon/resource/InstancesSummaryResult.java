@@ -32,6 +32,13 @@ import java.util.Map;
 @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class InstancesSummaryResult extends APIResult {
 
+    /**
+     * RestAPI supports filterBy these fields of instanceSummary.
+     */
+    public static enum InstanceSummaryFilterFields {
+        STATUS, CLUSTER
+    }
+
     @XmlElement
     private InstanceSummary[] instancesSummary;
 

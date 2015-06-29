@@ -180,12 +180,16 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") final String startStr,
             @Dimension("end-time") @QueryParam("end") final String endStr,
             @Dimension("colo") @QueryParam("colo") final String colo,
-            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
+            @DefaultValue("") @QueryParam("filterBy") final String filterBy,
+            @DefaultValue("") @QueryParam("orderBy") final String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") final String sortOrder) {
         return new InstanceProxy<InstancesSummaryResult>(InstancesSummaryResult.class) {
             @Override
             protected InstancesSummaryResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getSummary",
-                        type, entity, startStr, endStr, colo, lifeCycles);
+                        type, entity, startStr, endStr, colo, lifeCycles,
+                        filterBy, orderBy, sortOrder);
             }
         }.execute(colo, type, entity);
     }

@@ -116,8 +116,12 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") String startStr,
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Dimension("colo") @QueryParam("colo") String colo,
-            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles);
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles,
+            @DefaultValue("") @QueryParam("filterBy") String filterBy,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") String sortOrder) {
+        return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles,
+                filterBy, orderBy, sortOrder);
     }
 
     @GET

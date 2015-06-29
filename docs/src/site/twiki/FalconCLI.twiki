@@ -198,7 +198,7 @@ If the instance is in WAITING state, missing dependencies are listed
 
 Example : Suppose a process has 3 instance, one has succeeded,one is in running state and other one is waiting, the expected output is:
 
-{"status":"SUCCEEDED","message":"getStatus is successful","instances":[{"instance":"2012-05-07T05:02Z","status":"SUCCEEDED","logFile":"http://oozie-dashboard-url"},{"instance":"2012-05-07T05:07Z","status":"RUNNING","logFile":"http://oozie-dashboard-url"}, {"instance":"2010-01-02T11:05Z","status":"WAITING"}]
+{"status":"SUCCEEDED","message":"getStatus is successful","instances":[{"instance":"2012-05-07T05:02Z","status":"SUCCEEDED","logFile":"http://oozie-dashboard-url"},{"instance":"2012-05-07T05:07Z","status":"RUNNING","logFile":"http://oozie-dashboard-url"}, {"instance":"2010-01-02T11:05Z","status":"WAITING"}]}
 
 Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -list
@@ -217,13 +217,14 @@ The unscheduled instances between the specified time period are included as UNSC
 
 Example : Suppose a process has 3 instance, one has succeeded,one is in running state and other one is waiting, the expected output is:
 
-{"status":"SUCCEEDED","message":"getSummary is successful", "cluster": <<name>> [{"SUCCEEDED":"1"}, {"WAITING":"1"}, {"RUNNING":"1"}]}
+{"status":"SUCCEEDED","message":"getSummary is successful", instancesSummary:[{"cluster": <<name>> "map":[{"SUCCEEDED":"1"}, {"WAITING":"1"}, {"RUNNING":"1"}]}]}
 
 Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -summary
 
-Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
--colo <<colo>> -lifecycle <<lifecycles>>
+Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" -colo <<colo>>
+-filterBy <<field1:value1,field2:value2>> -lifecycle <<lifecycles>>
+-orderBy field -sortOrder <<sortOrder>>
 
 <a href="./Restapi/InstanceSummary.html">Optional params described here.</a>
 

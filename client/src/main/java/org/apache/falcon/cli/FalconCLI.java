@@ -36,6 +36,7 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -281,10 +282,12 @@ public class FalconCLI {
                                 lifeCycles,
                                 filterBy, orderBy, sortOrder, offset, numResults));
         } else if (optionsList.contains(SUMMARY_OPT)) {
+            validateOrderBy(orderBy, "summary");
+            validateFilterBy(filterBy, "summary");
             result =
                 ResponseHelper.getString(client
                         .getSummaryOfInstances(type, entity, start, end, colo,
-                                lifeCycles));
+                                lifeCycles, filterBy, orderBy, sortOrder));
         } else if (optionsList.contains(KILL_OPT)) {
             validateNotEmpty(start, START_OPT);
             validateNotEmpty(end, END_OPT);
@@ -584,6 +587,8 @@ public class FalconCLI {
                     EntityList.EntityFilterByFields.valueOf(tempKeyVal[0].toUpperCase());
                 } else if (filterType.equals("instance")) {
                     InstancesResult.InstanceFilterFields.valueOf(tempKeyVal[0].toUpperCase());
+                }else if (filterType.equals("summary")) {
+                    InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(tempKeyVal[0].toUpperCase());
                 } else {
                     throw new IllegalArgumentException("Invalid API call");
                 }
@@ -606,8 +611,13 @@ public class FalconCLI {
             if (Arrays.asList(new String[] {"type", "name"}).contains(orderBy.toLowerCase())) {
                 return;
             }
+        } else if (action.equals("summary")) {
+            if (Arrays.asList(new String[]{"cluster"})
+                    .contains(orderBy.toLowerCase())) {
+                return;
+            }
         }
-        throw new FalconCLIException("Invalid orderBy argument : " + ORDER_BY_OPT);
+        throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
     }
 
 

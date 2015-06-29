@@ -41,6 +41,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.resource.InstancesResult.Instance;
+import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.slf4j.Logger;
@@ -56,11 +57,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
@@ -134,13 +135,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     protected void validateInstanceFilterByClause(String entityFilterByClause) {
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
-        for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+        for (Map.Entry<String, List<String>> entry : filterByFieldsValues.entrySet()) {
             try {
                 InstancesResult.InstanceFilterFields filterKey =
                         InstancesResult.InstanceFilterFields .valueOf(entry.getKey().toUpperCase());
                 if (filterKey == InstancesResult.InstanceFilterFields.STARTEDAFTER) {
-                    EntityUtil.parseDateUTC(entry.getValue());
+                    getEarliestDate(entry.getValue());
                 }
             } catch (IllegalArgumentException e) {
                 throw FalconWebException.newInstanceException(
@@ -245,7 +246,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr,
-                                             String colo, List<LifeCycle> lifeCycles) {
+                                             String colo, List<LifeCycle> lifeCycles,
+                                             String filterBy, String orderBy, String sortOrder) {
         checkColo(colo);
         checkType(type);
         try {
@@ -255,10 +257,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getSummary(entityObject, startAndEndDate.first, startAndEndDate.second,
-                    lifeCycles);
+            return getInstanceSummaryResultSubset(wfEngine.getSummary(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, lifeCycles),
+                    filterBy, orderBy, sortOrder);
+
         } catch (Throwable e) {
-            LOG.error("Failed to get instances status", e);
+            LOG.error("Failed to get instance summary", e);
             throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -297,7 +301,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
 
         // Filter instances
-        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         List<Instance> instanceSet = getFilteredInstanceSet(resultSet, filterByFieldsValues);
 
         int pageCount = super.getRequiredNumberOfResults(instanceSet.size(), offset, numResults);
@@ -314,8 +318,28 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return result;
     }
 
+    private InstancesSummaryResult getInstanceSummaryResultSubset(InstancesSummaryResult resultSet, String filterBy,
+                                                    String orderBy, String sortOrder) throws FalconException {
+        if (resultSet.getInstancesSummary() == null) {
+            // return the empty resultSet
+            resultSet.setInstancesSummary(new InstancesSummaryResult.InstanceSummary[0]);
+            return resultSet;
+        }
+
+        // Filter instances
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        List<InstanceSummary> instanceSet = getFilteredInstanceSummarySet(resultSet, filterByFieldsValues);
+
+        InstancesSummaryResult result = new InstancesSummaryResult(resultSet.getStatus(), resultSet.getMessage());
+
+        // Sort the ArrayList using orderBy
+        instanceSet = sortInstanceSummary(instanceSet, orderBy.toLowerCase(), sortOrder);
+        result.setInstancesSummary(instanceSet.toArray(new InstanceSummary[instanceSet.size()]));
+        return result;
+    }
+
     private List<Instance> getFilteredInstanceSet(InstancesResult resultSet,
-                                                  Map<String, String> filterByFieldsValues)
+                                                  Map<String, List<String>> filterByFieldsValues)
         throws FalconException {
         // If filterBy is empty, return all instances. Else return instances with matching filter.
         if (filterByFieldsValues.size() == 0) {
@@ -327,7 +351,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             boolean isInstanceFiltered = false;
 
             // for each filter
-            for (Map.Entry<String, String> pair : filterByFieldsValues.entrySet()) {
+            for (Map.Entry<String, List<String>> pair : filterByFieldsValues.entrySet()) {
                 if (isInstanceFiltered(instance, pair)) { // wait until all filters are applied
                     isInstanceFiltered = true;
                     break;  // no use to continue other filters as the current one filtered this
@@ -342,25 +366,80 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return instanceSet;
     }
 
+    private List<InstanceSummary> getFilteredInstanceSummarySet(InstancesSummaryResult resultSet,
+                                                  Map<String, List<String>> filterByFieldsValues)
+        throws FalconException {
+        // If filterBy is empty, return all instances. Else return instances with matching filter.
+        if (filterByFieldsValues.size() == 0) {
+            return Arrays.asList(resultSet.getInstancesSummary());
+        }
+
+        List<InstanceSummary> instanceSet = new ArrayList<>();
+        // for each instance
+        for (InstanceSummary instance : resultSet.getInstancesSummary()) {
+            // for each filter
+            boolean isInstanceFiltered = false;
+            Map<String, Long> newSummaryMap = null;
+            for (Map.Entry<String, List<String>> pair : filterByFieldsValues.entrySet()) {
+                switch (InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(pair.getKey().toUpperCase())) {
+                case CLUSTER:
+                    if (instance.getCluster() == null || !containsIgnoreCase(pair.getValue(), instance.getCluster())) {
+                        isInstanceFiltered = true;
+                    }
+                    break;
+
+                case STATUS:
+                    if (newSummaryMap == null) {
+                        newSummaryMap = new HashMap<>();
+                    }
+                    if (instance.getSummaryMap() == null || instance.getSummaryMap().isEmpty()) {
+                        isInstanceFiltered = true;
+                    } else {
+                        for (Map.Entry<String, Long> entry : instance.getSummaryMap().entrySet()) {
+                            if (containsIgnoreCase(pair.getValue(), entry.getKey())) {
+                                newSummaryMap.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+
+                    }
+                    break;
+
+                default:
+                    isInstanceFiltered = true;
+                }
+
+                if (isInstanceFiltered) { // wait until all filters are applied
+                    break;  // no use to continue other filters as the current one filtered this
+                }
+            }
+
+            if (!isInstanceFiltered) {  // survived all filters
+                instanceSet.add(new InstanceSummary(instance.getCluster(), newSummaryMap));
+            }
+        }
+
+        return instanceSet;
+    }
+
     private boolean isInstanceFiltered(Instance instance,
-                                       Map.Entry<String, String> pair) throws FalconException {
-        final String filterValue = pair.getValue();
+                                       Map.Entry<String, List<String>> pair) throws FalconException {
+        final List<String> filterValue = pair.getValue();
         switch (InstancesResult.InstanceFilterFields.valueOf(pair.getKey().toUpperCase())) {
         case STATUS:
             return instance.getStatus() == null
-                    || !instance.getStatus().toString().equalsIgnoreCase(filterValue);
+                    || !containsIgnoreCase(filterValue, instance.getStatus().toString());
 
         case CLUSTER:
             return instance.getCluster() == null
-                    || !instance.getCluster().equalsIgnoreCase(filterValue);
+                    || !containsIgnoreCase(filterValue, instance.getCluster());
 
         case SOURCECLUSTER:
             return instance.getSourceCluster() == null
-                    || !instance.getSourceCluster().equalsIgnoreCase(filterValue);
+                    || !containsIgnoreCase(filterValue, instance.getSourceCluster());
 
         case STARTEDAFTER:
             return instance.getStartTime() == null
-                    || instance.getStartTime().before(EntityUtil.parseDateUTC(filterValue));
+                    || instance.getStartTime().before(getEarliestDate(filterValue));
 
         default:
             return true;
@@ -410,6 +489,22 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     Date end2 = (i2.getEndTime() == null) ? new Date(0) : i2.getEndTime();
                     return (order.equalsIgnoreCase("asc")) ? end1.compareTo(end2)
                             : end2.compareTo(end1);
+                }
+            });
+        }//Default : no sort
+
+        return instanceSet;
+    }
+
+    private List<InstanceSummary> sortInstanceSummary(List<InstanceSummary> instanceSet,
+                                         String orderBy, String sortOrder) {
+        final String order = getValidSortOrder(sortOrder, orderBy);
+        if (orderBy.equals("cluster")) {
+            Collections.sort(instanceSet, new Comparator<InstanceSummary>() {
+                @Override
+                public int compare(InstanceSummary i1, InstanceSummary i2) {
+                    return (order.equalsIgnoreCase("asc")) ? i1.getCluster().compareTo(i2.getCluster())
+                            : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
         }//Default : no sort
@@ -832,5 +927,27 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         if (StringUtils.isEmpty(param)) {
             throw new ValidationException("Parameter " + field + " is empty");
         }
+    }
+
+    private boolean containsIgnoreCase(List<String> strList, String str) {
+        for (String s : strList) {
+            if (s.equalsIgnoreCase(str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Date getEarliestDate(List<String> dateList) throws FalconException {
+        if (dateList.size() == 1) {
+            return EntityUtil.parseDateUTC(dateList.get(0));
+        }
+        Date earliestDate = EntityUtil.parseDateUTC(dateList.get(0));
+        for (int i = 1; i < dateList.size(); i++) {
+            if (earliestDate.after(EntityUtil.parseDateUTC(dateList.get(i)))) {
+                earliestDate = EntityUtil.parseDateUTC(dateList.get(i));
+            }
+        }
+        return earliestDate;
     }
 }

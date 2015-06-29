@@ -8,14 +8,23 @@
 Get summary of instance/instances of an entity.
 
 ---++ Parameters
-   * :entity-type Valid options are cluster, feed or process.
+   * :entity-type Valid options are feed or process.
    * :entity-name Name of the entity.
    * start <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
-      * By default, it is set to (end - (10 * entityFrequency)).
+       * By default, it is set to (end - (10 * entityFrequency)).
    * end <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
-      * Default is set to now.
+       * Default is set to now.
    * colo <optional param> Colo on which the query should be run.
    * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
+   * filterBy <optional param>  Filter results by list of field:value pairs.
+   Example1: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+   Example2: filterBy=Status:RUNNING,Status:KILLED
+       * Supported filter fields are STATUS, CLUSTER
+       * Query will do an AND among filterBy fields.
+   * orderBy <optional param> Field by which results should be ordered.
+       * Supports ordering by "cluster".
+   * sortOrder <optional param> Valid options are "asc" and "desc"
+   Example: orderBy=cluster sortOrder=asc
 
 ---++ Results
 Summary of the instances over the specified time range
@@ -39,10 +48,66 @@ GET http://localhost:15000/api/instance/summary/process/WordCount?colo=*&start=2
                     "entry":
                         {
                             "key":"SUCCEEDED",
-                            "key2":"value"
+                            "value":"value"
                          }
                 }
             }
         }
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET https://localhost:16443/api/instance/summary/process/WordCount?filterBy=Status:KILLED,Status:RUNNING&start=2015-06-24T16:00Z&end=2015-06-24T23:00Z&colo=*
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "status":"SUCCEEDED",
+    "message":"local/SUMMARY\n",
+    "requestId":"local/1246061948@qtp-1059149611-5 - 34d8c3bb-f461-4fd5-87cd-402c9c6b1ed2\n",
+    "instancesSummary":[
+        {
+            "cluster":"local",
+            "map":{
+                "entry":{
+                    "key":"RUNNING",
+                    "value":"1"
+                },
+                "entry":{
+                    "key":"KILLED",
+                    "value":"1"
+                }
+            }
+        }
+    ]
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET https://localhost:16443/api/instance/summary/process/WordCount?orderBy=cluster&sortOrder=asc&start=2015-06-24T16:00Z&end=2015-06-24T23:00Z&colo=*
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "status":"SUCCEEDED",
+    "message":"local/SUMMARY\n",
+    "requestId":"local/1246061948@qtp-1059149611-5 - 42e2040d-6b6e-4bfd-a090-83db5ed1a429\n",
+    "instancesSummary":[
+        {
+            "cluster":"local",
+            "map":{
+                "entry":{
+                    "key":"SUCCEEDED",
+                    "value":"6"
+                },
+                "entry":{
+                    "key":"KILLED",
+                    "value":"1"
+                }
+            }
+        }
+    ]
 }
 </verbatim>
