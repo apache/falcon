@@ -221,14 +221,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     break;
 
                 default:
-                    throw FalconWebException.newInstanceException("Instance dependency isn't supported for type: "
-                                + entityType, Response.Status.BAD_REQUEST);
+                    throw FalconWebException.newInstanceDependencyResult("Instance dependency isn't supported for type:"
+                        + entityType, Response.Status.BAD_REQUEST);
                 }
             }
 
         } catch (Throwable throwable) {
             LOG.error("Failed to get instance dependencies:", throwable);
-            throw FalconWebException.newInstanceException(throwable, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newInstanceDependencyResult(throwable, Response.Status.BAD_REQUEST);
         }
 
         InstanceDependencyResult res = new InstanceDependencyResult(APIResult.Status.SUCCEEDED, "Success!");

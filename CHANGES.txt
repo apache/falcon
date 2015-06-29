@@ -45,6 +45,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1268 Instance Dependency API failure message is not intuitive in distributed mode (Ajay Yadava)
+
     FALCON-1260 Instance dependency API produces incorrect results (Ajay Yadava)
     
     FALCON-99 Adding late data to process doesn't create new coord (Pallavi Rao via Suhas Vasu)
