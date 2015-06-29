@@ -227,6 +227,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             }
 
         } catch (Throwable throwable) {
+            LOG.error("Failed to get instance dependencies:", throwable);
             throw FalconWebException.newInstanceException(throwable, Response.Status.BAD_REQUEST);
         }
 

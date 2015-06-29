@@ -301,11 +301,11 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -
 
 For example:
 $FALCON_HOME/bin/falcon instance -dependency -type feed -name out -instanceTime 2014-12-15T00:00Z
-name: producer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:00Z, tag: Output
-name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:03Z, tag: Input
-name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:04Z, tag: Input
-name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:02Z, tag: Input
-name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:05Z, tag: Input
+name: producer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:00Z, tags: Output
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:03Z, tags: Input
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:04Z, tags: Input
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:02Z, tags: Input
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:05Z, tags: Input
 
 
 Response: default/Success!

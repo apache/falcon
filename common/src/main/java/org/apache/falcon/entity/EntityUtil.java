@@ -803,12 +803,12 @@ public final class EntityUtil {
         Calendar insCal = Calendar.getInstance(tz);
         insCal.setTime(startTime);
 
-        int instanceCount = getInstanceSequence(startTime, frequency, tz, referenceTime);
+        int instanceCount = getInstanceSequence(startTime, frequency, tz, referenceTime) - 1;
         final int freq = frequency.getFrequencyAsInt() * instanceCount;
         insCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
 
         while (insCal.getTime().after(referenceTime)) {
-            insCal.add(frequency.getTimeUnit().getCalendarUnit(), -1);
+            insCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequencyAsInt() * -1);
         }
         return insCal.getTime();
     }
@@ -849,7 +849,7 @@ public final class EntityUtil {
     /**
      * Find instance times given first instance start time and frequency till a given end time.
      *
-     * It finds the first valid instance time in the given time range, it then uses frequency to find next instances
+     * It finds the first valid instance time for the given time range, it then uses frequency to find next instances
      * in the given time range.
      *
      * @param startTime startTime of the entity (time of first instance ever of the given entity)
@@ -866,15 +866,15 @@ public final class EntityUtil {
             timeZone = TimeZone.getTimeZone("UTC");
         }
 
-        while(true){
-            Date nextStartTime = getNextStartTime(startTime, frequency, timeZone, startRange);
-            if (nextStartTime.before(startRange) || nextStartTime.after(endRange)){
+        Date current = getPreviousInstanceTime(startTime, frequency, timeZone, startRange);
+        while (true) {
+            Date nextStartTime = getNextStartTime(startTime, frequency, timeZone, current);
+            if (nextStartTime.after(endRange)){
                 break;
             }
-
             result.add(nextStartTime);
             // this is required because getNextStartTime returns greater than or equal to referenceTime
-            startRange = new Date(nextStartTime.getTime() + ONE_MS); // 1 milli seconds later
+            current = new Date(nextStartTime.getTime() + ONE_MS); // 1 milli seconds later
         }
         return result;
     }

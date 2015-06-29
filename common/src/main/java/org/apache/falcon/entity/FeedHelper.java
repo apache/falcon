@@ -448,7 +448,7 @@ public final class FeedHelper {
 
         // validate that instanceTime is in validity range
         if (feedCluster.getValidity().getStart().after(instanceTime)
-                || feedCluster.getValidity().getEnd().before(instanceTime)) {
+                || !feedCluster.getValidity().getEnd().after(instanceTime)) {
             throw new IllegalArgumentException("instanceTime: " + instanceTime + " is not in validity range for"
                     + " Feed: " + feed.getName() + " on cluster:" + cluster.getName());
         }
@@ -479,14 +479,20 @@ public final class FeedHelper {
 
         //validate the inputs
         validateFeedInstance(feed, feedInstanceTime, cluster);
-
         Process process = getProducerProcess(feed);
         if (process != null) {
+            org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process,
+                    cluster.getName());
+            Date pStart = processCluster.getValidity().getStart();
+            Date pEnd = processCluster.getValidity().getEnd();
             try {
                 Date processInstanceTime = getProducerInstanceTime(feed, feedInstanceTime, process, cluster);
+                if (processInstanceTime.before(pStart) || !processInstanceTime.before(pEnd)) {
+                    return null;
+                }
                 SchedulableEntityInstance producer = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                         processInstanceTime, EntityType.PROCESS);
-                producer.setTag(SchedulableEntityInstance.OUTPUT);
+                producer.setTags(SchedulableEntityInstance.OUTPUT);
                 return producer;
             } catch (FalconException e) {
                 LOG.error("Error in trying to get producer process: {}'s instance time for feed: {}'s instance: } "
@@ -576,7 +582,7 @@ public final class FeedHelper {
             for (Date date : consumerInstanceTimes) {
                 SchedulableEntityInstance in = new SchedulableEntityInstance(p.getName(), cluster.getName(), date,
                         EntityType.PROCESS);
-                in.setTag(SchedulableEntityInstance.INPUT);
+                in.setTags(SchedulableEntityInstance.INPUT);
                 result.add(in);
             }
         }
@@ -645,7 +651,7 @@ public final class FeedHelper {
             ExpressionHelper.setReferenceDate(processStartDate);
             ExpressionHelper evaluator = ExpressionHelper.get();
             Date startRelative = evaluator.evaluate(in.getStart(), Date.class);
-            Date startTimeActual = EntityUtil.getNextStartTime(feedStartDate,
+            Date startTimeActual = EntityUtil.getPreviousInstanceTime(feedStartDate,
                     feed.getFrequency(), feed.getTimezone(), startRelative);
             Long offset = processStartDate.getTime() - startTimeActual.getTime();
 
@@ -663,10 +669,15 @@ public final class FeedHelper {
 
                 ExpressionHelper.setReferenceDate(nextConsumerInstance);
                 evaluator = ExpressionHelper.get();
-                Long rangeStart = evaluator.evaluate(in.getStart(), Date.class).getTime();
+                Date inputStart = evaluator.evaluate(in.getStart(), Date.class);
+                Long rangeStart = EntityUtil.getPreviousInstanceTime(feedStartDate, feed.getFrequency(),
+                        feed.getTimezone(), inputStart).getTime();
                 Long rangeEnd = evaluator.evaluate(in.getEnd(), Date.class).getTime();
-                if (rangeStart <= feedInstancetime.getTime() && feedInstancetime.getTime() < rangeEnd) {
-                    result.add(nextConsumerInstance);
+                if (rangeStart <= feedInstancetime.getTime() && feedInstancetime.getTime() <= rangeEnd) {
+                    if (!nextConsumerInstance.before(processCluster.getValidity().getStart())
+                            && nextConsumerInstance.before(processCluster.getValidity().getEnd())) {
+                        result.add(nextConsumerInstance);
+                    }
                 } else {
                     break;
                 }
@@ -681,10 +692,15 @@ public final class FeedHelper {
 
                 ExpressionHelper.setReferenceDate(nextConsumerInstance);
                 evaluator = ExpressionHelper.get();
-                Long rangeStart = evaluator.evaluate(in.getStart(), Date.class).getTime();
+                Date inputStart = evaluator.evaluate(in.getStart(), Date.class);
+                Long rangeStart = EntityUtil.getPreviousInstanceTime(feedStartDate, feed.getFrequency(),
+                        feed.getTimezone(), inputStart).getTime();
                 Long rangeEnd = evaluator.evaluate(in.getEnd(), Date.class).getTime();
-                if (rangeStart <= feedInstancetime.getTime() && feedInstancetime.getTime() < rangeEnd) {
-                    result.add(nextConsumerInstance);
+                if (rangeStart <= feedInstancetime.getTime() && feedInstancetime.getTime() <= rangeEnd) {
+                    if (!nextConsumerInstance.before(processCluster.getValidity().getStart())
+                            && nextConsumerInstance.before(processCluster.getValidity().getEnd())) {
+                        result.add(nextConsumerInstance);
+                    }
                 } else {
                     break;
                 }

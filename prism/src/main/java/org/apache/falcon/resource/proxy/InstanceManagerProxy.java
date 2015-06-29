@@ -32,6 +32,8 @@ import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
@@ -55,6 +57,8 @@ import java.util.Set;
  */
 @Path("instance")
 public class InstanceManagerProxy extends AbstractInstanceManager {
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceManagerProxy.class);
+
     private final Map<String, Channel> processInstanceManagerChannels = new HashMap<String, Channel>();
 
     public InstanceManagerProxy() {
@@ -389,7 +393,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 try {
                     T resultHolder = doExecute(colo);
                     results.put(colo, resultHolder);
-                } catch (FalconException e) {
+                } catch (Throwable e) {
+                    LOG.error("Failed to fetch results for colo:{}", colo, e);
                     results.put(colo, getResultInstance(APIResult.Status.FAILED,
                             e.getClass().getName() + "::" + e.getMessage()));
                 }

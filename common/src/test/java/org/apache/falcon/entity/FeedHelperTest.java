@@ -78,6 +78,155 @@ public class FeedHelperTest extends AbstractTestBase {
         Assert.assertEquals(FeedHelper.normalizePartitionExpression(null, null), "");
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testInstanceBeforeStart() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Outputs outputs = new Outputs();
+        Output outFeed = new Output();
+        outFeed.setName("outputFeed");
+        outFeed.setFeed(feed.getName());
+        outFeed.setInstance("now(0,0)");
+        outputs.getOutputs().add(outFeed);
+        process.setOutputs(outputs);
+        store.publish(EntityType.PROCESS, process);
+        FeedHelper.getProducerInstance(feed, getDate("2011-02-27 10:00 UTC"), cluster);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testInstanceEqualsEnd() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Outputs outputs = new Outputs();
+        Output outFeed = new Output();
+        outFeed.setName("outputFeed");
+        outFeed.setFeed(feed.getName());
+        outFeed.setInstance("now(0,0)");
+        outputs.getOutputs().add(outFeed);
+        process.setOutputs(outputs);
+        store.publish(EntityType.PROCESS, process);
+        FeedHelper.getProducerInstance(feed, getDate("2016-02-28 10:00 UTC"), cluster);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testInstanceOutOfSync() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Outputs outputs = new Outputs();
+        Output outFeed = new Output();
+        outFeed.setName("outputFeed");
+        outFeed.setFeed(feed.getName());
+        outFeed.setInstance("now(0,0)");
+        outputs.getOutputs().add(outFeed);
+        process.setOutputs(outputs);
+        store.publish(EntityType.PROCESS, process);
+        FeedHelper.getProducerInstance(feed, getDate("2016-02-28 09:04 UTC"), cluster);
+    }
+
+    @Test
+    public void testGetProducerOutOfValidity() throws FalconException, ParseException {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Outputs outputs = new Outputs();
+        Output outFeed = new Output();
+        outFeed.setName("outputFeed");
+        outFeed.setFeed(feed.getName());
+        outFeed.setInstance("now(0,0)");
+        outputs.getOutputs().add(outFeed);
+        process.setOutputs(outputs);
+        store.publish(EntityType.PROCESS, process);
+        Assert.assertEquals(FeedHelper.getProducerProcess(feed).getName(), process.getName());
+        SchedulableEntityInstance result = FeedHelper.getProducerInstance(feed, getDate("2012-02-28 10:45 UTC"),
+                cluster);
+        Assert.assertNull(result);
+    }
+
+    @Test
+    public void testGetConsumersOutOfValidity() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("now(0, -20)");
+        inFeed.setEnd("now(0, 0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed, getDate("2016-02-28 09:00 UTC"),
+                cluster);
+        Assert.assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetConsumersFirstInstance() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("now(0, -20)");
+        inFeed.setEnd("now(0, 0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed, getDate("2012-02-28 10:15 UTC"),
+                cluster);
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        SchedulableEntityInstance consumer = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                getDate("2012-02-28 10:37 UTC"), EntityType.PROCESS);
+        consumer.setTags(SchedulableEntityInstance.INPUT);
+        expected.add(consumer);
+        Assert.assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetConsumersLastInstance() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:20 UTC", "2016-02-28 10:00 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("now(0, -20)");
+        inFeed.setEnd("now(0, 0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed, getDate("2012-02-28 10:15 UTC"),
+                cluster);
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        String[] consumers = { "2012-02-28 10:20 UTC", "2012-02-28 10:30 UTC", };
+        for (String d : consumers) {
+            SchedulableEntityInstance i = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                    getDate(d), EntityType.PROCESS);
+            i.setTags(SchedulableEntityInstance.INPUT);
+            expected.add(i);
+        }
+        Assert.assertEquals(result, expected);
+    }
+
+    @Test
+    public void testFeedWithNoDependencies() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed, getDate("2016-02-28 09:00 UTC"),
+                cluster);
+        Assert.assertTrue(result.isEmpty());
+        SchedulableEntityInstance res = FeedHelper.getProducerInstance(feed, getDate("2012-02-28 10:45 UTC"),
+                cluster);
+        Assert.assertNull(res);
+    }
+
     @Test
     public void testEvaluateExpression() throws Exception {
         Cluster cluster = new Cluster();
@@ -144,29 +293,24 @@ public class FeedHelperTest extends AbstractTestBase {
 
     @Test
     public void testGetProducerProcessWithOffset() throws FalconException, ParseException {
-        //create a feed, submit it, test that ProducerProcess is null
-
         Cluster cluster = publishCluster();
-        Feed feed = publishFeed(cluster, "days(1)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
         Assert.assertNull(FeedHelper.getProducerProcess(feed));
-
-        // create it's producer process submit it, test it's ProducerProcess
-        Process process = prepareProcess(cluster, "days(1)", "2012-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2016-02-28 10:37 UTC");
         Outputs outputs = new Outputs();
         Output outFeed = new Output();
         outFeed.setName("outputFeed");
         outFeed.setFeed(feed.getName());
-        outFeed.setInstance("today(0,0)");
+        outFeed.setInstance("now(0,0)");
         outputs.getOutputs().add(outFeed);
         process.setOutputs(outputs);
         store.publish(EntityType.PROCESS, process);
-
         Assert.assertEquals(FeedHelper.getProducerProcess(feed).getName(), process.getName());
-        SchedulableEntityInstance result = FeedHelper.getProducerInstance(feed, getDate("2013-02-27 10:00 UTC"),
+        SchedulableEntityInstance result = FeedHelper.getProducerInstance(feed, getDate("2013-02-28 10:35 UTC"),
                 cluster);
         SchedulableEntityInstance expected = new SchedulableEntityInstance(process.getName(), cluster.getName(),
-                getDate("2013-02-28 10:00 UTC"), EntityType.PROCESS);
-        expected.setTag(SchedulableEntityInstance.OUTPUT);
+                getDate("2013-02-28 10:37 UTC"), EntityType.PROCESS);
+        expected.setTags(SchedulableEntityInstance.OUTPUT);
         Assert.assertEquals(result, expected);
     }
 
@@ -192,7 +336,7 @@ public class FeedHelperTest extends AbstractTestBase {
                 cluster);
         SchedulableEntityInstance expected = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                 getDate("2013-02-28 10:00 UTC"), EntityType.PROCESS);
-        expected.setTag(SchedulableEntityInstance.OUTPUT);
+        expected.setTags(SchedulableEntityInstance.OUTPUT);
         Assert.assertEquals(result, expected);
     }
 
@@ -218,7 +362,7 @@ public class FeedHelperTest extends AbstractTestBase {
                 cluster);
         SchedulableEntityInstance expected = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                 getDate("2013-02-28 10:00 UTC"), EntityType.PROCESS);
-        expected.setTag(SchedulableEntityInstance.OUTPUT);
+        expected.setTags(SchedulableEntityInstance.OUTPUT);
         Assert.assertEquals(result, expected);
     }
 
@@ -245,7 +389,7 @@ public class FeedHelperTest extends AbstractTestBase {
                 cluster);
         SchedulableEntityInstance expected = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                 getDate("2013-02-28 10:00 UTC"), EntityType.PROCESS);
-        expected.setTag(SchedulableEntityInstance.OUTPUT);
+        expected.setTags(SchedulableEntityInstance.OUTPUT);
         Assert.assertEquals(result, expected);
     }
 
@@ -270,7 +414,7 @@ public class FeedHelperTest extends AbstractTestBase {
                 cluster);
         SchedulableEntityInstance expected = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                 getDate("2013-02-28 10:00 UTC"), EntityType.PROCESS);
-        expected.setTag(SchedulableEntityInstance.OUTPUT);
+        expected.setTags(SchedulableEntityInstance.OUTPUT);
         Assert.assertEquals(result, expected);
     }
 
@@ -322,19 +466,99 @@ public class FeedHelperTest extends AbstractTestBase {
         Set<SchedulableEntityInstance> expected = new HashSet<>();
         SchedulableEntityInstance ins = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                 getDate("2012-02-28 10:00 UTC"), EntityType.PROCESS);
-        ins.setTag(SchedulableEntityInstance.INPUT);
+        ins.setTags(SchedulableEntityInstance.INPUT);
         expected.add(ins);
         Assert.assertEquals(result, expected);
+    }
 
+    @Test
+    public void testGetConsumerProcessInstancesWithNonUnitFrequency() throws Exception {
+        //create a feed, submit it, test that ConsumerProcesses is blank list
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2012-02-28 00:00 UTC", "2016-02-28 00:00 UTC");
+
+        //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 09:37 UTC", "2016-02-28 10:00 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("now(0, -20)");
+        inFeed.setEnd("now(0,0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
+                getDate("2012-02-28 09:40 UTC"), cluster);
+
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        String[] consumers = {"2012-02-28 09:47 UTC", "2012-02-28 09:57 UTC"};
+        for (String d : consumers) {
+            SchedulableEntityInstance i = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                    getDate(d), EntityType.PROCESS);
+            i.setTags(SchedulableEntityInstance.INPUT);
+            expected.add(i);
+        }
+        Assert.assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetConsumersOutOfValidityRange() throws Exception {
+        //create a feed, submit it, test that ConsumerProcesses is blank list
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2010-02-28 00:00 UTC", "2016-02-28 00:00 UTC");
+
+        //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 09:37 UTC", "2016-02-28 10:00 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("now(0, -20)");
+        inFeed.setEnd("now(0,0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
+                getDate("2010-02-28 09:40 UTC"), cluster);
+        Assert.assertEquals(result.size(), 0);
+    }
+
+    @Test
+    public void testGetConsumersLargeOffsetShortValidity() throws Exception {
+        //create a feed, submit it, test that ConsumerProcesses is blank list
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2010-02-28 00:00 UTC", "2016-02-28 00:00 UTC");
+
+        //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 09:37 UTC", "2012-02-28 09:47 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("today(-2, 0)");
+        inFeed.setEnd("now(0,0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
+                getDate("2012-02-28 09:35 UTC"), cluster);
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        SchedulableEntityInstance consumer = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                getDate("2012-02-28 09:37 UTC"), EntityType.PROCESS);
+        consumer.setTags(SchedulableEntityInstance.INPUT);
+        expected.add(consumer);
+        Assert.assertEquals(result, expected);
     }
 
     @Test
     public void testGetMultipleConsumerInstances() throws Exception {
         Cluster cluster = publishCluster();
-        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-28 00:00 UTC", "2016-02-28 00:00 UTC");
-
-        //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
-        Process process = prepareProcess(cluster, "hours(1)", "2012-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-27 00:00 UTC", "2016-02-28 00:00 UTC");
+        Process process = prepareProcess(cluster, "hours(1)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
         Inputs inputs = new Inputs();
         Input inFeed = new Input();
         inFeed.setName("inputFeed");
@@ -347,28 +571,27 @@ public class FeedHelperTest extends AbstractTestBase {
 
         Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
                 getDate("2012-02-28 09:00 UTC"), cluster);
-        Assert.assertEquals(result.size(), 8);
-
+        Assert.assertEquals(result.size(), 9);
         Set<SchedulableEntityInstance> expected = new HashSet<>();
         String[] consumers = { "2012-02-28 05:00 UTC", "2012-02-28 06:00 UTC", "2012-02-28 07:00 UTC",
             "2012-02-28 08:00 UTC", "2012-02-28 09:00 UTC", "2012-02-28 10:00 UTC", "2012-02-28 11:00 UTC",
-            "2012-02-28 12:00 UTC", };
+            "2012-02-28 12:00 UTC", "2012-02-28 13:00 UTC", };
         for (String d : consumers) {
             SchedulableEntityInstance i = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                     getDate(d), EntityType.PROCESS);
-            i.setTag(SchedulableEntityInstance.INPUT);
+            i.setTags(SchedulableEntityInstance.INPUT);
             expected.add(i);
         }
         Assert.assertEquals(result, expected);
     }
 
     @Test
-    public void testGetConsumerWithNow() throws Exception {
+    public void testGetConsumerWithVariableEnd() throws Exception {
         Cluster cluster = publishCluster();
-        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-28 00:00 UTC", "2016-02-28 00:00 UTC");
+        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-27 00:00 UTC", "2016-02-28 00:00 UTC");
 
         //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
-        Process process = prepareProcess(cluster, "hours(1)", "2012-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "hours(1)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
         Inputs inputs = new Inputs();
         Input inFeed = new Input();
         inFeed.setName("inputFeed");
@@ -378,19 +601,66 @@ public class FeedHelperTest extends AbstractTestBase {
         inputs.getInputs().add(inFeed);
         process.setInputs(inputs);
         store.publish(EntityType.PROCESS, process);
-
         Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
                 getDate("2012-02-28 00:00 UTC"), cluster);
-        Assert.assertEquals(result.size(), 23);
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        String[] consumers =  {"2012-02-28 11:00 UTC", "2012-02-28 16:00 UTC", "2012-02-28 18:00 UTC",
+            "2012-02-28 20:00 UTC", "2012-02-28 13:00 UTC", "2012-02-28 03:00 UTC", "2012-02-28 04:00 UTC",
+            "2012-02-28 06:00 UTC", "2012-02-28 05:00 UTC", "2012-02-28 17:00 UTC", "2012-02-28 00:00 UTC",
+            "2012-02-28 23:00 UTC", "2012-02-28 21:00 UTC", "2012-02-28 15:00 UTC", "2012-02-28 22:00 UTC",
+            "2012-02-28 14:00 UTC", "2012-02-28 08:00 UTC", "2012-02-28 12:00 UTC", "2012-02-28 02:00 UTC",
+            "2012-02-28 01:00 UTC", "2012-02-28 19:00 UTC", "2012-02-28 10:00 UTC", "2012-02-28 09:00 UTC",
+            "2012-02-28 07:00 UTC", };
+        for (String d : consumers) {
+            SchedulableEntityInstance i = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                    getDate(d), EntityType.PROCESS);
+            i.setTags(SchedulableEntityInstance.INPUT);
+            expected.add(i);
+        }
+        Assert.assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetConsumerWithVariableStart() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-27 00:00 UTC", "2016-02-28 00:00 UTC");
+
+        //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
+        Process process = prepareProcess(cluster, "hours(1)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
+        Inputs inputs = new Inputs();
+        Input inFeed = new Input();
+        inFeed.setName("inputFeed");
+        inFeed.setFeed(feed.getName());
+        inFeed.setStart("now(0, 0)");
+        inFeed.setEnd("today(24, 0)");
+        inputs.getInputs().add(inFeed);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+
+        Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
+                getDate("2012-03-28 00:00 UTC"), cluster);
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        String[] consumers =  {"2012-03-27 16:00 UTC", "2012-03-27 01:00 UTC", "2012-03-27 10:00 UTC",
+            "2012-03-27 03:00 UTC", "2012-03-27 08:00 UTC", "2012-03-27 07:00 UTC", "2012-03-27 19:00 UTC",
+            "2012-03-27 22:00 UTC", "2012-03-27 12:00 UTC", "2012-03-27 20:00 UTC", "2012-03-27 09:00 UTC",
+            "2012-03-27 04:00 UTC", "2012-03-27 14:00 UTC", "2012-03-27 05:00 UTC", "2012-03-27 23:00 UTC",
+            "2012-03-27 17:00 UTC", "2012-03-27 13:00 UTC", "2012-03-27 18:00 UTC", "2012-03-27 15:00 UTC",
+            "2012-03-28 00:00 UTC", "2012-03-27 02:00 UTC", "2012-03-27 11:00 UTC", "2012-03-27 21:00 UTC",
+            "2012-03-27 00:00 UTC", "2012-03-27 06:00 UTC", };
+        for (String d : consumers) {
+            SchedulableEntityInstance i = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                    getDate(d), EntityType.PROCESS);
+            i.setTags(SchedulableEntityInstance.INPUT);
+            expected.add(i);
+        }
+        Assert.assertEquals(result, expected);
     }
 
     @Test
     public void testGetConsumerWithLatest() throws Exception {
         Cluster cluster = publishCluster();
-        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-28 00:00 UTC", "2016-02-28 00:00 UTC");
-
-        //create a consumer Process and submit it, assert that this is returned in ConsumerProcesses
-        Process process = prepareProcess(cluster, "hours(1)", "2012-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-27 00:00 UTC", "2016-02-28 00:00 UTC");
+        Process process = prepareProcess(cluster, "hours(1)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
         Inputs inputs = new Inputs();
         Input inFeed = new Input();
         inFeed.setName("inputFeed");
@@ -403,8 +673,21 @@ public class FeedHelperTest extends AbstractTestBase {
 
         Set<SchedulableEntityInstance> result = FeedHelper.getConsumerInstances(feed,
                 getDate("2012-02-28 00:00 UTC"), cluster);
-        System.out.println("result.size() = " + result.size());
-        Assert.assertEquals(result.size(), 23);
+        Set<SchedulableEntityInstance> expected = new HashSet<>();
+        String[] consumers =  {"2012-02-28 23:00 UTC", "2012-02-28 04:00 UTC", "2012-02-28 10:00 UTC",
+            "2012-02-28 07:00 UTC", "2012-02-28 17:00 UTC", "2012-02-28 13:00 UTC", "2012-02-28 05:00 UTC",
+            "2012-02-28 22:00 UTC", "2012-02-28 03:00 UTC", "2012-02-28 21:00 UTC", "2012-02-28 11:00 UTC",
+            "2012-02-28 20:00 UTC", "2012-02-28 06:00 UTC", "2012-02-28 01:00 UTC", "2012-02-28 14:00 UTC",
+            "2012-02-28 00:00 UTC", "2012-02-28 18:00 UTC", "2012-02-28 12:00 UTC", "2012-02-28 16:00 UTC",
+            "2012-02-28 09:00 UTC", "2012-02-28 15:00 UTC", "2012-02-28 19:00 UTC", "2012-02-28 08:00 UTC",
+            "2012-02-28 02:00 UTC", };
+        for (String d : consumers) {
+            SchedulableEntityInstance i = new SchedulableEntityInstance(process.getName(), cluster.getName(),
+                    getDate(d), EntityType.PROCESS);
+            i.setTags(SchedulableEntityInstance.INPUT);
+            expected.add(i);
+        }
+        Assert.assertEquals(result, expected);
     }
 
     private Validity getFeedValidity(String start, String end) throws ParseException {

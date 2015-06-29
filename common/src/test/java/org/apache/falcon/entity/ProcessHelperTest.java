@@ -62,40 +62,98 @@ public class ProcessHelperTest extends AbstractTestBase {
         store = ConfigurationStore.get();
     }
 
-    @Test
-    public void testGetInputFeedInstances() throws FalconException, ParseException {
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testBeforeStartInstance() throws FalconException, ParseException {
         // create a process with input feeds
         Cluster cluster = publishCluster();
-        Feed feed = publishFeed(cluster, "hours(1)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
+        Feed feed = publishFeed(cluster, "minutes(5)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
 
         // find the input Feed instances time
-        Process process = prepareProcess(cluster, "days(1)", "2012-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
         Inputs inputs = new Inputs();
-        Input input = getInput("inputFeed", feed.getName(), "today(0,-30)", "today(2,30)", false);
+        Input input = getInput("inputFeed", feed.getName(), "now(0,-20)", "now(0,0)", false);
         inputs.getInputs().add(input);
         process.setInputs(inputs);
         store.publish(EntityType.PROCESS, process);
 
-        Date processInstanceDate = getDate("2012-02-28 10:00 UTC");
+        Date processInstanceDate = getDate("2012-02-28 10:27 UTC");
+        ProcessHelper.getInputFeedInstances(process, processInstanceDate, cluster, false);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testEqualsToEndInstance() throws FalconException, ParseException {
+        // create a process with input feeds
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
+
+        // find the input Feed instances time
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Inputs inputs = new Inputs();
+        Input input = getInput("inputFeed", feed.getName(), "now(0,-20)", "now(0,0)", false);
+        inputs.getInputs().add(input);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+
+        Date processInstanceDate = getDate("2012-02-28 10:47 UTC");
+        ProcessHelper.getInputFeedInstances(process, processInstanceDate, cluster, false);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testOutOfSyncInstance() throws FalconException, ParseException {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Inputs inputs = new Inputs();
+        Input input = getInput("inputFeed", feed.getName(), "now(0,-20)", "now(0,0)", false);
+        inputs.getInputs().add(input);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+        Date processInstanceDate = getDate("2012-02-28 10:40 UTC");
+        ProcessHelper.getInputFeedInstances(process, processInstanceDate, cluster, false);
+    }
+
+    @Test
+    public void testProcessWithNoDependencies() throws Exception {
+        Cluster cluster = publishCluster();
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        store.publish(EntityType.PROCESS, process);
+        Date processInstanceDate = getDate("2012-02-28 10:37 UTC");
+        Set<SchedulableEntityInstance> inputFeedInstances = ProcessHelper.getInputFeedInstances(process,
+            processInstanceDate, cluster, false);
+        Assert.assertTrue(inputFeedInstances.isEmpty());
+        Set<SchedulableEntityInstance> res = ProcessHelper.getOutputFeedInstances(process, processInstanceDate,
+            cluster);
+        Assert.assertTrue(res.isEmpty());
+    }
+
+    @Test
+    public void testGetInputFeedInstances() throws FalconException, ParseException {
+        // create a process with input feeds
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2012-02-27 10:00 UTC", "2016-02-28 10:00 UTC");
+
+        // find the input Feed instances time
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2016-02-28 10:37 UTC");
+        Inputs inputs = new Inputs();
+        Input input = getInput("inputFeed", feed.getName(), "now(0,-20)", "now(0,0)", false);
+        inputs.getInputs().add(input);
+        process.setInputs(inputs);
+        store.publish(EntityType.PROCESS, process);
+
+        Date processInstanceDate = getDate("2012-02-28 10:37 UTC");
         Set<SchedulableEntityInstance> inputFeedInstances = ProcessHelper.getInputFeedInstances(process,
                 processInstanceDate, cluster, false);
-        Assert.assertEquals(inputFeedInstances.size(), 3);
+        Assert.assertEquals(inputFeedInstances.size(), 5);
 
         Set<SchedulableEntityInstance> expectedInputFeedInstances = new HashSet<>();
-        SchedulableEntityInstance instance = new SchedulableEntityInstance(feed.getName(), cluster.getName(),
-                getDate("2012-02-28 00:00 UTC"), EntityType.FEED);
-        instance.setTag(SchedulableEntityInstance.INPUT);
-        expectedInputFeedInstances.add(instance);
-        instance = new SchedulableEntityInstance(feed.getName(), cluster.getName(), getDate("2012-02-28 01:00 UTC"),
-                EntityType.FEED);
-        instance.setTag(SchedulableEntityInstance.INPUT);
-        expectedInputFeedInstances.add(instance);
-        instance = new SchedulableEntityInstance(feed.getName(), cluster.getName(), getDate("2012-02-28 02:00 UTC"),
-                EntityType.FEED);
-        instance.setTag(SchedulableEntityInstance.INPUT);
-        expectedInputFeedInstances.add(instance);
-
-        //Validate with expected result
+        String[] inputInstances = { "2012-02-28 10:15 UTC", "2012-02-28 10:20 UTC", "2012-02-28 10:25 UTC",
+            "2012-02-28 10:30 UTC", "2012-02-28 10:35 UTC", };
+        for (String d : inputInstances) {
+            SchedulableEntityInstance i = new SchedulableEntityInstance(feed.getName(), cluster.getName(),
+                    getDate(d), EntityType.FEED);
+            i.setTags(SchedulableEntityInstance.INPUT);
+            expectedInputFeedInstances.add(i);
+        }
         Assert.assertTrue(inputFeedInstances.equals(expectedInputFeedInstances));
     }
 
@@ -115,8 +173,8 @@ public class ProcessHelperTest extends AbstractTestBase {
 
         Set<SchedulableEntityInstance> expected = new HashSet<>();
         SchedulableEntityInstance ins = new SchedulableEntityInstance(feed.getName(), cluster.getName(),
-                getDate("2012-02-28 11:00 UTC"), EntityType.FEED);
-        ins.setTag(SchedulableEntityInstance.OUTPUT);
+                getDate("2012-02-27 11:00 UTC"), EntityType.FEED);
+        ins.setTags(SchedulableEntityInstance.OUTPUT);
         expected.add(ins);
 
         Assert.assertEquals(result, expected);

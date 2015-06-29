@@ -40,7 +40,7 @@ public class SchedulableEntityInstance {
 
     private EntityType entityType;
 
-    private String tag;
+    private String tags;
 
     //for JAXB
     private SchedulableEntityInstance() {
@@ -56,12 +56,12 @@ public class SchedulableEntityInstance {
         }
     }
 
-    public String getTag() {
-        return tag;
+    public String getTags() {
+        return tags;
     }
 
-    public void setTag(String tag) {
-        this.tag = tag;
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 
     public String getEntityName() {
@@ -103,7 +103,7 @@ public class SchedulableEntityInstance {
                 + ", type: " + entityType
                 + ", cluster: " + cluster
                 + ", instanceTime: " + SchemaHelper.formatDateUTC(instanceTime));
-        sb.append(", tag: " + ((tag != null) ? tag : ""));
+        sb.append(", tags: " + ((tags != null) ? tags : ""));
         return sb.toString();
     }
 
@@ -134,7 +134,7 @@ public class SchedulableEntityInstance {
             return false;
         }
 
-        if (!StringUtils.equals(tag, that.tag)) {
+        if (!StringUtils.equals(tags, that.tags)) {
             return false;
         }
 
@@ -147,8 +147,8 @@ public class SchedulableEntityInstance {
         result = 31 * result + entityName.hashCode();
         result = 31 * result + entityType.hashCode();
         result = 31 * result + cluster.hashCode();
-        if (tag != null) {
-            result = 31 * result + tag.hashCode();
+        if (tags != null) {
+            result = 31 * result + tags.hashCode();
         }
         return result;
     }

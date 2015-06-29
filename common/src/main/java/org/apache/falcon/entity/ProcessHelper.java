@@ -98,7 +98,7 @@ public final class ProcessHelper {
 
         // check if instanceTime is in validity range
         if (instanceTime.before(processCluster.getValidity().getStart())
-                || instanceTime.after(processCluster.getValidity().getEnd())) {
+                || !instanceTime.before(processCluster.getValidity().getEnd())) {
             throw new IllegalArgumentException("Instance time provided: " + instanceTime
                     + " is not in validity range of process: " + process.getName()
                     + "on cluster: " + cluster.getName());
@@ -148,7 +148,7 @@ public final class ProcessHelper {
                 SchedulableEntityInstance instance;
                 for (Date time : instanceTimes) {
                     instance = new SchedulableEntityInstance(feed.getName(), cluster.getName(), time, EntityType.FEED);
-                    instance.setTag(SchedulableEntityInstance.INPUT);
+                    instance.setTags(SchedulableEntityInstance.INPUT);
                     result.add(instance);
                 }
             }
@@ -175,11 +175,11 @@ public final class ProcessHelper {
                 // find the feed
                 Feed feed = store.get(EntityType.FEED, output.getFeed());
                 org.apache.falcon.entity.v0.feed.Cluster fCluster = FeedHelper.getCluster(feed, cluster.getName());
-                outputInstance = EntityUtil.getNextStartTime(fCluster.getValidity().getStart(), feed.getFrequency(),
-                        feed.getTimezone(), outputInstance);
+                outputInstance = EntityUtil.getPreviousInstanceTime(fCluster.getValidity().getStart(),
+                        feed.getFrequency(), feed.getTimezone(), outputInstance);
                 candidate = new SchedulableEntityInstance(output.getFeed(), cluster.getName(), outputInstance,
                         EntityType.FEED);
-                candidate.setTag(SchedulableEntityInstance.OUTPUT);
+                candidate.setTags(SchedulableEntityInstance.OUTPUT);
                 result.add(candidate);
             }
         }
