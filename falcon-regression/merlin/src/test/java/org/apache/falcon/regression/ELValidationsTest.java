@@ -214,6 +214,8 @@ public class ELValidationsTest extends BaseTestClass {
         if (fromJob.size() != qaList.size()) {
             return false;
         }
+        Collections.sort(fromJob);
+        Collections.sort(qaList);
         for (int index = 0; index < fromJob.size(); index++) {
             if (!fromJob.get(index).contains(qaList.get(index))) {
                 return false;

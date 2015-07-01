@@ -301,24 +301,25 @@ public class Bundle {
     }
 
     public void setInvalidData() {
-        int index = 0;
-        FeedMerlin dataElement = new FeedMerlin(dataSets.get(0));
-        if (!dataElement.getName().contains("raaw-logs16")) {
-            dataElement = new FeedMerlin(dataSets.get(1));
-            index = 1;
-        }
-
-
+        FeedMerlin dataElement = new FeedMerlin(getInputFeedFromBundle());
         String oldLocation = dataElement.getLocations().getLocations().get(0).getPath();
         LOGGER.info("oldlocation: " + oldLocation);
         dataElement.getLocations().getLocations().get(0).setPath(
             oldLocation.substring(0, oldLocation.indexOf('$')) + "invalid/"
-                    +
-                oldLocation.substring(oldLocation.indexOf('$')));
+                    + oldLocation.substring(oldLocation.indexOf('$')));
         LOGGER.info("new location: " + dataElement.getLocations().getLocations().get(0).getPath());
-        dataSets.set(index, dataElement.toString());
+        setInputFeed(dataElement.toString());
     }
 
+    public void setInputFeed(String newFeed) {
+        String inputFeedName = getInputFeedNameFromBundle();
+        for (int i = 0; i < dataSets.size(); i++) {
+            if (new FeedMerlin(dataSets.get(i)).getName().equals(inputFeedName)) {
+                dataSets.set(i, newFeed);
+                return;
+            }
+        }
+    }
 
     public void setFeedValidity(String feedStart, String feedEnd, String feedName) {
         FeedMerlin feedElement = getFeedElement(feedName);
@@ -327,10 +328,7 @@ public class Bundle {
     }
 
     public int getInitialDatasetFrequency() {
-        FeedMerlin dataElement = new FeedMerlin(dataSets.get(0));
-        if (!dataElement.getName().contains("raaw-logs16")) {
-            dataElement = new FeedMerlin(dataSets.get(1));
-        }
+        FeedMerlin dataElement = new FeedMerlin(getInputFeedFromBundle());
         if (dataElement.getFrequency().getTimeUnit() == TimeUnit.hours) {
             return (Integer.parseInt(dataElement.getFrequency().getFrequency())) * 60;
         } else {
@@ -849,10 +847,7 @@ public class Bundle {
     }
 
     public String getDatasetPath() {
-        FeedMerlin dataElement = new FeedMerlin(getDataSets().get(0));
-        if (!dataElement.getName().contains("raaw-logs16")) {
-            dataElement = new FeedMerlin(getDataSets().get(1));
-        }
+        FeedMerlin dataElement = new FeedMerlin(getInputFeedFromBundle());
         return dataElement.getLocations().getLocations().get(0).getPath();
     }
 

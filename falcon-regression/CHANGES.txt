@@ -355,6 +355,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1292 Avoid usage of hard coded feed names in Bundle class (Paul Isaychuk)
+
    FALCON-1281 Fix InstancePageTest#testInstancePageStatusWaitingRunning (Namit Maheshwari via Ruslan Ostafiychuk)
 
    FALCON-1287 Use listAllEntities() instead of listEntities() (Ruslan Ostafiychuk via Paul Isaychuk)
