@@ -37,6 +37,7 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.falcon.regression.ui.search.EntityPage;
+import org.apache.falcon.regression.ui.search.EntityPage.InstanceAction;
 import org.apache.falcon.regression.ui.search.LoginPage;
 import org.apache.falcon.regression.ui.search.SearchPage;
 import org.apache.falcon.resource.InstancesResult;
@@ -444,11 +445,10 @@ public class EntityPageTest extends BaseUITestClass {
         final EntityPage.InstanceSummary displayedSummary = entityPage.getInstanceSummary();
 
         //suspend instances through ui
-        final List<EntityPage.OneInstanceSummary> runningSummary = displayedSummary.getSummary();
-        for (EntityPage.OneInstanceSummary oneInstanceSummary : runningSummary) {
+        for (EntityPage.OneInstanceSummary oneInstanceSummary : displayedSummary.getSummary()) {
             oneInstanceSummary.clickCheckBox();
         }
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Suspend);
+        entityPage.performActionOnSelectedInstances(InstanceAction.Suspend);
         final List<EntityPage.OneInstanceSummary> suspendedSummary = displayedSummary.getSummary();
         Assert.assertEquals(suspendedSummary.get(0).getStatus(), "SUSPENDED",
             "Expecting first instance to be suspended");
@@ -460,7 +460,10 @@ public class EntityPageTest extends BaseUITestClass {
         displayedSummary.checkSummary(apiSuspendedSummary.getInstances());
 
         //resume instances through ui
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Resume);
+        for (EntityPage.OneInstanceSummary oneInstanceSummary : suspendedSummary) {
+            oneInstanceSummary.clickCheckBox();
+        }
+        entityPage.performActionOnSelectedInstances(InstanceAction.Resume);
         final List<EntityPage.OneInstanceSummary> resumedSummary = displayedSummary.getSummary();
         Assert.assertEquals(resumedSummary.get(0).getStatus(), "RUNNING",
             "Expecting first instance to be running");
@@ -506,7 +509,7 @@ public class EntityPageTest extends BaseUITestClass {
         for (EntityPage.OneInstanceSummary oneInstanceSummary : runningSummary) {
             oneInstanceSummary.clickCheckBox();
         }
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Kill);
+        entityPage.performActionOnSelectedInstances(InstanceAction.Kill);
         final List<EntityPage.OneInstanceSummary> killedSummary = displayedSummary.getSummary();
         Assert.assertEquals(killedSummary.get(0).getStatus(), "KILLED",
             "Expecting first instance to be killed");
@@ -518,7 +521,10 @@ public class EntityPageTest extends BaseUITestClass {
         displayedSummary.checkSummary(apiKilledSummary.getInstances());
 
         //rerun instances through ui
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Rerun);
+        for (EntityPage.OneInstanceSummary oneInstanceSummary : killedSummary) {
+            oneInstanceSummary.clickCheckBox();
+        }
+        entityPage.performActionOnSelectedInstances(InstanceAction.Rerun);
         final List<EntityPage.OneInstanceSummary> rerunSummary = displayedSummary.getSummary();
         Assert.assertEquals(rerunSummary.get(0).getStatus(), "RUNNING",
             "Expecting first instance to be running");
@@ -563,20 +569,20 @@ public class EntityPageTest extends BaseUITestClass {
 
         //kill instances through ui
         final List<EntityPage.OneInstanceSummary> runningSummary = displayedSummary.getSummary();
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Log);
+        entityPage.performActionOnSelectedInstances(InstanceAction.Log);
         Assert.assertFalse(getDriver().getCurrentUrl().contains("oozie"),
             "No instance is selected, so, log button should be disabled. "
                 + "Clicking instance log button should not take user to oozie page.");
         for (EntityPage.OneInstanceSummary oneInstanceSummary : runningSummary) {
             oneInstanceSummary.clickCheckBox();
         }
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Log);
+        entityPage.performActionOnSelectedInstances(InstanceAction.Log);
         Assert.assertFalse(getDriver().getCurrentUrl().contains("oozie"),
             "Two instances are selected, so, log button should be disabled. "
                 + "Clicking instance log button should not take user to oozie page.");
         runningSummary.get(1).clickCheckBox();
         //only first checkbox is ticked
-        displayedSummary.performActionOnSelectedInstances(EntityPage.InstanceAction.Log);
+        entityPage.performActionOnSelectedInstances(InstanceAction.Log);
         final String nominalTimeOfSelectedInstance = runningSummary.get(0).getNominalTime();
         final InstancesResult processInstanceLogs = prism.getProcessHelper()
             .getProcessInstanceLogs(process.getName(),

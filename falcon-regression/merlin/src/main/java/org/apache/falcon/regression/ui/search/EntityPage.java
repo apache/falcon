@@ -65,9 +65,9 @@ public class EntityPage extends AbstractSearchPage {
      */
     public enum InstanceAction {
         Log,
-        Suspend,
         Resume,
         Rerun,
+        Suspend,
         Kill
     }
 
@@ -400,6 +400,10 @@ public class EntityPage extends AbstractSearchPage {
             softAssert.assertAll();
         }
     }
+    public void performActionOnSelectedInstances(InstanceAction instanceAction) {
+        driver.findElement(By.xpath(String.format("//td/div[%d]", instanceAction.ordinal() + 1))).click();
+        waitForAngularToFinish();
+    }
 
     public InstanceSummary getInstanceSummary() {
         return new InstanceSummary(this);
@@ -424,17 +428,6 @@ public class EntityPage extends AbstractSearchPage {
 
         private List<WebElement> getTableRows() {
             return instanceListBox.findElements(By.xpath(".//tbody/tr"));
-        }
-
-        public void performActionOnSelectedInstances(InstanceAction instanceAction) {
-            final List<WebElement> summaryTableBodyParts = getTableRows();
-            final WebElement actionRibbon = summaryTableBodyParts.get(0);
-            for (WebElement element : actionRibbon.findElements(By.xpath("./td/div"))) {
-                if (InstanceAction.valueOf(element.getText()) == instanceAction) {
-                    element.click();
-                    return;
-                }
-            }
         }
 
         /**
