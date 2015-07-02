@@ -34,6 +34,7 @@ import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -494,12 +495,14 @@ public class EntityPage extends AbstractSearchPage {
             final WebElement startTimeButton = getSummaryStartedButton();
             startTimeButton.clear();
             sendKeysSlowly(startTimeButton, timeStr);
+            startTimeButton.sendKeys(Keys.ENTER);
         }
 
         public void setInstanceSummaryEndTime(String timeStr) {
             final WebElement endTimeButton = getSummaryEndedButton();
             endTimeButton.clear();
             sendKeysSlowly(endTimeButton, timeStr);
+            endTimeButton.sendKeys(Keys.ENTER);
         }
 
         public void selectInstanceSummaryStatus(String labelText) {

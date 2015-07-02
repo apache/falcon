@@ -323,12 +323,12 @@ public class EntityPageTest extends BaseUITestClass {
             process.getName(), "start=" + startTime, null);
         displayedSummary.check();
         displayedSummary.checkSummary(apiSummary.getInstances());
-        displayedSummary.setInstanceSummaryStartTime("01022010" + "0100");
+        displayedSummary.setInstanceSummaryStartTime("01022010" + "0101");
         final List<EntityPage.OneInstanceSummary> newSummary =
             entityPage.getInstanceSummary().getSummary();
         Assert.assertNull(EntityPage.InstanceSummary.getOneSummary(newSummary, startTime),
             "Not expecting first instance to be displayed");
-        displayedSummary.setInstanceSummaryStartTime("01022010" + "0105");
+        displayedSummary.setInstanceSummaryStartTime("01022010" + "0106");
         final List<EntityPage.OneInstanceSummary> newSummary2 =
             entityPage.getInstanceSummary().getSummary();
         Assert.assertNull(EntityPage.InstanceSummary.getOneSummary(newSummary2, startTime),
