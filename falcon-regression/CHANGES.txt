@@ -355,6 +355,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1300 Use xml instead of properties for log4j (Raghav Kumar Gautam via Ruslan Ostafiychuk)
+
    FALCON-1290 Push Enter in start/end filter on entity page, start instance is included (Ruslan Ostafiychuk)
 
    FALCON-1289 Select instances again after performing action on entity page (Ruslan Ostafiychuk)
