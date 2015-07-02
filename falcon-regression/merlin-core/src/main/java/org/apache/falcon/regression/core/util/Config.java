@@ -74,4 +74,8 @@ public final class Config {
     public static boolean getBoolean(String key, boolean defaultValue) {
         return INSTANCE.confObj.getBoolean(key, defaultValue);
     }
+
+    public static int getInt(String key, int defaultValue) {
+        return INSTANCE.confObj.getInt(key, defaultValue);
+    }
 }

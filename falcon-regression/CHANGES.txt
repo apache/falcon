@@ -93,6 +93,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1306 Custom window dimensions for UI tests (Ruslan Ostafiychuk)
+
    FALCON-1284 Fix entity cleanup when is_depracate=true (Ruslan Ostafiychuk via Paul Isaychuk)
 
    FALCON-1283 Save screenshots to log.capture.location (Ruslan Ostafiychuk via Paul Isaychuk)
