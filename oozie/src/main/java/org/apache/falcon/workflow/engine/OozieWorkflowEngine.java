@@ -648,10 +648,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
                 CoordinatorJob coordJob;
                 try {
-                    coordJob = client.getCoordJobInfo(coord.getId(), null, startActionNumber,
-                        (lastMaterializedActionNumber - startActionNumber));
+                    coordJob = client.getCoordJobInfo(coord.getId(), "nominaltime>=" + start + ";nominaltime<" + end,
+                            0, Integer.MAX_VALUE);
                 } catch (OozieClientException e) {
-                    LOG.debug("Unable to get details for coordinator {}", coord.getId(), e);
+                    LOG.error("Unable to get details for coordinator {}", coord.getId(), e);
                     throw new FalconException(e);
                 }
 
@@ -924,18 +924,15 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 endCal.setTime(EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, iterEnd));
                 endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
 
-                while (start.compareTo(endCal.getTime()) <= 0) {
-                    if (retentionCoord) {
-                        if (retentionInstancesCount >= maxRetentionInstancesCount) {
-                            break;
-                        }
-                        retentionInstancesCount++;
-                    }
-
-                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, endCal.getTime());
-                    String actionId = coord.getId() + "@" + sequence;
-                    addCoordAction(client, actions, actionId);
-                    endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+                try {
+                    int len = retentionCoord ? maxRetentionInstancesCount : Integer.MAX_VALUE;
+                    CoordinatorJob job = client.getCoordJobInfo(coord.getId(), "nominaltime>=" + start
+                                    + ";nominaltime<" + end, 0, len);
+                    actions = job.getActions();
+                } catch (OozieClientException e) {
+                    LOG.error("Unable to getcoordinator job for:{} for start:{} and end: {}", coord.getId(),
+                            start, end, e);
+                    throw new FalconException(e);
                 }
             }
             actionsMap.put(cluster, actions);
