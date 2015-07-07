@@ -9,9 +9,6 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
-    FALCON-991 consolidate get coord actions in OozieWorkflowEngine (Ajay Yadav via Srikanth
-    Sundarrajan)
-
     FALCON-1186 Add filtering capability to result of instance summary (Suhas Vasu)
 
     FALCON-1293 Update CHANGES.txt to change 0.6.1 branch to release (Shaik Idris Ali via Ajay Yadava)
