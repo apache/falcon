@@ -19,6 +19,7 @@ package org.apache.falcon.oozie.workflow;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.workflow.FalconPostProcessing;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.commons.lang3.StringUtils;
@@ -45,12 +46,14 @@ public class FalconPostProcessingTest {
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String ENTITY_NAME = "agg-coord";
+    private String userBrokerUrl = BROKER_URL;
     private BrokerService broker;
 
     private volatile AssertionError error;
     private CountDownLatch latch = new CountDownLatch(1);
     private String[] outputFeedNames = {"out-click-logs", "out-raw-logs"};
     private String[] outputFeedPaths = {"/out-click-logs/10/05/05/00/20", "/out-raw-logs/10/05/05/00/20"};
+    private String userNotification = "true";
 
     @BeforeClass
     public void setup() throws Exception {
@@ -65,7 +68,8 @@ public class FalconPostProcessingTest {
             "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), "2012-01-01-01-00",
             "-" + WorkflowExecutionArgs.BRKR_URL.getName(), BROKER_URL,
             "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
-            "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), BROKER_URL,
+            "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), userBrokerUrl,
+            "-" + WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED, userNotification,
             "-" + WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
             "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), "process",
             "-" + WorkflowExecutionArgs.OPERATION.getName(), "GENERATE",
@@ -105,7 +109,7 @@ public class FalconPostProcessingTest {
             public void run() {
                 try {
                     // falcon message [FALCON_TOPIC_NAME] and user message ["FALCON." + ENTITY_NAME]
-                    consumer(BROKER_URL, "FALCON.>");
+                    consumer(BROKER_URL, "FALCON.>", true);
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
@@ -115,15 +119,50 @@ public class FalconPostProcessingTest {
         };
         t.start();
 
+        userBrokerUrl = BROKER_URL;
+
         latch.await();
-        new FalconPostProcessing().run(this.args);
+        new FalconPostProcessing().run(args);
         t.join();
         if (error != null) {
             throw error;
         }
     }
 
-    private void consumer(String brokerUrl, String topic) throws JMSException {
+    @Test
+    public void testNoUserMessage() throws Exception {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    // falcon message [FALCON_TOPIC_NAME] and user message ["FALCON." + ENTITY_NAME]
+                    consumer(BROKER_URL, "FALCON.>", false);
+                } catch (AssertionError e) {
+                    error = e;
+                } catch (JMSException ignore) {
+                    error = null;
+                }
+            }
+        };
+        t.start();
+
+        userNotification = "false";
+        latch.await();
+        new FalconPostProcessing().run(this.args);
+        t.join();
+
+        userNotification = "true";
+        userBrokerUrl = ClusterHelper.NO_USER_BROKER_URL;
+        latch.await();
+        new FalconPostProcessing().run(this.args);
+        t.join();
+
+        if (error != null) {
+            throw error;
+        }
+    }
+
+    private void consumer(String brokerUrl, String topic, boolean checkUserMessage) throws JMSException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = connectionFactory.createConnection();
         connection.start();
@@ -135,7 +174,9 @@ public class FalconPostProcessingTest {
         latch.countDown();
 
         // Verify user message
-        verifyMesssage(consumer);
+        if (checkUserMessage) {
+            verifyMesssage(consumer);
+        }
 
         // Verify falcon message
         verifyMesssage(consumer);

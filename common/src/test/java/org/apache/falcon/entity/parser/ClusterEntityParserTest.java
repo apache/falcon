@@ -124,6 +124,19 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     }
 
     @Test
+    public void testParseClusterWithoutMessaging() throws FalconException {
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-no-messaging.xml");
+
+        // Parse should be successful
+        Cluster cluster = parser.parse(stream);
+
+        Interface messaging = ClusterHelper.getInterface(cluster, Interfacetype.MESSAGING);
+        Assert.assertNull(messaging);
+
+        Assert.assertEquals(ClusterHelper.getMessageBrokerUrl(cluster), ClusterHelper.NO_USER_BROKER_URL);
+    }
+
+    @Test
     public void testParseClusterWithBadRegistry() throws Exception {
         // disable catalog service
         StartupProperties.get().remove(CatalogServiceFactory.CATALOG_SERVICE);

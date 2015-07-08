@@ -64,7 +64,10 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateScheme(cluster, Interfacetype.READONLY);
         validateScheme(cluster, Interfacetype.WRITE);
         validateScheme(cluster, Interfacetype.WORKFLOW);
-        validateScheme(cluster, Interfacetype.MESSAGING);
+        // User may choose to disable job completion notifications
+        if (ClusterHelper.getInterface(cluster, Interfacetype.MESSAGING) != null) {
+            validateScheme(cluster, Interfacetype.MESSAGING);
+        }
         if (CatalogServiceFactory.isEnabled()
                 && ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY) != null) {
             validateScheme(cluster, Interfacetype.REGISTRY);
@@ -154,6 +157,13 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     protected void validateMessagingInterface(Cluster cluster) throws ValidationException {
+        // Validate only if user has specified this
+        final Interface messagingInterface = ClusterHelper.getInterface(cluster, Interfacetype.MESSAGING);
+        if (messagingInterface == null) {
+            LOG.info("Messaging service is not enabled for cluster: {}", cluster.getName());
+            return;
+        }
+
         final String messagingUrl = ClusterHelper.getMessageBrokerUrl(cluster);
         final String implementation = StartupProperties.get().getProperty("broker.impl.class",
                 "org.apache.activemq.ActiveMQConnectionFactory");

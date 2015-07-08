@@ -60,6 +60,8 @@
         <arg>${userBrokerImplClass}</arg>
         <arg>-userBrokerUrl</arg>
         <arg>${userBrokerUrl}</arg>
+        <arg>-userJMSNotificationEnabled</arg>
+        <arg>${userJMSNotificationEnabled}</arg>
         <arg>-brokerTTL</arg>
         <arg>${brokerTTL}</arg>
         <arg>-feedNames</arg>

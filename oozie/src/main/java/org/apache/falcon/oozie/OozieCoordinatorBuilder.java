@@ -57,6 +57,7 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
     protected static final String MR_JOB_PRIORITY = "jobPriority";
 
     protected static final String IGNORE = "IGNORE";
+    private static final Object USER_JMS_NOTIFICATION_ENABLED = "userJMSNotificationEnabled";
     protected final LifeCycle lifecycle;
 
     public OozieCoordinatorBuilder(T entity, LifeCycle lifecycle) {
@@ -132,6 +133,7 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
 
         props.put(MR_QUEUE_NAME, "default");
         props.put(MR_JOB_PRIORITY, "NORMAL");
+        props.put(USER_JMS_NOTIFICATION_ENABLED, "true");
 
         //props in entity override the set props.
         props.putAll(getEntityProperties(entity));

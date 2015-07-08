@@ -41,6 +41,7 @@ import java.util.Map;
 public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     public static final String WORKINGDIR = "working";
+    public static final String NO_USER_BROKER_URL = "NA";
 
     private ClusterHelper() {
     }
@@ -90,7 +91,8 @@ public final class ClusterHelper {
     }
 
     public static String getMessageBrokerUrl(Cluster cluster) {
-        return getInterface(cluster, Interfacetype.MESSAGING).getEndpoint();
+        final Interface messageInterface = getInterface(cluster, Interfacetype.MESSAGING);
+        return messageInterface == null ? NO_USER_BROKER_URL : messageInterface.getEndpoint();
     }
 
     public static String getMessageBrokerImplClass(Cluster cluster) {

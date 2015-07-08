@@ -657,10 +657,12 @@ Syntax:
 </process>
 </verbatim>
 
-queueName and jobPriority are special properties, which when present are used by the Falcon's launcher job, the same property is also available in workflow which can be used to propagate to pig or M/R job.
+The following are some special properties, which when present are used by the Falcon's launcher job, the same property is also available in workflow which can be used to propagate to pig or M/R job.
 <verbatim>
         <property name="queueName" value="hadoopQueue"/>
         <property name="jobPriority" value="VERY_HIGH"/>
+        <!-- This property is used to turn off JMS notifications for this process. JMS notifications are enabled by default. -->
+        <property name="userJMSNotificationEnabled" value="false"/>
 </verbatim>
 
 ---+++ Workflow

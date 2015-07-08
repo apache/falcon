@@ -9,6 +9,8 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1031 Make post processing notifications to user topics optional (Pallavi Rao via Ajay Yadava)
+    
     FALCON-1186 Add filtering capability to result of instance summary (Suhas Vasu)
 
     FALCON-1293 Update CHANGES.txt to change 0.6.1 branch to release (Shaik Idris Ali via Ajay Yadava)

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.workflow;
 
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.messaging.JMSMessageProducer;
 import org.apache.hadoop.conf.Configuration;
@@ -39,15 +40,21 @@ public class FalconPostProcessing extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-
         WorkflowExecutionContext context = WorkflowExecutionContext.create(args,
                 WorkflowExecutionContext.Type.POST_PROCESSING);
         LOG.info("Post workflow execution context created {}", context);
         // serialize the context to HDFS under logs dir before sending the message
         context.serialize();
 
-        LOG.info("Sending user message {} ", context);
-        invokeUserMessageProducer(context);
+        String userBrokerUrl = context.getValue(WorkflowExecutionArgs.USER_BRKR_URL);
+        boolean userNotificationEnabled = Boolean.parseBoolean(context.
+                getValue(WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED, "true"));
+
+        if (userBrokerUrl != null && !userBrokerUrl.equals(ClusterHelper.NO_USER_BROKER_URL)
+                && userNotificationEnabled) {
+            LOG.info("Sending user message {} ", context);
+            invokeUserMessageProducer(context);
+        }
 
         // JobLogMover doesn't throw exception, a failed log mover will not fail the user workflow
         LOG.info("Moving logs {}", context);
