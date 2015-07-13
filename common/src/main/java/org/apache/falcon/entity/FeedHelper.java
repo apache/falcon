@@ -26,6 +26,7 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
@@ -475,7 +476,7 @@ public final class FeedHelper {
     * @return returns the instance of the process which produces the given feed
             */
     public static SchedulableEntityInstance getProducerInstance(Feed feed, Date feedInstanceTime,
-                                        org.apache.falcon.entity.v0.cluster.Cluster cluster) throws FalconException {
+        org.apache.falcon.entity.v0.cluster.Cluster cluster) throws FalconException {
 
         //validate the inputs
         validateFeedInstance(feed, feedInstanceTime, cluster);
@@ -485,16 +486,21 @@ public final class FeedHelper {
                     cluster.getName());
             Date pStart = processCluster.getValidity().getStart();
             Date pEnd = processCluster.getValidity().getEnd();
+            Frequency pFrequency = process.getFrequency();
+            TimeZone pTz = process.getTimezone();
+
             try {
                 Date processInstanceTime = getProducerInstanceTime(feed, feedInstanceTime, process, cluster);
-                if (processInstanceTime.before(pStart) || !processInstanceTime.before(pEnd)) {
+                boolean isValid = EntityUtil.isValidInstanceTime(pStart, pFrequency, pTz, processInstanceTime);
+                if (processInstanceTime.before(pStart) || !processInstanceTime.before(pEnd) || !isValid){
                     return null;
                 }
+
                 SchedulableEntityInstance producer = new SchedulableEntityInstance(process.getName(), cluster.getName(),
                         processInstanceTime, EntityType.PROCESS);
                 producer.setTags(SchedulableEntityInstance.OUTPUT);
                 return producer;
-            } catch (FalconException e) {
+            } catch (FalconException | IllegalArgumentException e) {
                 LOG.error("Error in trying to get producer process: {}'s instance time for feed: {}'s instance: } "
                         + " on cluster:{}", process.getName(), feed.getName(), feedInstanceTime, cluster.getName());
             }

@@ -259,6 +259,23 @@ public final class EntityUtil {
         return feed.getTimezone();
     }
 
+    /**
+     * Returns true if the given instanceTime is a valid instanceTime on the basis of startTime and frequency of an
+     * entity.
+     *
+     * It doesn't check the instanceTime being after the validity of entity.
+     * @param startTime startTime of the entity
+     * @param frequency frequency of the entity.
+     * @param timezone timezone of the entity.
+     * @param instanceTime instanceTime to be checked for validity
+     * @return
+     */
+    public static boolean isValidInstanceTime(Date startTime, Frequency frequency, TimeZone timezone,
+        Date instanceTime) {
+        Date next = getNextStartTime(startTime, frequency, timezone, instanceTime);
+        return next.equals(instanceTime);
+    }
+
     public static Date getNextStartTime(Date startTime, Frequency frequency, TimeZone timezone, Date referenceTime) {
         if (startTime.after(referenceTime)) {
             return startTime;

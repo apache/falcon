@@ -53,6 +53,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1311 Instance dependency API produces inconsistent results in some scenarios(Pragya Mittal via Ajay Yadava)
+
     FALCON-1268 Instance Dependency API failure message is not intuitive in distributed mode (Ajay Yadava)
 
     FALCON-1260 Instance dependency API produces incorrect results (Ajay Yadava)

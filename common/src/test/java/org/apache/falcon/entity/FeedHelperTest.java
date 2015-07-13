@@ -127,6 +127,22 @@ public class FeedHelperTest extends AbstractTestBase {
     }
 
     @Test
+    public void testInvalidProducerInstance() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Process process = prepareProcess(cluster, "minutes(10)", "2012-02-28 10:37 UTC", "2012-02-28 10:47 UTC");
+        Outputs outputs = new Outputs();
+        Output outFeed = new Output();
+        outFeed.setName("outputFeed");
+        outFeed.setFeed(feed.getName());
+        outFeed.setInstance("now(0,0)");
+        outputs.getOutputs().add(outFeed);
+        process.setOutputs(outputs);
+        store.publish(EntityType.PROCESS, process);
+        Assert.assertNull(FeedHelper.getProducerInstance(feed, getDate("2012-02-28 10:40 UTC"), cluster));
+    }
+
+    @Test
     public void testGetProducerOutOfValidity() throws FalconException, ParseException {
         Cluster cluster = publishCluster();
         Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
