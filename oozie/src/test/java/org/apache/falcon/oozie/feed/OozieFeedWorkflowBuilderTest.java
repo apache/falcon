@@ -201,9 +201,12 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         HashMap<String, String> props = getCoordProperties(coord);
 
-        verifyEntityProperties(feed, trgCluster, srcCluster,
+        verifyEntityProperties(trgCluster, srcCluster,
                 WorkflowExecutionContext.EntityOperations.REPLICATE, props);
-        verifyBrokerProperties(trgCluster, props);
+
+        HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
+        verifyEntityProperties(feed, trgCluster, WorkflowExecutionContext.EntityOperations.REPLICATE, wfProps);
+        verifyBrokerProperties(trgCluster, wfProps);
 
         // verify the replication param that feed replicator depends on
         String pathsWithPartitions = getPathsWithPartitions(srcCluster, trgCluster, feed);
@@ -226,15 +229,15 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
 
         // verify workflow params
-        Assert.assertEquals(props.get("userWorkflowName"), "replication-policy");
-        Assert.assertEquals(props.get("userWorkflowVersion"), "0.6");
-        Assert.assertEquals(props.get("userWorkflowEngine"), "falcon");
+        Assert.assertEquals(wfProps.get("userWorkflowName"), "replication-policy");
+        Assert.assertEquals(wfProps.get("userWorkflowVersion"), "0.6");
+        Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
 
         // verify default params
-        Assert.assertEquals(props.get("queueName"), "default");
-        Assert.assertEquals(props.get("jobPriority"), "NORMAL");
-        Assert.assertEquals(props.get("maxMaps"), "5");
-        Assert.assertEquals(props.get("mapBandwidth"), "100");
+        Assert.assertEquals(wfProps.get("queueName"), "default");
+        Assert.assertEquals(wfProps.get("jobPriority"), "NORMAL");
+        Assert.assertEquals(wfProps.get("maxMaps"), "5");
+        Assert.assertEquals(wfProps.get("mapBandwidth"), "100");
 
         assertLibExtensions(coord, "replication");
         WORKFLOWAPP wf = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
@@ -340,12 +343,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("distcpSourcePaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("distcpTargetPaths"), "${coord:dataOut('output')}");
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
-        Assert.assertEquals(props.get("maxMaps"), "33");
-        Assert.assertEquals(props.get("mapBandwidth"), "2");
 
-        verifyEntityProperties(aFeed, aCluster, srcCluster,
+        verifyEntityProperties(aCluster, srcCluster,
                 WorkflowExecutionContext.EntityOperations.REPLICATE, props);
-        verifyBrokerProperties(trgCluster, props);
+
+        HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
+        verifyEntityProperties(aFeed, aCluster, WorkflowExecutionContext.EntityOperations.REPLICATE, wfProps);
+        verifyBrokerProperties(aCluster, wfProps);
+
+        Assert.assertEquals(wfProps.get("maxMaps"), "33");
+        Assert.assertEquals(wfProps.get("mapBandwidth"), "2");
     }
 
     public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP workflow, boolean isTable) {
@@ -484,9 +491,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertReplicationHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord),
                 wfPath.toString());
 
-        verifyEntityProperties(tableFeed, trgCluster, srcCluster,
-                WorkflowExecutionContext.EntityOperations.REPLICATE, props);
-        verifyBrokerProperties(trgCluster, props);
+        HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
+        verifyEntityProperties(tableFeed, trgCluster, WorkflowExecutionContext.EntityOperations.REPLICATE, wfProps);
+        verifyBrokerProperties(trgCluster, wfProps);
     }
 
     private void assertReplicationHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
@@ -592,10 +599,13 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         HashMap<String, String> props = getCoordProperties(coord);
 
-        String feedDataPath = props.get("feedDataPath");
-        String storageType = props.get("falconFeedStorageType");
+        HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
+
+        String feedDataPath = wfProps.get("feedDataPath");
+        String storageType = wfProps.get("falconFeedStorageType");
 
         // verify the param that feed evictor depends on
+
         Assert.assertEquals(storageType, Storage.TYPE.FILESYSTEM.name());
 
         final Storage storage = FeedHelper.createStorage(cluster, feed);
@@ -609,8 +619,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         }
 
         // verify the post processing params
-        Assert.assertEquals(props.get("feedNames"), feed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
+        Assert.assertEquals(wfProps.get("feedNames"), feed.getName());
+        Assert.assertEquals(wfProps.get("feedInstancePaths"), "IGNORE");
 
         assertWorkflowRetries(getWorkflowapp(srcMiniDFS.getFileSystem(), coord));
 
@@ -651,8 +661,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         HashMap<String, String> props = getCoordProperties(coord);
 
-        String feedDataPath = props.get("feedDataPath");
-        String storageType = props.get("falconFeedStorageType");
+        HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
+
+        String feedDataPath = wfProps.get("feedDataPath");
+        String storageType = wfProps.get("falconFeedStorageType");
 
         // verify the param that feed evictor depends on
         Assert.assertEquals(storageType, Storage.TYPE.TABLE.name());
@@ -668,13 +680,13 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         }
 
         // verify the post processing params
-        Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
+        Assert.assertEquals(wfProps.get("feedNames"), tableFeed.getName());
+        Assert.assertEquals(wfProps.get("feedInstancePaths"), "IGNORE");
 
         assertWorkflowRetries(coord);
-        verifyBrokerProperties(srcCluster, props);
+        verifyBrokerProperties(srcCluster, wfProps);
         verifyEntityProperties(tableFeed, trgCluster,
-                WorkflowExecutionContext.EntityOperations.DELETE, props);
+                WorkflowExecutionContext.EntityOperations.DELETE, wfProps);
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
         assertHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord),

@@ -22,7 +22,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -33,8 +32,6 @@ import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
-import org.apache.falcon.workflow.WorkflowExecutionArgs;
-import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Arrays;
@@ -73,32 +70,15 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
         }
 
         Path coordPath = getBuildPath(buildPath);
-        Properties props = createCoordDefaultConfiguration(cluster, coordName);
-        props.put("timeZone", entity.getTimezone().getID());
-        props.put("frequency", entity.getFrequency().getTimeUnit().name());
-
-        final Storage storage = FeedHelper.createStorage(cluster, entity);
-        props.put("falconFeedStorageType", storage.getType().name());
-
-        String feedDataPath = storage.getUriTemplate();
-        props.put("feedDataPath",
-            feedDataPath.replaceAll(Storage.DOLLAR_EXPR_START_REGEX, Storage.QUESTION_EXPR_START_REGEX));
-
-        props.put("limit", feedCluster.getRetention().getLimit().toString());
-
-        props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
-        props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
-
-        props.put("falconInputFeeds", entity.getName());
-        props.put("falconInPaths", IGNORE);
-
-        props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
+        Properties props = createCoordDefaultConfiguration(coordName);
 
         WORKFLOW workflow = new WORKFLOW();
-        Properties wfProp = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.RETENTION).build(cluster,
+        Properties wfProps = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.RETENTION).build(cluster,
             coordPath);
-        workflow.setAppPath(getStoragePath(wfProp.getProperty(OozieEntityBuilder.ENTITY_PATH)));
-        props.putAll(wfProp);
+        workflow.setAppPath(getStoragePath(wfProps.getProperty(OozieEntityBuilder.ENTITY_PATH)));
+        props.putAll(getProperties(coordPath, coordName));
+        // Add the custom properties set in feed. Else, dryrun won't catch any missing props.
+        props.putAll(getEntityProperties(entity));
         workflow.setConfiguration(getConfig(props));
         ACTION action = new ACTION();
         action.setWorkflow(workflow);
@@ -107,10 +87,5 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
 
         Path marshalPath = marshal(cluster, coord, coordPath);
         return Arrays.asList(getProperties(marshalPath, coordName));
-    }
-
-    @Override
-    protected WorkflowExecutionContext.EntityOperations getOperation() {
-        return WorkflowExecutionContext.EntityOperations.DELETE;
     }
 }

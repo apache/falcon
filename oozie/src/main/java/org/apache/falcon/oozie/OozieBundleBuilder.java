@@ -19,12 +19,10 @@
 package org.apache.falcon.oozie;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.CONFIGURATION;
@@ -83,9 +81,9 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
             final String coordName = coordProps.getProperty(OozieEntityBuilder.ENTITY_NAME);
             coord.setName(coordName);
             coord.setAppPath(getStoragePath(coordPath));
-            Properties appProps = createAppProperties(cluster, buildPath, coordName);
-            appProps.putAll(coordProps);
-            coord.setConfiguration(getConfig(appProps));
+            coordProps.put(OozieClient.USER_NAME, CurrentUser.getUser());
+            coordProps.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
+            coord.setConfiguration(getConfig(coordProps));
             bundle.getCoordinator().add(coord);
         }
 
@@ -114,35 +112,9 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         return conf;
     }
 
-    protected Properties createAppProperties(Cluster cluster, Path buildPath,
-                                             String coordName) throws FalconException {
-        Properties properties = getEntityProperties(cluster);
-        properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
-        properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
-        properties.setProperty("colo.name", cluster.getColo());
-
-        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
-        properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
-        properties.setProperty("falcon.libpath",
-                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath() + "/lib");
-
-        if (EntityUtil.isTableStorageType(cluster, entity)) {
-            Tag tag = EntityUtil.getWorkflowNameTag(coordName, entity);
-            if (tag == Tag.REPLICATION) {
-                // todo: kludge send source hcat creds for coord dependency check to pass
-                String srcClusterName = EntityUtil.getWorkflowNameSuffix(coordName, entity);
-                properties.putAll(getHiveCredentials(ClusterHelper.getCluster(srcClusterName)));
-            } else {
-                properties.putAll(getHiveCredentials(cluster));
-            }
-        }
-
-        return properties;
-    }
-
     protected Path marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
         return marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
-            OozieUtils.BUNDLE_JAXB_CONTEXT, new Path(outPath, "bundle.xml"));
+                OozieUtils.BUNDLE_JAXB_CONTEXT, new Path(outPath, "bundle.xml"));
     }
 
     //Used by coordinator builders to return multiple coords
@@ -152,7 +124,7 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
     public static BUNDLEAPP unmarshal(Cluster cluster, Path path) throws FalconException {
         try {
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                        path.toUri(), ClusterHelper.getConfiguration(cluster));
+                    path.toUri(), ClusterHelper.getConfiguration(cluster));
             Unmarshaller unmarshaller = OozieUtils.BUNDLE_JAXB_CONTEXT.createUnmarshaller();
             @SuppressWarnings("unchecked") JAXBElement<BUNDLEAPP> jaxbElement =
                     unmarshaller.unmarshal(new StreamSource(fs.open(path)), BUNDLEAPP.class);

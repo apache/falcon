@@ -25,6 +25,7 @@ import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Output;
@@ -36,9 +37,11 @@ import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.oozie.client.OozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +73,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
+    protected static final String IGNORE = "IGNORE";
 
     private static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
@@ -117,12 +121,12 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     }
 
     public static OozieEntityBuilder get(Entity entity) {
-        switch(entity.getEntityType()) {
+        switch (entity.getEntityType()) {
         case FEED:
             return new FeedBundleBuilder((Feed) entity);
 
         case PROCESS:
-            return new ProcessBundleBuilder((Process)entity);
+            return new ProcessBundleBuilder((Process) entity);
 
         default:
         }
@@ -145,6 +149,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
                     outPath.toUri(), ClusterHelper.getConfiguration(cluster));
             OutputStream out = fs.create(outPath);
+
             try {
                 marshaller.marshal(jaxbElement, out);
             } finally {
@@ -158,11 +163,24 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
     }
 
+    protected Properties createAppProperties(Cluster cluster, String wfName) throws FalconException {
+        Properties properties = getEntityProperties(cluster);
+        properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
+        properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
+        properties.setProperty("colo.name", cluster.getColo());
+
+        properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
+        properties.setProperty("falcon.libpath",
+                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath()  + "/lib");
+
+        return properties;
+    }
+
     protected Properties getHiveCredentials(Cluster cluster) {
         String metaStoreUrl = ClusterHelper.getRegistryEndPoint(cluster);
         if (metaStoreUrl == null) {
             throw new IllegalStateException(
-                "Registry interface is not defined in cluster: " + cluster.getName());
+                    "Registry interface is not defined in cluster: " + cluster.getName());
         }
 
         Properties hiveCredentials = new Properties();
@@ -173,7 +191,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
         if (isSecurityEnabled) {
             String principal = ClusterHelper
-                .getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+                    .getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
             hiveCredentials.put(METASTORE_KERBEROS_PRINCIPAL, principal);
             hiveCredentials.put(METASTORE_USE_THRIFT_SASL, "true");
             hiveCredentials.put("hcat.metastore.principal", principal);
@@ -236,9 +254,9 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
         //pig and java actions require partition expression as "key1=val1, key2=val2"
         props.put(prefix + "_partitions_pig",
-            "${coord:dataOutPartitions('" + output.getName() + "')}");
+                "${coord:dataOutPartitions('" + output.getName() + "')}");
         props.put(prefix + "_partitions_java",
-            "${coord:dataOutPartitions('" + output.getName() + "')}");
+                "${coord:dataOutPartitions('" + output.getName() + "')}");
 
         //hive requires partition expression as "key1='val1', key2='val2'" (with quotes around values)
         //there is no direct EL expression in oozie
@@ -246,7 +264,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         for (String key : tableStorage.getDatedPartitionKeys()) {
             StringBuilder expr = new StringBuilder();
             expr.append("${coord:dataOutPartitionValue('").append(output.getName()).append("', '").append(key)
-                .append("')}");
+                    .append("')}");
             props.put(prefix + "_dated_partition_value_" + key, expr.toString());
             partitions.add(key + "='" + expr + "'");
 

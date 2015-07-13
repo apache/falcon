@@ -36,7 +36,6 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.oozie.OozieCoordinatorBuilder;
 import org.apache.falcon.oozie.OozieEntityBuilder;
@@ -51,7 +50,6 @@ import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
-import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 
 import java.util.ArrayList;
@@ -82,13 +80,10 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         coord.setControls(controls);
 
         // Configuration
-        Properties props = createCoordDefaultConfiguration(cluster, coordName);
+        Properties props = createCoordDefaultConfiguration(coordName);
 
         initializeInputPaths(cluster, coord, props); // inputs
         initializeOutputPaths(cluster, coord, props);  // outputs
-
-        Workflow processWorkflow = entity.getWorkflow();
-        propagateUserWorkflowProperties(processWorkflow, props);
 
         // create parent wf
         Properties wfProps = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT).build(cluster,
@@ -96,21 +91,18 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
         WORKFLOW wf = new WORKFLOW();
         wf.setAppPath(getStoragePath(wfProps.getProperty(OozieEntityBuilder.ENTITY_PATH)));
-        props.putAll(wfProps);
+        // Add the custom properties set in feed. Else, dryrun won't catch any missing props.
+        props.putAll(getEntityProperties(entity));
         wf.setConfiguration(getConfig(props));
 
         // set coord action to parent wf
         org.apache.falcon.oozie.coordinator.ACTION action = new org.apache.falcon.oozie.coordinator.ACTION();
         action.setWorkflow(wf);
+
         coord.setAction(action);
 
         Path marshalPath = marshal(cluster, coord, coordPath);
         return Arrays.asList(getProperties(marshalPath, coordName));
-    }
-
-    @Override
-    protected WorkflowExecutionContext.EntityOperations getOperation() {
-        return WorkflowExecutionContext.EntityOperations.GENERATE;
     }
 
     private void initializeCoordAttributes(Cluster cluster, COORDINATORAPP coord, String coordName) {
@@ -351,12 +343,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private void propagateUserWorkflowProperties(Workflow processWorkflow, Properties props) {
-        props.put("userWorkflowName", ProcessHelper.getProcessWorkflowName(
-            processWorkflow.getName(), entity.getName()));
-        props.put("userWorkflowVersion", processWorkflow.getVersion());
-        props.put("userWorkflowEngine", processWorkflow.getEngine().value());
-    }
+
 
     protected void propagateCatalogTableProperties(Input input, CatalogStorage tableStorage, Properties props) {
         String prefix = "falcon_" + input.getName();

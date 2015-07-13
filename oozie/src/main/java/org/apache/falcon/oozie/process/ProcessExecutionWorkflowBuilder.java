@@ -26,6 +26,7 @@ import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -33,15 +34,18 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.oozie.client.OozieClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -102,8 +106,21 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         }
 
         marshal(cluster, wfApp, buildPath);
-        Properties props = getProperties(buildPath, wfName);
+        Properties props =  createDefaultConfiguration(cluster);
+        props.putAll(getProperties(buildPath, wfName));
         props.putAll(getWorkflowProperties());
+        props.setProperty(OozieClient.APP_PATH, buildPath.toString());
+
+        //Add libpath
+        Path libPath = new Path(buildPath, "lib");
+        copySharedLibs(cluster, libPath);
+        props.put(OozieClient.LIBPATH, libPath.toString());
+
+        Workflow processWorkflow = ((Process)(entity)).getWorkflow();
+        propagateUserWorkflowProperties(processWorkflow, props);
+
+        // Write out the config to config-default.xml
+        marshal(cluster, wfApp, getConfig(props), buildPath);
 
         return props;
     }
@@ -250,5 +267,17 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         } catch (IOException e) {
             throw new FalconException("Error adding archive for custom jars under: " + libPath, e);
         }
+    }
+
+    private void propagateUserWorkflowProperties(Workflow processWorkflow, Properties props) {
+        props.put("userWorkflowName", ProcessHelper.getProcessWorkflowName(
+                processWorkflow.getName(), entity.getName()));
+        props.put("userWorkflowVersion", processWorkflow.getVersion());
+        props.put("userWorkflowEngine", processWorkflow.getEngine().value());
+    }
+
+    @Override
+    protected WorkflowExecutionContext.EntityOperations getOperation() {
+        return WorkflowExecutionContext.EntityOperations.GENERATE;
     }
 }

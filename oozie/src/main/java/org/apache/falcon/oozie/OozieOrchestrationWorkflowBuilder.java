@@ -37,6 +37,7 @@ import org.apache.falcon.oozie.process.HiveProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.OozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.PigProcessWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.CREDENTIAL;
 import org.apache.falcon.oozie.workflow.CREDENTIALS;
 import org.apache.falcon.oozie.workflow.END;
@@ -46,17 +47,23 @@ import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.namespace.QName;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -79,9 +86,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     private static final String PREPROCESS_TEMPLATE = "/action/pre-process.xml";
 
     public static final Set<String> FALCON_ACTIONS = new HashSet<String>(Arrays.asList(
-        new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME, }));
+            new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME, }));
 
-    private final LifeCycle lifecycle;
+    private LifeCycle lifecycle;
+
+    protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
+    protected static final String MR_QUEUE_NAME = "queueName";
+    protected static final String MR_JOB_PRIORITY = "jobPriority";
 
     public OozieOrchestrationWorkflowBuilder(T entity, LifeCycle lifecycle) {
         super(entity);
@@ -94,6 +105,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
     public Tag getTag() {
         return lifecycle.getTag();
+    }
+
+    public OozieOrchestrationWorkflowBuilder(T entity) {
+        super(entity);
     }
 
     public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
@@ -115,7 +130,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
-                    + ", lifecycle " + lifecycle);
+                       + ", lifecycle " + lifecycle);
             }
 
         case PROCESS:
@@ -192,7 +207,19 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
     protected Path marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
         return marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow),
-            OozieUtils.WORKFLOW_JAXB_CONTEXT, new Path(outPath, "workflow.xml"));
+                OozieUtils.WORKFLOW_JAXB_CONTEXT, new Path(outPath, "workflow.xml"));
+    }
+
+    protected Path marshal(Cluster cluster, WORKFLOWAPP workflowapp, CONFIGURATION config, Path outPath)
+        throws FalconException {
+        QName workflowQName = new org.apache.falcon.oozie.workflow.ObjectFactory()
+                .createWorkflowApp(workflowapp).getName();
+        JAXBElement<CONFIGURATION> configJaxbElement =
+                new JAXBElement(new QName(workflowQName.getNamespaceURI(), "configuration", workflowQName.getPrefix()),
+                        CONFIGURATION.class, config);
+
+        return marshal(cluster, configJaxbElement, OozieUtils.CONFIG_JAXB_CONTEXT,
+                new Path(outPath, "config-default.xml"));
     }
 
     protected WORKFLOWAPP unmarshal(String template) throws FalconException {
@@ -212,13 +239,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag) throws FalconException {
         String libext = ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath() + "/libext";
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-            ClusterHelper.getConfiguration(cluster));
+                ClusterHelper.getConfiguration(cluster));
         try {
             addExtensionJars(fs, new Path(libext), wf);
             addExtensionJars(fs, new Path(libext, entity.getEntityType().name()), wf);
             if (tag != null) {
                 addExtensionJars(fs, new Path(libext, entity.getEntityType().name() + "/" + tag.name().toLowerCase()),
-                    wf);
+                        wf);
             }
         } catch (IOException e) {
             throw new FalconException(e);
@@ -316,7 +343,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
      * @param cluster     cluster entity
      */
     protected void addHCatalogCredentials(WORKFLOWAPP workflowApp, Cluster cluster, String credentialName,
-        Set<String> actions) {
+                                          Set<String> actions) {
         addHCatalogCredentials(workflowApp, cluster, credentialName);
 
         // add credential to each action
@@ -349,7 +376,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
         credential.getProperty().add(createProperty("hcat.metastore.uri", metaStoreUrl));
         credential.getProperty().add(createProperty("hcat.metastore.principal",
-            ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL)));
+                ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL)));
 
         return credential;
     }
@@ -365,5 +392,70 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         Properties props = RuntimeProperties.get();
         action.setRetryMax(props.getProperty("falcon.parentworkflow.retry.max", "3"));
         action.setRetryInterval(props.getProperty("falcon.parentworkflow.retry.interval.secs", "1"));
+    }
+
+    public Properties createDefaultConfiguration(Cluster cluster)  throws FalconException {
+        Properties props = new Properties();
+        props.put(WorkflowExecutionArgs.ENTITY_NAME.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.ENTITY_TYPE.getName(), entity.getEntityType().name());
+        props.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), cluster.getName());
+        props.put("falconDataOperation", getOperation().name());
+
+        props.put(WorkflowExecutionArgs.LOG_DIR.getName(),
+                getStoragePath(EntityUtil.getLogPath(cluster, entity)));
+        props.put(WorkflowExecutionArgs.WF_ENGINE_URL.getName(), ClusterHelper.getOozieUrl(cluster));
+
+        addLateDataProperties(props);
+        addBrokerProperties(cluster, props);
+
+        props.put(MR_QUEUE_NAME, "default");
+        props.put(MR_JOB_PRIORITY, "NORMAL");
+
+        //props in entity override the set props.
+        props.putAll(getEntityProperties(entity));
+        props.putAll(createAppProperties(cluster, entity.getName()));
+        return props;
+    }
+
+    private void addLateDataProperties(Properties props) throws FalconException {
+        if (EntityUtil.getLateProcess(entity) == null
+                || EntityUtil.getLateProcess(entity).getLateInputs() == null
+                || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
+            props.put("shouldRecord", "false");
+        } else {
+            props.put("shouldRecord", "true");
+        }
+    }
+
+    private void addBrokerProperties(Cluster cluster, Properties props) {
+        props.put(WorkflowExecutionArgs.USER_BRKR_URL.getName(),
+                ClusterHelper.getMessageBrokerUrl(cluster));
+        props.put(WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(),
+                ClusterHelper.getMessageBrokerImplClass(cluster));
+
+        String falconBrokerUrl = StartupProperties.get().getProperty(
+                "broker.url", "tcp://localhost:61616?daemon=true");
+        props.put(WorkflowExecutionArgs.BRKR_URL.getName(), falconBrokerUrl);
+
+        String falconBrokerImplClass = StartupProperties.get().getProperty(
+                "broker.impl.class", ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
+        props.put(WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), falconBrokerImplClass);
+
+        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins",
+                DEFAULT_BROKER_MSG_TTL.toString());
+        props.put(WorkflowExecutionArgs.BRKR_TTL.getName(), jmsMessageTTL);
+    }
+
+    protected abstract WorkflowExecutionContext.EntityOperations getOperation();
+
+    protected CONFIGURATION getConfig(Properties props) {
+        CONFIGURATION conf = new CONFIGURATION();
+        for (Map.Entry<Object, Object> prop : props.entrySet()) {
+            CONFIGURATION.Property confProp = new CONFIGURATION.Property();
+            confProp.setName((String) prop.getKey());
+            confProp.setValue((String) prop.getValue());
+            conf.getProperty().add(confProp);
+        }
+        return conf;
     }
 }

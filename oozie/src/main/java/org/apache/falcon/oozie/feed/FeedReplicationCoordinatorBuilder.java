@@ -45,7 +45,6 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.coordinator.ACTION;
-import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
@@ -73,8 +72,6 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
 
     private static final String PARALLEL = "parallel";
     private static final String TIMEOUT = "timeout";
-    private static final String MR_MAX_MAPS = "maxMaps";
-    private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
     private static final String ORDER = "order";
 
     public FeedReplicationCoordinatorBuilder(Feed entity) {
@@ -101,18 +98,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         return null;
     }
 
-    @Override
-    protected WorkflowExecutionContext.EntityOperations getOperation() {
-        return WorkflowExecutionContext.EntityOperations.REPLICATE;
-    }
-
     private Properties doBuild(Cluster srcCluster, Cluster trgCluster, Path buildPath) throws FalconException {
-
-        // Different workflow for each source since hive credentials vary for each cluster
-        OozieOrchestrationWorkflowBuilder builder = OozieOrchestrationWorkflowBuilder.get(entity, trgCluster,
-            Tag.REPLICATION);
-        Properties wfProps = builder.build(trgCluster, buildPath);
-
         long replicationDelayInMillis = getReplicationDelayInMillis(srcCluster);
         Date sourceStartDate = getStartDate(srcCluster, replicationDelayInMillis);
         Date sourceEndDate = getEndDate(srcCluster);
@@ -126,6 +112,11 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
                 + "not have overlapping dates", srcCluster.getName(), trgCluster.getName());
             return null;
         }
+
+        // Different workflow for each source since hive credentials vary for each cluster
+        OozieOrchestrationWorkflowBuilder builder = OozieOrchestrationWorkflowBuilder.get(entity, trgCluster,
+                Tag.REPLICATION);
+        Properties wfProps = builder.build(trgCluster, buildPath);
 
         COORDINATORAPP coord = unmarshal(REPLICATION_COORD_TEMPLATE);
 
@@ -155,24 +146,18 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     }
 
     private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path buildPath,
-        String wfName, Storage sourceStorage, Storage targetStorage) throws FalconException {
+             String wfName, Storage sourceStorage, Storage targetStorage) throws FalconException {
         ACTION action = new ACTION();
         WORKFLOW workflow = new WORKFLOW();
 
         workflow.setAppPath(getStoragePath(buildPath));
-        Properties props = createCoordDefaultConfiguration(trgCluster, wfName);
+        Properties props = createCoordDefaultConfiguration(wfName);
         // Override CLUSTER_NAME property to include both source and target cluster pair
         String clusterProperty = trgCluster.getName()
                 + WorkflowExecutionContext.CLUSTER_NAME_SEPARATOR + srcCluster.getName();
         props.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), clusterProperty);
         props.put("srcClusterName", srcCluster.getName());
         props.put("srcClusterColo", srcCluster.getColo());
-        if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden
-            props.put(MR_MAX_MAPS, getDefaultMaxMaps());
-        }
-        if (props.get(MR_MAP_BANDWIDTH) == null) { // set default if user has not overridden
-            props.put(MR_MAP_BANDWIDTH, getDefaultMapBandwidth());
-        }
 
         // the storage type is uniform across source and target feeds for replication
         props.put("falconFeedStorageType", sourceStorage.getType().name());
@@ -183,12 +168,6 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             instancePaths = pathsWithPartitions;
 
             propagateFileSystemCopyProperties(pathsWithPartitions, props);
-
-            if (entity.getAvailabilityFlag() == null) {
-                props.put("availabilityFlag", "NA");
-            } else {
-                props.put("availabilityFlag", entity.getAvailabilityFlag());
-            }
         } else if (sourceStorage.getType() == Storage.TYPE.TABLE) {
             instancePaths = "${coord:dataIn('input')}";
             final CatalogStorage sourceTableStorage = (CatalogStorage) sourceStorage;
@@ -197,25 +176,17 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             propagateTableStorageProperties(trgCluster, targetTableStorage, props, "falconTarget");
             propagateTableCopyProperties(srcCluster, sourceTableStorage, trgCluster, targetTableStorage, props);
             setupHiveConfiguration(srcCluster, trgCluster, buildPath);
-            props.put("availabilityFlag", "NA");
         }
 
         propagateLateDataProperties(instancePaths, sourceStorage.getType().name(), props);
-        props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
-
+        // Add the custom properties set in feed. Else, dryrun won't catch any missing props.
+        props.putAll(getEntityProperties(entity));
         workflow.setConfiguration(getConfig(props));
         action.setWorkflow(workflow);
 
         return action;
     }
 
-    private String getDefaultMaxMaps() {
-        return RuntimeProperties.get().getProperty("falcon.replication.workflow.maxmaps", "5");
-    }
-
-    private String getDefaultMapBandwidth() {
-        return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
-    }
 
     private String getPathsWithPartitions(Cluster srcCluster, Cluster trgCluster) throws FalconException {
         String srcPart = FeedHelper.normalizePartitionExpression(

@@ -23,6 +23,7 @@ import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -31,6 +32,8 @@ import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Properties;
@@ -41,6 +44,8 @@ import java.util.Properties;
 public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Feed> {
     protected static final String REPLICATION_ACTION_TEMPLATE = "/action/feed/replication-action.xml";
     protected static final String REPLICATION_ACTION_NAME = "replication";
+    private static final String MR_MAX_MAPS = "maxMaps";
+    private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
 
     public FeedReplicationWorkflowBuilder(Feed entity) {
         super(entity, LifeCycle.REPLICATION);
@@ -56,8 +61,32 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         addLibExtensionsToWorkflow(cluster, workflow, Tag.REPLICATION);
 
         marshal(cluster, workflow, buildPath);
-        return getProperties(buildPath, wfName);
+        Properties props = getProperties(buildPath, wfName);
+        props.putAll(createDefaultConfiguration(cluster));
+        if (EntityUtil.isTableStorageType(cluster, entity)) {
+            // todo: kludge send source hcat creds for coord dependency check to pass
+            props.putAll(getHiveCredentials(srcCluster));
+            props.putAll(getHiveCredentials(cluster));
+        }
+        props.putAll(getWorkflowProperties(entity));
+        props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
+        // Write out the config to config-default.xml
+        marshal(cluster, workflow, getConfig(props), buildPath);
+        return props;
     }
+
+    protected Properties getWorkflowProperties(Feed feed) throws FalconException {
+        Properties props = FeedHelper.getFeedProperties(feed);
+        if (props.getProperty(MR_MAX_MAPS) == null) { // set default if user has not overridden
+            props.put(MR_MAX_MAPS, getDefaultMaxMaps());
+        }
+        if (props.getProperty(MR_MAP_BANDWIDTH) == null) { // set default if user has not overridden
+            props.put(MR_MAP_BANDWIDTH, getDefaultMapBandwidth());
+        }
+
+        return props;
+    }
+
     protected ACTION addHDFSServersConfig(ACTION action, Cluster sourceCluster, Cluster targetCluster) {
         if (isSecurityEnabled) {
             // this is to ensure that the delegation tokens are checked out for both clusters
@@ -70,4 +99,17 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         return action;
     }
     protected abstract WORKFLOWAPP getWorkflow(Cluster src, Cluster target) throws FalconException;
+
+    @Override
+    protected WorkflowExecutionContext.EntityOperations getOperation() {
+        return WorkflowExecutionContext.EntityOperations.REPLICATE;
+    }
+
+    private String getDefaultMaxMaps() {
+        return RuntimeProperties.get().getProperty("falcon.replication.workflow.maxmaps", "5");
+    }
+
+    private String getDefaultMapBandwidth() {
+        return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
+    }
 }

@@ -31,10 +31,11 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
-import org.apache.falcon.oozie.coordinator.CONFIGURATION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -46,6 +47,9 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -116,7 +120,7 @@ public class AbstractTestBase {
         Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-coordinator-0.3.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<COORDINATORAPP> jaxbBundle = unmarshaller.unmarshal(
-            new StreamSource(new ByteArrayInputStream(coordStr.trim().getBytes())), COORDINATORAPP.class);
+                new StreamSource(new ByteArrayInputStream(coordStr.trim().getBytes())), COORDINATORAPP.class);
         return jaxbBundle.getValue();
     }
 
@@ -128,7 +132,7 @@ public class AbstractTestBase {
         Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-bundle-0.1.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<BUNDLEAPP> jaxbBundle = unmarshaller.unmarshal(
-            new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), BUNDLEAPP.class);
+                new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), BUNDLEAPP.class);
         return jaxbBundle.getValue();
     }
 
@@ -153,7 +157,7 @@ public class AbstractTestBase {
     }
 
     protected void assertLibExtensions(FileSystem fs, COORDINATORAPP coord, EntityType type,
-        String lifecycle) throws Exception {
+                                       String lifecycle) throws Exception {
         WORKFLOWAPP wf = getWorkflowapp(fs, coord);
         List<Object> actions = wf.getDecisionOrForkOrJoin();
         String lifeCyclePath = lifecycle == null ? "" : "/" + lifecycle;
@@ -172,7 +176,7 @@ public class AbstractTestBase {
             }
             if (files != null) {
                 Assert.assertTrue(files.get(files.size() - 1).endsWith(
-                    "/projects/falcon/working/libext/" + type.name() + lifeCyclePath + "/ext.jar"));
+                        "/projects/falcon/working/libext/" + type.name() + lifeCyclePath + "/ext.jar"));
             }
         }
     }
@@ -209,36 +213,57 @@ public class AbstractTestBase {
 
     protected HashMap<String, String> getCoordProperties(COORDINATORAPP coord) {
         HashMap<String, String> props = new HashMap<String, String>();
-        for (CONFIGURATION.Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+        for (org.apache.falcon.oozie.coordinator.CONFIGURATION.Property prop
+                : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             props.put(prop.getName(), prop.getValue());
         }
         return props;
     }
 
-    protected void verifyEntityProperties(Entity entity, Cluster cluster, Cluster srcCluster,
+    protected HashMap<String, String> getWorkflowProperties(FileSystem fs, COORDINATORAPP coord)
+        throws JAXBException, IOException, XMLStreamException {
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        StreamSource xml = new StreamSource(fs.open(new Path(wfPath + "/config-default.xml")));
+        XMLInputFactory xif = XMLInputFactory.newFactory();
+        XMLStreamReader xsr = xif.createXMLStreamReader(xml);
+        JAXBContext jaxbContext = OozieUtils.CONFIG_JAXB_CONTEXT;
+        CONFIGURATION jaxbConfig =  ((JAXBElement<CONFIGURATION>) jaxbContext.createUnmarshaller().
+                unmarshal(xsr, CONFIGURATION.class)).getValue();
+
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (CONFIGURATION.Property prop : jaxbConfig.getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
+        return props;
+    }
+
+    protected void verifyEntityProperties(Cluster cluster, Cluster srcCluster,
                                           WorkflowExecutionContext.EntityOperations operation,
                                           HashMap<String, String> props) throws Exception {
-        Assert.assertEquals(props.get(WorkflowExecutionArgs.ENTITY_NAME.getName()),
-                entity.getName());
-        Assert.assertEquals(props.get(WorkflowExecutionArgs.ENTITY_TYPE.getName()),
-                entity.getEntityType().name());
         if (WorkflowExecutionContext.EntityOperations.REPLICATE == operation) {
             Assert.assertEquals(props.get(WorkflowExecutionArgs.CLUSTER_NAME.getName()),
                     cluster.getName() + WorkflowExecutionContext.CLUSTER_NAME_SEPARATOR + srcCluster.getName());
         } else {
             Assert.assertEquals(props.get(WorkflowExecutionArgs.CLUSTER_NAME.getName()), cluster.getName());
         }
-        Assert.assertEquals(props.get(WorkflowExecutionArgs.LOG_DIR.getName()), getLogPath(cluster, entity));
-        Assert.assertEquals(props.get("falconDataOperation"), operation.name());
     }
 
     protected void verifyEntityProperties(Entity entity, Cluster cluster,
                                           WorkflowExecutionContext.EntityOperations operation,
                                           HashMap<String, String> props) throws Exception {
-        verifyEntityProperties(entity, cluster, null, operation, props);
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.ENTITY_NAME.getName()),
+                entity.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.ENTITY_TYPE.getName()),
+                entity.getEntityType().name());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.LOG_DIR.getName()), getLogPath(cluster, entity));
+        Assert.assertEquals(props.get("falconDataOperation"), operation.name());
+        Assert.assertTrue(props.containsKey(WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName()));
+        Assert.assertTrue(props.containsKey(WorkflowExecutionArgs.USER_WORKFLOW_VERSION.getName()));
+        Assert.assertTrue(props.containsKey(WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName()));
     }
 
-    private String getLogPath(Cluster cluster, Entity entity) {
+    protected String getLogPath(Cluster cluster, Entity entity) {
         Path logPath = EntityUtil.getLogPath(cluster, entity);
         return (logPath.toUri().getScheme() == null ? "${nameNode}" : "") + logPath;
     }

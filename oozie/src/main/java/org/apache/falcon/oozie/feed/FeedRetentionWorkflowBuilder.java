@@ -22,11 +22,15 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Properties;
@@ -64,20 +68,47 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
         decorateWorkflow(workflow, wfName, EVICTION_ACTION_NAME);
         addLibExtensionsToWorkflow(cluster, workflow, Tag.RETENTION);
 
+        Properties props = getProperties(buildPath, wfName);
+        props.putAll(getWorkflowProperties(cluster));
+        props.putAll(createDefaultConfiguration(cluster));
+        props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
+
         if (EntityUtil.isTableStorageType(cluster, entity)) {
             setupHiveCredentials(cluster, buildPath, workflow);
+            // todo: kludge send source hcat creds for coord dependency check to pass
+            props.putAll(getHiveCredentials(cluster));
         }
 
         marshal(cluster, workflow, buildPath);
-        Properties props = getProperties(buildPath, wfName);
-        props.putAll(getWorkflowProperties());
+
+        // Write out the config to config-default.xml
+        marshal(cluster, workflow, getConfig(props), buildPath);
         return props;
     }
 
-    private Properties getWorkflowProperties() {
+    private Properties getWorkflowProperties(Cluster cluster) throws FalconException {
         Properties props = new Properties();
         props.setProperty("srcClusterName", "NA");
         props.setProperty("availabilityFlag", "NA");
+
+        props.put("timeZone", entity.getTimezone().getID());
+        props.put("frequency", entity.getFrequency().getTimeUnit().name());
+
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
+        final Storage storage = FeedHelper.createStorage(cluster, entity);
+        props.put("falconFeedStorageType", storage.getType().name());
+
+        String feedDataPath = storage.getUriTemplate();
+        props.put("feedDataPath",
+                feedDataPath.replaceAll(Storage.DOLLAR_EXPR_START_REGEX, Storage.QUESTION_EXPR_START_REGEX));
+
+        props.put("limit", feedCluster.getRetention().getLimit().toString());
+
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
+
+        props.put("falconInputFeeds", entity.getName());
+        props.put("falconInPaths", IGNORE);
         return props;
     }
 
@@ -109,5 +140,10 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
                 }
             }
         }
+    }
+
+    @Override
+    protected WorkflowExecutionContext.EntityOperations getOperation() {
+        return WorkflowExecutionContext.EntityOperations.DELETE;
     }
 }

@@ -20,6 +20,7 @@ package org.apache.falcon.util;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.hive.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.xerces.dom.ElementNSImpl;
@@ -43,6 +44,7 @@ public final class OozieUtils {
     public static final JAXBContext ACTION_JAXB_CONTEXT;
     public static final JAXBContext COORD_JAXB_CONTEXT;
     public static final JAXBContext BUNDLE_JAXB_CONTEXT;
+    public static final JAXBContext CONFIG_JAXB_CONTEXT;
     protected static final JAXBContext HIVE_ACTION_JAXB_CONTEXT;
 
     static {
@@ -51,6 +53,7 @@ public final class OozieUtils {
             ACTION_JAXB_CONTEXT = JAXBContext.newInstance(org.apache.falcon.oozie.workflow.ACTION.class);
             COORD_JAXB_CONTEXT = JAXBContext.newInstance(COORDINATORAPP.class);
             BUNDLE_JAXB_CONTEXT = JAXBContext.newInstance(BUNDLEAPP.class);
+            CONFIG_JAXB_CONTEXT = JAXBContext.newInstance(CONFIGURATION.class);
             HIVE_ACTION_JAXB_CONTEXT = JAXBContext.newInstance(
                 org.apache.falcon.oozie.hive.ACTION.class.getPackage().getName());
         } catch (JAXBException e) {
@@ -72,7 +75,7 @@ public final class OozieUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static  JAXBElement<ACTION> unMarshalHiveAction(org.apache.falcon.oozie.workflow.ACTION wfAction) {
+    public static JAXBElement<ACTION> unMarshalHiveAction(org.apache.falcon.oozie.workflow.ACTION wfAction) {
         try {
             Unmarshaller unmarshaller = HIVE_ACTION_JAXB_CONTEXT.createUnmarshaller();
             unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
@@ -94,5 +97,4 @@ public final class OozieUtils {
             throw new RuntimeException("Unable to marshall hive action.", e);
         }
     }
-
 }
