@@ -144,8 +144,10 @@ public class FeedReplicationTest extends BaseTestClass {
         Path toSource = new Path(sourceLocation);
         Path toTarget = new Path(targetLocation);
         if (dataFlag) {
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+                OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.xml"));
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+                OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile1.txt"));
         }
 
         //check if coordinator exists
@@ -232,8 +234,10 @@ public class FeedReplicationTest extends BaseTestClass {
         Path toTarget = new Path(targetLocation);
 
         if (dataFlag) {
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+                OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.xml"));
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+                OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile1.txt"));
         }
 
         //check if all coordinators exist
@@ -329,8 +333,10 @@ public class FeedReplicationTest extends BaseTestClass {
         Path toSource = new Path(sourceLocation);
         Path toTarget = new Path(targetLocation);
         if (dataFlag) {
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
-            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+                OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.xml"));
+            HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+                OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile1.txt"));
         }
 
         //check while instance is got created
@@ -347,8 +353,7 @@ public class FeedReplicationTest extends BaseTestClass {
         LOGGER.info("Replication didn't start.");
 
         //create availability flag on source
-        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
-                OSUtil.RESOURCES + availabilityFlagName);
+        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.concat(OSUtil.RESOURCES, availabilityFlagName));
 
         //check if instance become running
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
@@ -424,8 +429,8 @@ public class FeedReplicationTest extends BaseTestClass {
 
         Path toSource = new Path(sourceLocation);
         Path toTarget = new Path(targetLocation);
-        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile.xml");
-        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.NORMAL_INPUT + "dataFile1.txt");
+        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.xml"));
+        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile1.txt"));
 
         //check if coordinator exists
         InstanceUtil.waitTillInstancesAreCreated(cluster2OC, feed.toString(), 0);

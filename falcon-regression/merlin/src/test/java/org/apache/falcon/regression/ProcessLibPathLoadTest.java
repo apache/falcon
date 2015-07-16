@@ -54,14 +54,14 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
 
     private String oozieLib = MerlinConstants.OOZIE_EXAMPLE_LIB;
     private String oozieLibName = oozieLib.substring(oozieLib.lastIndexOf('/') + 1);
-    private String filename = OSUtil.OOZIE_LIB_FOLDER + "lib/" + oozieLibName;
+    private String filename = OSUtil.concat(OSUtil.OOZIE_LIB_FOLDER, "lib", oozieLibName);
     private String processName;
     private String process;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
-        FileUtils.forceMkdir(new File(OSUtil.OOZIE_LIB_FOLDER + "lib"));
+        FileUtils.forceMkdir(new File(OSUtil.concat(OSUtil.OOZIE_LIB_FOLDER, "lib")));
         saveUrlToFile(oozieLib);
     }
 
@@ -91,7 +91,7 @@ public class ProcessLibPathLoadTest extends BaseTestClass {
     public void deleteJar() throws IOException {
         File file = new File(filename);
         Assert.assertEquals(file.delete(), true, filename + " is not present.");
-        FileUtils.deleteDirectory(new File(OSUtil.OOZIE_LIB_FOLDER + "lib"));
+        FileUtils.deleteDirectory(new File(OSUtil.concat(OSUtil.OOZIE_LIB_FOLDER, "lib")));
     }
 
     /**

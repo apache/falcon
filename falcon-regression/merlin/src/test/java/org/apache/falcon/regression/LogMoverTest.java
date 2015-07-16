@@ -73,7 +73,7 @@ public class LogMoverTest extends BaseTestClass {
 
         LOGGER.info("startDate : " + startDate + " , endDate : " + endDate);
         //copy pig script and workflow
-        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES + "LogMover");
+        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.concat(OSUtil.RESOURCES, "LogMover"));
         Bundle bundle = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].generateUniqueBundle(this);
@@ -116,7 +116,7 @@ public class LogMoverTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
         //Copy data to let pig job succeed
-        HadoopUtil.copyDataToFolder(clusterFS, propPath, OSUtil.RESOURCES + "pig");
+        HadoopUtil.copyDataToFolder(clusterFS, propPath, OSUtil.concat(OSUtil.RESOURCES, "pig"));
 
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);

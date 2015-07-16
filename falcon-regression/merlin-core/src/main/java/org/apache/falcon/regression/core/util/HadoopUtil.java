@@ -449,9 +449,9 @@ public final class HadoopUtil {
         LOGGER.info("folderData: " + folderPaths.toString());
         createFolders(fs, folderPrefix, folderPaths);
         if (fileToBePut.equals("_SUCCESS")) {
-            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "_SUCCESS");
+            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.concat(OSUtil.NORMAL_INPUT, "_SUCCESS"));
         } else {
-            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "dataFile4.txt");
+            copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile4.txt"));
         }
     }
 
@@ -474,7 +474,7 @@ public final class HadoopUtil {
             }
         }
         createFolders(fs, folderPrefix, folderPaths);
-        copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "dataFile4.txt");
+        copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile4.txt"));
     }
 
     /**
@@ -498,7 +498,8 @@ public final class HadoopUtil {
         }
         createFolders(fs, folderPrefix, folderPaths);
         copyDataToFolders(fs, folderPrefix, folderPaths,
-            OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "dataFile4.txt");
+            OSUtil.concat(OSUtil.NORMAL_INPUT, "_SUCCESS"),
+            OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile4.txt"));
     }
 
     /**

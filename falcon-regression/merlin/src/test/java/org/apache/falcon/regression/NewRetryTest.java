@@ -837,7 +837,7 @@ public class NewRetryTest extends BaseTestClass {
                 Util.findFolderBetweenGivenTimeStamps(now, now.plusMinutes(5), initialData);
             LOGGER.info("inserting data in folder " + insertionFolder + " at " + DateTime.now());
             HadoopUtil.injectMoreData(clusterFS, lateDir + insertionFolder,
-                    OSUtil.OOZIE_EXAMPLE_INPUT_DATA + "lateData");
+                    OSUtil.concat(OSUtil.OOZIE_EXAMPLE_INPUT_DATA, "lateData"));
             //now to validate all failed instances to check if they were retried or not.
             validateRetry(clusterOC, bundleId,
                 bundles[0].getProcessObject().getRetry().getAttempts());

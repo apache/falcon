@@ -61,8 +61,8 @@ public class CombinedActionsTest extends BaseTestClass {
     private final String outputHDFSDir = baseTestHDFSDir + "/output";
     private String aggregateWorkflowDir = cleanAndGetTestDir() + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(CombinedActionsTest.class);
-    private static final String HCATDIR = OSUtil.getPath("src", "test", "resources", "hcat");
-    private static final String LOCALHCATDATA = OSUtil.getPath(HCATDIR, "data");
+    private static final String HCATDIR = OSUtil.concat("src", "test", "resources", "hcat");
+    private static final String LOCALHCATDATA = OSUtil.concat(HCATDIR, "data");
     public static final String DBNAME = "default";
     public static final String COL1NAME = "id";
     public static final String COL2NAME = "value";
@@ -119,7 +119,8 @@ public class CombinedActionsTest extends BaseTestClass {
         HadoopUtil.deleteDirIfExists(pigMrTestDir + "/input", clusterFS);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
 
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, pigMrTestDir + "/input", dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.concat(OSUtil.NORMAL_INPUT, pigMrTestDir, "input"),
+            dataDates);
 
         final String datePattern = StringUtils.join(new String[] { "yyyy", "MM", "dd", "HH", "mm"}, "-");
         dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 60, DateTimeFormat.forPattern(datePattern));

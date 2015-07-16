@@ -98,9 +98,9 @@ public class HCatProcessTest extends BaseTestClass {
     private final String col2Name = "value";
     private final String partitionColumn = "dt";
 
-    private final String hcatDir = OSUtil.getPath("src", "test", "resources", "hcat");
-    private final String localHCatData = OSUtil.getPath(hcatDir, "data");
-    private final String hiveScript = OSUtil.getPath(hcatDir, "hivescript");
+    private final String hcatDir = OSUtil.concat("src", "test", "resources", "hcat");
+    private final String localHCatData = OSUtil.concat(hcatDir, "data");
+    private final String hiveScript = OSUtil.concat(hcatDir, "hivescript");
     private final String startDate = "2010-01-01T20:00Z";
     private final String endDate = "2010-01-01T21:10Z";
 

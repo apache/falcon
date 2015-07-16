@@ -70,10 +70,10 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
     private String testDirWithDate = testBaseDir1 + testDate;
     private String testDirWithDateSourceTarget = testBaseDir4 + testDate;
     private String testDirWithDateSource1 = testBaseDirServer1Source + testDate;
-    private String testFile1 = OSUtil.NORMAL_INPUT + "dataFile.xml";
-    private String testFile2 = OSUtil.RESOURCES + OSUtil.getPath("pig", "id.pig");
-    private String testFile3 = OSUtil.RESOURCES + OSUtil.getPath("ELbundle", "cluster-0.1.xml");
-    private String testFile4 = OSUtil.NORMAL_INPUT + "dataFile.properties";
+    private String testFile1 = OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.xml");
+    private String testFile2 = OSUtil.concat(OSUtil.RESOURCES, "pig", "id.pig");
+    private String testFile3 = OSUtil.concat(OSUtil.RESOURCES, "ELbundle", "cluster-0.1.xml");
+    private String testFile4 = OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.properties");
     private static final Logger LOGGER =
         Logger.getLogger(PrismFeedReplicationPartitionExpTest.class);
 

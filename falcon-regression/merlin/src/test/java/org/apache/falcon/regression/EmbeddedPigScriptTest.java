@@ -72,7 +72,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
 
         //copy pig script
-        HadoopUtil.uploadDir(clusterFS, pigScriptDir, OSUtil.RESOURCES + "pig");
+        HadoopUtil.uploadDir(clusterFS, pigScriptDir, OSUtil.concat(OSUtil.RESOURCES, "pig"));
         Bundle bundle = BundleUtil.readELBundle();
         bundle.generateUniqueBundle(this);
         bundle = new Bundle(bundle, cluster);

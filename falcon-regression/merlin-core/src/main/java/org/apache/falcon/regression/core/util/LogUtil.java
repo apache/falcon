@@ -82,7 +82,7 @@ public final class LogUtil {
              */
             private void writeOneJobInfo(OozieClient oozieClient, String bundleJobId,
                                          String location, Collection<File> filter) {
-                final String fileName = OSUtil.getPath(location, bundleJobId + "-info.log");
+                final String fileName = OSUtil.concat(location, bundleJobId + "-info.log");
                 final File file = new File(fileName);
                 if (filter != null && filter.contains(file)) {
                     return;
@@ -156,7 +156,7 @@ public final class LogUtil {
              */
             private void writeOneJobInfo(OozieClient oozieClient, String coordJobId,
                                          String location, Collection<File> filter) {
-                final String fileName = OSUtil.getPath(location, coordJobId + "-info.log");
+                final String fileName = OSUtil.concat(location, coordJobId + "-info.log");
                 final File file = new File(fileName);
                 if (filter != null && filter.contains(file)) {
                     return;
@@ -229,7 +229,7 @@ public final class LogUtil {
              */
             private void writeOneJobInfo(OozieClient oozieClient, String wfJobId,
                                          String location, Collection<File> filter) {
-                final String fileName = OSUtil.getPath(location, wfJobId + "-info.log");
+                final String fileName = OSUtil.concat(location, wfJobId + "-info.log");
                 final File file = new File(fileName);
                 if (filter != null && filter.contains(file)) {
                     return;
@@ -300,7 +300,7 @@ public final class LogUtil {
          */
         private static void writeOneJobLog(OozieClient oozieClient, String jobId,
             String location, Collection<File> filter) {
-            final String fileName = OSUtil.getPath(location, jobId + ".log");
+            final String fileName = OSUtil.concat(location, jobId + ".log");
             assert fileName != null;
             final File file = new File(fileName);
             if (filter != null && filter.contains(file)) {
@@ -324,7 +324,7 @@ public final class LogUtil {
     public static void writeOozieLogs(ColoHelper coloHelper, String logLocation) {
         final OozieClient oozieClient = coloHelper.getFeedHelper().getOozieClient();
         final String hostname = coloHelper.getClusterHelper().getQaHost();
-        final String oozieLogLocation = OSUtil.getPath(logLocation + "oozie_logs", hostname);
+        final String oozieLogLocation = OSUtil.concat(logLocation + "oozie_logs", hostname);
         assert oozieLogLocation != null;
         final File directory = new File(oozieLogLocation);
         if (!directory.exists()) {

@@ -416,7 +416,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         bundles[0].setProcessData(processElement.toString());
 
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.MULTIPLE_ACTION_WORKFLOW);
-        HadoopUtil.copyDataToFolder(clusterFS, aggregateWorkflowDir, OSUtil.PIG_DIR + "id.pig");
+        HadoopUtil.copyDataToFolder(clusterFS, aggregateWorkflowDir, OSUtil.concat(OSUtil.PIG_DIR, "id.pig"));
 
         bundles[0].setProcessValidity("2015-01-02T01:00Z", "2015-01-02T01:04Z");
         bundles[0].setOutputFeedLocationData(feedOutputPath);

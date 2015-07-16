@@ -72,7 +72,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.concat(OSUtil.RESOURCES, "workflows", "aggregatorNoOutput"));
     }
 
     @BeforeMethod(alwaysRun = true)

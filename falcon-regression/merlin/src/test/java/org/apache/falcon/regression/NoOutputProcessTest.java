@@ -61,7 +61,7 @@ public class NoOutputProcessTest extends BaseTestClass {
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
-        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.concat(OSUtil.RESOURCES, "workflows", "aggregatorNoOutput"));
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle(this);
         b = new Bundle(b, cluster);

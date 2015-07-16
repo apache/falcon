@@ -85,7 +85,7 @@ public class HCatReplicationTest extends BaseTestClass {
     private final String baseTestHDFSDir = cleanAndGetTestDir();
 
     private final String dbName = "default";
-    private final String localHCatData = OSUtil.getPath(OSUtil.RESOURCES, "hcat", "data");
+    private final String localHCatData = OSUtil.concat(OSUtil.RESOURCES, "hcat", "data");
     private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)

@@ -118,13 +118,13 @@ public class TestngListener implements ITestListener, IExecutionListener {
     }
 
     private void takeScreenShot(ITestResult result) throws IOException {
-        String logs = Config.getProperty("log.capture.location", OSUtil.getPath("target", "surefire-reports"));
+        String logs = Config.getProperty("log.capture.location", OSUtil.concat("target", "surefire-reports"));
         if (BaseUITestClass.getDriver() != null) {
             byte[] scrFile = ((TakesScreenshot)BaseUITestClass.getDriver()).getScreenshotAs(OutputType.BYTES);
             String params = Arrays.toString(result.getParameters());
             params = params.replaceAll("[<>\":\\\\/\\|\\?\\*]", ""); //remove <>:"/\|?*
-            String filename = OSUtil.getPath(logs, "screenshots",
-                String.format("%s.%s(%s).png", result .getTestClass().getRealClass().getSimpleName(),
+            String filename = OSUtil.concat(logs, "screenshots",
+                String.format("%s.%s(%s).png", result.getTestClass().getRealClass().getSimpleName(),
                     result.getName(), params));
             LOGGER.info("Saving screenshot to: " + filename);
             FileUtils.writeByteArrayToFile(new File(filename), scrFile);
