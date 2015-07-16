@@ -18,13 +18,11 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.process.EngineType;
-import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.process.Properties;
-import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -100,13 +98,8 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
 
-        final Process processElement = bundles[0].getProcessObject();
-        final Properties properties = new Properties();
-        final Property property = new Property();
-        property.setName("queueName");
-        property.setValue("default");
-        properties.getProperties().add(property);
-        processElement.setProperties(properties);
+        final ProcessMerlin processElement = bundles[0].getProcessObject();
+        processElement.clearProperties().withProperty("queueName", "default");
         processElement.getWorkflow().setEngine(EngineType.PIG);
         bundles[0].setProcessData(processElement.toString());
         bundles[0].submitFeedsScheduleProcess(prism);

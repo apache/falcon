@@ -115,8 +115,8 @@ public class EntityDryRunTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleFeed() throws Exception {
-        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
-        feed.setFeedProperty("EntityDryRunTestProp", "${coord:someEL(1)");
+        FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle())
+            .withProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed.toString());
         validate(response,
@@ -132,7 +132,7 @@ public class EntityDryRunTest extends BaseTestClass {
         FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed.toString());
         AssertUtil.assertSucceeded(response);
-        feed.setFeedProperty("EntityDryRunTestProp", "${coord:someEL(1)");
+        feed.withProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed.toString(), feed.toString());
         validate(response, "The new entity (feed) " + bundles[0].getInputFeedNameFromBundle()
             + " can't be scheduled");

@@ -126,9 +126,7 @@ public class ProcessAclTest extends BaseTestClass {
         throws Exception {
         bundles[0].submitProcess(true);
         if (op == EntityOp.update) {
-            ProcessMerlin processMerlin = new ProcessMerlin(processString);
-            processMerlin.setProperty("abc", "xyz");
-            processString = processMerlin.toString();
+            processString = new ProcessMerlin(processString).withProperty("abc", "xyz").toString();
         }
         final boolean executeRes = op.executeAs(user, processHelper, processString);
         Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
@@ -172,9 +170,7 @@ public class ProcessAclTest extends BaseTestClass {
         if (op == EntityOp.resume) {
             processHelper.suspend(processString);
         } else if (op == EntityOp.update) {
-            ProcessMerlin processMerlin = new ProcessMerlin(processString);
-            processMerlin.setProperty("abc", "xyz");
-            processString = processMerlin.toString();
+            processString = new ProcessMerlin(processString).withProperty("abc", "xyz").toString();
         }
         final boolean executeRes = op.executeAs(user, processHelper, processString);
         Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user

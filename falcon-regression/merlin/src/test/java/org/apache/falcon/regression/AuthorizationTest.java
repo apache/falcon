@@ -693,8 +693,7 @@ public class AuthorizationTest extends BaseTestClass {
         String oldFeedBundleId = OozieUtil.getLatestBundleID(clusterOC, Util.readEntityName(feed), EntityType.FEED);
 
         //update process by U1
-        ProcessMerlin processObj = bundles[0].getProcessObject();
-        processObj.setProperty("randomProp", "randomVal");
+        ProcessMerlin processObj = bundles[0].getProcessObject().withProperty("randomProp", "randomVal");
         serviceResponse = prism.getProcessHelper().update(bundles[0].getProcessData(), processObj.toString());
         AssertUtil.assertSucceeded(serviceResponse);
 
@@ -735,8 +734,7 @@ public class AuthorizationTest extends BaseTestClass {
         String oldFeedBundleId = OozieUtil.getLatestBundleID(clusterOC, Util.readEntityName(feed), EntityType.FEED);
 
         //update process by U2
-        ProcessMerlin processObj = bundles[0].getProcessObject();
-        processObj.setProperty("randomProp", "randomVal");
+        ProcessMerlin processObj = bundles[0].getProcessObject().withProperty("randomProp", "randomVal");
         serviceResponse = prism.getProcessHelper().update(bundles[0].getProcessData(), processObj.toString(),
             MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);

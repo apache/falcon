@@ -169,11 +169,29 @@ public class ClusterMerlin extends Cluster {
         getLocations().getLocations().add(newLocation);
     }
 
-    public void addProperty(String name, String value) {
-        Property property = new Property();
+    /**
+     * Add/replace a property.
+     * @param name name of the property
+     * @param value value of the property
+     * @return this
+     */
+    public ClusterMerlin withProperty(String name, String value) {
+        final List<Property> properties = getProperties().getProperties();
+        //if property with same name exists, just replace the value
+        for (Property property : properties) {
+            if (property.getName().equals(name)) {
+                LOGGER.info(String.format("Overwriting property name = %s oldVal = %s newVal = %s",
+                    property.getName(), property.getValue(), value));
+                property.setValue(value);
+                return this;
+            }
+        }
+        //if property is not added already, add it
+        final Property property = new Property();
         property.setName(name);
         property.setValue(value);
-        getProperties().getProperties().add(property);
+        properties.add(property);
+        return this;
     }
 
     public void addInterface(Interfacetype type, String endpoint, String version) {

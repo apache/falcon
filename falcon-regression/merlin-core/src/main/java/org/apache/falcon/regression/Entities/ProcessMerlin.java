@@ -24,10 +24,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.process.EngineType;
-import org.apache.falcon.entity.v0.process.Sla;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Output;
@@ -35,6 +34,7 @@ import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Properties;
 import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.entity.v0.process.Sla;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -182,19 +182,35 @@ public class ProcessMerlin extends Process {
         }
     }
 
-    public final void setProperty(String name, String value) {
-        Property p = new Property();
-        p.setName(name);
-        p.setValue(value);
-        if (null == getProperties() || null == getProperties()
-            .getProperties() || getProperties().getProperties().size()
-            <= 0) {
-            Properties props = new Properties();
-            props.getProperties().add(p);
-            setProperties(props);
-        } else {
-            getProperties().getProperties().add(p);
+    public final ProcessMerlin clearProperties() {
+        final Properties properties = new Properties();
+        setProperties(properties);
+        return this;
+    }
+
+    /**
+     * Add/replace a property.
+     * @param name name of the property
+     * @param value value of the property
+     * @return this
+     */
+    public final ProcessMerlin withProperty(String name, String value) {
+        final List<Property> properties = getProperties().getProperties();
+        //if property with same name exists, just replace the value
+        for (Property property : properties) {
+            if (property.getName().equals(name)) {
+                LOGGER.info(String.format("Overwriting property name = %s oldVal = %s newVal = %s",
+                    property.getName(), property.getValue(), value));
+                property.setValue(value);
+                return this;
+            }
         }
+        //if property is not added already, add it
+        final Property property = new Property();
+        property.setName(name);
+        property.setValue(value);
+        properties.add(property);
+        return this;
     }
 
     @Override
@@ -431,17 +447,6 @@ public class ProcessMerlin extends Process {
     }
 
     /**
-     * Adds optional property to process definition.
-     *
-     * @param properties desired properties to be added
-     */
-    public void addProperties(Property... properties) {
-        for (Property property : properties) {
-            this.getProperties().getProperties().add(property);
-        }
-    }
-
-    /**
      * Changes names of process inputs.
      *
      * @param names desired names of inputs
@@ -608,7 +613,7 @@ public class ProcessMerlin extends Process {
         draft.getOutputs().getOutputs().clear();
         draft.setRetry(null);
         draft.clearProcessCluster();
-        draft.getProperties().getProperties().clear();
+        draft.clearProperties();
         draft.setFrequency(null);
         draft.setOrder(null);
         draft.setTimezone(null);

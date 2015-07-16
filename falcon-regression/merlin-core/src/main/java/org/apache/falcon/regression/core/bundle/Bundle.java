@@ -27,7 +27,6 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.LateProcess;
-import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
@@ -795,10 +794,8 @@ public class Bundle {
      *
      * @param properties desired properties to be added
      */
-    public void addProcessProperty(Property... properties) {
-        ProcessMerlin p = new ProcessMerlin(processData);
-        p.addProperties(properties);
-        processData = p.toString();
+    public void addProcessProperty(String propName, String propValue) {
+        processData = new ProcessMerlin(processData).withProperty(propName, propValue).toString();
     }
 
     /**
@@ -840,10 +837,8 @@ public class Bundle {
     }
 
     public void setProcessProperty(String property, String value) {
-        ProcessMerlin process = new ProcessMerlin(this.getProcessData());
-        process.setProperty(property, value);
+        ProcessMerlin process = getProcessObject().withProperty(property, value);
         this.setProcessData(process.toString());
-
     }
 
     public String getDatasetPath() {

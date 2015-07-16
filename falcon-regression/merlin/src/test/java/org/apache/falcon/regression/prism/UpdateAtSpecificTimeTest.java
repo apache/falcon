@@ -284,7 +284,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             Util.shutDownService(cluster2.getProcessHelper());
 
             //add some property to feed so that new bundle is created
-            FeedMerlin updatedFeed = new FeedMerlin(feed).setFeedProperty("someProp", "someVal");
+            FeedMerlin updatedFeed = new FeedMerlin(feed).withProperty("someProp", "someVal");
 
             //save old data
             String oldBundleCluster1 = OozieUtil.getLatestBundleID(cluster1OC,
@@ -398,7 +398,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         String oldBundleID = OozieUtil.getLatestBundleID(cluster1OC,
             Util.readEntityName(feed), EntityType.FEED);
         String updateTime = TimeUtil.addMinsToTime(endTime, 60);
-        FeedMerlin updatedFeed = new FeedMerlin(feed).setFeedProperty("someProp", "someVal");
+        FeedMerlin updatedFeed = new FeedMerlin(feed).withProperty("someProp", "someVal");
         LOGGER.info("Original Feed : " + Util.prettyPrintXml(feed));
         LOGGER.info("Updated Feed :" + Util.prettyPrintXml(updatedFeed.toString()));
         LOGGER.info("Update Time : " + updateTime);

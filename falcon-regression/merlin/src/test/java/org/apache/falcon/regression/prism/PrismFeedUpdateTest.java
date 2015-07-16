@@ -204,7 +204,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 1);
 
         //change feed location path
-        outputFeed.setFeedProperty("queueName", "myQueue");
+        outputFeed.withProperty("queueName", "myQueue");
         LOGGER.info("updated feed: " + Util.prettyPrintXml(outputFeed.toString()));
 
         //update feed first time
@@ -229,8 +229,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         OozieUtil.waitForBundleToReachState(cluster1OC, bundles[0].getProcessName(),
             Job.Status.SUCCEEDED, 20);
 
-        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0));
-        feed.addProperty("someProp", "someVal");
+        FeedMerlin feed = new FeedMerlin(bundles[0].getDataSets().get(0)).withProperty("someProp", "someVal");
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed.toString(), feed.toString()));
         //check for new feed bundle creation
         Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1OC, EntityType.FEED,

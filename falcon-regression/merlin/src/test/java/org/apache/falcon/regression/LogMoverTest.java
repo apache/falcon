@@ -18,14 +18,19 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.process.Properties;
-import org.apache.falcon.entity.v0.process.Property;
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.*;
+import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -88,13 +93,8 @@ public class LogMoverTest extends BaseTestClass {
                 bundles[0].getFeedDataPathPrefix(), dataDates);
 
         // Defining path to be used in pig script
-        final Process processElement = bundles[0].getProcessObject();
-        final Properties properties = new Properties();
-        final Property property = new Property();
-        property.setName("inputPath");
-        property.setValue(propPath);
-        properties.getProperties().add(property);
-        processElement.setProperties(properties);
+        final ProcessMerlin processElement = bundles[0].getProcessObject();
+        processElement.clearProperties().withProperty("inputPath", propPath);
         bundles[0].setProcessData(processElement.toString());
         process = bundles[0].getProcessData();
         processName = Util.readEntityName(process);

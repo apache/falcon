@@ -88,26 +88,27 @@ public class FeedMerlin extends Feed {
     }
 
     /**
-     * Sets custom feed property.
-     * @param propertyName custom property name
-     * @param propertyValue custom property value
+     * Add/replace a property.
+     * @param name name of the property
+     * @param value value of the property
+     * @return this
      */
-    public FeedMerlin setFeedProperty(String propertyName, String propertyValue) {
-        boolean found = false;
-        for (Property prop : this.getProperties().getProperties()) {
-            //check if it is present
-            if (prop.getName().equalsIgnoreCase(propertyName)) {
-                prop.setValue(propertyValue);
-                found = true;
-                break;
+    public FeedMerlin withProperty(String name, String value) {
+        final List<Property> properties = getProperties().getProperties();
+        //if property with same name exists, just replace the value
+        for (Property property : properties) {
+            if (property.getName().equals(name)) {
+                LOGGER.info(String.format("Overwriting property name = %s oldVal = %s newVal = %s",
+                    property.getName(), property.getValue(), value));
+                property.setValue(value);
+                return this;
             }
         }
-        if (!found) {
-            Property property = new Property();
-            property.setName(propertyName);
-            property.setValue(propertyValue);
-            this.getProperties().getProperties().add(property);
-        }
+        //if property is not added already, add it
+        final Property property = new Property();
+        property.setName(name);
+        property.setValue(value);
+        properties.add(property);
         return this;
     }
 
@@ -286,13 +287,6 @@ public class FeedMerlin extends Feed {
                 location.setPath(feedInputPath);
             }
         }
-    }
-
-    public void addProperty(String someProp, String someVal) {
-        Property property = new Property();
-        property.setName(someProp);
-        property.setValue(someVal);
-        this.getProperties().getProperties().add(property);
     }
 
     /**

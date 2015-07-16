@@ -369,7 +369,7 @@ public class ClusterWizardPage extends AbstractSearchPage {
                 int indx = line.indexOf(":");
                 String name = line.substring(0, indx).trim();
                 String value = line.substring(indx + 1, line.length()).trim();
-                cluster.addProperty(name, value);
+                cluster.withProperty(name, value);
             }
         }
         //retrieve locations

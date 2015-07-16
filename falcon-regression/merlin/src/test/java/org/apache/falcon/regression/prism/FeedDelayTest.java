@@ -123,8 +123,8 @@ public class FeedDelayTest extends BaseTestClass {
                         .withDataLocation(targetDataLocation)
                         .build()).toString();
 
-        feed = FeedMerlin.fromString(feed).setFeedProperty("timeout", "minutes(35)").toString();
-        feed = FeedMerlin.fromString(feed).setFeedProperty("parallel", "3").toString();
+        feed = FeedMerlin.fromString(feed).withProperty("timeout", "minutes(35)").toString();
+        feed = FeedMerlin.fromString(feed).withProperty("parallel", "3").toString();
 
         LOGGER.info("feed : " + Util.prettyPrintXml(feed));
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));

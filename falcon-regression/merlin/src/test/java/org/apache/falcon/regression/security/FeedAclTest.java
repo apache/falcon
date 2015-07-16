@@ -119,9 +119,7 @@ public class FeedAclTest extends BaseTestClass {
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
         if (op == EntityOp.update) {
-            FeedMerlin feedMerlin = new FeedMerlin(feedString);
-            feedMerlin.addProperty("abc", "xyz");
-            feedString = feedMerlin.toString();
+            feedString = new FeedMerlin(feedString).withProperty("abc", "xyz").toString();
         }
         final boolean executeRes = op.executeAs(user, feedHelper, feedString);
         Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user
@@ -164,9 +162,7 @@ public class FeedAclTest extends BaseTestClass {
         if (op == EntityOp.resume) {
             feedHelper.suspend(feedString);
         } else if (op == EntityOp.update) {
-            FeedMerlin feedMerlin = new FeedMerlin(feedString);
-            feedMerlin.addProperty("abc", "xyz");
-            feedString = feedMerlin.toString();
+            feedString = new FeedMerlin(feedString).withProperty("abc", "xyz").toString();
         }
         final boolean executeRes = op.executeAs(user, feedHelper, feedString);
         Assert.assertEquals(executeRes, isAllowed, "Unexpected result user " + user

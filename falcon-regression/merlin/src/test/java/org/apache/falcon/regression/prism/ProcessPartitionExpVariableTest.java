@@ -18,9 +18,8 @@
 
 package org.apache.falcon.regression.prism;
 
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -30,6 +29,7 @@ import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.joda.time.DateTime;
@@ -39,7 +39,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,11 +90,7 @@ public class ProcessPartitionExpVariableTest extends BaseTestClass {
 
         bundles[0].generateRequiredBundle(1, 2, 1, baseTestDir, 1, startTime, endTime);
         bundles[0].setProcessInputNames("inputData0", "inputData");
-        Property p = new Property();
-        p.setName("var1");
-        p.setValue("hardCoded");
-
-        bundles[0].addProcessProperty(p);
+        bundles[0].addProcessProperty("var1", "hardCoded");
         bundles[0].setProcessInputPartition("${var1}", "${fileTime}");
 
         for (int i = 0; i < bundles[0].getDataSets().size(); i++) {

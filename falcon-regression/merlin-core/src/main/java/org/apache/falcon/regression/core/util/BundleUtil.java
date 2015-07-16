@@ -25,7 +25,6 @@ import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
-import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
@@ -132,9 +131,7 @@ public final class BundleUtil {
                 final String protectionPropName = "hadoop.rpc.protection";
                 final String protectionPropValue = Config.getProperty(protectionPropName);
                 if (StringUtils.isNotEmpty(protectionPropValue)) {
-                    final Property property = getFalconClusterPropertyObject(
-                        protectionPropName, protectionPropValue.trim());
-                    clusterMerlin.getProperties().getProperties().add(property);
+                    clusterMerlin.withProperty(protectionPropName, protectionPropValue.trim());
                 }
                 clusterData = clusterMerlin.toString();
             } else if (data.contains("uri:falcon:feed:0.1")) {
@@ -198,54 +195,33 @@ public final class BundleUtil {
         }
         //set colo name:
         clusterObject.setColo(Config.getProperty(prefix + "colo"));
-        // get the properties object for the cluster
-        org.apache.falcon.entity.v0.cluster.Properties clusterProperties =
-            clusterObject.getProperties();
         // properties in the cluster needed when secure mode is on
         if (MerlinConstants.IS_SECURE) {
             // add the namenode principal to the properties object
-            clusterProperties.getProperties().add(getFalconClusterPropertyObject(
-                    "dfs.namenode.kerberos.principal",
-                    Config.getProperty(prefix + "namenode.kerberos.principal", "none")));
+            clusterObject.withProperty("dfs.namenode.kerberos.principal",
+                Config.getProperty(prefix + "namenode.kerberos.principal", "none"));
 
             // add the hive meta store principal to the properties object
-            clusterProperties.getProperties().add(getFalconClusterPropertyObject(
-                    "hive.metastore.kerberos.principal",
-                    Config.getProperty(prefix + "hive.metastore.kerberos.principal", "none")));
+            clusterObject.withProperty("hive.metastore.kerberos.principal",
+                Config.getProperty(prefix + "hive.metastore.kerberos.principal", "none"));
 
-            // Until oozie has better integration with secure hive we need to send the properites to
+            // Until oozie has better integration with secure hive we need to send the properties to
             // falcon.
             // hive.metastore.sasl.enabled = true
-            clusterProperties.getProperties()
-                .add(getFalconClusterPropertyObject("hive.metastore.sasl.enabled", "true"));
+            clusterObject.withProperty("hive.metastore.sasl.enabled", "true");
             // Only set the metastore uri if its not empty or null.
         }
         String hiveMetastoreUris = Config.getProperty(prefix + "hive.metastore.uris");
         if (StringUtils.isNotBlank(hiveMetastoreUris)) {
             //hive.metastore.uris
-            clusterProperties.getProperties()
-                .add(getFalconClusterPropertyObject("hive.metastore.uris", hiveMetastoreUris));
+            clusterObject.withProperty("hive.metastore.uris", hiveMetastoreUris);
         }
         String hiveServer2Uri = Config.getProperty(prefix + "hive.server2.uri");
         if (StringUtils.isNotBlank(hiveServer2Uri)) {
             //hive.metastore.uris
-            clusterProperties.getProperties()
-                .add(getFalconClusterPropertyObject("hive.server2.uri", hiveServer2Uri));
+            clusterObject.withProperty("hive.server2.uri", hiveServer2Uri);
         }
         return clusterObject;
-    }
-
-    /**
-     * Forms property object based on parameters.
-     * @param name property name
-     * @param value property value
-     * @return property object
-     */
-    private static Property getFalconClusterPropertyObject(String name, String value) {
-        Property property = new Property();
-        property.setName(name);
-        property.setValue(value);
-        return property;
     }
 
     public static List<ClusterMerlin> getClustersFromStrings(List<String> clusterStrings) {
