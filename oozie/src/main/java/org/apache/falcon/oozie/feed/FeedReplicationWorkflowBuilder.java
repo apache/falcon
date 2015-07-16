@@ -91,7 +91,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         if (isSecurityEnabled) {
             // this is to ensure that the delegation tokens are checked out for both clusters
             CONFIGURATION.Property property = new CONFIGURATION.Property();
-            property.setName("mapreduce.job.hdfs-servers");
+            property.setName("oozie.launcher.mapreduce.job.hdfs-servers");
             property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
                     + "," + ClusterHelper.getStorageUrl(targetCluster));
             action.getJava().getConfiguration().getProperty().add(property);
