@@ -60,12 +60,12 @@
 
   <div class="col-xs-24">
     <div class="light">Name</div>
-    <input type="text" class="form-control" validation-message="{{validations.messages.name}}"
+    <input type="text" class="form-control" validation-message="{{validations.messages.engineName}}"
            id="workflowNameField"
            ng-model="process.workflow.name"
-           ng-required="true"
+           ng-required="false"
            ng-maxlength="39"
-           ng-pattern="validations.patterns.name"/>
+           ng-pattern="validations.patterns.engineName"/>
   </div>
 
   <div id="engineSection" class="col-xs-24">
@@ -81,7 +81,7 @@
         <input type="radio" id="hiveEngineRadio" ng-change="selectWorkflow()" ng-model="process.workflow.engine" value="hive" ng-required="!process.workflow.engine"/> Hive
       </div>
       <select id="engineVersionField" ng-model="process.workflow.version"
-        ng-required="true" ng-show="process.workflow.engine" validation-message="{{validations.messages.engine}}">
+        ng-required="false" ng-show="process.workflow.engine" validation-message="{{validations.messages.engine}}">
         
         <option value="" disabled selected style='display:none;'>-Select {{process.workflow.engine}} version-</option>
         

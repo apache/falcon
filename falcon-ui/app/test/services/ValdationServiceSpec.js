@@ -40,7 +40,7 @@
     describe('patterns', function () {
       it('Should return an object with the validation patterns', function () {
         expect(validationService.patterns).toBeDefined();
-        expect(validationService.patterns.name).toEqual(/^[a-zA-Z0-9]{1,39}$/);
+        expect(validationService.patterns.name).toEqual(/^(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})$/);
 
       });
     });

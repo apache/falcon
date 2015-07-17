@@ -24,7 +24,7 @@
     var checkMessages = {
         name: {
           patternInvalid: "The name has an invalid format.",
-          unavailable: "The name you choosed is not available",
+          unavailable: "The name you chose is not available",
           empty: "You need to specify a name"
         },
         colo: {
@@ -62,10 +62,11 @@
         number: { empty: "You need to provide a number" },
         option: { empty: "You need to select an option" },
         user: { empty: "Please enter your user name." },
-        password: { empty: "Please enter your password." }
+        password: { empty: "Please enter your password." },
+        engineName: { patternInvalid: "The name has an invalid format." }
       },
       checkPatterns = {
-        name: new RegExp("^[a-zA-Z0-9]{1,39}$"),
+        name: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9])*){1,39})$"),
         id: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9])*){1,39})$"),
         password: new RegExp("^(([a-zA-Z]([\\-a-zA-Z0-9])*){1,39})$"),
         freeText: new RegExp("^([\\sa-zA-Z0-9]){1,40}$"),
