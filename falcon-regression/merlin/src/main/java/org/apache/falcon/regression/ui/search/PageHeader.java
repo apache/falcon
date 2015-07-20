@@ -20,11 +20,9 @@ package org.apache.falcon.regression.ui.search;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.AssertUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -186,7 +184,9 @@ public class PageHeader {
     public void uploadXml(String filePath) throws IOException {
         final WebElement uploadEntityTextBox = uploadEntityBox.findElement(By.id("files"));
         uploadEntityTextBox.sendKeys(filePath);
-        waitForAngularToFinish();
+        //wait for alert
+        driver.findElements(
+            By.xpath("//div[@class='messages notifs' and contains(@style,'opacity') and not(contains(@style,'1;'))]"));
     }
 
     public ClusterWizardPage doCreateCluster() {
@@ -252,20 +252,5 @@ public class PageHeader {
         loginPage.checkPage();
         return loginPage;
     }
-
-    protected void waitForAngularToFinish() {
-        final String javaScript = "return (window.angular != null) && "
-            + "(angular.element(document).injector() != null) && "
-            + "(angular.element(document).injector().get('$http').pendingRequests.length === 0)";
-        boolean isLoaded = false;
-        for (int i = 0; i < AbstractSearchPage.PAGELOAD_TIMEOUT_THRESHOLD && !isLoaded; i++) {
-            final Object output = ((JavascriptExecutor) driver).executeScript(javaScript);
-            isLoaded = Boolean.valueOf(output.toString());
-            LOGGER.info(i+1 + ". waiting on angular to finish.");
-            TimeUtil.sleepSeconds(1);
-        }
-        LOGGER.info("angular is done continuing...");
-    }
-
 
 }

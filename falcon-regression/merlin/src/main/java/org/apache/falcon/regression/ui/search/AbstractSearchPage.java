@@ -18,6 +18,9 @@
 
 package org.apache.falcon.regression.ui.search;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.ui.pages.Page;
@@ -33,6 +36,7 @@ import org.testng.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 
@@ -138,8 +142,15 @@ public abstract class AbstractSearchPage extends Page {
             + "(angular.element(document).injector().get('$http').pendingRequests.length === 0)";
         boolean isLoaded = false;
         for (int i = 0; i < PAGELOAD_TIMEOUT_THRESHOLD && !isLoaded; i++) {
-            final Object output = ((JavascriptExecutor) driver).executeScript(javaScript);
-            isLoaded = Boolean.valueOf(output.toString());
+            TimeLimiter timeLimiter = new SimpleTimeLimiter();
+            final JavascriptExecutor proxyJsExecutor =
+                timeLimiter.newProxy((JavascriptExecutor) driver, JavascriptExecutor.class, 10, TimeUnit.SECONDS);
+            try {
+                final Object output = proxyJsExecutor.executeScript(javaScript);
+                isLoaded = Boolean.valueOf(output.toString());
+            } catch (Exception e) {
+                LOGGER.info("Checking of pending request failed because of: " + ExceptionUtils.getFullStackTrace(e));
+            }
             LOGGER.info(i+1 + ". waiting on angular to finish.");
             TimeUtil.sleepSeconds(1);
         }
