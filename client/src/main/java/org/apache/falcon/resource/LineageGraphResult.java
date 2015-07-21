@@ -118,6 +118,32 @@ public class LineageGraphResult {
             return getDotNotation();
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            Edge that = (Edge) o;
+            if (StringUtils.equals(that.getLabel(), label) && StringUtils.equals(that.getFrom(), from)
+                    && StringUtils.equals(that.getTo(), to)) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = from != null ? from.hashCode() : 0;
+            result = 31 * result + (to != null ? to.hashCode() : 0);
+            result = 31 * result + (label != null ? label.hashCode() : 0);
+            return result;
+        }
+
     }
 
 
