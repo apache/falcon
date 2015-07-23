@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
@@ -46,6 +47,7 @@ import org.apache.falcon.oozie.workflow.START;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
+import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -158,6 +160,19 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     protected void addTransition(ACTION action, String ok, String fail) {
         action.getOk().setTo(ok);
         action.getError().setTo(fail);
+    }
+
+    protected void addAdditionalReplicationProperties(ACTION replicationAction) {
+        List<String> args = replicationAction.getJava().getArg();
+        Properties props = getEntityProperties(entity);
+
+        for (ReplicationDistCpOption distcpOption : ReplicationDistCpOption.values()) {
+            String propertyValue = props.getProperty(distcpOption.getName());
+            if (StringUtils.isNotEmpty(propertyValue)) {
+                args.add("-" + distcpOption.getName());
+                args.add(propertyValue);
+            }
+        }
     }
 
     protected void decorateWorkflow(WORKFLOWAPP wf, String name, String startAction) {

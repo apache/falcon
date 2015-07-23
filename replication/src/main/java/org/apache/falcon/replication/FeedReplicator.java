@@ -27,6 +27,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -127,6 +128,39 @@ public class FeedReplicator extends Configured implements Tool {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName(), true, "option to force overwrite");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), true, "abort on error");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName(), true, "skip checksums");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), true,
+                "remove deleted files - should there be files in the target directory that"
+                        + "were removed from the source directory");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName(), true,
+                "preserve block size");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER.getName(), true,
+                "preserve replication count");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName(), true,
+                "preserve permissions");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         return new GnuParser().parse(options, args);
     }
 
@@ -136,10 +170,51 @@ public class FeedReplicator extends Configured implements Tool {
         String trgPath = cmd.getOptionValue("targetPath").trim();
 
         DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(trgPath));
-        distcpOptions.setSyncFolder(true);
         distcpOptions.setBlocking(true);
         distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
         distcpOptions.setMapBandwidth(Integer.valueOf(cmd.getOptionValue("mapBandwidth")));
+
+        String overwrite = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName());
+        if (StringUtils.isNotEmpty(overwrite) && overwrite.equalsIgnoreCase(Boolean.TRUE.toString())) {
+            distcpOptions.setOverwrite(Boolean.parseBoolean(overwrite));
+        } else {
+            distcpOptions.setSyncFolder(true);
+        }
+
+        String ignoreErrors = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());
+        if (StringUtils.isNotEmpty(ignoreErrors)) {
+            distcpOptions.setIgnoreFailures(Boolean.parseBoolean(ignoreErrors));
+        }
+
+        String skipChecksum = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName());
+        if (StringUtils.isNotEmpty(skipChecksum)) {
+            distcpOptions.setSkipCRC(Boolean.parseBoolean(skipChecksum));
+        }
+
+        String removeDeletedFiles = cmd.getOptionValue(
+                ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName());
+        if (StringUtils.isNotEmpty(removeDeletedFiles)) {
+            distcpOptions.setDeleteMissing(Boolean.parseBoolean(removeDeletedFiles));
+        }
+
+        String preserveBlockSize = cmd.getOptionValue(
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName());
+        if (preserveBlockSize != null && Boolean.parseBoolean(preserveBlockSize)) {
+            distcpOptions.preserve(DistCpOptions.FileAttribute.BLOCKSIZE);
+        }
+
+        String preserveReplicationCount = cmd.getOptionValue(ReplicationDistCpOption
+                .DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER.getName());
+        if (preserveReplicationCount != null && Boolean.parseBoolean(preserveReplicationCount)) {
+            distcpOptions.preserve(DistCpOptions.FileAttribute.REPLICATION);
+        }
+
+        String preservePermission = cmd.getOptionValue(
+                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName());
+        if (preservePermission != null && Boolean.parseBoolean(preservePermission)) {
+            distcpOptions.preserve(DistCpOptions.FileAttribute.PERMISSION);
+        }
+
         return distcpOptions;
     }
 

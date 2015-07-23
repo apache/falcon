@@ -57,9 +57,67 @@ public class FeedReplicatorTest {
 
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
+        validateMandatoryArguments(options, srcPaths, true);
+    }
+
+    @Test
+    public void testOptionalArguments() throws Exception {
+        /*
+         * <arg>-update</arg>
+         * <arg>-blocking</arg><arg>true</arg>
+         * <arg>-maxMaps</arg><arg>3</arg>
+         * <arg>-mapBandwidthKB</arg><arg>4</arg>
+         * <arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
+         * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
+         * <arg>-overwrite</arg><arg>true</arg>
+         * <arg>-ignoreErrors</arg><arg>false</arg>
+         * <arg>-skipChecksum</arg><arg>false</arg>
+         * <arg>-removeDeletedFiles</arg><arg>true</arg>
+         * <arg>-preserveBlockSize</arg><arg>false</arg>
+         * <arg>-preserveReplicationCount</arg><arg>true</arg>
+         * <arg>-preserveBlockSize</arg><arg>false</arg>
+         */
+        final String[] optionalArgs = {
+            "true",
+            "-maxMaps", "3",
+            "-mapBandwidth", "4",
+            "-sourcePaths", "hdfs://localhost:8020/tmp/",
+            "-targetPath", "hdfs://localhost1:8020/tmp/",
+            "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
+            "-overwrite", "true",
+            "-ignoreErrors", "false",
+            "-skipChecksum", "false",
+            "-removeDeletedFiles", "true",
+            "-preserveBlockSize", "false",
+            "-preserveReplicationNumber", "true",
+            "-preservePermission", "false",
+        };
+
+        FeedReplicator replicator = new FeedReplicator();
+        CommandLine cmd = replicator.getCommand(optionalArgs);
+        DistCpOptions options = replicator.getDistCpOptions(cmd);
+
+        List<Path> srcPaths = new ArrayList<Path>();
+        srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
+        validateMandatoryArguments(options, srcPaths, false);
+        validateOptionalArguments(options);
+    }
+
+    private void validateMandatoryArguments(DistCpOptions options, List<Path> srcPaths, boolean shouldSyncFolder) {
         Assert.assertEquals(options.getMaxMaps(), 3);
         Assert.assertEquals(options.getMapBandwidth(), 4);
         Assert.assertEquals(options.getSourcePaths(), srcPaths);
         Assert.assertEquals(options.getTargetPath(), new Path("hdfs://localhost1:8020/tmp/"));
+        Assert.assertEquals(options.shouldSyncFolder(), shouldSyncFolder);
+    }
+
+    private void validateOptionalArguments(DistCpOptions options) {
+        Assert.assertTrue(options.shouldOverwrite());
+        Assert.assertFalse(options.shouldIgnoreFailures());
+        Assert.assertFalse(options.shouldSkipCRC());
+        Assert.assertTrue(options.shouldDeleteMissing());
+        Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.BLOCKSIZE));
+        Assert.assertTrue(options.shouldPreserve(DistCpOptions.FileAttribute.REPLICATION));
+        Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.PERMISSION));
     }
 }

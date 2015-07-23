@@ -280,6 +280,13 @@ permission indicates the permission.
         <property name="parallel" value="3"/>
         <property name="maxMaps" value="8"/>
         <property name="mapBandwidth" value="1"/>
+        <property name="overwrite" value="true"/>
+        <property name="ignoreErrors" value="false"/>
+        <property name="skipChecksum" value="false"/>
+        <property name="removeDeletedFiles" value="true"/>
+        <property name="preserveBlockSize" value="true"/>
+        <property name="preserveReplicationNumber" value="true"/>
+        <property name="preservePermission" value="true"/>
         <property name="order" value="LIFO"/>
     </properties>
 </verbatim>
@@ -288,9 +295,15 @@ available to user to specify the Hadoop job queue and priority, the same values 
 "timeout", "parallel" and "order" are other special properties which decides replication instance's timeout value while
 waiting for the feed instance, parallel decides the concurrent replication instances that can run at any given time and
 order decides the execution order for replication instances like FIFO, LIFO and LAST_ONLY.
-"maxMaps" represents the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s
-used by each mapper during replication.
- 
+DistCp options can be passed as custom properties, which will be propagated to the DistCp tool. "maxMaps" represents
+the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s
+used by each mapper during replication. "overwrite" represents overwrite destination during replication.
+"ignoreErrors" represents ignore failures not causing the job to fail during replication. "skipChecksum" represents
+bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
+destination but not in source during replication. "preserveBlockSize" represents preserving block size during
+replication. "preserveReplicationNumber" represents preserving replication number during replication.
+"preservePermission" represents preserving permission during
+
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
 

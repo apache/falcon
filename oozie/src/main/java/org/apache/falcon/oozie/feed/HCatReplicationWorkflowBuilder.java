@@ -69,6 +69,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
 
         //Add replication
         ACTION replication = unmarshalAction(REPLICATION_ACTION_TEMPLATE);
+        addAdditionalReplicationProperties(replication);
         addTransition(replication, IMPORT_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(replication);
 
