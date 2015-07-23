@@ -18,34 +18,54 @@
 
 package org.apache.falcon.resource.provider;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.api.json.JSONJAXBContext;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 
 /**
  * An implementation of Context Resolver for JAXB.
  */
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
-public class JAXBContextResolver implements ContextResolver<ObjectMapper> {
+public class JAXBContextResolver implements ContextResolver<JAXBContext> {
 
-    private final ObjectMapper defaultObjectMapper;
+    private static JAXBContext context;
+    private static Class<?>[] types = {
+        InstancesResult.class,
+        APIResult.class,
+        InstancesResult.Instance.class,
+        InstancesResult.WorkflowStatus.class,
+        InstancesSummaryResult.class,
+        InstanceSummary.class,
+    };
 
+    static {
+        try {
+            context = new JSONJAXBContext(JSONConfiguration.natural().build(), types);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public JAXBContextResolver() {
-        defaultObjectMapper = createDefaultMapper();
     }
 
-    private static ObjectMapper createDefaultMapper() {
-        final ObjectMapper result = new ObjectMapper();
-        // you can customize it here e.g. result.enable(SerializationFeature.INDENT_OUTPUT);
-        return result;
-    }
-
-    public  ObjectMapper getContext(Class<?> objectType) {
-        return defaultObjectMapper;
+    public JAXBContext getContext(Class<?> objectType) {
+        for (Class<?> type : types) {
+            if (type == objectType) {
+                return context;
+            }
+        }
+        return null;
     }
 }

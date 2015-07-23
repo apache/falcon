@@ -9,8 +9,6 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
-    FALCON-1317 Inconsistent JSON serialization(Ajay Yadava)
-
     FALCON-1320 Adding equals() and hashCode() method in LineageGraphResult.Edge(Pragya Mittal via Ajay Yadava)
 
     FALCON-1139 Validation issues in Falcon UI(Pallavi Rao via Ajay Yadava)
