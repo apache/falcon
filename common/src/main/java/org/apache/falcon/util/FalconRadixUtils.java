@@ -193,7 +193,7 @@ public class FalconRadixUtils {
                     String regex = key.substring(0, key.indexOf("}") + 1);
                     // match the text and the regex
                     FeedDataPath.VARS var = getMatchingRegex(regex);
-                    if (matchPart(regex, input.substring(0, var.getValueSize()))) {
+                    if (matchPart(regex, remainingText.substring(0, var.getValueSize()))) {
                         newRoot = child; // if it matches then this is the newRoot
                         break;
                     }
@@ -251,10 +251,6 @@ public class FalconRadixUtils {
 
         private FeedDataPath.VARS getMatchingRegex(String inputPart) {
             //inputPart will be something like ${YEAR}
-
-            inputPart = inputPart.replace("${", "\\$\\{");
-            inputPart = inputPart.replace("}", "\\}");
-
             for (FeedDataPath.VARS var : FeedDataPath.VARS.values()) {
                 if (inputPart.equals("${" + var.name() + "}")) {
                     return var;

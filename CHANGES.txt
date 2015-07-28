@@ -65,6 +65,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1323 Reverse lookup of feeds causes NPE(Ajay Yadava)
+
     FALCON-1329 Falcon's idempotent behaviour breaks in some cases(Ajay Yadava)
 
     FALCON-1282 Incorrect hdfs servers property for feed replication in secured environment(Venkat Ranganathan via Ajay Yadava)

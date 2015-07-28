@@ -26,6 +26,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -42,7 +43,6 @@ public class RadixTreeTest {
         tree.insert("key1", "value1");
         tree.insert("key2", "value2");
         tree.insert("random", "random");
-
     }
 
     @AfterMethod
@@ -67,7 +67,17 @@ public class RadixTreeTest {
         Assert.assertEquals(tree.find("duplicatekey").size(), 2);
         Assert.assertTrue(tree.find("duplicatekey").contains("value1"));
         Assert.assertTrue(tree.find("duplicatekey").contains("value2"));
+    }
 
+    @Test
+    public void testGetNextCandidate() {
+        tree.insert("/projects/userplatform/${YEAR}-${MONTH}-${DAY}", "feed1");
+        tree.insert("/projects/userplatform/another", "feed2");
+        Collection<String> result = tree.find("/projects/userplatform/another");
+        Assert.assertTrue(result.contains("feed2"));
+
+        result = tree.find("/projects/userplatform/2014-07-07", regexAlgorithm);
+        Assert.assertTrue(result.contains("feed1"));
     }
 
     @Test

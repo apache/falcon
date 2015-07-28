@@ -79,6 +79,7 @@ public class FeedLookupResult extends APIResult {
         if (elements != null) {
             for (FeedProperties element : elements) {
                 buffer.append(element.toString());
+                buffer.append("\n");
             }
         }
         return buffer.toString();
