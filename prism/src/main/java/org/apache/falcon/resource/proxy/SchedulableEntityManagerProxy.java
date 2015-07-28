@@ -230,7 +230,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }
         }.execute());
 
-        if (!embeddedMode) {
+        // delete only if deleted from everywhere
+        if (!embeddedMode && results.get(FALCON_TAG).getStatus() == APIResult.Status.SUCCEEDED) {
             results.put(PRISM_TAG, super.delete(bufferedRequest, type, entity, currentColo));
         }
         return consolidateResult(results, APIResult.class);
@@ -298,7 +299,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }.execute());
         }
 
-        if (!embeddedMode) {
+        // update only if all are updated
+        if (!embeddedMode && results.get(FALCON_TAG).getStatus() == APIResult.Status.SUCCEEDED) {
             results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo));
         }
 
@@ -558,14 +560,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             for (String colo : colos) {
                 try {
                     results.put(colo, doExecute(colo));
-                } catch (FalconException e) {
+                } catch (Throwable e) {
                     results.put(colo, getResultInstance(APIResult.Status.FAILED, e.getClass().getName() + "::"
                             + e.getMessage()));
                 }
             }
 
             T finalResult = consolidateResult(results, clazz);
-            if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
+            if (finalResult.getStatus() == APIResult.Status.FAILED) {
                 throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
             } else {
                 return finalResult;

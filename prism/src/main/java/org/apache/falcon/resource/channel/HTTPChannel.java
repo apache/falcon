@@ -81,13 +81,14 @@ public class HTTPChannel extends AbstractChannel {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T invoke(String methodName, Object... args) throws FalconException {
+        HttpServletRequest incomingRequest = null;
         try {
             Method method = getMethod(service, methodName, args);
             String urlPrefix = getFalconEndPoint();
             String url = urlPrefix + "/" + pathValue(method, args);
             LOG.debug("Executing {}", url);
 
-            HttpServletRequest incomingRequest = getIncomingRequest(args);
+            incomingRequest = getIncomingRequest(args);
             incomingRequest.getInputStream().reset();
             String httpMethod = getHttpMethod(method);
             String mimeType = getConsumes(method);
@@ -116,6 +117,14 @@ public class HTTPChannel extends AbstractChannel {
         } catch (Throwable e) {
             LOG.error("Request failed", e);
             throw new FalconException(e);
+        } finally {
+            try {
+                if (incomingRequest != null) {
+                    incomingRequest.getInputStream().reset();
+                }
+            } catch (Exception ignore) {
+                // nothing to be done;
+            }
         }
     }
 
