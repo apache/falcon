@@ -100,7 +100,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") final Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? DEFAULT_NUM_RESULTS : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -131,7 +132,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? DEFAULT_NUM_RESULTS : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -158,7 +160,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") final Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? DEFAULT_NUM_RESULTS : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -251,7 +254,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
+            @QueryParam("numResults") final Integer numResults) {
+        final Integer resultsPerPage = numResults == null ? DEFAULT_NUM_RESULTS : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {

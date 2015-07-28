@@ -246,8 +246,7 @@ public class FalconCLI {
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
         String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
-        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
-                FalconClient.DEFAULT_NUM_RESULTS, "numResults");
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT), null, "numResults");
 
         colo = getColo(colo);
         String instanceAction = "instance";
@@ -347,7 +346,8 @@ public class FalconCLI {
         OUT.get().println(result);
     }
 
-    private Integer parseIntegerInput(String optionValue, int defaultVal, String optionName) throws FalconCLIException {
+    private Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName)
+        throws FalconCLIException {
         Integer integer = defaultVal;
         if (optionValue != null) {
             try {
@@ -418,7 +418,7 @@ public class FalconCLI {
         String feedInstancePath = commandLine.getOptionValue(PATH_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
-                FalconClient.DEFAULT_NUM_RESULTS, "numResults");
+                null, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         EntityType entityTypeEnum = null;
         if (optionsList.contains(LIST_OPT)) {

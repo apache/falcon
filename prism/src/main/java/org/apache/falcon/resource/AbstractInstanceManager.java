@@ -76,7 +76,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final long HOUR_IN_MILLIS = 3600000L;
     protected static final long DAY_IN_MILLIS = 86400000L;
     private static final long MONTH_IN_MILLIS = 2592000000L;
-    protected static final String DEFAULT_NUM_RESULTS = "10";
 
     protected EntityType checkType(String type) {
         if (StringUtils.isEmpty(type)) {
@@ -840,7 +839,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr)
         throws FalconException {
-        return getStartAndEndDate(entityObject, startStr, endStr, Integer.parseInt(DEFAULT_NUM_RESULTS));
+        return getStartAndEndDate(entityObject, startStr, endStr, DEFAULT_NUM_RESULTS);
     }
 
     private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr, int numResults)

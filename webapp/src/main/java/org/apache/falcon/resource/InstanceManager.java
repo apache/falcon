@@ -55,7 +55,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
         return super.getRunningInstances(type, entity, colo, lifeCycles, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -80,7 +81,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
         return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -101,7 +103,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
         return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -155,7 +158,8 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage) {
+        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
         return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }

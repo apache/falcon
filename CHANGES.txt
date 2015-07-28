@@ -9,6 +9,8 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1324 Pagination API breaks backward compatibility(Ajay Yadava).
+
     FALCON-668 FeedReplicator improvement to include more DistCP options(Sowmya Ramesh via Ajay Yadava)
 
     FALCON-1320 Adding equals() and hashCode() method in LineageGraphResult.Edge(Pragya Mittal via Ajay Yadava)

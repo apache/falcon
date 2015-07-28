@@ -93,7 +93,6 @@ public class FalconClient {
     private static final String TEMPLATE_SUFFIX = "-template.xml";
     private static final String PROPERTIES_SUFFIX = ".properties";
 
-    public static final int DEFAULT_NUM_RESULTS = 10;
 
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         @Override
@@ -441,7 +440,7 @@ public class FalconClient {
                                         String filterBy, String orderBy, String sortOrder) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.SUMMARY, type, entity, start, end, null,
-            null, colo, lifeCycles, filterBy, orderBy, sortOrder, 0, DEFAULT_NUM_RESULTS)
+            null, colo, lifeCycles, filterBy, orderBy, sortOrder, 0, null)
                 .getEntity(InstancesSummaryResult.class);
     }
 
@@ -450,7 +449,7 @@ public class FalconClient {
         throws FalconCLIException {
 
         return sendInstanceRequest(Instances.LISTING, type, entity, start, end, null,
-            null, colo, null, "", "", "", 0, DEFAULT_NUM_RESULTS).getEntity(FeedInstanceResult.class);
+            null, colo, null, "", "", "", 0, null).getEntity(FeedInstanceResult.class);
     }
 
     public InstancesResult killInstances(String type, String entity, String start,
@@ -767,7 +766,7 @@ public class FalconClient {
                                        String runid, String colo,
                                        List<LifeCycle> lifeCycles) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS)
+                runid, colo, lifeCycles, "", "", "", 0, null)
                 .getEntity(InstancesResult.class);
     }
 
@@ -776,7 +775,7 @@ public class FalconClient {
                                                 String runid, String colo, List<LifeCycle> lifeCycles,
                                                 Boolean isForced) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", "", 0, DEFAULT_NUM_RESULTS, isForced).getEntity(InstancesResult.class);
+                runid, colo, lifeCycles, "", "", "", 0, null, isForced).getEntity(InstancesResult.class);
     }
 
 

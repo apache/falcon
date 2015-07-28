@@ -471,11 +471,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage) {
         if (StringUtils.isNotEmpty(type)) {
             type = type.substring(1);
         }
+        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
         return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
