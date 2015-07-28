@@ -65,6 +65,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1328 Error in Triage documentation(Karishma Gulati via Ajay Yadava)
+
     FALCON-1323 Reverse lookup of feeds causes NPE(Ajay Yadava)
 
     FALCON-1329 Falcon's idempotent behaviour breaks in some cases(Ajay Yadava)

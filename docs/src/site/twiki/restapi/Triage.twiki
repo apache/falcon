@@ -21,7 +21,7 @@ It returns a json graph
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/feed/my-feed?start=2015-03-02T00:00Z&colo=local
+GET http://localhost:15000/api/instance/triage/feed/my-feed?start=2015-03-02T00:00Z&colo=local
 </verbatim>
 ---+++ Result
 <verbatim>
