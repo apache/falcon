@@ -67,6 +67,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1325 Triage API on prism, for an instance at which a process does not exist sends incorrect message(Ajay Yadava)
+
     FALCON-1328 Error in Triage documentation(Karishma Gulati via Ajay Yadava)
 
     FALCON-1323 Reverse lookup of feeds causes NPE(Ajay Yadava)

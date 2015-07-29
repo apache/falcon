@@ -22,6 +22,7 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,14 @@ public class FalconWebException extends WebApplicationException {
 
     public static FalconWebException newInstanceException(Throwable e, Response.Status status) {
         return newInstanceException(getMessage(e), status);
+    }
+
+
+    public static FalconWebException newTriageResultException(Throwable e, Response.Status status) {
+        String message = getMessage(e);
+        LOG.error("Triage failed: {}\nError: {}", status, message);
+        APIResult result = new TriageResult(APIResult.Status.FAILED, message);
+        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newInstanceSummaryException(Throwable e, Response.Status status) {
