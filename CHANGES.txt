@@ -67,6 +67,9 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1327 When using triage on a server for a process which does not exist on that server,
+    a NullPointerException is encountered(Ajay Yadava)
+
     FALCON-1325 Triage API on prism, for an instance at which a process does not exist sends incorrect message(Ajay Yadava)
 
     FALCON-1328 Error in Triage documentation(Karishma Gulati via Ajay Yadava)

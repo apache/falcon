@@ -644,7 +644,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         checkName(entityName);
         try {
             EntityType type = EntityType.valueOf(entityType.toUpperCase());
-            Entity entity = ConfigurationStore.get().get(type, entityName);
+            Entity entity = EntityUtil.getEntity(type, entityName);
             TriageResult result = new TriageResult(APIResult.Status.SUCCEEDED, "Success");
             List<LineageGraphResult> triageGraphs = new LinkedList<>();
             for (String clusterName : DeploymentUtil.getCurrentClusters()) {
