@@ -319,9 +319,9 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunMultipleSucceeded() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:08Z");
         bundles[0].setOutputFeedLocationData(feedOutputPath);
-        bundles[0].setProcessConcurrency(3);
+        bundles[0].setProcessConcurrency(2);
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
@@ -330,7 +330,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
                 start + "&end=2010-01-02T01:11Z&force=true");
-        InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 3, 3, 0, 0);
+        InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 2, 2, 0, 0);
     }
 
     /**

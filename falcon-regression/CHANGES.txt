@@ -360,6 +360,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1338 Fortify ProcessInstanceRerunTest#testProcessInstanceRerunMultipleSucceeded (Paul Isaychuk)
+
    FALCON-1318 Method waitForAngularToFinish() should be robust to unresponsive browser (Raghav Kumar Gautam)
 
    FALCON-1314 Unify handling of local files and directory (Raghav Kumar Gautam)
