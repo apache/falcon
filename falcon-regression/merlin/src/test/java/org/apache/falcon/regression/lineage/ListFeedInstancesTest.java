@@ -88,7 +88,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     }
 
     /*
-     * Prepares running feed with instances ordered (desc): 1 waiting, 1 suspended, 1 running,
+     * Prepares running feed with instances ordered (desc): 1 waiting, 1 running, 1 suspended,
      * 3 waiting and 6 killed. Testing is based on expected instances statuses.
      */
     private void prepareScenario() throws AuthenticationException, IOException, URISyntaxException,
@@ -284,9 +284,9 @@ public class ListFeedInstancesTest extends BaseTestClass {
             "start=" + TimeUtil.addMinsToTime(endTime, -5) + "&end=" + endTime, null);
         InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
 
-        //only start, actual feed startTime, should get 10 most recent instances(by default).
+        //only start, actual feed startTime, should get 1-10 instances(end is automatically set to freq*10).
         r = prism.getFeedHelper().listInstances(feedName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
+        InstanceUtil.validateResponse(r, 10, 0, 1, 3, 6);
 
         //only start, greater then the actual startTime.
         r = prism.getFeedHelper().listInstances(feedName,

@@ -324,7 +324,7 @@ public final class LogUtil {
     public static void writeOozieLogs(ColoHelper coloHelper, String logLocation) {
         final OozieClient oozieClient = coloHelper.getFeedHelper().getOozieClient();
         final String hostname = coloHelper.getClusterHelper().getQaHost();
-        final String oozieLogLocation = OSUtil.concat(logLocation + "oozie_logs", hostname);
+        final String oozieLogLocation = OSUtil.concat(logLocation, "oozie_logs", hostname);
         assert oozieLogLocation != null;
         final File directory = new File(oozieLogLocation);
         if (!directory.exists()) {

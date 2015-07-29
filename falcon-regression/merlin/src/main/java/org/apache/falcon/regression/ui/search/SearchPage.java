@@ -149,13 +149,12 @@ public class SearchPage extends AbstractSearchPage {
             getSearchBox().sendKeys(queryParam);
             getSearchBox().sendKeys(Keys.ENTER);
         }
-        String activeAlert = getActiveAlertText();
-        if (activeAlert != null) {
-            Assert.assertEquals(activeAlert.trim(), "No results matched the search criteria.");
+        waitForAngularToFinish();
+        if (resultBlock.isDisplayed()) {
+            return getSearchResults();
+        } else {
             return Collections.emptyList();
         }
-        UIAssert.assertDisplayed(resultBlock, "Search result block");
-        return getSearchResults();
 
     }
 
@@ -179,7 +178,7 @@ public class SearchPage extends AbstractSearchPage {
     }
 
     private void focusOnSearchBox() {
-        searchBlock.findElement(By.className("tags")).click();
+        driver.findElement(By.className("tags")).click();
     }
 
     public void checkNoResult() {

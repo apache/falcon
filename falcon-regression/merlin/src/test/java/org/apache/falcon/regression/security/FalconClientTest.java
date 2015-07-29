@@ -86,7 +86,7 @@ public class FalconClientTest extends BaseTestClass {
         final String clusterXml = bundles[0].getClusters().get(0);
         final ExecResult execResult =
             prism.getClusterHelper().clientDelete(clusterXml, MerlinConstants.DIFFERENT_USER_NAME);
-        AssertUtil.assertFailed(execResult, "cluster deletion failed");
+        AssertUtil.assertFailed(execResult, "ERROR: Forbidden;");
     }
 
     @AfterMethod(alwaysRun = true)

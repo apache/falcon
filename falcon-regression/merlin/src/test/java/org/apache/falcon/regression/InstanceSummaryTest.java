@@ -82,15 +82,14 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
-        processBundle = BundleUtil.readELBundle();
-        processBundle = new Bundle(processBundle, cluster3);
+        processBundle = new Bundle(BundleUtil.readELBundle(), cluster3);
         processBundle.generateUniqueBundle(this);
         processBundle.setInputFeedDataPath(feedInputPath);
         processBundle.setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
 
         for (int i = 0; i < 3; i++) {
-            bundles[i] = new Bundle(processBundle, servers.get(i));
+            bundles[i] = new Bundle(BundleUtil.readELBundle(), servers.get(i));
             bundles[i].generateUniqueBundle(this);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }

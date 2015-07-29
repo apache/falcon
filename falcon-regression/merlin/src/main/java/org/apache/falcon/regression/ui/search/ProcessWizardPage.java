@@ -131,6 +131,7 @@ public class ProcessWizardPage extends AbstractSearchPage {
     }
 
     public void clickEditXml(){
+        waitForAngularToFinish();
         editXmlButton.click();
     }
 
@@ -710,10 +711,12 @@ public class ProcessWizardPage extends AbstractSearchPage {
     }
 
     public void clickAddInput(){
+        waitForAngularToFinish();
         getAddInputButton().click();
     }
 
     public void clickAddOutput(){
+        waitForAngularToFinish();
         getAddOutputButton().click();
     }
 

@@ -19,7 +19,6 @@
 package org.apache.falcon.regression.lineage;
 
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -75,15 +74,12 @@ public class ListProcessInstancesTest extends BaseTestClass {
         bundles[0].setInputFeedDataPath(feedDataLocation);
         bundles[0].setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessValidity(startTime, endTime);
-        bundles[0].setInputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitAndScheduleProcess();
         processName = bundles[0].getProcessName();
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         //create data for processes to run and wait some time for instances to make progress
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 1);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 2);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
     }
@@ -94,8 +90,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     }
 
     /**
-     * List process instances using orderBy - status, -startTime, -endTime params, expecting list of
-     * process instances in the right order.
+     * List process instances using orderBy - status, -startTime, -endTime params.
      */
     @Test
     public void testProcessOrderBy() throws Exception {
@@ -172,12 +167,12 @@ public class ListProcessInstancesTest extends BaseTestClass {
 
         //use start option without numResults. 10 instances expected
         r = prism.getProcessHelper().listInstances(processName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
+        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
 
         //use start option with numResults value which is smaller then default.
         r = prism.getProcessHelper().listInstances(processName,
             "start=" + startTime + "&numResults=8", null);
-        InstanceUtil.validateResponse(r, 8, 3, 0, 5, 0);
+        InstanceUtil.validateResponse(r, 8, 0, 0, 8, 0);
 
         //use start option with numResults value greater then default. All 12 instances expected
         r = prism.getProcessHelper().listInstances(processName,
@@ -242,8 +237,6 @@ public class ListProcessInstancesTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
 
         //wait till new instances be RUNNING and total status count be stable
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
 
@@ -300,7 +293,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
                 + "&end=" + TimeUtil.addMinsToTime(startTime, 16), null);
         InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
 
-        //only start, actual startTime, should get 10 most recent instances
+        //only start, actual startTime (end is automatically set to start + frequency * 10)
         r = prism.getProcessHelper().listInstances(processName, "start=" + startTime, null);
         InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
 

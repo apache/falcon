@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.entity;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
@@ -43,6 +44,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Testing the pattern search of entities. Falcon-914
@@ -173,17 +175,13 @@ public class EntitiesPatternSearchTest extends BaseTestClass {
         }
     }
 
-    private Boolean getOutputEntity(String entityName, String pattern) {
-        String patternCheck="";
-        String regexString=".*";
-        StringBuffer newString = new StringBuffer();
-        char[] searchPatterns = pattern.toLowerCase().toCharArray();
-        for (char searchPattern : searchPatterns) {
-            newString = newString.append(regexString).append(searchPattern);
-        }
-        patternCheck = newString.append(regexString).toString();
-        LOGGER.info("patternCheck : " + patternCheck);
-        return entityName.toLowerCase().matches(patternCheck);
+    private Boolean getOutputEntity(final String entityName, final String userInput) {
+        final String wildCard = ".*";
+        final String patternStr = StringUtils.join(userInput.split(""), wildCard) + wildCard;
+        final Pattern pattern = Pattern.compile(patternStr, Pattern.CASE_INSENSITIVE);
+        final boolean isMatch = pattern.matcher(entityName).find();
+        LOGGER.info("patternStr : " + patternStr + " entityName: " + entityName + " isMatch: " + isMatch);
+        return isMatch;
     }
 
     private List<String> getPatternName() {

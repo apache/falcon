@@ -83,7 +83,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws IOException {
-        Bundle bundle = BundleUtil.readFeedReplicationBundle();
+        final Bundle bundle = BundleUtil.readFeedReplicationBundle();
         bundles[0] = new Bundle(bundle, cluster1);
         bundles[1] = new Bundle(bundle, cluster2);
         bundles[2] = new Bundle(bundle, cluster3);
@@ -92,8 +92,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         bundles[1].generateUniqueBundle(this);
         bundles[2].generateUniqueBundle(this);
 
-        processBundle = BundleUtil.readELBundle();
-        processBundle = new Bundle(processBundle, cluster1);
+        processBundle = new Bundle(BundleUtil.readELBundle(), cluster1);
         processBundle.generateUniqueBundle(this);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
     }

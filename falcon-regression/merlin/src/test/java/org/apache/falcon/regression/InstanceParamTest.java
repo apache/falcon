@@ -77,15 +77,16 @@ public class InstanceParamTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
-        processBundle = BundleUtil.readELBundle();
-        processBundle = new Bundle(processBundle, cluster1);
+        processBundle = new Bundle(BundleUtil.readELBundle(), cluster1);
         processBundle.generateUniqueBundle(this);
         processBundle.setInputFeedDataPath(feedInputPath);
         processBundle.setOutputFeedLocationData(feedOutputPath);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
         for (int i = 0; i < 3; i++) {
-            bundles[i] = new Bundle(processBundle, servers.get(i));
+            bundles[i] = new Bundle(BundleUtil.readELBundle(), servers.get(i));
             bundles[i].generateUniqueBundle(this);
+            bundles[i].setInputFeedDataPath(feedInputPath);
+            bundles[i].setOutputFeedLocationData(feedOutputPath);
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
         processName = processBundle.getProcessName();

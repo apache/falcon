@@ -1,0 +1,120 @@
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-dr-fs-workflow'>
+    <start to='dr-replication'/>
+    <!-- Replication action -->
+    <action name="dr-replication">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.oozie.libpath</name>
+                    <value>${wf:conf("falcon.libpath")}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-maxMaps</arg>
+            <arg>${distcpMaxMaps}</arg>
+            <arg>-mapBandwidth</arg>
+            <arg>${distcpMapBandwidth}</arg>
+            <arg>-sourcePaths</arg>
+            <arg>${drSourceClusterFS}${drSourceDir}</arg>
+            <arg>-targetPath</arg>
+            <arg>${drTargetClusterFS}${drTargetDir}</arg>
+            <arg>-falconFeedStorageType</arg>
+            <arg>FILESYSTEM</arg>
+            <arg>-availabilityFlag</arg>
+            <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
+            <arg>-counterLogDir</arg>
+            <arg>${logDir}/job-${nominalTime}</arg>
+        </java>
+        <ok to="success"/>
+        <error to="failure"/>
+    </action>
+    <decision name="success">
+        <switch>
+            <case to="successAlert">
+                ${drNotificationReceivers ne 'NA'}
+            </case>
+            <default to="end"/>
+        </switch>
+    </decision>
+    <decision name="failure">
+        <switch>
+            <case to="failureAlert">
+                ${drNotificationReceivers ne 'NA'}
+            </case>
+            <default to="fail"/>
+        </switch>
+    </decision>
+    <action name="successAlert">
+        <email xmlns="uri:oozie:email-action:0.2">
+            <to>${drNotificationReceivers}</to>
+            <subject>INFO: HDFS DR workflow ${entityName} completed successfully</subject>
+            <body>
+                The HDFS DR workflow ${wf:id()} is successful.
+                Source      =   ${drSourceClusterFS}${drSourceDir}
+                Target      =   ${drTargetClusterFS}${drTargetDir}
+            </body>
+        </email>
+        <ok to="end"/>
+        <error to="end"/>
+    </action>
+    <action name="failureAlert">
+        <email xmlns="uri:oozie:email-action:0.2">
+            <to>${drNotificationReceivers}</to>
+            <subject>ERROR: HDFS DR workflow ${entityName} failed</subject>
+            <body>
+                The workflow ${wf:id()} had issues and was killed.  The error message is: ${wf:errorMessage(wf:lastErrorNode())}
+                Source      =   ${drSourceClusterFS}${drSourceDir}
+                Target      =   ${drTargetClusterFS}${drTargetDir}
+            </body>
+        </email>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>
+            Workflow action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

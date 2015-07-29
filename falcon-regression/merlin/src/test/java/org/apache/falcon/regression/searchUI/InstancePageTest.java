@@ -22,7 +22,11 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.*;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.falcon.regression.ui.search.EntityPage;
 import org.apache.falcon.regression.ui.search.InstancePage;
@@ -33,9 +37,7 @@ import org.apache.falcon.resource.InstancesResult;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -59,14 +61,10 @@ public class InstancePageTest extends BaseUITestClass {
     private String instance = "2010-01-02T01:00Z";
     private String processName;
 
-    @BeforeClass(alwaysRun = true)
-    public void setup() {
-        openBrowser();
-        searchPage = LoginPage.open(getDriver()).doDefaultLogin();
-    }
-
     @BeforeMethod(alwaysRun = true)
     public void submitEntities() throws Exception {
+        openBrowser();
+        searchPage = LoginPage.open(getDriver()).doDefaultLogin();
         cleanAndGetTestDir();
         HadoopUtil.uploadDir(serverFS.get(0), aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = BundleUtil.readELBundle();
@@ -184,11 +182,7 @@ public class InstancePageTest extends BaseUITestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        removeTestClassEntities();
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() {
         closeBrowser();
+        removeTestClassEntities();
     }
 }

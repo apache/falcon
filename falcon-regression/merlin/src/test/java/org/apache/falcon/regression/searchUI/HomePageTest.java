@@ -111,18 +111,26 @@ public class HomePageTest extends BaseUITestClass {
 
         final String clusterXml = bundle.getClusterElement().toString();
         homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(clusterXml));
+        String alert = homePage.getActiveAlertText();
+        Assert.assertTrue(alert.contains("Submit successful"), "Not expected alert: '" + alert + "'");
         AssertUtil.assertSucceeded(prism.getClusterHelper().getEntityDefinition(clusterXml));
 
         final String feedXml = bundle.getInputFeedFromBundle();
         homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(feedXml));
+        alert = homePage.getActiveAlertText();
+        Assert.assertTrue(alert.contains("Submit successful"), "Not expected alert: '" + alert + "'");
         AssertUtil.assertSucceeded(prism.getFeedHelper().getEntityDefinition(feedXml));
 
         final String outputFeedXml = bundle.getOutputFeedFromBundle();
         homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(outputFeedXml));
+        alert = homePage.getActiveAlertText();
+        Assert.assertTrue(alert.contains("Submit successful"), "Not expected alert: '" + alert + "'");
         AssertUtil.assertSucceeded(prism.getFeedHelper().getEntityDefinition(outputFeedXml));
 
         final String processXml = bundle.getProcessObject().toString();
         homePage.getPageHeader().uploadXml(FileUtil.writeEntityToFile(processXml));
+        alert = homePage.getActiveAlertText();
+        Assert.assertTrue(alert.contains("Submit successful"), "Not expected alert: '" + alert + "'");
         AssertUtil.assertSucceeded(prism.getProcessHelper().getEntityDefinition(processXml));
 
     }
@@ -161,7 +169,6 @@ public class HomePageTest extends BaseUITestClass {
         writer.close();
 
         homePage.getPageHeader().uploadXml(xmlFile.getAbsolutePath());
-        Thread.sleep(1000);
         alertText = homePage.getActiveAlertText();
         Assert.assertEquals(alertText, "Invalid xml. File not uploaded",
             "XML file with invalid text was allowed to be uploaded");

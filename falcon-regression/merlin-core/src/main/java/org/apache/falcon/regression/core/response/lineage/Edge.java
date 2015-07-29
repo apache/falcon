@@ -50,6 +50,13 @@ public class Edge extends GraphEntity {
         @SerializedName("first")FIRST,
         @SerializedName("second")SECOND,
         @SerializedName("third")THIRD,
+        @SerializedName("fourth")FOURTH,
+        @SerializedName("fifth")FIFTH,
+        @SerializedName("sixth")SIXTH,
+        @SerializedName("seventh")SEVENTH,
+        @SerializedName("eighth")EIGHTH,
+        @SerializedName("ninth")NINTH,
+        @SerializedName("tenth")TENTH,
         @SerializedName("value")VALUE,
     }
     @SerializedName("_id")

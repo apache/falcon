@@ -46,6 +46,8 @@ bin/
 
 #hadoop-conf
 merlin/src/test/resources/hadoop-conf
+merlin/src/test/resources/hive-conf
+merlin/src/test/resources/falcon-conf
 
 #prop files
 merlin/src/main/resources/Merlin.properties

@@ -78,10 +78,6 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle(this);
-        bundle = new Bundle(bundle, cluster);
-        bundle.setInputFeedDataPath(feedInputPath);
     }
 
     /**

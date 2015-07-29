@@ -20,9 +20,11 @@ package org.apache.falcon.regression.ui.search;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.AssertUtil;
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -114,9 +116,11 @@ public class PageHeader {
         final SearchPage searchPage = PageFactory.initElements(driver, SearchPage.class);
         searchPage.checkPage();
         final PageHeader searchHeader = searchPage.getPageHeader();
-        searchHeader.checkLoggedIn();
-        Assert.assertEquals(searchHeader.getLoggedInUser(), LoginPage.UI_DEFAULT_USER,
-            "Unexpected user is displayed");
+        if (!MerlinConstants.IS_SECURE) {
+            searchHeader.checkLoggedIn();
+            Assert.assertEquals(searchHeader.getLoggedInUser(), LoginPage.UI_DEFAULT_USER,
+                "Unexpected user is displayed");
+        }
         return searchPage;
     }
 
@@ -138,7 +142,7 @@ public class PageHeader {
 
         final String oldUrl = driver.getCurrentUrl();
         //displayed if user is logged in: create entity buttons, upload entity button, username
-        if (getLogoutButton().isDisplayed()) {
+        if (MerlinConstants.IS_SECURE || getLogoutButton().isDisplayed()) {
             //checking create entity box
             UIAssert.assertDisplayed(createEntityBox, "Create entity box");
             final WebElement createEntityLabel = createEntityBox.findElement(By.tagName("h4"));
@@ -153,6 +157,9 @@ public class PageHeader {
             Assert.assertEquals(uploadEntityButton.getText(), "Browse for the XML file",
                 "Unexpected text on upload entity button");
             //checking if logged-in username is displayed
+            if (!MerlinConstants.IS_SECURE) {
+                UIAssert.assertDisplayed(getLogoutButton(), "Logout button");
+            }
             AssertUtil.assertNotEmpty(getLoggedInUser(), "Expecting logged-in username.");
 
             //create button navigation
@@ -219,12 +226,12 @@ public class PageHeader {
         return processPage;
     }
 
-    public NewMirrorPage doCreateMirror() {
+    public MirrorWizardPage doCreateMirror() {
         UIAssert.assertDisplayed(mirrorCreateButton, "Mirror create button");
         Assert.assertEquals(mirrorCreateButton.getText(), "Mirror",
             "Unexpected text on create mirror button");
         mirrorCreateButton.click();
-        final NewMirrorPage mirrorPage = PageFactory.initElements(driver, NewMirrorPage.class);
+        final MirrorWizardPage mirrorPage = PageFactory.initElements(driver, MirrorWizardPage.class);
         mirrorPage.checkPage();
         return mirrorPage;
     }
@@ -242,7 +249,7 @@ public class PageHeader {
     }
 
     private WebElement getLogoutButton() {
-        return loginHeaderBox.findElement(By.xpath("//button[contains(.,'Logout')]"));
+        return loginHeaderBox.findElements(By.tagName("button")).get(1);
     }
 
     public LoginPage doLogout() {
@@ -252,5 +259,20 @@ public class PageHeader {
         loginPage.checkPage();
         return loginPage;
     }
+
+    protected void waitForAngularToFinish() {
+        final String javaScript = "return (window.angular != null) && "
+            + "(angular.element(document).injector() != null) && "
+            + "(angular.element(document).injector().get('$http').pendingRequests.length === 0)";
+        boolean isLoaded = false;
+        for (int i = 0; i < AbstractSearchPage.PAGELOAD_TIMEOUT_THRESHOLD && !isLoaded; i++) {
+            final Object output = ((JavascriptExecutor) driver).executeScript(javaScript);
+            isLoaded = Boolean.valueOf(output.toString());
+            LOGGER.info(i+1 + ". waiting on angular to finish.");
+            TimeUtil.sleepSeconds(1);
+        }
+        LOGGER.info("angular is done continuing...");
+    }
+
 
 }

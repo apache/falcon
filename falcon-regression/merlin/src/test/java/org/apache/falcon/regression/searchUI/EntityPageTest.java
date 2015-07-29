@@ -588,8 +588,8 @@ public class EntityPageTest extends BaseUITestClass {
             .getProcessInstanceLogs(process.getName(),
                 "start=" + nominalTimeOfSelectedInstance
                 + "&end=" + TimeUtil.addMinsToTime(nominalTimeOfSelectedInstance, 1));
-        Assert.assertEquals(getDriver().getCurrentUrl().replaceFirst("/\\?", "?"),
-            processInstanceLogs.getInstances()[0].getLogFile(),
+        Assert.assertEquals(getDriver().getCurrentUrl().replaceFirst("/\\?", "?").toLowerCase(),
+            processInstanceLogs.getInstances()[0].getLogFile().toLowerCase(),
             "Only one instance is selected. "
                 + "Clicking instance log button should take user to oozie page.");
     }

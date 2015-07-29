@@ -20,6 +20,7 @@ package org.apache.falcon.regression.core.helpers.entity;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.exec.CommandLine;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.helpers.FalconClientBuilder;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -28,6 +29,7 @@ import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.ExecUtil;
 import org.apache.falcon.regression.core.util.FileUtil;
 import org.apache.falcon.regression.core.util.HCatUtil;
+import org.apache.falcon.regression.core.util.HiveUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
@@ -38,7 +40,6 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.log4j.Logger;
@@ -47,6 +48,8 @@ import org.testng.Assert;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 /** Abstract class for helper classes. */
@@ -116,6 +119,21 @@ public abstract class AbstractEntityHelper {
         return this.hCatClient;
     }
 
+    protected Connection hiveJdbcConnection;
+
+    public Connection getHiveJdbcConnection() {
+        if (null == hiveJdbcConnection) {
+            try {
+                hiveJdbcConnection =
+                    HiveUtil.getHiveJdbcConnection(hiveJdbcUrl, hiveJdbcUser, hiveJdbcPassword, hiveMetaStorePrincipal);
+            } catch (ClassNotFoundException | SQLException | InterruptedException | IOException e) {
+                Assert.fail("Unable to create hive jdbc connection because of exception:\n"
+                    + ExceptionUtils.getStackTrace(e));
+            }
+        }
+        return hiveJdbcConnection;
+    }
+
     //basic properties
     protected String qaHost;
 
@@ -140,6 +158,9 @@ public abstract class AbstractEntityHelper {
     protected String serviceStopCmd;
     protected String serviceStatusCmd;
     protected String hcatEndpoint = "";
+    protected String hiveJdbcUrl = "";
+    protected String hiveJdbcUser = "";
+    protected String hiveJdbcPassword = "";
 
     public String getNamenodePrincipal() {
         return namenodePrincipal;
@@ -241,6 +262,10 @@ public abstract class AbstractEntityHelper {
         this.namenodePrincipal = Config.getProperty(prefix + "namenode.kerberos.principal", "none");
         this.hiveMetaStorePrincipal = Config.getProperty(
                 prefix + "hive.metastore.kerberos.principal", "none");
+        this.hiveJdbcUrl = Config.getProperty(prefix + "hive.jdbc.url", "none");
+        this.hiveJdbcUser =
+            Config.getProperty(prefix + "hive.jdbc.user", System.getProperty("user.name"));
+        this.hiveJdbcPassword = Config.getProperty(prefix + "hive.jdbc.password", "");
     }
 
     public abstract String getEntityType();

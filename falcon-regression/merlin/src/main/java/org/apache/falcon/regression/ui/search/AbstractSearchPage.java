@@ -20,6 +20,7 @@ package org.apache.falcon.regression.ui.search;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -27,18 +28,20 @@ import org.apache.falcon.regression.ui.pages.Page;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-
 
 
 /** Parent page object for all the search ui pages. */
@@ -158,16 +161,37 @@ public abstract class AbstractSearchPage extends Page {
     }
 
     public String getActiveAlertText() {
-        WebElement alertsBlock = driver.findElement(By.xpath("//div[@class='messages notifs']"));
-        if (alertsBlock.getAttribute("style").contains("opacity")) {
-            return alertsBlock.findElement(By.xpath("./div[last()]")).getText();
+        if (waitForAlert()) {
+            waitForAngularToFinish();
+            return driver.findElement(By.xpath("//div[@class='messages notifs']/div[last()]")).getText();
         } else {
             return null;
         }
     }
 
-    protected void waitForAlert() {
-        driver.findElements(
-            By.xpath("//div[@class='messages notifs' and contains(@style,'opacity')]"));
+    /**
+     * Wait for active alert.
+     * @return true is alert is present
+     */
+    protected boolean waitForAlert() {
+        final WebElement alertsBlock = driver.findElement(By.xpath("//div[@class='messages notifs']"));
+        try {
+            new WebDriverWait(driver, 5).until(new ExpectedCondition<Boolean>() {
+                @Nullable
+                @Override
+                public Boolean apply(WebDriver webDriver) {
+                    String style = alertsBlock.getAttribute("style");
+                    if (style.contains("opacity") && !style.contains("opacity: 1;")) {
+                        String alert = alertsBlock.findElement(By.xpath("./div[last()]")).getText();
+                        return StringUtils.isNotEmpty(alert);
+                    } else {
+                        return false;
+                    }
+                }
+            });
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
     }
 }

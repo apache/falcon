@@ -88,6 +88,7 @@ public class ClusterWizardPage extends AbstractSearchPage {
             addProperty(property.getName(), property.getValue());
         }
         setLocations(cluster.getLocations().getLocations());
+        waitForAngularToFinish();
     }
 
     /**
@@ -415,6 +416,7 @@ public class ClusterWizardPage extends AbstractSearchPage {
      */
     public void clickNext() {
         next.click();
+        waitForAngularToFinish();
         Assert.assertTrue(summaryBox.isDisplayed(), "Summary box should be displayed.");
     }
 
@@ -431,11 +433,13 @@ public class ClusterWizardPage extends AbstractSearchPage {
      */
     public void clickPrevious() {
         previous.click();
+        waitForAngularToFinish();
         UIAssert.assertDisplayed(clusterBox, "Cluster box");
     }
 
     public void checkRegistry() {
         clusterBox.findElement(By.xpath("//input[@type='checkbox']")).click();
+        waitForAngularToFinish();
     }
 
     public String getInterfaceEndpoint(Interfacetype interfacetype) {

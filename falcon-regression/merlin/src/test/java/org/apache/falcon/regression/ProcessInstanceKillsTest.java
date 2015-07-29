@@ -66,10 +66,6 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        Bundle b = BundleUtil.readELBundle();
-        b.generateUniqueBundle(this);
-        b = new Bundle(b, cluster);
-        b.setInputFeedDataPath(feedInputPath);
     }
 
     @BeforeMethod(alwaysRun = true)

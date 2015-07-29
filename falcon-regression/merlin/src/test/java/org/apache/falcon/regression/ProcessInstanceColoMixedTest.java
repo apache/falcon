@@ -69,16 +69,11 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
-
-        //get 3 unique bundles
-        bundles[0] = BundleUtil.readELBundle();
-        bundles[0].generateUniqueBundle(this);
-        bundles[1] = BundleUtil.readELBundle();
-        bundles[1].generateUniqueBundle(this);
-
         //generate bundles according to config files
-        bundles[0] = new Bundle(bundles[0], cluster1);
-        bundles[1] = new Bundle(bundles[1], cluster2);
+        bundles[0] = new Bundle(BundleUtil.readELBundle(), cluster1);
+        bundles[1] = new Bundle(BundleUtil.readELBundle(), cluster2);
+        bundles[0].generateUniqueBundle(this);
+        bundles[1].generateUniqueBundle(this);
 
         //set cluster colos
         bundles[0].setCLusterColo(cluster1.getClusterHelper().getColoName());

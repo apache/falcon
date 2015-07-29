@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1319 Contribute HiveDr, Mirror tests and some test fixes (Namit Maheshwari, Paul Isaychuk,
+   Raghav Kumar Gautam & Ruslan Ostafiychuk via Raghav Kumar Gautam)
+
    FALCON-1254 ClusterSetup UI: edit xml test cases, stabilize 2 tests (Paul Isaychuk via Ruslan Ostafiychuk)
    
    FALCON-1215 Adding new test cases related to rerun feature (Pragya M via Samarth Gupta)

@@ -316,6 +316,7 @@ public class FeedWizardPage extends AbstractSearchPage {
 
     public void clickNext(){
         nextButton.click();
+        waitForAngularToFinish();
     }
 
     public void clickPrevious(){
@@ -327,11 +328,13 @@ public class FeedWizardPage extends AbstractSearchPage {
     }
 
     public void clickEditXml(){
+        waitForAngularToFinish();
         editXmlButton.click();
     }
 
     public void clickCatalogStorageButton(){
         catalogStorageButton.click();
+        waitForAngularToFinish();
     }
 
     public void setFeedName(String name){
@@ -416,6 +419,7 @@ public class FeedWizardPage extends AbstractSearchPage {
     }
 
     public void addProperty(){
+        waitForAngularToFinish();
         addPropertyButton.click();
     }
 
@@ -579,6 +583,7 @@ public class FeedWizardPage extends AbstractSearchPage {
         setFeedACLPermissions(feed.getACL().getPermission());
         setFeedSchemaLocation(feed.getSchema().getLocation());
         setFeedSchemaProvider(feed.getSchema().getProvider());
+        waitForAngularToFinish();
     }
 
     // Enter feed info on Page 2 of FeedSetup Wizard
@@ -592,9 +597,11 @@ public class FeedWizardPage extends AbstractSearchPage {
         setFeedTimeZone();
         setFeedPropertyKey(0, feed.getProperties().getProperties().get(0).getName());
         setFeedPropertyValue(0, feed.getProperties().getProperties().get(0).getValue());
-        addPropertyButton.click();
+        addProperty();
+        waitForAngularToFinish();
         setFeedPropertyKey(1, feed.getProperties().getProperties().get(1).getName());
         setFeedPropertyValue(1, feed.getProperties().getProperties().get(1).getValue());
+        waitForAngularToFinish();
     }
 
     // Enter feed info on Page 3 of FeedSetup Wizard
@@ -602,7 +609,7 @@ public class FeedWizardPage extends AbstractSearchPage {
         setFeedPath(0, feed.getLocations().getLocations().get(0).getPath());
         setFeedPath(1, feed.getLocations().getLocations().get(1).getPath());
         setFeedPath(2, feed.getLocations().getLocations().get(2).getPath());
-
+        waitForAngularToFinish();
     }
 
     // Enter feed info on Page 4 of FeedSetup Wizard
@@ -628,18 +635,19 @@ public class FeedWizardPage extends AbstractSearchPage {
         setFeedClusterRetentionLimit("99");
         setFeedClusterRetentionUnit(feed.getClusters().getClusters().get(0)
             .getRetention().getLimit().getTimeUnit().name());
+        waitForAngularToFinish();
     }
 
     // setFeed method runs the default feed setup wizard, entering data on each page
     public void setFeed(FeedMerlin feed){
         setFeedGeneralInfo(feed);
-        nextButton.click();
+        clickNext();
         setFeedPropertiesInfo(feed);
-        nextButton.click();
+        clickNext();
         setFeedLocationInfo(feed);
-        nextButton.click();
+        clickNext();
         setFeedClustersInfo(feed);
-        nextButton.click();
+        clickNext();
         saveFeedButton.click();
         waitForAlert();
     }

@@ -18,19 +18,20 @@
 
 package org.apache.falcon.regression;
 
-import org.apache.falcon.entity.v0.process.*;
-import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.entity.v0.process.Properties;
+import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
-import org.apache.falcon.regression.core.util.InstanceUtil;
-import org.apache.falcon.regression.core.util.OozieUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.FileSystem;
@@ -70,9 +71,6 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        Bundle b = BundleUtil.readELBundle();
-        b = new Bundle(b, cluster);
-        b.setInputFeedDataPath(feedInputPath);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -113,7 +111,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 5, 1, 0);
     }
 
@@ -156,9 +154,9 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
-                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
-                start + "&end=2010-01-02T01:16Z");
+            start + "&end=2010-01-02T01:16Z");
         InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
         r = prism.getProcessHelper().getProcessInstanceRerun(processName,
                 "?end=2010-01-02T01:11Z");
@@ -205,7 +203,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
-                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper()
             .getProcessInstanceKill(processName, start + "&end=2010-01-02T01:11Z");
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
@@ -236,7 +234,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 6, 0, 0);
     }
@@ -255,12 +253,12 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
-                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         prism.getProcessHelper().getProcessInstanceKill(processName,
-                start + "&end=2010-01-02T01:01Z");
+            start + "&end=2010-01-02T01:01Z");
         String wfID = InstanceUtil.getWorkflows(clusterOC, processName, Status.KILLED).get(0);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:01Z");
+            start + "&end=2010-01-02T01:01Z");
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 
@@ -280,13 +278,13 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, process, 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
-                CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         String wfID = InstanceUtil.getWorkflows(clusterOC, processName, Status.RUNNING,
             Status.SUCCEEDED).get(0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 0, CoordinatorAction
-                .Status.SUCCEEDED, EntityType.PROCESS);
+            .Status.SUCCEEDED, EntityType.PROCESS);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:01Z&force=true");
+            start + "&end=2010-01-02T01:01Z&force=true");
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 
@@ -307,11 +305,11 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         prism.getProcessHelper().getProcessInstanceSuspend(processName,
-                start + "&end=2010-01-02T01:06Z");
+            start + "&end=2010-01-02T01:06Z");
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:06Z");
+            start + "&end=2010-01-02T01:06Z");
         Assert.assertEquals(InstanceUtil.getInstanceStatus(clusterOC, processName, 0, 1),
-                CoordinatorAction.Status.SUSPENDED);
+            CoordinatorAction.Status.SUSPENDED);
     }
 
     /**
@@ -328,7 +326,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
-                CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         List<String> wfIDs = InstanceUtil.getWorkflows(clusterOC, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
                 start + "&end=2010-01-02T01:11Z&force=true");
@@ -353,7 +351,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
                 CoordinatorAction.Status.TIMEDOUT, EntityType.PROCESS);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-                start + "&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         s = InstanceUtil.getInstanceStatus(clusterOC, processName, 0, 0);
         Assert.assertEquals(s, CoordinatorAction.Status.WAITING,
                 "instance should have been in WAITING state");
@@ -378,12 +376,12 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
 
         //wait for instance to go in killing state
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
-                CoordinatorAction.Status.KILLED, EntityType.PROCESS, 5);
+            CoordinatorAction.Status.KILLED, EntityType.PROCESS, 5);
 
         Assert.assertEquals(OozieUtil.getWorkflowActionStatus(clusterOC, bundleId, "post-processing")
-                .contains("KILLED"), true);
+            .contains("KILLED"), true);
         Assert.assertEquals(OozieUtil.getWorkflowActionStatus(clusterOC, bundleId, "user-action")
-                .contains("SUCCEEDED"), true);
+            .contains("SUCCEEDED"), true);
 
         //start Server1 colo
         Util.startService(cluster.getClusterHelper());

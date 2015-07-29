@@ -194,7 +194,7 @@ public class HCatReplicationTest extends BaseTestClass {
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 30);
 
         //check if data was replicated correctly
         List<Path> cluster1ReplicatedData = HadoopUtil
@@ -290,7 +290,7 @@ public class HCatReplicationTest extends BaseTestClass {
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED);
+            CoordinatorAction.Status.SUCCEEDED, EntityType.FEED, 30);
 
         //replication should start, wait while it ends
         // we will check for 2 instances so that both partitions are copied over.

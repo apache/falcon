@@ -150,13 +150,16 @@ public final class ExecUtil {
         final ByteArrayOutputStream errStream = new ByteArrayOutputStream();
         executor.setStreamHandler(new PumpStreamHandler(outStream, errStream));
         int exitVal = 1;
+        String exception = "";
         try {
             exitVal = executor.execute(commandLine);
         } catch (IOException e) {
             LOGGER.warn("Caught exception: " + e);
+            exception = e.toString();
         }
         final String output = outStream.toString();
-        final String errors = errStream.toString();
+        String errors = errStream.toString();
+        errors = errors.isEmpty() ? exception : errors;
 
         LOGGER.info("exitVal: " + exitVal);
         LOGGER.info("output: " + output);

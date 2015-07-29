@@ -59,9 +59,6 @@ public class ProcessFrequencyTest extends BaseTestClass {
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        Bundle bundle = BundleUtil.readELBundle();
-        bundle.generateUniqueBundle(this);
-        bundles[0] = new Bundle(bundle, cluster);
     }
 
     @BeforeMethod(alwaysRun = true)

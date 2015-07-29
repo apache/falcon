@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.core.bundle;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -914,5 +915,13 @@ public class Bundle {
         ProcessMerlin processMerlin = getProcessObject();
         processMerlin.setTags(value);
         setProcessData(processMerlin.toString());
+    }
+
+
+    public static int runFalconCLI(List<String> args) throws Exception {
+        args.add(1, "-url");
+        args.add(2, prismHelper.getClusterHelper().getHostname());
+        LOGGER.info("Going to run falcon jar with args: " + args);
+        return new FalconCLI().run(args.toArray(new String[]{}));
     }
 }

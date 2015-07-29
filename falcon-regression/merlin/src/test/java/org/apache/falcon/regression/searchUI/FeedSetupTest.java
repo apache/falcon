@@ -139,6 +139,7 @@ public class FeedSetupTest extends BaseUITestClass{
     @Test
     public void testWizardCancel() throws Exception {
         // Step 1 - Check cancel on the first page - General Info Page
+        feedWizardPage.setFeedGeneralInfo(feed);
         feedWizardPage.clickCancel();
         searchPage.checkPage();
 
@@ -146,6 +147,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage = searchPage.getPageHeader().doCreateFeed();
         feedWizardPage.setFeedGeneralInfo(feed);
         feedWizardPage.clickNext();
+        feedWizardPage.setFeedPropertiesInfo(feed);
         feedWizardPage.clickCancel();
         searchPage.checkPage();
 
@@ -155,6 +157,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
         feedWizardPage.setFeedPropertiesInfo(feed);
         feedWizardPage.clickNext();
+        feedWizardPage.setFeedLocationInfo(feed);
         feedWizardPage.clickCancel();
         searchPage.checkPage();
 
@@ -166,6 +169,7 @@ public class FeedSetupTest extends BaseUITestClass{
         feedWizardPage.clickNext();
         feedWizardPage.setFeedLocationInfo(feed);
         feedWizardPage.clickNext();
+        feedWizardPage.setFeedClustersInfo(feed);
         feedWizardPage.clickCancel();
         searchPage.checkPage();
 
