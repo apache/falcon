@@ -194,4 +194,22 @@ public abstract class AbstractSearchPage extends Page {
             return false;
         }
     }
+
+    /**
+     * Method imitates click on check box. If click is not performed method retries the click.
+     * @param expectedState whether check box is expected to be enabled or not after click.
+     */
+    protected void clickCheckBoxSecurely(WebElement checkBox, boolean expectedState) {
+        double gap = 0.5;
+        for (int attempt = 1; attempt <= (DEFAULT_TIMEOUT / gap); attempt++) {
+            LOGGER.info("Attempt to click a check box: " + attempt);
+            checkBox.click();
+            if (checkBox.isSelected() == expectedState) {
+                return;
+            }
+            TimeUtil.sleepSeconds(gap);
+        }
+        Assert.fail("Check box state was not changed even in " + DEFAULT_TIMEOUT + " seconds.");
+    }
+
 }

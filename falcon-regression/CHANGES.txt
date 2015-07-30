@@ -360,6 +360,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1332 Fortify ClusterSetupTest#testRegistryInterface - if checkbox wasn't clicked repeat an attempt
+   (Paul Isaychuk via Raghav Kumar Gautam)
+
    FALCON-1338 Fortify ProcessInstanceRerunTest#testProcessInstanceRerunMultipleSucceeded (Paul Isaychuk)
 
    FALCON-1318 Method waitForAngularToFinish() should be robust to unresponsive browser (Raghav Kumar Gautam)

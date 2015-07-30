@@ -437,8 +437,13 @@ public class ClusterWizardPage extends AbstractSearchPage {
         UIAssert.assertDisplayed(clusterBox, "Cluster box");
     }
 
-    public void checkRegistry() {
-        clusterBox.findElement(By.xpath("//input[@type='checkbox']")).click();
+    /**
+     * Method imitates click on check box.
+     * @param expectedState whether check box is expected to be enabled or not after click.
+     */
+    public void checkRegistry(boolean expectedState) {
+        WebElement checkbox = clusterBox.findElement(By.xpath("//input[@type='checkbox']"));
+        clickCheckBoxSecurely(checkbox, expectedState);
         waitForAngularToFinish();
     }
 
