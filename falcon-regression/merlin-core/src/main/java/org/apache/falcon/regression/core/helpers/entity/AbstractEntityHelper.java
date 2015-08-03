@@ -669,4 +669,21 @@ public abstract class AbstractEntityHelper {
                 entityName + colo);
         return Util.sendRequest(url, "post", data, user);
     }
+
+
+    /**
+     * Retrieves entities lineage.
+     * @param params list of optional parameters
+     * @return entity lineage for the given pipeline.
+     */
+    public ServiceResponse getEntityLineage(String params)
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+
+        String url = createUrl(this.hostname + URLS.ENTITY_LINEAGE.getValue(), colo);
+        if (StringUtils.isNotEmpty(params)){
+            url += colo.isEmpty() ? "?" + params : "&" + params;
+        }
+        return Util.sendRequestLineage(createUrl(url), "get", null, null);
+    }
+
 }
