@@ -150,6 +150,8 @@ Release Version: 0.6.1
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
+   FALCON-1322 Add prefix in runtime.properties(Sandeep Samudrala via Ajay Yadava)
+
    FALCON-1280 Update docs/license licenses with right copyright 
    information (Shaik Idris Ali)
 
