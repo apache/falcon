@@ -18,11 +18,13 @@
 
 package org.apache.falcon.regression.core.response;
 
+import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 
@@ -109,4 +111,14 @@ public class ServiceResponse {
             return null;
         }
     }
+
+    /**
+     * Retrieves LineageGraphResult from a message if possible.
+     * @return LineageGraphResult
+     */
+    public LineageGraphResult getLineageGraphResult() {
+        LineageGraphResult lineageGraphResult = new GsonBuilder().create().fromJson(message, LineageGraphResult.class);
+        return lineageGraphResult;
+    }
+
 }

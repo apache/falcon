@@ -626,6 +626,54 @@ public class ProcessMerlin extends Process {
         draft.setWorkflow(null, null, null);
         return draft;
     }
+
+    /**
+     * Replaces old input by new input.
+     */
+    public void resetInputFeed(String inputName, String feedName) {
+        Input in1 = getInputs().getInputs().get(0);
+        getInputs().getInputs().clear();
+        Input in2 = new Input();
+        in2.setEnd(in1.getEnd());
+        in2.setFeed(feedName);
+        in2.setName(inputName);
+        in2.setPartition(in1.getPartition());
+        in2.setStart(in1.getStart());
+        in2.setOptional(in1.isOptional());
+        getInputs().getInputs().add(in2);
+    }
+
+    /**
+     * Replaces old output by new output.
+     */
+    public void resetOutputFeed(String outputName, String feedName) {
+        Output out1 = getOutputs().getOutputs().get(0);
+        getOutputs().getOutputs().clear();
+        Output out2 = new Output();
+        out2.setFeed(feedName);
+        out2.setName(outputName);
+        out2.setInstance(out1.getInstance());
+        getOutputs().getOutputs().add(out2);
+    }
+
+    /**
+     * Adds array of feeds as input.
+     */
+    public void addInputFeeds(String[] ipFeed) {
+        for(int i=0; i<ipFeed.length; i++){
+            addInputFeed(ipFeed[i], ipFeed[i]);
+        }
+    }
+
+    /**
+     * Adds array of feeds as output.
+     */
+    public void addOutputFeeds(String[] opFeed) {
+        for(int i=0; i<opFeed.length; i++){
+            addOutputFeed(opFeed[i], opFeed[i]);
+        }
+    }
+
 }
 
 
