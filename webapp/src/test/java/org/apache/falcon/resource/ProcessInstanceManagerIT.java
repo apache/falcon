@@ -29,6 +29,7 @@ import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
@@ -224,7 +225,7 @@ public class ProcessInstanceManagerIT {
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {
         TestContext context = new TestContext();
         ExternalId extId = new ExternalId(context.processName, Tag.DEFAULT, EntityUtil.parseDateUTC(instance));
-        ProxyOozieClient ozClient = OozieClientFactory.get(
+        OozieClient ozClient = OozieClientFactory.get(
                 (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, context.clusterName));
         String jobId = ozClient.getJobId(extId.getId());
         WorkflowJob jobInfo = null;

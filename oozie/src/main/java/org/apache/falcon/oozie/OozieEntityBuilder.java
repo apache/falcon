@@ -26,6 +26,7 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Output;
@@ -38,6 +39,7 @@ import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+import org.apache.falcon.workflow.util.OozieConstants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -168,8 +170,10 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
         properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty("colo.name", cluster.getColo());
-
-        properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
+        final String endpoint = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW).getEndpoint();
+        if (!OozieConstants.LOCAL_OOZIE.equals(endpoint)) {
+            properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
+        }
         properties.setProperty("falcon.libpath",
                 ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath()  + "/lib");
 

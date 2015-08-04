@@ -74,7 +74,7 @@ import java.util.Properties;
  * Client API to submit and manage Falcon Entities (Cluster, Feed, Process) jobs
  * against an Falcon instance.
  */
-public class FalconClient {
+public class FalconClient extends AbstractFalconClient {
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
