@@ -757,7 +757,7 @@ Feeds with Hive table storage will send one more parameter apart from the genera
 <verbatim>$input_filter</verbatim>
 
 ---+++ Retry
-Retry policy defines how the workflow failures should be handled. Two retry policies are defined: backoff and exp-backoff(exponential backoff). Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
+Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
 Syntax:
 <verbatim>
 <process name="[process name]">
@@ -771,7 +771,7 @@ Examples:
 <verbatim>
 <process name="sample-process">
 ...
-    <retry policy="backoff" delay="minutes(10)" attempts="3"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
 ...
 </process>
 </verbatim>

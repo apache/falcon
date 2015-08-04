@@ -148,7 +148,7 @@ Sample process which runs daily at 6th hour on corp cluster. It takes one input 
 
     <workflow engine="oozie" path="/projects/bootcamp/workflow" />
 
-    <retry policy="backoff" delay="minutes(5)" attempts="3" />
+    <retry policy="periodic" delay="minutes(5)" attempts="3" />
     
     <late-process policy="exp-backoff" delay="hours(1)">
         <late-input input="input" workflow-path="/projects/bootcamp/workflow/lateinput" />
