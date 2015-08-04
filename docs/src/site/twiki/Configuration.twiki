@@ -1,0 +1,113 @@
+---+Configuring Falcon
+
+By default config directory used by falcon is {package dir}/conf. To override this (to use the same conf with multiple
+falcon upgrades), set environment variable FALCON_CONF to the path of the conf dir.
+
+falcon-env.sh has been added to the falcon conf. This file can be used to set various environment variables that you
+need for you services.
+In addition you can set any other environment variables you might need. This file will be sourced by falcon scripts
+before any commands are executed. The following environment variables are available to set.
+
+<verbatim>
+# The java implementation to use. If JAVA_HOME is not found we expect java and jar to be in path
+#export JAVA_HOME=
+
+# any additional java opts you want to set. This will apply to both client and server operations
+#export FALCON_OPTS=
+
+# any additional java opts that you want to set for client only
+#export FALCON_CLIENT_OPTS=
+
+# java heap size we want to set for the client. Default is 1024MB
+#export FALCON_CLIENT_HEAP=
+
+# any additional opts you want to set for prism service.
+#export FALCON_PRISM_OPTS=
+
+# java heap size we want to set for the prism service. Default is 1024MB
+#export FALCON_PRISM_HEAP=
+
+# any additional opts you want to set for falcon service.
+#export FALCON_SERVER_OPTS=
+
+# java heap size we want to set for the falcon server. Default is 1024MB
+#export FALCON_SERVER_HEAP=
+
+# What is is considered as falcon home dir. Default is the base location of the installed software
+#export FALCON_HOME_DIR=
+
+# Where log files are stored. Default is logs directory under the base install location
+#export FALCON_LOG_DIR=
+
+# Where pid files are stored. Default is logs directory under the base install location
+#export FALCON_PID_DIR=
+
+# where the falcon active mq data is stored. Default is logs/data directory under the base install location
+#export FALCON_DATA_DIR=
+
+# Where do you want to expand the war file. By Default it is in /server/webapp dir under the base install dir.
+#export FALCON_EXPANDED_WEBAPP_DIR=
+</verbatim>
+
+---++Advanced Configurations
+
+---+++Configuring Monitoring plugin to register catalog partitions
+Falcon comes with a monitoring plugin that registers catalog partition. This comes in really handy during migration from
+ filesystem based feeds to hcatalog based feeds.
+This plugin enables the user to de-couple the partition registration and assume that all partitions are already on
+hcatalog even before the migration, simplifying the hcatalog migration.
+
+By default this plugin is disabled.
+To enable this plugin and leverage the feature, there are 3 pre-requisites:
+<verbatim>
+In {package dir}/conf/startup.properties, add
+*.workflow.execution.listeners=org.apache.falcon.catalog.CatalogPartitionHandler
+
+In the cluster definition, ensure registry endpoint is defined.
+Ex:
+<interface type="registry" endpoint="thrift://localhost:1109" version="0.13.3"/>
+
+In the feed definition, ensure the corresponding catalog table is mentioned in feed-properties
+Ex:
+<properties>
+    <property name="catalog.table" value="catalog:default:in_table#year={YEAR};month={MONTH};day={DAY};hour={HOUR};
+    minute={MINUTE}"/>
+</properties>
+</verbatim>
+
+*NOTE : for Mac OS users*
+<verbatim>
+If you are using a Mac OS, you will need to configure the FALCON_SERVER_OPTS (explained above).
+
+In  {package dir}/conf/falcon-env.sh uncomment the following line
+#export FALCON_SERVER_OPTS=
+
+and change it to look as below
+export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
+</verbatim>
+
+
+---+++Activemq
+
+* falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D
+option in environment variable FALCON_OPTS:
+   * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
+   * falcon.embeddedmq.port=<port> - Port for embedded active mq, default 61616
+   * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
+
+---+++Adding Extension Libraries
+
+Library extensions allows users to add custom libraries to entity lifecycles such as feed retention, feed replication
+and process execution. This is useful for usecases such as adding filesystem extensions. To enable this, add the
+following configs to startup.properties:
+*.libext.paths=<paths to be added to all entity lifecycles>
+
+*.libext.feed.paths=<paths to be added to all feed lifecycles>
+
+*.libext.feed.retentions.paths=<paths to be added to feed retention workflow>
+
+*.libext.feed.replication.paths=<paths to be added to feed replication workflow>
+
+*.libext.process.paths=<paths to be added to process workflow>
+
+The configured jars are added to falcon classpath and the corresponding workflows.
