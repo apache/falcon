@@ -58,7 +58,6 @@ import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
-import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.rest.RestConstants;
@@ -210,7 +209,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private void dryRunInternal(Cluster cluster, Path buildPath) throws FalconException {
         BUNDLEAPP bundle = OozieBundleBuilder.unmarshal(cluster, buildPath);
-        ProxyOozieClient client = OozieClientFactory.get(cluster.getName());
+        OozieClient client = OozieClientFactory.get(cluster.getName());
         for (COORDINATOR coord : bundle.getCoordinator()) {
             Properties props = new Properties();
             props.setProperty(OozieClient.COORDINATOR_APP_PATH, coord.getAppPath());
@@ -396,7 +395,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private void killBundle(String clusterName, BundleJob job) throws FalconException {
-        ProxyOozieClient client = OozieClientFactory.get(clusterName);
+        OozieClient client = OozieClientFactory.get(clusterName);
         try {
             //kill all coords
             for (CoordinatorJob coord : job.getCoordinators()) {
@@ -459,7 +458,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             List<Instance> runInstances = new ArrayList<Instance>();
 
             for (String cluster : clusters) {
-                ProxyOozieClient client = OozieClientFactory.get(cluster);
+                OozieClient client = OozieClientFactory.get(cluster);
                 List<String> wfNames = EntityUtil.getWorkflowNames(entity);
                 List<WorkflowJob> wfs = getRunningWorkflows(cluster, wfNames);
                 if (wfs != null) {
@@ -615,7 +614,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             }
 
             List<BundleJob> bundles = entry.getValue();
-            ProxyOozieClient client = OozieClientFactory.get(cluster);
+            OozieClient client = OozieClientFactory.get(cluster);
             List<CoordinatorJob> applicableCoords = getApplicableCoords(client, start, end,
                     bundles, lifeCycles);
             long unscheduledInstances = 0;
@@ -901,7 +900,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         for (Map.Entry<String, List<BundleJob>> entry : bundlesMap.entrySet()) {
             String cluster = entry.getKey();
             List<BundleJob> bundles = entry.getValue();
-            ProxyOozieClient client = OozieClientFactory.get(cluster);
+            OozieClient client = OozieClientFactory.get(cluster);
             List<CoordinatorJob> applicableCoords =
                 getApplicableCoords(client, start, end, bundles, lifeCycles);
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
@@ -947,7 +946,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return coord.getAppName().contains(LifeCycle.EVICTION.getTag().name());
     }
 
-    private void addCoordAction(ProxyOozieClient client, List<CoordinatorAction> actions, String actionId) {
+    private void addCoordAction(OozieClient client, List<CoordinatorAction> actions, String actionId) {
         CoordinatorAction coordActionInfo = null;
         try {
             coordActionInfo = client.getCoordActionInfo(actionId);
@@ -984,7 +983,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private List<CoordinatorJob> getApplicableCoords(ProxyOozieClient client, Date start, Date end,
+    private List<CoordinatorJob> getApplicableCoords(OozieClient client, Date start, Date end,
                                                      List<BundleJob> bundles,
                                                      List<LifeCycle> lifeCycles) throws FalconException {
         List<CoordinatorJob> applicableCoords = new ArrayList<CoordinatorJob>();
@@ -1323,7 +1322,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
 
-        ProxyOozieClient client = OozieClientFactory.get(cluster);
+        OozieClient client = OozieClientFactory.get(cluster);
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
@@ -1385,7 +1384,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public String getWorkflowStatus(String cluster, String jobId) throws FalconException {
 
-        ProxyOozieClient client = OozieClientFactory.get(cluster);
+        OozieClient client = OozieClientFactory.get(cluster);
         try {
             if (jobId.endsWith("-W")) {
                 WorkflowJob jobInfo = client.getJobInfo(jobId);
@@ -1489,7 +1488,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         // assert that its really changed
         try {
-            ProxyOozieClient client = OozieClientFactory.get(cluster);
+            OozieClient client = OozieClientFactory.get(cluster);
             CoordinatorJob coord = client.getCoordJobInfo(id);
             for (int counter = 0; counter < 3; counter++) {
                 Date intendedPauseTime = (StringUtils.isEmpty(pauseTime) ? null : SchemaHelper.parseDateUTC(pauseTime));

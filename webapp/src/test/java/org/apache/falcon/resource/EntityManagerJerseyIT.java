@@ -42,7 +42,7 @@ import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
-import org.apache.oozie.client.ProxyOozieClient;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -292,7 +292,7 @@ public class EntityManagerJerseyIT {
         OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
-        ProxyOozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
+        OozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
         String bundle = bundles.get(0).getId();
         String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
 
@@ -364,7 +364,7 @@ public class EntityManagerJerseyIT {
         OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
-        ProxyOozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
+        OozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
         String bundle = bundles.get(0).getId();
         String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
 

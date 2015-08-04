@@ -1,0 +1,317 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.falcon.unit;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.client.FalconCLIException;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.hadoop.JailedFileSystem;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Test Utility for Local Falcon Unit.
+ */
+public class FalconUnitTestBase {
+
+    /**
+     * Perform a predicate evaluation.
+     *
+     * @return the boolean result of the evaluation.
+     * @throws Exception thrown if the predicate evaluation could not evaluate.
+     */
+    public interface Predicate {
+
+        boolean evaluate() throws Exception;
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(FalconUnitTestBase.class);
+
+    private static final String DEFAULT_CLUSTER = "local";
+    private static final String DEFAULT_COLO = "local";
+    private static final String CLUSTER = "cluster";
+    private static final String COLO = "colo";
+    private static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
+    private static final String STAGING_PATH = "/projects/falcon/staging";
+    private static final String WORKING_PATH = "/projects/falcon/working";
+
+    public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_.]*##");
+    protected static FalconUnitClient falconUnitClient;
+    protected static JailedFileSystem fs;
+    protected static ConfigurationStore configStore;
+
+    @BeforeClass
+    public void setup() throws FalconException, IOException {
+        FalconUnit.start(true);
+        falconUnitClient = FalconUnit.getClient();
+        fs = (JailedFileSystem) FalconUnit.getFileSystem();
+        configStore = falconUnitClient.getConfigStore();
+    }
+
+    @AfterClass
+    public void cleanup() throws Exception {
+        fs.delete(new Path(STAGING_PATH), true);
+        fs.delete(new Path(WORKING_PATH), true);
+        FalconUnit.cleanup();
+    }
+
+    @AfterTest
+    public void cleanUpActionXml() throws IOException {
+        //Needed since oozie writes action xml to current directory.
+        FileUtils.deleteQuietly(new File("action.xml"));
+        FileUtils.deleteQuietly(new File(".action.xml.crc"));
+    }
+
+    protected FalconUnitClient getClient() throws FalconException {
+        return FalconUnit.getClient();
+    }
+
+    protected JailedFileSystem getFileSystem() throws IOException {
+        return fs;
+    }
+
+    public boolean submitCluster(String colo, String cluster,
+                                 Map<String, String> props) throws IOException, FalconCLIException {
+        props = updateColoAndCluster(colo, cluster, props);
+        fs.mkdirs(new Path(STAGING_PATH), HadoopClientFactory.ALL_PERMISSION);
+        fs.mkdirs(new Path(WORKING_PATH), HadoopClientFactory.READ_EXECUTE_PERMISSION);
+        String clusterXmlPath = overlayParametersOverTemplate(CLUSTER_TEMPLATE, props);
+        APIResult result = falconUnitClient.submit(CLUSTER, clusterXmlPath);
+        return true ? APIResult.Status.SUCCEEDED.equals(result.getStatus()) : false;
+    }
+
+    public boolean submitCluster() throws IOException, FalconCLIException {
+        return submitCluster(DEFAULT_COLO, DEFAULT_CLUSTER, null);
+    }
+
+    public APIResult submit(EntityType entityType, String filePath) throws FalconCLIException, IOException {
+        return submit(entityType.toString(), filePath);
+    }
+
+    public APIResult submit(String entityType, String filePath) throws FalconCLIException, IOException {
+        return falconUnitClient.submit(entityType, filePath);
+    }
+
+    public APIResult submitProcess(String filePath, String appDirectory) throws IOException, FalconCLIException {
+        createDir(appDirectory);
+        return submit(EntityType.PROCESS, filePath);
+    }
+
+    public APIResult scheduleProcess(String processName, String startTime, int numInstances,
+                                   String cluster, String localWfPath) throws FalconException,
+            IOException, FalconCLIException {
+        Process processEntity = configStore.get(EntityType.PROCESS, processName);
+        if (processEntity == null) {
+            throw new FalconException("Process not found " + processName);
+        }
+        String workflowPath = processEntity.getWorkflow().getPath();
+        fs.copyFromLocalFile(new Path(localWfPath), new Path(workflowPath));
+        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster);
+    }
+
+    public APIResult scheduleProcess(String processName, String startTime, int numInstances,
+                                   String cluster) throws FalconException, FalconCLIException {
+        Process processEntity = configStore.get(EntityType.PROCESS, processName);
+        if (processEntity == null) {
+            throw new FalconException("Process not found " + processName);
+        }
+        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster);
+    }
+
+    private Map<String, String> updateColoAndCluster(String colo, String cluster, Map<String, String> props) {
+        if (props == null) {
+            props = new HashMap<>();
+        }
+        String coloProp = StringUtils.isEmpty(colo) ? DEFAULT_COLO : colo;
+        props.put(COLO, coloProp);
+
+        String clusterProp = StringUtils.isEmpty(cluster) ? DEFAULT_CLUSTER : cluster;
+        props.put(CLUSTER, clusterProp);
+
+        return props;
+    }
+
+    public static String overlayParametersOverTemplate(String template,
+                                                       Map<String, String> overlay) throws IOException {
+        File tmpFile = getTempFile();
+        OutputStream out = new FileOutputStream(tmpFile);
+
+        InputStreamReader in;
+        InputStream resourceAsStream = FalconUnitTestBase.class.getResourceAsStream(template);
+        if (resourceAsStream == null) {
+            in = new FileReader(template);
+        } else {
+            in = new InputStreamReader(resourceAsStream);
+        }
+        BufferedReader reader = new BufferedReader(in);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            Matcher matcher = VAR_PATTERN.matcher(line);
+            while (matcher.find()) {
+                String variable = line.substring(matcher.start(), matcher.end());
+                line = line.replace(variable, overlay.get(variable.substring(2, variable.length() - 2)));
+                matcher = VAR_PATTERN.matcher(line);
+            }
+            out.write(line.getBytes());
+            out.write("\n".getBytes());
+        }
+        reader.close();
+        out.close();
+        return tmpFile.getAbsolutePath();
+    }
+
+
+    public static File getTempFile() throws IOException {
+        return getTempFile("test", ".xml");
+    }
+
+    public static File getTempFile(String prefix, String suffix) throws IOException {
+        return getTempFile("target", prefix, suffix);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static File getTempFile(String path, String prefix, String suffix) throws IOException {
+        File f = new File(path);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+        return File.createTempFile(prefix, suffix, f);
+    }
+
+    /**
+     * Creates data in the feed path with the given timestamp.
+     *
+     * @param feedName
+     * @param cluster
+     * @param time
+     * @param inputFile
+     * @throws FalconException
+     * @throws ParseException
+     * @throws IOException
+     */
+    public void createData(String feedName, String cluster, String time,
+                           String inputFile) throws FalconException, ParseException, IOException {
+        String feedPath = getFeedPathForTS(cluster, feedName, time);
+        fs.mkdirs(new Path(feedPath));
+        fs.copyFromLocalFile(new Path(getAbsolutePath("/" + inputFile)), new Path(feedPath));
+    }
+
+    protected String getFeedPathForTS(String cluster, String feedName,
+                                      String timeStamp) throws FalconException, ParseException {
+        Entity existingEntity = configStore.get(EntityType.FEED, feedName);
+        if (existingEntity == null) {
+            throw new FalconException("Feed Not Found  " + feedName);
+        }
+        Feed feed = (Feed) existingEntity;
+        Storage rawStorage = FeedHelper.createStorage(cluster, feed);
+        String feedPathTemplate = rawStorage.getUriTemplate(LocationType.DATA);
+        Properties properties = ExpressionHelper.getTimeVariables(ExpressionHelper.FORMATTER.get().parse(timeStamp),
+                TimeZone.getTimeZone("UTC"));
+        String feedPath = ExpressionHelper.substitute(feedPathTemplate, properties);
+        return feedPath;
+    }
+
+
+    public String getAbsolutePath(String fileName) {
+        return this.getClass().getResource(fileName).getPath();
+    }
+
+    public void createDir(String path) throws IOException {
+        fs.mkdirs(new Path(path));
+    }
+
+    /**
+     * Wait for a condition, expressed via a {@link Predicate} to become true.
+     *
+     * @param timeout   maximum time in milliseconds to wait for the predicate to become true.
+     * @param predicate predicate waiting on.
+     * @return the waited time.
+     */
+    protected long waitFor(int timeout, Predicate predicate) {
+        long started = System.currentTimeMillis();
+        long mustEnd = System.currentTimeMillis() + timeout;
+        long lastEcho = 0;
+        try {
+            long waiting = mustEnd - System.currentTimeMillis();
+            LOG.info("Waiting up to [{}] msec", waiting);
+            while (!(predicate.evaluate()) && System.currentTimeMillis() < mustEnd) {
+                if ((System.currentTimeMillis() - lastEcho) > 5000) {
+                    waiting = mustEnd - System.currentTimeMillis();
+                    LOG.info("Waiting up to [{}] msec", waiting);
+                    lastEcho = System.currentTimeMillis();
+                }
+                Thread.sleep(5000);
+            }
+            if (!predicate.evaluate()) {
+                LOG.info("Waiting timed out after [{}] msec", timeout);
+            }
+            return System.currentTimeMillis() - started;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    protected long waitForStatus(final EntityType entityType, final String entityName, final String instanceTime) {
+        return waitFor(20000, new Predicate() {
+            public boolean evaluate() throws Exception {
+                InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(entityType,
+                        entityName, instanceTime);
+                return InstancesResult.WorkflowStatus.SUCCEEDED.equals(status);
+            }
+        });
+    }
+
+    public void assertStatus(APIResult apiResult) {
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, apiResult.getStatus());
+    }
+
+}

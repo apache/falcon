@@ -4,11 +4,15 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1297 Falcon Unit which supports Submit and Schedule of jobs(Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1039 Add instance dependency API in falcon (Ajay Yadava)
 
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1322 Add prefix in runtime.properties(Sandeep Samudrala via Ajay Yadava)
+
     FALCON-1317 Inconsistent JSON serialization(Ajay Yadava)
 
     FALCON-1324 Pagination API breaks backward compatibility(Ajay Yadava).
@@ -150,9 +154,7 @@ Release Version: 0.6.1
    FALCON-822 Add reverse look up API (Ajay Yadava via Suhas Vasu)
 
   IMPROVEMENTS
-   FALCON-1322 Add prefix in runtime.properties(Sandeep Samudrala via Ajay Yadava)
-
-   FALCON-1280 Update docs/license licenses with right copyright 
+   FALCON-1280 Update docs/license licenses with right copyright
    information (Shaik Idris Ali)
 
    FALCON-1276 Verify licensing in html5-ui module. 

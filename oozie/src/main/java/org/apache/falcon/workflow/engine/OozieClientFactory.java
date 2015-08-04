@@ -23,7 +23,11 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.workflow.util.OozieConstants;
+import org.apache.oozie.client.LocalProxyOozieClient;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.ProxyOozieClient;
+import org.apache.oozie.local.LocalOozie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +37,12 @@ import org.slf4j.LoggerFactory;
 public final class OozieClientFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(OozieClientFactory.class);
-    private static final String LOCAL_OOZIE = "local";
 
     private static volatile boolean localInitialized = false;
 
     private OozieClientFactory() {}
 
-    public static synchronized ProxyOozieClient get(Cluster cluster)
+    public static synchronized OozieClient get(Cluster cluster)
         throws FalconException {
 
         assert cluster != null : "Cluster cant be null";
@@ -48,28 +51,27 @@ public final class OozieClientFactory {
         return getClientRef(oozieUrl);
     }
 
-    public static ProxyOozieClient get(String clusterName) throws FalconException {
+    public static OozieClient get(String clusterName) throws FalconException {
         return get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
     }
 
-    private static ProxyOozieClient getClientRef(String oozieUrl)
+    private static OozieClient getClientRef(String oozieUrl)
         throws FalconException {
 
-        if (LOCAL_OOZIE.equals(oozieUrl)) {
+        if (OozieConstants.LOCAL_OOZIE.equals(oozieUrl)) {
             return getLocalOozieClient();
         } else {
             return new ProxyOozieClient(oozieUrl);
         }
     }
 
-    private static ProxyOozieClient getLocalOozieClient() throws FalconException {
+    private static OozieClient getLocalOozieClient() throws FalconException {
         try {
             if (!localInitialized) {
-                //LocalOozie.start();
+                LocalOozie.start();
                 localInitialized = true;
             }
-            //return LocalOozie.getClient();
-            return null;
+            return new LocalProxyOozieClient();
         } catch (Exception e) {
             throw new FalconException(e);
         }

@@ -32,6 +32,7 @@ import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 
@@ -49,11 +50,11 @@ public final class OozieTestUtils {
     private OozieTestUtils() {
     }
 
-    public static ProxyOozieClient getOozieClient(TestContext context) throws FalconException {
+    public static OozieClient getOozieClient(TestContext context) throws FalconException {
         return getOozieClient(context.getCluster().getCluster());
     }
 
-    public static ProxyOozieClient getOozieClient(Cluster cluster) throws FalconException {
+    public static OozieClient getOozieClient(Cluster cluster) throws FalconException {
         return OozieClientFactory.get(cluster);
     }
 
@@ -63,7 +64,7 @@ public final class OozieTestUtils {
             return bundles;
         }
 
-        ProxyOozieClient ozClient = OozieClientFactory.get(context.getCluster().getCluster());
+        OozieClient ozClient = OozieClientFactory.get(context.getCluster().getCluster());
         return ozClient.getBundleJobsInfo("name=FALCON_PROCESS_" + context.getProcessName(), 0, 10);
     }
 
@@ -72,7 +73,7 @@ public final class OozieTestUtils {
             return true;
         }
 
-        ProxyOozieClient ozClient = getOozieClient(context);
+        OozieClient ozClient = getOozieClient(context);
         List<BundleJob> bundles = getBundles(context);
         if (bundles != null) {
             for (BundleJob bundle : bundles) {
@@ -88,7 +89,7 @@ public final class OozieTestUtils {
     }
 
     public static void waitForInstanceToComplete(TestContext context, String jobId) throws Exception {
-        ProxyOozieClient ozClient = getOozieClient(context);
+        OozieClient ozClient = getOozieClient(context);
         String lastStatus = null;
         for (int i = 0; i < 50; i++) {
             WorkflowJob job = ozClient.getJobInfo(jobId);
@@ -117,7 +118,7 @@ public final class OozieTestUtils {
     }
 
     private static List<WorkflowJob> getRunningJobs(TestContext context, String entityName) throws Exception {
-        ProxyOozieClient ozClient = getOozieClient(context);
+        OozieClient ozClient = getOozieClient(context);
         return ozClient.getJobsInfo(
                 ProxyOozieClient.FILTER_STATUS + '=' + Job.Status.RUNNING + ';'
                         + ProxyOozieClient.FILTER_NAME + '=' + "FALCON_PROCESS_DEFAULT_" + entityName);
@@ -133,7 +134,7 @@ public final class OozieTestUtils {
     }
 
     public static void waitForBundleStart(TestContext context, String bundleId, Job.Status... status) throws Exception {
-        ProxyOozieClient ozClient = getOozieClient(context);
+        OozieClient ozClient = getOozieClient(context);
         Set<Job.Status> statuses = new HashSet<Job.Status>(Arrays.asList(status));
 
         Status bundleStatus = null;
@@ -162,7 +163,7 @@ public final class OozieTestUtils {
     }
 
     public static WorkflowJob getWorkflowJob(Cluster cluster, String filter) throws Exception {
-        ProxyOozieClient ozClient = getOozieClient(cluster);
+        OozieClient ozClient = getOozieClient(cluster);
 
         List<WorkflowJob> jobs;
         while (true) {

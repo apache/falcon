@@ -390,6 +390,7 @@
         <module>archival</module>
         <module>rerun</module>
         <module>prism</module>
+        <module>unit</module>
         <module>webapp</module>
         <module>docs</module>
     </modules>
