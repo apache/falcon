@@ -154,10 +154,9 @@
             </xs:element>
             <xs:element type="retry" name="retry" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Retry defines how to handle workflow failures. Policy type - backoff, exponention
-                        backoff along with the delay define how frequenctly
-                        the
-                        workflow should be re-tried. Number of attempts define how many times to re-try the failures.
+                    <xs:documentation>Retry defines how to handle workflow failures. Policy type - periodic, exponential
+                        backoff, final along with the delay define how frequently the workflow should be re-tried. Number of
+                        attempts define how many times to re-try the failures.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
