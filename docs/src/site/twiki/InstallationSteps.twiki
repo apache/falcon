@@ -1,322 +1,76 @@
----++ Building & Installing Falcon
+---+Building & Installing Falcon
 
 
----+++ Building Falcon
+---++Building Falcon
+
+---+++Prerequisites
+
+   * JDK 1.7
+   * Maven 3.x
+
+
+
+---+++Step 1 - Clone the Falcon repository
 
 <verbatim>
-You would need the following installed to build Falcon
-
-* JDK 1.7
-* Maven 3.x
-
-git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
-
-cd falcon
-
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
-
-[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
-*Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
-[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie.
-Oozie versions >= 4 are supported]
-Falcon build with JDK 1.7 using -noverify option
-
+$git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 </verbatim>
 
-Once the build successfully completes, artifacts can be packaged for deployment. The package can be built in embedded or distributed mode.
 
-*Embedded Mode*
+---+++Step 2 - Build Falcon
+
 <verbatim>
-
-mvn clean assembly:assembly -DskipTests -DskipCheck=true
-
+$cd falcon
+$export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 </verbatim>
+It builds and installs the package into the local repository, for use as a dependency in other projects locally.
 
-Tar can be found in {project dir}/target/apache-falcon-${project.version}-bin.tar.gz
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of Hadoop]
 
-Tar is structured as follows
+*NOTE:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of Oozie. Oozie versions
+>= 4 are supported]
+NOTE: Falcon builds with JDK 1.7 using -noverify option
 
+
+
+---+++Step 3 - Package and Deploy Falcon
+
+Once the build successfully completes, artifacts can be packaged for deployment using the assembly plugin. The Assembly
+Plugin for Maven is primarily intended to allow users to aggregate the project output along with its dependencies,
+modules, site documentation, and other files into a single distributable archive. There are two basic ways in which you
+can deploy Falcon - Embedded mode(also known as Stand Alone Mode) and Distributed mode. Your next steps will vary based
+on the mode in which you want to deploy Falcon.
+
+*NOTE* : Oozie is being extended by Falcon (particularly on el-extensions) and hence the need for Falcon to build &
+re-package Oozie, so that users of Falcon can work with the right Oozie setup. Though Oozie is packaged by Falcon, it
+needs to be deployed separately by the administrator and is not auto deployed along with Falcon.
+
+
+---++++Embedded/Stand Alone Mode
+Embedded mode is useful when the Hadoop jobs and relevant data processing involve only one Hadoop cluster. In this mode
+ there is a single Falcon server that contacts the scheduler to schedule jobs on Hadoop. All the process/feed requests
+ like submit, schedule, suspend, kill etc. are sent to this server. For running Falcon in this mode one should use the
+ Falcon which has been built using standalone option. You can find the instructions for Embedded mode setup
+ [[Embedded-mode][here]].
+
+
+---++++Distributed Mode
+Distributed mode is for multiple (colos) instances of Hadoop clusters, and multiple workflow schedulers to handle them.
+In this mode Falcon has 2 components: Prism and Server(s). Both Prism and Server(s) have their own their own config
+locations(startup and runtime properties). In this mode Prism acts as a contact point for Falcon servers. While
+ all commands are available through Prism, only read and instance api's are available through Server. You can find the
+ instructions for Distributed Mode setup [[Distributed-mode][here]].
+
+
+
+---+++Preparing Oozie and Falcon packages for deployment
 <verbatim>
-
-|- bin
-   |- falcon
-   |- falcon-start
-   |- falcon-stop
-   |- falcon-config.sh
-   |- service-start.sh
-   |- service-stop.sh
-|- conf
-   |- startup.properties
-   |- runtime.properties
-   |- client.properties
-   |- log4j.xml
-   |- falcon-env.sh
-|- docs
-|- client
-   |- lib (client support libs)
-|- server
-   |- webapp
-      |- falcon.war
-|- hadooplibs
-|- README
-|- NOTICE.txt
-|- LICENSE.txt
-|- DISCLAIMER.txt
-|- CHANGES.txt
-</verbatim>
-
-*Distributed Mode*
-
-<verbatim>
-
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2
-
-</verbatim>
-
-Tar can be found in {project dir}/target/apache-falcon-distributed-${project.version}-server.tar.gz
-
-Tar is structured as follows
-
-<verbatim>
-
-|- bin
-   |- falcon
-   |- falcon-start
-   |- falcon-stop
-   |- falcon-config.sh
-   |- service-start.sh
-   |- service-stop.sh
-   |- prism-stop
-   |- prism-start
-|- conf
-   |- startup.properties
-   |- runtime.properties
-   |- client.properties
-   |- log4j.xml
-   |- falcon-env.sh
-|- docs
-|- client
-   |- lib (client support libs)
-|- server
-   |- webapp
-      |- falcon.war
-      |- prism.war
-|- hadooplibs
-|- README
-|- NOTICE.txt
-|- LICENSE.txt
-|- DISCLAIMER.txt
-|- CHANGES.txt
-</verbatim>
-
----+++ Installing & running Falcon
-
-*Installing falcon*
-<verbatim>
-tar -xzvf {falcon package}
-cd falcon-distributed-${project.version} or falcon-${project.version}
-</verbatim>
-
-*Configuring Falcon*
-
-By default config directory used by falcon is {package dir}/conf. To override this set environment variable FALCON_CONF to the path of the conf dir.
-
-falcon-env.sh has been added to the falcon conf. This file can be used to set various environment variables that you need for you services.
-In addition you can set any other environment variables you might need. This file will be sourced by falcon scripts before any commands are executed. The following environment variables are available to set.
-
-<verbatim>
-# The java implementation to use. If JAVA_HOME is not found we expect java and jar to be in path
-#export JAVA_HOME=
-
-# any additional java opts you want to set. This will apply to both client and server operations
-#export FALCON_OPTS=
-
-# any additional java opts that you want to set for client only
-#export FALCON_CLIENT_OPTS=
-
-# java heap size we want to set for the client. Default is 1024MB
-#export FALCON_CLIENT_HEAP=
-
-# any additional opts you want to set for prism service.
-#export FALCON_PRISM_OPTS=
-
-# java heap size we want to set for the prism service. Default is 1024MB
-#export FALCON_PRISM_HEAP=
-
-# any additional opts you want to set for falcon service.
-#export FALCON_SERVER_OPTS=
-
-# java heap size we want to set for the falcon server. Default is 1024MB
-#export FALCON_SERVER_HEAP=
-
-# What is is considered as falcon home dir. Default is the base location of the installed software
-#export FALCON_HOME_DIR=
-
-# Where log files are stored. Default is logs directory under the base install location
-#export FALCON_LOG_DIR=
-
-# Where pid files are stored. Default is logs directory under the base install location
-#export FALCON_PID_DIR=
-
-# where the falcon active mq data is stored. Default is logs/data directory under the base install location
-#export FALCON_DATA_DIR=
-
-# Where do you want to expand the war file. By Default it is in /server/webapp dir under the base install dir.
-#export FALCON_EXPANDED_WEBAPP_DIR=
-</verbatim>
-
-*Configuring Monitoring plugin to register catalog partitions*
-Falcon comes with a monitoring plugin that registers catalog partition. This comes in really handy during migration from filesystem based feeds to hcatalog based feeds.
-This plugin enables the user to de-couple the partition registration and assume that all partitions are already on hcatalog even before the migration, simplifying the hcatalog migration.
-
-By default this plugin is disabled.
-To enable this plugin and leverage the feature, there are 3 pre-requisites:
-
-<verbatim>
-In {package dir}/conf/startup.properties, add
-*.workflow.execution.listeners=org.apache.falcon.catalog.CatalogPartitionHandler
-
-In the cluster definition, ensure registry endpoint is defined.
-Ex:
-<interface type="registry" endpoint="thrift://localhost:1109" version="0.13.3"/>
-
-In the feed definition, ensure the corresponding catalog table is mentioned in feed-properties
-Ex:
-<properties>
-    <property name="catalog.table" value="catalog:default:in_table#year={YEAR};month={MONTH};day={DAY};hour={HOUR};minute={MINUTE}"/>
-</properties>
-</verbatim>
-
-*NOTE for Mac OS users*
-<verbatim>
-If you are using a Mac OS, you will need to configure the FALCON_SERVER_OPTS (explained above).
-
-In  {package dir}/conf/falcon-env.sh uncomment the following line
-#export FALCON_SERVER_OPTS=
-
-and change it to look as below
-export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
-</verbatim>
-
-*Starting Falcon Server*
-<verbatim>
-bin/falcon-start [-port <port>]
-</verbatim>
-
-By default,
-* If falcon.enableTLS is set to true explicitly or not set at all, falcon starts at port 15443 on https:// by default.
-* If falcon.enableTLS is set to false explicitly, falcon starts at port 15000 on http://.
-* To change the port, use -port option.
-   * If falcon.enableTLS is not set explicitly, port that ends with 443 will automatically put falcon on https://. Any other port will put falcon on http://.
-* falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
-   * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
-   * falcon.embeddedmq.port=<port> - Port for embedded active mq, default 61616
-   * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
-* falcon server starts with conf from {package dir}/conf. To override this (to use the same conf with multiple falcon upgrades), set environment variable FALCON_CONF to the path of conf dir
-
-__Adding Extension Libraries__
-Library extensions allows users to add custom libraries to entity lifecycles such as feed retention, feed replication and process execution. This is useful for usecases such as adding filesystem extensions. To enable this, add the following configs to startup.properties:
-*.libext.paths=<paths to be added to all entity lifecycles>
-*.libext.feed.paths=<paths to be added to all feed lifecycles>
-*.libext.feed.retentions.paths=<paths to be added to feed retention workflow>
-*.libext.feed.replication.paths=<paths to be added to feed replication workflow>
-*.libext.process.paths=<paths to be added to process workflow>
-
-The configured jars are added to falcon classpath and the corresponding workflows
-
-
-*Starting Prism*
-<verbatim>
-bin/prism-start [-port <port>]
-</verbatim>
-
-By default, 
-* prism server starts at port 16443. To change the port, use -port option
-   * falcon.enableTLS can be set to true or false explicitly to enable SSL, if not port that end with 443 will automatically put prism on https://
-* prism starts with conf from {package dir}/conf. To override this (to use the same conf with multiple prism upgrades), set environment variable FALCON_CONF to the path of conf dir
-
-*Using Falcon*
-<verbatim>
-bin/falcon admin -version
-Falcon server build version: {Version:"0.3-SNAPSHOT-rd7e2be9afa2a5dc96acd1ec9e325f39c6b2f17f7",Mode:"embedded"}
-
-----
-
-bin/falcon help
-(for more details about falcon cli usage)
-</verbatim>
-
-*Dashboard*
-
-Once falcon / prism is started, you can view the status of falcon entities using the Web-based dashboard. The web UI works in both distributed and embedded mode. You can open your browser at the corresponding port to use the web UI.
-
-Falcon dashboard makes the REST api calls as user "falcon-dashboard". If this user does not exist on your falcon and oozie servers, please create the user.
-
-<verbatim>
-## create user.
-[root@falconhost ~] useradd -U -m falcon-dashboard -G users
-
-## verify user is created with membership in correct groups.
-[root@falconhost ~] groups falcon-dashboard
-falcon-dashboard : falcon-dashboard users
-[root@falconhost ~]
-</verbatim>
-
-*Stopping Falcon Server*
-<verbatim>
-bin/falcon-stop
-</verbatim>
-
-*Stopping Prism*
-<verbatim>
-bin/prism-stop
-</verbatim>
-
----+++ Preparing Oozie and Falcon packages for deployment
-<verbatim>
-cd <<project home>>
-src/bin/package.sh <<hadoop-version>> <<oozie-version>>
+$cd <<project home>>
+$src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 
 >> ex. src/bin/package.sh 1.1.2 4.0.1 or src/bin/package.sh 0.20.2-cdh3u5 4.0.1
 >> ex. src/bin/package.sh 2.5.0 4.0.0
 >> Falcon package is available in <<falcon home>>/target/apache-falcon-<<version>>-bin.tar.gz
 >> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
 </verbatim>
-
----+++ Running Examples using embedded package
-<verbatim>
-bin/falcon-start
-</verbatim>
-Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/filesystem/standalone-cluster.xml
-The cluster locations,staging and working dirs, MUST be created prior to submitting a cluster entity to Falcon.
-*staging* must have 777 permissions and the parent dirs must have execute permissions
-*working* must have 755 permissions and the parent dirs must have execute permissions
-<verbatim>
-bin/falcon entity -submit -type cluster -file examples/entity/filesystem/standalone-cluster.xml
-</verbatim>
-Submit input and output feeds:
-<verbatim>
-bin/falcon entity -submit -type feed -file examples/entity/filesystem/in-feed.xml
-bin/falcon entity -submit -type feed -file examples/entity/filesystem/out-feed.xml
-</verbatim>
-Set-up workflow for the process:
-<verbatim>
-hadoop fs -put examples/app /
-</verbatim>
-Submit and schedule the process:
-<verbatim>
-bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/oozie-mr-process.xml
-bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/pig-process.xml
-</verbatim>
-Generate input data:
-<verbatim>
-examples/data/generate.sh <<hdfs endpoint>>
-</verbatim>
-Get status of instances:
-<verbatim>
-bin/falcon instance -status -type process -name oozie-mr-process -start 2013-11-15T00:05Z -end 2013-11-15T01:00Z
-</verbatim>
-
-HCat based example entities are in examples/entity/hcat.
-
-
