@@ -73,6 +73,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1369 Trunk build is broken(Ajay Yadava via Sowmya Ramesh)
+
     FALCON-1363 Fix retry policy example in documentation(Peeyush Bishnoi via Ajay Yadava)
 
     FALCON-1327 When using triage on a server for a process which does not exist on that server,
