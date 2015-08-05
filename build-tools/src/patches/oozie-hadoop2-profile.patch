@@ -1,0 +1,13 @@
+diff --git a/pom.xml b/pom.xml
+index 455a11d..ab4299c 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1785,7 +1785,7 @@
+         <profile>
+             <id>hadoop-2</id>
+             <activation>
+-                <activeByDefault>false</activeByDefault>
++                <activeByDefault>true</activeByDefault>
+             </activation>
+             <properties>
+                 <hadoop.version>2.4.0</hadoop.version>

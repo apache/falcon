@@ -57,6 +57,9 @@ patch -p0 < ../../build-tools/src/patches/oozie-site.patch
 case $VERSION in
 4.1.0 )
     ;;
+4.2.0 )
+    patch -p1 < ../../build-tools/src/patches/oozie-hadoop2-profile.patch
+    ;;
 esac
 
 rm `find . -name 'pom.xml.bak'`
