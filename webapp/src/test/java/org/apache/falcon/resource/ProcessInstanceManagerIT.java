@@ -30,7 +30,6 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
