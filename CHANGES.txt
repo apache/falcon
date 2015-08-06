@@ -11,6 +11,8 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1360 Size of feed should be humanized in feed instance listing(Sndeep Samudrala via Ajay Yadava)
+
     FALCON-1301 Improve documentation for Installation(Pragya Mittal via Ajay Yadava)
 
     FALCON-1322 Add prefix in runtime.properties(Sandeep Samudrala via Ajay Yadava)

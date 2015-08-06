@@ -32,6 +32,8 @@ public class FeedInstanceStatus {
 
     private long size = -1;
 
+    private String sizeH;
+
     private AvailabilityStatus status = AvailabilityStatus.MISSING;
 
     /**
@@ -72,9 +74,18 @@ public class FeedInstanceStatus {
         return size;
     }
 
+    public String getSizeH(){
+        return sizeH;
+    }
+
     public void setSize(long size) {
         this.size = size;
     }
+
+    public void setSizeH(String sizeH) {
+        this.sizeH = sizeH;
+    }
+
 
     public AvailabilityStatus getStatus() {
         return status;

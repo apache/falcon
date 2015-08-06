@@ -18,6 +18,8 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.commons.io.FileUtils;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -99,6 +101,9 @@ public class FeedInstanceResult extends APIResult {
         @XmlElement
         public long size;
 
+        @XmlElement
+        public String sizeH;
+
         public Instance() {
         }
 
@@ -130,6 +135,10 @@ public class FeedInstanceResult extends APIResult {
 
         public Long getSize() {
             return size;
+        }
+
+        public String getSizeH(){
+            return FileUtils.byteCountToDisplaySize(size);
         }
 
         @Override

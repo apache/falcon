@@ -733,6 +733,7 @@ public final class FeedHelper {
                 instance.creationTime = feedStatus.getCreationTime();
                 instance.uri = feedStatus.getUri();
                 instance.size = feedStatus.getSize();
+                instance.sizeH = feedStatus.getSizeH();
                 instances[index++] = instance;
             }
             result.setInstances(instances);
