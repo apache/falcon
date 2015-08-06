@@ -18,6 +18,8 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
@@ -32,6 +34,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 /**
@@ -257,6 +260,23 @@ public class InstanceManager extends AbstractInstanceManager {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
+    @POST
+    @Path("bulkRerun/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "bulk-re-run-instance")
+    @Override
+    public BulkRerunResult bulkRerunInstance(
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("start-time") @QueryParam("start") String startStr,
+            @Dimension("end-time") @QueryParam("end") String endStr,
+            @DefaultValue("") @QueryParam("filterBy") String filterBy,
+            @Context HttpServletRequest request,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles,
+            @Dimension("force") @QueryParam("force") Boolean isForced) {
+        return super.bulkRerunInstance(type, startStr, endStr, filterBy, request, colo,
+                lifeCycles, isForced);
+    }
 
     @GET
     @Path("dependencies/{type}/{entity}")

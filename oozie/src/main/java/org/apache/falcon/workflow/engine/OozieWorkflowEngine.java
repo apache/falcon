@@ -322,7 +322,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
 
         return Collections.max(bundles, new Comparator<BundleJob>() {
-            @Override public int compare(BundleJob o1, BundleJob o2) {
+            @Override
+            public int compare(BundleJob o1, BundleJob o2) {
                 return o1.getCreatedTime().compareTo(o2.getCreatedTime());
             }
         });
@@ -491,7 +492,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesResult killInstances(Entity entity, Date start, Date end,
                                          Properties props, List<LifeCycle> lifeCycles) throws FalconException {
-        return doJobAction(JobAction.KILL, entity, start, end, props, lifeCycles);
+        return doJobAction(JobAction.KILL, entity, start, end, props, lifeCycles, null);
+    }
+
+    @Override
+    public InstancesResult bulkRerunInstances(Entity entity, Date start, Date end,
+                                          Properties props, List<LifeCycle> lifeCycles,
+                                          Boolean isForced, Set<String> status) throws FalconException {
+        if (isForced != null && isForced) {
+            props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+        }
+        return doJobAction(JobAction.BULK_RERUN, entity, start, end, props, lifeCycles, status);
     }
 
     @Override
@@ -501,26 +512,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         if (isForced != null && isForced) {
             props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
         }
-        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles);
+        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles, null);
     }
 
     @Override
     public InstancesResult suspendInstances(Entity entity, Date start, Date end,
                                             Properties props, List<LifeCycle> lifeCycles) throws FalconException {
-        return doJobAction(JobAction.SUSPEND, entity, start, end, props, lifeCycles);
+        return doJobAction(JobAction.SUSPEND, entity, start, end, props, lifeCycles, null);
     }
 
     @Override
     public InstancesResult resumeInstances(Entity entity, Date start, Date end,
                                            Properties props, List<LifeCycle> lifeCycles) throws FalconException {
-        return doJobAction(JobAction.RESUME, entity, start, end, props, lifeCycles);
+        return doJobAction(JobAction.RESUME, entity, start, end, props, lifeCycles, null);
     }
 
     @Override
     public InstancesResult getStatus(Entity entity, Date start, Date end,
                                      List<LifeCycle> lifeCycles) throws FalconException {
 
-        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
+        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles, null);
     }
 
     @Override
@@ -533,11 +544,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesResult getInstanceParams(Entity entity, Date start, Date end,
                                              List<LifeCycle> lifeCycles) throws FalconException {
-        return doJobAction(JobAction.PARAMS, entity, start, end, null, lifeCycles);
+        return doJobAction(JobAction.PARAMS, entity, start, end, null, lifeCycles, null);
     }
 
     private static enum JobAction {
-        KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
+        KILL, SUSPEND, RESUME, RERUN, BULK_RERUN, STATUS, SUMMARY, PARAMS
     }
 
     private WorkflowJob getWorkflowInfo(String cluster, String wfId) throws FalconException {
@@ -549,7 +560,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
-                                        Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+                                        Properties props, List<LifeCycle> lifeCycles, Set<String> status) throws FalconException {
         Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end, lifeCycles);
         List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
         List<String> sourceClusterList = getIncludedClusters(props, FALCON_INSTANCE_SOURCE_CLUSTERS);
@@ -566,6 +577,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             List<CoordinatorAction> actions = entry.getValue();
             String sourceCluster = null;
             for (CoordinatorAction coordinatorAction : actions) {
+                if(action.equals(JobAction.BULK_RERUN)) {
+                    if(status!=null && status.size()>0) {
+                        if (!status.contains(coordinatorAction.getStatus().name())) {
+                            continue;
+                        }
+                    }
+                }
                 if (entity.getEntityType() == EntityType.FEED) {
                     sourceCluster = getSourceCluster(cluster, coordinatorAction, entity);
                     if (sourceClusterList.size() != 0 && !sourceClusterList.contains(sourceCluster)) {
@@ -780,6 +798,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             break;
 
         case RERUN:
+        case BULK_RERUN:
             if (jobInfo == null && COORD_RERUN_PRECOND.contains(coordinatorAction.getStatus())) {
                 //Coord action re-run
                 reRunCoordAction(cluster, coordinatorAction);
