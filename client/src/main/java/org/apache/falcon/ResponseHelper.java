@@ -140,8 +140,8 @@ public final class ResponseHelper {
                 sb.append(toAppend).append("\t");
 
                 toAppend =
-                    instance.getSize() != -1 ? String.valueOf(instance
-                        .getSize()) : "-";
+                    instance.getSize() != -1 ? instance
+                        .getSizeH() : "-";
                 sb.append(toAppend).append("\t");
 
                 toAppend =
