@@ -161,6 +161,10 @@ public abstract class AbstractEntityManager {
                 return getAllColos();
             }
 
+            if(StringUtils.isEmpty(name)) {
+                return getAllColos();
+            }
+
             return getApplicableColos(type, EntityUtil.getEntity(type, name));
         } catch (FalconException e) {
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);

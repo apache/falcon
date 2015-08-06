@@ -26,6 +26,7 @@ import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractInstanceManager;
+import org.apache.falcon.resource.BulkRerunResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -360,6 +361,31 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                         type, entity, startStr, endStr, bufferedRequest, colo, lifeCycles, isForced);
             }
         }.execute(colo, type, entity);
+    }
+
+    @POST
+    @Path("bulkRerun/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "bulk-re-run-instance")
+    @Override
+    public BulkRerunResult bulkRerunInstance(
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @DefaultValue("") @QueryParam("filterBy") final String filterBy,
+            @Context HttpServletRequest request,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
+            @Dimension("force") @QueryParam("force") final Boolean isForced) {
+
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new InstanceProxy<BulkRerunResult>(BulkRerunResult.class) {
+            @Override
+            protected BulkRerunResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("bulkRerunInstance",
+                        type, startStr, endStr, filterBy, bufferedRequest, colo, lifeCycles, isForced);
+            }
+        }.execute(colo, type, "");
     }
 
 

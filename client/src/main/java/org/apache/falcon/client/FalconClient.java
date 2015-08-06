@@ -33,6 +33,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.recipe.RecipeTool;
 import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.BulkRerunResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
@@ -240,6 +241,7 @@ public class FalconClient extends AbstractFalconClient {
         SUSPEND("api/instance/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RESUME("api/instance/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RERUN("api/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        BULK_RERUN("api/instance/bulkRerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -501,6 +503,30 @@ public class FalconClient extends AbstractFalconClient {
         }
         String temp = (buffer.length() == 0) ? null : buffer.toString();
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
+                getServletInputStream(clusters, sourceClusters, temp), null, colo, lifeCycles, isForced);
+    }
+
+    public BulkRerunResult bulkRerunInstance(String type, String start, String end, String filterBy, String filePath,
+                                             String colo, String clusters, String sourceClusters,
+                                             List<LifeCycle> lifeCycles, Boolean isForced)
+            throws FalconCLIException, IOException {
+
+        StringBuilder buffer = new StringBuilder();
+        if (filePath != null) {
+            BufferedReader in = null;
+            try {
+                in = new BufferedReader(new FileReader(filePath));
+
+                String str;
+                while ((str = in.readLine()) != null) {
+                    buffer.append(str).append("\n");
+                }
+            } finally {
+                IOUtils.closeQuietly(in);
+            }
+        }
+        String temp = (buffer.length() == 0) ? null : buffer.toString();
+        return sendBulkInstanceRequest(Instances.BULK_RERUN, type, start, end, filterBy,
                 getServletInputStream(clusters, sourceClusters, temp), null, colo, lifeCycles, isForced);
     }
 
@@ -779,6 +805,13 @@ public class FalconClient extends AbstractFalconClient {
     }
 
 
+    private BulkRerunResult sendBulkInstanceRequest(Instances instances, String type, String start, String end,
+                                                    String filterBy, InputStream props, String runid, String colo,
+                                                    List<LifeCycle> lifeCycles, Boolean isForced)
+            throws FalconCLIException {
+        return sendInstanceRequest(instances, type, "entityName", start, end, props,
+                runid, colo, lifeCycles, filterBy, "", "", 0, null, isForced).getEntity(BulkRerunResult.class);
+    }
 
     private ClientResponse sendInstanceRequest(Instances instances, String type, String entity,
                                        String start, String end, InputStream props, String runid, String colo,

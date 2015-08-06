@@ -20,6 +20,7 @@ package org.apache.falcon;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.resource.BulkRerunResult;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
@@ -226,6 +227,84 @@ public final class ResponseHelper {
                         sb.append(" ").append(action.getAction()).append("\t");
                         sb.append(action.getStatus()).append("\t")
                             .append(action.getLogFile()).append("\n");
+                    }
+                }
+            }
+        }
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(result.getMessage());
+        sb.append("Request Id: ").append(result.getRequestId());
+        return sb.toString();
+    }
+
+    public static String getString(BulkRerunResult result) {
+        StringBuilder sb = new StringBuilder();
+        String toAppend;
+
+        sb.append("Consolidated Status: ").append(result.getStatus())
+                .append("\n");
+
+        sb.append("\nInstances:\n");
+        sb.append("Instance\t\tCluster\t\tSourceCluster\t\tStatus\t\tStart\t\tEnd\t\tDetails\t\t\t\t\tLog\n");
+        sb.append("-----------------------------------------------------------------------------------------------\n");
+        if(result.getInstancesResultList()!=null && result.getInstancesResultList().size() > 0) {
+            for (InstancesResult instances : result.getInstancesResultList()) {
+                if (instances != null && instances.getInstances()!=null) {
+                    for (InstancesResult.Instance instance : instances.getInstances()) {
+
+                        toAppend =
+                                instance.getInstance() != null ? instance.getInstance()
+                                        : "-";
+                        sb.append(toAppend).append("\t");
+
+                        toAppend =
+                                instance.getCluster() != null ? instance.getCluster() : "-";
+                        sb.append(toAppend).append("\t");
+
+                        toAppend =
+                                instance.getSourceCluster() != null ? instance
+                                        .getSourceCluster() : "-";
+                        sb.append(toAppend).append("\t");
+
+                        toAppend =
+                                (instance.getStatus() != null ? instance.getStatus()
+                                        .toString() : "-");
+                        sb.append(toAppend).append("\t");
+
+                        toAppend = instance.getStartTime() != null
+                                ? SchemaHelper.formatDateUTC(instance.getStartTime()) : "-";
+                        sb.append(toAppend).append("\t");
+
+                        toAppend = instance.getEndTime() != null
+                                ? SchemaHelper.formatDateUTC(instance.getEndTime()) : "-";
+                        sb.append(toAppend).append("\t");
+
+                        toAppend = (!StringUtils.isEmpty(instance.getDetails()))
+                                ? instance.getDetails() : "-";
+                        sb.append(toAppend).append("\t");
+
+                        toAppend =
+                                instance.getLogFile() != null ? instance.getLogFile() : "-";
+                        sb.append(toAppend).append("\n");
+
+                        if (instance.getWfParams() != null) {
+                            InstancesResult.KeyValuePair[] props = instance.getWfParams();
+                            sb.append("Workflow params").append("\n");
+                            for (InstancesResult.KeyValuePair entry : props) {
+                                sb.append(entry.getKey()).append("=")
+                                        .append(entry.getValue()).append("\n");
+                            }
+                            sb.append("\n");
+                        }
+
+                        if (instance.actions != null) {
+                            sb.append("actions:\n");
+                            for (InstancesResult.InstanceAction action : instance.actions) {
+                                sb.append(" ").append(action.getAction()).append("\t");
+                                sb.append(action.getStatus()).append("\t")
+                                        .append(action.getLogFile()).append("\n");
+                            }
+                        }
                     }
                 }
             }

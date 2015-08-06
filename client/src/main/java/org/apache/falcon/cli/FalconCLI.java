@@ -37,6 +37,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.BulkRerunResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,6 +111,7 @@ public class FalconCLI {
     public static final String RUNNING_OPT = "running";
     public static final String KILL_OPT = "kill";
     public static final String RERUN_OPT = "rerun";
+    public static final String BULK_RERUN_OPT = "bulkRerun";
     public static final String LOG_OPT = "logs";
     public static final String RUNID_OPT = "runid";
     public static final String CLUSTERS_OPT = "clusters";
@@ -171,7 +173,7 @@ public class FalconCLI {
                 "Entity operations like submit, suspend, resume, delete, status, definition, submitAndSchedule",
                 entityOptions(), false);
         parser.addCommand(INSTANCE_CMD, "",
-                "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
+                "Process instances operations like running, status, kill, suspend, resume, rerun, bulkRerun, logs",
                 instanceOptions(), false);
         parser.addCommand(METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
@@ -320,6 +322,19 @@ public class FalconCLI {
                         .rerunInstances(type, entity, start, end, filePath, colo,
                                 clusters, sourceClusters,
                                 lifeCycles, isForced));
+        } else if (optionsList.contains(BULK_RERUN_OPT)) {
+            validateNotEmpty(start, START_OPT);
+            validateNotEmpty(end, END_OPT);
+            validateFilterBy(filterBy, "bulkRerun");
+            boolean isForced = false;
+            if (optionsList.contains(FORCE_RERUN_FLAG)) {
+                isForced = true;
+            }
+            result =
+                    ResponseHelper.getString(client
+                            .bulkRerunInstance(type, start, end, filterBy, filePath, colo,
+                                    clusters, sourceClusters,
+                                    lifeCycles, isForced));
         } else if (optionsList.contains(LOG_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
@@ -363,8 +378,9 @@ public class FalconCLI {
     private void validateInstanceCommands(Set<String> optionsList,
                                           String entity, String type,
                                           String colo) throws FalconCLIException {
-
-        validateNotEmpty(entity, ENTITY_NAME_OPT);
+        if (!optionsList.contains(BULK_RERUN_OPT)) {
+            validateNotEmpty(entity, ENTITY_NAME_OPT);
+        }
         validateNotEmpty(type, ENTITY_TYPE_OPT);
         validateNotEmpty(colo, COLO_OPT);
 
@@ -387,8 +403,17 @@ public class FalconCLI {
         }
 
         if (optionsList.contains(FORCE_RERUN_FLAG)) {
-            if (!optionsList.contains(RERUN_OPT)) {
-                throw new FalconCLIException("Force option can be used only with instance rerun");
+            if (!optionsList.contains(RERUN_OPT) && !optionsList.contains(BULK_RERUN_OPT)) {
+                throw new FalconCLIException("Force option can be used only with instance rerun and bulkRerun");
+            }
+        }
+
+        if (optionsList.contains(BULK_RERUN_OPT)) {
+            if(!optionsList.contains(FILTER_BY_OPT)) {
+                throw new FalconCLIException("FilterBy option must be used with instance bulk-rerun");
+            }
+            if(optionsList.contains(ENTITY_NAME_OPT)) {
+                throw new FalconCLIException("EntityName option cannot be used with instance bulk-rerun");
             }
         }
     }
@@ -589,6 +614,8 @@ public class FalconCLI {
                     InstancesResult.InstanceFilterFields.valueOf(tempKeyVal[0].toUpperCase());
                 }else if (filterType.equals("summary")) {
                     InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(tempKeyVal[0].toUpperCase());
+                } else if(filterType.equals("bulkRerun")) {
+                    BulkRerunResult.BulkRerunFilterFields.valueOf(tempKeyVal[0].toUpperCase());
                 } else {
                     throw new IllegalArgumentException("Invalid API call");
                 }
@@ -793,6 +820,12 @@ public class FalconCLI {
                 "Reruns process instances for a given process in the range start time and "
                         + "optional end time and overrides properties present in job.properties file");
 
+        Option bulkRerun = new Option(
+                BULK_RERUN_OPT,
+                false,
+                "Reruns process instances for all the given process in the range start time and "
+                        + "optional end time and overrides properties present in job.properties file");
+
         Option logs = new Option(
                 LOG_OPT,
                 false,
@@ -828,6 +861,7 @@ public class FalconCLI {
         group.addOption(suspend);
         group.addOption(resume);
         group.addOption(rerun);
+        group.addOption(bulkRerun);
         group.addOption(logs);
         group.addOption(params);
         group.addOption(listing);

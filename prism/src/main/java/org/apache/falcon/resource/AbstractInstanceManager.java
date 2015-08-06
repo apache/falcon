@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -313,7 +314,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         // Sort the ArrayList using orderBy
         instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
         result.setCollection(instanceSet.subList(
-                offset, (offset+pageCount)).toArray(new Instance[pageCount]));
+                offset, (offset + pageCount)).toArray(new Instance[pageCount]));
         return result;
     }
 
@@ -813,6 +814,119 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    public BulkRerunResult bulkRerunInstance(String type, String startStr, String endStr, String filterBy,
+                                             HttpServletRequest request, String colo, List<LifeCycle> lifeCycles,
+                                             Boolean isForced) {
+        checkColo(colo);
+        checkType(type);
+        try {
+            boolean invalidFilter = false;
+            Set<String> entity = new HashSet<>();
+            Set<String> status = new HashSet<>();
+            Set<String> tag = new HashSet<>();
+            Map<String, String> tagMap = new HashMap<>();
+            Set<String> pipeline = new HashSet<>();
+            List<InstancesResult> instancesFinalResult = new ArrayList<>();
+            if(!StringUtils.isEmpty(filterBy)) {
+                for (String filter : filterBy.split(",")) {
+                    if (filter.split(":").length != 2) {
+                        invalidFilter = true;
+                        break;
+                    }
+                    String filterKey = filter.split(":")[0].toUpperCase();
+                    String filterValue = filter.split(":")[1];
+                    if (filterKey.equals("STATUS")) {
+                        status.add(filterValue.toUpperCase());
+                    } else if (filterKey.equals("TAGS")) {
+                        if(filterValue.split("=").length!=2) {
+                            invalidFilter=true;
+                            break;
+                        }
+                        String[] splitTag = filterValue.split("=");
+                        if(tagMap.get(splitTag[0])!=null) {
+                            if(!tagMap.get(splitTag[0]).equals(splitTag[1])) {
+                                invalidFilter = true;
+                                break;
+                            }
+                        } else {
+                            tagMap.put(splitTag[0], splitTag[1]);
+                            tag.add(filterValue);
+                        }
+                    } else if (filterKey.equals("PIPELINES")) {
+                        pipeline.add(filterValue);
+                    } else if(filterKey.equals("NAME")) {
+                        entity.add(filterValue);
+                    } else {
+                        invalidFilter = true;
+                        break;
+                    }
+                }
+            }
+            if(invalidFilter) {
+                throw FalconWebException.newInstanceException("Invalid filterBy for instance rerun",
+                        Response.Status.BAD_REQUEST);
+            }
+
+            lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
+            validateNotEmpty(type, type);
+            EntityType entityType;
+            try {
+                entityType = EntityType.getEnum(type);
+            } catch (IllegalArgumentException e) {
+                throw new FalconException("Invalid entity type: " + type, e);
+            }
+            Collection<String> entities = new ArrayList<>();
+            if(entity.size() > 0) {
+                for(String name : entity) {
+                    entities.add(name);
+                }
+            } else {
+                entities = ConfigurationStore.get().getEntities(entityType);
+            }
+            for(String entityName : entities) {
+                Entity entityObject = EntityUtil.getEntity(type, entityName);
+                boolean pipelineFilter = true;
+                boolean tagFilter = true;
+                if (entityObject.getEntityType().equals(EntityType.PROCESS)) {
+                    String entityObjectPipelines = ((Process) (entityObject)).getPipelines();
+                    for (String value : pipeline) {
+                        if (entityObjectPipelines==null || !entityObjectPipelines.contains(value)) {
+                            LOG.warn("Pipeline: {} is not present in entityPipelines: {}", value,
+                                    entityObjectPipelines);
+                            pipelineFilter = false;
+                        }
+                    }
+                }
+                if(pipelineFilter) {
+                    String entityObjectTags = entityObject.getTags();
+                    for (String value : tag) {
+                        if (entityObjectTags == null || !entityObjectTags.contains(value)) {
+                            LOG.warn("Tag: {} is not present in entityTags: {}", value, entityObjectTags);
+                            tagFilter = false;
+                        }
+                    }
+                }
+                if(!(pipelineFilter && tagFilter)) {
+                    continue;
+                }
+                Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
+                        entityObject, startStr, endStr);
+                Properties props = getProperties(request);
+                AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+                InstancesResult instancesResult = wfEngine.bulkRerunInstances(entityObject, startAndEndDate.first, startAndEndDate.second,
+                        props, lifeCycles, isForced, status);
+                instancesFinalResult.add(instancesResult);
+            }
+            BulkRerunResult rerunResult = new BulkRerunResult(APIResult.Status.SUCCEEDED, "BulkRerun Succeeded");
+            rerunResult.setInstancesResultList(instancesFinalResult);
+            return rerunResult;
+
+        } catch (Exception e) {
+            LOG.error("Failed to rerun instances", e);
+            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        }
+    }
 
     private Properties getProperties(HttpServletRequest request) throws IOException {
         Properties props = new Properties();

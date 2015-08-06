@@ -76,6 +76,10 @@ public abstract class AbstractWorkflowEngine {
     public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
                                                    List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException;
 
+    public abstract InstancesResult bulkRerunInstances(Entity entity, Date start, Date end, Properties props,
+                                                   List<LifeCycle> lifeCycles, Boolean isForced, Set<String> status)
+            throws FalconException;
+
     public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props,
                                                      List<LifeCycle> lifeCycles) throws FalconException;
 
