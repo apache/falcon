@@ -116,12 +116,10 @@ public abstract class AbstractEntityManager {
     }
 
     protected void checkColo(String colo) {
-        if (StringUtils.isNotEmpty(colo) && !colo.equals("*")) {
-            if (!DeploymentUtil.getCurrentColo().equals(colo)) {
-                throw FalconWebException.newException(
-                        "Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
-                        Response.Status.BAD_REQUEST);
-            }
+        if (!DeploymentUtil.getCurrentColo().equals(colo)) {
+            throw FalconWebException.newException(
+                    "Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
+                    Response.Status.BAD_REQUEST);
         }
     }
 
