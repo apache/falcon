@@ -191,7 +191,7 @@ public class FeedDelayTest extends BaseTestClass {
         //Adding data to empty folders
         for (String location : missingDependencies) {
             LOGGER.info("Transferring data to : " + location);
-            HadoopUtil.copyDataToFolder(sourceFS, location, OSUtil.concat(OSUtil.RESOURCES, "dataFile.xml"));
+            HadoopUtil.copyDataToFolder(sourceFS, location, OSUtil.concat(OSUtil.NORMAL_INPUT, "dataFile.xml"));
         }
         return missingDependencies;
     }
