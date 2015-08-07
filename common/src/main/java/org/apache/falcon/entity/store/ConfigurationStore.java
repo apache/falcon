@@ -49,6 +49,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Persistent store for falcon entities.
@@ -145,25 +148,54 @@ public final class ConfigurationStore implements FalconService {
         }
 
         if (shouldPersist) {
-            try {
-                for (EntityType type : ENTITY_LOAD_ORDER) {
-                    ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
-                    FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
-                    if (files != null) {
-                        for (FileStatus file : files) {
-                            String fileName = file.getPath().getName();
-                            String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
-                            // ".xml"
-                            String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
-                            Entity entity = restore(type, entityName);
-                            entityMap.put(entityName, entity);
-                            onReload(entity);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                throw new FalconException("Unable to restore configurations", e);
+            for (final EntityType type : ENTITY_LOAD_ORDER) {
+                loadEntity(type);
             }
+        }
+    }
+
+    private void loadEntity(final EntityType type) throws FalconException {
+        try {
+            final ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
+            FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
+            if (files != null) {
+                final ExecutorService service = Executors.newFixedThreadPool(100);
+                for (final FileStatus file : files) {
+                    service.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                String fileName = file.getPath().getName();
+                                String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
+                                // ".xml"
+                                String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
+                                Entity entity = restore(type, entityName);
+                                entityMap.put(entityName, entity);
+                            } catch (IOException | FalconException e) {
+                                LOG.error("Unable to restore entity of", file);
+                            }
+                        }
+                    });
+                }
+                service.shutdown();
+                if (service.awaitTermination(10, TimeUnit.MINUTES)) {
+                    LOG.info("Restored Configurations for entity type: {} ", type.name());
+                } else {
+                    LOG.warn("Time out happened while waiting for all threads to finish while restoring entities "
+                            + "for type: {}", type.name());
+                }
+                // Checking if all entities were loaded
+                if (entityMap.size() != files.length) {
+                    throw new FalconException("Unable to restore configurations for entity type " + type.name());
+                }
+                for (Entity entity : entityMap.values()){
+                    onReload(entity);
+                }
+            }
+        } catch (IOException e) {
+            throw new FalconException("Unable to restore configurations", e);
+        } catch (InterruptedException e) {
+            throw new FalconException("Failed to restore configurations in 10 minutes for entity type " + type.name());
         }
     }
 
