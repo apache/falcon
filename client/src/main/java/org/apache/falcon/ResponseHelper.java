@@ -29,6 +29,7 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.TriageResult;
 
 import java.util.Date;
+import java.util.Formatter;
 import java.util.Map;
 
 /**
@@ -121,39 +122,21 @@ public final class ResponseHelper {
             .append("\n");
 
         sb.append("\nInstances:\n");
-        sb.append("Cluster\t\tInstance\t\tStatus\t\tSize\t\tCreationTime\t\tDetails\n");
+        Formatter formatter = new Formatter(sb);
+        formatter.format("%-16s%-20s%-16s%-16s%-20s%-16s", "Cluster", "Instance", "Status", "Size", "CreationTime",
+                "Details");
+        sb.append("\n");
         sb.append("-----------------------------------------------------------------------------------------------\n");
         if (result.getInstances() != null) {
             for (FeedInstanceResult.Instance instance : result.getInstances()) {
-
-                toAppend =
-                    instance.getCluster() != null ? instance.getCluster() : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getInstance() != null ? instance.getInstance()
-                        : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getStatus() != null ? instance.getStatus() : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getSize() != -1 ? instance
-                        .getSizeH() : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    instance.getCreationTime() != 0
-                        ? SchemaHelper.formatDateUTC(new Date(instance
-                            .getCreationTime())) : "-";
-                sb.append(toAppend).append("\t");
-
-                toAppend =
-                    StringUtils.isEmpty(instance.getUri()) ? "-" : instance
-                        .getUri();
-                sb.append(toAppend).append("\n");
+                formatter.format("%-16s", instance.getCluster() != null ? instance.getCluster() : "-");
+                formatter.format("%-20s", instance.getInstance() != null ? instance.getInstance() : "-");
+                formatter.format("%-16s", instance.getStatus() != null ? instance.getStatus() : "-");
+                formatter.format("%-16s", instance.getSize() != -1 ? instance.getSizeH() : "-");
+                formatter.format("%-20s", instance.getCreationTime() != 0
+                        ? SchemaHelper.formatDateUTC(new Date(instance.getCreationTime())) : "-");
+                formatter.format("%-16s", StringUtils.isEmpty(instance.getUri()) ? "-" : instance.getUri());
+                sb.append("\n");
             }
         }
         sb.append("\nAdditional Information:\n");
