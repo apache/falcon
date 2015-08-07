@@ -11,6 +11,8 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1368 Improve Falcon server restart time(Sandeep Samudrala via Ajay Yadava)
+
     FALCON-1361 Default end date should be now(Pragya Mittal via Ajay Yadava)
 
     FALCON-1362 Colo option shouldn't be mandatory(Sandeep Samudrala via Ajay Yadava)
