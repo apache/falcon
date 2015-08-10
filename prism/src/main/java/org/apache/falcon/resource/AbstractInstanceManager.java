@@ -662,7 +662,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             LOG.error("Failed to triage", e);
-            throw FalconWebException.newTriageResultException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
         }
     }
 

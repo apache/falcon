@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Resut for instance triage.
  */
-@XmlRootElement(name = "result")
+@XmlRootElement(name = "triage")
 @XmlAccessorType(XmlAccessType.FIELD)
 @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class TriageResult extends APIResult {

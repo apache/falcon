@@ -11,6 +11,7 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+
     FALCON-1359 Improve output format for Feed Instance Listing(Ajay Yadava)
 
     FALCON-1368 Improve Falcon server restart time(Sandeep Samudrala via Ajay Yadava)
@@ -83,6 +84,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1380 Triage Result throws incorrect error message on prism for an invalid process instance(Ajay Yadava)
+
     FALCON-1310 Falcon build fails with Oozie-4.2.0(Peeyush Bishnoi via Sowmya Ramesh)
 
     FALCON-1369 Trunk build is broken(Ajay Yadava via Sowmya Ramesh)
