@@ -381,6 +381,7 @@ public class FeedEvictorTest {
 
             String feedBasePathString = "/data/YYYY/feed1/mmHH/dd/MM/";
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
             generateInstances(fs, "feed1", dateFormat.toPattern(), 12, TimeUnit.DAYS, "/data", false);
 
             final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
