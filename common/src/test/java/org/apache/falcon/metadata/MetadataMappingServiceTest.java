@@ -478,6 +478,8 @@ public class MetadataMappingServiceTest {
 
     @Test
     public void testLineageForTransactionFailure() throws Exception {
+        cleanUp();
+        service.init();
         clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
                 "classification=production");
         verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY);
