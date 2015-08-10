@@ -76,12 +76,12 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     private final String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(alwaysRun = false)
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(alwaysRun = false)
     public void setup() throws IOException {
         final Bundle bundle = BundleUtil.readFeedReplicationBundle();
         bundles[0] = new Bundle(bundle, cluster1);
@@ -97,12 +97,47 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
     }
 
-    @AfterMethod(alwaysRun = true)
+    @AfterMethod(alwaysRun = false)
     public void tearDown() {
         removeTestClassEntities();
+        removeBundles(processBundle);
     }
 
-    @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
+    public void invalidCharProcess()
+        throws JAXBException, IOException, URISyntaxException,
+        AuthenticationException, OozieClientException, InterruptedException {
+        processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(0),
+            TimeUtil.getTimeWrtSystemTime(20));
+        processBundle.submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
+        String oldProcess =
+            processBundle.getProcessData();
+        processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(5),
+            TimeUtil.getTimeWrtSystemTime(100));
+        ServiceResponse r = prism.getProcessHelper().update(oldProcess,
+            processBundle.getProcessData(), "abc", null);
+        Assert.assertTrue(r.getMessage()
+            .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
+    }
+
+    @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
+    public void invalidCharFeed()
+        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+        OozieClientException, InterruptedException {
+
+        String feed = submitAndScheduleFeed(processBundle);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
+
+        //update frequency
+        Frequency f = new Frequency("" + 21, Frequency.TimeUnit.minutes);
+        String updatedFeed = InstanceUtil.setFeedFrequency(feed, f);
+        ServiceResponse r = prism.getFeedHelper().update(feed, updatedFeed, "abc", null);
+        Assert.assertTrue(r.getMessage()
+            .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
+    }
+
+    @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
     public void updateTimeInPastProcess()
         throws JAXBException, IOException, URISyntaxException,
         OozieClientException, AuthenticationException, InterruptedException {
@@ -133,7 +168,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             processBundle.getProcessData(), true, true);
     }
 
-    @Test(groups = {"MultiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"MultiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
     public void updateTimeInPastFeed()
         throws JAXBException, IOException, OozieClientException,
         URISyntaxException, AuthenticationException, InterruptedException {
@@ -163,7 +198,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(cluster3OC, updatedFeed.getName(), "RETENTION"), 2);
     }
 
-    @Test(groups = {"MultiCluster", "0.3.1", "distributed"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"MultiCluster", "0.3.1", "distributed"}, timeOut = 1200000, enabled = false)
     public void inNextFewMinutesUpdateRollForwardProcess()
         throws JAXBException, IOException, URISyntaxException, JSchException,
         OozieClientException, SAXException, AuthenticationException, InterruptedException {
@@ -259,7 +294,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         }
     }
 
-    @Test(groups = {"MultiCluster", "0.3.1", "distributed"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"MultiCluster", "0.3.1", "distributed"}, timeOut = 1200000, enabled = false)
     public void inNextFewMinutesUpdateRollForwardFeed()
         throws JAXBException, IOException, URISyntaxException, JSchException,
         OozieClientException, SAXException, AuthenticationException, InterruptedException {
@@ -328,7 +363,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         }
     }
 
-    @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
     public void updateTimeAfterEndTimeProcess()
         throws JAXBException, InterruptedException, IOException, URISyntaxException,
         OozieClientException, AuthenticationException {
@@ -367,7 +402,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             oldProcess, true, true);
     }
 
-    @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
     public void updateTimeAfterEndTimeFeed()
         throws JAXBException, IOException, OozieClientException,
         URISyntaxException, AuthenticationException, InterruptedException {
@@ -409,7 +444,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         OozieUtil.verifyNewBundleCreation(cluster1OC, oldBundleID, null, feed, true, false);
     }
 
-    @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
     public void updateTimeBeforeStartTimeProcess() throws JAXBException, IOException,
         URISyntaxException, OozieClientException, AuthenticationException,
         InterruptedException {
@@ -437,7 +472,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             oldProcess, true, false);
     }
 
-    @Test(groups = {"MultiCluster", "0.3.1"}, timeOut = 1200000, enabled = true)
+    @Test(groups = {"MultiCluster", "0.3.1"}, timeOut = 1200000, enabled = false)
     public void updateDiffClusterDiffValidityProcess()
         throws JAXBException, IOException, URISyntaxException, OozieClientException,
         AuthenticationException, InterruptedException {
