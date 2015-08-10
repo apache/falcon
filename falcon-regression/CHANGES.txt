@@ -362,6 +362,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1002 Disable UpdateAtSpecific time test from falcon regression(Samarth Gupta via Ajay Yadava)
+
    FALCON-1376 Fixing FeedDelayTest(Pragya Mittal via Ajay Yadava)
 
    FALCON-1332 Fortify ClusterSetupTest#testRegistryInterface - if checkbox wasn't clicked repeat an attempt
