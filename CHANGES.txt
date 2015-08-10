@@ -11,6 +11,7 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1379 Doc describes retention incorrectly(Ajay Yadava)
 
     FALCON-1359 Improve output format for Feed Instance Listing(Ajay Yadava)
 

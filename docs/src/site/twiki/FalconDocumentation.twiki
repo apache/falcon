@@ -252,17 +252,17 @@ feed/data xml in the following manner for each cluster the feed can belong to :
 </verbatim>
 
 The 'limit' attribute can be specified in units of minutes/hours/days/months, and a corresponding numeric value can
-be attached to it. It essentially instructs the system to retain data spanning from the current moment to the time specified
-in the attribute spanning backwards in time. Any data beyond the limit (past/future) is erased from the system.
+be attached to it. It essentially instructs the system to retain data till the time specified
+in the attribute spanning backwards in time, from now. Any data older than that is erased from the system.
 
 With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
 
 ---+++ Example:
 If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
-one in range [t-10h, t]. Any data before t-10h and after t is removed from the system.
+one after or equal to t-10h . Any data before t-10h is removed from the system.
 
-The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is either
-deleted/archived.
+The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is
+either deleted/archived.
 
 ---+++ NOTE: Falcon 0.1/0.2 releases support Delete operation only
 
