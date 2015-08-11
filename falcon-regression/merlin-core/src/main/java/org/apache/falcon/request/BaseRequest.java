@@ -20,7 +20,7 @@ package org.apache.falcon.request;
 
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
-import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
+import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.security.FalconAuthorizationToken;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -59,6 +59,7 @@ import java.util.List;
 /** Class for making rest requests. */
 public class BaseRequest {
 
+    private static final boolean AUTHENTICATE = setAuthenticate();
     private static final Logger LOGGER = Logger.getLogger(BaseRequest.class);
 
     private String method;
@@ -102,6 +103,12 @@ public class BaseRequest {
         target = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
         this.headers = new ArrayList<>();
         this.requestData = data;
+    }
+
+    private static boolean setAuthenticate() {
+        String value = Config.getProperty("isAuthenticationSet");
+        value = (null == value) ? "true" : value;
+        return !value.equalsIgnoreCase("false");
     }
 
     public void addHeader(String name, String value) {
@@ -149,7 +156,7 @@ public class BaseRequest {
         /*get the token and add it to the header.
         works in secure and un secure mode.*/
         AuthenticatedURL.Token token;
-        if (AbstractEntityHelper.AUTHENTICATE) {
+        if (AUTHENTICATE) {
             token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
                     uri.getHost(), uri.getPort());
             request.addHeader(RequestKeys.COOKIE, RequestKeys.AUTH_COOKIE_EQ + token);
@@ -179,7 +186,7 @@ public class BaseRequest {
             Header[] wwwAuthHeaders = response.getHeaders(RequestKeys.WWW_AUTHENTICATE);
             if (wwwAuthHeaders != null && wwwAuthHeaders.length != 0
                 && wwwAuthHeaders[0].getValue().trim().startsWith(RequestKeys.NEGOTIATE)) {
-                if (AbstractEntityHelper.AUTHENTICATE) {
+                if (AUTHENTICATE) {
                     token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
                         uri.getHost(), uri.getPort(), true);
                     request.removeHeaders(RequestKeys.COOKIE);

@@ -55,14 +55,85 @@ import java.util.List;
 /** Abstract class for helper classes. */
 public abstract class AbstractEntityHelper {
 
-    public static final boolean AUTHENTICATE = setAuthenticate();
-
     private static final Logger LOGGER = Logger.getLogger(AbstractEntityHelper.class);
 
-    private static boolean setAuthenticate() {
-        String value = Config.getProperty("isAuthenticationSet");
-        value = (null == value) ? "true" : value;
-        return !value.equalsIgnoreCase("false");
+    //basic properties
+    private String qaHost;
+    private String hostname = "";
+    private String username = "";
+    private String password = "";
+    private String hadoopLocation = "";
+    private String hadoopURL = "";
+    private String clusterReadonly = "";
+    private String clusterWrite = "";
+    private String oozieURL = "";
+    private String activeMQ = "";
+    private String storeLocation = "";
+    private String colo;
+    private String allColo;
+    private String coloName;
+    //hive jdbc
+    private String hiveJdbcUrl = "";
+    private String hiveJdbcUser = "";
+    private String hiveJdbcPassword = "";
+    private Connection hiveJdbcConnection;
+    //clients
+    private OozieClient oozieClient;
+    private String hcatEndpoint = "";
+    private HCatClient hCatClient;
+    private FileSystem hadoopFS;
+    //other properties
+    private String namenodePrincipal;
+    private String hiveMetaStorePrincipal;
+    private String identityFile;
+    private String serviceUser;
+    private String serviceStartCmd;
+    private String serviceStopCmd;
+    private String serviceStatusMsg;
+    private String serviceStatusCmd;
+
+    public AbstractEntityHelper(String prefix) {
+        if ((null == prefix) || prefix.isEmpty()) {
+            prefix = "";
+        } else {
+            prefix += ".";
+        }
+        this.qaHost = Config.getProperty(prefix + "qa_host");
+        this.hostname = Config.getProperty(prefix + "hostname");
+        this.username = Config.getProperty(prefix + "username", System.getProperty("user.name"));
+        this.password = Config.getProperty(prefix + "password", "");
+        this.hadoopLocation = Config.getProperty(prefix + "hadoop_location");
+        this.hadoopURL = Config.getProperty(prefix + "hadoop_url");
+        this.hcatEndpoint = Config.getProperty(prefix + "hcat_endpoint");
+        this.clusterReadonly = Config.getProperty(prefix + "cluster_readonly");
+        this.clusterWrite = Config.getProperty(prefix + "cluster_write");
+        this.oozieURL = Config.getProperty(prefix + "oozie_url");
+        this.activeMQ = Config.getProperty(prefix + "activemq_url");
+        this.storeLocation = Config.getProperty(prefix + "storeLocation");
+        this.allColo = "?colo=" + Config.getProperty(prefix + "colo", "*");
+        this.colo = (!Config.getProperty(prefix + "colo", "").isEmpty()) ? "?colo=" + Config
+            .getProperty(prefix + "colo") : "";
+        this.coloName = this.colo.contains("=") ? this.colo.split("=")[1] : "";
+        this.serviceStartCmd =
+            Config.getProperty(prefix + "service_start_cmd", "/etc/init.d/tomcat6 start");
+        this.serviceStopCmd = Config.getProperty(prefix + "service_stop_cmd",
+            "/etc/init.d/tomcat6 stop");
+        this.serviceUser = Config.getProperty(prefix + "service_user", null);
+        this.serviceStatusMsg = Config.getProperty(prefix + "service_status_msg",
+            "Tomcat servlet engine is running with pid");
+        this.serviceStatusCmd =
+            Config.getProperty(prefix + "service_status_cmd", "/etc/init.d/tomcat6 status");
+        this.identityFile = Config.getProperty(prefix + "identityFile",
+            System.getProperty("user.home") + "/.ssh/id_rsa");
+        this.hadoopFS = null;
+        this.oozieClient = null;
+        this.namenodePrincipal = Config.getProperty(prefix + "namenode.kerberos.principal", "none");
+        this.hiveMetaStorePrincipal = Config.getProperty(
+            prefix + "hive.metastore.kerberos.principal", "none");
+        this.hiveJdbcUrl = Config.getProperty(prefix + "hive.jdbc.url", "none");
+        this.hiveJdbcUser =
+            Config.getProperty(prefix + "hive.jdbc.user", System.getProperty("user.name"));
+        this.hiveJdbcPassword = Config.getProperty(prefix + "hive.jdbc.password", "");
     }
 
     public String getActiveMQ() {
@@ -105,7 +176,45 @@ public abstract class AbstractEntityHelper {
         return hcatEndpoint;
     }
 
-    protected HCatClient hCatClient;
+    public String getQaHost() {
+        return qaHost;
+    }
+
+    public String getIdentityFile() {
+        return identityFile;
+    }
+
+    public String getServiceUser() {
+        return serviceUser;
+    }
+
+    public String getServiceStopCmd() {
+        return serviceStopCmd;
+    }
+
+    public String getServiceStartCmd() {
+        return serviceStartCmd;
+    }
+
+    public String getColo() {
+        return colo;
+    }
+
+    public String getColoName() {
+        return coloName;
+    }
+
+    public abstract String getEntityType();
+
+    public abstract String getEntityName(String entity);
+
+    public String getNamenodePrincipal() {
+        return namenodePrincipal;
+    }
+
+    public String getHiveMetaStorePrincipal() {
+        return hiveMetaStorePrincipal;
+    }
 
     public HCatClient getHCatClient() {
         if (null == this.hCatClient) {
@@ -118,8 +227,6 @@ public abstract class AbstractEntityHelper {
         }
         return this.hCatClient;
     }
-
-    protected Connection hiveJdbcConnection;
 
     public Connection getHiveJdbcConnection() {
         if (null == hiveJdbcConnection) {
@@ -134,53 +241,12 @@ public abstract class AbstractEntityHelper {
         return hiveJdbcConnection;
     }
 
-    //basic properties
-    protected String qaHost;
-
-    public String getQaHost() {
-        return qaHost;
-    }
-
-    protected String hostname = "";
-    protected String username = "";
-    protected String password = "";
-    protected String hadoopLocation = "";
-    protected String hadoopURL = "";
-    protected String clusterReadonly = "";
-    protected String clusterWrite = "";
-    private String oozieURL = "";
-    protected String activeMQ = "";
-    protected String storeLocation = "";
-    protected String colo;
-    protected String allColo;
-    protected String coloName;
-    protected String serviceStartCmd;
-    protected String serviceStopCmd;
-    protected String serviceStatusCmd;
-    protected String hcatEndpoint = "";
-    protected String hiveJdbcUrl = "";
-    protected String hiveJdbcUser = "";
-    protected String hiveJdbcPassword = "";
-
-    public String getNamenodePrincipal() {
-        return namenodePrincipal;
-    }
-
-    public String getHiveMetaStorePrincipal() {
-        return hiveMetaStorePrincipal;
-    }
-
-    protected String namenodePrincipal;
-    protected String hiveMetaStorePrincipal;
-
     public OozieClient getOozieClient() {
         if (null == this.oozieClient) {
             this.oozieClient = OozieUtil.getClient(this.oozieURL);
         }
         return this.oozieClient;
     }
-
-    protected OozieClient oozieClient;
 
     public FileSystem getHadoopFS() throws IOException {
         if (null == this.hadoopFS) {
@@ -192,87 +258,7 @@ public abstract class AbstractEntityHelper {
         return this.hadoopFS;
     }
 
-    protected FileSystem hadoopFS;
-
-    public String getIdentityFile() {
-        return identityFile;
-    }
-
-    protected String identityFile;
-
-    protected String serviceStatusMsg;
-
-    public String getServiceUser() {
-        return serviceUser;
-    }
-
-    public String getServiceStopCmd() {
-        return serviceStopCmd;
-    }
-
-    public String getServiceStartCmd() {
-        return serviceStartCmd;
-    }
-
-    protected String serviceUser;
-
-    public String getColo() {
-        return colo;
-    }
-
-    public String getColoName() {
-        return coloName;
-    }
-
-    public AbstractEntityHelper(String prefix) {
-        if ((null == prefix) || prefix.isEmpty()) {
-            prefix = "";
-        } else {
-            prefix += ".";
-        }
-        this.qaHost = Config.getProperty(prefix + "qa_host");
-        this.hostname = Config.getProperty(prefix + "hostname");
-        this.username = Config.getProperty(prefix + "username", System.getProperty("user.name"));
-        this.password = Config.getProperty(prefix + "password", "");
-        this.hadoopLocation = Config.getProperty(prefix + "hadoop_location");
-        this.hadoopURL = Config.getProperty(prefix + "hadoop_url");
-        this.hcatEndpoint = Config.getProperty(prefix + "hcat_endpoint");
-        this.clusterReadonly = Config.getProperty(prefix + "cluster_readonly");
-        this.clusterWrite = Config.getProperty(prefix + "cluster_write");
-        this.oozieURL = Config.getProperty(prefix + "oozie_url");
-        this.activeMQ = Config.getProperty(prefix + "activemq_url");
-        this.storeLocation = Config.getProperty(prefix + "storeLocation");
-        this.allColo = "?colo=" + Config.getProperty(prefix + "colo", "*");
-        this.colo = (!Config.getProperty(prefix + "colo", "").isEmpty()) ? "?colo=" + Config
-            .getProperty(prefix + "colo") : "";
-        this.coloName = this.colo.contains("=") ? this.colo.split("=")[1] : "";
-        this.serviceStartCmd =
-            Config.getProperty(prefix + "service_start_cmd", "/etc/init.d/tomcat6 start");
-        this.serviceStopCmd = Config.getProperty(prefix + "service_stop_cmd",
-            "/etc/init.d/tomcat6 stop");
-        this.serviceUser = Config.getProperty(prefix + "service_user", null);
-        this.serviceStatusMsg = Config.getProperty(prefix + "service_status_msg",
-            "Tomcat servlet engine is running with pid");
-        this.serviceStatusCmd =
-            Config.getProperty(prefix + "service_status_cmd", "/etc/init.d/tomcat6 status");
-        this.identityFile = Config.getProperty(prefix + "identityFile",
-            System.getProperty("user.home") + "/.ssh/id_rsa");
-        this.hadoopFS = null;
-        this.oozieClient = null;
-        this.namenodePrincipal = Config.getProperty(prefix + "namenode.kerberos.principal", "none");
-        this.hiveMetaStorePrincipal = Config.getProperty(
-                prefix + "hive.metastore.kerberos.principal", "none");
-        this.hiveJdbcUrl = Config.getProperty(prefix + "hive.jdbc.url", "none");
-        this.hiveJdbcUser =
-            Config.getProperty(prefix + "hive.jdbc.user", System.getProperty("user.name"));
-        this.hiveJdbcPassword = Config.getProperty(prefix + "hive.jdbc.password", "");
-    }
-
-    public abstract String getEntityType();
-
-    public abstract String getEntityName(String entity);
-
-    protected String createUrl(String... parts) {
+    private String createUrl(String... parts) {
         return StringUtils.join(parts, "/");
     }
 
@@ -608,7 +594,6 @@ public abstract class AbstractEntityHelper {
         return ExecUtil.executeCommand(commandLine);
     }
 
-
     /**
      * Retrieves entities summary.
      * @param clusterName compulsory parameter for request
@@ -669,7 +654,6 @@ public abstract class AbstractEntityHelper {
                 entityName + colo);
         return Util.sendRequest(url, "post", data, user);
     }
-
 
     /**
      * Retrieves entities lineage.
