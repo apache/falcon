@@ -100,7 +100,6 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     @AfterMethod(alwaysRun = false)
     public void tearDown() {
         removeTestClassEntities();
-        removeBundles(processBundle);
     }
 
     @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = false)
@@ -110,13 +109,13 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(0),
             TimeUtil.getTimeWrtSystemTime(20));
         processBundle.submitFeedsScheduleProcess(prism);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, processBundle.getProcessData(), 0);
         String oldProcess =
             processBundle.getProcessData();
         processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(5),
             TimeUtil.getTimeWrtSystemTime(100));
         ServiceResponse r = prism.getProcessHelper().update(oldProcess,
-            processBundle.getProcessData(), "abc", null);
+            processBundle.getProcessData(), "abc");
         Assert.assertTrue(r.getMessage()
             .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
     }
@@ -126,13 +125,14 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         throws JAXBException, IOException, URISyntaxException, AuthenticationException,
         OozieClientException, InterruptedException {
 
-        String feed = submitAndScheduleFeed(processBundle);
-        InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
+        FeedMerlin feed = new FeedMerlin(submitAndScheduleFeed(processBundle));
+        InstanceUtil.waitTillInstancesAreCreated(cluster1OC, feed.toString(), 0);
 
         //update frequency
         Frequency f = new Frequency("" + 21, Frequency.TimeUnit.minutes);
-        String updatedFeed = InstanceUtil.setFeedFrequency(feed, f);
-        ServiceResponse r = prism.getFeedHelper().update(feed, updatedFeed, "abc", null);
+        FeedMerlin updatedFeed = new FeedMerlin(feed.toString());
+        updatedFeed.setFrequency(f);
+        ServiceResponse r = prism.getFeedHelper().update(feed.toString(), updatedFeed.toString(), "abc");
         Assert.assertTrue(r.getMessage()
             .contains("java.lang.IllegalArgumentException: abc is not a valid UTC string"));
     }
