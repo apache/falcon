@@ -1,0 +1,80 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Hive Disaster Recovery
+=======================
+
+Overview
+---------
+
+Falcon provides feature to replicate Hive metadata and data events from one hadoop cluster
+to another cluster. This is supported for secure and unsecure cluster through Falcon Recipes.
+
+
+Prerequisites
+-------------
+
+Following is the prerequisites to use Hive DR
+
+* Hive 1.2.0+
+* Oozie 4.2.0+
+
+*Note:* Set following properties in hive-site.xml for replicating the Hive events:
+    <property>
+        <name>hive.metastore.event.listeners</name>
+        <value>org.apache.hive.hcatalog.listener.DbNotificationListener</value>
+        <description>event listeners that are notified of any metastore changes</description>
+    </property>
+
+    <property>
+        <name>hive.metastore.dml.events</name>
+        <value>true</value>
+    </property>
+
+
+Usage
+------
+a. Perform initial bootstrap of Table and Database from one Hadoop cluster to another Hadoop cluster
+
+    Table Bootstrap
+    ----------------
+    For bootstrapping table replication, essentially after having turned on the DbNotificationListener
+    on the source db, we should do an EXPORT of the table, distcp the export over to the destination
+    warehouse, and do an IMPORT over there. Check following Hive Export-Import link for syntax details
+    and examples.
+
+    This will set up the destination table so that the events on the source cluster that modify the table
+    will then be replicated over.
+
+    Database Bootstrap
+    ------------------
+    For bootstrapping DB replication, first destination DB should be created. This step is expected,
+    since DB replication definitions can be set up by users only on pre-existing DB’s. Second, we need
+    to export all tables in the source db and import them in the destination db, as described above.
+
+
+b. Setup cluster definition
+   $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
+
+c. Submit Hive DR recipe
+   $FALCON_HOME/bin/falcon recipe -name hive-disaster-recovery -operation HIVE_DISASTER_RECOVERY
+
+
+Recipe templates for Hive DR is available in addons/recipe/hive-disaster-recovery and copy it to
+recipe path specified in client.properties.
+
+*Note:* If kerberos security is enabled on cluster, use the secure templates for Hive DR from
+        addons/recipe/hive-disaster-recovery

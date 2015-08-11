@@ -21,6 +21,7 @@
     xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
     <formats>
         <format>tar.gz</format>
+        <format>zip</format>
     </formats>
     <id>server</id>
     <baseDirectory>falcon-distributed-${project.version}</baseDirectory>
@@ -125,6 +126,20 @@
         <file>
             <source>oozie-el-extensions/src/main/conf/oozie-site.xml</source>
             <outputDirectory>oozie/conf</outputDirectory>
+        </file>
+
+        <file>
+            <source>addons/recipes/hdfs-replication/src/main/resources/hdfs-replication-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
+        </file>
+
+        <file>
+            <source>addons/recipes/hive-disaster-recovery/src/main/resources/hive-disaster-recovery-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
+        </file>
+        <file>
+            <source>addons/recipes/hive-disaster-recovery/src/main/resources/hive-disaster-recovery-secure-workflow.xml</source>
+            <outputDirectory>data-mirroring/workflows</outputDirectory>
         </file>
     </files>
 </assembly>

@@ -43,6 +43,8 @@ a. Building falcon from the source release
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
         Falcon build with JDK 1.7 using -noverify option
+        To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this
+        Hive >= 1.2.0 and Oozie >= 4.2.0 should be available.
 
 
 b. Building falcon from the source repository
@@ -55,6 +57,8 @@ b. Building falcon from the source repository
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
         Falcon build with JDK 1.7 using -noverify option
+        To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this
+        Hive >= 1.2.0 and Oozie >= 4.2.0 should be available.
 
 
 2. Deploying Falcon

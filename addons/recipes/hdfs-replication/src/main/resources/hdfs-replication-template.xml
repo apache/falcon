@@ -17,30 +17,27 @@
   limitations under the License.
   -->
 
-<process name="##name##" xmlns="uri:falcon:process:0.1">
+<process name="##falcon.recipe.job.name##" xmlns="uri:falcon:process:0.1">
     <clusters>
         <!--  source  -->
-        <cluster name="##src.cluster.name##">
-            <validity end="##src.cluster.validity.end##" start="##src.cluster.validity.start##"/>
+        <cluster name="##falcon.recipe.cluster.name##">
+            <validity end="##falcon.recipe.cluster.validity.end##" start="##falcon.recipe.cluster.validity.start##"/>
         </cluster>
     </clusters>
+
+    <tags>_falcon_mirroring_type=HDFS</tags>
 
     <parallel>1</parallel>
     <!-- Dir replication needs to run only once to catch up -->
     <order>LAST_ONLY</order>
-    <frequency>##process.frequency##</frequency>
+    <frequency>##falcon.recipe.frequency##</frequency>
     <timezone>UTC</timezone>
 
     <properties>
         <property name="oozie.wf.subworkflow.classpath.inheritance" value="true"/>
-        <property name="##process.property2.name##" value="##process.property2.value##"/>
-        <property name="##process.property3.name##" value="##process.property3.value##"/>
-        <property name="##process.property4.name##" value="##process.property4.value##"/>
-        <property name="##process.property5.name##" value="##process.property5.value##"/>
-        <property name="##process.property6.name##" value="##process.property6.value##"/>
-        <property name="##process.property7.name##" value="##process.property7.value##"/>
     </properties>
 
-    <workflow name="##workflow.name##" engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>
-    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+    <workflow name="##falcon.recipe.workflow.name##" engine="oozie" path="/apps/data-mirroring/workflows/hdfs-replication-workflow.xml" lib="##workflow.lib.path##"/>
+    <retry policy="##falcon.recipe.retry.policy##" delay="##falcon.recipe.retry.delay##" attempts="3"/>
+    <ACL/>
 </process>

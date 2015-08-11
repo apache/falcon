@@ -4,6 +4,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1188 Falcon support for Hive Replication(Venkat Ranganathan via Ajay Yadava)
+
     FALCON-1297 Falcon Unit which supports Submit and Schedule of jobs(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1039 Add instance dependency API in falcon (Ajay Yadava)
