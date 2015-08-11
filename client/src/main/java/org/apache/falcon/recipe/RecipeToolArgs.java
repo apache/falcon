@@ -25,10 +25,11 @@ import org.apache.commons.cli.Option;
  * Recipe tool args.
  */
 public enum RecipeToolArgs {
-    RECIPE_FILE_ARG("file", "recipe file path"),
+    RECIPE_FILE_ARG("file", "recipe template file path"),
     RECIPE_PROPERTIES_FILE_ARG("propertiesFile", "recipe properties file path"),
     RECIPE_PROCESS_XML_FILE_PATH_ARG(
-            "recipeProcessFilePath", "file path of recipe process to be submitted");
+            "recipeProcessFilePath", "file path of recipe process to be submitted"),
+    RECIPE_OPERATION_ARG("recipeOperation", "recipe operation");
 
     private final String name;
     private final String description;

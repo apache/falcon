@@ -31,6 +31,8 @@ It builds and installs the package into the local repository, for use as a depen
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of Oozie. Oozie versions
 >= 4 are supported]
 NOTE: Falcon builds with JDK 1.7 using -noverify option
+      To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this Hive >= 1.2.0
+      and Oozie >= 4.2.0 should be available.
 
 
 

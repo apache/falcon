@@ -124,7 +124,16 @@ public class FalconCLI {
     // Recipe Command
     public static final String RECIPE_CMD = "recipe";
     public static final String RECIPE_NAME = "name";
+    public static final String RECIPE_OPERATION= "operation";
     public static final String RECIPE_TOOL_CLASS_NAME = "tool";
+
+    /**
+     * Recipe operation enum.
+     */
+    public static enum RecipeOperation {
+        HDFS_REPLICATION,
+        HIVE_DISASTER_RECOVERY
+    }
 
     private final Properties clientProperties;
 
@@ -914,6 +923,9 @@ public class FalconCLI {
         Option recipeToolClassName = new Option(RECIPE_TOOL_CLASS_NAME, true, "recipe class");
         recipeOptions.addOption(recipeToolClassName);
 
+        Option recipeOperation = new Option(RECIPE_OPERATION, true, "recipe operation");
+        recipeOptions.addOption(recipeOperation);
+
         return recipeOptions;
     }
 
@@ -1005,11 +1017,23 @@ public class FalconCLI {
     private void recipeCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
         String recipeName = commandLine.getOptionValue(RECIPE_NAME);
         String recipeToolClass = commandLine.getOptionValue(RECIPE_TOOL_CLASS_NAME);
+        String recipeOperation = commandLine.getOptionValue(RECIPE_OPERATION);
 
         validateNotEmpty(recipeName, RECIPE_NAME);
+        validateNotEmpty(recipeOperation, RECIPE_OPERATION);
+        validateRecipeOperations(recipeOperation);
 
-        String result =
-            client.submitRecipe(recipeName, recipeToolClass).getMessage();
+        String result = client.submitRecipe(recipeName, recipeToolClass, recipeOperation).toString();
         OUT.get().println(result);
+    }
+
+    private static void validateRecipeOperations(String recipeOperation) throws FalconCLIException {
+        for(RecipeOperation operation : RecipeOperation.values()) {
+            if (operation.toString().equalsIgnoreCase(recipeOperation)) {
+                return;
+            }
+        }
+        throw new FalconCLIException("Allowed Recipe operations: "
+                + java.util.Arrays.asList((RecipeOperation.values())));
     }
 }

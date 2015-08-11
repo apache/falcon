@@ -44,7 +44,7 @@ import java.util.Properties;
  */
 @Test(groups = {"exhaustive"})
 public class FalconCLIIT {
-    private static final String RECIPE_PROPERTIES_FILE_XML = "/process.properties";
+    private static final String RECIPE_PROPERTIES_FILE_XML = "/hdfs-replication.properties";
 
     private InMemoryWriter stream = new InMemoryWriter(System.out);
     private String recipePropertiesFilePath;
@@ -217,23 +217,23 @@ public class FalconCLIIT {
         Assert.assertEquals(executeWithURL("entity -status -type process -name " + overlay.get("processName")), 0);
 
         Assert.assertEquals(executeWithURL("entity -summary -type feed -cluster "+ overlay.get("cluster")
-                        + " -fields status,tags -start " + START_INSTANCE
-                        + " -filterBy TYPE:FEED -orderBy name -sortOrder asc "
-                        + " -offset 0 -numResults 1 -numInstances 5"), 0);
+                + " -fields status,tags -start " + START_INSTANCE
+                + " -filterBy TYPE:FEED -orderBy name -sortOrder asc "
+                + " -offset 0 -numResults 1 -numInstances 5"), 0);
 
         Assert.assertEquals(executeWithURL("entity -summary -type process -fields status,pipelines"
-                        + " -cluster " + overlay.get("cluster")
-                        + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
-                        + " -end " + SchemaHelper.getDateFormat().format(new Date())
-                        + " -filterBy TYPE:PROCESS -orderBy name -sortOrder desc "
-                        + " -offset 0 -numResults 1 -numInstances 7"), 0);
+                + " -cluster " + overlay.get("cluster")
+                + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
+                + " -end " + SchemaHelper.getDateFormat().format(new Date())
+                + " -filterBy TYPE:PROCESS -orderBy name -sortOrder desc "
+                + " -offset 0 -numResults 1 -numInstances 7"), 0);
 
         Assert.assertEquals(executeWithURL("entity -summary -type process -fields status,pipelines"
-                        + " -cluster " + overlay.get("cluster")
-                        + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
-                        + " -end " + SchemaHelper.getDateFormat().format(new Date())
-                        + " -filterBy TYPE:PROCESS -orderBy name -sortOrder invalid "
-                        + " -offset 0 -numResults 1 -numInstances 7"), -1);
+                + " -cluster " + overlay.get("cluster")
+                + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
+                + " -end " + SchemaHelper.getDateFormat().format(new Date())
+                + " -filterBy TYPE:PROCESS -orderBy name -sortOrder invalid "
+                + " -offset 0 -numResults 1 -numInstances 7"), -1);
 
         // No start or end date
         Assert.assertEquals(executeWithURL("entity -summary -type process -fields status,pipelines"
@@ -329,9 +329,9 @@ public class FalconCLIIT {
                 + " -orderBy startTime -sortOrder asc -offset 0 -numResults 1"), 0);
 
         Assert.assertEquals(executeWithURL("instance -running -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start " + SchemaHelper.getDateFormat().format(new Date())
-                        + " -orderBy INVALID -offset 0 -numResults 1"), -1);
+                + overlay.get("outputFeedName")
+                + " -start " + SchemaHelper.getDateFormat().format(new Date())
+                + " -orderBy INVALID -offset 0 -numResults 1"), -1);
 
         Assert.assertEquals(executeWithURL("instance -running -type feed -lifecycle eviction -name "
                 + overlay.get("outputFeedName")
@@ -339,14 +339,14 @@ public class FalconCLIIT {
                 + " -orderBy startTime -sortOrder desc -offset 0 -numResults 1"), 0);
 
         Assert.assertEquals(executeWithURL("instance -running -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start " + startTimeString
-                        + " -orderBy startTime -sortOrder invalid -offset 0 -numResults 1"), -1);
+                + overlay.get("outputFeedName")
+                + " -start " + startTimeString
+                + " -orderBy startTime -sortOrder invalid -offset 0 -numResults 1"), -1);
 
         Assert.assertEquals(executeWithURL("instance -running -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start " + SchemaHelper.getDateFormat().format(new Date())
-                        + " -filterBy INVALID:FILTER -offset 0 -numResults 1"), -1);
+                + overlay.get("outputFeedName")
+                + " -start " + SchemaHelper.getDateFormat().format(new Date())
+                + " -filterBy INVALID:FILTER -offset 0 -numResults 1"), -1);
 
         // testcase : start str is older than entity schedule time.
         Assert.assertEquals(executeWithURL("instance -running -type feed -lifecycle eviction -name "
@@ -389,14 +389,14 @@ public class FalconCLIIT {
                 + " -orderBy startTime -offset 0 -numResults 1"), 0);
 
         Assert.assertEquals(executeWithURL("instance -status -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
-                        +" -filterBy INVALID:FILTER -orderBy startTime -offset 0 -numResults 1"), -1);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                +" -filterBy INVALID:FILTER -orderBy startTime -offset 0 -numResults 1"), -1);
 
         Assert.assertEquals(executeWithURL("instance -list -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
-                        +" -filterBy STATUS:SUCCEEDED -orderBy INVALID -offset 0 -numResults 1"), -1);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                +" -filterBy STATUS:SUCCEEDED -orderBy INVALID -offset 0 -numResults 1"), -1);
         Assert.assertEquals(executeWithURL("instance -status -type feed -lifecycle eviction -name "
                 + overlay.get("outputFeedName")
                 + " -start " + SchemaHelper.getDateFormat().format(new Date())
@@ -453,8 +453,8 @@ public class FalconCLIIT {
 
         // No end date, should fail.
         Assert.assertEquals(executeWithURL("instance -suspend -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())), -1);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())), -1);
 
         Assert.assertEquals(executeWithURL("instance -resume -type process -name "
                 + overlay.get("processName")
@@ -479,13 +479,13 @@ public class FalconCLIIT {
 
         OozieTestUtils.waitForProcessWFtoStart(context);
         Assert.assertEquals(executeWithURL("instance -kill -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
 
         // Fail due to no end date
         Assert.assertEquals(executeWithURL("instance -kill -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())), -1);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())), -1);
 
         Assert.assertEquals(executeWithURL("instance -rerun -type process -name "
                 + overlay.get("processName")
@@ -575,13 +575,13 @@ public class FalconCLIIT {
                 + " -tags owner=producer@xyz.com,department=forecasting "
                 + " -filterBy STATUS:SUBMITTED,type:process -orderBy name -offset 1 -numResults 1"), 0);
         Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
-                        + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy INVALID -offset 0 -numResults 1"), -1);
+                + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy INVALID -offset 0 -numResults 1"), -1);
 
         Assert.assertEquals(executeWithURL("entity -list -type process -fields INVALID "
-                        + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy name -offset 1 -numResults 1"), -1);
+                + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy name -offset 1 -numResults 1"), -1);
 
         Assert.assertEquals(executeWithURL("entity -list -type process -fields status "
-                        + " -filterBy INVALID:FILTER,TYPE:process -orderBy name -offset 1 -numResults 1"), -1);
+                + " -filterBy INVALID:FILTER,TYPE:process -orderBy name -offset 1 -numResults 1"), -1);
 
         Assert.assertEquals(executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")), 0);
 
@@ -678,26 +678,26 @@ public class FalconCLIIT {
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         Assert.assertEquals(executeWithURL("instance -kill -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
 
         Assert.assertEquals(executeWithURL("instance -kill -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
-                        + " -end " +  SchemaHelper.getDateFormat().format(new Date())), 0);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                + " -end " +  SchemaHelper.getDateFormat().format(new Date())), 0);
 
         Assert.assertEquals(executeWithURL("instance -rerun -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE), -1);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE), -1);
 
         Assert.assertEquals(executeWithURL("instance -rerun -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
 
         Assert.assertEquals(executeWithURL("instance -rerun -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
-                        + " -end " + SchemaHelper.getDateFormat().format(new Date())), 0);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                + " -end " + SchemaHelper.getDateFormat().format(new Date())), 0);
     }
 
     public void testInvalidCLIInstanceCommands() throws Exception {
@@ -712,7 +712,7 @@ public class FalconCLIIT {
                 + " -end 2010-01-01T03:00Z"), -1);
 
         Assert.assertEquals(executeWithURL("instance -kill -type process -name "
-                        + " -start 2010-01-01T01:00Z  -end 2010-01-01T03:00Z"), -1);
+                + " -start 2010-01-01T01:00Z  -end 2010-01-01T03:00Z"), -1);
     }
 
     public void testFalconURL() throws Exception {
@@ -734,12 +734,12 @@ public class FalconCLIIT {
         submitTestFiles(context, overlay);
 
         Assert.assertEquals(new FalconCLI().run(("entity -schedule -type feed -name "
-                        + overlay.get("outputFeedName") + " -url "
-                        + TestContext.BASE_URL).split("\\s+")), 0);
+                + overlay.get("outputFeedName") + " -url "
+                + TestContext.BASE_URL).split("\\s+")), 0);
 
         Assert.assertEquals(new FalconCLI().run(("entity -schedule -type process -name "
-                        + overlay.get("processName")+ " -url "
-                        + TestContext.BASE_URL).split("\\s+")), 0);
+                + overlay.get("processName")+ " -url "
+                + TestContext.BASE_URL).split("\\s+")), 0);
     }
 
     public void testGetVersion() throws Exception {
@@ -766,52 +766,52 @@ public class FalconCLIIT {
         Thread.sleep(500);
 
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE), 0);
 
         Assert.assertEquals(executeWithURL("instance -logs -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())), 0);
+                + overlay.get("outputFeedName")
+                + " -start "+ SchemaHelper.getDateFormat().format(new Date())), 0);
 
         // test filterBy, orderBy, offset, numResults
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED -orderBy endtime "
-                        + " -sortOrder asc -offset 0 -numResults 1"), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:SUCCEEDED -orderBy endtime "
+                + " -sortOrder asc -offset 0 -numResults 1"), 0);
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED -orderBy starttime "
-                        + " -sortOrder asc -offset 0 -numResults 1"), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:SUCCEEDED -orderBy starttime "
+                + " -sortOrder asc -offset 0 -numResults 1"), 0);
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED -orderBy cluster "
-                        + " -sortOrder asc -offset 0 -numResults 1"), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:SUCCEEDED -orderBy cluster "
+                + " -sortOrder asc -offset 0 -numResults 1"), 0);
 
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:WAITING -orderBy startTime -offset 0 -numResults 1"), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:WAITING -orderBy startTime -offset 0 -numResults 1"), 0);
 
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED -orderBy endtime "
-                        + " -sortOrder invalid -offset 0 -numResults 1"), -1);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:SUCCEEDED -orderBy endtime "
+                + " -sortOrder invalid -offset 0 -numResults 1"), -1);
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED,STARTEDAFTER:"+START_INSTANCE+" -offset 1 -numResults 1"), 0);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:SUCCEEDED,STARTEDAFTER:"+START_INSTANCE+" -offset 1 -numResults 1"), 0);
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy INVALID:FILTER -orderBy startTime -offset 0 -numResults 1"), -1);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy INVALID:FILTER -orderBy startTime -offset 0 -numResults 1"), -1);
         Assert.assertEquals(executeWithURL("instance -logs -type process -name "
-                        + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED -orderBy wrongOrder -offset 0 -numResults 1"), -1);
+                + overlay.get("processName")
+                + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                + " -filterBy STATUS:SUCCEEDED -orderBy wrongOrder -offset 0 -numResults 1"), -1);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -819,7 +819,8 @@ public class FalconCLIIT {
     public void testRecipeCommand() throws Exception {
         recipeSetup();
         try {
-            Assert.assertEquals(executeWithURL("recipe -name " + "process"), 0);
+            Assert.assertEquals(executeWithURL("recipe -name " + "hdfs-replication"
+                    + " -operation HDFS_REPLICATION"), 0);
         } finally {
             if (recipePropertiesFilePath != null) {
                 new File(recipePropertiesFilePath).delete();
@@ -836,12 +837,6 @@ public class FalconCLIIT {
                 overlay);
         Assert.assertEquals(executeWithURL("entity -submit -type cluster -file " + filePath), 0);
         context.setCluster(overlay.get("cluster"));
-
-        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
-        Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
-
-        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
-        Assert.assertEquals(executeWithURL("entity -submit -type feed -file " + filePath), 0);
     }
 
     private void createPropertiesFile(TestContext context) throws Exception  {
@@ -854,16 +849,14 @@ public class FalconCLIIT {
         String resourcePath = FilenameUtils.getFullPathNoEndSeparator(wfFile);
         String libPath = TestContext.getTempFile("target/lib", "recipe", ".jar").getAbsolutePath();
 
-        File file = new File(resourcePath, "process.properties");
+        File file = new File(resourcePath, "hdfs-replication.properties");
         OutputStream out = new FileOutputStream(file);
-        props.setProperty("falcon.recipe.processName", context.getProcessName());
-        props.setProperty("falcon.recipe.src.cluster.name", context.getClusterName());
-        props.setProperty("falcon.recipe.processEndDate", context.getProcessEndTime());
-        props.setProperty("falcon.recipe.inputFeedName", context.getInputFeedName());
-        props.setProperty("falcon.recipe.outputFeedName", context.getOutputFeedName());
+        props.setProperty("falcon.recipe.name", context.getProcessName());
+        props.setProperty("falcon.recipe.cluster.name", context.getClusterName());
+        props.setProperty("falcon.recipe.cluster.validity.end", context.getProcessEndTime());
         props.setProperty("falcon.recipe.workflow.path", TestContext.class.getResource("/fs-workflow.xml").getPath());
         props.setProperty("falcon.recipe.workflow.lib.path", new File(libPath).getParent());
-        props.setProperty("falcon.recipe.src.cluster.hdfs.writeEndPoint", "jail://global:00");
+        props.setProperty("falcon.recipe.cluster.hdfs.writeEndPoint", "jail://global:00");
 
         props.store(out, null);
         out.close();

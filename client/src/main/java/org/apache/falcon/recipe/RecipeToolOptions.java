@@ -18,18 +18,42 @@
 
 package org.apache.falcon.recipe;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * Recipe tool options.
  */
 public enum RecipeToolOptions {
-    SOURCE_CLUSTER_HDFS_WRITE_ENDPOINT(
-            "falcon.recipe.src.cluster.hdfs.writeEndPoint", "source cluster HDFS write endpoint"),
+    RECIPE_NAME("falcon.recipe.name", "Recipe name", false),
+    CLUSTER_NAME("falcon.recipe.cluster.name", "Cluster name where replication job should run", false),
+    CLUSTER_HDFS_WRITE_ENDPOINT(
+            "falcon.recipe.cluster.hdfs.writeEndPoint", "Cluster HDFS write endpoint"),
+    CLUSTER_VALIDITY_START("falcon.recipe.cluster.validity.start", "Source cluster validity start", false),
+    CLUSTER_VALIDITY_END("falcon.recipe.cluster.validity.end", "Source cluster validity end", false),
+    WORKFLOW_NAME("falcon.recipe.workflow.name", "Workflow name", false),
     WORKFLOW_PATH("falcon.recipe.workflow.path", "Workflow path", false),
-    WORKFLOW_LIB_PATH("falcon.recipe.workflow.lib.path", "WF lib path", false);
+    WORKFLOW_LIB_PATH("falcon.recipe.workflow.lib.path", "WF lib path", false),
+    PROCESS_FREQUENCY("falcon.recipe.process.frequency", "Process frequency", false),
+    RETRY_POLICY("falcon.recipe.retry.policy", "Retry policy", false),
+    RETRY_DELAY("falcon.recipe.retry.delay", "Retry delay", false),
+    RETRY_ATTEMPTS("falcon.recipe.retry.attempts", "Retry attempts", false),
+    RECIPE_TAGS("falcon.recipe.tags", "Recipe tags", false),
+    RECIPE_ACL_OWNER("falcon.recipe.acl.owner", "Recipe acl owner", false),
+    RECIPE_ACL_GROUP("falcon.recipe.acl.group", "Recipe acl group", false),
+    RECIPE_ACL_PERMISSION("falcon.recipe.acl.permission", "Recipe acl permission", false),
+    RECIPE_NN_PRINCIPAL("falcon.recipe.nn.principal", "Recipe DFS NN principal", false);
 
     private final String name;
     private final String description;
     private final boolean isRequired;
+
+    public static final Map<String, RecipeToolOptions> OPTIONSMAP = new HashMap<>();
+    static {
+        for (RecipeToolOptions c : RecipeToolOptions.values()) {
+            OPTIONSMAP.put(c.getName(), c);
+        }
+    }
 
     RecipeToolOptions(String name, String description) {
         this(name, description, true);

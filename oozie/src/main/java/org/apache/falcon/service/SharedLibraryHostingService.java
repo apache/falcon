@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -47,10 +48,15 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
 
     private static final String[] LIBS = StartupProperties.get().getProperty("shared.libs").split(",");
 
-    private static final FalconPathFilter NON_FALCON_JAR_FILTER = new FalconPathFilter() {
+    private static class FalconLibPath implements  FalconPathFilter {
+        private String[] shareLibs;
+        FalconLibPath(String[] libList) {
+            this.shareLibs = Arrays.copyOf(libList, libList.length);
+        }
+
         @Override
         public boolean accept(Path path) {
-            for (String jarName : LIBS) {
+            for (String jarName : shareLibs) {
                 if (path.getName().startsWith(jarName)) {
                     return true;
                 }
@@ -60,7 +66,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
 
         @Override
         public String getJarName(Path path) {
-            for (String jarName : LIBS) {
+            for (String jarName : shareLibs) {
                 if (path.getName().startsWith(jarName)) {
                     return jarName;
                 }
@@ -84,9 +90,10 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
                     "lib");
             Path libext = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
                     "libext");
+            FalconPathFilter nonFalconJarFilter = new FalconLibPath(LIBS);
             Properties properties = StartupProperties.get();
             pushLibsToHDFS(fs, properties.getProperty("system.lib.location"), lib,
-                    NON_FALCON_JAR_FILTER);
+                    nonFalconJarFilter);
             pushLibsToHDFS(fs, properties.getProperty("libext.paths"), libext, null);
             pushLibsToHDFS(fs, properties.getProperty("libext.feed.paths"),
                     new Path(libext, EntityType.FEED.name()) , null);
@@ -107,7 +114,6 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         if (StringUtils.isEmpty(src)) {
             return;
         }
-
         LOG.debug("Copying libs from {}", src);
         createTargetPath(fs, target);
 
