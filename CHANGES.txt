@@ -87,6 +87,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1396 Disable the faulty test(Ajay Yadava via Sowmya Ramesh)
+
     FALCON-1251 FeedEvictor UT fails intermittently(Sandeep Samudrala via Ajay Yadava)
 
     FALCON-1383 MetadataMappingServiceTest#testLineageForTransactionFailure fails randomly(Sandeep Samudrala via Ajay Yadava)

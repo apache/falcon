@@ -815,7 +815,7 @@ public class FalconCLIIT {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test
+    @Test(enabled = false)
     public void testRecipeCommand() throws Exception {
         recipeSetup();
         try {
