@@ -231,16 +231,6 @@ public class ProcessEntityParserTest extends AbstractTestBase {
     //RESUME CHECKSTYLE CHECK HiddenFieldCheck
 
     @Test(expectedExceptions = ValidationException.class)
-    public void testInvalidProcessValidity() throws Exception {
-        Process process = parser
-                .parseAndValidate((ProcessEntityParserTest.class
-                        .getResourceAsStream(PROCESS_XML)));
-        process.getClusters().getClusters().get(0).getValidity().setStart(
-                SchemaHelper.parseDateUTC("2011-12-31T00:00Z"));
-        parser.validate(process);
-    }
-
-    @Test(expectedExceptions = ValidationException.class)
     public void testInvalidDependentFeedsRetentionLimit() throws Exception {
         Process process = parser
                 .parseAndValidate((ProcessEntityParserTest.class
@@ -507,5 +497,57 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         } catch (FalconException e) {
             Assert.assertEquals(javax.xml.bind.UnmarshalException.class, e.getCause().getClass());
         }
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testEndTimeProcessBeforeStartTime() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setEnd(
+                SchemaHelper.parseDateUTC("2010-12-31T00:00Z"));
+        parser.validate(process);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInstanceStartTimeBeforeFeedStartTimeForInput() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setStart(
+                SchemaHelper.parseDateUTC("2011-10-31T00:00Z"));
+        parser.validate(process);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInstanceEndTimeAfterFeedEndTimeForInput() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setStart(
+                SchemaHelper.parseDateUTC("2011-12-31T00:00Z"));
+        parser.validate(process);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInstanceTimeBeforeFeedStartTimeForOutput() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setStart(
+                SchemaHelper.parseDateUTC("2011-11-02T00:00Z"));
+        process.getOutputs().getOutputs().get(0).setInstance("yesterday(-60,0)");
+        parser.validate(process);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInstanceTimeAfterFeedEndTimeForOutput() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setStart(
+                SchemaHelper.parseDateUTC("2011-12-30T00:00Z"));
+        process.getOutputs().getOutputs().get(0).setInstance("today(120,0)");
+        parser.validate(process);
     }
 }

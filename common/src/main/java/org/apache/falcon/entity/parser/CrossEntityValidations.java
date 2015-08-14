@@ -55,15 +55,9 @@ public final class CrossEntityValidations {
                 Validity processValidity = ProcessHelper.getCluster(process, clusterName).getValidity();
                 ExpressionHelper.setReferenceDate(processValidity.getStart());
                 Date instStart = evaluator.evaluate(instStartEL, Date.class);
+                Date instEnd = evaluator.evaluate(instEndEL, Date.class);
                 if (instStart.before(feedStart)) {
                     throw new ValidationException("Start instance  " + instStartEL + " of feed " + feed.getName()
-                            + " is before the start of feed " + feedValidity.getStart() + " for cluster "
-                            + clusterName);
-                }
-
-                Date instEnd = evaluator.evaluate(instEndEL, Date.class);
-                if (instEnd.after(feedEnd)) {
-                    throw new ValidationException("End instance  " + instEndEL + " of feed " + feed.getName()
                             + " is before the start of feed " + feedValidity.getStart() + " for cluster "
                             + clusterName);
                 }
