@@ -168,11 +168,11 @@ public class EntityManagerTest extends AbstractEntityManager {
         CurrentUser.authenticate(System.getProperty("user.name"));
     }
 
-
     @Test
-    public void testCapOnNumberOfResults() {
-        Assert.assertNotEquals(getRequiredNumberOfResults(10000, 0, 10000), 10000);
-        Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 10000), MAX_RESULTS);
+    public void testNumberOfResults() {
+        Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 10000), 10000);
+        Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 4000), 4000);
+        Assert.assertNotEquals(getRequiredNumberOfResults(10000, 0, 10000), 3000);
     }
 
     @Test
