@@ -89,6 +89,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1399 Property for default number of results is not loaded dynamically(Ajay Yadava)
+
     FALCON-1398 CrossEntityValidations contains incorrect validations(Pragya Mittal via Ajay Yadava)
 
     FALCON-1396 Disable the faulty test(Ajay Yadava via Sowmya Ramesh)

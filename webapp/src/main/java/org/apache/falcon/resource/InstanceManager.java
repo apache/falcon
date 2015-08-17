@@ -56,7 +56,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage) {
-        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getRunningInstances(type, entity, colo, lifeCycles, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -82,7 +82,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage) {
-        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -104,7 +104,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage) {
-        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
@@ -159,7 +159,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage) {
-        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
     }
