@@ -77,8 +77,6 @@ public abstract class AbstractEntityManager {
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
-    protected static final Integer DEFAULT_NUM_RESULTS = getDefaultResultsPerPage();
-
     private AbstractWorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
 
@@ -90,8 +88,8 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    private static int getDefaultResultsPerPage() {
-        Integer result = 3000;
+    protected static Integer getDefaultResultsPerPage() {
+        Integer result = 10;
         final String key = "webservices.default.results.per.page";
         String value = RuntimeProperties.get().getProperty(key, result.toString());
         try {

@@ -80,7 +80,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         if (StringUtils.isNotEmpty(type)) {
             type = type.substring(1);
         }
-        resultsPerPage = resultsPerPage == null ? DEFAULT_NUM_RESULTS : resultsPerPage;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
     }
