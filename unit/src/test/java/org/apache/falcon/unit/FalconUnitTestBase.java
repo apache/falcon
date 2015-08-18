@@ -301,7 +301,7 @@ public class FalconUnitTestBase {
     }
 
     protected long waitForStatus(final EntityType entityType, final String entityName, final String instanceTime) {
-        return waitFor(20000, new Predicate() {
+        return waitFor(90000, new Predicate() {
             public boolean evaluate() throws Exception {
                 InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(entityType,
                         entityName, instanceTime);
