@@ -60,8 +60,11 @@ public final class EntityGraph implements ConfigurationChangeListener {
             Set<Entity> dependents = new HashSet<Entity>();
             for (Node node : graph.get(entityNode)) {
                 Entity dependentEntity = store.get(node.type, node.name);
-                assert dependentEntity != null : "Unable to find " + node;
-                dependents.add(dependentEntity);
+                if (dependentEntity != null) {
+                    dependents.add(dependentEntity);
+                } else {
+                    LOG.error("Dependent entity {} was not found in configuration store.", node);
+                }
             }
             return dependents;
         } else {
@@ -84,16 +87,17 @@ public final class EntityGraph implements ConfigurationChangeListener {
         if (nodeEdges == null) {
             return;
         }
-        LOG.trace("Adding edges for {}: {}", entity.getName(), nodeEdges);
+        LOG.debug("Adding edges for {}: {}", entity.getName(), nodeEdges);
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
+            LOG.debug("Adding edges : {} for {}", entry.getValue(), entry.getKey());
             if (graph.containsKey(entry.getKey())) {
                 graph.get(entry.getKey()).addAll(entry.getValue());
             } else {
                 graph.put(entry.getKey(), entry.getValue());
             }
         }
-        LOG.trace("Merged edges to graph {}", entity.getName());
+        LOG.debug("Merged edges to graph {}", entity.getName());
     }
 
     @Override
