@@ -49,7 +49,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS, "process", scheduleTime);
         InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(EntityType.PROCESS,
                 "process", scheduleTime);
-        Assert.assertEquals(InstancesResult.WorkflowStatus.SUCCEEDED, status);
+        Assert.assertEquals(status, InstancesResult.WorkflowStatus.SUCCEEDED);
         String outPath = getFeedPathForTS("local", "out", scheduleTime);
         Assert.assertTrue(getFileSystem().exists(new Path(outPath)));
         FileStatus[] files = getFileSystem().listStatus(new Path(outPath));

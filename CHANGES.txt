@@ -89,6 +89,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1392 FalconUnit tests fail(Pavan Kumar Kolamuri via Ajay Yadava)
+  
     FALCON-1344 EntityGraph returns null in list of dependent entities(Ajay Yadava)
     
     FALCON-1330 When multiple cluster definitions exist for the same colo, triage produces unexpected results(Ajay Yadava)
