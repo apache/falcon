@@ -111,7 +111,7 @@ public class ClusterEntityValidationIT {
         };
     }
 
-    @Test (dataProvider = "interfaceToInvalidURLs")
+    @Test (dataProvider = "interfaceToInvalidURLs", enabled = false)
     public void testClusterEntityWithInvalidInterfaces(Interfacetype interfacetype, String endpoint)
         throws Exception {
         overlay = context.getUniqueOverlay();
