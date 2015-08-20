@@ -89,6 +89,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1409 Update API throws NullPointerException(Sandeep Samudrala via Ajay Yadava)
+
     FALCON-1407 Temporarily disable failing tests in ClusterEntityValidationIT(Ajay Yadava)
 
     FALCON-1392 FalconUnit tests fail(Pavan Kumar Kolamuri via Ajay Yadava)

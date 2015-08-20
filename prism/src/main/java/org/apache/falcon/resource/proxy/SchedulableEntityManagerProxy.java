@@ -257,6 +257,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         oldColos.removeAll(mergedColos);   //Old colos where delete should be called
 
         Map<String, APIResult> results = new HashMap<String, APIResult>();
+        boolean result = true;
         if (!oldColos.isEmpty()) {
             results.put(FALCON_TAG + "/delete", new EntityProxy(type, entityName) {
                 @Override
@@ -299,8 +300,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }.execute());
         }
 
+        for (APIResult apiResult : results.values()) {
+            if (apiResult.getStatus() != APIResult.Status.SUCCEEDED) {
+                result = false;
+            }
+        }
+
         // update only if all are updated
-        if (!embeddedMode && results.get(FALCON_TAG).getStatus() == APIResult.Status.SUCCEEDED) {
+        if (!embeddedMode && result) {
             results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo));
         }
 
