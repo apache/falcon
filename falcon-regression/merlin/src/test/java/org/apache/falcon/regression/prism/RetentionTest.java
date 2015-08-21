@@ -37,6 +37,7 @@ import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
@@ -141,7 +142,7 @@ public class RetentionTest extends BaseTestClass {
         }
         final DateTime today = new DateTime(DateTimeZone.UTC);
         final List<DateTime> times = TimeUtil.getDatesOnEitherSide(
-            freqType.addTime(today, -36), freqType.addTime(today, 36), skip, freqType);
+            freqType.addTime(today, -36), freqType.addTime(today, -1), skip, freqType);
         final List<String> dataDates = TimeUtil.convertDatesToString(times, freqType.getFormatter());
         LOGGER.info("dataDates = " + dataDates);
         dataDates.add(HadoopUtil.SOMETHING_RANDOM);
@@ -206,6 +207,9 @@ public class RetentionTest extends BaseTestClass {
 
         Assert.assertTrue(Arrays.deepEquals(finalData.toArray(new String[finalData.size()]),
             expectedOutput.toArray(new String[expectedOutput.size()])));
+
+        //check that root directory exists
+        Assert.assertTrue(clusterFS.exists(new Path(testHDFSDir)), "Base data directory should be present.");
     }
 
     /**
@@ -272,7 +276,6 @@ public class RetentionTest extends BaseTestClass {
         }
         return finalData;
     }
-
 
     /**
      * Provides different sets of parameters for retention workflow.
