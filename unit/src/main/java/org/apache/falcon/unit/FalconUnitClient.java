@@ -118,8 +118,9 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @throws FalconException
      */
     @Override
-    public APIResult schedule(EntityType entityType, String entityName, String cluster) throws FalconCLIException {
-        return schedule(entityType, entityName, null, 0, cluster);
+    public APIResult schedule(EntityType entityType, String entityName,
+                              String cluster, Boolean skipDryRun) throws FalconCLIException {
+        return schedule(entityType, entityName, null, 0, cluster, skipDryRun);
     }
 
 
@@ -133,7 +134,7 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @return boolean
      */
     public APIResult schedule(EntityType entityType, String entityName, String startTime, int numInstances,
-                              String cluster) throws FalconCLIException {
+                              String cluster, Boolean skipDryRun) throws FalconCLIException {
         try {
             FalconUnitHelper.checkSchedulableEntity(entityType.toString());
             Entity entity = EntityUtil.getEntity(entityType, entityName);
@@ -146,7 +147,7 @@ public class FalconUnitClient extends AbstractFalconClient {
             if (StringUtils.isNotEmpty(startTime) && entityType == EntityType.PROCESS) {
                 updateStartAndEndTime((Process) entity, startTime, numInstances, cluster);
             }
-            workflowEngine.schedule(entity);
+            workflowEngine.schedule(entity, skipDryRun);
             LOG.info(entityName + " is scheduled successfully");
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + "PROCESS" + ") scheduled successfully");
         } catch (FalconException e) {

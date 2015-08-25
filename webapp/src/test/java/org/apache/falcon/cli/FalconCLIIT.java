@@ -184,6 +184,33 @@ public class FalconCLIIT {
 
     }
 
+    public void testSkipDryRunValidCommands() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
+
+        Assert.assertEquals(
+                executeWithURL("entity -schedule -skipDryRun -type cluster -name " + overlay.get("cluster")), -1);
+
+        Assert.assertEquals(
+                executeWithURL("entity -schedule -type feed -name " + overlay.get("outputFeedName")), 0);
+
+        Assert.assertEquals(
+                executeWithURL("entity -schedule -type process -skipDryRun -name " + overlay.get("processName")), 0);
+
+        Assert.assertEquals(0,
+                executeWithURL("entity -touch -skipDryRun -name " + overlay.get("processName") + " -type process"));
+
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
+        Assert.assertEquals(
+                executeWithURL("entity -submitAndSchedule -skipDryRun -type feed -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        Assert.assertEquals(
+                executeWithURL("entity -validate -skipDryRun -type process -file " + filePath), 0);
+
+    }
+
     public void testSuspendResumeStatusEntityValidCommands() throws Exception {
 
         TestContext context = new TestContext();

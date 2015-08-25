@@ -126,8 +126,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     public APIResult schedule(@Context HttpServletRequest request,
                               @Dimension("entityType") @PathParam("type") String type,
                               @Dimension("entityName") @PathParam("entity") String entity,
-                              @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.schedule(request, type, entity, colo);
+                              @Dimension("colo") @QueryParam("colo") String colo,
+                              @QueryParam("skipDryRun") Boolean skipDryRun) {
+        return super.schedule(request, type, entity, colo, skipDryRun);
     }
 
     @POST
@@ -160,8 +161,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "validate")
     @Override
-    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
-        return super.validate(request, type);
+    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type,
+                              @QueryParam("skipDryRun") Boolean skipDryRun) {
+        return super.validate(request, type, skipDryRun);
     }
 
     @POST
@@ -171,8 +173,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult touch(@Dimension("entityType") @PathParam("type") String type,
                            @Dimension("entityName") @PathParam("entity") String entityName,
-                           @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.touch(type, entityName, colo);
+                           @Dimension("colo") @QueryParam("colo") String colo,
+                           @QueryParam("skipDryRun") Boolean skipDryRun) {
+        return super.touch(type, entityName, colo, skipDryRun);
     }
 
     @GET

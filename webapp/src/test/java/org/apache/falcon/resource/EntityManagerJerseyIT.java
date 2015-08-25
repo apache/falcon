@@ -131,7 +131,8 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
-    private ClientResponse update(TestContext context, Entity entity, Date endTime) throws Exception {
+    private ClientResponse update(TestContext context, Entity entity,
+                                  Date endTime, Boolean skipDryRun) throws Exception {
         File tmpFile = TestContext.getTempFile();
         entity.getEntityType().getMarshaller().marshal(entity, tmpFile);
         WebResource resource = context.service.path("api/entities/update/"
@@ -139,19 +140,24 @@ public class EntityManagerJerseyIT {
         if (endTime != null) {
             resource = resource.queryParam("effective", SchemaHelper.formatDateUTC(endTime));
         }
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
+        }
         return resource.header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
     }
 
-    private ClientResponse touch(TestContext context, Entity entity) {
+    private ClientResponse touch(TestContext context, Entity entity, Boolean skipDryRun) {
         WebResource resource = context.service.path("api/entities/touch/"
                 + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
-        ClientResponse clientResponse = resource
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
+        }
+        return resource
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
-        return clientResponse;
     }
 
     @Test
@@ -174,7 +180,7 @@ public class EntityManagerJerseyIT {
 
         //change output feed path and update feed as another user
         feed.getLocations().getLocations().get(0).setPath("/falcon/test/output2/${YEAR}/${MONTH}/${DAY}");
-        ClientResponse response = update(context, feed, null);
+        ClientResponse response = update(context, feed, null, false);
         context.assertSuccessful(response);
 
         bundles = OozieTestUtils.getBundles(context);
@@ -222,7 +228,7 @@ public class EntityManagerJerseyIT {
     }
 
     public void testDryRun() throws Exception {
-        //Schedule of invalid process should fail because of dryRun
+        //Schedule of invalid process should fail because of dryRun, and should pass when dryrun is skipped
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
         String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
@@ -237,7 +243,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response = context.validate(tmpFile.getAbsolutePath(), overlay, EntityType.PROCESS);
         context.assertFailure(response);
 
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, false);
+        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, false, null);
 
         //Fix the process and then submitAndSchedule should succeed
         Iterator<Property> itr = process.getProperties().getProperties().iterator();
@@ -256,8 +262,13 @@ public class EntityManagerJerseyIT {
         //Update with invalid property should fail again
         process.getProperties().getProperties().add(prop);
         updateEndtime(process);
-        response = update(context, process, null);
+        response = update(context, process, null, null);
         context.assertFailure(response);
+
+        // update where dryrun is disabled should succeed.
+        response = update(context, process, null, true);
+        context.assertSuccessful(response);
+
     }
 
     @Test
@@ -274,7 +285,7 @@ public class EntityManagerJerseyIT {
         process.getProperties().getProperties().get(0).setName("newprop");
         Date endTime = getEndTime();
         process.getClusters().getClusters().get(0).getValidity().setEnd(endTime);
-        response = update(context, process, endTime);
+        response = update(context, process, endTime, null);
         context.assertSuccessful(response);
 
         //Since the process endtime = update effective time, it shouldn't create new bundle
@@ -315,7 +326,7 @@ public class EntityManagerJerseyIT {
 
         updateEndtime(process);
         Date endTime = getEndTime();
-        response = update(context, process, endTime);
+        response = update(context, process, endTime, null);
         context.assertSuccessful(response);
 
         //Assert that update creates new bundle and old coord is running
@@ -349,7 +360,7 @@ public class EntityManagerJerseyIT {
         Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
 
         updateEndtime(process);
-        ClientResponse response = update(context, process, null);
+        ClientResponse response = update(context, process, null, null);
         context.assertSuccessful(response);
 
         //Assert that update does not create new bundle
@@ -371,13 +382,13 @@ public class EntityManagerJerseyIT {
         //Update end time of process required for touch
         Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
         updateEndtime(process);
-        ClientResponse response = update(context, process, null);
+        ClientResponse response = update(context, process, null, null);
         context.assertSuccessful(response);
         bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
 
         //Calling force update
-        response = touch(context, process);
+        response = touch(context, process, true);
         context.assertSuccessful(response);
         OozieTestUtils.waitForBundleStart(context, Status.PREP, Status.RUNNING);
 
@@ -871,7 +882,7 @@ public class EntityManagerJerseyIT {
         Date endTime = getEndTime();
         ExecutorService service =  Executors.newSingleThreadExecutor();
         Future<ClientResponse> future = service.submit(new UpdateCommand(context, process, endTime));
-        response = update(context, process, endTime);
+        response = update(context, process, endTime, false);
         ClientResponse duplicateUpdateThreadResponse = future.get();
 
         // since there are duplicate threads for updates, there is no guarantee which request will succeed
@@ -918,7 +929,7 @@ public class EntityManagerJerseyIT {
 
         @Override
         public ClientResponse call() throws Exception {
-            return update(context, process, endTime);
+            return update(context, process, endTime, false);
         }
     }
 }

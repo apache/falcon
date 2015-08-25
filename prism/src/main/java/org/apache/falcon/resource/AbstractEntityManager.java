@@ -206,7 +206,7 @@ public abstract class AbstractEntityManager {
      * @param type entity type
      * @return APIResule -Succeeded or Failed
      */
-    public APIResult validate(HttpServletRequest request, String type) {
+    public APIResult validate(HttpServletRequest request, String type, Boolean skipDryRun) {
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity entity = deserializeEntity(request, entityType);
@@ -217,7 +217,7 @@ public abstract class AbstractEntityManager {
                 Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
                 for (String cluster : clusters) {
                     try {
-                        getWorkflowEngine().dryRun(entity, cluster);
+                        getWorkflowEngine().dryRun(entity, cluster, skipDryRun);
                     } catch (FalconException e) {
                         throw new FalconException("dryRun failed on cluster " + cluster, e);
                     }
@@ -267,7 +267,8 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    public APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
+    public APIResult update(HttpServletRequest request, String type, String entityName,
+                            String colo, Boolean skipDryRun) {
         checkColo(colo);
         List<Entity> tokenList = null;
         try {
@@ -292,7 +293,7 @@ public abstract class AbstractEntityManager {
                 oldClusters.removeAll(newClusters); //deleted clusters
 
                 for (String cluster : newClusters) {
-                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster));
+                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster, skipDryRun));
                 }
                 for (String cluster : oldClusters) {
                     getWorkflowEngine().delete(oldEntity, cluster);
