@@ -61,7 +61,7 @@ public class DefaultTaskLogRetriever extends Configured implements TaskLogURLRet
         }
     }
 
-    protected List<String> getFromHistory(String jodId) throws IOException {
+    protected List<String> getFromHistory(String jobId) throws IOException {
         return null;
     }
 }

@@ -48,13 +48,22 @@ public class TaskLogRetrieverYarn extends DefaultTaskLogRetriever {
             LOG.warn("External id for workflow action is null");
             return null;
         }
+
+        if (conf.get(YARN_LOG_SERVER_URL) == null) {
+            LOG.warn("YARN log Server is null");
+            return null;
+        }
+
         try {
             Job job = cluster.getJob(jobID);
             if (job != null) {
                 TaskCompletionEvent[] events = job.getTaskCompletionEvents(0);
                 for (TaskCompletionEvent event : events) {
                     LogParams params = cluster.getLogParams(jobID, event.getTaskAttemptId());
-                    String url = SCHEME + conf.get(YARN_LOG_SERVER_URL) + "/"
+                    String url = (conf.get(YARN_LOG_SERVER_URL).startsWith(SCHEME)
+                            ? conf.get(YARN_LOG_SERVER_URL)
+                            : SCHEME + conf.get(YARN_LOG_SERVER_URL))
+                            + "/"
                             + event.getTaskTrackerHttp() + "/"
                             + params.getContainerId() + "/"
                             + params.getApplicationId() + "/"
