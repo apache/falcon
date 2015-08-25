@@ -49,7 +49,7 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isAlive(Cluster cluster) throws FalconException;
 
-    public abstract void schedule(Entity entity) throws FalconException;
+    public abstract void schedule(Entity entity, Boolean skipDryRun) throws FalconException;
 
     public abstract String suspend(Entity entity) throws FalconException;
 
@@ -61,7 +61,7 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract void reRun(String cluster, String wfId, Properties props, boolean isForced) throws FalconException;
 
-    public abstract void dryRun(Entity entity, String clusterName) throws FalconException;
+    public abstract void dryRun(Entity entity, String clusterName, Boolean skipDryRun) throws FalconException;
 
     public abstract boolean isActive(Entity entity) throws FalconException;
 
@@ -88,9 +88,10 @@ public abstract class AbstractWorkflowEngine {
     public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
                                                       List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract String update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException;
+    public abstract String update(Entity oldEntity, Entity newEntity,
+                                  String cluster, Boolean skipDryRun) throws FalconException;
 
-    public abstract String touch(Entity entity, String cluster) throws FalconException;
+    public abstract String touch(Entity entity, String cluster, Boolean skipDryRun) throws FalconException;
 
     public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
 

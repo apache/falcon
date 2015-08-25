@@ -230,10 +230,11 @@ public class TestContext {
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        scheduleProcess(processTemplate, overlay, true);
+        scheduleProcess(processTemplate, overlay, true, null);
     }
 
-    public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed) throws Exception {
+    public void scheduleProcess(String processTemplate, Map<String, String> overlay,
+                                boolean succeed, Boolean skipDryRun) throws Exception {
         ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
@@ -243,7 +244,7 @@ public class TestContext {
         response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS);
+        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun);
         if (succeed) {
             assertSuccessful(response);
         } else {
@@ -278,10 +279,20 @@ public class TestContext {
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
+        return submitAndSchedule(template, overlay, entityType, null);
+    }
+
+    public ClientResponse submitAndSchedule(String template, Map<String, String> overlay,
+                                            EntityType entityType, Boolean skipDryRun)
+        throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        return this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase())
+        WebResource resource = service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase());
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
+        }
+        return resource
                 .header("Cookie", getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .type(MediaType.TEXT_XML)
@@ -290,10 +301,20 @@ public class TestContext {
 
     public ClientResponse validate(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
+        return validate(template, overlay, entityType, null);
+    }
+
+    public ClientResponse validate(String template, Map<String, String> overlay,
+                                   EntityType entityType, Boolean skipDryRun)
+        throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        return this.service.path("api/entities/validate/" + entityType.name().toLowerCase())
+        WebResource resource = service.path("api/entities/validate/" + entityType.name().toLowerCase());
+        if (null != skipDryRun) {
+            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
+        }
+        return resource
             .header("Cookie", getAuthenticationToken())
             .accept(MediaType.TEXT_XML)
             .type(MediaType.TEXT_XML)

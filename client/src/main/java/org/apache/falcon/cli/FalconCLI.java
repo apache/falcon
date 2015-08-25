@@ -90,6 +90,7 @@ public class FalconCLI {
     public static final String PATH_OPT = "path";
     public static final String LIST_OPT = "list";
     public static final String TOUCH_OPT = "touch";
+    public static final String SKIPDRYRUN_OPT = "skipDryRun";
 
     public static final String FIELDS_OPT = "fields";
     public static final String FILTER_BY_OPT = "filterBy";
@@ -429,6 +430,11 @@ public class FalconCLI {
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
                 null, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
+        Boolean skipDryRun = null;
+        if (optionsList.contains(SKIPDRYRUN_OPT)) {
+            skipDryRun = true;
+        }
+
         EntityType entityTypeEnum = null;
         if (optionsList.contains(LIST_OPT)) {
             if (entityType == null) {
@@ -460,20 +466,19 @@ public class FalconCLI {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
-            result = client.update(entityType, entityName, filePath).getMessage();
+            result = client.update(entityType, entityName, filePath, skipDryRun).getMessage();
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            result =
-                    client.submitAndSchedule(entityType, filePath).getMessage();
+            result = client.submitAndSchedule(entityType, filePath, skipDryRun).getMessage();
         } else if (optionsList.contains(VALIDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            result = client.validate(entityType, filePath).getMessage();
+            result = client.validate(entityType, filePath, skipDryRun).getMessage();
         } else if (optionsList.contains(SCHEDULE_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.schedule(entityTypeEnum, entityName, colo).getMessage();
+            result = client.schedule(entityTypeEnum, entityName, colo, skipDryRun).getMessage();
         } else if (optionsList.contains(SUSPEND_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
@@ -522,7 +527,7 @@ public class FalconCLI {
         } else if (optionsList.contains(TOUCH_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.touch(entityType, entityName, colo).getMessage();
+            result = client.touch(entityType, entityName, colo, skipDryRun).getMessage();
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
@@ -742,6 +747,7 @@ public class FalconCLI {
         Option numInstances = new Option(NUM_INSTANCES_OPT, true,
                 "Number of instances to return per entity summary request");
         Option path = new Option(PATH_OPT, true, "Path for a feed's instance");
+        Option skipDryRun = new Option(SKIPDRYRUN_OPT, false, "skip dry run in workflow engine");
 
         entityOptions.addOption(url);
         entityOptions.addOption(path);
@@ -763,6 +769,7 @@ public class FalconCLI {
         entityOptions.addOption(offset);
         entityOptions.addOption(numResults);
         entityOptions.addOption(numInstances);
+        entityOptions.addOption(skipDryRun);
 
         return entityOptions;
     }
@@ -926,6 +933,9 @@ public class FalconCLI {
         Option recipeOperation = new Option(RECIPE_OPERATION, true, "recipe operation");
         recipeOptions.addOption(recipeOperation);
 
+        Option skipDryRunOperation = new Option(SKIPDRYRUN_OPT, false, "skip dryrun operation");
+        recipeOptions.addOption(skipDryRunOperation);
+
         return recipeOptions;
     }
 
@@ -1015,6 +1025,11 @@ public class FalconCLI {
     }
 
     private void recipeCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
+        Set<String> optionsList = new HashSet<String>();
+        for (Option option : commandLine.getOptions()) {
+            optionsList.add(option.getOpt());
+        }
+
         String recipeName = commandLine.getOptionValue(RECIPE_NAME);
         String recipeToolClass = commandLine.getOptionValue(RECIPE_TOOL_CLASS_NAME);
         String recipeOperation = commandLine.getOptionValue(RECIPE_OPERATION);
@@ -1022,8 +1037,12 @@ public class FalconCLI {
         validateNotEmpty(recipeName, RECIPE_NAME);
         validateNotEmpty(recipeOperation, RECIPE_OPERATION);
         validateRecipeOperations(recipeOperation);
+        Boolean skipDryRun = null;
+        if (optionsList.contains(SKIPDRYRUN_OPT)) {
+            skipDryRun = true;
+        }
 
-        String result = client.submitRecipe(recipeName, recipeToolClass, recipeOperation).toString();
+        String result = client.submitRecipe(recipeName, recipeToolClass, recipeOperation, skipDryRun).toString();
         OUT.get().println(result);
     }
 

@@ -112,6 +112,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Arrays.asList(Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED);
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
     private static final String FALCON_INSTANCE_SOURCE_CLUSTERS = "falcon.instance.source.clusters";
+    private static final String FALCON_SKIP_DRYRUN = "falcon.skip.dryrun";
 
     private static final int WORKFLOW_STATUS_RETRY_DELAY_MS = 100; // milliseconds
     private static final String WORKFLOW_STATUS_RETRY_COUNT = "workflow.status.retry.count";
@@ -142,7 +143,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void schedule(Entity entity) throws FalconException {
+    public void schedule(Entity entity, Boolean skipDryRun) throws FalconException {
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -168,7 +169,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 }
 
                 //Do dryRun of coords before schedule as schedule is asynchronous
-                dryRunInternal(cluster, new Path(properties.getProperty(OozieEntityBuilder.ENTITY_PATH)));
+                dryRunInternal(cluster, new Path(properties.getProperty(OozieEntityBuilder.ENTITY_PATH)), skipDryRun);
                 scheduleEntity(clusterName, properties, entity);
             }
         }
@@ -196,18 +197,28 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void dryRun(Entity entity, String clusterName) throws FalconException {
+    public void dryRun(Entity entity, String clusterName, Boolean skipDryRun) throws FalconException {
         OozieEntityBuilder builder = OozieEntityBuilder.get(entity);
         Path buildPath = new Path("/tmp", "falcon" + entity.getName() + System.currentTimeMillis());
         Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
         Properties props = builder.build(cluster, buildPath);
         if (props != null) {
-            dryRunInternal(cluster, new Path(props.getProperty(OozieEntityBuilder.ENTITY_PATH)));
+            dryRunInternal(cluster, new Path(props.getProperty(OozieEntityBuilder.ENTITY_PATH)), skipDryRun);
         }
     }
 
+    private void dryRunInternal(Cluster cluster, Path buildPath, Boolean skipDryRun) throws FalconException {
+        if (null != skipDryRun && skipDryRun) {
+            LOG.info("Skipping dryrun as directed by param in cli/RestApi.");
+            return;
+        } else {
+            String skipDryRunStr = RuntimeProperties.get().getProperty(FALCON_SKIP_DRYRUN, "false").toLowerCase();
+            if (Boolean.valueOf(skipDryRunStr)) {
+                LOG.info("Skipping dryrun as directed by Runtime properties.");
+                return;
+            }
+        }
 
-    private void dryRunInternal(Cluster cluster, Path buildPath) throws FalconException {
         BUNDLEAPP bundle = OozieBundleBuilder.unmarshal(cluster, buildPath);
         OozieClient client = OozieClientFactory.get(cluster.getName());
         for (COORDINATOR coord : bundle.getCoordinator()) {
@@ -322,7 +333,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
 
         return Collections.max(bundles, new Comparator<BundleJob>() {
-            @Override public int compare(BundleJob o1, BundleJob o2) {
+            @Override
+            public int compare(BundleJob o1, BundleJob o2) {
                 return o1.getCreatedTime().compareTo(o2.getCreatedTime());
             }
         });
@@ -683,7 +695,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         for (WorkflowAction action : wfActions) {
             if (action.getType().equalsIgnoreCase("sub-workflow") && StringUtils.isNotEmpty(action.getExternalId())) {
                 // if the action is sub-workflow, get job urls of all actions within the sub-workflow
-                List<WorkflowAction> subWorkFlowActions = getWorkflowInfo(cluster, action.getExternalId()).getActions();
+                List<WorkflowAction> subWorkFlowActions = getWorkflowInfo(cluster,
+                        action.getExternalId()).getActions();
                 for (WorkflowAction subWfAction : subWorkFlowActions) {
                     if (!subWfAction.getType().startsWith(":")) {
                         InstancesResult.InstanceAction instanceAction =
@@ -1039,7 +1052,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public String update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException {
+    public String update(Entity oldEntity, Entity newEntity,
+                         String cluster, Boolean skipDryRun) throws FalconException {
         BundleJob bundle = findLatestBundle(oldEntity, cluster);
 
         boolean entityUpdated = false;
@@ -1068,26 +1082,27 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 return getUpdateString(newEntity, new Date(), bundle, bundle);
             }
 
-            LOG.debug("Going to update! : {} for cluster {}, bundle: {}", newEntity.toShortString(), cluster, bundle
-                .getId());
+            LOG.debug("Going to update! : {} for cluster {}, bundle: {}",
+                    newEntity.toShortString(), cluster, bundle.getId());
             result.append(updateInternal(oldEntity, newEntity, clusterEntity, bundle,
-                    CurrentUser.getUser())).append("\n");
+                    CurrentUser.getUser(), skipDryRun)).append("\n");
             LOG.info("Entity update complete: {} for cluster {}, bundle: {}", newEntity.toShortString(), cluster,
                 bundle.getId());
         }
 
-        result.append(updateDependents(clusterEntity, oldEntity, newEntity));
+        result.append(updateDependents(clusterEntity, oldEntity, newEntity, skipDryRun));
         return result.toString();
     }
 
     @Override
-    public String touch(Entity entity, String cluster) throws FalconException {
+    public String touch(Entity entity, String cluster, Boolean skipDryRun) throws FalconException {
         BundleJob bundle = findLatestBundle(entity, cluster);
         Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
         StringBuilder result = new StringBuilder();
         if (bundle != MISSING) {
-            LOG.info("Updating entity {} for cluster: {}, bundle: {}", entity.toShortString(), cluster, bundle.getId());
-            String output = updateInternal(entity, entity, clusterEntity, bundle, CurrentUser.getUser());
+            LOG.info("Updating entity {} for cluster: {}, bundle: {}",
+                    entity.toShortString(), cluster, bundle.getId());
+            String output = updateInternal(entity, entity, clusterEntity, bundle, CurrentUser.getUser(), skipDryRun);
             result.append(output).append("\n");
             LOG.info("Entity update complete: {} for cluster {}, bundle: {}", entity.toShortString(), cluster,
                     bundle.getId());
@@ -1124,7 +1139,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return  builder.toString();
     }
 
-    private String updateDependents(Cluster cluster, Entity oldEntity, Entity newEntity) throws FalconException {
+    private String updateDependents(Cluster cluster, Entity oldEntity,
+                                    Entity newEntity, Boolean skipDryRun) throws FalconException {
         //Update affected entities
         Set<Entity> affectedEntities = EntityGraph.get().getDependents(oldEntity);
         StringBuilder result = new StringBuilder();
@@ -1147,7 +1163,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.info("Triggering update for {}, {}", cluster, affectedProcBundle.getId());
 
             result.append(updateInternal(affectedEntity, affectedEntity, cluster, affectedProcBundle,
-                affectedProcBundle.getUser())).append("\n");
+                affectedProcBundle.getUser(), skipDryRun)).append("\n");
             LOG.info("Entity update complete: {} for cluster {}, bundle: {}",
                 affectedEntity.toShortString(), cluster, affectedProcBundle.getId());
         }
@@ -1178,7 +1194,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return null;
     }
 
-    private void updateCoords(String cluster, BundleJob bundle, int concurrency, Date endTime) throws FalconException {
+    private void updateCoords(String cluster, BundleJob bundle,
+                              int concurrency, Date endTime) throws FalconException {
         if (endTime.compareTo(now()) <= 0) {
             throw new FalconException("End time " + SchemaHelper.formatDateUTC(endTime) + " can't be in the past");
         }
@@ -1217,14 +1234,14 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob oldBundle,
-        String user) throws FalconException {
+        String user, Boolean skipDryRun) throws FalconException {
         String clusterName = cluster.getName();
 
         Date effectiveTime = getEffectiveTime(cluster, newEntity);
         LOG.info("Effective time " + effectiveTime);
 
         //Validate that new entity can be scheduled
-        dryRunForUpdate(cluster, newEntity, effectiveTime);
+        dryRunForUpdate(cluster, newEntity, effectiveTime, skipDryRun);
 
         boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
 
@@ -1256,11 +1273,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return EntityUtil.getNextStartTime(newEntity, cluster, effectiveTime);
     }
 
-    private void dryRunForUpdate(Cluster cluster, Entity entity, Date startTime) throws FalconException {
+    private void dryRunForUpdate(Cluster cluster, Entity entity, Date startTime,
+                                 Boolean skipDryRun) throws FalconException {
         Entity clone = entity.copy();
         EntityUtil.setStartDate(clone, cluster.getName(), startTime);
         try {
-            dryRun(clone, cluster.getName());
+            dryRun(clone, cluster.getName(), skipDryRun);
         } catch (FalconException e) {
             throw new FalconException("The new entity " + entity.toShortString() + " can't be scheduled", e);
         }
