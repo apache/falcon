@@ -28,6 +28,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.json.simple.JSONValue;
@@ -95,6 +96,7 @@ public class WorkflowExecutionContext {
 
     private final Map<WorkflowExecutionArgs, String> context;
     private final long creationTime;
+    private Configuration actionJobConf;
 
     public WorkflowExecutionContext(Map<WorkflowExecutionArgs, String> context) {
         this.context = context;
@@ -301,7 +303,9 @@ public class WorkflowExecutionContext {
         OutputStream out = null;
         Path file = new Path(contextFile);
         try {
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(file.toUri());
+            FileSystem fs =
+                    actionJobConf == null ? HadoopClientFactory.get().createProxiedFileSystem(file.toUri())
+                                 : HadoopClientFactory.get().createProxiedFileSystem(file.toUri(), actionJobConf);
             out = fs.create(file);
             out.write(JSONValue.toJSONString(context).getBytes());
         } catch (IOException e) {
@@ -346,7 +350,12 @@ public class WorkflowExecutionContext {
         return new Path(logDir + parentSuffix, entityName + "-wf-post-exec-context.json").toString();
     }
 
+
     public static WorkflowExecutionContext create(String[] args, Type type) throws FalconException {
+        return create(args, type, null);
+    }
+
+    public static WorkflowExecutionContext create(String[] args, Type type, Configuration conf) throws FalconException {
         Map<WorkflowExecutionArgs, String> wfProperties = new HashMap<WorkflowExecutionArgs, String>();
 
         try {
@@ -362,6 +371,7 @@ public class WorkflowExecutionContext {
         }
 
         WorkflowExecutionContext executionContext = new WorkflowExecutionContext(wfProperties);
+        executionContext.actionJobConf = conf;
         executionContext.context.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
         executionContext.context.put(WorkflowExecutionArgs.CONTEXT_FILE,
                 getFilePath(executionContext.getLogDir(), executionContext.getEntityName(),

@@ -22,6 +22,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -58,7 +59,13 @@ public class JobLogMover {
         new HashSet<String>(Arrays.asList(new String[]{"eviction", "replication", }));
 
     private Configuration getConf() {
-        return new Configuration();
+        Configuration conf = null;
+        try {
+            conf = OozieActionConfigurationHelper.createActionConf();
+        } catch (IOException ioe) {
+            LOG.warn("Cannot get Oozie configuration.  Returning default");
+        }
+        return conf == null ? new Configuration(): conf;
     }
 
     public int run(WorkflowExecutionContext context) {
@@ -76,7 +83,7 @@ public class JobLogMover {
             //the corresponding job logs are stored within the respective dir
             Path path = new Path(context.getLogDir() + "/"
                     + String.format("%03d", context.getWorkflowRunId()));
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri(), getConf());
 
             if (EntityType.FEED.name().equalsIgnoreCase(context.getEntityType())
                     || notUserWorkflowEngineIsOozie(context.getUserWorkflowEngine())) {
