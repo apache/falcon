@@ -1,4 +1,4 @@
----++ POST  api/entities/update/:entity-type/:entity-name
+---++ POST  api/entities/update/:entity-type/:entity-name?skipDryRun=false
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -10,6 +10,7 @@ Updates the submitted entity.
 ---++ Parameters
    * :entity-type can be feed or process.
    * :entity-name is name of the feed or process.
+   * skipDryRun : Optional query param, Falcon skips oozie dryrun when value is set to true.
 
 ---++ Results
 Result of the validation.
