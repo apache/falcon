@@ -20,6 +20,8 @@ Once submitted, an entity can be scheduled using schedule option. Process and fe
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [process|feed] -name <<name>> -schedule
 
+Optional Arg : -skipDryRun. When this argument is specified, Falcon skips oozie dryrun.
+
 Example:
 $FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule
 
@@ -60,8 +62,6 @@ Optional Args : -fields <<field1,field2>>
 <a href="./Restapi/EntityList.html">Optional params described here.</a>
 
 
-
-
 ---+++Summary
 
 Summary of entities of a particular type and a cluster will be listed. Entity summary has N most recent instances of entity.
@@ -83,6 +83,8 @@ not allowed.
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update -file <<path_to_file>>
 
+Optional Arg : -skipDryRun. When this argument is specified, Falcon skips oozie dryrun.
+
 Example:
 $FALCON_HOME/bin/falcon entity -type process -name HourlyReportsGenerator -update -file /process/definition.xml
 
@@ -92,6 +94,8 @@ Force Update operation allows an already submitted/scheduled entity to be update
 
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -touch
+
+Optional Arg : -skipDryRun. When this argument is specified, Falcon skips oozie dryrun.
 
 ---+++Status
 
