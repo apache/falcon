@@ -13,6 +13,8 @@ Trunk (Unreleased)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1378 Falcon documentation lacks information on how to run Falcon on standalone Oozie/Hadoop setup(Pallavi Rao via Ajay Yadava)
+
     FALCON-1419 Document ability to disable oozie dryRun during entity schedule actions(Balu Vellanki via Ajay Yadava)
 
     FALCON-1174 Ability to disable oozie dryrun while scheduling or updating the falcon entity(Balu Vellanki via Ajay Yadava)
