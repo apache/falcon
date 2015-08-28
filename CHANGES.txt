@@ -95,6 +95,8 @@ Trunk (Unreleased)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1312 Falcon post processing action should use Oozie prepared configuration(Venkat Ranganathan via Ajay Yadava)
+
     FALCON-1038 Log mover fails for map-reduce action(Peeyush Bishnoi via Ajay Yadava)
     
     FALCON-1412 Process waits indefinitely and finally timedout even though missing dependencies are met(Pallavi Rao via Ajay Yadava)

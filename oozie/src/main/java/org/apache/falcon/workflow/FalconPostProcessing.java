@@ -20,6 +20,7 @@ package org.apache.falcon.workflow;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.messaging.JMSMessageProducer;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -35,13 +36,14 @@ public class FalconPostProcessing extends Configured implements Tool {
     private static final Logger LOG = LoggerFactory.getLogger(FalconPostProcessing.class);
 
     public static void main(String[] args) throws Exception {
-        ToolRunner.run(new Configuration(), new FalconPostProcessing(), args);
+        Configuration conf = OozieActionConfigurationHelper.createActionConf();
+        ToolRunner.run(conf, new FalconPostProcessing(), args);
     }
 
     @Override
     public int run(String[] args) throws Exception {
         WorkflowExecutionContext context = WorkflowExecutionContext.create(args,
-                WorkflowExecutionContext.Type.POST_PROCESSING);
+                WorkflowExecutionContext.Type.POST_PROCESSING, getConf());
         LOG.info("Post workflow execution context created {}", context);
         // serialize the context to HDFS under logs dir before sending the message
         context.serialize();
