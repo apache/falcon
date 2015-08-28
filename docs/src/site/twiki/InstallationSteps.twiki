@@ -76,3 +76,12 @@ $src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 >> Falcon package is available in <<falcon home>>/target/apache-falcon-<<version>>-bin.tar.gz
 >> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
 </verbatim>
+
+*NOTE:* If you have a separate Apache Oozie installation, you will need to follow some additional steps:
+   1. Once you have setup the Falcon Server, copy libraries under {falcon-server-dir}/oozie/libext/ to {oozie-install-dir}/libext.
+   1. Modify Oozie's configuration file. Copy all Falcon related properties from {falcon-server-dir}/oozie/conf/oozie-site.xml to {oozie-install-dir}/conf/oozie-site.xml
+   1. Restart oozie:
+      1. cd {oozie-install-dir}
+      1. sudo -u oozie ./bin/oozie-stop.sh
+      1. sudo -u oozie ./bin/oozie-setup.sh prepare-war
+      1. sudo -u oozie ./bin/oozie-start.sh
