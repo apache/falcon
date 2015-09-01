@@ -1,6 +1,9 @@
 Apache Falcon Change log
-
 Trunk (Unreleased)
+
+Branch: 0.7 (Proposed Release Version: 0.7)
+  FALCON-1424 Update changes.txt for 0.7 branch(Ajay Yadava)
+
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
