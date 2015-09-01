@@ -67,8 +67,6 @@
             <arg>FILESYSTEM</arg>
             <arg>-availabilityFlag</arg>
             <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
-            <arg>-counterLogDir</arg>
-            <arg>${logDir}/job-${nominalTime}</arg>
         </java>
         <ok to="success"/>
         <error to="failure"/>
