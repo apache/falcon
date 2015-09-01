@@ -98,6 +98,8 @@ Branch: 0.7 (Proposed Release Version: 0.7)
     (Suhas Vasu)
 
   BUG FIXES
+    FALCON-1423 HDFS recipe broken: Unrecognized option: -counterLogDir(Sowmya Ramesh via Ajay Yadava)
+
     FALCON-1312 Falcon post processing action should use Oozie prepared configuration(Venkat Ranganathan via Ajay Yadava)
 
     FALCON-1038 Log mover fails for map-reduce action(Peeyush Bishnoi via Ajay Yadava)
