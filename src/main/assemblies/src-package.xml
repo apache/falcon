@@ -35,6 +35,7 @@
                 <exclude>backlog</exclude>
                 <exclude>**/.idea/**</exclude>
                 <exclude>**/*.iml</exclude>
+                <exclude>**/addons/designer/**</exclude>
 		<exclude>**/*.ipr</exclude>
 		<exclude>**/*.iws</exclude>
 		<exclude>**/*.log</exclude>
