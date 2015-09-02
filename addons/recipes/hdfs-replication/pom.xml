@@ -25,7 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon.recipes</groupId>
     <artifactId>falcon-hdfs-replication-recipe</artifactId>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.8-SNAPSHOT</version>
     <description>Apache Falcon Sample Hdfs Replicaiton Recipe</description>
     <name>Apache Falcon Sample Hdfs Replication Recipe</name>
     <packaging>jar</packaging>
