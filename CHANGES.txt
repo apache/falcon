@@ -29,6 +29,8 @@ Branch: 0.7 (Proposed Release Version: 0.7)
     FALCON-796 Enable users to triage data processing issues through falcon (Ajay Yadava)
     
   IMPROVEMENTS
+    FALCON-1432 Fix licenses in LICENSES.txt(Ajay Yadava)
+
     FALCON-1378 Falcon documentation lacks information on how to run Falcon on standalone Oozie/Hadoop setup(Pallavi Rao via Ajay Yadava)
 
     FALCON-1419 Document ability to disable oozie dryRun during entity schedule actions(Balu Vellanki via Ajay Yadava)
