@@ -53,6 +53,7 @@ import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -94,7 +95,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         Configuration conf = EmbeddedCluster.newCluster("testCluster").getConf();
         hdfsUrl = conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);

@@ -23,6 +23,7 @@ import org.apache.falcon.aspect.AuditMessage;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.aspect.ResourceMessage;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -49,7 +50,7 @@ public class ChainableMonitoringPluginTest
         GenericAlert.instrumentFailedInstance("cluster", "process", "agg-coord", "120:df",
                 "ef-id", "wf-user", "1", "DELETE", "now", "error", "none", 1242);
         GenericAlert.alertJMSMessageConsumerFailed("test-alert", new Exception("test"));
-        GenericAlert.audit("falcon", "127.0.0.1", "localhost",  "test-action", "127.0.0.1",
+        GenericAlert.audit(FalconTestUtil.TEST_USER_1, "127.0.0.1", "localhost",  "test-action", "127.0.0.1",
                 SchemaHelper.formatDateUTC(new Date()));
     }
 

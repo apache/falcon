@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconRadixUtils;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -66,7 +67,7 @@ public class FeedLocationStoreTest extends AbstractTestBase {
         store = ConfigurationStore.get();
         store.init();
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
 
     }
     @BeforeMethod

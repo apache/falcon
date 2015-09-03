@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -383,7 +384,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         try {
             // need a new parser since it caches authorization enabled flag
@@ -407,7 +408,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         try {
             InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");

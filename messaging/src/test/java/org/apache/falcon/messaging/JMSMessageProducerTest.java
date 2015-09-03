@@ -20,6 +20,7 @@ package org.apache.falcon.messaging;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.testng.Assert;
@@ -146,7 +147,7 @@ public class JMSMessageProducerTest {
     private List<String> createCommonArgs() {
         return new ArrayList<String>(Arrays.asList(
                 "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
-                "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
+                "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), FalconTestUtil.TEST_USER_1,
                 "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
                 "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2011-01-01-01-00",
                 "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), "2012-01-01-01-00",

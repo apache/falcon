@@ -20,6 +20,7 @@ package org.apache.falcon.messaging;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +61,7 @@ public class ProcessProducerTest {
             "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeedNames, ","),
             "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), StringUtils.join(outputFeedPaths, ","),
             "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
-            "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
+            "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), FalconTestUtil.TEST_USER_1,
             "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
             "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2011-01-01-01-00",
             "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), "2012-01-01-01-00",
@@ -153,7 +154,7 @@ public class ProcessProducerTest {
         Assert.assertEquals(m.getString(WorkflowExecutionArgs.WORKFLOW_ID.getName()),
                 "workflow-01-00");
         Assert.assertEquals(m.getString(WorkflowExecutionArgs.WORKFLOW_USER.getName()),
-                "falcon");
+                FalconTestUtil.TEST_USER_1);
         Assert.assertEquals(m.getString(WorkflowExecutionArgs.RUN_ID.getName()), "1");
         Assert.assertEquals(m.getString(WorkflowExecutionArgs.NOMINAL_TIME.getName()),
                 "2011-01-01-01-00");

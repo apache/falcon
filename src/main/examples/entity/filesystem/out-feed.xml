@@ -34,6 +34,6 @@
         <location type="data" path="/data/out/${YEAR}/${MONTH}/${DAY}/${HOUR}"/>
     </locations>
 
-    <ACL owner="testuser" group="group" permission="0x644"/>
+    <ACL owner="testuser-ut-user" group="group" permission="0x644"/>
     <schema location="/schema/out/out.format.csv" provider="csv"/>
 </feed>

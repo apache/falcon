@@ -36,7 +36,7 @@
 
     <table uri="catalog:source_db:source_clicks_table#ds=${YEAR}${MONTH}${DAY};region=${region}" />
 
-    <ACL owner="testuser" group="group" permission="0x755"/>
+    <ACL owner="testuser-ut-user" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
 
 </feed>

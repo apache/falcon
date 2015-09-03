@@ -22,6 +22,7 @@ package org.apache.falcon.security;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -101,12 +102,12 @@ public class SecurityUtilTest {
         Assert.assertEquals(CurrentUser.getUser(), currentUser);
 
         ACL acl = new ACL();
-        acl.setOwner("testuser");
+        acl.setOwner(FalconTestUtil.TEST_USER_2);
         acl.setGroup("users");
         Mockito.when(process.getACL()).thenReturn(acl);
 
         // When ACL is specified
         SecurityUtil.tryProxy(process);
-        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+        Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);
     }
 }

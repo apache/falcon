@@ -19,6 +19,7 @@ package org.apache.falcon.rerun.queue;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.rerun.event.RerunEvent;
+import org.apache.falcon.util.FalconTestUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,7 +46,7 @@ public class InMemoryQueueTest {
             long time = System.currentTimeMillis();
             int delay = ((5 - index) / 2) * 50;
             MyEvent event = new MyEvent("someCluster", Integer.toString(index),
-                    time, delay, "someType", "someName", "someInstance", 0, "falcon");
+                    time, delay, "someType", "someName", "someInstance", 0, FalconTestUtil.TEST_USER_1);
             queue.offer(event);
             boolean inserted = false;
             for (int posn = 0; posn < events.size(); posn++) {

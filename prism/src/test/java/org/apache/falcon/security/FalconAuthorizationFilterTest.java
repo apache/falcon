@@ -22,6 +22,7 @@ import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.mockito.Mock;
@@ -204,7 +205,7 @@ public class FalconAuthorizationFilterTest {
 
     @Test
     public void testDoFilterForEntityWithInvalidEntity() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
 
@@ -231,7 +232,7 @@ public class FalconAuthorizationFilterTest {
 
     @Test
     public void testDoFilterForDeleteEntityInvalidEntity() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_1);
 
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
 

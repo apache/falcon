@@ -35,7 +35,7 @@
         <location name="temp" path="/tmp"/>
         <location name="working" path="/projects/falcon/working"/>
     </locations>
-    <ACL owner="falcon" group="falcon"/>
+    <ACL owner="falcon-ut-user" group="falcon"/>
     <properties>
         <property name="field1" value="value1"/>
         <property name="field2" value="value2"/>

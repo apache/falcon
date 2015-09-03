@@ -20,6 +20,7 @@ package org.apache.falcon.hadoop;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.ipc.RemoteException;
@@ -77,7 +78,7 @@ public class HadoopClientFactoryTest {
 
         UserGroupInformation.setConfiguration(conf);
         UserGroupInformation realUser = UserGroupInformation.createUserForTesting(
-                "testuser", new String[]{"testgroup"});
+                FalconTestUtil.TEST_USER_2, new String[]{"testgroup"});
         UserGroupInformation.createProxyUserForTesting("proxyuser", realUser, new String[]{"proxygroup"});
 
         URI uri = new URI(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
@@ -91,7 +92,7 @@ public class HadoopClientFactoryTest {
         Configuration conf = embeddedCluster.getConf();
 
         UserGroupInformation realUser = UserGroupInformation.createUserForTesting(
-                "testuser", new String[]{"testgroup"});
+                FalconTestUtil.TEST_USER_2, new String[]{"testgroup"});
         UserGroupInformation.createProxyUserForTesting("proxyuser", realUser, new String[]{"proxygroup"});
         UserGroupInformation.setConfiguration(conf);
 
