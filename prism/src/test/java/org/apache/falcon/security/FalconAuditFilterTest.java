@@ -18,6 +18,7 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.mockito.Mock;
@@ -68,7 +69,7 @@ public class FalconAuditFilterTest {
             filter.init(mockConfig);
         }
 
-        Mockito.when(mockRequest.getRemoteUser()).thenReturn("falcon");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_1);
         Mockito.when(mockRequest.getRemoteHost()).thenReturn("http://remotehost");
         Mockito.when(mockRequest.getRequestURI()).thenReturn("http://127.0.0.1:15000");
         filter.doFilter(mockRequest, mockResponse, mockChain);
@@ -106,7 +107,7 @@ public class FalconAuditFilterTest {
             filter.init(mockConfig);
         }
 
-        Mockito.when(mockRequest.getRemoteUser()).thenReturn("falcon");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_1);
         Mockito.when(mockRequest.getRequestURI()).thenReturn("http://127.0.0.1:15000");
         Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=guest");
         filter.doFilter(mockRequest, mockResponse, mockChain);

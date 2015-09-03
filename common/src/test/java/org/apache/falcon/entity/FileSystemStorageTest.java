@@ -35,6 +35,7 @@ import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -58,7 +59,7 @@ import java.util.TimeZone;
  */
 public class FileSystemStorageTest {
 
-    private static final String USER = "falcon";
+    private static final String USER = FalconTestUtil.TEST_USER_1;
 
     @BeforeClass
     public void setUp() {
@@ -121,7 +122,7 @@ public class FileSystemStorageTest {
         locations.add(location);
 
         FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
-        Assert.assertEquals(storage.getWorkingDir().toString(), "/user/falcon");
+        Assert.assertEquals(storage.getWorkingDir().toString(), "/user/" + FalconTestUtil.TEST_USER_1);
     }
 
     @Test

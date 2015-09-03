@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -57,7 +58,7 @@ public class DefaultAuthorizationProviderTest {
 
     @BeforeClass
     public void setUp() throws Exception {
-        realUser = UserGroupInformation.createUserForTesting("falcon", new String[]{"falcon", });
+        realUser = UserGroupInformation.createUserForTesting(FalconTestUtil.TEST_USER_1, new String[]{"falcon", });
 
         CurrentUser.authenticate(EntityBuilderTestUtil.USER);
         org.testng.Assert.assertEquals(CurrentUser.getUser(), EntityBuilderTestUtil.USER);

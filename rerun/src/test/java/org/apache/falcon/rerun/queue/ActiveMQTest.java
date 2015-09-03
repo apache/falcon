@@ -20,6 +20,7 @@ package org.apache.falcon.rerun.queue;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.event.RerunEvent;
+import org.apache.falcon.util.FalconTestUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -51,7 +52,7 @@ public class ActiveMQTest {
 
         RerunEvent event = new LaterunEvent("clusterName", "wfId",
                 System.currentTimeMillis(), 60 * 1000, "entityType",
-                "entityName", "instance", 0, "falcon");
+                "entityName", "instance", 0, FalconTestUtil.TEST_USER_1);
 
         try {
             activeMQueue.offer(event);

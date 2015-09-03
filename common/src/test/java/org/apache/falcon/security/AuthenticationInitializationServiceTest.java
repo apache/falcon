@@ -19,6 +19,7 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
@@ -123,20 +124,21 @@ public class AuthenticationInitializationServiceTest {
     public void testInitForKerberosAuthenticationMethod() throws FalconException {
         Mockito.when(mockLoginUser.getAuthenticationMethod())
                 .thenReturn(UserGroupInformation.AuthenticationMethod.KERBEROS);
-        Mockito.when(mockLoginUser.getUserName()).thenReturn("falcon");
+        Mockito.when(mockLoginUser.getUserName()).thenReturn(FalconTestUtil.TEST_USER_1);
         Mockito.when(mockLoginUser.isFromKeytab()).thenReturn(Boolean.TRUE);
 
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE,
                 KerberosAuthenticationHandler.TYPE);
         StartupProperties.get().setProperty(
                 AuthenticationInitializationService.KERBEROS_KEYTAB, "falcon.kerberos.keytab");
-        StartupProperties.get().setProperty(AuthenticationInitializationService.KERBEROS_PRINCIPAL, "falcon");
+        StartupProperties.get().setProperty(AuthenticationInitializationService.KERBEROS_PRINCIPAL,
+                FalconTestUtil.TEST_USER_1);
 
         authenticationService.init();
 
         Assert.assertTrue(mockLoginUser.isFromKeytab());
         Assert.assertEquals(mockLoginUser.getAuthenticationMethod().name(),
                 KerberosAuthenticationHandler.TYPE);
-        Assert.assertEquals("falcon", mockLoginUser.getUserName());
+        Assert.assertEquals(FalconTestUtil.TEST_USER_1, mockLoginUser.getUserName());
     }
 }

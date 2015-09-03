@@ -30,6 +30,6 @@
 
     <table uri="catalog:default:out_table#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}" />
 
-    <ACL owner="testuser" group="group" permission="0x644"/>
+    <ACL owner="testuser-ut-user" group="group" permission="0x644"/>
     <schema location="/schema/out/out.format.csv" provider="csv"/>
 </feed>

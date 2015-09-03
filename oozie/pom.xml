@@ -49,6 +49,14 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-oozie-el-extension</artifactId>
         </dependency>
 

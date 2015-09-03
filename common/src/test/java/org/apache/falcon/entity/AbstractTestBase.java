@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -76,7 +77,7 @@ public class AbstractTestBase {
         store = ConfigurationStore.get();
         store.init();
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
     }
 
     protected void cleanupStore() throws FalconException {

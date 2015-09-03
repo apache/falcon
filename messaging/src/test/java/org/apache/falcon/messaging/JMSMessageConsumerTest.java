@@ -22,6 +22,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
@@ -117,7 +118,7 @@ public class JMSMessageConsumerTest {
         message.put(WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-" + i);
         message.put(WorkflowExecutionArgs.TOPIC_NAME.getName(), TOPIC_NAME);
         message.put(WorkflowExecutionArgs.STATUS.getName(), i != 15 ? "SUCCEEDED" : "FAILED");
-        message.put(WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon");
+        message.put(WorkflowExecutionArgs.WORKFLOW_USER.getName(), FalconTestUtil.TEST_USER_1);
 
         String[] args = new String[message.size() * 2];
         int index = 0;

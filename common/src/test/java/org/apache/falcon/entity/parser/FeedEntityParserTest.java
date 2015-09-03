@@ -41,6 +41,7 @@ import org.apache.falcon.entity.v0.feed.Partitions;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -85,7 +86,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         cluster.setName("backupCluster");
         store.publish(EntityType.CLUSTER, cluster);
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
         modifiableFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
     }
@@ -148,7 +149,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
                 FeedHelper.createStorage(feed).getUriTemplate(LocationType.STATS));
 
         assertEquals(feed.getACL().getGroup(), "group");
-        assertEquals(feed.getACL().getOwner(), "testuser");
+        assertEquals(feed.getACL().getOwner(), FalconTestUtil.TEST_USER_2);
         assertEquals(feed.getACL().getPermission(), "0x755");
 
         assertEquals(feed.getSchema().getLocation(), "/schema/clicks");
