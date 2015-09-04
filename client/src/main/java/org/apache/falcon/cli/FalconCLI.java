@@ -604,10 +604,10 @@ public class FalconCLI {
                 }else if (filterType.equals("summary")) {
                     InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(tempKeyVal[0].toUpperCase());
                 } else {
-                    throw new IllegalArgumentException("Invalid API call");
+                    throw new IllegalArgumentException("Invalid API call: filterType is not valid");
                 }
             } catch (IllegalArgumentException ie) {
-                throw new FalconCLIException("Invalid filterBy argument : " + FILTER_BY_OPT);
+                throw new FalconCLIException("Invalid filterBy argument : " + tempKeyVal[0] + " in : " + s);
             }
         }
     }
