@@ -17,13 +17,11 @@
  */
 package org.apache.falcon.aspect;
 
-import org.aspectj.lang.annotation.Aspect;
 import org.testng.annotations.Test;
 
 /**
  * Test class for Alerts.
  */
-@Aspect
 public class GenericAlertTest {
 
     @Test

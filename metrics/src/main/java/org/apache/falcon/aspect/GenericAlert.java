@@ -22,14 +22,12 @@ import org.apache.falcon.monitors.Auditable;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.monitors.TimeTaken;
-import org.aspectj.lang.annotation.Aspect;
 
 /**
  * Create a method with params you want to monitor/alert/audit via Aspect
  * and log in metric, invoke this method from code.
  */
 @SuppressWarnings("UnusedParameters")
-@Aspect
 public final class GenericAlert {
 
     private GenericAlert() {}

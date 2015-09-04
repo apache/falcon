@@ -119,13 +119,14 @@ public abstract class AbstractFalconAspect {
         try {
             result = joinPoint.proceed();
         } finally {
+
             AuditMessage auditMessage = new AuditMessage(
-                    getStringValue(args[0], "Unknown-User"),
-                    getStringValue(args[1], "Unknown-Address"),
-                    getStringValue(args[2], "Unknown-Host"),
-                    args[3].toString(),
-                    args[4].toString(),
-                    args[5].toString());
+                 getStringValue(args[0], "Unknown-User"),
+                 getStringValue(args[1], "Unknown-Address"),
+                 getStringValue(args[2], "Unknown-Host"),
+                 getStringValue(args[3], "Unknown-URL"),
+                 getStringValue(args[4], "Unknown-Address"),
+                 getStringValue(args[5], "Unknown-Time"));
             publishAudit(auditMessage);
         }
 
