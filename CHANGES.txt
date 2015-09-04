@@ -12,6 +12,7 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1421 checkColos should be a no-op for embedded mode(Venkat Ranganathan via Ajay Yadava)
 
   
 Branch: 0.7 (Proposed Release Version: 0.7)
