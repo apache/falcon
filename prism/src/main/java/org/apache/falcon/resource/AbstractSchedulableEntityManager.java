@@ -273,6 +273,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         StringBuilder result = new StringBuilder();
         try {
             Entity entity = EntityUtil.getEntity(type, entityName);
+            decorateEntityWithACL(entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             for (String cluster : clusters) {
                 result.append(getWorkflowEngine().touch(entity, cluster, skipDryRun));

@@ -12,6 +12,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1416 Add ACL (if missing) during touch(Narayan Periwal via Ajay Yadava)
+
     FALCON-1413 Filter By throws wrong error in case of wrong argument being passed(Narayan Periwal via Ajay Yadava)
 
     FALCON-1421 checkColos should be a no-op for embedded mode(Venkat Ranganathan via Ajay Yadava)
