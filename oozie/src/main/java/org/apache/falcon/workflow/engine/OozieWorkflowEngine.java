@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieBundleBuilder;
 import org.apache.falcon.oozie.OozieEntityBuilder;
@@ -1078,7 +1079,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 // only concurrency and endtime are changed. So, change coords
                 LOG.info("Change operation is adequate! : {}, bundle: {}", cluster, bundle.getId());
                 updateCoords(cluster, bundle, EntityUtil.getParallel(newEntity),
-                    EntityUtil.getEndTime(newEntity, cluster));
+                    EntityUtil.getEndTime(newEntity, cluster), newEntity);
                 return getUpdateString(newEntity, new Date(), bundle, bundle);
             }
 
@@ -1195,7 +1196,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private void updateCoords(String cluster, BundleJob bundle,
-                              int concurrency, Date endTime) throws FalconException {
+                              int concurrency, Date endTime, Entity entity) throws FalconException {
         if (endTime.compareTo(now()) <= 0) {
             throw new FalconException("End time " + SchemaHelper.formatDateUTC(endTime) + " can't be in the past");
         }
@@ -1206,8 +1207,19 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         // change coords
         for (CoordinatorJob coord : bundle.getCoordinators()) {
+
+            Frequency delay = null;
+            //get Delay to calculate coordinator end time in case of feed replication with delay.
+            if (entity.getEntityType().equals(EntityType.FEED)) {
+                delay = getDelay((Feed) entity, coord);
+            }
+
+            //calculate next start time based on delay.
+            endTime = (delay == null) ? endTime
+                    : EntityUtil.getNextStartTime(coord.getStartTime(), delay, EntityUtil.getTimeZone(entity), endTime);
             LOG.debug("Updating endtime of coord {} to {} on cluster {}",
                     coord.getId(), SchemaHelper.formatDateUTC(endTime), cluster);
+
             Date lastActionTime = getCoordLastActionTime(coord);
             if (lastActionTime == null) { // nothing is materialized
                 LOG.info("Nothing is materialized for this coord: {}", coord.getId());
@@ -1233,6 +1245,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private Frequency getDelay(Feed entity, CoordinatorJob coord) {
+        Feed feed = entity;
+        for (org.apache.falcon.entity.v0.feed.Cluster entityCluster : feed.getClusters().getClusters()){
+            if (coord.getAppName().contains(entityCluster.getName()) && coord.getAppName().contains("REPLICATION")
+                    && entityCluster.getDelay() != null){
+                return entityCluster.getDelay();
+            }
+        }
+        return null;
+    }
+
     private String updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob oldBundle,
         String user, Boolean skipDryRun) throws FalconException {
         String clusterName = cluster.getName();
@@ -1246,7 +1269,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
 
         //Set end times for old coords
-        updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime);
+        updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
 
         //schedule new entity
         String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
