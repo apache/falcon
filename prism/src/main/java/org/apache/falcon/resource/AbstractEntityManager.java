@@ -244,6 +244,7 @@ public abstract class AbstractEntityManager {
      */
     public APIResult delete(HttpServletRequest request, String type, String entity, String colo) {
         checkColo(colo);
+        List<Entity> tokenList = null;
         try {
             EntityType entityType = EntityType.getEnum(type);
             String removedFromEngine = "";
@@ -251,6 +252,7 @@ public abstract class AbstractEntityManager {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
 
                 canRemove(entityObj);
+                tokenList = obtainEntityLocks(entityObj, "delete");
                 if (entityType.isSchedulable() && !DeploymentUtil.isPrism()) {
                     getWorkflowEngine().delete(entityObj);
                     removedFromEngine = "(KILLED in ENGINE)";
@@ -267,6 +269,8 @@ public abstract class AbstractEntityManager {
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        } finally {
+            releaseEntityLocks(entity, tokenList);
         }
     }
 
@@ -285,7 +289,7 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
-            tokenList = obtainUpdateEntityLocks(oldEntity);
+            tokenList = obtainEntityLocks(oldEntity, "update");
 
             StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
@@ -311,11 +315,11 @@ public abstract class AbstractEntityManager {
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
-            releaseUpdateEntityLocks(entityName, tokenList);
+            releaseEntityLocks(entityName, tokenList);
         }
     }
 
-    private List<Entity> obtainUpdateEntityLocks(Entity entity)
+    private List<Entity> obtainEntityLocks(Entity entity, String command)
         throws FalconException {
         List<Entity> tokenList = new ArrayList<Entity>();
 
@@ -323,25 +327,28 @@ public abstract class AbstractEntityManager {
         if (memoryLocks.acquireLock(entity)) {
             tokenList.add(entity);
         } else {
-            throw new FalconException("Looks like an update command is already issued for " + entity.toShortString());
+            throw new FalconException(command + " command is already issued for " + entity.toShortString());
         }
 
-        //now obtain locks for all dependent entities.
+        //now obtain locks for all dependent entities if any.
         Set<Entity> affectedEntities = EntityGraph.get().getDependents(entity);
-        for (Entity e : affectedEntities) {
-            if (memoryLocks.acquireLock(e)) {
-                tokenList.add(e);
-            } else {
-                LOG.error("Error while trying to acquire lock for {}. Releasing already obtained locks",
-                        e.toShortString());
-                throw new FalconException("There are multiple update commands running for dependent entity "
-                        + e.toShortString());
+        if (affectedEntities != null) {
+            for (Entity e : affectedEntities) {
+                if (memoryLocks.acquireLock(e)) {
+                    tokenList.add(e);
+                    LOG.debug("{} on entity {} has acquired lock on {}", command, entity, e);
+                } else {
+                    LOG.error("Error while trying to acquire lock for {}. Releasing already obtained locks",
+                            e.toShortString());
+                    throw new FalconException("There are multiple update commands running for dependent entity "
+                            + e.toShortString());
+                }
             }
         }
         return tokenList;
     }
 
-    private void releaseUpdateEntityLocks(String entityName, List<Entity> tokenList) {
+    private void releaseEntityLocks(String entityName, List<Entity> tokenList) {
         if (tokenList != null && !tokenList.isEmpty()) {
             for (Entity entity : tokenList) {
                 memoryLocks.releaseLock(entity);
@@ -391,14 +398,21 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected synchronized Entity submitInternal(HttpServletRequest request, String type)
+    protected Entity submitInternal(HttpServletRequest request, String type)
         throws IOException, FalconException {
 
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(request, entityType);
+        List<Entity> tokenList = null;
         // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
         decorateEntityWithACL(entity);
 
+        try {
+            tokenList = obtainEntityLocks(entity, "submit");
+        }finally {
+            ConfigurationStore.get().cleanupUpdateInit();
+            releaseEntityLocks(entity.getName(), tokenList);
+        }
         Entity existingEntity = configStore.get(entityType, entity.getName());
         if (existingEntity != null) {
             if (EntityUtil.equals(existingEntity, entity)) {

@@ -384,6 +384,13 @@ public class TestContext {
                 .post(ClientResponse.class, rawlogStream);
     }
 
+    public ClientResponse deleteFromFalcon(String entityName, String entityType) throws IOException{
+        return this.service.path("api/entities/delete/" + entityType + "/" + entityName.toLowerCase())
+                .header("Cookie", getAuthenticationToken())
+                .accept(MediaType.TEXT_XML)
+                .delete(ClientResponse.class);
+    }
+
     public void assertStatus(ClientResponse clientResponse, APIResult.Status status) {
         String response = clientResponse.getEntity(String.class);
         try {

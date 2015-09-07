@@ -574,6 +574,55 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
+    @Test
+    public void testDuplicateSubmitCommands() throws Exception {
+        TestContext context = newContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService duplicateService = Executors.newSingleThreadExecutor();
+
+        Future<ClientResponse> future = service.submit(new SubmitCommand(context, overlay));
+        Future<ClientResponse> duplicateFuture = duplicateService.submit(new SubmitCommand(context, overlay));
+
+        ClientResponse response = future.get();
+        ClientResponse duplicateSubmitThreadResponse = duplicateFuture.get();
+
+        // since there are duplicate threads for submits, there is no guarantee which request will succeed.
+        testDuplicateCommandsResponse(context, response, duplicateSubmitThreadResponse);
+    }
+
+    @Test
+    public void testDuplicateDeleteCommands() throws Exception {
+        TestContext context = newContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService duplicateService = Executors.newSingleThreadExecutor();
+
+        Future<ClientResponse> future = service.submit(new DeleteCommand(context, overlay.get("cluster"), "cluster"));
+        Future<ClientResponse> duplicateFuture = duplicateService.submit(new DeleteCommand(context,
+                overlay.get("cluster"), "cluster"));
+
+        ClientResponse response = future.get();
+        ClientResponse duplicateSubmitThreadResponse = duplicateFuture.get();
+
+        // since there are duplicate threads for deletion, there is no guarantee which request will succeed.
+        testDuplicateCommandsResponse(context, response, duplicateSubmitThreadResponse);
+    }
+
+    private void testDuplicateCommandsResponse(TestContext context, ClientResponse response,
+                                               ClientResponse duplicateSubmitThreadResponse) {
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+            context.assertSuccessful(response);
+            context.assertFailure(duplicateSubmitThreadResponse);
+        } else {
+            context.assertFailure(response);
+            context.assertSuccessful(duplicateSubmitThreadResponse);
+        }
+    }
+
     public void testProcesssScheduleAndDelete() throws Exception {
         TestContext context = newContext();
         ClientResponse clientResponse;
@@ -886,13 +935,7 @@ public class EntityManagerJerseyIT {
         ClientResponse duplicateUpdateThreadResponse = future.get();
 
         // since there are duplicate threads for updates, there is no guarantee which request will succeed
-        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-            context.assertSuccessful(response);
-            context.assertFailure(duplicateUpdateThreadResponse);
-        } else {
-            context.assertFailure(response);
-            context.assertSuccessful(duplicateUpdateThreadResponse);
-        }
+        testDuplicateCommandsResponse(context, response, duplicateUpdateThreadResponse);
 
     }
 
@@ -932,4 +975,49 @@ public class EntityManagerJerseyIT {
             return update(context, process, endTime, false);
         }
     }
+
+    class SubmitCommand implements Callable<ClientResponse> {
+        private Map<String, String> overlay;
+        private TestContext context;
+
+        public TestContext getContext() {
+            return context;
+        }
+
+        public Map<String, String> getOverlay() {
+            return overlay;
+        }
+
+        public SubmitCommand(TestContext context, Map<String, String> overlay) {
+            this.context = context;
+            this.overlay = overlay;
+        }
+
+        @Override
+        public ClientResponse call() throws Exception {
+            return context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        }
+    }
+
+    class DeleteCommand implements Callable<ClientResponse> {
+        private TestContext context;
+        private String entityName;
+        private String entityType;
+
+        public TestContext getContext() {
+            return context;
+        }
+
+        public DeleteCommand(TestContext context, String entityName, String entityType) {
+            this.context = context;
+            this.entityName = entityName;
+            this.entityType = entityType;
+        }
+
+        @Override
+        public ClientResponse call() throws Exception {
+            return context.deleteFromFalcon(entityName, entityType);
+        }
+    }
+
 }
