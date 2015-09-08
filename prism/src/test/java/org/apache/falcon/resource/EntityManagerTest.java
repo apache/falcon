@@ -167,6 +167,34 @@ public class EntityManagerTest extends AbstractEntityManager {
     }
 
     @Test
+    public void testGetEntityListFilterBy() throws Exception {
+
+        Entity process2 = buildProcess("processAuthUserFilterBy", System.getProperty("user.name"), "", "USER-DATA");
+        configStore.publish(EntityType.PROCESS, process2);
+
+        EntityList entityList = this.getEntityList("", "", "", "process", "", "PIPELINES:USER-DATA", "", "asc", 0, 10);
+        Assert.assertNotNull(entityList.getElements());
+        Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertNotNull(entityList.getElements()[0].pipeline);
+        Assert.assertEquals(entityList.getElements()[0].pipeline.get(0), "USER-DATA");
+
+        /*
+         * Both entities should be returned when the user is SuperUser.
+         */
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        CurrentUser.authenticate(System.getProperty("user.name"));
+        entityList = this.getEntityList("", "", "", "process", "", "PIPELINES:USER-DATA", "", "desc", 0, 10);
+        Assert.assertNotNull(entityList.getElements());
+        Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertNotNull(entityList.getElements()[0].pipeline);
+        Assert.assertEquals(entityList.getElements()[0].pipeline.get(0), "USER-DATA");
+
+        // reset values
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        CurrentUser.authenticate(System.getProperty("user.name"));
+    }
+
+    @Test
     public void testNumberOfResults() {
         Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 10000), 10000);
         Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 4000), 4000);

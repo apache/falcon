@@ -599,6 +599,11 @@ public abstract class AbstractEntityManager {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
         Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        for (String  key : filterByFieldsValues.keySet()) {
+            if (!key.toUpperCase().equals("NAME") && !key.toUpperCase().equals("CLUSTER")) {
+                fields.add(key.toUpperCase());
+            }
+        }
         validateEntityFilterByClause(filterByFieldsValues);
         if (StringUtils.isNotEmpty(filterTags)) {
             filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), Arrays.asList(filterTags));
