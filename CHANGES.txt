@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
     FALCON-1430 Exclude designer from source tarball(Ajay Yadava)
+    
+    FALCON-1250 Throw error when keys in startup.properties do not start with "*." or domain+"."(Narayan Periwal via Ajay Yadava)
+
  
   OPTIMIZATIONS
 
