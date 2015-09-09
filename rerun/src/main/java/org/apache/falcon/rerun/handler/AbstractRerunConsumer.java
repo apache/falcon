@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.rerun.handler;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.v0.Frequency;
@@ -50,20 +51,25 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
         int attempt = 1;
         AbstractRerunPolicy policy = new ExpBackoffPolicy();
         Frequency frequency = new Frequency("minutes(1)");
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 T message;
                 try {
                     message = handler.takeFromQueue();
                     attempt = 1;
                 } catch (FalconException e) {
-                    LOG.error("Error while reading message from the queue", e);
-                    GenericAlert.alertRerunConsumerFailed(
-                            "Error while reading message from the queue: ", e);
-                    Thread.sleep(policy.getDelay(frequency, attempt));
-                    handler.reconnect();
-                    attempt++;
-                    continue;
+                    if (ExceptionUtils.getRootCause(e) instanceof InterruptedException){
+                        LOG.info("Rerun handler daemon has been interrupted");
+                        return;
+                    } else {
+                        LOG.error("Error while reading message from the queue", e);
+                        GenericAlert.alertRerunConsumerFailed(
+                                "Error while reading message from the queue: ", e);
+                        Thread.sleep(policy.getDelay(frequency, attempt));
+                        handler.reconnect();
+                        attempt++;
+                        continue;
+                    }
                 }
 
                 // Login the user to access WfEngine as this user

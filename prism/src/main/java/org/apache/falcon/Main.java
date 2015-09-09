@@ -38,6 +38,8 @@ public final class Main {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
+    private static EmbeddedServer server;
+    private static BrokerService broker;
 
     /**
      * Prevent users from constructing this.
@@ -60,7 +62,19 @@ public final class Main {
         return new GnuParser().parse(options, args);
     }
 
+    static class ShutDown extends Thread {
+        public void run() {
+            try {
+                LOG.info("calling shutdown hook");
+                server.stop();
+                broker.stop();
+            } catch (Exception e) {
+                LOG.error("Server shutdown failed with " , e);
+            }
+        }
+    }
     public static void main(String[] args) throws Exception {
+        Runtime.getRuntime().addShutdownHook(new ShutDown());
         CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
         String appPath = "webapp/target/falcon-webapp-" + projectVersion;
@@ -79,7 +93,7 @@ public final class Main {
         LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         LOG.info("Server starting with TLS ? {} on port {}", enableTLS, appPort);
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        EmbeddedServer server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
+        server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
         server.start();
     }
 
@@ -109,12 +123,13 @@ public final class Main {
             int mqport = Integer.valueOf(System.getProperty("falcon.embeddedmq.port", "61616"));
             LOG.info("Starting ActiveMQ at port {} with data dir {}", mqport, dataDir);
 
-            BrokerService broker = new BrokerService();
+            broker = new BrokerService();
             broker.setUseJmx(false);
             broker.setDataDirectory(dataDir);
             broker.addConnector("vm://localhost");
             broker.addConnector("tcp://0.0.0.0:" + mqport);
             broker.setSchedulerSupport(true);
+            broker.setUseShutdownHook(false);
             broker.start();
         }
     }

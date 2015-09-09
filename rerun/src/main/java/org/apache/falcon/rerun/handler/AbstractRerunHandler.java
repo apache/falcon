@@ -48,6 +48,10 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
         this.delayQueue.init();
     }
 
+    public void close() throws FalconException {
+        this.delayQueue.close();
+    }
+
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public abstract void handleRerun(String clusterName, String entityType,
                                      String entityName, String nominalTime, String runId,

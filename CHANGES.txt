@@ -15,6 +15,7 @@ Trunk (Unreleased)
     
     FALCON-1250 Throw error when keys in startup.properties do not start with "*." or domain+"."(Narayan Periwal via Ajay Yadava)
 
+    FALCON-348 Add shutdown hook for Falcon (Sandeep Samudrala via Pallavi Rao)
  
   OPTIMIZATIONS
 

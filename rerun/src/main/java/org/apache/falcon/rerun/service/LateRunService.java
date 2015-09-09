@@ -39,6 +39,8 @@ public class LateRunService implements FalconService {
 
     private ActiveMQueue<LaterunEvent> queue;
 
+    private AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler;
+
     @Override
     public String getName() {
         return LateRunService.class.getName();
@@ -50,8 +52,7 @@ public class LateRunService implements FalconService {
             throw new FalconException("WorkflowJobEndNotificationService must be configured ahead");
         }
 
-        AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler =
-            RerunHandlerFactory.getRerunHandler(RerunType.LATE);
+        rerunHandler = RerunHandlerFactory.getRerunHandler(RerunType.LATE);
         queue = new ActiveMQueue<LaterunEvent>(
                 StartupProperties.get()
                     .getProperty("broker.url", "failover:(tcp://localhost:61616)?initialReconnectDelay=5000"),
@@ -64,6 +65,7 @@ public class LateRunService implements FalconService {
 
     @Override
     public void destroy() throws FalconException {
+        rerunHandler.close();
         closeQuietly();
         LOG.info("LateRun thread destroyed");
     }

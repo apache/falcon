@@ -52,6 +52,7 @@ import java.util.Date;
  */
 public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         AbstractRerunHandler<LaterunEvent, M> {
+    private Thread daemon;
 
     @Override
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -188,12 +189,19 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
     @Override
     public void init(M aDelayQueue) throws FalconException {
         super.init(aDelayQueue);
-        Thread daemon = new Thread(new LateRerunConsumer(this));
+        daemon = new Thread(new LateRerunConsumer(this));
         daemon.setName("LaterunHandler");
         daemon.setDaemon(true);
         daemon.start();
         LOG.info("Laterun Handler thread started");
     }
+
+    @Override
+    public void close() throws FalconException {
+        daemon.interrupt();
+        super.close();
+    }
+
 
     public Path getLateLogPath(String logDir, String nominalTime,
                                String srcClusterName) {
