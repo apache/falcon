@@ -90,7 +90,10 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
                     // workflow is serialized to a specific dir
                     Path coordPath = new Path(buildPath, Tag.REPLICATION.name() + "/" + srcCluster.getName());
 
-                    props.add(doBuild(srcCluster, cluster, coordPath));
+                    Properties buildProps = doBuild(srcCluster, cluster, coordPath);
+                    if (buildProps != null && !buildProps.isEmpty()) {
+                        props.add(buildProps);
+                    }
                 }
             }
             return props;
@@ -107,10 +110,9 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         Date targetEndDate = getEndDate(trgCluster);
 
         if (noOverlapExists(sourceStartDate, sourceEndDate,
-            targetStartDate, targetEndDate)) {
-            LOG.warn("Not creating replication coordinator, as the source cluster: {} and target cluster: {} do "
-                + "not have overlapping dates", srcCluster.getName(), trgCluster.getName());
-            return null;
+                targetStartDate, targetEndDate)) {
+            throw new FalconException("Source cluster: " + srcCluster.getName() + " and Target cluster: "
+                    + trgCluster.getName() + " do not have overlapping dates for replication");
         }
 
         // Different workflow for each source since hive credentials vary for each cluster
