@@ -7,6 +7,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-1357 Update CHANGES.txt to change 0.7 branch to release.(Ajay Yadava)
+
     FALCON-1414 Add all fields in filterBy to the entity list output.(Narayan Periwal via Ajay Yadava)
 
     FALCON-1430 Exclude designer from source tarball(Ajay Yadava)
@@ -30,7 +32,7 @@ Trunk (Unreleased)
     FALCON-1421 checkColos should be a no-op for embedded mode(Venkat Ranganathan via Ajay Yadava)
 
   
-Branch: 0.7 (Proposed Release Version: 0.7)
+Release version: 0.7
   FALCON-1424 Update changes.txt for 0.7 branch(Ajay Yadava)
 
   INCOMPATIBLE CHANGES
