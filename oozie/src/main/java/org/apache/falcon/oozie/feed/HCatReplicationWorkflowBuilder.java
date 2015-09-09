@@ -20,12 +20,15 @@ package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.OozieUtils;
 
+import javax.xml.bind.JAXBElement;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -64,17 +67,28 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
 
         //Add export action
         ACTION export = unmarshalAction(EXPORT_ACTION_TEMPLATE);
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> exportActionJaxbElement =
+            OozieUtils.unMarshalHiveAction(export);
+        org.apache.falcon.oozie.hive.ACTION hiveExportAction = exportActionJaxbElement.getValue();
+        addHDFSServersConfig(hiveExportAction, src, target);
+        OozieUtils.marshalHiveAction(export, exportActionJaxbElement);
         addTransition(export, REPLICATION_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(export);
 
         //Add replication
         ACTION replication = unmarshalAction(REPLICATION_ACTION_TEMPLATE);
+        addHDFSServersConfig(replication, src, target);
         addAdditionalReplicationProperties(replication);
         addTransition(replication, IMPORT_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(replication);
 
         //Add import action
         ACTION importAction = unmarshalAction(IMPORT_ACTION_TEMPLATE);
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> importActionJaxbElement =
+            OozieUtils.unMarshalHiveAction(importAction);
+        org.apache.falcon.oozie.hive.ACTION hiveImportAction = importActionJaxbElement.getValue();
+        addHDFSServersConfig(hiveImportAction, src, target);
+        OozieUtils.marshalHiveAction(importAction, importActionJaxbElement);
         addTransition(importAction, CLEANUP_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(importAction);
 
@@ -132,8 +146,6 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
                 if (isSecurityEnabled) { // add a reference to credential in the action
                     action.setCred(TARGET_HIVE_CREDENTIAL_NAME);
                 }
-            } else if (REPLICATION_ACTION_NAME.equals(actionName)) {
-                addHDFSServersConfig(action, sourceCluster, targetCluster);
             }
         }
     }
@@ -144,4 +156,19 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
 
         return props;
     }
+
+    private org.apache.falcon.oozie.hive.ACTION addHDFSServersConfig(org.apache.falcon.oozie.hive.ACTION action,
+        Cluster sourceCluster, Cluster targetCluster) {
+        if (isSecurityEnabled) {
+            // this is to ensure that the delegation tokens are checked out for both clusters
+            org.apache.falcon.oozie.hive.CONFIGURATION.Property hiveProperty = new org.apache.falcon.oozie.hive
+                    .CONFIGURATION.Property();
+            hiveProperty.setName("oozie.launcher.mapreduce.job.hdfs-servers");
+            hiveProperty.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
+                    + "," + ClusterHelper.getStorageUrl(targetCluster));
+            action.getConfiguration().getProperty().add(hiveProperty);
+        }
+        return action;
+    }
+
 }

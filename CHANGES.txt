@@ -20,6 +20,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1365 HCatReplication job fails with AccessControlException(Sowmya Ramesh via Ajay Yadava)
+
     FALCON-298 Feed update with replication delay creates holes(Sandeep Samudrala via Ajay Yadava)
 
     FALCON-1410 Entity submit fails when multiple threads try submitting same definition(Sandeep Samudrala via Ajay Yadava)
