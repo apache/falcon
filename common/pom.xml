@@ -51,16 +51,20 @@
                        <groupId>org.apache.hadoop</groupId>
                        <artifactId>hadoop-hdfs</artifactId>
                        <classifier>tests</classifier>
-                 </dependency>
-                 <dependency>
+                </dependency>
+                <dependency>
                        <groupId>org.apache.hadoop</groupId>
                        <artifactId>hadoop-common</artifactId>
                        <classifier>tests</classifier>
-                 </dependency>
-                 <dependency>
+                </dependency>
+                <dependency>
                        <groupId>org.apache.hadoop</groupId>
                        <artifactId>hadoop-common</artifactId>
-                 </dependency>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.oozie</groupId>
+                    <artifactId>oozie-client</artifactId>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>

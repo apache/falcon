@@ -20,6 +20,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+
+    FALCON-1371 Status of scheduled Process entity is shown as submitted in corner case(Balu Vellanki via Sowmya Ramesh)
+
     FALCON-1402 Validate cmd throws NPE when source cluster and any one of target cluster doesn't have overlapping dates(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1365 HCatReplication job fails with AccessControlException(Sowmya Ramesh via Ajay Yadava)

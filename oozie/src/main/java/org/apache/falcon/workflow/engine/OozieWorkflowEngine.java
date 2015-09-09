@@ -106,6 +106,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Arrays.asList(Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED, Status.SUSPENDEDWITHERROR);
     private static final List<Job.Status> BUNDLE_RUNNING_STATUS = Arrays.asList(Job.Status.PREP, Job.Status.RUNNING,
             Job.Status.RUNNINGWITHERROR);
+    private static final List<Job.Status> BUNDLE_SUCCEEDED_STATUS = Arrays.asList(Job.Status.SUCCEEDED);
+    private static final List<Job.Status> BUNDLE_FAILED_STATUS = Arrays.asList(Job.Status.FAILED,
+            Job.Status.DONEWITHERROR);
+    private static final List<Job.Status> BUNDLE_KILLED_STATUS = Arrays.asList(Job.Status.KILLED);
 
     private static final List<Job.Status> BUNDLE_SUSPEND_PRECOND =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.DONEWITHERROR);
@@ -239,26 +243,52 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public boolean isActive(Entity entity) throws FalconException {
-        return isBundleInState(entity, BundleStatus.ACTIVE);
+        return isBundleInState(findLatestBundle(entity), BundleStatus.ACTIVE);
     }
 
     @Override
-    public boolean isSuspended(Entity entity) throws FalconException {
-        return isBundleInState(entity, BundleStatus.SUSPENDED);
+    public boolean isActive(Map<String, BundleJob> bundles) throws FalconException {
+        return isBundleInState(bundles, BundleStatus.ACTIVE);
+    }
+
+    @Override
+    public boolean isSuspended(Map<String, BundleJob> bundles) throws FalconException {
+        return isBundleInState(bundles, BundleStatus.SUSPENDED);
+    }
+
+    @Override
+    public boolean isFailed(Map<String, BundleJob> bundles) throws FalconException {
+        return isBundleInState(bundles, BundleStatus.FAILED);
+    }
+
+    @Override
+    public boolean isKilled(Map<String, BundleJob> bundles) throws FalconException {
+        return isBundleInState(bundles, BundleStatus.KILLED);
+    }
+
+    @Override
+    public boolean isSucceeded(Map<String, BundleJob> bundles) throws FalconException {
+        return isBundleInState(bundles, BundleStatus.SUCCEEDED);
     }
 
     private enum BundleStatus {
-        ACTIVE, RUNNING, SUSPENDED
+        ACTIVE, RUNNING, SUSPENDED, FAILED, KILLED, SUCCEEDED
     }
 
-    private boolean isBundleInState(Entity entity, BundleStatus status) throws FalconException {
+    private boolean isBundleInState(Map<String, BundleJob> bundles,
+                                    BundleStatus status) throws FalconException {
 
-        Map<String, BundleJob> bundles = findLatestBundle(entity);
-        for (BundleJob bundle : bundles.values()) {
-            if (bundle == MISSING) {// There is no active bundle
-                return false;
+        // After removing MISSING bundles for clusters, if bundles.size() == 0, entity is not scheduled. Return false.
+        for (Map.Entry<String, BundleJob> clusterBundle : bundles.entrySet()) {
+            if (clusterBundle.getValue() == MISSING) { // There is no active bundle for this cluster
+                bundles.remove(clusterBundle.getKey());
             }
+        }
+        if (bundles.size() == 0) {
+            return false;
+        }
 
+        for (BundleJob bundle : bundles.values()) {
             switch (status) {
             case ACTIVE:
                 if (!BUNDLE_ACTIVE_STATUS.contains(bundle.getStatus())) {
@@ -277,8 +307,27 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     return false;
                 }
                 break;
+
+            case FAILED:
+                if (!BUNDLE_FAILED_STATUS.contains(bundle.getStatus())) {
+                    return false;
+                }
+                break;
+
+            case KILLED:
+                if (!BUNDLE_KILLED_STATUS.contains(bundle.getStatus())) {
+                    return false;
+                }
+                break;
+
+            case SUCCEEDED:
+                if (!BUNDLE_SUCCEEDED_STATUS.contains(bundle.getStatus())) {
+                    return false;
+                }
+                break;
             default:
             }
+            LOG.debug("Bundle {} is in state {}", bundle.getAppName(), status.name());
         }
         return true;
     }
@@ -296,7 +345,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                         //Load bundle as coord info is not returned in getBundleJobsInfo()
                         BundleJob bundle = getBundleInfo(clusterName, job.getId());
                         filteredJobs.add(bundle);
-                        LOG.debug("Found bundle {} with app path {}", job.getId(), job.getAppPath());
+                        LOG.debug("Found bundle {} with app path {} and status {}",
+                                job.getId(), job.getAppPath(), job.getStatus());
                     }
                 }
             }
@@ -317,11 +367,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     //Return latest bundle(last created) for the entity for each cluster
-    private Map<String, BundleJob> findLatestBundle(Entity entity) throws FalconException {
+    @Override
+    public Map<String, BundleJob> findLatestBundle(Entity entity) throws FalconException {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         Map<String, BundleJob> jobMap = new HashMap<String, BundleJob>();
         for (String cluster : clusters) {
-            jobMap.put(cluster, findLatestBundle(entity, cluster));
+            BundleJob bundleJob = findLatestBundle(entity, cluster);
+            jobMap.put(cluster, bundleJob);
         }
         return jobMap;
     }
