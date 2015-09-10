@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 /**
  * Exception for REST APIs.
@@ -103,9 +101,7 @@ public class FalconWebException extends WebApplicationException {
     }
 
     private static String getMessage(Throwable e) {
-        StringWriter errors = new StringWriter();
-        e.printStackTrace(new PrintWriter(errors));
-        return errors.toString();
+        return e.getCause()==null? e.getMessage():e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
     }
 
     public FalconWebException(Throwable e, Response response) {
