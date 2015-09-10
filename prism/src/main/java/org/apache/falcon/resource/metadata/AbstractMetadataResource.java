@@ -19,14 +19,13 @@
 package org.apache.falcon.resource.metadata;
 
 import com.tinkerpop.blueprints.Graph;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.metadata.MetadataMappingService;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.service.Services;
 
-import java.util.Set;
-
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.util.Set;
 
 /**
  * A base class for managing Metadata operations.
@@ -64,10 +63,8 @@ public abstract class AbstractMetadataResource {
 
     private void checkIfMetadataMappingServiceIsEnabled() {
         if (service == null) {
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity("Lineage " + MetadataMappingService.SERVICE_NAME + " is not enabled.")
-                    .type("text/plain")
-                    .build());
+            throw FalconWebException.newMetadataResourceException(
+                    "Lineage " + MetadataMappingService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
     }
 }

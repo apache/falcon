@@ -38,7 +38,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Iterator;
@@ -213,23 +212,22 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
 
     private RelationshipType validateAndParseDimensionType(String type) {
         if (StringUtils.isEmpty(type) || type.contains("INSTANCE")) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid Dimension type : " +  type).type("text/plain").build());
+            throw FalconWebException.newMetadataResourceException(
+                    "Invalid Dimension type : " + type, Response.Status.BAD_REQUEST);
         }
 
         try {
             return RelationshipType.valueOf(type);
         } catch (IllegalArgumentException iae) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid Dimension type : " + type).type("text/plain").build());
+            throw FalconWebException.newMetadataResourceException(
+                    "Invalid Dimension type : " + type, Response.Status.BAD_REQUEST);
         }
     }
 
     private void validateDimensionName(String name) {
         if (StringUtils.isEmpty(name)) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Dimension name cannot be empty for Relations API").type("text/plain")
-                    .build());
+            throw FalconWebException.newMetadataResourceException(
+                    "Dimension name cannot be empty for Relations API", Response.Status.BAD_REQUEST);
         }
     }
 }

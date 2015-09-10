@@ -22,6 +22,7 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.service.Services;
@@ -33,7 +34,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileFilter;
@@ -60,7 +60,7 @@ public class LineageMetadataResourceTest {
         testContext.tearDown();
     }
 
-    @Test (expectedExceptions = WebApplicationException.class)
+    @Test (expectedExceptions = FalconWebException.class)
     public void testGetVerticesWithInvalidId() throws Exception {
         LineageMetadataResource resource = new LineageMetadataResource();
         Response response = resource.getVertex("blah");
@@ -156,7 +156,7 @@ public class LineageMetadataResourceTest {
         LineageMetadataResource resource = new LineageMetadataResource();
         try {
             resource.getVertices(null, null);
-        } catch(WebApplicationException e) {
+        } catch(FalconWebException e) {
             Assert.assertEquals(e.getResponse().getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
             Assert.assertEquals(e.getResponse().getEntity().toString(),
                     "Invalid argument: key or value passed is null or empty.");
@@ -221,7 +221,7 @@ public class LineageMetadataResourceTest {
         verifyVertexEdgesCount(vertexId, LineageMetadataResource.BOTH_IDS, expectedSize);
     }
 
-    @Test (expectedExceptions = WebApplicationException.class)
+    @Test (expectedExceptions = FalconWebException.class)
     public void testVertexEdgesForIdAndInvalidDirection() throws Exception {
         LineageMetadataResource resource = new LineageMetadataResource();
         resource.getVertexEdges("0", "blah");
@@ -257,7 +257,7 @@ public class LineageMetadataResourceTest {
         Assert.assertEquals(totalSize, expectedSize);
     }
 
-    @Test (expectedExceptions = WebApplicationException.class)
+    @Test (expectedExceptions = FalconWebException.class)
     public void testEdgesByInvalidId() throws Exception {
         LineageMetadataResource resource = new LineageMetadataResource();
         Response response = resource.getEdge("blah");
@@ -309,7 +309,7 @@ public class LineageMetadataResourceTest {
         Assert.assertEquals(totalSize, getEdgesCount(resource.getGraph()));
     }
 
-    @Test (expectedExceptions = WebApplicationException.class)
+    @Test (expectedExceptions = FalconWebException.class)
     public void testSerializeGraphBadFile() throws Exception {
         String path = StartupProperties.get().getProperty("falcon.graph.serialize.path");
         StartupProperties.get().setProperty("falcon.graph.serialize.path", "blah");
@@ -339,7 +339,7 @@ public class LineageMetadataResourceTest {
         Assert.assertTrue(jsonFiles.length > 0);
     }
 
-    @Test (expectedExceptions = WebApplicationException.class)
+    @Test (expectedExceptions = FalconWebException.class)
     public void testLineageServiceIsDisabled() throws Exception {
         Services.get().reset();
         try {

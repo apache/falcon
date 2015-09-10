@@ -54,7 +54,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
@@ -182,8 +181,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
         if (vertex == null) {
             String message = "Vertex with [" + vertexId + "] cannot be found.";
             LOG.info(message);
-            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                    .entity(JSONObject.quote(message)).build());
+            throw FalconWebException.newMetadataResourceException(
+                    JSONObject.quote(message), Response.Status.NOT_FOUND);
         }
 
         return vertex;
@@ -306,7 +305,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             return Response.ok(response).build();
 
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newMetadataResourceException(e.getMessage(),
+                    Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -331,7 +331,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             return getVertexEdges(vertex, direction);
 
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newMetadataResourceException(e.getMessage(),
+                    Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -416,8 +417,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             if (edge == null) {
                 String message = "Edge with [" + edgeId + "] cannot be found.";
                 LOG.info(message);
-                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                        .entity(JSONObject.quote(message)).build());
+                throw FalconWebException.newMetadataResourceException(
+                        JSONObject.quote(message), Response.Status.NOT_FOUND);
             }
 
             JSONObject response = new JSONObject();
@@ -500,10 +501,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     private static void validateInputs(String errorMsg, String... inputs) {
         for (String input : inputs) {
             if (StringUtils.isEmpty(input)) {
-                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                        .entity(errorMsg)
-                        .type("text/plain")
-                        .build());
+                throw FalconWebException.newMetadataResourceException(errorMsg, Response.Status.BAD_REQUEST);
             }
         }
     }
@@ -582,9 +580,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                 queryDirection = Direction.OUT;
                 countOnly = false;
             } else {
-                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                        .entity(JSONObject.quote(directionSegment + " segment was invalid."))
-                        .build());
+                throw FalconWebException.newMetadataResourceException(
+                        JSONObject.quote(directionSegment + " segment was invalid."), Response.Status.BAD_REQUEST);
             }
         }
 

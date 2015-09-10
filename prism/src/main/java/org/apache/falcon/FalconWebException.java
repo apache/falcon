@@ -49,55 +49,57 @@ public class FalconWebException extends WebApplicationException {
         return newException(e.getMessage(), status);
     }
 
-    public static FalconWebException newInstanceException(Throwable e, Response.Status status) {
-        return newInstanceException(getMessage(e), status);
-    }
-
-
     public static FalconWebException newTriageResultException(Throwable e, Response.Status status) {
         String message = getMessage(e);
         LOG.error("Triage failed: {}\nError: {}", status, message);
         APIResult result = new TriageResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+        return new FalconWebException(e, Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newInstanceSummaryException(Throwable e, Response.Status status) {
         String message = getMessage(e);
         LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new InstancesSummaryResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+        return new FalconWebException(e, Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newInstanceDependencyResult(Throwable e, Response.Status status) {
-        String message = getMessage(e);
-        LOG.error("Action failed: {}\nError: {}", status, message);
-        APIResult result = new InstanceDependencyResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+        return newInstanceDependencyResult(getMessage(e), status);
     }
 
     public static FalconWebException newInstanceDependencyResult(String message, Response.Status status) {
         LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new InstanceDependencyResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+        return new FalconWebException(new Exception(message),
+                Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+    }
+
+    public static FalconWebException newException(String message, Response.Status status) {
+        APIResult result = new APIResult(APIResult.Status.FAILED, message);
+        return newException(result, status);
     }
 
     public static FalconWebException newException(APIResult result, Response.Status status) {
         LOG.error("Action failed: {}\nError: {}", status, result.getMessage());
-        return new FalconWebException(Response.status(status).
-                entity(result).type(MediaType.TEXT_XML_TYPE).build());
-    }
-
-    public static FalconWebException newException(String message, Response.Status status) {
-        LOG.error("Action failed: {}\nError: {}", status, message);
-        APIResult result = new APIResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(Response.status(status).
-                entity(result).type(MediaType.TEXT_XML_TYPE).build());
+        return new FalconWebException(new FalconException(result.getMessage()),
+                Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newInstanceException(String message, Response.Status status) {
+        return newInstanceException(new FalconException(message), status);
+    }
+
+    public static FalconWebException newInstanceException(Throwable e, Response.Status status) {
+        LOG.error("Action failed: {}\nError: {}", status, e.getMessage());
+        APIResult result = new InstancesResult(APIResult.Status.FAILED, e.getMessage());
+        return new FalconWebException(e, Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+    }
+
+    public static FalconWebException newMetadataResourceException(String message, Response.Status status) {
         LOG.error("Action failed: {}\nError: {}", status, message);
-        APIResult result = new InstancesResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+        // Using MediaType.TEXT_PLAIN for newMetadataResourceException to ensure backward compatibility.
+        return new FalconWebException(new Exception(message),
+                Response.status(status).entity(message).type(MediaType.TEXT_PLAIN).build());
     }
 
     private static String getMessage(Throwable e) {
@@ -106,7 +108,7 @@ public class FalconWebException extends WebApplicationException {
         return errors.toString();
     }
 
-    public FalconWebException(Response response) {
-        super(response);
+    public FalconWebException(Throwable e, Response response) {
+        super(e, response);
     }
 }

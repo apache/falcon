@@ -20,6 +20,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1438 Falcon RestAPI - In case of error falcon responds with FalconWebException::null(Balu Vellanki via Ajay Yadava).
+
     FALCON-1415 Hive DR process fail if there are no events available from source table(Peeyush Bishnoi via Ajay Yadava)
 
     FALCON-1371 Status of scheduled Process entity is shown as submitted in corner case(Balu Vellanki via Sowmya Ramesh)

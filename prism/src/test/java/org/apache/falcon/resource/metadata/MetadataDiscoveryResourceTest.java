@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource.metadata;
 
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.metadata.RelationshipType;
 import org.json.simple.JSONValue;
 import org.testng.Assert;
@@ -25,7 +26,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
@@ -150,19 +150,19 @@ public class MetadataDiscoveryResourceTest {
         Assert.assertEquals(Integer.parseInt(results.get(MetadataDiscoveryResource.TOTAL_SIZE).toString()), 0);
     }
 
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testListInvalidDimensionType() throws Exception {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.listDimensionValues("INVALID", null);
     }
 
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testListFeedDimensionType() throws Exception {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.listDimensionValues("Feed", null);
     }
 
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testListInstanceDimensionType() throws Exception {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.listDimensionValues("FEED_INSTANCE", null);
@@ -280,24 +280,24 @@ public class MetadataDiscoveryResourceTest {
     }
 
 
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testEntityRelationsInvalidType() {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.getDimensionRelations("INVALID", "name");
     }
 
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testEntityRelationsFeedType() throws Exception {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.getDimensionRelations("FEED", "name");
     }
 
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testEntityRelationsInstanceType() throws Exception {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.getDimensionRelations("FEED_INSTANCE", "name");
     }
-    @Test(expectedExceptions = WebApplicationException.class)
+    @Test(expectedExceptions = FalconWebException.class)
     public void testEntityRelationsNoName() throws Exception {
         MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
         resource.getDimensionRelations(RelationshipType.TAGS.toString(), null);

@@ -163,6 +163,13 @@ public class ProcessInstanceManagerIT {
         Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
+        response = context.service.path("api/instance/kill/process/" + context.processName)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .post(InstancesResult.class);
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED);
+        Assert.assertNotNull(response.getMessage());
+
         response = context.service.path("api/instance/status/process/" + context.processName)
                 .queryParam("orderBy", "startTime").queryParam("filterBy", "STATUS:KILLED")
                 .queryParam("start", START_INSTANCE)
