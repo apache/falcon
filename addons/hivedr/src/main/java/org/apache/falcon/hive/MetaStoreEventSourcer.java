@@ -95,6 +95,7 @@ public class MetaStoreEventSourcer implements EventSourcer {
                 inputOptions.getMaxEvents(), dbName, null);
         if (replicationTaskIter == null || !replicationTaskIter.hasNext()) {
             LOG.info("No events for db: {}", dbName);
+            return;
         }
         processEvents(dbName, null, inputOptions, replicationTaskIter);
     }
@@ -106,6 +107,7 @@ public class MetaStoreEventSourcer implements EventSourcer {
         );
         if (replicationTaskIter == null || !replicationTaskIter.hasNext()) {
             LOG.info("No events for db.table: {}.{}", dbName, tableName);
+            return;
         }
         processEvents(dbName, tableName, inputOptions, replicationTaskIter);
     }

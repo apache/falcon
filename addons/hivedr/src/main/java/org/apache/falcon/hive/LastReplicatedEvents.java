@@ -19,6 +19,7 @@
 package org.apache.falcon.hive;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.exception.HiveReplicationException;
 import org.apache.falcon.hive.util.DRStatusStore;
 import org.apache.falcon.hive.util.DelimiterUtils;
@@ -132,7 +133,13 @@ public class LastReplicatedEvents {
                 eventId = ReplicationUtils.getLastReplicationId(table);
             }
         }
-        LOG.info("Last saved eventId : {}", eventId);
+
+        if ((StringUtils.isEmpty(tableName))) {
+            LOG.info("Last replicated eventId for DB : {} is {}", dbName, eventId);
+        } else {
+            LOG.info("Last replicated eventId for DB : {} Table : {} is {}", dbName, tableName, eventId);
+        }
+
         return eventId;
     }
 
