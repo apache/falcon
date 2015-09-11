@@ -154,14 +154,10 @@ public abstract class ApplicationProperties extends Properties {
         }
     }
 
-    private Set<String> getKeys(Set<Object> keySet) throws FalconException {
+    private Set<String> getKeys(Set<Object> keySet) {
         Set<String> keys = new HashSet<String>();
         for (Object keyObj : keySet) {
             String key = (String) keyObj;
-            if (!key.startsWith("*.") && !key.startsWith(domain + ".")) {
-                LOG.error("Key: " + key + " does not start with '*.' or '" + domain + ".'");
-                throw new FalconException("Key: " + key + " does not start with '*.' or '" + domain + ".'");
-            }
             keys.add(key.substring(key.indexOf('.') + 1));
         }
         return keys;

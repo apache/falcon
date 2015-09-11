@@ -12,8 +12,6 @@ Trunk (Unreleased)
     FALCON-1414 Add all fields in filterBy to the entity list output.(Narayan Periwal via Ajay Yadava)
 
     FALCON-1430 Exclude designer from source tarball(Ajay Yadava)
-    
-    FALCON-1250 Throw error when keys in startup.properties do not start with "*." or domain+"."(Narayan Periwal via Ajay Yadava)
 
     FALCON-348 Add shutdown hook for Falcon (Sandeep Samudrala via Pallavi Rao)
  
