@@ -68,7 +68,7 @@ See also: [[../Security.twiki][Security in Falcon]]
 | GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance |
 | GET         | [[Triage][api/instance/triage/:entity-type/:entity-name]]                   | Triage an instance to see it's stuck lineage |
 | GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name]]         | Return summary of instances for an entity |
-| GET         | [[InstanceDependency][api/instance/dependency/:entity-type/:entity-name]]   | Return dependent instances for a given instance |
+| GET         | [[InstanceDependency][api/instance/dependencies/:entity-type/:entity-name]] | Return dependent instances for a given instance |
 
 ---++ REST Call on Metadata Lineage Resource
 

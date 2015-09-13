@@ -18,6 +18,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1445 Docfix for api/instance/dependencies endpoint(Raghav Kumar Gautam via Ajay Yadava)
+
     FALCON-1381 The webservice response of Falcon includes a stack trace in case of errors(Narayan Periwal via Ajay Yadava)
 
     FALCON-1438 Falcon RestAPI - In case of error falcon responds with FalconWebException::null(Balu Vellanki via Ajay Yadava).

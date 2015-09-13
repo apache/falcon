@@ -1,4 +1,4 @@
----++ GET /api/instance/dependency/:entity-type/:entity-name
+---++ GET /api/instance/dependencies/:entity-type/:entity-name
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -20,7 +20,7 @@ Dependent instances for the specified instance
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/dependency/feed/myFeed?colo=*&instanceTime=2012-04-03T07:00Z
+GET http://localhost:15000/api/instance/dependencies/feed/myFeed?colo=*&instanceTime=2012-04-03T07:00Z
 </verbatim>
 ---+++ Result
 <verbatim>
