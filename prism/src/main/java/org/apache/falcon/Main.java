@@ -66,8 +66,13 @@ public final class Main {
         public void run() {
             try {
                 LOG.info("calling shutdown hook");
-                server.stop();
-                broker.stop();
+                if (server != null) {
+                    server.stop();
+                }
+                if (broker != null) {
+                    broker.stop();
+                }
+                LOG.info("Shutdown Complete.");
             } catch (Exception e) {
                 LOG.error("Server shutdown failed with " , e);
             }

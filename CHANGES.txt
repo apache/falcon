@@ -18,6 +18,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1443 NPE in shutdown hook(Pallavi Rao via Ajay Yadava)
+
     FALCON-1445 Docfix for api/instance/dependencies endpoint(Raghav Kumar Gautam via Ajay Yadava)
 
     FALCON-1381 The webservice response of Falcon includes a stack trace in case of errors(Narayan Periwal via Ajay Yadava)
