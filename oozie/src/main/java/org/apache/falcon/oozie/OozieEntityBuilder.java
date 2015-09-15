@@ -23,11 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -165,8 +165,8 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
     }
 
-    protected Properties createAppProperties(Cluster cluster, String wfName) throws FalconException {
-        Properties properties = getEntityProperties(cluster);
+    protected Properties createAppProperties(Cluster cluster) throws FalconException {
+        Properties properties = EntityUtil.getEntityProperties(cluster);
         properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
         properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty("colo.name", cluster.getColo());
@@ -175,7 +175,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         }
         properties.setProperty("falcon.libpath",
-                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath()  + "/lib");
+                ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath() + "/lib");
 
         return properties;
     }
@@ -213,42 +213,6 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
 
         return hiveConf;
-    }
-
-    protected Properties getEntityProperties(Entity myEntity) {
-        Properties properties = new Properties();
-        switch (myEntity.getEntityType()) {
-        case CLUSTER:
-            org.apache.falcon.entity.v0.cluster.Properties clusterProps = ((Cluster) myEntity).getProperties();
-            if (clusterProps != null) {
-                for (Property prop : clusterProps.getProperties()) {
-                    properties.put(prop.getName(), prop.getValue());
-                }
-            }
-            break;
-
-        case FEED:
-            org.apache.falcon.entity.v0.feed.Properties feedProps = ((Feed) myEntity).getProperties();
-            if (feedProps != null) {
-                for (org.apache.falcon.entity.v0.feed.Property prop : feedProps.getProperties()) {
-                    properties.put(prop.getName(), prop.getValue());
-                }
-            }
-            break;
-
-        case PROCESS:
-            org.apache.falcon.entity.v0.process.Properties processProps = ((Process) myEntity).getProperties();
-            if (processProps != null) {
-                for (org.apache.falcon.entity.v0.process.Property prop : processProps.getProperties()) {
-                    properties.put(prop.getName(), prop.getValue());
-                }
-            }
-            break;
-
-        default:
-            throw new IllegalArgumentException("Unhandled entity type " + myEntity.getEntityType());
-        }
-        return properties;
     }
 
     protected void propagateCatalogTableProperties(Output output, CatalogStorage tableStorage, Properties props) {

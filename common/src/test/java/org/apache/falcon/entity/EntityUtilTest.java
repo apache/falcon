@@ -28,6 +28,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LateArrival;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -42,6 +43,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
 
 /**
@@ -251,6 +253,55 @@ public class EntityUtilTest extends AbstractTestBase {
         Pair<Date, Date> startEndDates = EntityUtil.getEntityStartEndDates(process);
         Assert.assertEquals(startEndDates.first, expectedStartDate);
         Assert.assertEquals(startEndDates.second, expectedEndDate);
+    }
+
+    @Test
+    public void testGetFeedProperties() {
+        Feed feed = new Feed();
+        org.apache.falcon.entity.v0.feed.Properties props = new org.apache.falcon.entity.v0.feed.Properties();
+        Property queue = new Property();
+        String name = "Q";
+        String value = "head of Q division!";
+        queue.setName(name);
+        queue.setValue(value);
+        props.getProperties().add(queue);
+        feed.setProperties(props);
+        Properties actual = EntityUtil.getEntityProperties(feed);
+        Assert.assertEquals(actual.size(), 1);
+        Assert.assertEquals(actual.getProperty(name), value);
+    }
+
+    @Test
+    public void testGetProcessProperties() {
+        org.apache.falcon.entity.v0.cluster.Cluster cluster = new org.apache.falcon.entity.v0.cluster.Cluster();
+        org.apache.falcon.entity.v0.cluster.Properties props = new org.apache.falcon.entity.v0.cluster.Properties();
+        org.apache.falcon.entity.v0.cluster.Property priority = new org.apache.falcon.entity.v0.cluster.Property();
+        String name = "priority";
+        String value = "Sister of Moriarity!";
+        priority.setName(name);
+        priority.setValue(value);
+        props.getProperties().add(priority);
+        cluster.setProperties(props);
+        Properties actual = EntityUtil.getEntityProperties(cluster);
+        Assert.assertEquals(actual.size(), 1);
+        Assert.assertEquals(actual.getProperty(name), value);
+    }
+
+    @Test
+    public void testGetClusterProperties() {
+        Process process = new Process();
+        org.apache.falcon.entity.v0.process.Properties props = new org.apache.falcon.entity.v0.process.Properties();
+        org.apache.falcon.entity.v0.process.Property priority = new org.apache.falcon.entity.v0.process.Property();
+        String name = "M";
+        String value = "Minions!";
+        priority.setName(name);
+        priority.setValue(value);
+        props.getProperties().add(priority);
+        process.setProperties(props);
+        Properties actual = EntityUtil.getEntityProperties(process);
+        Assert.assertEquals(actual.size(), 1);
+        Assert.assertEquals(actual.getProperty(name), value);
+
     }
 
     @Test

@@ -164,7 +164,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
     protected void addAdditionalReplicationProperties(ACTION replicationAction) {
         List<String> args = replicationAction.getJava().getArg();
-        Properties props = getEntityProperties(entity);
+        Properties props = EntityUtil.getEntityProperties(entity);
 
         for (ReplicationDistCpOption distcpOption : ReplicationDistCpOption.values()) {
             String propertyValue = props.getProperty(distcpOption.getName());
@@ -427,8 +427,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         props.put(MR_JOB_PRIORITY, "NORMAL");
 
         //props in entity override the set props.
-        props.putAll(getEntityProperties(entity));
-        props.putAll(createAppProperties(cluster, entity.getName()));
+        props.putAll(EntityUtil.getEntityProperties(entity));
+        props.putAll(createAppProperties(cluster));
         return props;
     }
 

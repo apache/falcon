@@ -182,7 +182,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
 
         propagateLateDataProperties(instancePaths, sourceStorage.getType().name(), props);
         // Add the custom properties set in feed. Else, dryrun won't catch any missing props.
-        props.putAll(getEntityProperties(entity));
+        props.putAll(EntityUtil.getEntityProperties(entity));
         workflow.setConfiguration(getConfig(props));
         action.setWorkflow(workflow);
 
@@ -336,7 +336,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             timeoutInMillis = THIRTY_MINUTES;
         }
 
-        Properties props = getEntityProperties(entity);
+        Properties props = EntityUtil.getEntityProperties(entity);
         String timeout = props.getProperty(TIMEOUT);
         if (timeout!=null) {
             try{

@@ -34,6 +34,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.LateInput;
@@ -66,6 +67,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -310,6 +312,44 @@ public final class EntityUtil {
         }
         return startCal.getTime();
     }
+
+
+    public static Properties getEntityProperties(Entity myEntity) {
+        Properties properties = new Properties();
+        switch (myEntity.getEntityType()) {
+        case CLUSTER:
+            org.apache.falcon.entity.v0.cluster.Properties clusterProps = ((Cluster) myEntity).getProperties();
+            if (clusterProps != null) {
+                for (Property prop : clusterProps.getProperties()) {
+                    properties.put(prop.getName(), prop.getValue());
+                }
+            }
+            break;
+
+        case FEED:
+            org.apache.falcon.entity.v0.feed.Properties feedProps = ((Feed) myEntity).getProperties();
+            if (feedProps != null) {
+                for (org.apache.falcon.entity.v0.feed.Property prop : feedProps.getProperties()) {
+                    properties.put(prop.getName(), prop.getValue());
+                }
+            }
+            break;
+
+        case PROCESS:
+            org.apache.falcon.entity.v0.process.Properties processProps = ((Process) myEntity).getProperties();
+            if (processProps != null) {
+                for (org.apache.falcon.entity.v0.process.Property prop : processProps.getProperties()) {
+                    properties.put(prop.getName(), prop.getValue());
+                }
+            }
+            break;
+
+        default:
+            throw new IllegalArgumentException("Unhandled entity type " + myEntity.getEntityType());
+        }
+        return properties;
+    }
+
 
     public static int getInstanceSequence(Date startTime, Frequency frequency, TimeZone tz, Date instanceTime) {
         if (startTime.after(instanceTime)) {

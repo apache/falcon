@@ -8,6 +8,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1449 Move getEntityProperties method to EntityUtil.(Ajay Yadava)
+
     FALCON-1357 Update CHANGES.txt to change 0.7 branch to release.(Ajay Yadava)
 
     FALCON-1414 Add all fields in filterBy to the entity list output.(Narayan Periwal via Ajay Yadava)

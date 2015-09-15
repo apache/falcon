@@ -197,7 +197,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
     }
 
     protected void propagateEntityProperties(CONFIGURATION conf, List<String> paramList) {
-        Properties entityProperties = getEntityProperties(entity);
+        Properties entityProperties = EntityUtil.getEntityProperties(entity);
 
         // Propagate user defined properties to job configuration
         final List<org.apache.falcon.oozie.workflow.CONFIGURATION.Property> configuration = conf.getProperty();

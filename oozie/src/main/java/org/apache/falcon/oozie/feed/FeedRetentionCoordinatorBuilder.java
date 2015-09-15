@@ -21,6 +21,7 @@ package org.apache.falcon.oozie.feed;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -78,7 +79,7 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
         workflow.setAppPath(getStoragePath(wfProps.getProperty(OozieEntityBuilder.ENTITY_PATH)));
         props.putAll(getProperties(coordPath, coordName));
         // Add the custom properties set in feed. Else, dryrun won't catch any missing props.
-        props.putAll(getEntityProperties(entity));
+        props.putAll(EntityUtil.getEntityProperties(entity));
         workflow.setConfiguration(getConfig(props));
         ACTION action = new ACTION();
         action.setWorkflow(workflow);

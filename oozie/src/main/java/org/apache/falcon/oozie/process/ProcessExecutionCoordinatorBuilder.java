@@ -92,7 +92,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         WORKFLOW wf = new WORKFLOW();
         wf.setAppPath(getStoragePath(wfProps.getProperty(OozieEntityBuilder.ENTITY_PATH)));
         // Add the custom properties set in feed. Else, dryrun won't catch any missing props.
-        props.putAll(getEntityProperties(entity));
+        props.putAll(EntityUtil.getEntityProperties(entity));
         wf.setConfiguration(getConfig(props));
 
         // set coord action to parent wf
