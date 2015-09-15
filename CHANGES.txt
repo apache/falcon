@@ -5,6 +5,7 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
     FALCON-1357 Update CHANGES.txt to change 0.7 branch to release.(Ajay Yadava)

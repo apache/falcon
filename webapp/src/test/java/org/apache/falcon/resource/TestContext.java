@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
@@ -230,11 +231,20 @@ public class TestContext {
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        scheduleProcess(processTemplate, overlay, true, null);
+        scheduleProcess(processTemplate, overlay, true, null, "");
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay,
-                                boolean succeed, Boolean skipDryRun) throws Exception {
+                                Boolean skipDryRun, final String doAsUSer) throws Exception {
+        scheduleProcess(processTemplate, overlay, true, skipDryRun, doAsUSer);
+    }
+
+    public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed) throws Exception{
+        scheduleProcess(processTemplate, overlay, succeed, null, "");
+    }
+
+    public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed,
+                                Boolean skipDryRun, final String doAsUser) throws Exception {
         ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
@@ -244,7 +254,7 @@ public class TestContext {
         response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun);
+        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun, doAsUser);
         if (succeed) {
             assertSuccessful(response);
         } else {
@@ -279,21 +289,26 @@ public class TestContext {
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
-        return submitAndSchedule(template, overlay, entityType, null);
+        return submitAndSchedule(template, overlay, entityType, null, "");
     }
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay,
-                                            EntityType entityType, Boolean skipDryRun)
-        throws Exception {
+                                            EntityType entityType, Boolean skipDryRun,
+                                            final String doAsUser) throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        WebResource resource = service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase());
+        WebResource resource = this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase());
+
         if (null != skipDryRun) {
             resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
         }
-        return resource
-                .header("Cookie", getAuthenticationToken())
+
+        if (StringUtils.isNotEmpty(doAsUser)) {
+            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        return resource.header("Cookie", getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, rawlogStream);
@@ -323,6 +338,11 @@ public class TestContext {
 
     public ClientResponse submitToFalcon(String template, Map<String, String> overlay, EntityType entityType)
         throws IOException {
+        return submitToFalcon(template, overlay, entityType, "");
+    }
+
+    public ClientResponse submitToFalcon(String template, Map<String, String> overlay, EntityType entityType,
+                                         final String doAsUser) throws IOException {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         if (entityType == EntityType.CLUSTER) {
             try {
@@ -334,7 +354,7 @@ public class TestContext {
                 throw new IOException("Unable to setup cluster info", e);
             }
         }
-        return submitFileToFalcon(entityType, tmpFile);
+        return submitFileToFalcon(entityType, tmpFile, doAsUser);
     }
 
     public static void deleteClusterLocations(Cluster clusterEntity, FileSystem fs) throws IOException {
@@ -374,11 +394,21 @@ public class TestContext {
     }
 
     public ClientResponse submitFileToFalcon(EntityType entityType, String tmpFile) throws IOException {
+        return submitFileToFalcon(entityType, tmpFile, "");
+    }
+
+    public ClientResponse submitFileToFalcon(EntityType entityType, String tmpFile,
+                                             final String doAsUser) throws IOException {
 
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        return this.service.path("api/entities/submit/" + entityType.name().toLowerCase())
-                .header("Cookie", getAuthenticationToken())
+        WebResource resource = this.service.path("api/entities/submit/" + entityType.name().toLowerCase());
+
+        if (StringUtils.isNotEmpty(doAsUser)) {
+            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        return resource.header("Cookie", getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, rawlogStream);

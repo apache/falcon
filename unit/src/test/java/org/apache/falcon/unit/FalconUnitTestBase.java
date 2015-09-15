@@ -125,7 +125,7 @@ public class FalconUnitTestBase {
         fs.mkdirs(new Path(STAGING_PATH), HadoopClientFactory.ALL_PERMISSION);
         fs.mkdirs(new Path(WORKING_PATH), HadoopClientFactory.READ_EXECUTE_PERMISSION);
         String clusterXmlPath = overlayParametersOverTemplate(CLUSTER_TEMPLATE, props);
-        APIResult result = falconUnitClient.submit(CLUSTER, clusterXmlPath);
+        APIResult result = falconUnitClient.submit(CLUSTER, clusterXmlPath, "");
         return true ? APIResult.Status.SUCCEEDED.equals(result.getStatus()) : false;
     }
 
@@ -138,7 +138,7 @@ public class FalconUnitTestBase {
     }
 
     public APIResult submit(String entityType, String filePath) throws FalconCLIException, IOException {
-        return falconUnitClient.submit(entityType, filePath);
+        return falconUnitClient.submit(entityType, filePath, "");
     }
 
     public APIResult submitProcess(String filePath, String appDirectory) throws IOException, FalconCLIException {

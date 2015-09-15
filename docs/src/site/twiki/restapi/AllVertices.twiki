@@ -8,7 +8,7 @@
 Get all vertices.
 
 ---++ Parameters
-None.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 All vertices in lineage graph.
@@ -16,7 +16,7 @@ All vertices in lineage graph.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/vertices/all
+GET http://localhost:15000/api/metadata/lineage/vertices/all?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

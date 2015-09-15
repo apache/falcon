@@ -8,14 +8,15 @@
 Get stack trace of the falcon server.
 
 ---++ Parameters
-None.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+
 ---++ Results
 Stack trace of the server.
 
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/admin/stack
+GET http://localhost:15000/api/admin/stack?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -9,6 +9,7 @@ It returns the graph depicting the relationship between the various processes an
 
 ---++ Parameters
    * :pipeline is the name of the pipeline
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 It returns a json graph
@@ -16,7 +17,7 @@ It returns a json graph
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/entities?pipeline=my-pipeline
+GET http://localhost:15000/api/metadata/lineage/entities?pipeline=my-pipeline&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -19,16 +19,44 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
+import org.apache.falcon.service.GroupsService;
+import org.apache.falcon.service.ProxyUserService;
+import org.apache.falcon.service.Services;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
  * Test for current user's thread safety.
  */
 public class CurrentUserTest {
+    private ProxyUserService proxyUserService;
+    private GroupsService groupsService;
+
+    @BeforeClass
+    public void setUp() throws Exception {
+        Services.get().register(new ProxyUserService());
+        Services.get().register(new GroupsService());
+        groupsService = Services.get().getService(GroupsService.SERVICE_NAME);
+        proxyUserService = Services.get().getService(ProxyUserService.SERVICE_NAME);
+        groupsService.init();
+
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts", "*");
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.groups", "*");
+        proxyUserService.init();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        proxyUserService.destroy();
+        groupsService.destroy();
+        Services.get().reset();
+    }
 
     @AfterMethod
     public void cleanUp() {
@@ -114,5 +142,36 @@ public class CurrentUserTest {
 
         Assert.assertEquals(CurrentUser.getAuthenticatedUser(), EntityBuilderTestUtil.USER);
         Assert.assertEquals(CurrentUser.getUser(), "proxy");
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testProxyDoAsUserWithNoAuth() throws Exception {
+        CurrentUser.proxyDoAsUser("falcon", "localhost");
+    }
+
+    @Test
+    public void testProxyDoAsUser() throws Exception {
+        CurrentUser.authenticate("foo");
+
+        CurrentUser.proxyDoAsUser(EntityBuilderTestUtil.USER, "localhost");
+        UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
+        Assert.assertNotNull(proxyUgi);
+        Assert.assertEquals(proxyUgi.getUserName(), EntityBuilderTestUtil.USER);
+
+        Assert.assertEquals(CurrentUser.getAuthenticatedUser(), "foo");
+        Assert.assertEquals(CurrentUser.getUser(), EntityBuilderTestUtil.USER);
+    }
+
+    @Test
+    public void testProxyDoAsSameUser() throws Exception {
+        CurrentUser.authenticate("foo");
+
+        CurrentUser.proxyDoAsUser("foo", "localhost");
+        UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
+        Assert.assertNotNull(proxyUgi);
+        Assert.assertEquals(proxyUgi.getUserName(), "foo");
+
+        Assert.assertEquals(CurrentUser.getAuthenticatedUser(), "foo");
+        Assert.assertEquals(CurrentUser.getUser(), "foo");
     }
 }

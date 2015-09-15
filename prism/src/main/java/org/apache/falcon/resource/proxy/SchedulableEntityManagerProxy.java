@@ -486,13 +486,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @QueryParam("numResults") Integer resultsPerPage) {
+                                    @QueryParam("numResults") Integer resultsPerPage,
+                                    @QueryParam("doAs") String doAsUser) {
         if (StringUtils.isNotEmpty(type)) {
             type = type.substring(1);
         }
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getEntityList(fields, nameSubsequence, tagKeywords, type, tags, filterBy,
-                orderBy, sortOrder, offset, resultsPerPage);
+                orderBy, sortOrder, offset, resultsPerPage, doAsUser);
     }
 
     @GET
@@ -512,9 +513,10 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @DefaultValue("asc") @QueryParam("sortOrder") String entitySortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer entityOffset,
             @DefaultValue("10") @QueryParam("numResults") final Integer numEntities,
-            @DefaultValue("7") @QueryParam("numInstances") final Integer numInstanceResults) {
+            @DefaultValue("7") @QueryParam("numInstances") final Integer numInstanceResults,
+            @DefaultValue("") @QueryParam("doAs") final String doAsUser) {
         return super.getEntitySummary(type, cluster, startStr, endStr, entityFields, entityFilter,
-                entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults);
+                entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults, doAsUser);
     }
 
     @GET

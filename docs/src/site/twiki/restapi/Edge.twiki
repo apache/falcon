@@ -9,6 +9,7 @@ Gets the edge with specified id.
 
 ---++ Parameters
    * :id is the unique id of the edge.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Edge with the specified id.
@@ -16,7 +17,7 @@ Edge with the specified id.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/edges/Q6t-c-5g
+GET http://localhost:15000/api/metadata/lineage/edges/Q6t-c-5g?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -10,6 +10,7 @@ Get all dimensions of specified type.
 ---++ Parameters
    * :type Valid dimension types are cluster_entity,feed_entity, process_entity, user, colo, tags, groups, pipelines
    * cluster <optional query param> Show dimensions related to this cluster.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 
 ---++ Results
@@ -18,7 +19,7 @@ List of dimensions that match requested type [and cluster].
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/discovery/process_entity/list?cluster=primary-cluster
+GET http://localhost:15000/api/metadata/discovery/process_entity/list?cluster=primary-cluster&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

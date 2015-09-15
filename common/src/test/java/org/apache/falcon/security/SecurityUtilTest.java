@@ -22,10 +22,16 @@ package org.apache.falcon.security;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.service.GroupsService;
+import org.apache.falcon.service.ProxyUserService;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.RuntimeProperties;
 import org.mockito.Mockito;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -34,6 +40,29 @@ import java.io.IOException;
  * Unit test for Security utils.
  */
 public class SecurityUtilTest {
+
+    private ProxyUserService proxyUserService;
+    private GroupsService groupsService;
+
+    @BeforeClass
+    public void setUp() throws Exception {
+        Services.get().register(new ProxyUserService());
+        Services.get().register(new GroupsService());
+        groupsService = Services.get().getService(GroupsService.SERVICE_NAME);
+        proxyUserService = Services.get().getService(ProxyUserService.SERVICE_NAME);
+        groupsService.init();
+
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts", "*");
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.groups", "*");
+        proxyUserService.init();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        proxyUserService.destroy();
+        groupsService.destroy();
+        Services.get().reset();
+    }
 
     @Test
     public void testDefaultGetAuthenticationType() throws Exception {
@@ -98,7 +127,7 @@ public class SecurityUtilTest {
 
         // When ACL not specified
         CurrentUser.authenticate(currentUser);
-        SecurityUtil.tryProxy(process);
+        SecurityUtil.tryProxy(process, "");
         Assert.assertEquals(CurrentUser.getUser(), currentUser);
 
         ACL acl = new ACL();
@@ -107,7 +136,27 @@ public class SecurityUtilTest {
         Mockito.when(process.getACL()).thenReturn(acl);
 
         // When ACL is specified
-        SecurityUtil.tryProxy(process);
+        SecurityUtil.tryProxy(process, "");
         Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);
     }
+
+    @Test (expectedExceptions = FalconException.class,
+           expectedExceptionsMessageRegExp = "doAs user and ACL owner mismatch.*")
+    public void testTryProxyWithDoAsUser() throws IOException, FalconException {
+        Process process = Mockito.mock(Process.class);
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        final String currentUser = "foo";
+
+        ACL acl = new ACL();
+        acl.setOwner("testuser");
+        acl.setGroup("users");
+        Mockito.when(process.getACL()).thenReturn(acl);
+
+        CurrentUser.authenticate(currentUser);
+        CurrentUser.proxyDoAsUser("doAsUser", "localhost");
+
+        Assert.assertEquals(CurrentUser.getUser(), "doAsUser");
+        SecurityUtil.tryProxy(process, "doAsUser");
+    }
+
 }

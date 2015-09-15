@@ -131,7 +131,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          * Only one entity should be returned when the auth is enabled.
          */
         try {
-            getEntityList("", "", "", "process", "", "", "", "", 0, 10);
+            getEntityList("", "", "", "process", "", "", "", "", 0, 10, "");
             Assert.fail();
         } catch (Throwable ignore) {
             // do nothing
@@ -148,7 +148,7 @@ public class EntityManagerTest extends AbstractEntityManager {
         Entity process2 = buildProcess("processAuthUser", System.getProperty("user.name"), "", "");
         configStore.publish(EntityType.PROCESS, process2);
 
-        EntityList entityList = this.getEntityList("", "", "", "process", "", "", "", "asc", 0, 10);
+        EntityList entityList = this.getEntityList("", "", "", "process", "", "", "", "asc", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
 
@@ -157,7 +157,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          */
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         CurrentUser.authenticate(System.getProperty("user.name"));
-        entityList = this.getEntityList("", "", "", "process", "", "", "", "desc", 0, 10);
+        entityList = this.getEntityList("", "", "", "process", "", "", "", "desc", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
 
@@ -172,7 +172,8 @@ public class EntityManagerTest extends AbstractEntityManager {
         Entity process2 = buildProcess("processAuthUserFilterBy", System.getProperty("user.name"), "", "USER-DATA");
         configStore.publish(EntityType.PROCESS, process2);
 
-        EntityList entityList = this.getEntityList("", "", "", "process", "", "PIPELINES:USER-DATA", "", "asc", 0, 10);
+        EntityList entityList = this.getEntityList("", "", "", "process", "",
+                "PIPELINES:USER-DATA", "", "asc", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
         Assert.assertNotNull(entityList.getElements()[0].pipeline);
@@ -183,7 +184,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          */
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         CurrentUser.authenticate(System.getProperty("user.name"));
-        entityList = this.getEntityList("", "", "", "process", "", "PIPELINES:USER-DATA", "", "desc", 0, 10);
+        entityList = this.getEntityList("", "", "", "process", "", "PIPELINES:USER-DATA", "", "desc", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
         Assert.assertNotNull(entityList.getElements()[0].pipeline);
@@ -222,7 +223,7 @@ public class EntityManagerTest extends AbstractEntityManager {
         configStore.publish(EntityType.PROCESS, process4);
 
         EntityList entityList = this.getEntityList("tags", "", "", "process", "", "PIPELINES:dataReplicationPipeline",
-                "name", "desc", 1, 1);
+                "name", "desc", 1, 1, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
         Assert.assertEquals(entityList.getElements()[0].name, "process1");
@@ -232,7 +233,7 @@ public class EntityManagerTest extends AbstractEntityManager {
 
 
         entityList = this.getEntityList("pipelines", "", "", "process",
-                "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "", 0, 2);
+                "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "", 0, 2, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
         Assert.assertEquals(entityList.getElements()[1].name, "process2");
@@ -241,17 +242,17 @@ public class EntityManagerTest extends AbstractEntityManager {
         Assert.assertEquals(entityList.getElements()[0].tag, null);
 
         entityList = this.getEntityList("pipelines", "", "", "process",
-                "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "", 10, 2);
+                "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "", 10, 2, "");
         Assert.assertEquals(entityList.getElements().length, 0);
 
         entityList = this.getEntityList("pipelines", "", "", "process",
-                "owner=producer@xyz.com", "", "name", "", 1, 2);
+                "owner=producer@xyz.com", "", "name", "", 1, 2, "");
         Assert.assertEquals(entityList.getElements().length, 2);
 
         // Test negative value for numResults, should throw an exception.
         try {
             this.getEntityList("pipelines", "", "", "process",
-                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "", 10, -1);
+                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "", 10, -1, "");
             Assert.assertTrue(false);
         } catch (Throwable e) {
             Assert.assertTrue(true);
@@ -260,7 +261,7 @@ public class EntityManagerTest extends AbstractEntityManager {
         // Test invalid entry for sortOrder
         try {
             this.getEntityList("pipelines", "", "", "process",
-                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "invalid", 10, 2);
+                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "", "name", "invalid", 10, 2, "");
             Assert.assertTrue(false);
         } catch (Throwable e) {
             Assert.assertTrue(true);
@@ -287,18 +288,18 @@ public class EntityManagerTest extends AbstractEntityManager {
         Entity process5 = buildProcess("Process5", user, "category=usHealthcarePlans,department=billingDepartment", "");
         configStore.publish(EntityType.PROCESS, process5);
 
-        EntityList entityList = this.getEntityList("", "sample", "health,billing", "", "", "", "name", "", 0, 10);
+        EntityList entityList = this.getEntityList("", "sample", "health,billing", "", "", "", "name", "", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
         Assert.assertEquals(entityList.getElements()[0].name, "SampleProcess1");
         Assert.assertEquals(entityList.getElements()[1].name, "SampleProcess2");
 
-        entityList = this.getEntityList("", "sample4", "", "", "", "", "", "", 0, 10);
+        entityList = this.getEntityList("", "sample4", "", "", "", "", "", "", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
         Assert.assertEquals(entityList.getElements()[0].name, "SampleProcess4");
 
-        entityList = this.getEntityList("", "", "health,us", "", "", "", "name", "", 0, 10);
+        entityList = this.getEntityList("", "", "health,us", "", "", "", "name", "", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
         Assert.assertEquals(entityList.getElements()[0].name, "Process5");

@@ -49,6 +49,7 @@ import java.io.IOException;
 public class FalconAuthorizationFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconAuthorizationFilter.class);
+    private static final String DO_AS_PARAM = "doAs";
 
     private boolean isAuthorizationEnabled;
     private AuthorizationProvider authorizationProvider;
@@ -81,8 +82,9 @@ public class FalconAuthorizationFilter implements Filter {
                 authorizationProvider.authorizeResource(requestParts.getResource(),
                         requestParts.getAction(), requestParts.getEntityType(),
                         requestParts.getEntityName(), authenticatedUGI);
+                String doAsUser = request.getParameter(DO_AS_PARAM);
                 tryProxy(authenticatedUGI,
-                    requestParts.getEntityType(), requestParts.getEntityName());
+                    requestParts.getEntityType(), requestParts.getEntityName(), doAsUser);
                 LOG.info("Authorization succeeded for user={}, proxy={}",
                     authenticatedUGI.getShortUserName(), CurrentUser.getUser());
             } catch (AuthorizationException e) {
@@ -133,7 +135,8 @@ public class FalconAuthorizationFilter implements Filter {
     }
 
     private void tryProxy(UserGroupInformation authenticatedUGI,
-                          String entityType, String entityName) throws IOException {
+                          String entityType, String entityName,
+                          final String doAsUser) throws IOException {
         if (entityType == null || entityName == null) {
             return;
         }
@@ -141,7 +144,7 @@ public class FalconAuthorizationFilter implements Filter {
         try {
             EntityType type = EntityType.getEnum(entityType);
             Entity entity = EntityUtil.getEntity(type, entityName);
-            SecurityUtil.tryProxy(entity);
+            SecurityUtil.tryProxy(entity, doAsUser);
         } catch (FalconException ignore) {
             // do nothing
         }

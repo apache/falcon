@@ -2,6 +2,20 @@
 
 FalconCLI is a interface between user and Falcon. It is a command line utility provided by Falcon. FalconCLI supports Entity Management, Instance Management and Admin operations.There is a set of web services that are used by FalconCLI to interact with Falcon.
 
+---++Common CLI Options
+
+---+++Falcon URL
+
+Optional -url option indicating the URL of the Falcon system to run the command against can be provided.  If not mentioned it will be picked from the system environment variable FALCON_URL. If FALCON_URL is not set then it will be picked from client.properties file. If the option is not
+provided and also not set in client.properties, Falcon CLI will fail.
+
+---+++Proxy user support
+
+The -doAs option allows the current user to impersonate other users when interacting with the Falcon system. The current user must be configured as a proxyuser in the Falcon system. The proxyuser configuration may restrict from
+which hosts a user may impersonate users, as well as users of which groups can be impersonated.
+
+<a href="./FalconDocumentation.html#Proxyuser_support">Proxyuser support described here.</a>
+
 ---++Entity Management Operations
 
 ---+++Submit

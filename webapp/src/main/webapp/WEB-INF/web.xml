@@ -31,6 +31,11 @@
     </filter>
 
     <filter>
+        <filter-name>hostnameFilter</filter-name>
+        <filter-class>org.apache.falcon.security.HostnameFilter</filter-class>
+    </filter>
+
+    <filter>
         <filter-name>authentication</filter-name>
         <filter-class>org.apache.falcon.security.FalconAuthenticationFilter</filter-class>
     </filter>
@@ -43,6 +48,11 @@
     <filter-mapping>
         <filter-name>audit</filter-name>
         <servlet-name>FalconRESTApi</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>hostnameFilter</filter-name>
+        <url-pattern>/*</url-pattern>
     </filter-mapping>
 
     <filter-mapping>

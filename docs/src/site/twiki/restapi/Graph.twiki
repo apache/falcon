@@ -8,7 +8,7 @@
 Dump the graph.
 
 ---++ Parameters
-None.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Serialize graph to a file configured using *.falcon.graph.serialize.path in Custom startup.properties.
@@ -16,7 +16,7 @@ Serialize graph to a file configured using *.falcon.graph.serialize.path in Cust
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/serialize
+GET http://localhost:15000/api/metadata/lineage/serialize?doAs=joe
 </verbatim>
 ---+++ Result
 None.

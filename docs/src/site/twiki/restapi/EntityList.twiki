@@ -27,6 +27,7 @@ Get list of the entities.
    * sortOrder <optional param> Valid options are "asc" and "desc"
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
    * Note:
       * We have two filtering parameters for entity tags: "tags" and "tagkeys". "tags" does the exact match in key=value fashion, while "tagkeys" finds all the entities with the given key as a substring in the tags. This "tagkeys" filter is introduced for the user who doesn't remember the exact tag but some keywords in the tag. It also helps users to save the time of typing long tags.
       * The returned entities will match all the filtering criteria.
@@ -137,7 +138,7 @@ GET http://localhost:15000/api/entities/list/process?filterBy=STATUS:RUNNING,PIP
 
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/list/feed,process?nameseq=samplebill&tagkeys=billing,healthcare&numResults=2&offset=1&fields=status,clusters,tags
+GET http://localhost:15000/api/entities/list/feed,process?nameseq=samplebill&tagkeys=billing,healthcare&numResults=2&offset=1&fields=status,clusters,tags&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

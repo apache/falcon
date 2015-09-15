@@ -9,6 +9,7 @@
 ---++ Parameters
     * path path of the instance for which you want to determine the feed. e.g. /data/project1/2014/10/10/23/
     Path has to be the complete path and can't be a part of it.
+    * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Returns the name of the feed along with the location type(meta/data/stats) and cluster on which the given path belongs to this feed.
@@ -16,7 +17,7 @@ Returns the name of the feed along with the location type(meta/data/stats) and c
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/lookup/feed?path=/data/project1/2014/10/10/23
+GET http://localhost:15000/api/entities/lookup/feed?path=/data/project1/2014/10/10/23&doAs=joe
 </verbatim>
 ---+++ Result
 {

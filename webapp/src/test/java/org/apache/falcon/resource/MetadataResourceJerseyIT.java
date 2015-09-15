@@ -87,6 +87,7 @@ public class MetadataResourceJerseyIT {
         response = context.service
                 .path("api/metadata/discovery/process_entity/list")
                 .queryParam("cluster", "random")
+                .queryParam("doAs", "testUser")
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);

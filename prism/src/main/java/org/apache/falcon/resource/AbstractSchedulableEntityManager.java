@@ -201,7 +201,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     public EntitySummaryResult getEntitySummary(String type, String cluster, String startDate, String endDate,
                                                 String fields, String filterBy, String filterTags,
                                                 String orderBy, String sortOrder, Integer offset,
-                                                Integer resultsPerPage, Integer numInstances) {
+                                                Integer resultsPerPage, Integer numInstances, final String doAsUser) {
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
         validateTypeForEntitySummary(type);
@@ -218,7 +218,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                     getFilteredEntities(EntityType.valueOf(type.toUpperCase()), "", "", filterByFieldsValues,
                             SchemaHelper.getDateFormat().format(startAndEndDates.first),
                             SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                            cluster),
+                            cluster, doAsUser),
                     orderBy, sortOrder, offset, resultsPerPage);
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
         } catch (Exception e) {

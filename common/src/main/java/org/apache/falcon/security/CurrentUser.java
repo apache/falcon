@@ -19,6 +19,8 @@
 package org.apache.falcon.security;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.service.ProxyUserService;
+import org.apache.falcon.service.Services;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,40 @@ public final class CurrentUser {
     }
 
     /**
+     * Proxies doAs user.
+     *
+     * @param doAsUser doAs user
+     * @param proxyHost proxy host
+     * @throws IOException
+     */
+    public static void proxyDoAsUser(final String doAsUser,
+                                     final String proxyHost) throws IOException {
+        if (!isAuthenticated()) {
+            throw new IllegalStateException("Authentication not done");
+        }
+
+        String currentUser = CURRENT_USER.get().authenticatedUser;
+        if (StringUtils.isNotEmpty(doAsUser) && !doAsUser.equalsIgnoreCase(currentUser)) {
+            if (StringUtils.isEmpty(proxyHost)) {
+                throw new IllegalArgumentException("proxy host cannot be null or empty");
+            }
+            ProxyUserService proxyUserService = Services.get().getService(ProxyUserService.SERVICE_NAME);
+            try {
+                proxyUserService.validate(currentUser, proxyHost, doAsUser);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            CurrentUser user = CURRENT_USER.get();
+            LOG.info("Authenticated user {} is proxying doAs user {} from host {}",
+                    user.authenticatedUser, doAsUser, proxyHost);
+            AUDIT.info("Authenticated user {} is proxying doAs user {} from host {}",
+                    user.authenticatedUser, doAsUser, proxyHost);
+            user.proxyUser = doAsUser;
+        }
+    }
+
+    /**
      * Captures the entity owner if authenticated user is a super user.
      *
      * @param aclOwner entity acl owner
@@ -80,9 +116,9 @@ public final class CurrentUser {
 
         CurrentUser user = CURRENT_USER.get();
         LOG.info("Authenticated user {} is proxying entity owner {}/{}",
-            user.authenticatedUser, aclOwner, aclGroup);
+                user.authenticatedUser, aclOwner, aclGroup);
         AUDIT.info("Authenticated user {} is proxying entity owner {}/{}",
-            user.authenticatedUser, aclOwner, aclGroup);
+                user.authenticatedUser, aclOwner, aclGroup);
         user.proxyUser = aclOwner;
     }
 

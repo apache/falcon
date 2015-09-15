@@ -19,6 +19,7 @@ package org.apache.falcon.resource;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -243,7 +244,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response = context.validate(tmpFile.getAbsolutePath(), overlay, EntityType.PROCESS);
         context.assertFailure(response);
 
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, false, null);
+        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, false);
 
         //Fix the process and then submitAndSchedule should succeed
         Iterator<Property> itr = process.getProperties().getProperties().iterator();
@@ -624,6 +625,14 @@ public class EntityManagerJerseyIT {
     }
 
     public void testProcesssScheduleAndDelete() throws Exception {
+        scheduleAndDeleteProcess(false);
+    }
+
+    public void testProcesssScheduleAndDeleteWithDoAs() throws Exception {
+        scheduleAndDeleteProcess(true);
+    }
+
+    private void scheduleAndDeleteProcess(boolean withDoAs) throws Exception {
         TestContext context = newContext();
         ClientResponse clientResponse;
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -632,12 +641,21 @@ public class EntityManagerJerseyIT {
         updateEndtime(process);
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        if (withDoAs) {
+            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "testUser");
+        } else {
+            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        }
         OozieTestUtils.waitForBundleStart(context, Status.RUNNING);
 
+        WebResource resource = context.service.path("api/entities/delete/process/" + context.processName);
+
+        if (withDoAs) {
+            resource = resource.queryParam(FalconCLI.DO_AS_OPT, "testUser");
+        }
+
         //Delete a scheduled process
-        clientResponse = context.service
-                .path("api/entities/delete/process/" + context.processName)
+        clientResponse = resource
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .delete(ClientResponse.class);

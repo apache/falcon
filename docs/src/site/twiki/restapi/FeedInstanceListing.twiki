@@ -14,6 +14,7 @@ Get falcon feed instance availability.
    * end <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
       * Default is set to now.
    * colo <optional param> Colo on which the query should be run.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Feed instance availability status
@@ -21,7 +22,7 @@ Feed instance availability status
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/listing/feed/SampleFeed?colo=*&start=2012-04-03T07:00Z
+GET http://localhost:15000/api/instance/listing/feed/SampleFeed?colo=*&start=2012-04-03T07:00Z&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -18,8 +18,12 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.service.GroupsService;
+import org.apache.falcon.service.ProxyUserService;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
@@ -27,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,6 +42,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.security.AccessControlException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,6 +52,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Test for FalconAuthenticationFilter using mock objects.
  */
 public class FalconAuthenticationFilterTest {
+    private ProxyUserService proxyUserService;
+
+    private GroupsService groupsService;
 
     @Mock
     private HttpServletRequest mockRequest;
@@ -62,9 +71,28 @@ public class FalconAuthenticationFilterTest {
     @Mock
     private UserGroupInformation mockUgi;
 
+    @Mock
+    private HostnameFilter mockHostnameFilter;
+
     @BeforeClass
-    public void init() {
+    public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+        Services.get().register(new ProxyUserService());
+        Services.get().register(new GroupsService());
+        groupsService = Services.get().getService(GroupsService.SERVICE_NAME);
+        proxyUserService = Services.get().getService(ProxyUserService.SERVICE_NAME);
+        groupsService.init();
+
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.hosts", "*");
+        RuntimeProperties.get().setProperty("falcon.service.ProxyUserService.proxyuser.foo.groups", "*");
+        proxyUserService.init();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        proxyUserService.destroy();
+        groupsService.destroy();
+        Services.get().reset();
     }
 
     @BeforeMethod
@@ -214,5 +242,58 @@ public class FalconAuthenticationFilterTest {
         FalconAuthenticationFilter filter = new FalconAuthenticationFilter();
         Properties properties = filter.getConfiguration(FalconAuthenticationFilter.FALCON_PREFIX, null);
         Assert.assertEquals(properties.get(KerberosAuthenticationHandler.PRINCIPAL), principal);
+    }
+
+    @Test
+    public void testDoFilterWithEmptyDoAsUser() throws Exception {
+        Filter filter = new FalconAuthenticationFilter();
+        synchronized (StartupProperties.get()) {
+            filter.init(mockConfig);
+        }
+
+        CurrentUser.authenticate("testuser");
+        Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=testuser");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
+        Mockito.when(mockRequest.getParameter(FalconAuthenticationFilter.DO_AS_PARAM)).thenReturn("");
+        filter.doFilter(mockRequest, mockResponse, mockChain);
+        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+    }
+
+    @Test
+    public void testDoFilterWithDoAsUser() throws Exception {
+        Filter filter = new FalconAuthenticationFilter();
+        HostnameFilter.HOSTNAME_TL.set("localhost");
+        synchronized (StartupProperties.get()) {
+            filter.init(mockConfig);
+        }
+
+        CurrentUser.authenticate("foo");
+        Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=foo");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn("foo");
+        Mockito.when(mockRequest.getParameter(FalconAuthenticationFilter.DO_AS_PARAM)).thenReturn("doAsProxyUser");
+        Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+        filter.doFilter(mockRequest, mockResponse, mockChain);
+        Assert.assertEquals(CurrentUser.getUser(), "doAsProxyUser");
+    }
+
+    @Test (expectedExceptions = AccessControlException.class,
+           expectedExceptionsMessageRegExp = "User .* not defined as proxyuser.*")
+    public void testDoFilterWithInvalidProxyUser() throws Exception {
+        Filter filter = new FalconAuthenticationFilter();
+        HostnameFilter.HOSTNAME_TL.set("localhost");
+        synchronized (StartupProperties.get()) {
+            filter.init(mockConfig);
+        }
+
+        CurrentUser.authenticate("testuser");
+        Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=testuser");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
+        Mockito.when(mockRequest.getParameter(FalconAuthenticationFilter.DO_AS_PARAM)).thenReturn("doAsProxyUser");
+        Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+        filter.doFilter(mockRequest, mockResponse, mockChain);
+        Assert.assertEquals(CurrentUser.getUser(), "doAsProxyUser");
     }
 }

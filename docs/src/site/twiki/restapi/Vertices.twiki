@@ -10,6 +10,7 @@ Get all vertices for a key index given the specified value.
 ---++ Parameters
    * :key is the key to be matched.
    * :value is the associated value of the key.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 All vertices matching given property key and a value.
@@ -17,7 +18,7 @@ All vertices matching given property key and a value.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/vertices?key=name&value=sampleIngestProcess
+GET http://localhost:15000/api/metadata/lineage/vertices?key=name&value=sampleIngestProcess&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

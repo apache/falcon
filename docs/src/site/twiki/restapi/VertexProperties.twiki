@@ -10,6 +10,7 @@ Gets the properties of the vertex with specified id.
 ---++ Parameters
    * :id is the unique id of the vertex.
    * :relationships has default value of false. Pass true if relationships should be fetched.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
  Properties associated with the specified vertex.
@@ -17,7 +18,7 @@ Gets the properties of the vertex with specified id.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/vertices/properties/40004?relationships=true
+GET http://localhost:15000/api/metadata/lineage/vertices/properties/40004?relationships=true&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

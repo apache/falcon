@@ -56,6 +56,8 @@ public class HTTPChannel extends AbstractChannel {
 
     private static final Properties DEPLOYMENT_PROPERTIES = DeploymentProperties.get();
 
+    private static final String DO_AS_PARAM = "doAs";
+
     private String colo;
     private String serviceName;
     private Class service;
@@ -95,9 +97,12 @@ public class HTTPChannel extends AbstractChannel {
             String accept = MediaType.WILDCARD;
             String user = CurrentUser.getUser();
 
+            String doAsUser = incomingRequest.getParameter(DO_AS_PARAM);
+
             ClientResponse response = getClient()
                     .resource(UriBuilder.fromUri(url).build().normalize())
                     .queryParam("user.name", user)
+                    .queryParam("doAs", doAsUser)
                     .accept(accept).type(mimeType)
                     .method(httpMethod, ClientResponse.class,
                             (isPost(httpMethod) ? incomingRequest.getInputStream() : null));

@@ -10,6 +10,7 @@ Get dependencies of the entity.
 ---++ Parameters
    * :entity-type can be cluster, feed or process.
    * :entity-name is name of the entity.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Dependenciess of the entity.
@@ -17,7 +18,7 @@ Dependenciess of the entity.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/dependencies/process/SampleProcess
+GET http://localhost:15000/api/entities/dependencies/process/SampleProcess?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

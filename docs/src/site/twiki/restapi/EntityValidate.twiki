@@ -1,4 +1,4 @@
----++ POST  api/entities/validate/entity-type?skipDryRun=false
+---++ POST  api/entities/validate/entity-type
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -10,6 +10,7 @@ Validates the submitted entity.
 ---++ Parameters
    * :entity-type can be cluster, feed or process.
    * skipDryRun : Optional query param, Falcon skips oozie dryrun when value is set to true.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Result of the validation.
@@ -122,7 +123,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/entities/validate/process
+POST http://localhost:15000/api/entities/validate/process?skipDryRun=false&doAs=joe
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
 <process xmlns="uri:falcon:process:0.1" name="SampleProcess" >

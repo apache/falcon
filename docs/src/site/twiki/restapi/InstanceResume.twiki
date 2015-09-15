@@ -13,29 +13,31 @@ Resume suspended instances of an entity.
    * start is the start time of the instance(s) that you want to refer to
    * end is the end time of the instance(s) that you want to refer to
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+
 ---++ Results
 Results of the resume command.
 
 ---++ Examples
 ---+++ Rest Call
-<verbatim>
-POST http://localhost:15000/api/instance/resume/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&end=2014-04-03T07:00Z
-</verbatim>
----+++ Result
-<verbatim>
-{
-    "instances": [
-        {
-            "details": "",
-            "startTime": "2013-10-21T15:19:57-07:00",
-            "cluster": "primary-cluster",
-            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
-            "status": "RUNNING",
-            "instance": "2012-04-03T07:00Z"
-        }
-    ],
-    "requestId": "default\/e88ff2e0-2af7-4829-a360-f92e95be2981\n",
-    "message": "default\/RESUME\n",
-    "status": "SUCCEEDED"
-}
-</verbatim>
+           <verbatim>
+           POST http://localhost:15000/api/instance/resume/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&end=2014-04-03T07:00Z&doAs=joe
+           </verbatim>
+           ---+++ Result
+           <verbatim>
+           {
+               "instances": [
+                   {
+                       "details": "",
+                       "startTime": "2013-10-21T15:19:57-07:00",
+                       "cluster": "primary-cluster",
+                       "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+                       "status": "RUNNING",
+                       "instance": "2012-04-03T07:00Z"
+                   }
+               ],
+               "requestId": "default\/e88ff2e0-2af7-4829-a360-f92e95be2981\n",
+               "message": "default\/RESUME\n",
+               "status": "SUCCEEDED"
+           }
+           </verbatim>

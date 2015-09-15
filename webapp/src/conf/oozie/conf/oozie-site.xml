@@ -338,8 +338,6 @@
 
     <!-- Proxyuser Configuration -->
 
-    <!--
-
     <property>
         <name>oozie.service.ProxyUserService.proxyuser.#USER#.hosts</name>
         <value>*</value>
@@ -374,7 +372,7 @@
         </description>
     </property>
 
-    -->
+
 
     <property>
         <name>oozie.base.url</name>

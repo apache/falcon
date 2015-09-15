@@ -401,6 +401,28 @@
             </plugin>
 
             <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includes>
+                        <include>${project.build.directory}/test-classes/runtime.properties</include>
+                        <include>${project.build.directory}/webapps/oozie/conf/oozie-site.xml</include>
+                    </includes>
+                    <token>#USER#</token>
+                    <value>${user.name}</value>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>maven-jetty-plugin</artifactId>
                 <version>${jetty.version}</version>

@@ -81,29 +81,30 @@ public class FalconMetadataCLI {
         String value = commandLine.getOptionValue(VALUE_OPT);
         String direction = commandLine.getOptionValue(DIRECTION_OPT);
         String pipeline = commandLine.getOptionValue(PIPELINE_OPT);
+        String doAsUser = commandLine.getOptionValue(FalconCLI.DO_AS_OPT);
 
         if (optionsList.contains(LINEAGE_OPT)) {
             validatePipelineName(pipeline);
-            result = client.getEntityLineageGraph(pipeline).getDotNotation();
+            result = client.getEntityLineageGraph(pipeline, doAsUser).getDotNotation();
         } else if (optionsList.contains(LIST_OPT)) {
             validateDimensionType(dimensionType.toUpperCase());
-            result = client.getDimensionList(dimensionType, cluster);
+            result = client.getDimensionList(dimensionType, cluster, doAsUser);
         } else if (optionsList.contains(RELATIONS_OPT)) {
             validateDimensionType(dimensionType.toUpperCase());
             validateDimensionName(dimensionName, RELATIONS_OPT);
-            result = client.getDimensionRelations(dimensionType, dimensionName);
+            result = client.getDimensionRelations(dimensionType, dimensionName, doAsUser);
         } else if (optionsList.contains(VERTEX_CMD)) {
             validateId(id);
-            result = client.getVertex(id);
+            result = client.getVertex(id, doAsUser);
         } else if (optionsList.contains(VERTICES_CMD)) {
             validateVerticesCommand(key, value);
-            result = client.getVertices(key, value);
+            result = client.getVertices(key, value, doAsUser);
         } else if (optionsList.contains(VERTEX_EDGES_CMD)) {
             validateVertexEdgesCommand(id, direction);
-            result = client.getVertexEdges(id, direction);
+            result = client.getVertexEdges(id, direction, doAsUser);
         } else if (optionsList.contains(EDGE_CMD)) {
             validateId(id);
-            result = client.getEdge(id);
+            result = client.getEdge(id, doAsUser);
         } else {
             throw new FalconCLIException("Invalid metadata command");
         }
@@ -210,6 +211,9 @@ public class FalconMetadataCLI {
         metadataOptions.addOption(key);
         metadataOptions.addOption(value);
         metadataOptions.addOption(direction);
+
+        Option doAs = new Option(FalconCLI.DO_AS_OPT, true, "doAs user");
+        metadataOptions.addOption(doAs);
 
         return metadataOptions;
     }

@@ -8,14 +8,15 @@
 Get version of the falcon server.
 
 ---++ Parameters
-None.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+
 ---++ Results
 Version of the server.
 
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/admin/version
+GET http://localhost:15000/api/admin/version?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -14,6 +14,7 @@ lot of instances are failing in a pipeline as it then finds out the root cause o
    * :entity-name name of the feed/process.
    * :start instance time of the entity instance.
    * :colo <optional param> name of the colo on which you want to triage
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 It returns a json graph
@@ -21,7 +22,7 @@ It returns a json graph
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/triage/feed/my-feed?start=2015-03-02T00:00Z&colo=local
+GET http://localhost:15000/api/instance/triage/feed/my-feed?start=2015-03-02T00:00Z&colo=local&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -25,6 +25,7 @@ Get summary of instance/instances of an entity.
        * Supports ordering by "cluster".
    * sortOrder <optional param> Valid options are "asc" and "desc"
    Example: orderBy=cluster sortOrder=asc
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Summary of the instances over the specified time range
@@ -86,7 +87,7 @@ GET https://localhost:16443/api/instance/summary/process/WordCount?filterBy=Stat
 
 ---+++ Rest Call
 <verbatim>
-GET https://localhost:16443/api/instance/summary/process/WordCount?orderBy=cluster&sortOrder=asc&start=2015-06-24T16:00Z&end=2015-06-24T23:00Z&colo=*
+GET https://localhost:16443/api/instance/summary/process/WordCount?orderBy=cluster&sortOrder=asc&start=2015-06-24T16:00Z&end=2015-06-24T23:00Z&colo=*&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

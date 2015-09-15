@@ -10,6 +10,7 @@ Suspend an entity.
 ---++ Parameters
    * :entity-type can either be a feed or a process.
    * :entity-name is name of the entity.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Status of the entity.
@@ -17,7 +18,7 @@ Status of the entity.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/entities/suspend/process/SampleProcess
+POST http://localhost:15000/api/entities/suspend/process/SampleProcess?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -18,12 +18,15 @@
 
 package org.apache.falcon.security;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -55,6 +58,7 @@ public final class SecurityUtil {
      */
     public static final String HIVE_METASTORE_PRINCIPAL = "hive.metastore.kerberos.principal";
 
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
     private SecurityUtil() {
     }
@@ -107,11 +111,19 @@ public final class SecurityUtil {
         return ReflectionUtils.getInstanceByClassName(providerClassName);
     }
 
-    public static void tryProxy(Entity entity) throws IOException, FalconException {
+    public static void tryProxy(Entity entity, final String doAsUser) throws IOException, FalconException {
         if (entity != null && entity.getACL() != null && SecurityUtil.isAuthorizationEnabled()) {
             final String aclOwner = entity.getACL().getOwner();
             final String aclGroup = entity.getACL().getGroup();
 
+            if (StringUtils.isNotEmpty(doAsUser)) {
+                if (!doAsUser.equalsIgnoreCase(aclOwner)) {
+                    LOG.warn("doAs user {} not same as acl owner {}. Ignoring acl owner.", doAsUser, aclOwner);
+                    throw new FalconException("doAs user and ACL owner mismatch. doAs user " + doAsUser
+                            +  " should be same as ACL owner " + aclOwner);
+                }
+                return;
+            }
             if (SecurityUtil.getAuthorizationProvider().shouldProxy(
                     CurrentUser.getAuthenticatedUGI(), aclOwner, aclGroup)) {
                 CurrentUser.proxy(aclOwner, aclGroup);

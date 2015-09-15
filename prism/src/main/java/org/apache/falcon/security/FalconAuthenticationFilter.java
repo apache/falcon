@@ -52,6 +52,8 @@ public class FalconAuthenticationFilter
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconAuthenticationFilter.class);
 
+    protected static final String DO_AS_PARAM = "doAs";
+
     /**
      * Constant for the configuration property that indicates the prefix.
      */
@@ -177,9 +179,11 @@ public class FalconAuthenticationFilter
                     } else {
                         try {
                             NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
+                            String doAsUser = httpRequest.getParameter(DO_AS_PARAM);
                             CurrentUser.authenticate(user);
-                            LOG.info("Request from authenticated user: {}, URL={}", user,
-                                    Servlets.getRequestURI(httpRequest));
+                            CurrentUser.proxyDoAsUser(doAsUser, HostnameFilter.get());
+                            LOG.info("Request from authenticated user: {}, URL={}, doAs user: {}", user,
+                                    Servlets.getRequestURI(httpRequest), doAsUser);
 
                             filterChain.doFilter(servletRequest, servletResponse);
                         } finally {

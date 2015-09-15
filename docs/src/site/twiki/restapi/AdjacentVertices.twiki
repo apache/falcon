@@ -9,6 +9,7 @@ Get a list of adjacent vertices or edges with a direction.
 
 ---++ Parameters
    * :id is the id of the vertex.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
    * :direction is the direction associated with the edges.
 
    To get the adjacent out vertices of vertex pass direction as out, in to get adjacent in vertices
@@ -52,6 +53,26 @@ GET http://localhost:15000/api/metadata/lineage/vertices/4/out
 ---+++ Rest Call
 <verbatim>
 GET http://localhost:15000/api/metadata/lineage/vertices/4/bothE
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results":[
+        {
+            "_id":"Q5V-4-5g",
+            "_type":"edge",
+            "_outV":4,
+            "_inV":8,
+            "_label":"output"
+        }
+    ],
+    "totalSize":1
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/metadata/lineage/vertices/4/bothE?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

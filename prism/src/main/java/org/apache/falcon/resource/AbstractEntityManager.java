@@ -76,6 +76,7 @@ import java.util.Set;
 public abstract class AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
+    private static final String DO_AS_PARAM = "doAs";
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     private AbstractWorkflowEngine workflowEngine;
@@ -425,7 +426,8 @@ public abstract class AbstractEntityManager {
                             + "Can't be submitted again. Try removing before submitting.");
         }
 
-        SecurityUtil.tryProxy(entity); // proxy before validating since FS/Oozie needs to be proxied
+        String doAsUser = request.getParameter(DO_AS_PARAM);
+        SecurityUtil.tryProxy(entity, doAsUser); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: ({}): {}", type, entity.getName());
@@ -599,7 +601,8 @@ public abstract class AbstractEntityManager {
      */
     public EntityList getEntityList(String fieldStr, String nameSubsequence, String tagKeywords,
                                     String filterType, String filterTags, String filterBy,
-                                    String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
+                                    String orderBy, String sortOrder, Integer offset,
+                                    Integer resultsPerPage, final String doAsUser) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
         Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
@@ -620,14 +623,14 @@ public abstract class AbstractEntityManager {
                 // return entities of all types if no entity type specified
                 for (EntityType entityType : EntityType.values()) {
                     entities.addAll(getFilteredEntities(
-                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", ""));
+                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
                 }
             } else {
                 String[] types = filterType.split(",");
                 for (String type : types) {
                     EntityType entityType = EntityType.getEnum(type);
                     entities.addAll(getFilteredEntities(
-                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", ""));
+                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
                 }
             }
         } catch (Exception e) {
@@ -679,7 +682,8 @@ public abstract class AbstractEntityManager {
 
     protected List<Entity> getFilteredEntities(
             EntityType entityType, String nameSubsequence, String tagKeywords,
-            Map<String, List<String>> filterByFieldsValues, String startDate, String endDate, String cluster)
+            Map<String, List<String>> filterByFieldsValues,
+            String startDate, String endDate, String cluster, final String doAsUser)
         throws FalconException, IOException {
         Collection<String> entityNames = configStore.getEntities(entityType);
         if (entityNames.isEmpty()) {
@@ -714,7 +718,7 @@ public abstract class AbstractEntityManager {
                 // this is for entity summary
                 continue;
             }
-            SecurityUtil.tryProxy(entity);
+            SecurityUtil.tryProxy(entity, doAsUser);
 
             // filter by fields
             if (isFilteredByFields(entity, filterByFieldsValues)) {

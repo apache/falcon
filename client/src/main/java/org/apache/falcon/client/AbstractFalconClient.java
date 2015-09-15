@@ -37,7 +37,7 @@ public abstract class AbstractFalconClient {
      * @return
      * @throws FalconCLIException
      */
-    public abstract APIResult submit(String entityType, String filePath) throws FalconCLIException,
+    public abstract APIResult submit(String entityType, String filePath, String doAsUser) throws FalconCLIException,
             IOException;
 
     /**
@@ -49,6 +49,6 @@ public abstract class AbstractFalconClient {
      * @throws FalconCLIException
      */
     public abstract APIResult schedule(EntityType entityType, String entityName,
-                                       String colo, Boolean skipDryRun) throws FalconCLIException;
+                                       String colo, Boolean skipDryRun, String doAsuser) throws FalconCLIException;
 
 }

@@ -25,6 +25,7 @@ Get log of a specific instance of an entity.
    * sortOrder <optional param> Valid options are "asc" and "desc"
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Log of specified instance.
@@ -63,7 +64,7 @@ GET http://localhost:15000/api/instance/logs/process/SampleProcess?colo=*&start=
 
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/logs/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=STATUS:SUCCEEDED,CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
+GET http://localhost:15000/api/instance/logs/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=STATUS:SUCCEEDED,CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

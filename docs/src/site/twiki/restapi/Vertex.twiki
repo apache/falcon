@@ -9,6 +9,7 @@ Gets the vertex with specified id.
 
 ---++ Parameters
    * :id is the unique id of the vertex.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Vertex with the specified id.
@@ -16,7 +17,7 @@ Vertex with the specified id.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/lineage/vertices/4
+GET http://localhost:15000/api/metadata/lineage/vertices/4?doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -13,6 +13,7 @@ Get the params passed to the workflow for an instance of feed/process.
    * start should be the nominal time of the instance for which you want the params to be returned
    * colo <optional param> Colo on which the query should be run.
    * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 
 ---++ Results
@@ -21,7 +22,7 @@ List of instances currently running.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-http://userqa.user.com:16000/api/instance/params/process/Sample-Process?start=2014-10-01T11:00Z&colo=*
+http://userqa.user.com:16000/api/instance/params/process/Sample-Process?start=2014-10-01T11:00Z&colo=*&doAs=joe
 </verbatim>
 ---+++ Result
 {

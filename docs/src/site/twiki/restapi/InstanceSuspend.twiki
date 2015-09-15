@@ -13,6 +13,7 @@ Suspend instances of an entity.
    * start is the start time of the instance(s) that you want to refer to
    * end is the end time of the instance(s) that you want to refer to
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Results of the suspend command.
@@ -20,7 +21,7 @@ Results of the suspend command.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/instance/suspend/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&end=2014-04-03T07:00Z
+POST http://localhost:15000/api/instance/suspend/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&end=2014-04-03T07:00Z&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>

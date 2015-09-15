@@ -78,7 +78,7 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @return boolean
      */
     @Override
-    public APIResult submit(String type, String filePath) throws IOException, FalconCLIException {
+    public APIResult submit(String type, String filePath, String doAsUser) throws IOException, FalconCLIException {
         try {
             EntityType entityType = EntityType.getEnum(type);
             InputStream entityStream = FalconUnitHelper.getFileInputStream(filePath);
@@ -118,8 +118,8 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @throws FalconException
      */
     @Override
-    public APIResult schedule(EntityType entityType, String entityName,
-                              String cluster, Boolean skipDryRun) throws FalconCLIException {
+    public APIResult schedule(EntityType entityType, String entityName, String cluster,
+                              Boolean skipDryRun, String doAsUser) throws FalconCLIException {
         return schedule(entityType, entityName, null, 0, cluster, skipDryRun);
     }
 

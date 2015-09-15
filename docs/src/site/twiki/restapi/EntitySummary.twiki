@@ -27,6 +27,7 @@ Given an EntityType and cluster, get list of entities along with summary of N re
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
    * numInstances <optional param> Number of recent instances to show per entity. Only integers > 0 are valid, Default is 7.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 
 ---++ Results
 Show entities along with summary of N instances for each entity.
@@ -34,7 +35,7 @@ Show entities along with summary of N instances for each entity.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/summary/feed?cluster=primary-cluster&filterBy=STATUS:RUNNING&fields=status&tags=consumer=consumer@xyz.com&orderBy=name&offset=0&numResults=1&numInstances=2
+GET http://localhost:15000/api/entities/summary/feed?cluster=primary-cluster&filterBy=STATUS:RUNNING&fields=status&tags=consumer=consumer@xyz.com&orderBy=name&offset=0&numResults=1&numInstances=2&doAs=joe
 </verbatim>
 ---+++ Result
 <verbatim>
