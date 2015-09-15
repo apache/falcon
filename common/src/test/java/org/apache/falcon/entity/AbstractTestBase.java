@@ -72,8 +72,9 @@ public class AbstractTestBase {
 
         cleanupStore();
         String listeners = StartupProperties.get().getProperty("configstore.listeners");
-        StartupProperties.get().setProperty("configstore.listeners",
-                listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
+        listeners = listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", "");
+        listeners = listeners.replace("org.apache.falcon.service.FeedSLAMonitoringService", "");
+        StartupProperties.get().setProperty("configstore.listeners", listeners);
         store = ConfigurationStore.get();
         store.init();
 

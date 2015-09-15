@@ -387,6 +387,12 @@ public class CatalogStorage extends Configured implements Storage {
     }
 
     @Override
+    public FeedInstanceStatus.AvailabilityStatus getInstanceAvailabilityStatus(Feed feed, String clusterName,
+                                         LocationType locationType, Date instancetime) throws FalconException {
+        throw new UnsupportedOperationException("getInstanceAvailabilityStatus"); //TODO to be implemented later
+    }
+
+    @Override
     public StringBuilder evict(String retentionLimit, String timeZone, Path logFilePath) throws FalconException {
         LOG.info("Applying retention on {}, Limit: {}, timezone: {}",
                 getTable(), retentionLimit, timeZone);

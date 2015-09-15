@@ -740,4 +740,12 @@ public final class FeedHelper {
         }
         return result;
     }
+
+    public static FeedInstanceStatus.AvailabilityStatus getFeedInstanceStatus(Feed feed, String clusterName,
+                                                                              Date instanceTime)
+        throws FalconException {
+        Storage storage = createStorage(clusterName, feed);
+        return storage.getInstanceAvailabilityStatus(feed, clusterName, LocationType.DATA, instanceTime);
+    }
+
 }

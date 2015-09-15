@@ -18,12 +18,16 @@
 
 package org.apache.falcon;
 
+import java.io.Serializable;
+
 /**
  * Simple pair class to hold a pair of object of specific class.
  * @param <A> - First element in pair.
  * @param <B> - Second element in pair
  */
-public class Pair<A, B> {
+public class Pair<A, B> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     public final A first;

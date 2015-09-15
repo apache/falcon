@@ -60,10 +60,9 @@ public class FeedLocationStoreTest extends AbstractTestBase {
 
         cleanupStore();
         String listeners = StartupProperties.get().getProperty("configstore.listeners");
-        StartupProperties.get().setProperty("configstore.listeners",
-                listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
-//        StartupProperties.get().setProperty("configstore.listeners",
-//                "org.apache.falcon.entity.store.FeedLocationStore");
+        listeners = listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", "");
+        listeners = listeners.replace("org.apache.falcon.service.FeedSLAMonitoringService", "");
+        StartupProperties.get().setProperty("configstore.listeners", listeners);
         store = ConfigurationStore.get();
         store.init();
 
