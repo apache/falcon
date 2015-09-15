@@ -56,7 +56,7 @@ public class TaskLogRetrieverYarnTest extends TaskLogRetrieverYarn {
         for (int count = 0; count < samples; count++) {
             List<String> expectedResult = new ArrayList<String>();
             Cluster cluster = getCluster(getConf());
-            String jobId = new JobID("job", random.nextInt(1000)).toString();
+            String jobId = new JobID("job", count).toString();
             boolean success = random.nextBoolean();
             JobID jobID = JobID.forName(jobId);
             int numEvents = getRandomValueInRange(10) + 1;
@@ -77,9 +77,10 @@ public class TaskLogRetrieverYarnTest extends TaskLogRetrieverYarn {
                 } else {
                     when(cluster.getJob(jobID)).thenReturn(null);
                     expectedResult = null;
+                    break;
                 }
-                resultSet[count] = new Object[]{jobId, expectedResult};
             }
+            resultSet[count] = new Object[]{jobId, expectedResult};
         }
         return resultSet;
     }
