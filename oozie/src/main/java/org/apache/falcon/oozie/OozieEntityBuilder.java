@@ -24,6 +24,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
@@ -69,9 +70,6 @@ import java.util.Properties;
 public abstract class OozieEntityBuilder<T extends Entity> {
     public static final Logger LOG = LoggerFactory.getLogger(OozieEntityBuilder.class);
 
-    public static final String METASTOREURIS = "hive.metastore.uris";
-    public static final String METASTORE_KERBEROS_PRINCIPAL = "hive.metastore.kerberos.principal";
-    public static final String METASTORE_USE_THRIFT_SASL = "hive.metastore.sasl.enabled";
 
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
@@ -180,33 +178,8 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         return properties;
     }
 
-    protected Properties getHiveCredentials(Cluster cluster) {
-        String metaStoreUrl = ClusterHelper.getRegistryEndPoint(cluster);
-        if (metaStoreUrl == null) {
-            throw new IllegalStateException(
-                    "Registry interface is not defined in cluster: " + cluster.getName());
-        }
-
-        Properties hiveCredentials = new Properties();
-        hiveCredentials.put(METASTOREURIS, metaStoreUrl);
-        hiveCredentials.put("hive.metastore.execute.setugi", "true");
-        hiveCredentials.put("hcatNode", metaStoreUrl.replace("thrift", "hcat"));
-        hiveCredentials.put("hcat.metastore.uri", metaStoreUrl);
-
-        if (isSecurityEnabled) {
-            String principal = ClusterHelper
-                    .getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
-            hiveCredentials.put(METASTORE_KERBEROS_PRINCIPAL, principal);
-            hiveCredentials.put(METASTORE_USE_THRIFT_SASL, "true");
-            hiveCredentials.put("hcat.metastore.principal", principal);
-        }
-
-        return hiveCredentials;
-    }
-
     protected Configuration getHiveCredentialsAsConf(Cluster cluster) {
-        Properties hiveCredentials = getHiveCredentials(cluster);
-
+        Properties hiveCredentials = HiveUtil.getHiveCredentials(cluster);
         Configuration hiveConf = new Configuration(false);
         for (Entry<Object, Object> entry : hiveCredentials.entrySet()) {
             hiveConf.set((String)entry.getKey(), (String)entry.getValue());

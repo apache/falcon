@@ -163,7 +163,7 @@ public class HiveCatalogService extends AbstractCatalogService {
                                                      HiveConf hcatConf,
                                                      UserGroupInformation proxyUGI) throws IOException {
         if (UserGroupInformation.isSecurityEnabled()) {
-            String metaStoreServicePrincipal = conf.get(SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+            String metaStoreServicePrincipal = conf.get(SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
             hcatConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname,
                 metaStoreServicePrincipal);
             hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");

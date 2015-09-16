@@ -43,6 +43,8 @@ public final class ClusterHelper {
     public static final String WORKINGDIR = "working";
     public static final String NO_USER_BROKER_URL = "NA";
 
+
+
     private ClusterHelper() {
     }
 
@@ -123,6 +125,8 @@ public final class ClusterHelper {
         String normalizedPath = new Path(normalizedUrl + "/").toString();
         return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
+
+
 
     public static Location getLocation(Cluster cluster, ClusterLocationType clusterLocationType) {
         for (Location loc : cluster.getLocations().getLocations()) {

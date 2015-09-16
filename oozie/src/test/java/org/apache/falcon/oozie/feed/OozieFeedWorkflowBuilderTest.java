@@ -109,7 +109,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         org.apache.falcon.entity.v0.cluster.Property property =
                 new org.apache.falcon.entity.v0.cluster.Property();
-        property.setName(OozieOrchestrationWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL);
+        property.setName(SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
         property.setValue("hive/_HOST");
 
         srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH, srcHdfsUrl);

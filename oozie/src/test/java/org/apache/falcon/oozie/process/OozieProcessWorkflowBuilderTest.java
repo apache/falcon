@@ -43,7 +43,6 @@ import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieEntityBuilder;
-import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
@@ -118,7 +117,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         cluster = store.get(EntityType.CLUSTER, "corp");
         org.apache.falcon.entity.v0.cluster.Property property =
                 new org.apache.falcon.entity.v0.cluster.Property();
-        property.setName(OozieOrchestrationWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL);
+        property.setName(SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
         property.setValue("hive/_HOST");
         cluster.getProperties().getProperties().add(property);
 

@@ -24,6 +24,7 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -65,8 +66,8 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         props.putAll(createDefaultConfiguration(cluster));
         if (EntityUtil.isTableStorageType(cluster, entity)) {
             // todo: kludge send source hcat creds for coord dependency check to pass
-            props.putAll(getHiveCredentials(srcCluster));
-            props.putAll(getHiveCredentials(cluster));
+            props.putAll(HiveUtil.getHiveCredentials(srcCluster));
+            props.putAll(HiveUtil.getHiveCredentials(cluster));
         }
         props.putAll(getWorkflowProperties(entity));
         props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));

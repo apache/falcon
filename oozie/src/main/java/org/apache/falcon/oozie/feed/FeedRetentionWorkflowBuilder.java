@@ -23,6 +23,7 @@ import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -76,7 +77,7 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
         if (EntityUtil.isTableStorageType(cluster, entity)) {
             setupHiveCredentials(cluster, buildPath, workflow);
             // todo: kludge send source hcat creds for coord dependency check to pass
-            props.putAll(getHiveCredentials(cluster));
+            props.putAll(HiveUtil.getHiveCredentials(cluster));
         }
 
         marshal(cluster, workflow, buildPath);

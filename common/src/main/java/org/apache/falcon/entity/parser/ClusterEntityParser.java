@@ -215,10 +215,10 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         try {
             Configuration clusterConf = ClusterHelper.getConfiguration(cluster);
             if (UserGroupInformation.isSecurityEnabled()) {
-                String metaStorePrincipal = clusterConf.get(SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+                String metaStorePrincipal = clusterConf.get(SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
                 Validate.notEmpty(metaStorePrincipal,
                         "Cluster definition missing required metastore credential property: "
-                                + SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+                                + SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
             }
 
             if (!CatalogServiceFactory.getCatalogService().isAlive(clusterConf, catalogUrl)) {

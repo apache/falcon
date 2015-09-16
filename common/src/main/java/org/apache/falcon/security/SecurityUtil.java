@@ -56,7 +56,11 @@ public final class SecurityUtil {
      * Constant for the configuration property that indicates the Name node principal.
      * This is used to talk to Hive Meta Store during parsing and validations only.
      */
-    public static final String HIVE_METASTORE_PRINCIPAL = "hive.metastore.kerberos.principal";
+    public static final String HIVE_METASTORE_KERBEROS_PRINCIPAL = "hive.metastore.kerberos.principal";
+
+    public static final String METASTORE_USE_THRIFT_SASL = "hive.metastore.sasl.enabled";
+
+    public static final String METASTORE_PRINCIPAL = "hcat.metastore.principal";
 
     private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
