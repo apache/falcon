@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.entity.v0;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,7 +41,9 @@ public final class DateValidator {
      * @return true valid date fromat, false invalid date format
      */
     public static boolean validate(final String date) {
-
+        if (StringUtils.isBlank(date)) {
+            return false;
+        }
         Matcher matcher = PATTERN.matcher(date);
 
         if (matcher.matches()) {

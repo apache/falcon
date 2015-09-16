@@ -62,6 +62,7 @@ public class DateValidatorTest {
             new Object[]{"2010-6-31T00:00Z", }, new Object[]{"2010-06-31T00:00Z", },
             new Object[]{"2010-9-31T00:00Z", }, new Object[]{"2010-09-31T00:00Z", },
             new Object[]{"2010-11-31T00:00Z", }, new Object[]{"1999-04-31T01:00Z", },
+            new Object[]{null, }, new Object[]{"", }, new Object[]{"      ", },
         };
     }
 
