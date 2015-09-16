@@ -32,6 +32,8 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.feed.Properties;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
@@ -92,6 +94,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedGroups(feed);
         validateFeedSLA(feed);
         validateACL(feed);
+        validateProperties(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -447,7 +450,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * @param feed Feed entity
      * @throws ValidationException
      */
-    private void validateACL(Feed feed) throws FalconException {
+    protected void validateACL(Feed feed) throws FalconException {
         if (isAuthorizationDisabled) {
             return;
         }
@@ -472,6 +475,26 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 storage.validateACL(feedACL);
             } catch(FalconException e) {
                 throw new ValidationException(e);
+            }
+        }
+    }
+
+    protected void validateProperties(Feed feed) throws ValidationException {
+        Properties properties = feed.getProperties();
+        if (properties == null) {
+            return; // feed has no properties to validate.
+        }
+
+        List<Property> propertyList = feed.getProperties().getProperties();
+        HashSet<String> propertyKeys = new HashSet<String>();
+        for (Property prop : propertyList) {
+            if (StringUtils.isBlank(prop.getName())) {
+                throw new ValidationException("Property name and value cannot be empty for Feed : "
+                        + feed.getName());
+            }
+            if (!propertyKeys.add(prop.getName())) {
+                throw new ValidationException("Multiple properties with same name found for Feed : "
+                        + feed.getName());
             }
         }
     }

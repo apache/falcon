@@ -38,12 +38,14 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Partitions;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -923,4 +925,44 @@ public class FeedEntityParserTest extends AbstractTestBase {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
     }
+
+    @Test
+    public void testValidateFeedProperties() throws Exception {
+        FeedEntityParser feedEntityParser = Mockito
+                .spy((FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED));
+        InputStream stream = this.getClass().getResourceAsStream("/config/feed/feed-0.1.xml");
+        Feed feed = parser.parse(stream);
+
+        Mockito.doNothing().when(feedEntityParser).validateACL(feed);
+
+        // Good set of properties, should work
+        feedEntityParser.validate(feed);
+
+        // add duplicate property, should throw validation exception.
+        Property property1 = new Property();
+        property1.setName("field1");
+        property1.setValue("any value");
+        feed.getProperties().getProperties().add(property1);
+        try {
+            feedEntityParser.validate(feed);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
+        // Remove duplicate property. It should not throw exception anymore
+        feed.getProperties().getProperties().remove(property1);
+        feedEntityParser.validate(feed);
+
+        // add empty property name, should throw validation exception.
+        property1.setName("");
+        feed.getProperties().getProperties().add(property1);
+        try {
+            feedEntityParser.validate(feed);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+    }
+
 }

@@ -19,6 +19,7 @@
 package org.apache.falcon.entity.parser;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.ClusterHelper;
@@ -30,6 +31,8 @@ import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.entity.v0.cluster.Properties;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -48,6 +51,8 @@ import org.slf4j.LoggerFactory;
 import javax.jms.ConnectionFactory;
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * Parser that parses cluster entity definition.
@@ -87,8 +92,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateWorkflowInterface(cluster);
         validateMessagingInterface(cluster);
         validateRegistryInterface(cluster);
-
         validateLocations(cluster);
+        validateProperties(cluster);
     }
 
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
@@ -257,7 +262,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
      * @param cluster cluster entity
      * @throws ValidationException
      */
-    private void validateLocations(Cluster cluster) throws ValidationException {
+    protected void validateLocations(Cluster cluster) throws ValidationException {
         Configuration conf = ClusterHelper.getConfiguration(cluster);
         FileSystem fs;
         try {
@@ -325,6 +330,26 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
 
         }
 
+    }
+
+    protected void validateProperties(Cluster cluster) throws ValidationException {
+        Properties properties = cluster.getProperties();
+        if (properties == null) {
+            return; // Cluster has no properties to validate.
+        }
+
+        List<Property> propertyList = cluster.getProperties().getProperties();
+        HashSet<String> propertyKeys = new HashSet<String>();
+        for (Property prop : propertyList) {
+            if (StringUtils.isBlank(prop.getName())) {
+                throw new ValidationException("Property name and value cannot be empty for Cluster: "
+                        + cluster.getName());
+            }
+            if (!propertyKeys.add(prop.getName())) {
+                throw new ValidationException("Multiple properties with same name found for Cluster: "
+                        + cluster.getName());
+            }
+        }
     }
 
     private void checkPathOwnerAndPermission(String clusterName, String location, FileSystem fs,

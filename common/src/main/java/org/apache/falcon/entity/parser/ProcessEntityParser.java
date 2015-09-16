@@ -28,6 +28,8 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.process.Properties;
+import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Input;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -78,6 +81,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
             validateEntityExists(EntityType.CLUSTER, clusterName);
             validateProcessValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd());
             validateHDFSPaths(process, clusterName);
+            validateProperties(process);
 
             if (process.getInputs() != null) {
                 for (Input input : process.getInputs().getInputs()) {
@@ -266,7 +270,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
      * @param process process entity
      * @throws ValidationException
      */
-    private void validateACL(Process process) throws FalconException {
+    protected void validateACL(Process process) throws FalconException {
         if (isAuthorizationDisabled) {
             return;
         }
@@ -285,4 +289,25 @@ public class ProcessEntityParser extends EntityParser<Process> {
             throw new ValidationException(e);
         }
     }
+
+    protected void validateProperties(Process process) throws ValidationException {
+        Properties properties = process.getProperties();
+        if (properties == null) {
+            return; // Cluster has no properties to validate.
+        }
+
+        List<Property> propertyList = process.getProperties().getProperties();
+        HashSet<String> propertyKeys = new HashSet<String>();
+        for (Property prop : propertyList) {
+            if (StringUtils.isBlank(prop.getName())) {
+                throw new ValidationException("Property name and value cannot be empty for Process : "
+                        + process.getName());
+            }
+            if (!propertyKeys.add(prop.getName())) {
+                throw new ValidationException("Multiple properties with same name found for Process : "
+                        + process.getName());
+            }
+        }
+    }
+
 }

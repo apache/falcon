@@ -23,6 +23,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1342 Do not allow duplicate properties in entities(Balu Vellanki via Sowmya Ramesh)
+
     FALCON-1461 NPE in DateValidator validate(Raghav Kumar Gautam via Sowmya Ramesh)
 
     FALCON-1446 Flaky TaskLogRetrieverYarnTest(Narayan Periwal via Pallavi Rao)

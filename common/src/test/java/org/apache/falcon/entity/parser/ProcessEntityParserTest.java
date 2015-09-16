@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
@@ -32,6 +33,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -551,4 +553,44 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         process.getOutputs().getOutputs().get(0).setInstance("today(120,0)");
         parser.validate(process);
     }
+
+    @Test
+    public void testValidateProcessProperties() throws Exception {
+        ProcessEntityParser processEntityParser = Mockito
+                .spy((ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS));
+        InputStream stream = this.getClass().getResourceAsStream("/config/process/process-0.1.xml");
+        Process process = parser.parse(stream);
+
+        Mockito.doNothing().when(processEntityParser).validateACL(process);
+
+        // Good set of properties, should work
+        processEntityParser.validate(process);
+
+        // add duplicate property, should throw validation exception.
+        Property property1 = new Property();
+        property1.setName("name1");
+        property1.setValue("any value");
+        process.getProperties().getProperties().add(property1);
+        try {
+            processEntityParser.validate(process);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
+        // Remove duplicate property. It should not throw exception anymore
+        process.getProperties().getProperties().remove(property1);
+        processEntityParser.validate(process);
+
+        // add empty property name, should throw validation exception.
+        property1.setName("");
+        process.getProperties().getProperties().add(property1);
+        try {
+            processEntityParser.validate(process);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+    }
+
 }

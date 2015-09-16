@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Locations;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -148,6 +149,49 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         Assert.assertEquals(catalog.getEndpoint(), "Hcat");
         Assert.assertEquals(catalog.getVersion(), "0.1");
+    }
+
+    @Test
+    public void testValidateClusterProperties() throws Exception {
+        ClusterEntityParser clusterEntityParser = Mockito
+                .spy((ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER));
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-0.1.xml");
+        Cluster cluster = parser.parse(stream);
+
+        Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateLocations(cluster);
+
+        // Good set of properties, should work
+        clusterEntityParser.validate(cluster);
+
+        // add duplicate property, should throw validation exception.
+        Property property1 = new Property();
+        property1.setName("field1");
+        property1.setValue("any value");
+        cluster.getProperties().getProperties().add(property1);
+        try {
+            clusterEntityParser.validate(cluster);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
+        // Remove duplicate property. It should not throw exception anymore
+        cluster.getProperties().getProperties().remove(property1);
+        clusterEntityParser.validate(cluster);
+
+        // add empty property name, should throw validation exception.
+        property1.setName("");
+        cluster.getProperties().getProperties().add(property1);
+        try {
+            clusterEntityParser.validate(cluster);
+            Assert.fail(); // should not reach here
+        } catch (ValidationException e) {
+            // Do nothing
+        }
+
     }
 
     /**
