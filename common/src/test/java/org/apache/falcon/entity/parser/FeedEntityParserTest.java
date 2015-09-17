@@ -927,6 +927,15 @@ public class FeedEntityParserTest extends AbstractTestBase {
     }
 
     @Test
+    public void testValidateEmailNotification() throws Exception {
+        Feed feedNotification = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                (FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
+        Assert.assertNotNull(feedNotification.getNotification());
+        Assert.assertEquals(feedNotification.getNotification().getTo(), "falcon@localhost");
+        Assert.assertEquals(feedNotification.getNotification().getType(), "email");
+    }
+
+    @Test
     public void testValidateFeedProperties() throws Exception {
         FeedEntityParser feedEntityParser = Mockito
                 .spy((FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED));

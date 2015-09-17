@@ -8,6 +8,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1425 Provide Email based plugin to send Notification once instance completed(Peeyush Bishnoi via Ajay Yadava)
+
     FALCON-1205 SLAService to keep track of missing SLAs for feeds(Ajay Yadava)
 
     FALCON-1449 Move getEntityProperties method to EntityUtil.(Ajay Yadava)

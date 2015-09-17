@@ -114,6 +114,14 @@
                 <xs:element type="locations" name="locations"/>
                 <xs:element type="catalog-table" name="table"/>
             </xs:choice>
+            <xs:element type="notification" name="notification" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Notification will help to notify the users about the finished status of Falcon
+                        Instance. Currently Email type notification is supported and users must specify the receiver's
+                        email address.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element type="ACL" name="ACL"/>
             <xs:element type="schema" name="schema"/>
             <xs:element type="properties" name="properties" minOccurs="0"/>
@@ -291,6 +299,37 @@
     <xs:complexType name="partition">
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
     </xs:complexType>
+
+    <xs:complexType name="notification">
+        <xs:annotation>
+            <xs:documentation>
+                Notification specifies the "type" of notification to be used to send notification.
+                Currently email based notification type is supported and user can specify the comma
+                separated email address with "to" property.
+                e.g:     type="email" to="falcon@localhost,hive@localhost"
+                "limit" property in notification will help to set the frequency of email notification
+                in case of Falcon instance failure. Incase of feed entity limit="attempt" is only supported
+                as there is no retry element.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="type" use="required">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="email"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="level" use="optional">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="attempt"/>
+                    <xs:enumeration value="instance"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute type="xs:string" name="to" use="required"/>
+    </xs:complexType>
+
     <xs:complexType name="ACL">
         <xs:annotation>
             <xs:documentation>

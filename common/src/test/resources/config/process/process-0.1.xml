@@ -54,4 +54,6 @@
         <late-input input="impression" workflow-path="himpression/late/workflow"/>
         <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow"/>
     </late-process>
+
+    <notification type="email" to="falcon@localhost"/>
 </process>

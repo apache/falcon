@@ -357,6 +357,14 @@ public class ProcessEntityParserTest extends AbstractTestBase {
     }
 
     @Test
+    public void testValidateEmailNotification() throws Exception {
+        Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
+        Assert.assertNotNull(process.getNotification());
+        Assert.assertEquals(process.getNotification().getTo(), "falcon@localhost");
+        Assert.assertEquals(process.getNotification().getType(), "email");
+    }
+
+    @Test
     public void testValidateACLWithNoACLAndAuthorizationDisabled() throws Exception {
         InputStream stream = this.getClass().getResourceAsStream(PROCESS_XML);
 

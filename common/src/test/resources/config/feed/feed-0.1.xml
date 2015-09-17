@@ -58,6 +58,7 @@
         <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>
 
+    <notification type="email" to="falcon@localhost"/>
     <ACL owner="testuser-ut-user" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
 

@@ -29,6 +29,7 @@ import org.apache.falcon.entity.WorkflowNameBuilder.WorkflowName;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
+import org.apache.falcon.entity.v0.EntityNotification;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -936,5 +937,17 @@ public final class EntityUtil {
         return result;
     }
 
+    public static EntityNotification getEntityNotification(Entity entity) {
+        switch (entity.getEntityType()) {
+        case FEED:
+            Feed feed = (Feed) entity;
+            return feed.getNotification();
+        case PROCESS:
+            Process process = (Process) entity;
+            return process.getNotification();
 
+        default:
+            throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+        }
+    }
 }
