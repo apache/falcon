@@ -147,24 +147,27 @@ public class FalconUnitTestBase {
     }
 
     public APIResult scheduleProcess(String processName, String startTime, int numInstances,
-                                   String cluster, String localWfPath, Boolean skipDryRun) throws FalconException,
-            IOException, FalconCLIException {
+                                   String cluster, String localWfPath, Boolean skipDryRun,
+                                   String properties) throws FalconException, IOException, FalconCLIException {
         Process processEntity = configStore.get(EntityType.PROCESS, processName);
         if (processEntity == null) {
             throw new FalconException("Process not found " + processName);
         }
         String workflowPath = processEntity.getWorkflow().getPath();
         fs.copyFromLocalFile(new Path(localWfPath), new Path(workflowPath));
-        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster, skipDryRun);
+        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster,
+                skipDryRun, properties);
     }
 
     public APIResult scheduleProcess(String processName, String startTime, int numInstances,
-                                   String cluster, Boolean skipDryRun) throws FalconException, FalconCLIException {
+                                   String cluster, Boolean skipDryRun,
+                                   String properties) throws FalconException, FalconCLIException {
         Process processEntity = configStore.get(EntityType.PROCESS, processName);
         if (processEntity == null) {
             throw new FalconException("Process not found " + processName);
         }
-        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster, skipDryRun);
+        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster,
+                skipDryRun, properties);
     }
 
     private Map<String, String> updateColoAndCluster(String colo, String cluster, Map<String, String> props) {

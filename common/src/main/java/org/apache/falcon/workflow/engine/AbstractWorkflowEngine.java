@@ -51,7 +51,8 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isAlive(Cluster cluster) throws FalconException;
 
-    public abstract void schedule(Entity entity, Boolean skipDryRun) throws FalconException;
+    public abstract void schedule(Entity entity, Boolean skipDryRun, Map<String, String> properties)
+        throws FalconException;
 
     public abstract String suspend(Entity entity) throws FalconException;
 

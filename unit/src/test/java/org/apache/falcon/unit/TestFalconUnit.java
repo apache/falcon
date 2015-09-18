@@ -44,7 +44,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createData("in", "local", scheduleTime, "input.txt");
         result = submitProcess(getAbsolutePath("/process.xml"), "/app/oozie-mr");
         assertStatus(result);
-        result = scheduleProcess("process", scheduleTime, 1, "local", getAbsolutePath("/workflow.xml"), true);
+        result = scheduleProcess("process", scheduleTime, 1, "local", getAbsolutePath("/workflow.xml"),
+                true, "");
         assertStatus(result);
         waitForStatus(EntityType.PROCESS, "process", scheduleTime);
         InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(EntityType.PROCESS,

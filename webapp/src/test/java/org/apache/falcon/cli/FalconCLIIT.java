@@ -184,7 +184,8 @@ public class FalconCLIIT {
 
         Assert.assertEquals(executeWithURL("entity -schedule -type feed -name " + overlay.get("outputFeedName")), 0);
 
-        Assert.assertEquals(executeWithURL("entity -schedule -type process -name " + overlay.get("processName")), 0);
+        Assert.assertEquals(executeWithURL("entity -schedule -type process -name " + overlay.get("processName")
+                                            + " -properties key:value"), 0);
 
     }
 

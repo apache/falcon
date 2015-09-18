@@ -389,7 +389,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                               @Dimension("entityType") @PathParam("type") final String type,
                               @Dimension("entityName") @PathParam("entity") final String entity,
                               @Dimension("colo") @QueryParam("colo") final String coloExpr,
-                              @QueryParam("skipDryRun") final Boolean skipDryRun) {
+                              @QueryParam("skipDryRun") final Boolean skipDryRun,
+                              @QueryParam("properties") final String properties) {
 
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
         return new EntityProxy(type, entity) {
@@ -400,7 +401,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
             @Override
             protected APIResult doExecute(String colo) throws FalconException {
-                return getEntityManager(colo).invoke("schedule", bufferedRequest, type, entity, colo, skipDryRun);
+                return getEntityManager(colo).invoke("schedule", bufferedRequest, type, entity, colo, skipDryRun,
+                        properties);
             }
         }.execute();
     }
@@ -414,12 +416,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult submitAndSchedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("colo") @QueryParam("colo") String coloExpr,
-            @QueryParam("skipDryRun") Boolean skipDryRun) {
+            @QueryParam("skipDryRun") Boolean skipDryRun,
+            @QueryParam("properties") String properties) {
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         String entity = getEntity(bufferedRequest, type).getName();
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         results.put("submit", submit(bufferedRequest, type, coloExpr));
-        results.put("schedule", schedule(bufferedRequest, type, entity, coloExpr, skipDryRun));
+        results.put("schedule", schedule(bufferedRequest, type, entity, coloExpr, skipDryRun, properties));
         return consolidateResult(results, APIResult.class);
     }
 

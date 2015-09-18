@@ -129,8 +129,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                               @Dimension("entityType") @PathParam("type") String type,
                               @Dimension("entityName") @PathParam("entity") String entity,
                               @Dimension("colo") @QueryParam("colo") String colo,
-                              @QueryParam("skipDryRun") Boolean skipDryRun) {
-        return super.schedule(request, type, entity, colo, skipDryRun);
+                              @QueryParam("skipDryRun") Boolean skipDryRun,
+                              @QueryParam("properties") String properties) {
+        return super.schedule(request, type, entity, colo, skipDryRun, properties);
     }
 
     @POST

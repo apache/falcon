@@ -48,7 +48,7 @@ public abstract class AbstractFalconClient {
      * @return
      * @throws FalconCLIException
      */
-    public abstract APIResult schedule(EntityType entityType, String entityName,
-                                       String colo, Boolean skipDryRun, String doAsuser) throws FalconCLIException;
+    public abstract APIResult schedule(EntityType entityType, String entityName, String colo, Boolean skipDryRun,
+                                        String doAsuser, String properties) throws FalconCLIException;
 
 }

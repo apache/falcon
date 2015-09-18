@@ -43,6 +43,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -373,6 +374,35 @@ public class EntityUtilTest extends AbstractTestBase {
             {new Path("/projects/abc/falcon/workflows/process/sample/"), true, false},
             {new Path("/projects/falcon/staging/falcon/workflows/process/test-process/"), false, false},
             {new Path("/projects/falcon/staging/falcon/workflows/process/test-process/"), true, false},
+        };
+    }
+
+    @Test
+    public void testStringToProps() {
+        String testPropsString = "key1:value1,key2 : value2 , key3: value3, key4:value4:test";
+        Map<String, String> props = EntityUtil.getPropertyMap(testPropsString);
+        Assert.assertEquals(props.size(), 4);
+        for (int i = 1; i <= 3; i++) {
+            Assert.assertEquals(props.get("key" + i), "value" + i);
+        }
+        Assert.assertEquals(props.get("key4"), "value4:test");
+    }
+
+    @Test (expectedExceptions = IllegalArgumentException.class,
+            expectedExceptionsMessageRegExp = "Found invalid property .*",
+            dataProvider = "InvalidProps")
+    public void testInvalidStringToProps(String propString) {
+        String[] invalidProps = {"key1", "key1=value1", "key1:value1,key2=value2, :value"};
+        EntityUtil.getPropertyMap(propString);
+    }
+
+    @DataProvider(name = "InvalidProps")
+    public Object[][] getInvalidProps() {
+        return new Object[][]{
+            {"key1"},
+            {"key1=value1"},
+            {"key1:value1,key2=value2"},
+            {":value"},
         };
     }
 }

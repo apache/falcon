@@ -148,7 +148,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void schedule(Entity entity, Boolean skipDryRun) throws FalconException {
+    public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> suppliedProps) throws FalconException {
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -172,7 +172,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
                     continue;
                 }
-
                 //Do dryRun of coords before schedule as schedule is asynchronous
                 dryRunInternal(cluster, new Path(properties.getProperty(OozieEntityBuilder.ENTITY_PATH)), skipDryRun);
                 scheduleEntity(clusterName, properties, entity);

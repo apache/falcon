@@ -39,8 +39,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -67,10 +67,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity,
             @Dimension("colo") @PathParam("colo") String colo,
-            @QueryParam("skipDryRun") Boolean skipDryRun) {
+            @QueryParam("skipDryRun") Boolean skipDryRun,
+            @QueryParam("properties") String properties) {
         checkColo(colo);
         try {
-            scheduleInternal(type, entity, skipDryRun);
+            scheduleInternal(type, entity, skipDryRun,  EntityUtil.getPropertyMap(properties));
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
@@ -78,8 +79,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         }
     }
 
-    private synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun)
-        throws FalconException, AuthorizationException {
+    private synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun,
+            Map<String, String> properties) throws FalconException, AuthorizationException {
 
         checkSchedulableEntity(type);
         Entity entityObj = null;
@@ -91,7 +92,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                         + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            getWorkflowEngine().schedule(entityObj, skipDryRun);
+            getWorkflowEngine().schedule(entityObj, skipDryRun, properties);
         } catch (Exception e) {
             throw new FalconException("Entity schedule failed for " + type + ": " + entity, e);
         } finally {
@@ -100,7 +101,6 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                 LOG.info("Memory lock released for {}", entityObj.toShortString());
             }
         }
-
     }
 
     /**
@@ -112,12 +112,13 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     public APIResult submitAndSchedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("colo") @PathParam("colo") String colo,
-            @QueryParam("skipDryRun") Boolean skipDryRun) {
+            @QueryParam("skipDryRun") Boolean skipDryRun,
+            @QueryParam("properties") String properties) {
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
             Entity entity = submitInternal(request, type);
-            scheduleInternal(type, entity.getName(), skipDryRun);
+            scheduleInternal(type, entity.getName(), skipDryRun, EntityUtil.getPropertyMap(properties));
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {

@@ -231,20 +231,20 @@ public class TestContext {
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        scheduleProcess(processTemplate, overlay, true, null, "");
+        scheduleProcess(processTemplate, overlay, true, null, "", null);
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay,
-                                Boolean skipDryRun, final String doAsUSer) throws Exception {
-        scheduleProcess(processTemplate, overlay, true, skipDryRun, doAsUSer);
+                                Boolean skipDryRun, final String doAsUSer, String properties) throws Exception {
+        scheduleProcess(processTemplate, overlay, true, skipDryRun, doAsUSer, properties);
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed) throws Exception{
-        scheduleProcess(processTemplate, overlay, succeed, null, "");
+        scheduleProcess(processTemplate, overlay, succeed, null, "", null);
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed,
-                                Boolean skipDryRun, final String doAsUser) throws Exception {
+                                Boolean skipDryRun, final String doAsUser, String properties) throws Exception {
         ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
@@ -254,7 +254,7 @@ public class TestContext {
         response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun, doAsUser);
+        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS, skipDryRun, doAsUser, properties);
         if (succeed) {
             assertSuccessful(response);
         } else {
@@ -289,12 +289,12 @@ public class TestContext {
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
-        return submitAndSchedule(template, overlay, entityType, null, "");
+        return submitAndSchedule(template, overlay, entityType, null, "", null);
     }
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay,
                                             EntityType entityType, Boolean skipDryRun,
-                                            final String doAsUser) throws Exception {
+                                            final String doAsUser, String properties) throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
@@ -306,6 +306,10 @@ public class TestContext {
 
         if (StringUtils.isNotEmpty(doAsUser)) {
             resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        if (StringUtils.isNotEmpty(properties)) {
+            resource = resource.queryParam("properties", properties);
         }
 
         return resource.header("Cookie", getAuthenticationToken())

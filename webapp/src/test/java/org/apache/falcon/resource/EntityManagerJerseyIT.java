@@ -642,9 +642,9 @@ public class EntityManagerJerseyIT {
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         if (withDoAs) {
-            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "testUser");
+            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "testUser", null);
         } else {
-            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "", "key1:value1");
         }
         OozieTestUtils.waitForBundleStart(context, Status.RUNNING);
 

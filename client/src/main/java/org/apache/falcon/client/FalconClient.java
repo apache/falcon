@@ -287,32 +287,32 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult schedule(EntityType entityType, String entityName, String colo,
-                              Boolean skipDryRun, String doAsUser)
+                              Boolean skipDryRun, String doAsUser, String properties)
         throws FalconCLIException {
 
         return sendEntityRequest(Entities.SCHEDULE, entityType, entityName,
-                colo, skipDryRun, doAsUser);
+                colo, skipDryRun, doAsUser, properties);
 
     }
 
     public APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.SUSPEND, entityType, entityName, colo, null, doAsUser);
+        return sendEntityRequest(Entities.SUSPEND, entityType, entityName, colo, null, doAsUser, null);
 
     }
 
     public APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.RESUME, entityType, entityName, colo, null, doAsUser);
+        return sendEntityRequest(Entities.RESUME, entityType, entityName, colo, null, doAsUser, null);
 
     }
 
     public APIResult delete(EntityType entityType, String entityName, String doAsUser)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.DELETE, entityType, entityName, null, null, doAsUser);
+        return sendEntityRequest(Entities.DELETE, entityType, entityName, null, null, doAsUser, null);
 
     }
 
@@ -321,7 +321,7 @@ public class FalconClient extends AbstractFalconClient {
 
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.VALIDATE, entityType,
-                entityStream, null, skipDryRun, doAsUser);
+                entityStream, null, skipDryRun, doAsUser, null);
     }
 
     public APIResult submit(String entityType, String filePath, String doAsUser)
@@ -329,7 +329,7 @@ public class FalconClient extends AbstractFalconClient {
 
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.SUBMIT, entityType,
-                entityStream, null, null, doAsUser);
+                entityStream, null, null, doAsUser, null);
     }
 
     public APIResult update(String entityType, String entityName, String filePath,
@@ -353,18 +353,18 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult submitAndSchedule(String entityType, String filePath,
-                                       Boolean skipDryRun, String doAsUser)
+                                       Boolean skipDryRun, String doAsUser, String properties)
         throws FalconCLIException {
 
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.SUBMITandSCHEDULE,
-                entityType, entityStream, null, skipDryRun, doAsUser);
+                entityType, entityStream, null, skipDryRun, doAsUser, properties);
     }
 
     public APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser)
         throws FalconCLIException {
 
-        return sendEntityRequest(Entities.STATUS, entityType, entityName, colo, null, doAsUser);
+        return sendEntityRequest(Entities.STATUS, entityType, entityName, colo, null, doAsUser, null);
     }
 
     public Entity getDefinition(String entityType, String entityName, String doAsUser)
@@ -641,7 +641,7 @@ public class FalconClient extends AbstractFalconClient {
 
     private APIResult sendEntityRequest(Entities entities, EntityType entityType,
                                      String entityName, String colo, Boolean skipDryRun,
-                                     String doAsUser) throws FalconCLIException {
+                                     String doAsUser, String properties) throws FalconCLIException {
 
         WebResource resource = service.path(entities.path)
                 .path(entityType.toString().toLowerCase()).path(entityName);
@@ -653,6 +653,10 @@ public class FalconClient extends AbstractFalconClient {
         }
         if (StringUtils.isNotEmpty(doAsUser)) {
             resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        if (StringUtils.isNotEmpty(properties)) {
+            resource = resource.queryParam("properties", properties);
         }
 
         ClientResponse clientResponse = resource
@@ -788,8 +792,8 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private APIResult sendEntityRequestWithObject(Entities entities, String entityType,
-                                               Object requestObject, String colo,
-                                               Boolean skipDryRun, String doAsUser) throws FalconCLIException {
+                                               Object requestObject, String colo, Boolean skipDryRun,
+                                               String doAsUser, String properties) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
         if (colo != null) {
@@ -802,6 +806,10 @@ public class FalconClient extends AbstractFalconClient {
 
         if (StringUtils.isNotEmpty(doAsUser)) {
             resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        if (StringUtils.isNotEmpty(properties)) {
+            resource = resource.queryParam("properties", properties);
         }
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -1094,7 +1102,7 @@ public class FalconClient extends AbstractFalconClient {
                 RecipeTool.main(args);
             }
             validate(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser);
-            return submitAndSchedule(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser);
+            return submitAndSchedule(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser, null);
         } catch (Exception e) {
             throw new FalconCLIException(e.getMessage(), e);
         }

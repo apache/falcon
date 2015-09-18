@@ -950,4 +950,27 @@ public final class EntityUtil {
             throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
         }
     }
+
+
+    /**
+     * @param properties - String of format key1:value1, key2:value2
+     * @return
+     */
+    public static Map<String, String> getPropertyMap(String properties) {
+        Map<String, String> props = new HashMap<>();
+        if (StringUtils.isNotEmpty(properties)) {
+            String[] kvPairs = properties.split(",");
+            for (String kvPair : kvPairs) {
+                String[] keyValue = kvPair.trim().split(":", 2);
+                if (keyValue.length == 2 && !keyValue[0].trim().isEmpty() && !keyValue[1].trim().isEmpty()) {
+                    props.put(keyValue[0].trim(), keyValue[1].trim());
+                } else {
+                    throw new IllegalArgumentException("Found invalid property " + keyValue[0]
+                            + ". Schedule properties must be comma separated key-value pairs. "
+                            + " Example: key1:value1,key2:value2");
+                }
+            }
+        }
+        return props;
+    }
 }

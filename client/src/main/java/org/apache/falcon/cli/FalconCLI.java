@@ -91,6 +91,7 @@ public class FalconCLI {
     public static final String LIST_OPT = "list";
     public static final String TOUCH_OPT = "touch";
     public static final String SKIPDRYRUN_OPT = "skipDryRun";
+    public static final String PROPS_OPT = "properties";
 
     public static final String FIELDS_OPT = "fields";
     public static final String FILTER_BY_OPT = "filterBy";
@@ -441,6 +442,8 @@ public class FalconCLI {
             skipDryRun = true;
         }
 
+        String userProps = commandLine.getOptionValue(PROPS_OPT);
+
         EntityType entityTypeEnum = null;
         if (optionsList.contains(LIST_OPT)) {
             if (entityType == null) {
@@ -476,7 +479,7 @@ public class FalconCLI {
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            result = client.submitAndSchedule(entityType, filePath, skipDryRun, doAsUser).getMessage();
+            result = client.submitAndSchedule(entityType, filePath, skipDryRun, doAsUser, userProps).getMessage();
         } else if (optionsList.contains(VALIDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
@@ -484,7 +487,7 @@ public class FalconCLI {
         } else if (optionsList.contains(SCHEDULE_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.schedule(entityTypeEnum, entityName, colo, skipDryRun, doAsUser).getMessage();
+            result = client.schedule(entityTypeEnum, entityName, colo, skipDryRun, doAsUser, userProps).getMessage();
         } else if (optionsList.contains(SUSPEND_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
@@ -759,6 +762,7 @@ public class FalconCLI {
         Option path = new Option(PATH_OPT, true, "Path for a feed's instance");
         Option skipDryRun = new Option(SKIPDRYRUN_OPT, false, "skip dry run in workflow engine");
         Option doAs = new Option(DO_AS_OPT, true, "doAs user");
+        Option userProps = new Option(PROPS_OPT, true, "User supplied comma separated key value properties");
 
         entityOptions.addOption(url);
         entityOptions.addOption(path);
@@ -782,6 +786,7 @@ public class FalconCLI {
         entityOptions.addOption(numInstances);
         entityOptions.addOption(skipDryRun);
         entityOptions.addOption(doAs);
+        entityOptions.addOption(userProps);
 
         return entityOptions;
     }
