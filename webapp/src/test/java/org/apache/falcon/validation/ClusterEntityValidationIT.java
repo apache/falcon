@@ -111,7 +111,7 @@ public class ClusterEntityValidationIT {
         };
     }
 
-    @Test (dataProvider = "interfaceToInvalidURLs", enabled = false)
+    @Test (dataProvider = "interfaceToInvalidURLs")
     public void testClusterEntityWithInvalidInterfaces(Interfacetype interfacetype, String endpoint)
         throws Exception {
         overlay = context.getUniqueOverlay();
@@ -126,8 +126,10 @@ public class ClusterEntityValidationIT {
 
         File tmpFile = TestContext.getTempFile();
         EntityType.CLUSTER.getMarshaller().marshal(clusterEntity, tmpFile);
+        System.out.println("Starting Interface type " + interfacetype + "Endpoint " + endpoint);
         ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
         context.assertFailure(response);
+        System.out.println("Completed Interface type " + interfacetype + "Endpoint " + endpoint);
     }
 
     @Test
