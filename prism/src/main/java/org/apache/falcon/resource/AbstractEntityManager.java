@@ -48,7 +48,6 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.oozie.client.BundleJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -515,7 +514,7 @@ public abstract class AbstractEntityManager {
     }
 
     private enum EntityStatus {
-        SUBMITTED, SUSPENDED, RUNNING, SUCCEEDED, KILLED, FAILED
+        SUBMITTED, SUSPENDED, RUNNING, COMPLETED
     }
 
     /**
@@ -545,21 +544,16 @@ public abstract class AbstractEntityManager {
 
     protected EntityStatus getStatus(Entity entity, EntityType type) throws FalconException {
         EntityStatus status = EntityStatus.SUBMITTED;
-        Map<String, BundleJob> latestBundles = workflowEngine.findLatestBundle(entity);
 
         if (type.isSchedulable()) {
-            if (workflowEngine.isActive(latestBundles)) {
-                if (workflowEngine.isSuspended(latestBundles)) {
+            if (workflowEngine.isActive(entity)) {
+                if (workflowEngine.isSuspended(entity)) {
                     status = EntityStatus.SUSPENDED;
                 } else {
                     status = EntityStatus.RUNNING;
                 }
-            } else if (workflowEngine.isSucceeded(latestBundles)) {
-                status = EntityStatus.SUCCEEDED;
-            } else if (workflowEngine.isKilled(latestBundles)) {
-                status = EntityStatus.KILLED;
-            } else if (workflowEngine.isFailed(latestBundles)) {
-                status = EntityStatus.FAILED;
+            } else if (workflowEngine.isCompleted(entity)) {
+                status = EntityStatus.COMPLETED;
             }
         }
         return status;

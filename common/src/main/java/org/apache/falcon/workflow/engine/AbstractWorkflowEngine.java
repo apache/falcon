@@ -24,12 +24,10 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.oozie.client.BundleJob;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -68,17 +66,9 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isActive(Entity entity) throws FalconException;
 
-    public abstract boolean isActive(Map<String, BundleJob> bundles) throws FalconException;
+    public abstract boolean isSuspended(Entity entity) throws FalconException;
 
-    public abstract boolean isSuspended(Map<String, BundleJob> bundles) throws FalconException;
-
-    public abstract boolean isSucceeded(Map<String, BundleJob> bundles) throws FalconException;
-
-    public abstract boolean isFailed(Map<String, BundleJob> bundles) throws FalconException;
-
-    public abstract boolean isKilled(Map<String, BundleJob> bundles) throws FalconException;
-
-    public abstract Map<String, BundleJob> findLatestBundle(Entity entity) throws FalconException;
+    public abstract boolean isCompleted(Entity entity) throws FalconException;
 
     public abstract InstancesResult getRunningInstances(Entity entity,
                                                         List<LifeCycle> lifeCycles) throws FalconException;

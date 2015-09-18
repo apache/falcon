@@ -27,6 +27,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1442 Contract of WorkflowEngine API broken(Balu Vellanki via Ajay Yadava)
+
     FALCON-1460 Move getHiveCredentials method to ClusterHelper(Ajay Yadava via Sowmya Ramesh)
 
     FALCON-1342 Do not allow duplicate properties in entities(Balu Vellanki via Sowmya Ramesh)

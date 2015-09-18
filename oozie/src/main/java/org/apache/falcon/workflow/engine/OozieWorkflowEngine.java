@@ -246,28 +246,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public boolean isActive(Map<String, BundleJob> bundles) throws FalconException {
-        return isBundleInState(bundles, BundleStatus.ACTIVE);
+    public boolean isSuspended(Entity entity) throws FalconException {
+        return isBundleInState(findLatestBundle(entity), BundleStatus.SUSPENDED);
     }
 
     @Override
-    public boolean isSuspended(Map<String, BundleJob> bundles) throws FalconException {
-        return isBundleInState(bundles, BundleStatus.SUSPENDED);
-    }
-
-    @Override
-    public boolean isFailed(Map<String, BundleJob> bundles) throws FalconException {
-        return isBundleInState(bundles, BundleStatus.FAILED);
-    }
-
-    @Override
-    public boolean isKilled(Map<String, BundleJob> bundles) throws FalconException {
-        return isBundleInState(bundles, BundleStatus.KILLED);
-    }
-
-    @Override
-    public boolean isSucceeded(Map<String, BundleJob> bundles) throws FalconException {
-        return isBundleInState(bundles, BundleStatus.SUCCEEDED);
+    public boolean isCompleted(Entity entity) throws FalconException {
+        Map<String, BundleJob> bundles = findLatestBundle(entity);
+        return (isBundleInState(bundles, BundleStatus.SUCCEEDED)
+                || isBundleInState(bundles, BundleStatus.FAILED)
+                || isBundleInState(bundles, BundleStatus.KILLED));
     }
 
     private enum BundleStatus {
@@ -366,8 +354,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     //Return latest bundle(last created) for the entity for each cluster
-    @Override
-    public Map<String, BundleJob> findLatestBundle(Entity entity) throws FalconException {
+    private Map<String, BundleJob> findLatestBundle(Entity entity) throws FalconException {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         Map<String, BundleJob> jobMap = new HashMap<String, BundleJob>();
         for (String cluster : clusters) {

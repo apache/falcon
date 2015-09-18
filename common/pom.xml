@@ -61,10 +61,6 @@
                        <groupId>org.apache.hadoop</groupId>
                        <artifactId>hadoop-common</artifactId>
                 </dependency>
-                <dependency>
-                    <groupId>org.apache.oozie</groupId>
-                    <artifactId>oozie-client</artifactId>
-                </dependency>
             </dependencies>
         </profile>
     </profiles>
