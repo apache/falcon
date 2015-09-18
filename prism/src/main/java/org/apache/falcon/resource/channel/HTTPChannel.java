@@ -20,6 +20,7 @@ package org.apache.falcon.resource.channel;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.resource.proxy.BufferedRequest;
@@ -99,11 +100,13 @@ public class HTTPChannel extends AbstractChannel {
 
             String doAsUser = incomingRequest.getParameter(DO_AS_PARAM);
 
-            ClientResponse response = getClient()
+            WebResource resource =  getClient()
                     .resource(UriBuilder.fromUri(url).build().normalize())
-                    .queryParam("user.name", user)
-                    .queryParam("doAs", doAsUser)
-                    .accept(accept).type(mimeType)
+                    .queryParam("user.name", user);
+            if (doAsUser != null) {
+                resource = resource.queryParam("doAs", doAsUser);
+            }
+            ClientResponse response = resource.accept(accept).type(mimeType)
                     .method(httpMethod, ClientResponse.class,
                             (isPost(httpMethod) ? incomingRequest.getInputStream() : null));
             incomingRequest.getInputStream().reset();

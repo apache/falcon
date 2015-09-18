@@ -28,6 +28,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1465 Cluster submission fails with java.lang.IllegalArgumentException in distributed mode(Ajay Yadava via Sowmya Ramesh)
+
     FALCON-1331 Update Failed for an entity and further updates are not possible as lock is not released(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1408 Add more logging information for failing ClusterEntityValidationIT(Pavan Kumar Kolamuri via Ajay Yadava)
