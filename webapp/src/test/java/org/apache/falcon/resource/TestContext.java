@@ -587,6 +587,14 @@ public class TestContext {
         }
     }
 
+    public static void deleteEntitiesFromStore() throws Exception {
+        for (EntityType type : EntityType.values()) {
+            for (String name : ConfigurationStore.get().getEntities(type)) {
+                executeWithURL("entity -delete -type " + type.name().toLowerCase() + " -name " + name);
+            }
+        }
+    }
+
     public static int executeWithURL(String command) throws Exception {
         return new FalconCLI().run((command + " -url " + TestContext.BASE_URL).split("\\s+"));
     }

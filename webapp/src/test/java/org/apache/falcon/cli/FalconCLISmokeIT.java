@@ -22,6 +22,7 @@ import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -41,6 +42,11 @@ public class FalconCLISmokeIT {
         String services = StartupProperties.get().getProperty("application.services");
         StartupProperties.get().setProperty("application.services",
                 services + ",org.apache.falcon.metadata.MetadataMappingService");
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     @Test

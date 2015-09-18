@@ -24,6 +24,7 @@ import org.apache.falcon.util.OozieTestUtils;
 import org.apache.hive.hcatalog.api.HCatPartition;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -43,6 +44,11 @@ public class CatalogPartitionHandlerIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     // TODO : Enable this after oozie/hadoop config file changes

@@ -21,6 +21,7 @@ package org.apache.falcon.resource;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.util.OozieTestUtils;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -40,6 +41,11 @@ public class EntityManagerPaginationJerseyIT {
         TestContext.prepare();
         context = new TestContext();
         scheduleMultipleProcess(5);
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     @AfterMethod

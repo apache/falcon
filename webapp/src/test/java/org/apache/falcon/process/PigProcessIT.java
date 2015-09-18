@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -67,6 +68,11 @@ public class PigProcessIT {
 
         copyDataAndScriptsToHDFS(storageUrl);
         copyLibsToHDFS(cluster, storageUrl);
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     private void copyDataAndScriptsToHDFS(String storageUrl) throws IOException {

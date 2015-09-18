@@ -125,6 +125,7 @@ public class TableStorageFeedReplicationIT {
 
         cleanupStagingDirs(sourceContext.getCluster().getCluster(), SOURCE_DATABASE_NAME);
         cleanupStagingDirs(targetContext.getCluster().getCluster(), TARGET_DATABASE_NAME);
+        TestContext.deleteEntitiesFromStore();
     }
 
     private void cleanupHiveMetastore(String metastoreUrl, String databaseName, String tableName) throws Exception {

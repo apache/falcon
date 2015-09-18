@@ -104,6 +104,7 @@ public class LateDataHandlerIT {
         HiveTestUtils.dropDatabase(metastoreUrl, DATABASE_NAME);
 
         cleanupFS();
+        TestContext.deleteEntitiesFromStore();
     }
 
     private void cleanupFS() throws IOException {

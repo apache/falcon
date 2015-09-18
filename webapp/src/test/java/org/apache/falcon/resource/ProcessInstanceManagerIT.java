@@ -32,6 +32,7 @@ import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.core.MediaType;
@@ -42,6 +43,11 @@ import javax.ws.rs.core.MediaType;
 @Test(enabled = false, groups = {"exhaustive"})
 public class ProcessInstanceManagerIT {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
+    }
 
     protected void schedule(TestContext context) throws Exception {
         CurrentUser.authenticate(System.getProperty("user.name"));

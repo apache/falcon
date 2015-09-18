@@ -65,6 +65,7 @@ public class FeedEntityValidationIT {
     public void tearDown() throws Exception {
         HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
         HiveTestUtils.dropDatabase(METASTORE_URL, DATABASE_NAME);
+        TestContext.deleteEntitiesFromStore();
     }
 
     /**

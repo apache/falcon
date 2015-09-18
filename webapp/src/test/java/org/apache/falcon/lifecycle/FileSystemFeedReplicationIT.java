@@ -104,16 +104,13 @@ public class FileSystemFeedReplicationIT {
 
     @AfterClass
     public void tearDown() throws Exception {
-        TestContext.executeWithURL("entity -delete -type feed -name customer-fs-replicating-feed");
-        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
-        TestContext.executeWithURL("entity -delete -type cluster -name bcp-cluster");
-
         cleanupStagingDirs(sourceContext.getCluster().getCluster());
         cleanupStagingDirs(targetContext.getCluster().getCluster());
 
         cleanupStagingDirs(targetAlphaContext.getCluster().getCluster());
         cleanupStagingDirs(targetBetaContext.getCluster().getCluster());
         cleanupStagingDirs(targetGammaContext.getCluster().getCluster());
+        TestContext.deleteEntitiesFromStore();
     }
 
     private void cleanupStagingDirs(Cluster cluster) throws IOException {

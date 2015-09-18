@@ -45,6 +45,7 @@ import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -84,6 +85,11 @@ public class EntityManagerJerseyIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     static void assertLibs(FileSystem fs, Path path) throws IOException {

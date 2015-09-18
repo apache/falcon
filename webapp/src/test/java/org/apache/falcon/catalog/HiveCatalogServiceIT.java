@@ -125,6 +125,7 @@ public class HiveCatalogServiceIT {
         dropTable(EXTERNAL_TABLE_NAME);
         dropTable(TABLE_NAME);
         dropDatabase();
+        TestContext.deleteEntitiesFromStore();
     }
 
     private void dropTable(String tableName) throws Exception {

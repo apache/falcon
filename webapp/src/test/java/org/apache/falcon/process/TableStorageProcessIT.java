@@ -134,9 +134,7 @@ public class TableStorageProcessIT {
 
         cleanupFS(context.getCluster().getCluster());
 
-        TestContext.executeWithURL("entity -delete -type feed -name output-table");
-        TestContext.executeWithURL("entity -delete -type feed -name input-table");
-        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
+        TestContext.deleteEntitiesFromStore();
     }
 
     private void cleanupFS(Cluster cluster) throws IOException {

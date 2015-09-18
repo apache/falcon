@@ -24,6 +24,7 @@ import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -52,6 +53,11 @@ public class FalconCLIIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     public void testSubmitEntityValidCommands() throws Exception {

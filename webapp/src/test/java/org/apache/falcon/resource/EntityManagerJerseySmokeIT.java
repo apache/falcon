@@ -24,6 +24,7 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.oozie.client.BundleJob;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -44,6 +45,11 @@ public class EntityManagerJerseySmokeIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        TestContext.deleteEntitiesFromStore();
     }
 
     private ThreadLocal<TestContext> contexts = new ThreadLocal<TestContext>();

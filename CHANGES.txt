@@ -25,6 +25,7 @@ Trunk (Unreleased)
     FALCON-348 Add shutdown hook for Falcon (Sandeep Samudrala via Pallavi Rao)
  
   OPTIMIZATIONS
+    FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
     FALCON-1408 Add more logging information for failing ClusterEntityValidationIT(Pavan Kumar Kolamuri via Ajay Yadava)
