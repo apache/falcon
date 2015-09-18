@@ -245,7 +245,7 @@ public abstract class AbstractEntityManager {
      */
     public APIResult delete(HttpServletRequest request, String type, String entity, String colo) {
         checkColo(colo);
-        List<Entity> tokenList = null;
+        List<Entity> tokenList = new ArrayList<>();
         try {
             EntityType entityType = EntityType.getEnum(type);
             String removedFromEngine = "";
@@ -253,7 +253,7 @@ public abstract class AbstractEntityManager {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
 
                 canRemove(entityObj);
-                tokenList = obtainEntityLocks(entityObj, "delete");
+                obtainEntityLocks(entityObj, "delete", tokenList);
                 if (entityType.isSchedulable() && !DeploymentUtil.isPrism()) {
                     getWorkflowEngine().delete(entityObj);
                     removedFromEngine = "(KILLED in ENGINE)";
@@ -278,7 +278,7 @@ public abstract class AbstractEntityManager {
     public APIResult update(HttpServletRequest request, String type, String entityName,
                             String colo, Boolean skipDryRun) {
         checkColo(colo);
-        List<Entity> tokenList = null;
+        List<Entity> tokenList = new ArrayList<>();
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
@@ -290,7 +290,7 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
-            tokenList = obtainEntityLocks(oldEntity, "update");
+            obtainEntityLocks(oldEntity, "update", tokenList);
 
             StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
@@ -320,10 +320,11 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    private List<Entity> obtainEntityLocks(Entity entity, String command)
+    private void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)
         throws FalconException {
-        List<Entity> tokenList = new ArrayList<Entity>();
-
+        if (tokenList == null) {
+            tokenList = new ArrayList<>();
+        }
         //first obtain lock for the entity for which update is issued.
         if (memoryLocks.acquireLock(entity)) {
             tokenList.add(entity);
@@ -346,7 +347,6 @@ public abstract class AbstractEntityManager {
                 }
             }
         }
-        return tokenList;
     }
 
     private void releaseEntityLocks(String entityName, List<Entity> tokenList) {
@@ -404,12 +404,12 @@ public abstract class AbstractEntityManager {
 
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(request, entityType);
-        List<Entity> tokenList = null;
+        List<Entity> tokenList = new ArrayList<>();
         // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
         decorateEntityWithACL(entity);
 
         try {
-            tokenList = obtainEntityLocks(entity, "submit");
+            obtainEntityLocks(entity, "submit", tokenList);
         }finally {
             ConfigurationStore.get().cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
