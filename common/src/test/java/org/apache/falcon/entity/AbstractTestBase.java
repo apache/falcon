@@ -35,6 +35,7 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.annotations.BeforeClass;
 
 import javax.xml.bind.JAXBException;
@@ -79,6 +80,7 @@ public class AbstractTestBase {
         store.init();
 
         CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
+        UserGroupInformation.createUserForTesting(FalconTestUtil.TEST_USER_2, new String[]{"testgroup"});
     }
 
     protected void cleanupStore() throws FalconException {

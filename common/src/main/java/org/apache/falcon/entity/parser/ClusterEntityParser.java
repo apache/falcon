@@ -138,9 +138,11 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                 conf.set(SecurityUtil.NN_PRINCIPAL, nameNodePrincipal);
             }
 
-            HadoopClientFactory.get().createProxiedFileSystem(conf);
-        } catch (FalconException e) {
-            throw new ValidationException("Invalid storage server or port: " + storageUrl, e);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
+            fs.exists(new Path("/"));
+        } catch (Exception e) {
+            throw new ValidationException("Invalid storage server or port: " + storageUrl
+                    + ", " + e.getMessage(), e);
         }
     }
 

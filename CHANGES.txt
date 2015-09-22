@@ -33,6 +33,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1343 Fix validation of read/write endpoints in ClusterEntityParser(Balu Vellanki via Ajay Yadava)
+
     FALCON-1373 HiveDR does not work when job is run on destination cluster(Balu Vellanki via Ajay Yadava)
 
     FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 

@@ -137,6 +137,14 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(ClusterHelper.getMessageBrokerUrl(cluster), ClusterHelper.NO_USER_BROKER_URL);
     }
 
+    @Test(expectedExceptions = ValidationException.class,
+            expectedExceptionsMessageRegExp = ".*java.net.UnknownHostException.*")
+    public void testParseClusterWithBadWriteInterface() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-bad-write-endpoint.xml");
+        Cluster cluster = parser.parse(stream);
+        parser.validate(cluster);
+    }
+
     @Test
     public void testParseClusterWithBadRegistry() throws Exception {
         // disable catalog service
@@ -164,7 +172,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateLocations(cluster);
 
         // Good set of properties, should work
-        clusterEntityParser.validate(cluster);
+        clusterEntityParser.validateProperties(cluster);
 
         // add duplicate property, should throw validation exception.
         Property property1 = new Property();
@@ -180,13 +188,13 @@ public class ClusterEntityParserTest extends AbstractTestBase {
 
         // Remove duplicate property. It should not throw exception anymore
         cluster.getProperties().getProperties().remove(property1);
-        clusterEntityParser.validate(cluster);
+        clusterEntityParser.validateProperties(cluster);
 
         // add empty property name, should throw validation exception.
         property1.setName("");
         cluster.getProperties().getProperties().add(property1);
         try {
-            clusterEntityParser.validate(cluster);
+            clusterEntityParser.validateProperties(cluster);
             Assert.fail(); // should not reach here
         } catch (ValidationException e) {
             // Do nothing
