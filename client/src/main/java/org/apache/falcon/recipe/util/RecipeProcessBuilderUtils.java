@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.Notification;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Retry;
@@ -111,6 +112,7 @@ public final class RecipeProcessBuilderUtils {
 
         bindWorkflowProperties(process.getWorkflow(), recipeProperties);
         bindRetryProperties(process.getRetry(), recipeProperties);
+        bindNotificationProperties(process.getNotification(), recipeProperties);
         bindACLProperties(process.getACL(), recipeProperties);
         bindTagsProperties(process, recipeProperties);
         bindCustomProperties(process.getProperties(), recipeProperties);
@@ -172,6 +174,20 @@ public final class RecipeProcessBuilderUtils {
         String retryDelay = recipeProperties.getProperty(RecipeToolOptions.RETRY_DELAY.getName());
         if (StringUtils.isNotEmpty(retryDelay)) {
             processRetry.setDelay(Frequency.fromString(retryDelay));
+        }
+    }
+
+    private static void bindNotificationProperties(final Notification processNotification,
+                                                   final Properties recipeProperties) {
+        processNotification.setType(recipeProperties.getProperty(
+                RecipeToolOptions.RECIPE_NOTIFICATION_TYPE.getName()));
+
+        String notificationAddress = recipeProperties.getProperty(
+                RecipeToolOptions.RECIPE_NOTIFICATION_ADDRESS.getName());
+        if (StringUtils.isNotBlank(notificationAddress)) {
+            processNotification.setTo(notificationAddress);
+        } else {
+            processNotification.setTo("NA");
         }
     }
 

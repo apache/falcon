@@ -40,5 +40,6 @@
     <workflow name="##workflow.name##" engine="oozie"
               path="/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml" lib="##workflow.lib.path##"/>
     <retry policy="##retry.policy##" delay="##retry.delay##" attempts="3"/>
+    <notification type="##notification.type##" to="##notification.receivers##"/>
     <ACL/>
 </process>

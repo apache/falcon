@@ -68,48 +68,6 @@
             <arg>-availabilityFlag</arg>
             <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
         </java>
-        <ok to="success"/>
-        <error to="failure"/>
-    </action>
-    <decision name="success">
-        <switch>
-            <case to="successAlert">
-                ${drNotificationReceivers ne 'NA'}
-            </case>
-            <default to="end"/>
-        </switch>
-    </decision>
-    <decision name="failure">
-        <switch>
-            <case to="failureAlert">
-                ${drNotificationReceivers ne 'NA'}
-            </case>
-            <default to="fail"/>
-        </switch>
-    </decision>
-    <action name="successAlert">
-        <email xmlns="uri:oozie:email-action:0.2">
-            <to>${drNotificationReceivers}</to>
-            <subject>INFO: HDFS DR workflow ${entityName} completed successfully</subject>
-            <body>
-                The HDFS DR workflow ${wf:id()} is successful.
-                Source      =   ${drSourceDir}
-                Target      =   ${drTargetClusterFS}${drTargetDir}
-            </body>
-        </email>
-        <ok to="end"/>
-        <error to="end"/>
-    </action>
-    <action name="failureAlert">
-        <email xmlns="uri:oozie:email-action:0.2">
-            <to>${drNotificationReceivers}</to>
-            <subject>ERROR: HDFS DR workflow ${entityName} failed</subject>
-            <body>
-                The workflow ${wf:id()} had issues and was killed.  The error message is: ${wf:errorMessage(wf:lastErrorNode())}
-                Source      =   ${drSourceDir}
-                Target      =   ${drTargetClusterFS}${drTargetDir}
-            </body>
-        </email>
         <ok to="end"/>
         <error to="fail"/>
     </action>

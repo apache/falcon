@@ -42,7 +42,9 @@ public enum RecipeToolOptions {
     RECIPE_ACL_OWNER("falcon.recipe.acl.owner", "Recipe acl owner", false),
     RECIPE_ACL_GROUP("falcon.recipe.acl.group", "Recipe acl group", false),
     RECIPE_ACL_PERMISSION("falcon.recipe.acl.permission", "Recipe acl permission", false),
-    RECIPE_NN_PRINCIPAL("falcon.recipe.nn.principal", "Recipe DFS NN principal", false);
+    RECIPE_NN_PRINCIPAL("falcon.recipe.nn.principal", "Recipe DFS NN principal", false),
+    RECIPE_NOTIFICATION_TYPE("falcon.recipe.notification.type", "Recipe Notification Type", false),
+    RECIPE_NOTIFICATION_ADDRESS("falcon.recipe.notification.receivers", "Recipe Email Notification receivers", false);
 
     private final String name;
     private final String description;

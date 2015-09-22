@@ -39,5 +39,6 @@
 
     <workflow name="##falcon.recipe.workflow.name##" engine="oozie" path="/apps/data-mirroring/workflows/hdfs-replication-workflow.xml" lib="##workflow.lib.path##"/>
     <retry policy="##falcon.recipe.retry.policy##" delay="##falcon.recipe.retry.delay##" attempts="3"/>
+    <notification type="##falcon.recipe.notification.type##" to="##falcon.recipe.notification.receivers##"/>
     <ACL/>
 </process>
