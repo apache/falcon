@@ -73,7 +73,10 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
+    // Used when the parameter exists but is not applicable for a particular action/scenario
     protected static final String IGNORE = "IGNORE";
+    // Used when the parameter is not available
+    protected static final String NONE = "NONE";
 
     private static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override

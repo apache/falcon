@@ -144,9 +144,9 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
     private void initializeInputPaths(Cluster cluster, COORDINATORAPP coord, Properties props) throws FalconException {
         if (entity.getInputs() == null) {
-            props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), "NONE");
-            props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), IGNORE);
-            props.put(WorkflowExecutionArgs.INPUT_NAMES.getName(), IGNORE);
+            props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), NONE);
+            props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), NONE);
+            props.put(WorkflowExecutionArgs.INPUT_NAMES.getName(), NONE);
             return;
         }
 
@@ -252,8 +252,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
     private void initializeOutputPaths(Cluster cluster, COORDINATORAPP coord, Properties props) throws FalconException {
         if (entity.getOutputs() == null) {
-            props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), IGNORE);
-            props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
+            props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), NONE);
+            props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), NONE);
             return;
         }
 

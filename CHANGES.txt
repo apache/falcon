@@ -3,6 +3,7 @@ Trunk (Unreleased)
   FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
 
   INCOMPATIBLE CHANGES
+    FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
 
   NEW FEATURES
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
@@ -30,6 +31,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
+
     FALCON-1465 Cluster submission fails with java.lang.IllegalArgumentException in distributed mode(Ajay Yadava via Sowmya Ramesh)
 
     FALCON-1331 Update Failed for an entity and further updates are not possible as lock is not released(Pavan Kumar Kolamuri via Ajay Yadava)
