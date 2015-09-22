@@ -57,9 +57,6 @@ public enum HiveDRArgs {
             "Target hive metastore kerberos principal", false),
     TARGET_HIVE2_KERBEROS_PRINCIPAL("targetHive2KerberosPrincipal", "Target hiveserver2 kerberos principal", false),
 
-    CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal",
-            "Namenode kerberos principal of cluster on which replication job runs", false),
-
     // num events
     MAX_EVENTS("maxEvents", "number of events to process in this run"),
 
@@ -73,7 +70,10 @@ public enum HiveDRArgs {
     JOB_NAME("drJobName", "unique job name"),
 
     CLUSTER_FOR_JOB_RUN("clusterForJobRun", "cluster where job runs"),
-    CLUSTER_FOR_JOB_RUN_WRITE_EP("clusterForJobRunWriteEP", "cluster where job runs write EP"),
+    JOB_CLUSTER_NN("clusterForJobRunWriteEP", "write end point of cluster where job runs"),
+    JOB_CLUSTER_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal",
+            "Namenode kerberos principal of cluster on which replication job runs", false),
+
 
     FALCON_LIBPATH("falconLibPath", "Falcon Lib Path for Jar files", false),
 

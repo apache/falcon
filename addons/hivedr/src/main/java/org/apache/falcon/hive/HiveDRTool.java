@@ -62,7 +62,8 @@ public class HiveDRTool extends Configured implements Tool {
     private static final String META_PATH_FILE_SUFFIX = ".metapath";
 
     private FileSystem jobFS;
-    private FileSystem targetClusterFs;
+    private FileSystem sourceClusterFS;
+    private FileSystem targetClusterFS;
 
     private HiveDROptions inputOptions;
     private DRStatusStore drStore;
@@ -117,15 +118,18 @@ public class HiveDRTool extends Configured implements Tool {
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
+        Configuration sourceConf = FileUtils.getConfiguration(inputOptions.getSourceWriteEP(),
+                inputOptions.getSourceNNKerberosPrincipal());
+        sourceClusterFS = FileSystem.get(sourceConf);
         Configuration targetConf = FileUtils.getConfiguration(inputOptions.getTargetWriteEP(),
                 inputOptions.getTargetNNKerberosPrincipal());
-        targetClusterFs = FileSystem.get(targetConf);
+        targetClusterFS = FileSystem.get(targetConf);
         jobConf = FileUtils.getConfiguration(inputOptions.getJobClusterWriteEP(),
                 inputOptions.getJobClusterNNPrincipal());
         jobFS = FileSystem.get(jobConf);
 
         // init DR status store
-        drStore = new HiveDRStatusStore(targetClusterFs);
+        drStore = new HiveDRStatusStore(targetClusterFS);
         eventSoucerUtil = new EventSourcerUtils(jobConf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
     }
 
@@ -219,12 +223,12 @@ public class HiveDRTool extends Configured implements Tool {
         Path sourceStagingPath = new Path(inputOptions.getSourceStagingPath());
         Path targetStagingPath = new Path(inputOptions.getTargetStagingPath());
         LOG.info("Source staging path: {}", sourceStagingPath);
-        if (!FileSystem.mkdirs(jobFS, sourceStagingPath, STAGING_DIR_PERMISSION)) {
+        if (!FileSystem.mkdirs(sourceClusterFS, sourceStagingPath, STAGING_DIR_PERMISSION)) {
             throw new IOException("mkdir failed for " + sourceStagingPath);
         }
 
         LOG.info("Target staging path: {}", targetStagingPath);
-        if (!FileSystem.mkdirs(targetClusterFs, targetStagingPath, STAGING_DIR_PERMISSION)) {
+        if (!FileSystem.mkdirs(targetClusterFS, targetStagingPath, STAGING_DIR_PERMISSION)) {
             throw new IOException("mkdir failed for " + targetStagingPath);
         }
     }
@@ -234,12 +238,12 @@ public class HiveDRTool extends Configured implements Tool {
         Path sourceStagingPath = new Path(inputOptions.getSourceStagingPath());
         Path targetStagingPath = new Path(inputOptions.getTargetStagingPath());
         try {
-            if (jobFS.exists(sourceStagingPath)) {
-                jobFS.delete(sourceStagingPath, true);
+            if (sourceClusterFS.exists(sourceStagingPath)) {
+                sourceClusterFS.delete(sourceStagingPath, true);
             }
 
-            if (targetClusterFs.exists(targetStagingPath)) {
-                targetClusterFs.delete(targetStagingPath, true);
+            if (targetClusterFS.exists(targetStagingPath)) {
+                targetClusterFS.delete(targetStagingPath, true);
             }
         } catch (IOException e) {
             LOG.error("Unable to cleanup staging dir:", e);
@@ -320,8 +324,11 @@ public class HiveDRTool extends Configured implements Tool {
             if (jobFS != null) {
                 jobFS.close();
             }
-            if (targetClusterFs != null) {
-                targetClusterFs.close();
+            if (targetClusterFS != null) {
+                targetClusterFS.close();
+            }
+            if (sourceClusterFS != null) {
+                sourceClusterFS.close();
             }
         } catch (IOException e) {
             LOG.error("Closing FS failed", e);

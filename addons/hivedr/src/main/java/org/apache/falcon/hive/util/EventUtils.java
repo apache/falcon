@@ -61,16 +61,19 @@ public class EventUtils {
     private String sourceDatabase = null;
     private String sourceNN = null;
     private String sourceNNKerberosPrincipal = null;
+    private String jobNN = null;
+    private String jobNNKerberosPrincipal = null;
     private String targetHiveServer2Uri = null;
     private String targetStagingPath = null;
     private String targetNN = null;
     private String targetNNKerberosPrincipal = null;
-    private String targetStagingUri = null;
+    private String fullyQualifiedTargetStagingPath = null;
     private List<Path> sourceCleanUpList = null;
     private List<Path> targetCleanUpList = null;
     private static final Logger LOG = LoggerFactory.getLogger(EventUtils.class);
 
     private FileSystem sourceFileSystem = null;
+    private FileSystem jobFileSystem = null;
     private FileSystem targetFileSystem = null;
     private Connection sourceConnection = null;
     private Connection targetConnection = null;
@@ -85,6 +88,8 @@ public class EventUtils {
         sourceDatabase = conf.get(HiveDRArgs.SOURCE_DATABASE.getName());
         sourceNN = conf.get(HiveDRArgs.SOURCE_NN.getName());
         sourceNNKerberosPrincipal = conf.get(HiveDRArgs.SOURCE_NN_KERBEROS_PRINCIPAL.getName());
+        jobNN = conf.get(HiveDRArgs.JOB_CLUSTER_NN.getName());
+        jobNNKerberosPrincipal = conf.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL.getName());
         targetHiveServer2Uri = conf.get(HiveDRArgs.TARGET_HS2_URI.getName());
         targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName())
                 + File.separator + conf.get(HiveDRArgs.JOB_NAME.getName());
@@ -128,14 +133,15 @@ public class EventUtils {
 
     public void initializeFS() throws IOException {
         LOG.info("Initializing staging directory");
-        targetStagingUri = new Path(targetNN, targetStagingPath).toString();
+        fullyQualifiedTargetStagingPath = new Path(targetNN, targetStagingPath).toString();
         sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
+        jobFileSystem = FileSystem.get(FileUtils.getConfiguration(jobNN, jobNNKerberosPrincipal));
         targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
     }
 
     private String readEvents(Path eventFileName) throws IOException {
         StringBuilder eventString = new StringBuilder();
-        BufferedReader in = new BufferedReader(new InputStreamReader(sourceFileSystem.open(eventFileName)));
+        BufferedReader in = new BufferedReader(new InputStreamReader(jobFileSystem.open(eventFileName)));
         try {
             String line;
             while ((line=in.readLine())!=null) {
@@ -302,16 +308,25 @@ public class EventUtils {
         DistCpOptions options = getDistCpOptions(srcStagingPaths);
         DistCp distCp = new DistCp(conf, options);
         LOG.info("Started DistCp with source Path: {} \ttarget path: {}", StringUtils.join(srcStagingPaths.toArray()),
-                targetStagingUri);
+                fullyQualifiedTargetStagingPath);
         Job distcpJob = distCp.execute();
         LOG.info("Distp Hadoop job: {}", distcpJob.getJobID().toString());
         LOG.info("Completed DistCp");
     }
 
     public DistCpOptions getDistCpOptions(List<Path> srcStagingPaths) {
-        srcStagingPaths.toArray(new Path[srcStagingPaths.size()]);
+        /*
+         * Add the fully qualified sourceNameNode to srcStagingPath uris. This will
+         * ensure DistCp will succeed when the job is run on target cluster.
+         */
+        List<Path> fullyQualifiedSrcStagingPaths = new ArrayList<Path>();
+        for (Path srcPath : srcStagingPaths) {
+            fullyQualifiedSrcStagingPaths.add(new Path(sourceNN, srcPath.toString()));
+        }
+        fullyQualifiedSrcStagingPaths.toArray(new Path[fullyQualifiedSrcStagingPaths.size()]);
 
-        DistCpOptions distcpOptions = new DistCpOptions(srcStagingPaths, new Path(targetStagingUri));
+        DistCpOptions distcpOptions = new DistCpOptions(fullyQualifiedSrcStagingPaths,
+                new Path(fullyQualifiedTargetStagingPath));
         /* setSyncFolder to false to retain dir structure as in source at the target. If set to true all files will be
         copied to the same staging sir at target resulting in DuplicateFileException in DistCp.
         */

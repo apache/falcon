@@ -77,6 +77,14 @@ public class HiveDROptions {
         throw new HiveReplicationException("Source StagingPath cannot be empty");
     }
 
+    public String getSourceWriteEP() {
+        return context.get(HiveDRArgs.SOURCE_NN);
+    }
+
+    public String getSourceNNKerberosPrincipal() {
+        return context.get(HiveDRArgs.SOURCE_NN_KERBEROS_PRINCIPAL);
+    }
+
     public String getTargetWriteEP() {
         return context.get(HiveDRArgs.TARGET_NN);
     }
@@ -120,11 +128,11 @@ public class HiveDROptions {
     }
 
     public String getJobClusterWriteEP() {
-        return context.get(HiveDRArgs.CLUSTER_FOR_JOB_RUN_WRITE_EP);
+        return context.get(HiveDRArgs.JOB_CLUSTER_NN);
     }
 
     public String getJobClusterNNPrincipal() {
-        return context.get(HiveDRArgs.CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL);
+        return context.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL);
     }
 
     public void setSourceStagingDir(String path) {
