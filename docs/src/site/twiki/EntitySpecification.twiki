@@ -256,6 +256,18 @@ upto 8 hours then late-arrival's cut-off="hours(8)"
 
 *Note:* This will only apply for !FileSystem storage but not Table storage until a future time.
 
+
+---+++ Email Notification
+
+<verbatim>
+    <notification type="email" to="bob@xyz.com"/>
+</verbatim>
+Specifying the notification element with "type" property allows users to receive email notification when a scheduled feed instance completes.
+Multiple recipients of an email can be provided as comma separated addresses with "to" property.
+To send email notification ensure that SMTP parameters are defined in Falcon startup.properties.
+Refer to [[FalconEmailNotification][Falcon Email Notification]] for more details.
+
+
 ---+++ ACL
 
 A feed has ACL (Access Control List) useful for implementing permission requirements
@@ -820,6 +832,16 @@ Example:
 This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Falcon should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml
 
 *Note:* This is only supported for !FileSystem storage but not Table storage at this point.
+
+---+++ Email Notification
+
+<verbatim>
+    <notification type="email" to="bob@@xyz.com"/>
+</verbatim>
+Specifying the notification element with "type" property allows users to receive email notification when a scheduled process instance completes.
+Multiple recipients of an email can be provided as comma separated addresses with "to" property.
+To send email notification ensure that SMTP parameters are defined in Falcon startup.properties.
+Refer to [[FalconEmailNotification][Falcon Email Notification]] for more details.
 
 ---+++ ACL
 
