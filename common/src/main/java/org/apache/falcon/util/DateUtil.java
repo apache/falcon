@@ -27,6 +27,9 @@ import java.util.TimeZone;
  */
 public final class DateUtil {
 
+    //Friday, April 16, 9999 7:12:55 AM UTC corresponding date
+    public static final Date NEVER = new Date(Long.parseLong("253379862775000"));
+
     private DateUtil() {}
 
     public static Date getNextMinute(Date time) throws Exception {
@@ -36,4 +39,5 @@ public final class DateUtil {
         insCal.add(Calendar.MINUTE, 1);
         return insCal.getTime();
     }
+
 }

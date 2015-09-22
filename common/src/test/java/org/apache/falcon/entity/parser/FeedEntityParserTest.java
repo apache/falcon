@@ -974,4 +974,12 @@ public class FeedEntityParserTest extends AbstractTestBase {
         }
     }
 
+    @Test
+    public void testFeedEndTimeOptional() throws Exception {
+        Feed feed = parser.parseAndValidate(ProcessEntityParserTest.class
+                .getResourceAsStream(FEED_XML));
+        feed.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(feed);
+    }
+
 }

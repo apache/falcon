@@ -21,6 +21,7 @@ package org.apache.falcon.entity.parser;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -601,4 +602,22 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         }
     }
 
+    @Test
+    public void testProcessEndTimeOptional() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class
+                .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(process);
+    }
+
+    @Test
+    public void testProcessEndTime() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class
+                .getResourceAsStream(PROCESS_XML)));
+        String feedName = process.getInputs().getInputs().get(0).getFeed();
+        Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
+        feedEntity.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        process.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(process);
+    }
 }

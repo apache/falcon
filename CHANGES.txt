@@ -9,6 +9,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1417 Make validity end date optional for feed / process(Pragya Mittal via Ajay Yadava)
+
     FALCON-1434 Enhance schedule API to accept key-value properties(Pallavi Rao)   
 
     FALCON-1426 Add documentation for Falcon Email notification (Peeyush Bishnoi via Pallavi Rao)

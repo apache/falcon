@@ -40,6 +40,7 @@ import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -79,6 +80,12 @@ public class ProcessEntityParser extends EntityParser<Process> {
                         + " is defined more than once for process: " + process.getName());
             }
             validateEntityExists(EntityType.CLUSTER, clusterName);
+
+            // Optinal end_date
+            if (cluster.getValidity().getEnd() == null) {
+                cluster.getValidity().setEnd(DateUtil.NEVER);
+            }
+
             validateProcessValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd());
             validateHDFSPaths(process, clusterName);
             validateProperties(process);

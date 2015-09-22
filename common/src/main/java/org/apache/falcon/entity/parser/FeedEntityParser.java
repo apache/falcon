@@ -47,6 +47,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -82,6 +83,12 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateACL(feed);
         for (Cluster cluster : feed.getClusters().getClusters()) {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
+
+            // Optinal end_date
+            if (cluster.getValidity().getEnd() == null) {
+                cluster.getValidity().setEnd(DateUtil.NEVER);
+            }
+
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);

@@ -28,6 +28,7 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.util.DateUtil;
 
 import java.util.Date;
 
@@ -45,6 +46,12 @@ public final class CrossEntityValidations {
                 String clusterName = cluster.getName();
                 org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
                         clusterName).getValidity();
+
+                // Optinal end_date
+                if (feedValidity.getEnd() == null) {
+                    feedValidity.setEnd(DateUtil.NEVER);
+                }
+
                 Date feedStart = feedValidity.getStart();
                 Date feedEnd = feedValidity.getEnd();
 
