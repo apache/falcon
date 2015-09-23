@@ -328,7 +328,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 + "=" + EntityUtil.getWorkflowName(entity) + ";", 0, 256);
             if (jobs != null) {
                 for (BundleJob job : jobs) {
-                    if (EntityUtil.isStagingPath(cluster, entity, new Path(job.getAppPath()))) {
+                    // Path is extracted twice as to handle changes in hadoop configurations for nameservices.
+                    if (EntityUtil.isStagingPath(cluster, entity,
+                            new Path((new Path(job.getAppPath())).toUri().getPath()))) {
                         //Load bundle as coord info is not returned in getBundleJobsInfo()
                         BundleJob bundle = getBundleInfo(clusterName, job.getId());
                         filteredJobs.add(bundle);
