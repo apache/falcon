@@ -47,8 +47,10 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +87,7 @@ public final class EntityUtil {
     private static final long ONE_MS = 1;
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
+    private static final String STAGING_DIR_NAME_SEPARATOR = "_";
 
     private EntityUtil() {}
 
@@ -355,6 +358,10 @@ public final class EntityUtil {
     public static int getInstanceSequence(Date startTime, Frequency frequency, TimeZone tz, Date instanceTime) {
         if (startTime.after(instanceTime)) {
             return -1;
+        }
+
+        if (tz == null) {
+            tz = TimeZone.getTimeZone("UTC");
         }
 
         Calendar startCal = Calendar.getInstance(tz);
@@ -657,13 +664,48 @@ public final class EntityUtil {
                 "falcon/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
     }
 
+    /**
+     * Gets the latest staging path for an entity on a cluster, based on the dir name(that contains timestamp).
+     * @param cluster
+     * @param entity
+     * @return
+     * @throws FalconException
+     */
+    public static Path getLatestStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, final Entity entity)
+        throws FalconException {
+        Path basePath = getBaseStagingPath(cluster, entity);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                ClusterHelper.getConfiguration(cluster));
+        try {
+            final String md5 = md5(getClusterView(entity, cluster.getName()));
+            FileStatus[] files = fs.listStatus(basePath, new PathFilter() {
+                @Override
+                public boolean accept(Path path) {
+                    return path.getName().startsWith(md5);
+                }
+            });
+            if (files != null && files.length != 0) {
+                // Find the latest directory using the timestamp used in the dir name
+                // These files will vary only in ts suffix (as we have filtered out using a common md5 hash),
+                // hence, sorting will be on timestamp.
+                // FileStatus compares on Path and hence the latest will be at the end after sorting.
+                Arrays.sort(files);
+                return files[files.length - 1].getPath();
+            }
+            throw new FalconException("No staging directories found for entity " + entity.getName() + " on cluster "
+                + cluster.getName());
+        } catch (Exception e) {
+            throw new FalconException("Unable get listing for " + basePath.toString(), e);
+        }
+    }
+
     //Creates new staging path for entity schedule/update
     //Staging path containd md5 of the cluster view of the entity. This is required to check if update is required
     public static Path getNewStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
         throws FalconException {
         Entity clusterView = getClusterView(entity, cluster.getName());
         return new Path(getBaseStagingPath(cluster, entity),
-            md5(clusterView) + "_" + String.valueOf(System.currentTimeMillis()));
+            md5(clusterView) + STAGING_DIR_NAME_SEPARATOR + String.valueOf(System.currentTimeMillis()));
     }
 
     // Given an entity and a cluster, determines if the supplied path is the staging path for that entity.

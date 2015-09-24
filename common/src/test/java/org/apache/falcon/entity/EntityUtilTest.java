@@ -38,6 +38,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -404,5 +405,49 @@ public class EntityUtilTest extends AbstractTestBase {
             {"key1:value1,key2=value2"},
             {":value"},
         };
+    }
+
+    @Test
+    public void testGetLatestStagingPath() throws FalconException, IOException {
+        ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
+        InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
+        org.apache.falcon.entity.v0.cluster.Cluster cluster = parser.parse(stream);
+
+        ProcessEntityParser processParser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+        stream = this.getClass().getResourceAsStream(PROCESS_XML);
+        Process process = processParser.parse(stream);
+        process.setName("staging-test");
+
+        String md5 = EntityUtil.md5(EntityUtil.getClusterView(process, "testCluster"));
+        FileSystem fs = HadoopClientFactory.get().
+                createFalconFileSystem(ClusterHelper.getConfiguration(cluster));
+
+        String basePath = "/projects/falcon/staging/falcon/workflows/process/staging-test/";
+        Path[] paths = {
+            new Path(basePath + "5a8100dc460b44db2e7bfab84b24cb92_1436441045003"),
+            new Path(basePath + "6b3a1b6c7cf9de62c78b125415ffb70c_1436504488677"),
+            new Path(basePath + md5 + "_1436344303117"),
+            new Path(basePath + md5 + "_1436347924846"),
+            new Path(basePath + md5 + "_1436357052992"),
+            new Path(basePath + "logs"),
+            new Path(basePath + "random_dir"),
+        };
+
+        // Ensure exception is thrown when there are no staging dirs.
+        fs.delete(new Path(basePath), true);
+        try {
+            EntityUtil.getLatestStagingPath(cluster, process);
+            Assert.fail("Exception expected");
+        } catch (FalconException e) {
+            // Do nothing
+        }
+
+        // Now create paths
+        for (Path path : paths) {
+            fs.create(path);
+        }
+
+        // Ensure latest is returned.
+        Assert.assertEquals(EntityUtil.getLatestStagingPath(cluster, process).getName(), md5 + "_1436357052992");
     }
 }
