@@ -52,6 +52,10 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
      * Get list of dimensions for the given dimension-type.
      * <p/>
      * GET http://host/metadata/discovery/dimension-type/list
+     * @param clusterName <optional query param> Show dimensions related to this cluster.
+     * @param dimensionType Valid dimension types are cluster_entity,feed_entity, process_entity, user, colo, tags,
+     *                      groups, pipelines
+     * @return List of dimensions that match requested type [and cluster].
      */
     @GET
     @Path("/{type}/list")
@@ -89,6 +93,10 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
      * Get relations of a dimension identified by type and name.
      *
      * GET http://host/metadata/discovery/dimension-type/dimension-name/relations
+     * @param dimensionName Name of the dimension.
+     * @param dimensionType Valid dimension types are cluster_entity,feed_entity, process_entity, user, colo, tags,
+     *                      groups, pipelines
+     * @return Get all relations of a specific dimension.
      */
     @GET
     @Path("/{type}/{name}/relations")

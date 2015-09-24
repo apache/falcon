@@ -42,6 +42,7 @@
                         <version>2.4</version>
                         <configuration>
                             <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
+                            <packagingExcludes>docs/downloads.html</packagingExcludes>
                             <webResources>
                                 <resource>
                                     <directory>../falcon-ui/dist</directory>
@@ -49,6 +50,9 @@
                                 <resource>
                                     <directory>src/main/webapp/WEB-INF/distributed</directory>
                                     <targetPath>WEB-INF</targetPath>
+                                </resource>
+                                <resource>
+                                    <directory>../prism/target/restapi</directory>
                                 </resource>
                             </webResources>
                         </configuration>
@@ -250,6 +254,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
+                    <packagingExcludes>docs/downloads.html</packagingExcludes>
                     <webResources>
                         <resource>
                             <directory>../html5-ui</directory>
@@ -261,6 +266,9 @@
                         <resource>
                             <directory>src/main/webapp/WEB-INF/embedded</directory>
                             <targetPath>WEB-INF</targetPath>
+                        </resource>
+                        <resource>
+                            <directory>../prism/target/restapi</directory>
                         </resource>
                     </webResources>
                 </configuration>

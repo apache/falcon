@@ -110,6 +110,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return new BufferedRequest(request);
     }
 
+    /**
+     * Submit the given entity.
+     * @param request Servlet Request
+     * @param type Valid options are cluster, feed or process.
+     * @param ignore colo is ignored
+     * @return Result of the submission.
+     */
     @POST
     @Path("submit/{type}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
@@ -169,6 +176,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
     }
 
+    /**
+     * Validates the submitted entity.
+     * @param request Servlet Request
+     * @param type Valid options are cluster, feed or process.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
     @POST
     @Path("validate/{type}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
@@ -198,6 +212,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute();
     }
 
+    /**
+     * Delete the specified entity.
+     * @param request Servlet Request
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param ignore colo is ignored
+     * @return Results of the delete operation.
+     */
     @DELETE
     @Path("delete/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -238,6 +260,15 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return consolidateResult(results, APIResult.class);
     }
 
+    /**
+     * Updates the submitted entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param ignore colo is ignored
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
     @POST
     @Path("update/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -317,6 +348,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return consolidateResult(results, APIResult.class);
     }
 
+    /**
+     * Force updates the entity.
+     * @param type Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param coloExpr Colo on which the query should be run.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
     @POST
     @Path("touch/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -341,6 +380,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute();
     }
 
+    /**
+     * Get status of the entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param coloExpr Colo on which the query should be run.
+     * @return Status of the entity.
+     */
     @GET
     @Path("status/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -362,6 +408,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute();
     }
 
+    /**
+     * Get dependencies of the entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @return Dependencies of the entity.
+     */
     @GET
     @Path("dependencies/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -372,6 +424,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return super.getDependencies(type, entity);
     }
 
+    /**
+     * Get definition of the entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entityName Name of the entity.
+     * @return Definition of the entity.
+     */
     @GET
     @Path("definition/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -380,6 +438,15 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return super.getEntityDefinition(type, entityName);
     }
 
+    /**
+     * Schedule an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entity Name of the entity.
+     * @param coloExpr Colo on which the query should be run.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the schedule command.
+     */
     @POST
     @Path("schedule/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -407,6 +474,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute();
     }
 
+    /**
+     * Submits and schedules an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param coloExpr Colo on which the query should be run.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the submit and schedule command.
+     */
     @POST
     @Path("submitAndSchedule/{type}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
@@ -426,6 +501,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return consolidateResult(results, APIResult.class);
     }
 
+    /**
+     * Suspend an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entity Name of the entity.
+     * @param coloExpr Colo on which the query should be run.
+     * @return Status of the entity.
+     */
     @POST
     @Path("suspend/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -450,6 +533,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute();
     }
 
+    /**
+     * Resume a supended entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entity Name of the entity.
+     * @param coloExpr Colo on which the query should be run.
+     * @return Result of the resume command.
+     */
     @POST
     @Path("resume/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -475,6 +566,39 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
+    /**
+     *
+     * Get list of the entities.
+     * We have two filtering parameters for entity tags: "tags" and "tagkeys".
+     * "tags" does the exact match in key=value fashion, while "tagkeys" finds all the entities with the given key as a
+     * substring in the tags. This "tagkeys" filter is introduced for the user who doesn't remember the exact tag but
+     * some keywords in the tag. It also helps users to save the time of typing long tags.
+     * The returned entities will match all the filtering criteria.
+     * @param type Comma-separated entity types. Can be empty. Valid entity types are cluster, feed or process.
+     * @param fields <optional param> Fields of entity that the user wants to view, separated by commas.
+     *               Valid options are STATUS, TAGS, PIPELINES, CLUSTERS.
+     * @param nameSubsequence <optional param> Subsequence of entity name. Not case sensitive.
+     *                        The entity name needs to contain all the characters in the subsequence in the same order.
+     *                        Example 1: "sample1" will match the entity named "SampleFeed1-2".
+     *                        Example 2: "mhs" will match the entity named "New-My-Hourly-Summary".
+     * @param tagKeywords <optional param> Keywords in tags, separated by comma. Not case sensitive.
+     *                    The returned entities will have tags that match all the tag keywords.
+     * @param tags <optional param> Return list of entities that have specified tags, separated by a comma.
+     *             Query will do AND on tag values.
+     *             Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+     * @param filterBy <optional param> Filter results by list of field:value pairs.
+     *                 Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+     *                 Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                Supports ordering by "name".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param resultsPerPage <optional param> Number of results to show per request, used for pagination. Only
+     *                       integers > 0 are valid, Default is 10.
+     * @return Total number of results and a list of entities.
+     */
     @GET
     @Path("list{type : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -499,6 +623,33 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                 orderBy, sortOrder, offset, resultsPerPage, doAsUser);
     }
 
+    /**
+     * Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity.
+     * @param type Valid options are feed or process.
+     * @param cluster Show entities that belong to this cluster.
+     * @param startStr <optional param> Show entity summaries from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *                 By default, it is set to (end - 2 days).
+     * @param endStr <optional param> Show entity summary up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *               Default is set to now.
+     * @param entityFields <optional param> Fields of entity that the user wants to view, separated by commas.
+     *                     Valid options are STATUS, TAGS, PIPELINES.
+     * @param entityFilter <optional param> Filter results by list of field:value pairs.
+     *                     Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+     *                     Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
+     *                     Query will do an AND among filterBy fields.
+     * @param entityTags <optional param> Return list of entities that have specified tags, separated by a comma.
+     *                   Query will do AND on tag values.
+     *                   Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+     * @param entityOrderBy <optional param> Field by which results should be ordered.
+     *                      Supports ordering by "name".
+     * @param entitySortOrder <optional param> Valid options are "asc" and "desc"
+     * @param entityOffset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numEntities <optional param> Number of results to show per request, used for pagination. Only
+     *                    integers > 0 are valid, Default is 10.
+     * @param numInstanceResults <optional param> Number of recent instances to show per entity. Only integers > 0 are
+     *                           valid, Default is 7.
+     * @return Show entities along with summary of N instances for each entity.
+     */
     @GET
     @Path("summary/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -522,6 +673,15 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                 entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults, doAsUser);
     }
 
+    /**
+     * Get the name of the feed along with the location type(meta/data/stats) and cluster on which the given path
+     * belongs to this feed.
+     * @param type Valid option is feed.
+     * @param path path of the instance for which you want to determine the feed
+     *             Example: /data/project1/2014/10/10/23/ Path has to be the complete path and can't be a part of it.
+     * @return Returns the name of the feed along with the location type(meta/data/stats) and cluster on which the given
+     *         path belongs to this feed.
+     */
     @GET
     @Path("lookup/{type}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})

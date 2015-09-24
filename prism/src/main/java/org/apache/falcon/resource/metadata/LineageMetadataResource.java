@@ -79,6 +79,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/serialize
      * graph.getVertices();
+     * @return Serialize graph to a file configured using *.falcon.graph.serialize.path in Custom startup.properties.
      */
     @GET
     @Path("/serialize")
@@ -96,6 +97,11 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     }
 
 
+    /**
+     * It returns the graph depicting the relationship between the various processes and feeds in a given pipeline.
+     * @param pipeline Name of the pipeline
+     * @return It returns a json graph
+     */
     @GET
     @Path("/entities")
     @Produces({MediaType.APPLICATION_JSON})
@@ -138,6 +144,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/vertices/all
      * graph.getVertices();
+     * @return All vertices in lineage graph.
      */
     @GET
     @Path("/vertices/all")
@@ -157,6 +164,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/vertices/id
      * graph.getVertex(id);
+     * @param vertexId The unique id of the vertex.
+     * @return Vertex with the specified id.
      */
     @GET
     @Path("/vertices/{id}")
@@ -193,6 +202,9 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      * This is NOT a rexster API.
      * <p/>
      * GET http://host/metadata/lineage/vertices/properties/id
+     * @param vertexId The unique id of the vertex.
+     * @param relationships It has default value of false. Pass true if relationships should be fetched.
+     * @return Properties associated with the specified vertex.
      */
     @GET
     @Path("/vertices/properties/{id}")
@@ -292,6 +304,9 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      * <p/>
      * GET http://host/metadata/lineage/vertices?key=<key>&value=<value>
      * graph.getVertices(key, value);
+     * @param key The key to be matched.
+     * @param value The associated value of the key.
+     * @return All vertices matching given property key and a value.
      */
     @GET
     @Path("/vertices")
@@ -313,9 +328,26 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get a list of adjacent edges with a direction.
      *
+     * <br/>
+     * To get the adjacent out vertices of vertex pass direction as out, in to get adjacent in vertices and both to get
+     * both in and out adjacent vertices.<br/>
+     * Similarly to get the out edges of vertex pass outE, inE to get in edges and bothE to get the both in and out
+     * edges of vertex.<br/>
+     * out : get the adjacent out vertices of vertex<br/>
+     * in : get the adjacent in vertices of vertex<br/>
+     * both : get the both adjacent in and out vertices of vertex<br/>
+     * outCount : get the number of out vertices of vertex<br/>
+     * inCount : get the number of in vertices of vertex<br/>
+     * bothCount : get the number of adjacent in and out vertices of vertex<br/>
+     * outIds : get the identifiers of out vertices of vertex<br/>
+     * inIds : get the identifiers of in vertices of vertex<br/>
+     * bothIds : get the identifiers of adjacent in and out vertices of vertex<br/>
      * GET http://host/metadata/lineage/vertices/id/direction
      * graph.getVertex(id).get{Direction}Edges();
      * direction: {(?!outE)(?!bothE)(?!inE)(?!out)(?!both)(?!in)(?!query).+}
+     * @param vertexId The id of the vertex.
+     * @param direction The direction associated with the edges.
+     * @return Adjacent vertices of the vertex for the specified direction.
      */
     @GET
     @Path("vertices/{id}/{direction}")
@@ -385,6 +417,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/edges/all
      * graph.getEdges();
+     * @return All edges in lineage graph.
      */
     @GET
     @Path("/edges/all")
@@ -405,6 +438,8 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      *
      * GET http://host/metadata/lineage/edges/id
      * graph.getEdge(id);
+     * @param edgeId The unique id of the edge.
+     * @return Edge with the specified id.
      */
     @GET
     @Path("/edges/{id}")

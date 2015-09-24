@@ -43,6 +43,10 @@ import java.util.Properties;
 @Path("admin")
 public class AdminResource {
 
+    /**
+     * Get stack trace of the falcon server.
+     * @return Stack trace of the server.
+     */
     @GET
     @Path("stack")
     @Produces(MediaType.TEXT_PLAIN)
@@ -67,6 +71,10 @@ public class AdminResource {
 
     private PropertyList version;
 
+    /**
+     * Get version of the falcon server.
+     * @return Version of the server.
+     */
     @GET
     @Path("version")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -96,6 +104,11 @@ public class AdminResource {
         return version;
     }
 
+    /**
+     * Get configuration information of the falcon server.
+     * @param type config-type can be build, deploy, startup or runtime
+     * @return Configuration information of the server.
+     */
     @GET
     @Path("config/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})

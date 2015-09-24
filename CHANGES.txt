@@ -11,6 +11,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-438 Auto generate documentation for REST API(Narayan Periwal via Ajay Yadava)
+
     FALCON-1483 Add Utils to common to support native scheduler(Pallavi Rao via Ajay Yadava)
 
     FALCON-1417 Make validity end date optional for feed / process(Pragya Mittal via Ajay Yadava)

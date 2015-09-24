@@ -86,6 +86,25 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    /**
+     * Get a list of instances currently running for a given entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param colo <optional param> Colo on which the query should be run.
+     * @param lifeCycles <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process
+     *                   is Execution(default).
+     * @param filterBy <optional param> Filter results by list of field:value pairs. Example:
+     *                 filterBy=CLUSTER:primary-cluster
+     *                 Supported filter fields are CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered
+     *                Supports ordering by "status","startTime","endTime","cluster".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numResults <optional param> Number of results to show per request, used for pagination.
+     *                   Only integers > 0 are valid, Default is 10.
+     * @return List of instances currently running.
+     */
     @GET
     @Path("running/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -116,6 +135,29 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
        getStatus(...) method actually gets all instances, filtered by a specific status. This is
        a better named API which achieves the same result
      */
+    /**
+     * Get list of all instances of a given entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param startStr <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *                 By default, it is set to (end - (10 * entityFrequency)).
+     * @param endStr <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *               Default is set to now.
+     * @param colo <optional param> Colo on which the query should be run.
+     * @param lifeCycles <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process
+     *                   is Execution(default).
+     * @param filterBy <optional param> Filter results by list of field:value pairs. Example:
+     *                 filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+     *                 Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                Supports ordering by "status","startTime","endTime","cluster".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numResults <optional param> Number of results to show per request, used for pagination.
+     *                   Only integers > 0 are valid, Default is 10.
+     * @return List of instances of given entity
+     */
     @GET
     @Path("list/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -144,6 +186,30 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Get status of a specific instance of an entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param startStr <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *                 By default, it is set to (end - (10 * entityFrequency)).
+     * @param endStr <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *               Default is set to now.
+     * @param colo <optional param> Colo on which the query should be run.
+     * @param lifeCycles <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process
+     *                   is Execution(default).
+     * @param filterBy <optional param> Filter results by list of field:value pairs. Example:
+     *                 filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+     *                 Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                Supports ordering by "status","startTime","endTime","cluster".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numResults <optional param> Number of results to show per request, used for pagination.
+     *                   Only integers > 0 are valid, Default is 10.
+     * @return Status of the specified instance along with job urls for all actions of user workflow and non-succeeded
+     *         actions of the main-workflow.
+     */
     @GET
     @Path("status/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -172,6 +238,27 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Get summary of instance/instances of an entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param startStr <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *                 By default, it is set to (end - (10 * entityFrequency)).
+     * @param endStr <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *               Default is set to now.
+     * @param colo <optional param> Colo on which the query should be run.
+     * @param lifeCycles <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process
+     *                   is Execution(default).
+     * @param filterBy <optional param> Filter results by list of field:value pairs.
+     *                 Example1: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+     *                 Example2: filterBy=Status:RUNNING,Status:KILLED
+     *                 Supported filter fields are STATUS, CLUSTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                Supports ordering by "cluster". Example: orderBy=cluster
+     * @param sortOrder <optional param> Valid options are "asc" and "desc". Example: sortOrder=asc
+     * @return Summary of the instances over the specified time range
+     */
     @GET
     @Path("summary/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -197,6 +284,17 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Get falcon feed instance availability.
+     * @param type Valid options is feed.
+     * @param entity Name of the entity.
+     * @param start <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *              By default, it is set to (end - (10 * entityFrequency)).
+     * @param end <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *            Default is set to now.
+     * @param colo Colo on which the query should be run.
+     * @return Feed instance availability status
+     */
     @GET
     @Path("listing/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -217,6 +315,16 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Get the params passed to the workflow for an instance of feed/process.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param start should be the nominal time of the instance for which you want the params to be returned
+     * @param colo <optional param> Colo on which the query should be run.
+     * @param lifeCycles <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is
+     *                   Execution(default).
+     * @return List of instances currently running.
+     */
     @GET
     @Path("params/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -237,6 +345,30 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Get log of a specific instance of an entity.
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param startStr <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *                 By default, it is set to (end - (10 * entityFrequency)).
+     * @param endStr <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *               Default is set to now.
+     * @param colo <optional param> Colo on which the query should be run.
+     * @param runId <optional param> Run Id.
+     * @param lifeCycles <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is
+     *                   Execution(default).
+     * @param filterBy <optional param> Filter results by list of field:value pairs.
+     *                 Example: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+     *                 Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                Supports ordering by "status","startTime","endTime","cluster".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0
+     *                   are valid, Default is 10.
+     * @return Log of specified instance.
+     */
     @GET
     @Path("logs/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -266,6 +398,18 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Kill currently running instance(s) of an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entity name of the entity.
+     * @param startStr start time of the instance(s) that you want to refer to
+     * @param endStr end time of the instance(s) that you want to refer to
+     * @param colo Colo on which the query should be run.
+     * @param lifeCycles <optional param> can be Eviction/Replication(default) for feed and Execution(default) for
+     *                   process.
+     * @return Result of the kill operation.
+     */
     @POST
     @Path("kill/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -290,6 +434,18 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Suspend instances of an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entity name of the entity.
+     * @param startStr the start time of the instance(s) that you want to refer to
+     * @param endStr the end time of the instance(s) that you want to refer to
+     * @param colo Colo on which the query should be run.
+     * @param lifeCycles <optional param> can be Eviction/Replication(default) for feed and Execution(default) for
+     *                   process.
+     * @return Results of the suspend command.
+     */
     @POST
     @Path("suspend/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -313,6 +469,18 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Resume suspended instances of an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entity name of the entity.
+     * @param startStr start time of the instance(s) that you want to refer to
+     * @param endStr the end time of the instance(s) that you want to refer to
+     * @param colo Colo on which the query should be run.
+     * @param lifeCycles <optional param> can be Eviction/Replication(default) for feed and Execution(default) for
+     *                   process.
+     * @return Results of the resume command.
+     */
     @POST
     @Path("resume/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -337,6 +505,20 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, type, entity);
     }
 
+    /**
+     * Rerun instances of an entity. On issuing a rerun, by default the execution resumes from the last failed node in
+     * the workflow.
+     * @param type Valid options are feed or process.
+     * @param entity name of the entity.
+     * @param startStr start is the start time of the instance that you want to refer to
+     * @param endStr end is the end time of the instance that you want to refer to
+     * @param request Servlet Request
+     * @param colo Colo on which the query should be run.
+     * @param lifeCycles <optional param> can be Eviction/Replication(default) for feed and Execution(default) for
+     *                   process.
+     * @param isForced <optional param> can be used to forcefully rerun the entire instance.
+     * @return Results of the rerun command.
+     */
     @POST
     @Path("rerun/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -363,6 +545,14 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     }
 
 
+    /**
+     * Get dependent instances for a particular instance.
+     * @param entityType Valid options are feed or process.
+     * @param entityName Name of the entity
+     * @param instanceTimeStr <mandatory param> time of the given instance
+     * @param colo Colo on which the query should be run.
+     * @return Dependent instances for the specified instance
+     */
     @GET
     @Path("dependencies/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -384,6 +574,14 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, entityType, entityName);
     }
 
+    /**
+     *
+     * @param entityType type of the entity. Only feed and process are valid entity types for triage.
+     * @param entityName name of the entity.
+     * @param instanceTime time of the instance which should be used to triage.
+     * @param colo Colo on which the query should be run.
+     * @return It returns a json graph
+     */
     @GET
     @Path("triage/{type}/{name}")
     @Produces(MediaType.APPLICATION_JSON)

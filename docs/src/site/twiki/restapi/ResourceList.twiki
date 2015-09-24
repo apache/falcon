@@ -29,6 +29,8 @@ curl -i --negotiate -u : "http://<HOST>:<PORT>/<PATH>?<PARAM>=..."
 
 See also: [[../Security.twiki][Security in Falcon]]
 
+The current version of the rest api's documentation is also hosted on the Falcon server and Prism Server (in distributed mode) at the url http://<HOST>:<PORT>/docs
+
 ---++ REST Call on Admin Resource
 
 | *Call Type* | *Resource*                                     | *Description*                               |
