@@ -54,15 +54,6 @@ public class HiveDRStatusStoreTest {
             fileSystem.delete(storePath, true);
         }
         FileSystem.mkdirs(fileSystem, storePath, DRStatusStore.DEFAULT_STORE_PERMISSION);
-        try {
-            new HiveDRStatusStore(fileSystem);
-            Assert.fail();
-        } catch (IOException ie) {
-            // Exception expected.
-            Assert.assertEquals(ie.getMessage(), "Base dir jail://hiveReplTest:00" + storePath.toUri()
-                    + " does not have correct ownership/permissions."
-                    + " Please set group to " + DRStatusStore.getStoreGroup() + " and permissions to rwxrwx---");
-        }
         drStatusStore = new HiveDRStatusStore(fileSystem, fileSystem.getFileStatus(storePath).getGroup());
     }
 
@@ -85,6 +76,12 @@ public class HiveDRStatusStoreTest {
         replicationStatusList.add(table4);
         replicationStatusList.add(dbStatus);
         drStatusStore.updateReplicationStatus("jobname", replicationStatusList);
+    }
+
+    @Test(expectedExceptions = IOException.class,
+            expectedExceptionsMessageRegExp = ".*does not have correct ownership/permissions.*")
+    public void testDrStatusStoreWithFakeUser() throws IOException {
+        new HiveDRStatusStore(fileSystem, "fakeGroup");
     }
 
     public  void updateReplicationStatusNewTablesTest() throws Exception {
