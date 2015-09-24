@@ -34,6 +34,7 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
+import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -648,7 +649,7 @@ public class EntityManagerJerseyIT {
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         if (withDoAs) {
-            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "testUser", null);
+            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, FalconTestUtil.TEST_USER_2, null);
         } else {
             context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "", "key1:value1");
         }
@@ -657,7 +658,7 @@ public class EntityManagerJerseyIT {
         WebResource resource = context.service.path("api/entities/delete/process/" + context.processName);
 
         if (withDoAs) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, "testUser");
+            resource = resource.queryParam(FalconCLI.DO_AS_OPT, FalconTestUtil.TEST_USER_2);
         }
 
         //Delete a scheduled process

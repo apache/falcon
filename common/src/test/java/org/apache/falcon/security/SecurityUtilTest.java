@@ -148,7 +148,7 @@ public class SecurityUtilTest {
         final String currentUser = "foo";
 
         ACL acl = new ACL();
-        acl.setOwner("testuser");
+        acl.setOwner(FalconTestUtil.TEST_USER_2);
         acl.setGroup("users");
         Mockito.when(process.getACL()).thenReturn(acl);
 

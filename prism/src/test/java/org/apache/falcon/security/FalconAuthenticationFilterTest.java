@@ -251,13 +251,13 @@ public class FalconAuthenticationFilterTest {
             filter.init(mockConfig);
         }
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
         Mockito.when(mockRequest.getMethod()).thenReturn("POST");
-        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=testuser");
-        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=" + FalconTestUtil.TEST_USER_2);
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_2);
         Mockito.when(mockRequest.getParameter(FalconAuthenticationFilter.DO_AS_PARAM)).thenReturn("");
         filter.doFilter(mockRequest, mockResponse, mockChain);
-        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+        Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);
     }
 
     @Test
@@ -287,10 +287,10 @@ public class FalconAuthenticationFilterTest {
             filter.init(mockConfig);
         }
 
-        CurrentUser.authenticate("testuser");
+        CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
         Mockito.when(mockRequest.getMethod()).thenReturn("POST");
-        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=testuser");
-        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=" + FalconTestUtil.TEST_USER_2);
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_2);
         Mockito.when(mockRequest.getParameter(FalconAuthenticationFilter.DO_AS_PARAM)).thenReturn("doAsProxyUser");
         Mockito.when(mockRequest.getMethod()).thenReturn("POST");
         filter.doFilter(mockRequest, mockResponse, mockChain);

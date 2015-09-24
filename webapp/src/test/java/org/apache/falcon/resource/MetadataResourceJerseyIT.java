@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.metadata.AbstractMetadataResource;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.FalconTestUtil;
 import org.json.simple.JSONValue;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -93,7 +94,7 @@ public class MetadataResourceJerseyIT {
         response = context.service
                 .path("api/metadata/discovery/process_entity/list")
                 .queryParam("cluster", "random")
-                .queryParam("doAs", "testUser")
+                .queryParam("doAs", FalconTestUtil.TEST_USER_2)
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
