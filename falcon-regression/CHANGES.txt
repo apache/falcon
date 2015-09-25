@@ -366,6 +366,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1489 Partial status http response code returns 200(Pragya Mittal via Ajay Yadava)
+
    FALCON-1388 Fix merge conflicts produced by FALCON-1002 (Paul Isaychuk)
 
    FALCON-1002 Disable UpdateAtSpecific time test from falcon regression(Samarth Gupta via Ajay Yadava)
