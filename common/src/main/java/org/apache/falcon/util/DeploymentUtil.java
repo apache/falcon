@@ -19,9 +19,12 @@
 package org.apache.falcon.util;
 
 import org.apache.falcon.entity.ColoClusterRelation;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.EntityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -69,6 +72,12 @@ public final class DeploymentUtil {
     }
 
     public static Set<String> getCurrentClusters() {
+        // return all clusters in embedded mode
+        if (EMBEDDED_MODE) {
+            Collection<String> allClusters = ConfigurationStore.get().getEntities(EntityType.CLUSTER);
+            Set<String> result = new HashSet<>(allClusters);
+            return result;
+        }
         String colo = getCurrentColo();
         return ColoClusterRelation.get().getClusters(colo);
     }

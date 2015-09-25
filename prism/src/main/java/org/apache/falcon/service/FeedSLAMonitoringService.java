@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  * Service to monitor Feed SLAs.
  */
 public class FeedSLAMonitoringService implements ConfigurationChangeListener, FalconService {
-    private static final Logger LOG = LoggerFactory.getLogger(FeedSLAMonitoringService.class);
+    private static final Logger LOG = LoggerFactory.getLogger("FeedSLA");
 
     private static final String ONE_HOUR = String.valueOf(60 * 60 * 1000);
 
@@ -187,7 +187,16 @@ public class FeedSLAMonitoringService implements ConfigurationChangeListener, Fa
                     + "feed.sla.serialization.frequency.millis Should be an integer", freq);
             throw new FalconException("Invalid integer value for property ", e);
         }
-        deserialize(filePath);
+        try {
+            if (fileSystem.exists(filePath)) {
+                deserialize(filePath);
+            } else {
+                LOG.debug("No old state exists at: {}, Initializing a clean state.", filePath.toString());
+                initializeService();
+            }
+        } catch (IOException e) {
+            throw new FalconException("Couldn't check the existence of " + filePath, e);
+        }
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         executor.scheduleWithFixedDelay(new Monitor(), 0, STATUS_CHECK_FREQUENCY_SECS, TimeUnit.SECONDS);
     }
@@ -316,7 +325,6 @@ public class FeedSLAMonitoringService implements ConfigurationChangeListener, Fa
             Map<String, Object> state = new HashMap<>();
             state.put("lastSerializedAt", lastSerializedAt.getTime());
             state.put("lastCheckedAt", lastCheckedAt.getTime());
-            state.put("monitoredFeeds", monitoredFeeds);
             state.put("pendingInstances", pendingInstances);
             oos.writeObject(state);
             fileSystem.rename(tmp, filePath);
@@ -328,21 +336,24 @@ public class FeedSLAMonitoringService implements ConfigurationChangeListener, Fa
     }
 
     @SuppressWarnings("unchecked")
-    private void deserialize(Path path) {
+    private void deserialize(Path path) throws FalconException {
         try {
             Map<String, Object> state = deserializeInternal(path);
             pendingInstances = (Map<Pair<String, String>, Set<Date>>) state.get("pendingInstances");
-            lastCheckedAt = (Date) state.get("lastCheckedAt");
-            lastSerializedAt = (Date) state.get("lastSerializedAt");
-            monitoredFeeds = (Set<String>) state.get("monitoredFeeds");
-
-        } catch (Throwable throwable) {
-            LOG.error("Couldn't restore the state of feed sla monitoring service. Resetting it", throwable);
-            pendingInstances = new HashMap<>();
-            lastCheckedAt = new Date();
-            lastSerializedAt = new Date();
-            monitoredFeeds = new HashSet<>();
+            lastCheckedAt = new Date((Long) state.get("lastCheckedAt"));
+            lastSerializedAt = new Date((Long) state.get("lastSerializedAt"));
+            monitoredFeeds = new HashSet<>(); // will be populated on the onLoad of entities.
+            LOG.debug("Restored the service from old state.");
+        } catch (IOException | ClassNotFoundException e) {
+            throw new FalconException("Couldn't deserialize the old state", e);
         }
+    }
+
+    private void initializeService() {
+        pendingInstances = new HashMap<>();
+        lastCheckedAt = new Date();
+        lastSerializedAt = new Date();
+        monitoredFeeds = new HashSet<>();
     }
 
     @SuppressWarnings("unchecked")

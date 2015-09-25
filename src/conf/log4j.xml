@@ -51,6 +51,15 @@
         </layout>
     </appender>
 
+    <appender name="FeedSLA" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="${falcon.log.dir}/${falcon.app.type}.feed.sla.log"/>
+        <param name="Append" value="true"/>
+        <param name="Threshold" value="debug"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %m%n"/>
+        </layout>
+    </appender>
+
     <appender name="ALERT" class="org.apache.log4j.DailyRollingFileAppender">
         <param name="File" value="${falcon.log.dir}/${falcon.app.type}.alerts.log"/>
         <param name="Append" value="true"/>
@@ -82,6 +91,11 @@
     <logger name="METRIC">
         <level value="info"/>
         <appender-ref ref="METRIC"/>
+    </logger>
+
+    <logger name="FeedSLA">
+        <level value="debug"/>
+        <appender-ref ref="FeedSLA"/>
     </logger>
 
     <logger name="org.apache.hadoop.security" additivity="false">
