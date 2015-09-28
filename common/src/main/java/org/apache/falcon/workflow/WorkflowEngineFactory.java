@@ -19,6 +19,7 @@
 package org.apache.falcon.workflow;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.lifecycle.AbstractPolicyBuilderFactory;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 
@@ -30,11 +31,17 @@ public final class WorkflowEngineFactory {
 
     private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
 
+    private static final String LIFECYCLE_ENGINE = "lifecycle.engine.impl";
+
     private WorkflowEngineFactory() {
     }
 
     public static AbstractWorkflowEngine getWorkflowEngine() throws FalconException {
         return ReflectionUtils.getInstance(WORKFLOW_ENGINE);
+    }
+
+    public static AbstractPolicyBuilderFactory getLifecycleEngine() throws FalconException {
+        return ReflectionUtils.getInstance(LIFECYCLE_ENGINE);
     }
 
 }

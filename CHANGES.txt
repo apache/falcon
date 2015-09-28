@@ -6,6 +6,8 @@ Trunk (Unreleased)
     FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
 
   NEW FEATURES
+    FALCON-965 Open up life cycle stage implementation within Falcon for extension(Ajay Yadava)
+
     FALCON-1437 Change DR recipes notification with Falcon notification(Peeyush Bishnoi via Sowmya Ramesh)
 
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)

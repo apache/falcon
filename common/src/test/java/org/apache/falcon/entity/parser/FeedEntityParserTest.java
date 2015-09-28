@@ -42,6 +42,7 @@ import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.LifecyclePolicyMap;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
@@ -88,9 +89,9 @@ public class FeedEntityParserTest extends AbstractTestBase {
         cluster.setName("backupCluster");
         store.publish(EntityType.CLUSTER, cluster);
 
+        LifecyclePolicyMap.get().init();
         CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
-        modifiableFeed = parser.parseAndValidate(this.getClass()
-                .getResourceAsStream(FEED_XML));
+        modifiableFeed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
     }
 
     @Test(expectedExceptions = ValidationException.class)
@@ -161,6 +162,25 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Marshaller marshaller = EntityType.FEED.getMarshaller();
         marshaller.marshal(feed, stringWriter);
         System.out.println(stringWriter.toString());
+    }
+
+    @Test
+    public void testLifecycleParse() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+        assertEquals("hours(17)", feed.getLifecycle().getRetentionStage().getFrequency().toString());
+        assertEquals("AgeBasedDelete", FeedHelper.getPolicies(feed, "testCluster").get(0));
+        assertEquals("reports", feed.getLifecycle().getRetentionStage().getQueue());
+        assertEquals("NORMAL", feed.getLifecycle().getRetentionStage().getPriority());
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+            expectedExceptionsMessageRegExp = ".*Retention is a mandatory stage.*")
+    public void testMandatoryRetention() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+        feed.getLifecycle().setRetentionStage(null);
+        parser.validate(feed);
     }
 
     @Test(expectedExceptions = ValidationException.class)

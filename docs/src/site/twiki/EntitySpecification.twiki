@@ -316,6 +316,46 @@ destination but not in source during replication. "preserveBlockSize" represents
 replication. "preserveReplicationNumber" represents preserving replication number during replication.
 "preservePermission" represents preserving permission during
 
+
+---+++ Lifecycle
+<verbatim>
+
+<lifecycle>
+    <retention-stage>
+        <frequency>hours(10)</frequency>
+        <queue>reports</queue>
+        <priority>NORMAL</priority>
+        <properties>
+            <property name="retention.policy.agebaseddelete.limit" value="hours(9)"></property>
+        </properties>
+    </retention-stage>
+</lifecycle>
+
+</verbatim>
+
+lifecycle tag is the new way to define various stages of a feed's lifecycle. In the example above we have defined a
+retention-stage using lifecycle tag. You may define lifecycle at global level or a cluster level or both. Cluster level
+configuration takes precedence and falcon falls back to global definition if cluster level specification is missing.
+
+
+----++++ Retention Stage
+As of now there are two ways to specify retention. One is through the <retention> tag in the cluster and another is the
+new way through <retention-stage> tag in <lifecycle> tag. If both are defined for a feed, then the lifecycle tag will be
+considered effective and falcon will ignore the <retention> tag in the cluster. If there is an invalid configuration of
+retention-stage in lifecycle tag, then falcon will *NOT* fall back to retention tag even if it is defined and will
+throw validation error.
+
+In this new method of defining retention you can specify the frequency at which the retention should occur, you can
+also define the queue and priority parameters for retention jobs. The default behavior of retention-stage is same as
+the existing one which is to delete all instances corresponding to instance-time earlier than the duration provided in
+"retention.policy.agebaseddelete.limit"
+
+Property "retention.policy.agebaseddelete.limit" is a mandatory property and must contain a valid duration e.g. "hours(1)"
+
+In future, we will allow more customisation like customising how to choose instances to be deleted through this method.
+
+
+
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
 

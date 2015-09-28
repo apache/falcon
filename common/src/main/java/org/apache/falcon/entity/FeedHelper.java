@@ -19,7 +19,6 @@
 package org.apache.falcon.entity;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
@@ -31,14 +30,17 @@ import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Lifecycle;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.lifecycle.FeedLifecycleStage;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.FeedInstanceResult;
@@ -370,6 +372,49 @@ public final class FeedHelper {
             }
         }
         return feedProperties;
+    }
+
+    public static Lifecycle getLifecycle(Feed feed, String clusterName) throws FalconException {
+        Cluster cluster = getCluster(feed, clusterName);
+        if (cluster !=null) {
+            return cluster.getLifecycle() != null ? cluster.getLifecycle() : feed.getLifecycle();
+        }
+        throw new FalconException("Cluster: " + clusterName + " isn't valid for feed: " + feed.getName());
+    }
+
+    public static RetentionStage getRetentionStage(Feed feed, String clusterName) throws FalconException {
+        if (isLifecycleEnabled(feed, clusterName)) {
+            Lifecycle globalLifecycle = feed.getLifecycle();
+            Lifecycle clusterLifecycle = getCluster(feed, clusterName).getLifecycle();
+
+            if (clusterLifecycle != null && clusterLifecycle.getRetentionStage() != null) {
+                return clusterLifecycle.getRetentionStage();
+            } else if (globalLifecycle != null) {
+                return globalLifecycle.getRetentionStage();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns various policies applicable for a feed.
+     *
+     * @param feed
+     * @return list of names of lifecycle policies for the given feed, empty list if there are none.
+     */
+    public static List<String> getPolicies(Feed feed, String clusterName) throws FalconException {
+        List<String> result = new ArrayList<>();
+        Cluster cluster = getCluster(feed, clusterName);
+        if (cluster != null) {
+            if (isLifecycleEnabled(feed, clusterName)) {
+                String policy = getRetentionStage(feed, clusterName).getPolicy();
+                policy = StringUtils.isBlank(policy)
+                        ? FeedLifecycleStage.RETENTION.getDefaultPolicyName() : policy;
+                result.add(policy);
+            }
+            return result;
+        }
+        throw new FalconException("Cluster: " + clusterName + " isn't valid for feed: " + feed.getName());
     }
 
     /**
@@ -746,6 +791,27 @@ public final class FeedHelper {
         throws FalconException {
         Storage storage = createStorage(clusterName, feed);
         return storage.getInstanceAvailabilityStatus(feed, clusterName, LocationType.DATA, instanceTime);
+    }
+
+    public static boolean isLifecycleEnabled(Feed feed, String clusterName) {
+        Cluster cluster = getCluster(feed, clusterName);
+        return cluster != null && (feed.getLifecycle() != null || cluster.getLifecycle() != null);
+    }
+
+    public static Frequency getRetentionFrequency(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionFrequency;
+        RetentionStage retentionStage = getRetentionStage(feed, clusterName);
+        if (retentionStage != null && retentionStage.getFrequency() != null) {
+            retentionFrequency = retentionStage.getFrequency();
+        } else {
+            Frequency.TimeUnit timeUnit = feed.getFrequency().getTimeUnit();
+            if (timeUnit == Frequency.TimeUnit.hours || timeUnit == Frequency.TimeUnit.minutes) {
+                retentionFrequency = new Frequency("hours(6)");
+            } else {
+                retentionFrequency = new Frequency("days(1)");
+            }
+        }
+        return  retentionFrequency;
     }
 
 }

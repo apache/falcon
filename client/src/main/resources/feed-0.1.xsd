@@ -125,6 +125,7 @@
             <xs:element type="ACL" name="ACL"/>
             <xs:element type="schema" name="schema"/>
             <xs:element type="properties" name="properties" minOccurs="0"/>
+            <xs:element type="lifecycle" name="lifecycle" minOccurs="0" />
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="xs:string" name="description"/>
@@ -160,6 +161,7 @@
                 <xs:element type="locations" name="locations" minOccurs="0"/>
                 <xs:element type="catalog-table" name="table"/>
             </xs:choice>
+            <xs:element type="lifecycle" name="lifecycle" minOccurs="0" />
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="cluster-type" name="type" use="optional"/>
@@ -357,6 +359,20 @@
             <xs:enumeration value="chmod"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:complexType name="lifecycle">
+        <xs:annotation>
+            <xs:documentation>
+                Lifecycle of the feed consists of various stages. For example typical stages of a feed are import,
+                replication, archival, retention and export. All these stages together are called lifecycle of a feed.
+            </xs:documentation>
+        </xs:annotation>
+
+        <xs:all>
+            <xs:element type="retention-stage" name="retention-stage" minOccurs="0"></xs:element>
+        </xs:all>
+
+    </xs:complexType>
+
     <xs:simpleType name="cluster-type">
         <xs:annotation>
             <xs:documentation>
@@ -435,4 +451,23 @@
             <xs:minLength value="1"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:complexType name="retention-stage">
+        <xs:annotation>
+            <xs:documentation>
+                Retention stage is the new way to define retention for a feed using feed lifecycle feature. Retention
+                has a configurable policy which does the validation and the real execution through workflow engine.
+                This method of specifying retention gives you more control like using different queue name, priority
+                and execution-order for retention than other lifecycle stages of feed like replication.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element type="non-empty-string" name="policy" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="frequency-type" name="frequency" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="xs:string" name="queue" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="xs:string" name="priority" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="properties" name="properties" minOccurs="0" maxOccurs="1"></xs:element>
+        </xs:all>
+    </xs:complexType>
+
 </xs:schema>

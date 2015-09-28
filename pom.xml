@@ -434,6 +434,7 @@
         <module>rerun</module>
         <module>prism</module>
         <module>unit</module>
+        <module>lifecycle</module>
         <module>webapp</module>
         <module>docs</module>
     </modules>
@@ -839,6 +840,12 @@
             <dependency>
                 <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-feed-lifecycle</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

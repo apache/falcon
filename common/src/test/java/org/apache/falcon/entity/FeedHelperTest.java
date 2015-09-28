@@ -19,6 +19,8 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.parser.EntityParserFactory;
+import org.apache.falcon.entity.parser.FeedEntityParser;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -28,9 +30,11 @@ import org.apache.falcon.entity.v0.cluster.Properties;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Lifecycle;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
@@ -38,6 +42,7 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.falcon.service.LifecyclePolicyMap;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -50,6 +55,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -63,6 +69,7 @@ public class FeedHelperTest extends AbstractTestBase {
     @BeforeClass
     public void init() throws Exception {
         initConfigStore();
+        LifecyclePolicyMap.get().init();
     }
 
     @BeforeMethod
@@ -229,6 +236,16 @@ public class FeedHelperTest extends AbstractTestBase {
             expected.add(i);
         }
         Assert.assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetPolicies() throws Exception {
+        FeedEntityParser parser = (FeedEntityParser) EntityParserFactory
+                .getParser(EntityType.FEED);
+        Feed feed = parser.parse(this.getClass().getResourceAsStream(FEED3_XML));
+        List<String> policies = FeedHelper.getPolicies(feed, "testCluster");
+        Assert.assertEquals(policies.size(), 1);
+        Assert.assertEquals(policies.get(0), "AgeBasedDelete");
     }
 
     @Test
@@ -704,6 +721,132 @@ public class FeedHelperTest extends AbstractTestBase {
             expected.add(i);
         }
         Assert.assertEquals(result, expected);
+    }
+
+    @Test
+    public void testIsLifeCycleEnabled() throws Exception {
+        Feed feed = new Feed();
+
+        // lifecycle is not defined
+        Clusters clusters = new Clusters();
+        org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
+        cluster.setName("cluster1");
+        clusters.getClusters().add(cluster);
+        feed.setClusters(clusters);
+        Assert.assertFalse(FeedHelper.isLifecycleEnabled(feed, cluster.getName()));
+
+        // lifecycle is defined at global level
+        Lifecycle globalLifecycle = new Lifecycle();
+        RetentionStage retentionStage = new RetentionStage();
+        retentionStage.setFrequency(new Frequency("hours(2)"));
+        globalLifecycle.setRetentionStage(retentionStage);
+        feed.setLifecycle(globalLifecycle);
+        Assert.assertTrue(FeedHelper.isLifecycleEnabled(feed, cluster.getName()));
+
+        // lifecycle is defined at both global and cluster level
+        Lifecycle clusterLifecycle = new Lifecycle();
+        retentionStage = new RetentionStage();
+        retentionStage.setFrequency(new Frequency("hours(4)"));
+        clusterLifecycle.setRetentionStage(retentionStage);
+        feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
+        Assert.assertTrue(FeedHelper.isLifecycleEnabled(feed, cluster.getName()));
+
+        // lifecycle is defined only at cluster level
+        feed.setLifecycle(null);
+        Assert.assertTrue(FeedHelper.isLifecycleEnabled(feed, cluster.getName()));
+    }
+
+    @Test
+    public void testGetRetentionStage() throws Exception {
+        Feed feed = new Feed();
+        feed.setFrequency(new Frequency("days(1)"));
+
+        // lifecycle is not defined
+        Clusters clusters = new Clusters();
+        org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
+        cluster.setName("cluster1");
+        clusters.getClusters().add(cluster);
+        feed.setClusters(clusters);
+        Assert.assertNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("days(1)"));
+
+        // lifecycle is defined at global level
+        Lifecycle globalLifecycle = new Lifecycle();
+        RetentionStage globalRetentionStage = new RetentionStage();
+        globalRetentionStage.setFrequency(new Frequency("hours(2)"));
+        globalLifecycle.setRetentionStage(globalRetentionStage);
+        feed.setLifecycle(globalLifecycle);
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+                feed.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle is defined at both global and cluster level
+        Lifecycle clusterLifecycle = new Lifecycle();
+        RetentionStage clusterRetentionStage = new RetentionStage();
+        clusterRetentionStage.setFrequency(new Frequency("hours(4)"));
+        clusterLifecycle.setRetentionStage(clusterRetentionStage);
+        feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle at both level - retention only at cluster level.
+        feed.getLifecycle().setRetentionStage(null);
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle at both level - retention only at global level.
+        feed.getLifecycle().setRetentionStage(globalRetentionStage);
+        feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(null);
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+                feed.getLifecycle().getRetentionStage().getFrequency());
+
+        // lifecycle is defined only at cluster level
+        feed.setLifecycle(null);
+        feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(clusterRetentionStage);
+        Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+                cluster.getLifecycle().getRetentionStage().getFrequency());
+    }
+
+    @Test
+    public void testGetRetentionFrequency() throws Exception {
+        Feed feed = new Feed();
+        feed.setFrequency(new Frequency("days(10)"));
+
+        // no lifecycle defined - test both daily and monthly feeds
+        Clusters clusters = new Clusters();
+        org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
+        cluster.setName("cluster1");
+        clusters.getClusters().add(cluster);
+        feed.setClusters(clusters);
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("days(1)"));
+
+        feed.setFrequency(new Frequency("hours(1)"));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(6)"));
+
+        feed.setFrequency(new Frequency("minutes(5)"));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(6)"));
+
+        // lifecycle at both level - retention only at global level.
+        Lifecycle globalLifecycle = new Lifecycle();
+        RetentionStage globalRetentionStage = new RetentionStage();
+        globalRetentionStage.setFrequency(new Frequency("hours(2)"));
+        globalLifecycle.setRetentionStage(globalRetentionStage);
+        feed.setLifecycle(globalLifecycle);
+
+        Lifecycle clusterLifecycle = new Lifecycle();
+        RetentionStage clusterRetentionStage = new RetentionStage();
+        clusterLifecycle.setRetentionStage(clusterRetentionStage);
+        feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(6)"));
+
+        // lifecycle at both level - retention only at cluster level.
+        feed.getLifecycle().getRetentionStage().setFrequency(null);
+        clusterRetentionStage.setFrequency(new Frequency("hours(4)"));
+        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(4)"));
     }
 
     private Validity getFeedValidity(String start, String end) throws ParseException {

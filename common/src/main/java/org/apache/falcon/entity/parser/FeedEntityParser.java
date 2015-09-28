@@ -32,14 +32,14 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.Properties;
-import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Properties;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
@@ -48,6 +48,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
 import org.apache.falcon.util.DateUtil;
+import org.apache.falcon.service.LifecyclePolicyMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -55,9 +56,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.List;
 
 /**
  * Parser that parses feed entity definition.
@@ -80,6 +81,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             throw new ValidationException("Feed should have at least one cluster");
         }
 
+        validateLifecycle(feed);
         validateACL(feed);
         for (Cluster cluster : feed.getClusters().getClusters()) {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
@@ -100,7 +102,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
         validateFeedSLA(feed);
-        validateACL(feed);
         validateProperties(feed);
 
         // Seems like a good enough entity object for a new one
@@ -122,6 +123,21 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         ensureValidityFor(feed, processes);
+    }
+
+    private void validateLifecycle(Feed feed) throws FalconException {
+        LifecyclePolicyMap map = LifecyclePolicyMap.get();
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            if (FeedHelper.isLifecycleEnabled(feed, cluster.getName())) {
+                if (FeedHelper.getRetentionStage(feed, cluster.getName()) == null) {
+                    throw new ValidationException("Retention is a mandatory stage, didn't find it for cluster: "
+                            + cluster.getName());
+                }
+                for (String policyName : FeedHelper.getPolicies(feed, cluster.getName())) {
+                    map.get(policyName).validate(feed, cluster.getName());
+                }
+            }
+        }
     }
 
     private Set<Process> findProcesses(Set<Entity> referenced) {
