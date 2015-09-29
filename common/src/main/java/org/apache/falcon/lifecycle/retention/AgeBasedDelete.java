@@ -69,7 +69,7 @@ public class AgeBasedDelete extends RetentionPolicy {
 
     private void validateLimitWithSla(Feed feed, Cluster cluster, String retentionExpression) throws FalconException {
         // test that slaHigh is less than retention
-        Sla clusterSla = FeedHelper.getSLAs(cluster, feed);
+        Sla clusterSla = FeedHelper.getSLA(cluster, feed);
         if (clusterSla != null) {
             ExpressionHelper evaluator = ExpressionHelper.get();
             ExpressionHelper.setReferenceDate(new Date());

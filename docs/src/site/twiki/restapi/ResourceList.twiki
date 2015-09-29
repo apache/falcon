@@ -54,6 +54,7 @@ The current version of the rest api's documentation is also hosted on the Falcon
 | GET         | [[EntityList][api/entities/list/:entity-type]]                              | Get the list of entities           |
 | GET         | [[EntitySummary][api/entities/summary/:entity-type/:cluster]]               | Get instance summary of all entities |
 | GET         | [[EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity |
+| GET         | [[FeedSLA][api/entities/sla-alert/:entity-type]]                            | Get pending feed instances which missed sla |
 | GET         | [[FeedLookup][api/entities/lookup/feed/]]                                   | Get feed for given path            |
 
 ---++ REST Call on Feed and Process Instances

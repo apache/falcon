@@ -24,12 +24,15 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.lock.MemoryLocks;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.UnschedulableEntityException;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.monitors.Dimension;
+import org.apache.falcon.service.FeedSLAMonitoringService;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +104,73 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                 LOG.info("Memory lock released for {}", entityObj.toShortString());
             }
         }
+    }
+
+    public static void validateSlaParams(String entityType, String entityName, String start, String end,
+                                  String colo) throws FalconException {
+        EntityType type = EntityType.getEnum(entityType);
+        if (type != EntityType.FEED) {
+            throw new ValidationException("SLA monitoring is not supported for: " + type);
+        }
+
+        // validate valid feed name.
+        if (StringUtils.isNotBlank(entityName)) {
+            EntityUtil.getEntity(EntityType.FEED, entityName);
+        }
+
+        Date startTime, endTime;
+        // validate mandatory start date
+        if (StringUtils.isBlank(start)) {
+            throw new ValidationException("'start' is mandatory and can not be blank.");
+        } else {
+            startTime = SchemaHelper.parseDateUTC(start);
+        }
+
+        // validate optional end date
+        if (StringUtils.isBlank(end)) {
+            endTime = new Date();
+        } else {
+            endTime = SchemaHelper.parseDateUTC(end);
+        }
+
+        if (startTime.after(endTime)) {
+            throw new ValidationException("start can not be after end");
+        }
+
+        checkColo(colo);
+    }
+
+    /**
+     * Returns the feed instances which are not yet available and have missed either slaLow or slaHigh.
+     * This api doesn't return the feeds which missed SLA but are now available. Purpose of this api is to show feed
+     * instances which you need to attend to.
+     * @param startStr startTime in
+     * @param endStr
+     */
+    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(String feedName, String startStr, String endStr,
+                                                                       String colo) {
+
+        Set<SchedulableEntityInstance> instances = new HashSet<>();
+        try {
+            checkColo(colo);
+            Date start = EntityUtil.parseDateUTC(startStr);
+            Date end = (endStr == null) ? new Date() : EntityUtil.parseDateUTC(endStr);
+
+            if (StringUtils.isBlank(feedName)) {
+                instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(start, end));
+            } else {
+                for (String clusterName : DeploymentUtil.getCurrentClusters()) {
+                    instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(feedName,
+                            clusterName, start, end));
+                }
+            }
+        } catch (FalconException e) {
+            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        }
+        SchedulableEntityInstanceResult result = new SchedulableEntityInstanceResult(APIResult.Status.SUCCEEDED,
+                "Success!");
+        result.setCollection(instances.toArray());
+        return result;
     }
 
     /**

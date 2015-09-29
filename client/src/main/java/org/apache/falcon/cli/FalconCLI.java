@@ -37,6 +37,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,6 +87,7 @@ public class FalconCLI {
     public static final String SUMMARY_OPT = "summary";
     public static final String DEFINITION_OPT = "definition";
     public static final String DEPENDENCY_OPT = "dependency";
+    public static final String SLA_MISS_ALERT_OPT = "slaAlert";
     public static final String LOOKUP_OPT = "lookup";
     public static final String PATH_OPT = "path";
     public static final String LIST_OPT = "list";
@@ -420,6 +422,7 @@ public class FalconCLI {
         String entityName = commandLine.getOptionValue(ENTITY_NAME_OPT);
         String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
         String colo = commandLine.getOptionValue(COLO_OPT);
+        colo = getColo(colo);
         String cluster = commandLine.getOptionValue(CLUSTER_OPT);
         String start = commandLine.getOptionValue(START_OPT);
         String end = commandLine.getOptionValue(END_OPT);
@@ -462,7 +465,15 @@ public class FalconCLI {
         validateSortOrder(sortOrder);
         String entityAction = "entity";
 
-        if (optionsList.contains(SUBMIT_OPT)) {
+        if (optionsList.contains(SLA_MISS_ALERT_OPT)) {
+            validateNotEmpty(entityType, ENTITY_TYPE_OPT);
+            validateNotEmpty(start, START_OPT);
+            parseDateString(start);
+            parseDateString(end);
+            SchedulableEntityInstanceResult response = client.getFeedSlaMissPendingAlerts(entityType,
+                entityName, start, end, colo);
+            result = ResponseHelper.getString(response);
+        } else if (optionsList.contains(SUBMIT_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.submit(entityType, filePath, doAsUser).getMessage();
@@ -710,6 +721,7 @@ public class FalconCLI {
         Option list = new Option(LIST_OPT, false,
                 "List entities registered for a type");
         Option lookup = new Option(LOOKUP_OPT, false, "Lookup a feed given its instance's path");
+        Option slaAlert = new Option(SLA_MISS_ALERT_OPT, false, "Get missing feed instances which missed SLA");
         Option entitySummary = new Option(SUMMARY_OPT, false,
                 "Get summary of instances for list of entities");
         Option touch = new Option(TOUCH_OPT, false,
@@ -729,6 +741,7 @@ public class FalconCLI {
         group.addOption(dependency);
         group.addOption(list);
         group.addOption(lookup);
+        group.addOption(slaAlert);
         group.addOption(entitySummary);
         group.addOption(touch);
 

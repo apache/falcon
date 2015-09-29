@@ -26,6 +26,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.TriageResult;
 
 import java.util.Date;
@@ -285,6 +286,19 @@ public final class ResponseHelper {
         }
         sb.append("\n\nResponse: ").append(dependencyResult.getMessage());
         sb.append("\nRequest Id: ").append(dependencyResult.getRequestId());
+        return sb.toString();
+    }
+
+    public static String getString(SchedulableEntityInstanceResult instances) {
+        StringBuilder sb = new StringBuilder();
+        String results = instances.toString();
+        if (StringUtils.isEmpty(results)) {
+            sb.append("No sla miss found!");
+        } else {
+            sb.append(results);
+        }
+        sb.append("\n\nResponse: ").append(instances.getMessage());
+        sb.append("\nRequest Id: ").append(instances.getRequestId());
         return sb.toString();
     }
 }

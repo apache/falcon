@@ -42,6 +42,7 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
@@ -177,6 +178,7 @@ public class FalconClient extends AbstractFalconClient {
         return currentToken;
     }
 
+
     /**
      * Methods allowed on Entity Resources.
      */
@@ -195,6 +197,7 @@ public class FalconClient extends AbstractFalconClient {
         SUMMARY("api/entities/summary", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LOOKUP("api/entities/lookup/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML),
+        SLA("api/entities/sla-alert", HttpMethod.GET, MediaType.APPLICATION_JSON),
         TOUCH("api/entities/touch", HttpMethod.POST, MediaType.TEXT_XML);
 
         private String path;
@@ -380,6 +383,24 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
+    public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
+                                           String startTime, String endTime, String colo) throws FalconCLIException {
+
+        WebResource resource = service.path(Entities.SLA.path).path(entityType).queryParam("start", startTime)
+                .queryParam("colo", colo);
+        if (endTime != null) {
+            resource = resource.queryParam("end", endTime);
+        }
+        if (entityName != null) {
+            resource = resource.queryParam("name", entityName);
+        }
+        ClientResponse clientResponse = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(Entities.SLA.mimeType).type(MediaType.APPLICATION_JSON)
+                .method(Entities.SLA.method, ClientResponse.class);
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(SchedulableEntityInstanceResult.class);
+    }
 
     public TriageResult triage(String entityType, String entityName, String instanceTime, String colo)
         throws FalconCLIException {

@@ -101,7 +101,7 @@ public abstract class AbstractEntityManager {
         return result;
     }
 
-    protected void checkColo(String colo) {
+    protected static void checkColo(String colo) {
         if (DeploymentUtil.isEmbeddedMode()) {
             return;
         }
@@ -146,7 +146,7 @@ public abstract class AbstractEntityManager {
                 return DeploymentUtil.getDefaultColos();
             }
 
-            if (EntityType.getEnum(type) == EntityType.CLUSTER) {
+            if (EntityType.getEnum(type) == EntityType.CLUSTER || name == null) {
                 return getAllColos();
             }
 

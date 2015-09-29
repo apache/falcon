@@ -152,7 +152,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private void validateFeedSLA(Feed feed) throws FalconException {
         for (Cluster cluster : feed.getClusters().getClusters()) {
-            Sla clusterSla = FeedHelper.getSLAs(cluster, feed);
+            Sla clusterSla = FeedHelper.getSLA(cluster, feed);
             if (clusterSla != null) {
                 Frequency slaLowExpression = clusterSla.getSlaLow();
                 ExpressionHelper evaluator = ExpressionHelper.get();

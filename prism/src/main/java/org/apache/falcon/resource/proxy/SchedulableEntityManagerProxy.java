@@ -34,19 +34,20 @@ import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedLookupResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
-
 import org.apache.falcon.util.DeploymentUtil;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -108,6 +109,36 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return (BufferedRequest) request;
         }
         return new BufferedRequest(request);
+    }
+
+    @GET
+    @Path("sla-alert/{type}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+    @Monitored(event = "feed-sla-misses")
+    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(
+            @Dimension("entityType") @PathParam("type") final String entityType,
+            @Dimension("entityName") @QueryParam("name") final String entityName,
+            @Dimension("start") @QueryParam("start") final String start,
+            @Dimension("end") @QueryParam("end") final String end,
+            @Dimension("colo") @QueryParam("colo") final String colo) {
+        try {
+            validateSlaParams(entityType, entityName, start, end, colo);
+        } catch (Exception e) {
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+        return new EntityProxy<SchedulableEntityInstanceResult>(entityType, entityName,
+            SchedulableEntityInstanceResult.class) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return getApplicableColos(entityType, entityName);
+            }
+
+            @Override
+            protected SchedulableEntityInstanceResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("getFeedSLAMissPendingAlerts", entityType, entityName,
+                        start, end, colo);
+            }
+        }.execute();
     }
 
     /**

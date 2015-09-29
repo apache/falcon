@@ -264,7 +264,7 @@ public final class FeedHelper {
         return null;
     }
 
-    public static Sla getSLAs(Cluster cluster, Feed feed) {
+    public static Sla getSLA(Cluster cluster, Feed feed) {
         final Sla clusterSla = cluster.getSla();
         if (clusterSla != null) {
             return clusterSla;

@@ -19,6 +19,7 @@
 package org.apache.falcon.resource;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * Entity management operations as REST API for feed and process.
@@ -49,6 +51,24 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                @Dimension("entityName") @PathParam("entity") String entity,
                                @Dimension("colo") @QueryParam("colo") final String colo) {
         return super.getStatus(type, entity, colo);
+    }
+
+    @GET
+    @Path("sla-alert/{type}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+    @Monitored(event = "feed-sla-misses")
+    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(
+            @Dimension("entityType") @PathParam("type") String entityType,
+            @Dimension("entityName") @QueryParam("name") String entityName,
+            @Dimension("start") @QueryParam("start") String start,
+            @Dimension("end") @QueryParam("end") String end,
+            @Dimension("colo") @QueryParam("colo") final String colo) {
+        try {
+            validateSlaParams(entityType, entityName, start, end, colo);
+        } catch (Exception e) {
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+        return super.getFeedSLAMissPendingAlerts(entityName, start, end, colo);
     }
 
     @GET

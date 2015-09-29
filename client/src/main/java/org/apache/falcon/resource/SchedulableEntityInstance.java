@@ -27,7 +27,7 @@ import java.util.Date;
 /**
  * Instance of a Schedulable Entity (Feed/Process).
  */
-public class SchedulableEntityInstance {
+public class SchedulableEntityInstance implements Comparable<SchedulableEntityInstance> {
 
     public static final String INPUT = "Input";
     public static final String OUTPUT = "Output";
@@ -151,5 +151,25 @@ public class SchedulableEntityInstance {
             result = 31 * result + tags.hashCode();
         }
         return result;
+    }
+
+    @Override
+    public int compareTo(SchedulableEntityInstance o) {
+        int result = this.cluster.compareTo(o.cluster);
+        if (result != 0) {
+            return result;
+        }
+
+        result = this.entityType.compareTo(o.entityType);
+        if (result != 0) {
+            return result;
+        }
+
+        result = this.entityName.compareToIgnoreCase(o.entityName);
+        if (result != 0) {
+            return result;
+        }
+
+        return this.instanceTime.compareTo(o.instanceTime);
     }
 }

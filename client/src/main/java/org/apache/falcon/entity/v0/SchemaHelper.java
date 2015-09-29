@@ -54,7 +54,7 @@ public final class SchemaHelper {
         try {
             return getDateFormat().parse(dateStr);
         } catch (ParseException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Unable to parse date: " + dateStr, e);
         }
     }
 

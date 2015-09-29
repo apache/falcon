@@ -1,0 +1,56 @@
+---++ GET /api/entities/sla-alert/:entity-type
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+<verbatim>
+Since: 0.8
+</verbatim>
+This command lists all the feed instances which have missed sla and are still not available. If a feed instance missed
+sla but is now available, then it will not be reported in results. The purpose of this API is alerting and hence it
+ doesn't return feed instances which missed SLA but are available as they don't require any action.
+
+---++ Parameters
+   * :entity-type Only valid option is feed.
+   * entity-name <optional param> parameter to restrict results for a particular feed using feed's name.
+   * start <mandatory param> start of the time window for nominal instances, inclusive.
+   * end <mandatory param> end of the time window for nominal instances to be considered, default is treated as current time.
+   * colo <optional param> name of the colo
+
+
+---++ Results
+Pending feed instances which missed SLA.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/entities/feed?colo=*&start=2012-04-03T07:00Z
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "status":"SUCCEEDED",
+    "message":"default/Success!\n",
+    "requestId":"default/885720178@qtp-495452957-6 - f6e82e9b-d23f-466b-82df-4fb8293ce9cf\n",
+    "instances":[
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:33:00+05:30","tags":"Missed SLA High"},
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:29:00+05:30","tags":"Missed SLA High"},
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:35:00+05:30","tags":"Missed SLA Low"},
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:30:00+05:30","tags":"Missed SLA High"},
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:34:00+05:30","tags":"Missed SLA High"},
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:31:00+05:30","tags":"Missed SLA High"},
+            {"cluster":"local","entityName":"out","entityType":"FEED","instanceTime":"2015-09-26T17:32:00+05:30","tags":"Missed SLA High"}
+    ]
+}
+</verbatim>
+
+In case there are no pending instances which have missed sla the response will be like below:
+<verbatim>
+{
+    "status":"SUCCEEDED",
+    "message":"default/Success!\n",
+    "requestId":"default/979808239@qtp-1243851750-3 - 8c7396c0-efe2-43e9-9aea-7ae6afea5fd6\n"
+}
+</verbatim>
