@@ -587,6 +587,8 @@ public class EntityManagerJerseyIT {
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
+        context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+
         ExecutorService service = Executors.newSingleThreadExecutor();
         ExecutorService duplicateService = Executors.newSingleThreadExecutor();
 
@@ -1020,7 +1022,7 @@ public class EntityManagerJerseyIT {
 
         @Override
         public ClientResponse call() throws Exception {
-            return context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+            return context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
         }
     }
 
