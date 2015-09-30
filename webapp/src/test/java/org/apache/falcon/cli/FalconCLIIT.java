@@ -720,11 +720,11 @@ public class FalconCLIIT {
         String clusterName = overlay.get("cluster");
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                        + FalconCLI.ENTITY_TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
+                        + FalconCLI.TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
                 0);
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                + FalconCLI.ENTITY_TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
+                + FalconCLI.TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
@@ -764,11 +764,11 @@ public class FalconCLIIT {
         String clusterName = overlay.get("cluster");
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                        + FalconCLI.ENTITY_TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
+                        + FalconCLI.TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
                 0);
 
         Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                + FalconCLI.ENTITY_TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
+                + FalconCLI.TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
