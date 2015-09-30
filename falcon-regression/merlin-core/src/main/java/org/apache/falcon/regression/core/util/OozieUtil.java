@@ -21,6 +21,7 @@ package org.apache.falcon.regression.core.util;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.OozieClient;
@@ -34,8 +35,10 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.json.JSONException;
 import org.testng.Assert;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -724,5 +727,31 @@ public final class OozieUtil {
             return getActionStatus(oozieClient, wid, subAction);
         }
         return FAIL_MSG;
+    }
+
+    /**
+     * Returns configuration object of a given bundleID for a given instanceTime.
+     *
+     * @param oozieClient  oozie client of cluster job is running on
+     * @param bundleID     name of process which job is being analyzed
+     * @param time         job status we are waiting for
+     * @throws org.apache.oozie.client.OozieClientException
+     * @throws org.json.JSONException
+     */
+    public static Configuration getProcessConf(OozieClient oozieClient, String bundleID, String time)
+        throws OozieClientException, JSONException {
+        waitForCoordinatorJobCreation(oozieClient, bundleID);
+        List<CoordinatorJob> coordJobs = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
+        CoordinatorJob coordJobInfo = oozieClient.getCoordJobInfo(coordJobs.get(0).getId());
+
+        Configuration conf = new Configuration();
+        for (CoordinatorAction action : coordJobInfo.getActions()) {
+            String dateStr = (new DateTime(action.getNominalTime(), DateTimeZone.UTC)).toString();
+            if (!dateStr.isEmpty() && dateStr.contains(time.replace("Z", ""))) {
+                conf.addResource(new ByteArrayInputStream(oozieClient.getJobInfo(action.getExternalId()).
+                        getConf().getBytes()));
+            }
+        }
+        return conf;
     }
 }

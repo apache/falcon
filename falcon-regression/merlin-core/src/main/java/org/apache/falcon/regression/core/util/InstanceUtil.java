@@ -32,8 +32,11 @@ import org.apache.falcon.regression.core.helpers.entity.AbstractEntityHelper;
 import org.apache.falcon.request.BaseRequest;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -45,17 +48,22 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.json.JSONException;
 import org.testng.Assert;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * util functions related to instanceTest.
@@ -88,6 +96,8 @@ public final class InstanceUtil {
             result = new InstancesSummaryResult(APIResult.Status.FAILED, responseString);
         }else if (url.contains("/listing/")) {
             result = new FeedInstanceResult(APIResult.Status.FAILED, responseString);
+        }else if (url.contains("/dependencies/")) {
+            result = new InstanceDependencyResult(APIResult.Status.FAILED, responseString);
         }else {
             result = new InstancesResult(APIResult.Status.FAILED, responseString);
         }
@@ -118,7 +128,8 @@ public final class InstanceUtil {
                 }
             }).create().fromJson(responseString,
                     url.contains("/listing/") ? FeedInstanceResult.class : url.contains("/summary/")
-                        ? InstancesSummaryResult.class : InstancesResult.class);
+                            ? InstancesSummaryResult.class : url.contains("/dependencies/")
+                            ? InstanceDependencyResult.class : InstancesResult.class);
         } catch (JsonSyntaxException e) {
             Assert.fail("Not a valid json:\n" + responseString);
         }
@@ -693,6 +704,136 @@ public final class InstanceUtil {
     ) throws OozieClientException {
         int sleep = INSTANCES_CREATED_TIMEOUT * 60 / 5;
         waitTillInstancesAreCreated(oozieClient, entity, bundleSeqNo, sleep);
+    }
+
+    /**
+     * Asserts instances of specific job will be present for given instanceTime.
+     *
+     * @param instancesResult  InstanceDependencyResult
+     * @param oozieClient  oozieClient of cluster job is running on
+     * @param bundleID     bundleId of job
+     * @param time  instanceTime.
+     * @throws JSONException
+     * @throws ParseException
+     */
+    public static void assertProcessInstances(InstanceDependencyResult instancesResult, OozieClient oozieClient,
+                                        String bundleID, String time) throws OozieClientException,
+                                        JSONException, ParseException {
+        List<String> inputPath = new ArrayList<>();
+        List<String> outputPath = new ArrayList<>();
+        SchedulableEntityInstance[] instances = instancesResult.getDependencies();
+        LOGGER.info("instances: " + Arrays.toString(instances));
+        Assert.assertNotNull(instances, "instances should be not null");
+        for (SchedulableEntityInstance instance : instances) {
+            Assert.assertNotNull(instance.getCluster());
+            Assert.assertNotNull(instance.getEntityName());
+            Assert.assertNotNull(instance.getEntityType());
+            Assert.assertNotNull(instance.getInstanceTime());
+            Assert.assertNotNull(instance.getTags());
+            if (instance.getTags().equals("Input")) {
+                inputPath.add(new DateTime(instance.getInstanceTime(), DateTimeZone.UTC).toString());
+            }
+            if (instance.getTags().equals("Output")) {
+                outputPath.add(new DateTime(instance.getInstanceTime(), DateTimeZone.UTC).toString());
+            }
+        }
+
+        List<String> inputActual = getMinuteDatesToPath(inputPath.get(inputPath.indexOf(
+            Collections.min(inputPath))), inputPath.get(inputPath.indexOf(Collections.max(inputPath))), 5);
+        List<String> outputActual = getMinuteDatesToPath(outputPath.get(outputPath.indexOf(Collections.min(
+            outputPath))), outputPath.get(outputPath.indexOf(Collections.max(outputPath))), 5);
+
+        Configuration conf = OozieUtil.getProcessConf(oozieClient, bundleID, time);
+        Assert.assertNotNull(conf, "Configuration should not be null");
+        List<String> inputExp = Arrays.asList(conf.get("inputData").split(","));
+        List<String> outputExp = Arrays.asList(conf.get("outputData").split(","));
+
+        Assert.assertTrue(matchList(inputExp, inputActual), " Inputs dont match");
+        Assert.assertTrue(matchList(outputExp, outputActual), " Outputs dont match");
+
+    }
+
+    /**
+     * Returns list of path based on given start and end time.
+     *
+     * @param startOozieDate  start date
+     * @param endOozieDate    end date
+     * @param minuteSkip      difference  between paths
+     * @throws ParseException
+     */
+    public static List<String> getMinuteDatesToPath(String startOozieDate, String endOozieDate,
+                                                    int minuteSkip) throws ParseException {
+        String myFormat = "yyyy'-'MM'-'dd'T'HH':'mm'Z'";
+        String userFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'SSS'Z'";
+        return TimeUtil.getMinuteDatesOnEitherSide(TimeUtil.parseDate(startOozieDate, myFormat, userFormat),
+                TimeUtil.parseDate(endOozieDate, myFormat, userFormat), minuteSkip);
+    }
+
+    /**
+     * Parses date from one format to another.
+     *
+     * @param oozieDate  input date
+     * @throws ParseException
+     */
+    public static String getParsedDates(String oozieDate) throws ParseException {
+        String myFormat = "yyyy'-'MM'-'dd'T'HH':'mm'Z'";
+        String userFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'SSS'Z'";
+        return TimeUtil.parseDate(oozieDate, myFormat, userFormat);
+    }
+
+    /**
+     * Asserts Whether two list are equal or not.
+     *
+     * @param firstList  list<String> to be comapred
+     * @param secondList  list<String> to be compared
+     */
+    public static boolean matchList(List<String> firstList, List<String> secondList) {
+        Collections.sort(firstList);
+        Collections.sort(secondList);
+        if (firstList.size() != secondList.size()) {
+            return false;
+        }
+        for (int index = 0; index < firstList.size(); index++) {
+            if (!firstList.get(index).contains(secondList.get(index))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Asserts instanceDependencyResult of specific job for a given feed.
+     *
+     * @param instancesResult  InstanceDependencyResult
+     * @param processName  process name for given bundle
+     * @param tag     Input/Output
+     * @param expectedInstances  instance for given instanceTime.
+     * @throws JSONException
+     * @throws ParseException
+     * @throws OozieClientException
+     */
+    public static void assertFeedInstances(InstanceDependencyResult instancesResult, String processName, String tag,
+                                            List<String> expectedInstances)
+        throws OozieClientException, JSONException, ParseException {
+        List<String> actualInstances = new ArrayList<>();
+        SchedulableEntityInstance[] instances = instancesResult.getDependencies();
+        LOGGER.info("instances: " + Arrays.toString(instances));
+        Assert.assertNotNull(instances, "instances should be not null");
+        for (SchedulableEntityInstance instance : instances) {
+            Assert.assertNotNull(instance.getCluster());
+            Assert.assertNotNull(instance.getEntityName());
+            Assert.assertNotNull(instance.getEntityType());
+            Assert.assertNotNull(instance.getInstanceTime());
+            Assert.assertNotNull(instance.getTags());
+            Assert.assertTrue(instance.getEntityType().toString().equals("PROCESS"), "Type should be PROCESS");
+            Assert.assertTrue(instance.getEntityName().equals(processName), "Expected name is : " + processName);
+            Assert.assertTrue(instance.getTags().equals(tag));
+            actualInstances.add(getParsedDates(new DateTime(instance.getInstanceTime(), DateTimeZone.UTC).toString()));
+        }
+
+        Set<String> expectedInstancesSet = new HashSet<>(expectedInstances);
+        Set<String> actualInstancesSet = new HashSet<>(actualInstances);
+        Assert.assertEquals(expectedInstancesSet, actualInstancesSet, "Instances dont match");
     }
 }
 

@@ -23,7 +23,11 @@ public enum ResponseErrors {
 
     PROCESS_NOT_FOUND("(PROCESS) not found"),
     UNPARSEABLE_DATE("Start and End dates cannot be empty for Instance POST apis"),
-    START_BEFORE_SCHEDULED("is before the entity was scheduled");
+    START_BEFORE_SCHEDULED("is before the entity was scheduled"),
+    PROCESS_INVALID_RANGE("is not in validity range of process"),
+    PROCESS_INSTANCE_FAULT("is not a valid instance time on cluster"),
+    FEED_INVALID_RANGE("is not in validity range for Feed"),
+    FEED_INSTANCE_FAULT("is not a valid instance for the  feed");
 
     private String error;
 

@@ -35,6 +35,7 @@ import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.conf.Configuration;
@@ -662,12 +663,22 @@ public abstract class AbstractEntityHelper {
      */
     public ServiceResponse getEntityLineage(String params)
         throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
-
         String url = createUrl(this.hostname + URLS.ENTITY_LINEAGE.getValue(), colo);
         if (StringUtils.isNotEmpty(params)){
             url += colo.isEmpty() ? "?" + params : "&" + params;
         }
         return Util.sendRequestLineage(createUrl(url), "get", null, null);
+    }
+
+    /**
+     * Retrieves instance dependencies.
+     */
+    public InstanceDependencyResult getInstanceDependencies(
+            String entityName, String params, String user)
+        throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_DEPENDENCIES.getValue(), getEntityType(), entityName, "");
+        return (InstanceDependencyResult) InstanceUtil
+                .createAndSendRequestProcessInstance(url, params, allColo, user);
     }
 
 }

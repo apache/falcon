@@ -25,6 +25,8 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -33,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
-all time / date related util methods for merlin . need to move methods from
+All time / date related util methods for merlin . need to move methods from
 instanceUtil to here , pending item.
  */
 
@@ -274,5 +276,26 @@ public final class TimeUtil {
     private static int getInt(String expression, int position) {
         String numbers = expression.substring(expression.indexOf('(') + 1, expression.indexOf(')'));
         return Integer.parseInt(numbers.split(",")[position]);
+    }
+
+    /**
+     * Converts given date from one format to another.
+     *
+     * @param date        input date
+     * @param myFormat    input date format
+     * @param userFormat  required format
+     * @return date in userFormat
+     */
+    public static String parseDate(String date, String myFormat, String userFormat) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(myFormat);
+        SimpleDateFormat fromUser = new SimpleDateFormat(userFormat);
+        String reformattedStr="";
+        try {
+            reformattedStr = formatter.format(fromUser.parse(date));
+            LOGGER.info(reformattedStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return reformattedStr;
     }
 }

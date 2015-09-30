@@ -394,6 +394,7 @@ public final class Util {
         INSTANCE_LIST("/api/instance/list"),
         INSTANCE_LISTING("/api/instance/listing"),
         INSTANCE_LOGS("/api/instance/logs"),
+        INSTANCE_DEPENDENCIES("/api/instance/dependencies"),
         TOUCH_URL("/api/entities/touch");
 
         private final String url;

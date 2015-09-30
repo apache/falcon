@@ -76,4 +76,14 @@ public final class MatrixUtil {
             + "row of second array: " + Arrays.deepToString(arr2[0]));
         return (Object[][]) ArrayUtils.addAll(arr1, arr2);
     }
+
+    /**
+     * Cross product many arrays.
+     * @param firstArray first array that you want to cross product
+     * @param otherArrays other arrays that you want to cross product
+     * @return cross product
+     */
+    public static Object[][] crossProductNew(Object[] firstArray, Object[][]... otherArrays) {
+        return crossProduct(firstArray, otherArrays);
+    }
 }

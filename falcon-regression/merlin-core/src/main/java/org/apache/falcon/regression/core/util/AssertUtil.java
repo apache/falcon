@@ -26,7 +26,6 @@ import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.InstancesResult;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -192,7 +191,7 @@ public final class AssertUtil {
      *
      * @param response ProcessInstancesResult
      */
-    public static void assertSucceeded(InstancesResult response) {
+    public static void assertSucceeded(APIResult response) {
         Assert.assertNotNull(response.getMessage(), "Status message is null");
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED,
             "Status should be SUCCEEDED. Message: " + response.getMessage());
@@ -448,5 +447,15 @@ public final class AssertUtil {
         Assert.assertTrue(assertPath(logFlag, entityName, clusterFS, entityType), message);
     }
 
-
+    /**
+     * Checks that API Response status is FAILED.
+     *
+     * @param response APIResult
+     * @throws JAXBException
+     */
+    public static void assertFailedInstance(APIResult response) throws JAXBException {
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
+                "Status should be FAILED. Message: " + response.getMessage());
+        Assert.assertNotNull(response.getMessage(), "response message should not be null");
+    }
 }
