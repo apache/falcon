@@ -32,6 +32,8 @@ import org.testng.annotations.Test;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Tests for FeedSLAMonitoring Service.
@@ -48,7 +50,7 @@ public class FeedSLAMonitoringTest {
         Date start = SchemaHelper.parseDateUTC("2014-05-05T00:00Z");
         Date end = SchemaHelper.parseDateUTC("2015-05-05T00:00Z");
 
-        Set<Date> missingInstances = new HashSet<>();
+        BlockingQueue<Date> missingInstances = new LinkedBlockingQueue<>();
         missingInstances.add(SchemaHelper.parseDateUTC("2013-05-05T00:00Z")); // before start time
         missingInstances.add(SchemaHelper.parseDateUTC("2014-05-05T00:00Z")); // equal to start time
         missingInstances.add(SchemaHelper.parseDateUTC("2014-05-06T00:00Z")); // in between

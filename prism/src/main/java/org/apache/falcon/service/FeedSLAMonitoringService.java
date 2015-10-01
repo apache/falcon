@@ -52,7 +52,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -76,6 +78,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         return SERVICE;
     }
 
+    private int queueSize;
+
     /**
      * Permissions for storePath.
      */
@@ -91,7 +95,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      * Map<Pair<feedName, clusterName>, Set<instanceTime> to store
      * each missing instance of a feed.
      */
-    private Map<Pair<String, String>, Set<Date>> pendingInstances;
+    private Map<Pair<String, String>, BlockingQueue<Date>> pendingInstances;
 
 
     /**
@@ -206,6 +210,9 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         freq = StartupProperties.get().getProperty("feed.sla.lookAheadWindow.millis", "900000");
         lookAheadWindowMillis = Integer.valueOf(freq);
 
+        String size = StartupProperties.get().getProperty("feed.sla.queue.size", "288");
+        queueSize = Integer.valueOf(size);
+
         try {
             if (fileSystem.exists(filePath)) {
                 deserialize(filePath);
@@ -270,23 +277,31 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     void addNewPendingFeedInstances(Date from, Date to) throws FalconException {
         Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
         for (String feedName : monitoredFeeds) {
-
             Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
             for (Cluster feedCluster : feed.getClusters().getClusters()) {
                 if (currentClusters.contains(feedCluster.getName())) {
                     Date nextInstanceTime = from;
                     Pair<String, String> key = new Pair<>(feed.getName(), feedCluster.getName());
-                    Set<Date> instances = pendingInstances.get(key);
+                    BlockingQueue<Date> instances = pendingInstances.get(key);
                     if (instances == null) {
-                        instances = new HashSet<>();
+                        instances = new LinkedBlockingQueue<>(queueSize);
                     }
-
+                    Set<Date> exists = new HashSet<>(instances);
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =
                             EntityUtil.getEntity(EntityType.CLUSTER, feedCluster.getName());
+                    nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
                     while (nextInstanceTime.before(to)) {
-                        nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
-                        instances.add(nextInstanceTime);
+                        if (instances.size() >= queueSize) { // if no space, first make some space
+                            LOG.debug("Removing instance={} for <feed,cluster>={}", instances.peek(), key);
+                            exists.remove(instances.peek());
+                            instances.remove();
+                        }
+                        LOG.debug("Adding instance={} for <feed,cluster>={}", nextInstanceTime, key);
+                        if (exists.add(nextInstanceTime)) {
+                            instances.add(nextInstanceTime);
+                        }
                         nextInstanceTime = new Date(nextInstanceTime.getTime() + ONE_MS);
+                        nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
                     }
                     pendingInstances.put(key, instances);
                 }
@@ -299,7 +314,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      * Checks the availability of all the pendingInstances and removes the ones which have become available.
      */
     private void checkPendingInstanceAvailability() throws FalconException {
-        for (Map.Entry<Pair<String, String>, Set<Date>> entry: pendingInstances.entrySet()) {
+        for (Map.Entry<Pair<String, String>, BlockingQueue<Date>> entry: pendingInstances.entrySet()) {
             for (Date date : entry.getValue()) {
                 boolean status = checkFeedInstanceAvailability(entry.getKey().first, entry.getKey().second, date);
                 if (status) {
@@ -358,7 +373,26 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     private void deserialize(Path path) throws FalconException {
         try {
             Map<String, Object> state = deserializeInternal(path);
-            pendingInstances = (ConcurrentHashMap<Pair<String, String>, Set<Date>>) state.get("pendingInstances");
+            pendingInstances = new ConcurrentHashMap<>();
+            Map<Pair<String, String>, BlockingQueue<Date>> pendingInstancesCopy =
+                    (Map<Pair<String, String>, BlockingQueue<Date>>) state.get("pendingInstances");
+            // queue size can change during restarts, hence copy
+            for (Map.Entry<Pair<String, String>, BlockingQueue<Date>> entry : pendingInstancesCopy.entrySet()) {
+                BlockingQueue<Date> value = new LinkedBlockingQueue<>(queueSize);
+                BlockingQueue<Date> oldValue = entry.getValue();
+                LOG.debug("Number of old instances:{}, new queue size:{}", oldValue.size(), queueSize);
+                while (!oldValue.isEmpty()) {
+                    Date instance = oldValue.remove();
+                    if (value.size() == queueSize) { // if full
+                        LOG.debug("Deserialization: Removing value={} for <feed,cluster>={}", value.peek(),
+                            entry.getKey());
+                        value.remove();
+                    }
+                    LOG.debug("Deserialization Adding: key={} to <feed,cluster>={}", entry.getKey(), instance);
+                    value.add(instance);
+                }
+                pendingInstances.put(entry.getKey(), value);
+            }
             lastCheckedAt = new Date((Long) state.get("lastCheckedAt"));
             lastSerializedAt = new Date((Long) state.get("lastSerializedAt"));
             monitoredFeeds = new ConcurrentHashSet<>(); // will be populated on the onLoad of entities.
@@ -397,13 +431,13 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      * Start time and end time are both inclusive.
      * @param start start time, inclusive
      * @param end end time, inclusive
-     * @return
+     * @return Set of pending feed instances belonging to the given range which have missed SLA
      * @throws FalconException
      */
     public Set<SchedulableEntityInstance> getFeedSLAMissPendingAlerts(Date start, Date end)
         throws FalconException {
         Set<SchedulableEntityInstance> result = new HashSet<>();
-        for (Map.Entry<Pair<String, String>, Set<Date>> feedInstances : pendingInstances.entrySet()) {
+        for (Map.Entry<Pair<String, String>, BlockingQueue<Date>> feedInstances : pendingInstances.entrySet()) {
             Pair<String, String> feedClusterPair = feedInstances.getKey();
             Feed feed = EntityUtil.getEntity(EntityType.FEED, feedClusterPair.first);
             Cluster cluster = FeedHelper.getCluster(feed, feedClusterPair.second);
@@ -428,7 +462,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      * @param clusterName cluster name
      * @param start start time, inclusive
      * @param end end time, inclusive
-     * @return
+     * @return Pending feed instances of the given feed which belong to the given time range and have missed SLA.
      * @throws FalconException
      */
     public Set<SchedulableEntityInstance> getFeedSLAMissPendingAlerts(String feedName, String clusterName,
@@ -436,7 +470,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
         Set<SchedulableEntityInstance> result = new HashSet<>();
         Pair<String, String> feedClusterPair = new Pair<>(feedName, clusterName);
-        Set<Date> missingInstances = pendingInstances.get(feedClusterPair);
+        BlockingQueue<Date> missingInstances = pendingInstances.get(feedClusterPair);
         Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
         Cluster cluster = FeedHelper.getCluster(feed, feedClusterPair.second);
         Sla sla = FeedHelper.getSLA(cluster, feed);
@@ -452,7 +486,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         return result;
     }
 
-    Set<Pair<Date, String>> getSLAStatus(Sla sla, Date start, Date end, Set<Date> missingInstances)
+    Set<Pair<Date, String>> getSLAStatus(Sla sla, Date start, Date end, BlockingQueue<Date> missingInstances)
         throws FalconException {
         String tagCritical = "Missed SLA High";
         String tagWarn = "Missed SLA Low";

@@ -15,6 +15,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1476 Maintaining threshold on monitoring entities for SLA service(Ajay Yadava)
+
     FALCON-592 Refactor FalconCLI to make it more manageable(Balu Vellanki via Ajay Yadava)
 
     FALCON-1472 Improvements in SLA service(Ajay Yadava)
