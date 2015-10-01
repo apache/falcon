@@ -47,6 +47,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1499 Lifecycle Retention Issues(Ajay Yadava)
+
     FALCON-1469 Flaky EntityManagerJerseyIT#testDuplicateSubmitCommands(Sandeep Samudrala via Ajay Yadava)
 
     FALCON-1470 HiveDRStatusStoreTest should fail when using fakeGroup to create StatusStore(Balu Vellanki via Sowmya Ramesh)

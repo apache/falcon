@@ -18,6 +18,7 @@
 
 package org.apache.falcon.lifecycle.engine.oozie.retention;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
@@ -82,8 +83,12 @@ public final class AgeBasedWorkflowBuilder {
         props.putAll(FeedHelper.getUserWorkflowProperties(LifeCycle.EVICTION));
         // override the queueName and priority
         RetentionStage retentionStage = FeedHelper.getRetentionStage(feed, cluster.getName());
-        props.put(OozieBuilderUtils.MR_QUEUE_NAME, retentionStage.getQueue());
-        props.put(OozieBuilderUtils.MR_JOB_PRIORITY, retentionStage.getPriority());
+        if (StringUtils.isNotBlank(retentionStage.getQueue())) {
+            props.put(OozieBuilderUtils.MR_QUEUE_NAME, retentionStage.getQueue());
+        }
+        if (StringUtils.isNotBlank(retentionStage.getPriority())) {
+            props.put(OozieBuilderUtils.MR_JOB_PRIORITY, retentionStage.getPriority());
+        }
 
         if (EntityUtil.isTableStorageType(cluster, feed)) {
             setupHiveCredentials(cluster, buildPath, workflow);

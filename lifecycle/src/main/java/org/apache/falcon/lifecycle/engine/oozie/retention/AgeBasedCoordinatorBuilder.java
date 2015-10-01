@@ -83,6 +83,8 @@ public final class AgeBasedCoordinatorBuilder {
         CONTROLS controls = new CONTROLS();
         controls.setExecution(ExecutionType.LAST_ONLY.value());
         controls.setTimeout(String.valueOf(frequencyInMillis / (1000 * 60)));
+        controls.setConcurrency("1");
+        controls.setThrottle("1");
         coord.setControls(controls);
 
         coord.setFrequency("${coord:" + retentionFrequency.toString() + "}");
