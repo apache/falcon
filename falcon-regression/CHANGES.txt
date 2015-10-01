@@ -102,6 +102,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1502 Checkstyle failures in Falcon Regression(Pragya Mittal via Ajay Yadava)
+
    FALCON-1384 AbstractEntityHelper.java cleanup (Paul Isaychuk)
 
    FALCON-1306 Custom window dimensions for UI tests (Ruslan Ostafiychuk)

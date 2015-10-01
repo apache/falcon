@@ -19,7 +19,10 @@
 package org.apache.falcon.regression.searchUI;
 
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.EngineType;
+import org.apache.falcon.entity.v0.process.ExecutionType;
+import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
