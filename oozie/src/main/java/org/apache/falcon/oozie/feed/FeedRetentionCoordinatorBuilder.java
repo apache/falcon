@@ -18,6 +18,7 @@
 
 package org.apache.falcon.oozie.feed;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
@@ -50,18 +51,21 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
 
     @Override public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-
-        if (feedCluster.getValidity().getEnd().before(new Date())) {
-            LOG.warn("Feed Retention is not applicable as Feed's end time for cluster {} is not in the future",
-                cluster.getName());
+        if (feedCluster == null) {
             return null;
         }
 
         COORDINATORAPP coord = new COORDINATORAPP();
         String coordName = getEntityName();
         coord.setName(coordName);
-        coord.setEnd(SchemaHelper.formatDateUTC(feedCluster.getValidity().getEnd()));
-        coord.setStart(SchemaHelper.formatDateUTC(new Date()));
+        Date endDate = feedCluster.getValidity().getEnd();
+        coord.setEnd(SchemaHelper.formatDateUTC(endDate));
+        if (feedCluster.getValidity().getEnd().before(new Date())) {
+            Date startDate = DateUtils.addMinutes(endDate, -1);
+            coord.setStart(SchemaHelper.formatDateUTC(startDate));
+        } else {
+            coord.setStart(SchemaHelper.formatDateUTC(new Date()));
+        }
         coord.setTimezone(entity.getTimezone().getID());
         TimeUnit timeUnit = entity.getFrequency().getTimeUnit();
         if (timeUnit == TimeUnit.hours || timeUnit == TimeUnit.minutes) {
