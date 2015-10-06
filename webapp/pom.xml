@@ -53,6 +53,7 @@
                                 </resource>
                                 <resource>
                                     <directory>../prism/target/restapi</directory>
+                                    <targetPath>.</targetPath>
                                 </resource>
                             </webResources>
                         </configuration>

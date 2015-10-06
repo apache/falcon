@@ -49,7 +49,9 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
-    FALCON-1491 Update ActiveMQ version to 5.12
+    FALCON-1509 Auto generation of REST API does not work in distributed mode(Narayan Periwal via Sowmya Ramesh).
+
+    FALCON-1491 Update ActiveMQ version to 5.12(Peeyush Bishnoi via Sowmya Ramesh).
 
     FALCON-1487 In secure cluster setup Hcat process/feed scheduling or replication fails(Sowmya Ramesh)
 
