@@ -49,6 +49,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1491 Update ActiveMQ version to 5.12
+
     FALCON-1487 In secure cluster setup Hcat process/feed scheduling or replication fails(Sowmya Ramesh)
 
     FALCON-1339 List feed entities shows scheduled Feed entities as submitted(Balu Vellanki via Sowmya Ramesh)

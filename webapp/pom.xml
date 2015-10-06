@@ -339,8 +339,8 @@
                                 <!-- this is only used in integration-tests against external clusters -->
                                 <artifactItem>
                                     <groupId>org.apache.activemq</groupId>
-                                    <artifactId>kahadb</artifactId>
-                                    <version>5.4.3</version>
+                                    <artifactId>activemq-kahadb-store</artifactId>
+                                    <version>5.12.0</version>
                                     <type>jar</type>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/libext</outputDirectory>

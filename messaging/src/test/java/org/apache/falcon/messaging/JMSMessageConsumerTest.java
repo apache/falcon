@@ -147,7 +147,7 @@ public class JMSMessageConsumerTest {
 
             sendMessages(SECONDARY_TOPIC_NAME);
 
-            Assert.assertEquals(adminView.getTotalEnqueueCount(), 20);
+            Assert.assertEquals(adminView.getTotalEnqueueCount(), 18);
             Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
             Assert.assertEquals(adminView.getTotalConsumerCount(), 3);
 
