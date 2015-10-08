@@ -15,7 +15,7 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
-    FALCON-1477 Adding "-debug" option to Falcon CLI for debug statements to stdout(Narayan Periwal)
+    FALCON-1477 Adding "-debug" option to Falcon CLI for debug statements to stdout(Narayan Periwal via Pallavi Rao)
 
     FALCON-1476 Maintaining threshold on monitoring entities for SLA service(Ajay Yadava)
 
@@ -51,6 +51,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1514 Incorrect logging while submitting cluster(Sandeep Samudrala via Pallavi Rao)
+
     FALCON-1509 Auto generation of REST API does not work in distributed mode(Narayan Periwal via Sowmya Ramesh).
 
     FALCON-1491 Update ActiveMQ version to 5.12(Peeyush Bishnoi via Sowmya Ramesh).

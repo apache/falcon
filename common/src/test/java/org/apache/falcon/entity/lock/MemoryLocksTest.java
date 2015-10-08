@@ -36,7 +36,7 @@ public class MemoryLocksTest {
     public void testSuccessfulMemoryLockAcquisition() throws Exception {
         MemoryLocks memoryLocks = MemoryLocks.getInstance();
         Entity feed = (Entity) EntityType.FEED.getUnmarshaller().unmarshal(this.getClass().getResource(FEED_XML));
-        Assert.assertEquals(memoryLocks.acquireLock(feed), true);
+        Assert.assertEquals(memoryLocks.acquireLock(feed, "test"), true);
         memoryLocks.releaseLock(feed);
     }
 
@@ -44,8 +44,8 @@ public class MemoryLocksTest {
     public void testUnsuccessfulMemoryLockAcquisition() throws Exception {
         MemoryLocks memoryLocks = MemoryLocks.getInstance();
         Entity feed = (Entity) EntityType.FEED.getUnmarshaller().unmarshal(this.getClass().getResource(FEED_XML));
-        Assert.assertEquals(memoryLocks.acquireLock(feed), true);
-        Assert.assertEquals(memoryLocks.acquireLock(feed), false);
+        Assert.assertEquals(memoryLocks.acquireLock(feed, "test"), true);
+        Assert.assertEquals(memoryLocks.acquireLock(feed, "test"), false);
         memoryLocks.releaseLock(feed);
     }
 
@@ -57,8 +57,8 @@ public class MemoryLocksTest {
         org.apache.falcon.entity.v0.process.Process process = (Process) EntityType.PROCESS.getUnmarshaller().
                 unmarshal(this.getClass().getResource(PROCESS_XML));
         process.setName(feed.getName());
-        Assert.assertEquals(memoryLocks.acquireLock(feed), true);
-        Assert.assertEquals(memoryLocks.acquireLock(process), true);
+        Assert.assertEquals(memoryLocks.acquireLock(feed, "test"), true);
+        Assert.assertEquals(memoryLocks.acquireLock(process, "test"), true);
         memoryLocks.releaseLock(feed);
     }
 }

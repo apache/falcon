@@ -326,7 +326,7 @@ public abstract class AbstractEntityManager {
             tokenList = new ArrayList<>();
         }
         //first obtain lock for the entity for which update is issued.
-        if (memoryLocks.acquireLock(entity)) {
+        if (memoryLocks.acquireLock(entity, command)) {
             tokenList.add(entity);
         } else {
             throw new FalconException(command + " command is already issued for " + entity.toShortString());
@@ -336,11 +336,11 @@ public abstract class AbstractEntityManager {
         Set<Entity> affectedEntities = EntityGraph.get().getDependents(entity);
         if (affectedEntities != null) {
             for (Entity e : affectedEntities) {
-                if (memoryLocks.acquireLock(e)) {
+                if (memoryLocks.acquireLock(e, command)) {
                     tokenList.add(e);
                     LOG.debug("{} on entity {} has acquired lock on {}", command, entity, e);
                 } else {
-                    LOG.error("Error while trying to acquire lock for {}. Releasing already obtained locks",
+                    LOG.error("Error while trying to acquire lock on {}. Releasing already obtained locks",
                             e.toShortString());
                     throw new FalconException("There are multiple update commands running for dependent entity "
                             + e.toShortString());
@@ -354,9 +354,9 @@ public abstract class AbstractEntityManager {
             for (Entity entity : tokenList) {
                 memoryLocks.releaseLock(entity);
             }
-            LOG.info("All update locks released for {}", entityName);
+            LOG.info("All locks released on {}", entityName);
         } else {
-            LOG.info("No locks to release for " + entityName);
+            LOG.info("No locks to release on " + entityName);
         }
 
     }

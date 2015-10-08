@@ -45,14 +45,14 @@ public final class MemoryLocks {
      * @param entity entity object.
      * @return the lock token for the resource, or <code>null</code> if the lock could not be obtained.
      */
-    public boolean acquireLock(Entity entity) {
+    public boolean acquireLock(Entity entity, String command) {
         boolean lockObtained = false;
         String entityName = getLockKey(entity);
 
         Boolean putResponse = locks.putIfAbsent(entityName, true);
         if (putResponse == null || !putResponse) {
-            LOG.info("Lock obtained for schedule/update of {} by {}",
-                    entity.toShortString(), Thread.currentThread().getName());
+            LOG.info("Lock acquired for {} on {} by {}",
+                    command, entity.toShortString(), Thread.currentThread().getName());
             lockObtained = true;
         }
         return lockObtained;
@@ -67,7 +67,7 @@ public final class MemoryLocks {
         String entityName = getLockKey(entity);
 
         locks.remove(entityName);
-        LOG.info("Successfully released lock for {} by {}",
+        LOG.info("Successfully released lock on {} by {}",
                 entity.toShortString(), Thread.currentThread().getName());
     }
 

@@ -90,7 +90,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             entityObj = EntityUtil.getEntity(type, entity);
             //first acquire lock on entity before scheduling
-            if (!memoryLocks.acquireLock(entityObj)) {
+            if (!memoryLocks.acquireLock(entityObj, "schedule")) {
                 throw new FalconException("Looks like an schedule/update command is already running for "
                         + entityObj.toShortString());
             }
