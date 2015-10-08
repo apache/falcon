@@ -102,6 +102,7 @@ public class FalconMetadataCLI extends FalconCLI {
         Option key = new Option(KEY_OPT, true, "key property");
         Option value = new Option(VALUE_OPT, true, "value property");
         Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
+        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
 
         metadataOptions.addOption(vertex);
         metadataOptions.addOption(vertices);
@@ -111,6 +112,7 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(key);
         metadataOptions.addOption(value);
         metadataOptions.addOption(direction);
+        metadataOptions.addOption(debug);
 
         Option doAs = new Option(FalconCLI.DO_AS_OPT, true, "doAs user");
         metadataOptions.addOption(doAs);

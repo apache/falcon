@@ -55,6 +55,7 @@ public class FalconAdminCLI extends FalconCLI {
         Option doAs = new Option(DO_AS_OPT, true,
                 "doAs user");
         Option help = new Option("help", false, "show Falcon help");
+        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
         group.addOption(status);
         group.addOption(version);
         group.addOption(stack);
@@ -62,6 +63,7 @@ public class FalconAdminCLI extends FalconCLI {
 
         adminOptions.addOptionGroup(group);
         adminOptions.addOption(doAs);
+        adminOptions.addOption(debug);
         return adminOptions;
     }
 

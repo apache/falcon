@@ -65,18 +65,22 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Client API to submit and manage Falcon Entities (Cluster, Feed, Process) jobs
  * against an Falcon instance.
  */
 public class FalconClient extends AbstractFalconClient {
+
+    public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
@@ -105,6 +109,11 @@ public class FalconClient extends AbstractFalconClient {
 
     private final WebResource service;
     private final AuthenticatedURL.Token authenticationToken;
+
+    /**
+     * debugMode=false means no debugging. debugMode=true means debugging on.
+     */
+    private boolean debugMode = false;
 
     private final Properties clientProperties;
 
@@ -156,6 +165,22 @@ public class FalconClient extends AbstractFalconClient {
                 new TrustManager[]{TrustManagerUtils.getValidateServerCertificateTrustManager()},
                 new SecureRandom());
         return sslContext;
+    }
+
+    /**
+     * @return current debug Mode
+     */
+    public boolean getDebugMode() {
+        return debugMode;
+    }
+
+    /**
+     * Set debug mode.
+     *
+     * @param debugMode : debugMode=false means no debugging. debugMode=true means debugging on
+     */
+    public void setDebugMode(boolean debugMode) {
+        this.debugMode = debugMode;
     }
 
     public Properties getClientProperties() {
@@ -351,6 +376,7 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)
                 .method(operation.method, ClientResponse.class, entityStream);
+        printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return parseAPIResult(clientResponse);
     }
@@ -404,13 +430,15 @@ public class FalconClient extends AbstractFalconClient {
 
     public TriageResult triage(String entityType, String entityName, String instanceTime, String colo)
         throws FalconCLIException {
-        ClientResponse clientResponse = service
+        WebResource resource = service
                 .path(Instances.TRIAGE.path).path(entityType).path(entityName)
-                .queryParam("start", instanceTime).queryParam("colo", colo)
+                .queryParam("start", instanceTime).queryParam("colo", colo);
+        ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(Instances.TRIAGE.mimeType).type(MediaType.TEXT_XML)
                 .method(Instances.TRIAGE.method, ClientResponse.class);
 
+        printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(TriageResult.class);
     }
@@ -448,6 +476,7 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)
                 .method(operation.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return parseAPIResult(clientResponse);
     }
@@ -589,6 +618,7 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(job.mimeType).type(MediaType.TEXT_PLAIN)
                 .method(job.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         return clientResponse.getStatus();
     }
 
@@ -610,6 +640,7 @@ public class FalconClient extends AbstractFalconClient {
             .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
             .accept(operation.mimeType).type(operation.mimeType)
             .method(operation.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(LineageGraphResult.class);
     }
@@ -684,6 +715,8 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
+
+        printClientResponse(clientResponse);
 
         checkIfSuccessful(clientResponse);
 
@@ -770,6 +803,8 @@ public class FalconClient extends AbstractFalconClient {
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
 
+        printClientResponse(clientResponse);
+
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(EntitySummaryResult.class);
     }
@@ -787,6 +822,8 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
+
+        printClientResponse(clientResponse);
 
         checkIfSuccessful(clientResponse);
         String entity = clientResponse.getEntity(String.class);
@@ -806,6 +843,8 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
+
+        printClientResponse(clientResponse);
 
         checkIfSuccessful(clientResponse);
 
@@ -832,10 +871,13 @@ public class FalconClient extends AbstractFalconClient {
         if (StringUtils.isNotEmpty(properties)) {
             resource = resource.queryParam("properties", properties);
         }
+
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class, requestObject);
+
+        printClientResponse(clientResponse);
 
         checkIfSuccessful(clientResponse);
 
@@ -853,6 +895,7 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(api.mimeType)
                 .method(api.method, ClientResponse.class);
+        printClientResponse(response);
         checkIfSuccessful(response);
         return response.getEntity(FeedLookupResult.class);
     }
@@ -917,6 +960,7 @@ public class FalconClient extends AbstractFalconClient {
                     .accept(instances.mimeType)
                     .method(instances.method, ClientResponse.class, props);
         }
+        printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse;
     }
@@ -933,6 +977,7 @@ public class FalconClient extends AbstractFalconClient {
                     .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                     .accept(api.mimeType)
                     .method(api.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(InstanceDependencyResult.class);
     }
@@ -977,6 +1022,8 @@ public class FalconClient extends AbstractFalconClient {
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
 
+        printClientResponse(clientResponse);
+
         checkIfSuccessful(clientResponse);
 
         return parseEntityList(clientResponse);
@@ -995,6 +1042,7 @@ public class FalconClient extends AbstractFalconClient {
                 .accept(job.mimeType)
                 .type(job.mimeType)
                 .method(job.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         return clientResponse.getEntity(String.class);
     }
 
@@ -1034,6 +1082,8 @@ public class FalconClient extends AbstractFalconClient {
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(operation.mimeType)
                 .method(operation.method, ClientResponse.class);
+
+        printClientResponse(clientResponse);
 
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(String.class);
@@ -1141,6 +1191,7 @@ public class FalconClient extends AbstractFalconClient {
                 .accept(job.mimeType)
                 .type(job.mimeType)
                 .method(job.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         return clientResponse.getEntity(String.class);
     }
 
@@ -1157,6 +1208,7 @@ public class FalconClient extends AbstractFalconClient {
                 .accept(job.mimeType)
                 .type(job.mimeType)
                 .method(job.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         return clientResponse.getEntity(String.class);
     }
 
@@ -1174,6 +1226,7 @@ public class FalconClient extends AbstractFalconClient {
                 .accept(job.mimeType)
                 .type(job.mimeType)
                 .method(job.method, ClientResponse.class);
+        printClientResponse(clientResponse);
         return clientResponse.getEntity(String.class);
     }
 
@@ -1182,6 +1235,12 @@ public class FalconClient extends AbstractFalconClient {
         if (statusFamily != Response.Status.Family.SUCCESSFUL
                 && statusFamily != Response.Status.Family.INFORMATIONAL) {
             throw FalconCLIException.fromReponse(clientResponse);
+        }
+    }
+
+    private void printClientResponse(ClientResponse clientResponse) {
+        if (getDebugMode()) {
+            OUT.get().println(clientResponse.toString());
         }
     }
 }

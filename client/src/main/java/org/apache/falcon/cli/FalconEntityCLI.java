@@ -148,6 +148,7 @@ public class FalconEntityCLI extends FalconCLI {
         Option skipDryRun = new Option(SKIPDRYRUN_OPT, false, "skip dry run in workflow engine");
         Option doAs = new Option(DO_AS_OPT, true, "doAs user");
         Option userProps = new Option(PROPS_OPT, true, "User supplied comma separated key value properties");
+        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
 
         entityOptions.addOption(url);
         entityOptions.addOption(path);
@@ -172,6 +173,7 @@ public class FalconEntityCLI extends FalconCLI {
         entityOptions.addOption(skipDryRun);
         entityOptions.addOption(doAs);
         entityOptions.addOption(userProps);
+        entityOptions.addOption(debug);
 
         return entityOptions;
     }

@@ -46,6 +46,8 @@ public class FalconCLI {
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
+    public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
+    public static final String DEBUG_OPTION = "debug";
     public static final String URL_OPTION = "url";
     private static final String FALCON_URL = "FALCON_URL";
 
@@ -155,6 +157,7 @@ public class FalconCLI {
                 String falconUrl = getFalconEndpoint(commandLine);
                 FalconClient client = new FalconClient(falconUrl, clientProperties);
 
+                setDebugMode(client, commandLine.hasOption(DEBUG_OPTION));
                 if (command.getName().equals(ADMIN_CMD)) {
                     exitValue = adminCLI.adminCommand(commandLine, client, falconUrl);
                 } else if (command.getName().equals(ENTITY_CMD)) {
@@ -296,6 +299,18 @@ public class FalconCLI {
         }
 
         return url;
+    }
+
+    private void setDebugMode(FalconClient client, boolean debugOpt) {
+        String debug = System.getenv(ENV_FALCON_DEBUG);
+        if (debugOpt) {  // CLI argument "-debug" used
+            client.setDebugMode(true);
+        } else if (StringUtils.isNotBlank(debug)) {
+            System.out.println(ENV_FALCON_DEBUG + ": " + debug);
+            if (debug.trim().toLowerCase().equals("true")) {
+                client.setDebugMode(true);
+            }
+        }
     }
 
     private Properties getClientProperties() throws IOException {

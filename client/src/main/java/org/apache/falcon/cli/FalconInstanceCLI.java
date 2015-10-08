@@ -147,6 +147,7 @@ public class FalconInstanceCLI extends FalconCLI {
         Option forceRerun = new Option(FORCE_RERUN_FLAG, false,
                 "Flag to forcefully rerun entire workflow of an instance");
         Option doAs = new Option(DO_AS_OPT, true, "doAs user");
+        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
 
         Option instanceTime = new Option(INSTANCE_TIME_OPT, true, "Time for an instance");
 
@@ -169,6 +170,7 @@ public class FalconInstanceCLI extends FalconCLI {
         instanceOptions.addOption(numResults);
         instanceOptions.addOption(forceRerun);
         instanceOptions.addOption(doAs);
+        instanceOptions.addOption(debug);
         instanceOptions.addOption(instanceTime);
 
         return instanceOptions;
