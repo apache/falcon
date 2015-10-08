@@ -166,7 +166,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
             }
 
             if ("admin".equals(resource)) {
-                if (!"version".equals(action)) {
+                if (!("version".equals(action) || "clearuser".equals(action) || "getuser".equals(action))) {
                     authorizeAdminResource(authenticatedUGI, action);
                 }
             } else if ("entities".equals(resource) || "instance".equals(resource)) {

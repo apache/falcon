@@ -19,16 +19,21 @@
 package org.apache.falcon.resource.admin;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.util.VersionInfo;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -97,6 +102,11 @@ public class AdminResource {
             property.value = VersionInfo.getVersion() + "-r" + VersionInfo.getRevision();
             props.add(property);
 
+            property = new Property();
+            property.key = "authentication";
+            property.value = StartupProperties.get().getProperty("falcon.authentication.type", "simple");
+            props.add(property);
+
             version = new PropertyList();
             version.properties = props;
         }
@@ -144,7 +154,7 @@ public class AdminResource {
     @XmlRootElement(name = "property")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    private static class Property {
+    protected static class Property {
         public String key;
         public String value;
     }
@@ -154,8 +164,39 @@ public class AdminResource {
     @XmlRootElement(name = "properties")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    private static class PropertyList {
+    protected static class PropertyList {
         public List<Property> properties;
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+
+    @GET
+    @Path("clearuser")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String clearUser(@Context HttpServletResponse response) {
+        if (!SecurityUtil.isSecurityEnabled()) {
+            Cookie cookie = new Cookie("hadoop.auth", null);
+            cookie.setPath("/");
+            cookie.setMaxAge(0);
+            cookie.setSecure(false);
+            response.addCookie(cookie);
+        }  // Else,  Do not checkin User, security is handled via Kerberos.
+        return "ok";
+    }
+
+    @GET
+    @Path("getuser")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getAuthenticatedUser() {
+        String user;
+        try {
+            if (SecurityUtil.isSecurityEnabled()) {
+                user = CurrentUser.getAuthenticatedUser();
+            } else {
+                user = CurrentUser.getUser();
+            }
+        } catch (IllegalStateException ile) {
+            user = "";
+        }
+        return user;
+    }
 }
