@@ -93,6 +93,7 @@ public final class RuntimeProperties extends ApplicationProperties {
             long backOffDelay = REFRESH_DELAY;
             while (true) {
                 try {
+                    Thread.sleep(Math.min(MAX_ITER * REFRESH_DELAY, backOffDelay));
                     try {
                         RuntimeProperties newProperties = new RuntimeProperties();
                         newProperties.loadProperties();
@@ -103,7 +104,6 @@ public final class RuntimeProperties extends ApplicationProperties {
                         LOG.warn("Error refreshing runtime properties", e);
                         backOffDelay += REFRESH_DELAY;
                     }
-                    Thread.sleep(Math.min(MAX_ITER * REFRESH_DELAY, backOffDelay));
                 } catch (InterruptedException e) {
                     LOG.error("Application is stopping. Aborting...");
                     break;

@@ -79,7 +79,7 @@ public class ProxyUserService implements FalconService {
             if (key.startsWith(CONF_PREFIX) && key.endsWith(GROUPS)) {
                 String proxyUser = key.substring(0, key.lastIndexOf(GROUPS));
                 if (RuntimeProperties.get().getProperty(proxyUser + HOSTS) == null) {
-                    throw new FalconException(CONF_PREFIX + proxyUser + HOSTS + " property not set in runtime "
+                    throw new FalconException(proxyUser + HOSTS + " property not set in runtime "
                             + "properties. Please add it.");
                 }
                 proxyUser = proxyUser.substring(CONF_PREFIX.length());
@@ -94,7 +94,7 @@ public class ProxyUserService implements FalconService {
             if (key.startsWith(CONF_PREFIX) && key.endsWith(HOSTS)) {
                 String proxyUser = key.substring(0, key.lastIndexOf(HOSTS));
                 if (RuntimeProperties.get().getProperty(proxyUser + GROUPS) == null) {
-                    throw new FalconException(CONF_PREFIX + proxyUser + GROUPS + " property not set in runtime "
+                    throw new FalconException(proxyUser + GROUPS + " property not set in runtime "
                             + "properties. Please add it.");
                 }
                 proxyUser = proxyUser.substring(CONF_PREFIX.length());
