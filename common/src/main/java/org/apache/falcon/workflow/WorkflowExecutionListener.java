@@ -25,7 +25,38 @@ import org.apache.falcon.FalconException;
  */
 public interface WorkflowExecutionListener {
 
+    /**
+     * Invoked when a workflow is succeeds.
+     * @param context
+     * @throws FalconException
+     */
     void onSuccess(WorkflowExecutionContext context) throws FalconException;
 
+    /**
+     * Invoked when a workflow fails.
+     * @param context
+     * @throws FalconException
+     */
     void onFailure(WorkflowExecutionContext context) throws FalconException;
+
+    /**
+     * Invoked on start of a workflow. Basically, when the workflow is RUNNING.
+     * @param context
+     * @throws FalconException
+     */
+    void onStart(WorkflowExecutionContext context) throws FalconException;
+
+    /**
+     * Invoked when a workflow is suspended.
+     * @param context
+     * @throws FalconException
+     */
+    void onSuspend(WorkflowExecutionContext context) throws FalconException;
+
+    /**
+     * Invoked when a workflow is in waiting state.
+     * @param context
+     * @throws FalconException
+     */
+    void onWait(WorkflowExecutionContext context) throws FalconException;
 }

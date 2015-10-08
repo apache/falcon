@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,13 +57,13 @@ public class WorkflowNameBuilder<T extends Entity> {
     }
 
     public Tag getWorkflowTag(String workflowName) {
-        return WorkflowName.getTagAndSuffixes(entity, workflowName) == null ? null
-                : WorkflowName.getTagAndSuffixes(entity, workflowName).first;
+        return WorkflowName.getTagAndSuffixes(workflowName) == null ? null
+                : WorkflowName.getTagAndSuffixes(workflowName).first;
     }
 
     public String getWorkflowSuffixes(String workflowName) {
-        return WorkflowName.getTagAndSuffixes(entity, workflowName) == null ? ""
-                : WorkflowName.getTagAndSuffixes(entity, workflowName).second;
+        return WorkflowName.getTagAndSuffixes(workflowName) == null ? ""
+                : WorkflowName.getTagAndSuffixes(workflowName).second;
     }
 
     /**
@@ -70,12 +71,39 @@ public class WorkflowNameBuilder<T extends Entity> {
      */
     public static class WorkflowName {
         private static final String SEPARATOR = "_";
+        private static final Pattern WF_NAME_PATTERN;
 
         private String prefix;
         private String entityType;
         private String tag;
         private String entityName;
         private List<String> suffixes;
+
+        static {
+            StringBuilder typePattern = new StringBuilder("(");
+            for (EntityType type : EntityType.values()) {
+                typePattern.append(type.name());
+                typePattern.append("|");
+            }
+            typePattern = typePattern.deleteCharAt(typePattern.length() - 1);
+            typePattern.append(")");
+            StringBuilder tagsPattern = new StringBuilder("(");
+            for (Tag tag : Tag.values()) {
+                tagsPattern.append(tag.name());
+                tagsPattern.append("|");
+            }
+            tagsPattern = tagsPattern.deleteCharAt(tagsPattern.length() - 1);
+            tagsPattern.append(")");
+
+            String name = "([a-zA-Z][\\-a-zA-Z0-9]*)";
+
+            String suffix = "([_A-Za-z0-9-.]*)";
+
+            String namePattern = PREFIX + SEPARATOR + typePattern + SEPARATOR + tagsPattern
+                    + SEPARATOR + name + suffix;
+
+            WF_NAME_PATTERN = Pattern.compile(namePattern);
+        }
 
         public WorkflowName(String prefix, String entityType, String tag,
                             String entityName, List<String> suffixes) {
@@ -100,28 +128,27 @@ public class WorkflowNameBuilder<T extends Entity> {
             return builder.toString();
         }
 
-        public static Pair<Tag, String> getTagAndSuffixes(Entity entity,
-                                                          String workflowName) {
-
-            StringBuilder namePattern = new StringBuilder(PREFIX + SEPARATOR
-                    + entity.getEntityType().name() + SEPARATOR + "(");
-            for (Tag tag : Tag.values()) {
-                namePattern.append(tag.name());
-                namePattern.append("|");
-            }
-            namePattern = namePattern.deleteCharAt(namePattern.length() - 1);
-            namePattern.append(")" + SEPARATOR + entity.getName()
-                    + "([_A-Za-z0-9-.]*)");
-
-            Pattern pattern = Pattern.compile(namePattern.toString());
-
-            Matcher matcher = pattern.matcher(workflowName);
+        public static Pair<Tag, String> getTagAndSuffixes(String workflowName) {
+            Matcher matcher = WF_NAME_PATTERN.matcher(workflowName);
             if (matcher.matches()) {
                 matcher.reset();
                 if (matcher.find()) {
-                    String tag = matcher.group(1);
-                    String suffixes = matcher.group(2);
-                    return new Pair<Tag, String>(Tag.valueOf(tag), suffixes);
+                    String tag = matcher.group(2);
+                    String suffixes = matcher.group(4);
+                    return new Pair<>(Tag.valueOf(tag), suffixes);
+                }
+            }
+            return null;
+        }
+
+        public static Pair<String, EntityType> getEntityNameAndType(String workflowName) {
+            Matcher matcher = WF_NAME_PATTERN.matcher(workflowName);
+            if (matcher.matches()) {
+                matcher.reset();
+                if (matcher.find()) {
+                    String type = matcher.group(1);
+                    String name = matcher.group(3);
+                    return new Pair<>(name, EntityType.valueOf(type));
                 }
             }
             return null;

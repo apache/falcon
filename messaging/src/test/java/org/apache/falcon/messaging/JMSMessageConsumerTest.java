@@ -26,10 +26,11 @@ import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
+import org.mockito.Mockito;
 import org.mortbay.log.Log;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.jms.Connection;
@@ -37,7 +38,9 @@ import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
+import javax.jms.Message;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.jms.Topic;
 import java.io.IOException;
 import java.util.HashMap;
@@ -54,17 +57,26 @@ public class JMSMessageConsumerTest {
     private static final String SECONDARY_TOPIC_NAME = "FALCON.ENTITY.SEC.TOPIC";
     private BrokerService broker;
 
-    @BeforeClass
+    private JMSMessageConsumer subscriber;
+    private WorkflowJobEndNotificationService jobEndService;
+
+    @BeforeMethod
     public void setup() throws Exception {
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");
         broker.setBrokerName("localhost");
+        jobEndService = Mockito.mock(WorkflowJobEndNotificationService.class);
         broker.start();
-        broker.deleteAllMessages();
+        //Comma separated topics are supported in startup properties
+        subscriber = new JMSMessageConsumer(BROKER_IMPL_CLASS, "", "",
+                BROKER_URL, TOPIC_NAME + "," + SECONDARY_TOPIC_NAME, jobEndService);
+
+        subscriber.startSubscriber();
     }
 
-    public void sendMessages(String topic) throws JMSException, FalconException, IOException {
+    public void sendMessages(String topic, WorkflowExecutionContext.Type type)
+        throws JMSException, FalconException, IOException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);
         Connection connection = connectionFactory.createConnection();
         connection.start();
@@ -74,32 +86,100 @@ public class JMSMessageConsumerTest {
         javax.jms.MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-        for (int i = 0; i < 3; i++) {
-            WorkflowExecutionContext context = WorkflowExecutionContext.create(
-                    getMockFalconMessage(i), WorkflowExecutionContext.Type.POST_PROCESSING);
+        for (int i = 0; i < 5; i++) {
+            Message message = null;
 
-            MapMessage message = session.createMapMessage();
-            for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {
-                message.setString(entry.getKey().getName(), entry.getValue());
+            switch(type) {
+            case POST_PROCESSING:
+                message = getMockFalconMessage(i, session);
+                break;
+            case WORKFLOW_JOB:
+                message = getMockOozieMessage(i, session);
+                break;
+            case COORDINATOR_ACTION:
+                message = getMockOozieCoordMessage(i, session);
+            default:
+                break;
             }
-
             Log.debug("Sending:" + message);
             producer.send(message);
         }
-
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(
-                getMockFalconMessage(5), WorkflowExecutionContext.Type.POST_PROCESSING);
-
-        MapMessage mapMessage = session.createMapMessage();
-        for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {
-            mapMessage.setString(entry.getKey().getName(), entry.getValue());
-        }
-
-        Log.debug("Sending:" + mapMessage);
-        producer.send(mapMessage);
     }
 
-    private String[] getMockFalconMessage(int i) {
+    private Message getMockOozieMessage(int i, Session session) throws FalconException, JMSException {
+        TextMessage message = session.createTextMessage();
+        message.setStringProperty("appType", "WORKFLOW_JOB");
+        message.setStringProperty("appName", "FALCON_PROCESS_DEFAULT_process1");
+        message.setStringProperty("user", "falcon");
+        switch(i % 4) {
+        case 0:
+            message.setText("{\"status\":\"RUNNING\",\"id\":\"0000042-130618221729631-oozie-oozi-W\""
+                    + ",\"startTime\":1342915200000}");
+            break;
+        case 1:
+            message.setText("{\"status\":\"FAILED\",\"errorCode\":\"EL_ERROR\","
+                    + "\"errorMessage\":\"variable [dummyvalue] cannot be resolved\","
+                    + "\"id\":\"0000042-130618221729631-oozie-oozi-W\",\"startTime\":1342915200000,"
+                    + "\"endTime\":1366672183543}");
+            break;
+        case 2:
+            message.setText("{\"status\":\"SUCCEEDED\",\"id\":\"0000039-130618221729631-oozie-oozi-W\""
+                    + ",\"startTime\":1342915200000,"
+                    + "\"parentId\":\"0000025-130618221729631-oozie-oozi-C@1\",\"endTime\":1366676224154}");
+            break;
+        case 3:
+            message.setText("{\"status\":\"SUSPENDED\",\"id\":\"0000039-130618221729631-oozie-oozi-W\","
+                    + "\"startTime\":1342915200000,\"parentId\":\"0000025-130618221729631-oozie-oozi-C@1\"}");
+            break;
+        default:
+        }
+        return message;
+    }
+
+    private Message getMockOozieCoordMessage(int i, Session session) throws FalconException, JMSException {
+        TextMessage message = session.createTextMessage();
+        message.setStringProperty("appType", "COORDINATOR_ACTION");
+        message.setStringProperty("appName", "FALCON_PROCESS_DEFAULT_process1");
+        message.setStringProperty("user", "falcon");
+        switch(i % 5) {
+        case 0:
+            message.setText("{\"status\":\"WAITING\",\"nominalTime\":1310342400000,\"missingDependency\""
+                    + ":\"hdfs://gsbl90107.blue.com:8020/user/john/dir1/file1\","
+                    + "\"id\":\"0000025-130618221729631-oozie-oozi-C@1\",\"startTime\":1342915200000,"
+                    + "\"parentId\":\"0000025-130618221729631-oozie-oozi-C\"}");
+            message.setStringProperty("eventStatus", "WAITING");
+            break;
+        case 1:
+            message.setText("{\"status\":\"RUNNING\",\"nominalTime\":1310342400000,"
+                    + "\"id\":\"0000025-130618221729631-oozie-oozi-C@1\","
+                    + "\"startTime\":1342915200000,\"parentId\":\"0000025-130618221729631-oozie-oozi-C\"}");
+            message.setStringProperty("eventStatus", "STARTED");
+            break;
+        case 2:
+            message.setText("{\"status\":\"SUCCEEDED\",\"nominalTime\":1310342400000,"
+                    + "\"id\":\"0000025-130618221729631-oozie-oozi-C@1\","
+                    + "\"startTime\":1342915200000,\"parentId\":\"0000025-130618221729631-oozie-oozi-C\","
+                    + "\"endTime\":1366677082799}");
+            message.setStringProperty("eventStatus", "SUCCESS");
+            break;
+        case 3:
+            message.setText("{\"status\":\"FAILED\",\"errorCode\":\"E0101\",\"errorMessage\":"
+                    + "\"dummyError\",\"nominalTime\":1310342400000,"
+                    + "\"id\":\"0000025-130618221729631-oozie-oozi-C@1\",\"startTime\":1342915200000,"
+                    + "\"parentId\":\"0000025-130618221729631-oozie-oozi-C\",\"endTime\":1366677140818}");
+            message.setStringProperty("eventStatus", "FAILURE");
+            break;
+        case 4:
+            message.setText("{\"status\":\"TIMEDOUT\",\"nominalTime\":1310342400000,"
+                    + "\"id\":\"0000025-130618221729631-oozie-oozi-C@1\",\"startTime\":1342915200000,"
+                    + "\"parentId\":\"0000025-130618221729631-oozie-oozi-C\",\"endTime\":1366677140818}");
+            message.setStringProperty("eventStatus", "FAILURE");
+        default:
+        }
+        return message;
+    }
+
+    private Message getMockFalconMessage(int i, Session session) throws FalconException, JMSException {
         Map<String, String> message = new HashMap<String, String>();
         message.put(WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS);
         message.put(WorkflowExecutionArgs.BRKR_URL.getName(), BROKER_URL);
@@ -127,39 +207,78 @@ public class JMSMessageConsumerTest {
             args[index++] = entry.getValue();
         }
 
-        return args;
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(
+                args, WorkflowExecutionContext.Type.POST_PROCESSING);
+
+        MapMessage jmsMessage = session.createMapMessage();
+        for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {
+            jmsMessage.setString(entry.getKey().getName(), entry.getValue());
+        }
+
+        return jmsMessage;
     }
 
     @Test
     public void testSubscriber() {
         try {
-            //Comma separated topics are supported in startup properties
-            JMSMessageConsumer subscriber = new JMSMessageConsumer(BROKER_IMPL_CLASS, "", "",
-                    BROKER_URL, TOPIC_NAME+","+SECONDARY_TOPIC_NAME, new WorkflowJobEndNotificationService());
-            subscriber.startSubscriber();
-            sendMessages(TOPIC_NAME);
+            sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.POST_PROCESSING);
 
             final BrokerView adminView = broker.getAdminView();
 
             Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
-            Assert.assertEquals(adminView.getTotalEnqueueCount(), 11);
+            Assert.assertEquals(adminView.getTotalEnqueueCount(), 10);
             Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
 
-            sendMessages(SECONDARY_TOPIC_NAME);
+            sendMessages(SECONDARY_TOPIC_NAME, WorkflowExecutionContext.Type.POST_PROCESSING);
 
             Assert.assertEquals(adminView.getTotalEnqueueCount(), 18);
             Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
             Assert.assertEquals(adminView.getTotalConsumerCount(), 3);
-
-            subscriber.closeSubscriber();
         } catch (Exception e) {
             Assert.fail("This should not have thrown an exception.", e);
         }
     }
 
-    @AfterClass
-    public void tearDown() throws Exception {
-        broker.deleteAllMessages();
+    @Test
+    public void testJMSMessagesFromOozie() throws Exception {
+        sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.WORKFLOW_JOB);
+
+        final BrokerView adminView = broker.getAdminView();
+
+        Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
+        Assert.assertEquals(adminView.getTotalEnqueueCount(), 10);
+        Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
+
+        // Async operations. Give some time for messages to be processed.
+        Thread.sleep(100);
+        Mockito.verify(jobEndService, Mockito.times(2)).notifyStart(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService).notifyFailure(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService).notifySuccess(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService).notifySuspend(Mockito.any(WorkflowExecutionContext.class));
+    }
+
+    @Test
+    public void testJMSMessagesForOozieCoord() throws Exception {
+        sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.COORDINATOR_ACTION);
+
+        final BrokerView adminView = broker.getAdminView();
+
+        Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
+        Assert.assertEquals(adminView.getTotalEnqueueCount(), 12);
+        Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
+
+        // Async operations. Give some time for messages to be processed.
+        Thread.sleep(100);
+        Mockito.verify(jobEndService, Mockito.never()).notifyStart(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService, Mockito.never()).notifySuccess(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService, Mockito.never()).notifySuspend(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService, Mockito.times(1)).notifyWait(Mockito.any(WorkflowExecutionContext.class));
+        Mockito.verify(jobEndService, Mockito.times(1)).notifyFailure(Mockito.any(WorkflowExecutionContext.class));
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception{
         broker.stop();
+        subscriber.closeSubscriber();
     }
 }

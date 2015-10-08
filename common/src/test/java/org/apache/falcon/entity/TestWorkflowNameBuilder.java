@@ -17,10 +17,13 @@
  */
 package org.apache.falcon.entity;
 
+import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -87,5 +90,20 @@ public class TestWorkflowNameBuilder {
         Assert.assertEquals(processBuilder.getWorkflowName().toString(),
                 "FALCON_PROCESS_DEFAULT_agg-logs");
 
+    }
+
+    @Test(dataProvider = "workflowNames")
+    public void workflowNameTypeTest(String wfName, Pair<String, EntityType> nameType) {
+        Assert.assertEquals(WorkflowNameBuilder.WorkflowName.getEntityNameAndType(wfName), nameType);
+    }
+
+    @DataProvider(name = "workflowNames")
+    public Object[][] getWorkflowNames() {
+        return new Object[][] {
+            {"FALCON_PROCESS_DEFAULT_agg-logs", new Pair<>("agg-logs", EntityType.PROCESS)},
+            {"FALCON_FEED_REPLICATION_raw-logs", new Pair<>("raw-logs", EntityType.FEED)},
+            {"FALCON_FEED_RETENTION_logs2", new Pair<>("logs2", EntityType.FEED)},
+            {"FALCON_FEED_REPLICATION_logs_colo1", new Pair<>("logs", EntityType.FEED)},
+        };
     }
 }

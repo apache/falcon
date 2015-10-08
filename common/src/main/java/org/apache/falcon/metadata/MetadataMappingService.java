@@ -297,6 +297,20 @@ public class MetadataMappingService
         // do nothing since lineage is only recorded for successful workflow
     }
 
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // TBD
+    }
 
 
     private void onProcessInstanceExecuted(WorkflowExecutionContext context) throws FalconException {

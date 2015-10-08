@@ -48,6 +48,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -55,6 +56,7 @@ import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
+import org.apache.oozie.client.JMSConnectionInfo;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
@@ -587,6 +589,25 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     public InstancesResult getInstanceParams(Entity entity, Date start, Date end,
                                              List<LifeCycle> lifeCycles) throws FalconException {
         return doJobAction(JobAction.PARAMS, entity, start, end, null, lifeCycles);
+    }
+
+    @Override
+    public boolean isNotificationEnabled(String cluster, String jobID) throws FalconException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            JMSConnectionInfo jmsConnection = client.getJMSConnectionInfo();
+            if (jmsConnection != null && !jmsConnection.getJNDIProperties().isEmpty()){
+                String falconTopic  = StartupProperties.get().getProperty("entity.topic", "FALCON.ENTITY.TOPIC");
+                String oozieTopic = client.getJMSTopicName(jobID);
+                if (falconTopic.equals(oozieTopic)) {
+                    return true;
+                }
+            }
+        } catch (OozieClientException e) {
+            LOG.error("Error while retrieving JMS connection info", e);
+        }
+
+        return false;
     }
 
     private static enum JobAction {
@@ -1618,6 +1639,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 instance.endTime = jobInfo.getEndTime();
             }
             instance.cluster = cluster;
+            instance.runId = jobInfo.getRun();
+            instance.status = WorkflowStatus.valueOf(jobInfo.getStatus().name());
+            instance.wfParams = getWFParams(jobInfo);
             instances[0] = instance;
             InstancesResult result = new InstancesResult(APIResult.Status.SUCCEEDED,
                     "Instance for workflow id:" + jobId);

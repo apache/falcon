@@ -62,12 +62,12 @@ public class WorkflowExecutionContext {
     /**
      * Workflow execution status.
      */
-    public enum Status {SUCCEEDED, FAILED}
+    public enum Status {WAITING, RUNNING, SUSPENDED, SUCCEEDED, FAILED, TIMEDOUT, KILLED}
 
     /**
      * Workflow execution type.
      */
-    public enum Type {PRE_PROCESSING, POST_PROCESSING}
+    public enum Type {PRE_PROCESSING, POST_PROCESSING, WORKFLOW_JOB, COORDINATOR_ACTION}
 
     /**
      * Entity operations supported.
@@ -107,6 +107,10 @@ public class WorkflowExecutionContext {
         return context.get(arg);
     }
 
+    public void setValue(WorkflowExecutionArgs arg, String value) {
+        context.put(arg, value);
+    }
+
     public String getValue(WorkflowExecutionArgs arg, String defaultValue) {
         return context.containsKey(arg) ? context.get(arg) : defaultValue;
     }
@@ -128,8 +132,20 @@ public class WorkflowExecutionContext {
         return Status.FAILED.name().equals(getValue(WorkflowExecutionArgs.STATUS));
     }
 
+    public boolean hasWorkflowTimedOut() {
+        return Status.TIMEDOUT.name().equals(getValue(WorkflowExecutionArgs.STATUS));
+    }
+
+    public boolean hasWorkflowBeenKilled() {
+        return Status.KILLED.name().equals(getValue(WorkflowExecutionArgs.STATUS));
+    }
+
     public String getContextFile() {
         return getValue(WorkflowExecutionArgs.CONTEXT_FILE);
+    }
+
+    public Status getWorkflowStatus() {
+        return Status.valueOf(getValue(WorkflowExecutionArgs.STATUS));
     }
 
     public String getLogDir() {
@@ -211,7 +227,10 @@ public class WorkflowExecutionContext {
     }
 
     public EntityOperations getOperation() {
-        return EntityOperations.valueOf(getValue(WorkflowExecutionArgs.OPERATION));
+        if (getValue(WorkflowExecutionArgs.OPERATION) != null) {
+            return EntityOperations.valueOf(getValue(WorkflowExecutionArgs.OPERATION));
+        }
+        return EntityOperations.valueOf(getValue(WorkflowExecutionArgs.DATA_OPERATION));
     }
 
     public String getOutputFeedNames() {
@@ -280,6 +299,19 @@ public class WorkflowExecutionContext {
 
     public long getExecutionCompletionTime() {
         return creationTime;
+    }
+
+    public long getWorkflowStartTime() {
+        return Long.parseLong(getValue(WorkflowExecutionArgs.WF_START_TIME));
+    }
+
+    public long getWorkflowEndTime() {
+        return Long.parseLong(getValue(WorkflowExecutionArgs.WF_END_TIME));
+    }
+
+
+    public Type getContextType() {
+        return Type.valueOf(getValue(WorkflowExecutionArgs.CONTEXT_TYPE));
     }
 
     /**
@@ -397,7 +429,11 @@ public class WorkflowExecutionContext {
     }
 
     public static WorkflowExecutionContext create(Map<WorkflowExecutionArgs, String> wfProperties) {
-        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, Type.POST_PROCESSING.name());
+        return WorkflowExecutionContext.create(wfProperties, Type.POST_PROCESSING);
+    }
+
+    public static WorkflowExecutionContext create(Map<WorkflowExecutionArgs, String> wfProperties, Type type) {
+        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
         return new WorkflowExecutionContext(wfProperties);
     }
 }

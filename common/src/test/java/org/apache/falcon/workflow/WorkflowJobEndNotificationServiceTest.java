@@ -22,9 +22,12 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.util.Date;
+import java.util.Properties;
 
 /**
  * A test for WorkflowJobEndNotificationService.
@@ -55,15 +58,17 @@ public class WorkflowJobEndNotificationServiceTest implements WorkflowExecutionL
     private WorkflowJobEndNotificationService service;
     private WorkflowExecutionContext savedContext;
 
-    @BeforeMethod
+    @BeforeClass
     public void setUp() throws Exception {
         service = new WorkflowJobEndNotificationService();
         savedContext = WorkflowExecutionContext.create(getTestMessageArgs(),
                 WorkflowExecutionContext.Type.POST_PROCESSING);
         Assert.assertNotNull(savedContext);
+        service.init();
+        service.registerListener(this);
     }
 
-    @AfterMethod
+    @AfterClass
     public void tearDown() throws Exception {
         service.destroy();
     }
@@ -73,27 +78,28 @@ public class WorkflowJobEndNotificationServiceTest implements WorkflowExecutionL
         Assert.assertEquals(service.getName(), WorkflowJobEndNotificationService.SERVICE_NAME);
     }
 
-    @Test
-    public void testInit() throws Exception {
-        String listenerClassNames = StartupProperties.get().getProperty(
-                "workflow.execution.listeners");
-        Assert.assertEquals(listenerClassNames, "");
-
+    @Test(priority = -1)
+    public void testBasic() throws Exception {
         try {
-            StartupProperties.get().setProperty("workflow.execution.listeners",
-                    "org.apache.falcon.workflow.WorkflowJobEndNotificationServiceTest");
-            listenerClassNames = StartupProperties.get().getProperty(
-                    "workflow.execution.listeners");
-            Assert.assertEquals(listenerClassNames,
-                    "org.apache.falcon.workflow.WorkflowJobEndNotificationServiceTest");
-
-            service.init();
             notifyFailure(savedContext);
             notifySuccess(savedContext);
         } finally {
-            service.unregisterListener(this);
             StartupProperties.get().setProperty("workflow.execution.listeners", "");
         }
+    }
+
+    @Test
+    public void testNotificationsFromEngine() throws FalconException {
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(),
+                WorkflowExecutionContext.Type.WORKFLOW_JOB);
+
+        // Pretend the start was already notified
+        Properties wfProps = new Properties();
+        wfProps.put(WorkflowExecutionArgs.CLUSTER_NAME.name(), CLUSTER_NAME);
+        service.getContextMap().put("workflow-01-00", wfProps);
+
+        // Should retrieve from cache.
+        service.notifySuspend(context);
     }
 
     @Override
@@ -106,6 +112,19 @@ public class WorkflowJobEndNotificationServiceTest implements WorkflowExecutionL
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
         Assert.assertNotNull(context);
         Assert.assertEquals(context.entrySet().size(), 28);
+    }
+
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+
     }
 
     private void notifyFailure(WorkflowExecutionContext context) {
@@ -150,6 +169,8 @@ public class WorkflowJobEndNotificationServiceTest implements WorkflowExecutionL
 
             "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
             "-" + WorkflowExecutionArgs.LOG_FILE.getName(), LOGS_DIR + "/log.txt",
+            "-" + WorkflowExecutionArgs.WF_START_TIME.getName(), Long.toString(new Date().getTime()),
+            "-" + WorkflowExecutionArgs.WF_END_TIME.getName(), Long.toString(new Date().getTime() + 1000000),
         };
     }
 }

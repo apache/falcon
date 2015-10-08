@@ -106,9 +106,28 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 
     @Override
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
+        // Re-run does not make sense on timeouts.
+        if (context.hasWorkflowTimedOut()) {
+            return;
+        }
         handleRerun(context.getClusterName(), context.getEntityType(),
                 context.getEntityName(), context.getNominalTimeAsISO8601(),
                 context.getWorkflowRunIdString(), context.getWorkflowId(),
                 context.getWorkflowUser(), context.getExecutionCompletionTime());
+    }
+
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
     }
 }

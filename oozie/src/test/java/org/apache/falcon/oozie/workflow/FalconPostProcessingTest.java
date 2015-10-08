@@ -179,9 +179,6 @@ public class FalconPostProcessingTest {
             verifyMesssage(consumer);
         }
 
-        // Verify falcon message
-        verifyMesssage(consumer);
-
         connection.close();
     }
 

@@ -24,6 +24,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.Date;
+
 
 /**
  * A test for WorkflowExecutionContext.
@@ -86,6 +88,7 @@ public class WorkflowExecutionContextTest {
     @Test
     public void testHasWorkflowSucceeded() throws Exception {
         Assert.assertTrue(context.hasWorkflowSucceeded());
+        Assert.assertEquals(context.getWorkflowStatus(), WorkflowExecutionContext.Status.SUCCEEDED);
     }
 
     @Test
@@ -240,6 +243,18 @@ public class WorkflowExecutionContextTest {
     }
 
     @Test
+    public void testWorkflowStartEnd() throws Exception {
+        Assert.assertEquals(context.getWorkflowEndTime() - context.getWorkflowStartTime(), 1000000);
+    }
+
+    @Test
+    public void testSetAndGetValue() throws Exception {
+        context.setValue(WorkflowExecutionArgs.RUN_ID, "10");
+        Assert.assertEquals(context.getValue(WorkflowExecutionArgs.RUN_ID), "10");
+        context.setValue(WorkflowExecutionArgs.RUN_ID, "1");
+    }
+
+    @Test
     public void testSerializeDeserialize() throws Exception {
         String contextFile = context.getContextFile();
         context.serialize();
@@ -318,6 +333,8 @@ public class WorkflowExecutionContextTest {
 
             "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
             "-" + WorkflowExecutionArgs.LOG_FILE.getName(), LOGS_DIR + "/log.txt",
+            "-" + WorkflowExecutionArgs.WF_START_TIME.getName(), Long.toString(new Date().getTime()),
+            "-" + WorkflowExecutionArgs.WF_END_TIME.getName(), Long.toString(new Date().getTime() + 1000000),
         };
     }
 }

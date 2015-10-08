@@ -105,4 +105,6 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract InstancesResult getInstanceParams(Entity entity, Date start, Date end,
                                                       List<LifeCycle> lifeCycles) throws FalconException;
+
+    public abstract boolean isNotificationEnabled(String cluster, String jobID) throws FalconException;
 }

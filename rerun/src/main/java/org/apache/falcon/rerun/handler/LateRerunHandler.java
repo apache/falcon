@@ -239,4 +239,19 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
         // do nothing since late data does not apply for failed workflows
     }
+
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing.
+    }
 }

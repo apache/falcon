@@ -523,6 +523,54 @@
         </description>
     </property>
 
+    <!-- Required to Notify Falcon on Workflow job status. -->
+    <property>
+        <name>oozie.services.ext</name>
+        <value>
+            org.apache.oozie.service.JMSAccessorService,
+            org.apache.oozie.service.JMSTopicService,
+            org.apache.oozie.service.EventHandlerService
+        </value>
+    </property>
+    <property>
+        <name>oozie.service.EventHandlerService.event.listeners</name>
+        <value>
+            org.apache.oozie.jms.JMSJobEventListener
+        </value>
+    </property>
+    <property>
+        <name>oozie.jms.producer.connection.properties</name>
+        <value>
+            java.naming.factory.initial#org.apache.activemq.jndi.ActiveMQInitialContextFactory;java.naming.provider.url#tcp://localhost:61616
+        </value>
+    </property>
+    <property>
+        <name>oozie.service.JMSTopicService.topic.name</name>
+        <value>
+            WORKFLOW=ENTITY.TOPIC, COORDINATOR=ENTITY.TOPIC
+        </value>
+        <description>
+            Topic options are ${username} or a fixed string which can be specified as default or for a
+            particular job type.
+            For e.g To have a fixed string topic for workflows, coordinators and bundles,
+            specify in the following comma-separated format: {jobtype1}={some_string1}, {jobtype2}={some_string2}
+            where job type can be WORKFLOW, COORDINATOR or BUNDLE.
+            Following example defines topic for workflow job, workflow action, coordinator job, coordinator action,
+            bundle job and bundle action
+            WORKFLOW=workflow,
+            COORDINATOR=coordinator,
+            BUNDLE=bundle
+            For jobs with no defined topic, default topic will be ${username}
+        </description>
+    </property>
+    <property>
+        <name>oozie.service.JMSTopicService.topic.prefix</name>
+        <value>FALCON.</value>
+        <description>
+            This can be used to append a prefix to the topic in oozie.service.JMSTopicService.topic.name. For eg: oozie.
+        </description>
+    </property>
+
     <property>
         <name>oozie.service.HadoopAccessorService.supported.filesystems</name>
         <value>*</value>

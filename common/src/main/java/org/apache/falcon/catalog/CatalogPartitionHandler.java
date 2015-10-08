@@ -295,4 +295,19 @@ public class CatalogPartitionHandler implements WorkflowExecutionListener{
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
         //no-op
     }
+
+    @Override
+    public void onStart(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
+
+    @Override
+    public void onWait(WorkflowExecutionContext context) throws FalconException {
+        // Do nothing
+    }
 }

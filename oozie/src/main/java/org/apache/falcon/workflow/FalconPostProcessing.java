@@ -62,9 +62,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         LOG.info("Moving logs {}", context);
         invokeLogProducer(context);
 
-        LOG.info("Sending falcon message {}", context);
-        invokeFalconMessageProducer(context);
-
         return 0;
     }
 
@@ -73,13 +70,6 @@ public class FalconPostProcessing extends Configured implements Tool {
                 .type(JMSMessageProducer.MessageType.USER)
                 .build();
         jmsMessageProducer.sendMessage(WorkflowExecutionContext.USER_MESSAGE_ARGS);
-    }
-
-    private void invokeFalconMessageProducer(WorkflowExecutionContext context) throws Exception {
-        JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
-                .type(JMSMessageProducer.MessageType.FALCON)
-                .build();
-        jmsMessageProducer.sendMessage();
     }
 
     private void invokeLogProducer(WorkflowExecutionContext context) {
