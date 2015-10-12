@@ -91,7 +91,23 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             addPipelines(process.getPipelines(), processInstance);
         }
 
+        addCounters(processInstance, context);
+
         return processInstance;
+    }
+
+    private void addCounters(Vertex processInstance, WorkflowExecutionContext context) throws FalconException {
+        String counterString = getCounterString(context);
+        if (!StringUtils.isBlank(counterString)) {
+            addCountersToInstance(counterString, processInstance);
+        }
+    }
+
+    private String getCounterString(WorkflowExecutionContext context) {
+        if (!StringUtils.isBlank(context.getCounters())) {
+            return context.getCounters();
+        }
+        return null;
     }
 
     public String getProcessInstanceName(WorkflowExecutionContext context) {
@@ -116,6 +132,18 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
 
         vertex.setProperty(optionName.getName(), value);
+    }
+
+    private void addCountersToInstance(String counterString, Vertex vertex) throws FalconException {
+        String[] counterKeyValues = counterString.split(",");
+        try {
+            for (String counter : counterKeyValues) {
+                String[] keyVals = counter.split(":", 2);
+                vertex.setProperty(keyVals[0], Long.parseLong(keyVals[1]));
+            }
+        } catch (NumberFormatException e) {
+            throw new FalconException("Invalid values for counter:" + e);
+        }
     }
 
     public void addInstanceToEntity(Vertex instanceVertex, String entityName,
@@ -200,6 +228,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
         addInstanceToEntity(feedInstanceVertex, targetClusterName, RelationshipType.CLUSTER_ENTITY,
                 RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE, context.getTimeStampAsISO8601());
+
+        addCounters(feedInstanceVertex, context);
     }
 
     public void addEvictedInstance(WorkflowExecutionContext context) throws FalconException {

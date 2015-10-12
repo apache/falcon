@@ -84,7 +84,8 @@ public enum WorkflowExecutionArgs {
     LOG_DIR("logDir", "log dir where lineage can be recorded"),
 
     CONTEXT_FILE("contextFile", "wf execution context file path where wf properties are recorded", false),
-    CONTEXT_TYPE("contextType", "wf execution context type, pre or post processing", false);
+    CONTEXT_TYPE("contextType", "wf execution context type, pre or post processing", false),
+    COUNTERS("counters", "store job counters", false);
 
 
     private final String name;

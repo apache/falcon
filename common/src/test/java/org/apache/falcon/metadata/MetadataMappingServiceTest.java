@@ -41,20 +41,23 @@ import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
-import static org.apache.falcon.workflow.WorkflowExecutionContext.EntityOperations;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,13 +65,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static org.apache.falcon.workflow.WorkflowExecutionContext.EntityOperations;
+
 /**
  * Test for Metadata relationship mapping service.
  */
 public class MetadataMappingServiceTest {
 
     public static final String FALCON_USER = "falcon-user";
-    private static final String LOGS_DIR = "/falcon/staging/feed/logs";
+    private static final String LOGS_DIR = "jail://global:00/falcon/staging/feed/logs";
     private static final String NOMINAL_TIME = "2014-01-01-01-00";
 
     public static final String CLUSTER_ENTITY_NAME = "primary-cluster";
@@ -97,6 +102,7 @@ public class MetadataMappingServiceTest {
             "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join1/20140102";
     public static final String OUTPUT_INSTANCE_PATHS_NO_DATE =
             "jail://global:00/falcon/imp-click-join1,jail://global:00/falcon/imp-click-join2";
+    public static final String COUNTERS = "TIMETAKEN:36956,COPY:30,BYTESCOPIED:1000";
 
     public static final String BROKER = "org.apache.activemq.ActiveMQConnectionFactory";
 
@@ -580,6 +586,26 @@ public class MetadataMappingServiceTest {
         Assert.assertTrue(EntityRelationshipGraphBuilder.areSame(outputs1, outputs2));
     }
 
+    @Test
+    public void testLineageForJobCounter() throws Exception {
+        setupForJobCounters();
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "IGNORE", "IGNORE", "IGNORE", "NONE"),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+        Graph graph = service.getGraph();
+
+        Vertex vertex = graph.getVertices("name", "sample-process/2014-01-01T01:00Z").iterator().next();
+        Assert.assertEquals(vertex.getProperty("TIMETAKEN"), 36956L);
+        Assert.assertEquals(vertex.getProperty("COPY"), 30L);
+        Assert.assertEquals(vertex.getProperty("BYTESCOPIED"), 1000L);
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 9);
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 14);
+        verifyLineageGraphForJobCounters(context);
+    }
+
     private void verifyUpdatedEdges(Process newProcess) {
         Vertex processVertex = getEntityVertex(newProcess.getName(), RelationshipType.PROCESS_ENTITY);
 
@@ -946,6 +972,13 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(clusterVertex.getProperty(RelationshipProperty.NAME.getName()), context.getClusterName());
     }
 
+    private void verifyLineageGraphForJobCounters(WorkflowExecutionContext context) throws Exception {
+        Vertex processVertex = getEntityVertex(PROCESS_ENTITY_NAME,
+                RelationshipType.PROCESS_ENTITY);
+        Assert.assertEquals(processVertex.getProperty("name"), PROCESS_ENTITY_NAME);
+        Assert.assertTrue(context.getCounters().length()>0);
+    }
+
     private static String[] getTestMessageArgs(EntityOperations operation, String wfName, String outputFeedNames,
                                                String feedInstancePaths, String falconInputPaths,
                                                String falconInputFeeds) {
@@ -993,6 +1026,36 @@ public class MetadataMappingServiceTest {
 
             "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
         };
+    }
+
+    private void setupForJobCounters() throws Exception {
+        cleanUp();
+        service.init();
+        // Add cluster
+        clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
+                "classification=production");
+        List<Feed> inFeeds = new ArrayList<>();
+        List<Feed> outFeeds = new ArrayList<>();
+
+        createJobCountersFileForTest();
+        // Add process
+        processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
+                "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
+                WORKFLOW_VERSION, inFeeds, outFeeds);
+    }
+
+    private void createJobCountersFileForTest() throws Exception {
+        Path counterFile = new Path(LOGS_DIR, "counter.txt");
+        OutputStream out = null;
+        try {
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                    new Path(LOGS_DIR).toUri());
+            out = fs.create(counterFile);
+            out.write(COUNTERS.getBytes());
+            out.flush();
+        }  finally {
+            out.close();
+        }
     }
 
     private void setup() throws Exception {

@@ -56,6 +56,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         ACTION replication = unmarshalAction(REPLICATION_ACTION_TEMPLATE);
         addHDFSServersConfig(replication, src, target);
         addAdditionalReplicationProperties(replication);
+        enableCounters(replication);
         addTransition(replication, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(replication);
 

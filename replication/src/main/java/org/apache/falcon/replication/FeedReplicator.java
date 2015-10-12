@@ -27,12 +27,17 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.job.JobCountersHandler;
+import org.apache.falcon.job.JobType;
+import org.apache.falcon.job.JobCounters;
 import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.util.Tool;
@@ -89,7 +94,18 @@ public class FeedReplicator extends Configured implements Tool {
                 ? new CustomReplicator(conf, options)
                 : new DistCp(conf, options);
         LOG.info("Started DistCp");
-        distCp.execute();
+        Job job = distCp.execute();
+
+        if (cmd.hasOption("counterLogDir")
+                && job.getStatus().getState() == JobStatus.State.SUCCEEDED) {
+            LOG.info("Gathering counters for the the Feed Replication job");
+            Path counterFile = new Path(cmd.getOptionValue("counterLogDir"), "counter.txt");
+            JobCounters fsReplicationCounters = JobCountersHandler.getCountersType(JobType.FSREPLICATION.name());
+            if (fsReplicationCounters != null) {
+                fsReplicationCounters.obtainJobCounters(conf, job, true);
+                fsReplicationCounters.storeJobCounters(conf, counterFile);
+            }
+        }
 
         if (includePathSet) {
             executePostProcessing(conf, options);  // this only applies for FileSystem Storage.
@@ -158,6 +174,10 @@ public class FeedReplicator extends Configured implements Tool {
 
         opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName(), true,
                 "preserve permissions");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option("counterLogDir", true, "log directory to store job counter file");
         opt.setRequired(false);
         options.addOption(opt);
 
