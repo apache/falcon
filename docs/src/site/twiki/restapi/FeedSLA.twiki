@@ -26,7 +26,7 @@ Pending feed instances which missed SLA.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/entities/feed?colo=*&start=2012-04-03T07:00Z
+GET http://localhost:15000/api/entities/sla-alert/feed?colo=*&start=2012-04-03T07:00Z
 </verbatim>
 ---+++ Result
 <verbatim>

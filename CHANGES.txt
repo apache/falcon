@@ -61,6 +61,8 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1532 Incorrect documentation in SLA monitoring(Pragya Mittal via Ajay Yadava)
+
     FALCON-1466 Flaky unit tests in Proxy user feature(Sowmya Ramesh)
 
     FALCON-1518 Temporarily comment getTotalEnqueueCount in JMSMessageConsumerTest(Peeyush Bishnoi via Sowmya Ramesh)
