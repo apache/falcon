@@ -57,10 +57,15 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     protected ConfigurationStore configStore;
     private AbstractWorkflowEngine workflowEngine;
+    private LocalSchedulableEntityManager localSchedulableEntityManager;
+    private LocalInstanceManager localInstanceManager;
+
 
     public FalconUnitClient() throws FalconException {
         configStore = ConfigurationStore.get();
         workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
+        localSchedulableEntityManager = new LocalSchedulableEntityManager();
+        localInstanceManager = new LocalInstanceManager();
     }
 
     public ConfigurationStore getConfigStore() {
@@ -122,6 +127,18 @@ public class FalconUnitClient extends AbstractFalconClient {
                               Boolean skipDryRun, String doAsUser, String properties) throws FalconCLIException {
         return schedule(entityType, entityName, null, 0, cluster, skipDryRun, properties);
     }
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public InstancesResult getStatusOfInstances(String type, String entity, String start, String end,
+                                                String colo, List<LifeCycle> lifeCycles, String filterBy,
+                                                String orderBy, String sortOrder, Integer offset,
+                                                Integer numResults, String doAsUser) throws FalconCLIException {
+        return localInstanceManager.getStatusOfInstances(type, entity, start, end, colo, lifeCycles, filterBy, orderBy,
+                sortOrder, offset, numResults);
+
+    }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
 
     /**

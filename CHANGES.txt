@@ -17,6 +17,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1516 Feed Retention support in Falcon Unit(Pavan Kolamuri via Pallavi Rao) 
+
     FALCON-1231 Improve JobCompletionNotification Service(Pallavi Rao)
 
     FALCON-1157 Build error when using maven 3.3.x(Venkat Ramachandran via Pallavi Rao)

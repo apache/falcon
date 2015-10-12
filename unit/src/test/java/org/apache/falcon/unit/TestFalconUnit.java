@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.unit;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -24,6 +26,9 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.text.ParseException;
 
 /**
  * Test cases of falcon jobs using Local Oozie and LocalJobRunner.
@@ -55,5 +60,31 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertTrue(getFileSystem().exists(new Path(outPath)));
         FileStatus[] files = getFileSystem().listStatus(new Path(outPath));
         Assert.assertTrue(files.length > 0);
+    }
+
+
+    @Test
+    public void testRetention() throws IOException, FalconCLIException, FalconException,
+            ParseException, InterruptedException {
+        // submit with default props
+        submitCluster();
+        // submitting feeds
+        APIResult result = submit(EntityType.FEED, getAbsolutePath("/infeed.xml"));
+        assertStatus(result);
+        String scheduleTime = "2015-06-20T00:00Z";
+        createData("in", "local", scheduleTime, "input.txt");
+        String inPath = getFeedPathForTS("local", "in", scheduleTime);
+        Assert.assertTrue(fs.exists(new Path(inPath)));
+        result = schedule(EntityType.FEED, "in", "local");
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, result.getStatus());
+        waitFor(WAIT_TIME, new Predicate() {
+            public boolean evaluate() throws Exception {
+                InstancesResult.WorkflowStatus status = getRetentionStatus("in", "local");
+                return InstancesResult.WorkflowStatus.SUCCEEDED.equals(status);
+            }
+        });
+        InstancesResult.WorkflowStatus status = getRetentionStatus("in", "local");
+        Assert.assertEquals(InstancesResult.WorkflowStatus.SUCCEEDED, status);
+        Assert.assertFalse(fs.exists(new Path(inPath)));
     }
 }

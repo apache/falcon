@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.falcon.util;
+
+import org.apache.falcon.entity.v0.SchemaHelper;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -30,14 +31,20 @@ public final class DateUtil {
     //Friday, April 16, 9999 7:12:55 AM UTC corresponding date
     public static final Date NEVER = new Date(Long.parseLong("253379862775000"));
 
+    public static final long HOUR_IN_MILLIS = 60 * 60 * 1000;
+
     private DateUtil() {}
 
     public static Date getNextMinute(Date time) throws Exception {
         Calendar insCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         insCal.setTime(time);
-
         insCal.add(Calendar.MINUTE, 1);
         return insCal.getTime();
+
     }
 
+    public static String getDateFormatFromTime(long milliSeconds) {
+        return SchemaHelper.getDateFormat().format((new Date(milliSeconds)));
+
+    }
 }

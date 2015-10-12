@@ -20,12 +20,15 @@ package org.apache.falcon.unit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.FalconCLIException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
@@ -34,6 +37,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +55,10 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -74,6 +81,14 @@ public class FalconUnitTestBase {
         boolean evaluate() throws Exception;
     }
 
+    public static final ThreadLocal<SimpleDateFormat> FORMATTER = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+            return format;
+        }
+    };
+
     private static final Logger LOG = LoggerFactory.getLogger(FalconUnitTestBase.class);
 
     private static final String DEFAULT_CLUSTER = "local";
@@ -85,6 +100,7 @@ public class FalconUnitTestBase {
     private static final String WORKING_PATH = "/projects/falcon/working";
 
     public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_.]*##");
+    protected static final int WAIT_TIME = 90000;
     protected static FalconUnitClient falconUnitClient;
     protected static JailedFileSystem fs;
     protected static ConfigurationStore configStore;
@@ -168,6 +184,15 @@ public class FalconUnitTestBase {
         }
         return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster,
                 skipDryRun, properties);
+    }
+
+    public APIResult schedule(EntityType entityType, String entityName, String cluster) throws FalconException,
+            FalconCLIException {
+        Entity entity = configStore.get(entityType, entityName);
+        if (entity == null) {
+            throw new FalconException("Process not found " + entityName);
+        }
+        return falconUnitClient.schedule(entityType, entityName, cluster, false, null, null);
     }
 
     private Map<String, String> updateColoAndCluster(String colo, String cluster, Map<String, String> props) {
@@ -304,7 +329,7 @@ public class FalconUnitTestBase {
     }
 
     protected long waitForStatus(final EntityType entityType, final String entityName, final String instanceTime) {
-        return waitFor(90000, new Predicate() {
+        return waitFor(WAIT_TIME, new Predicate() {
             public boolean evaluate() throws Exception {
                 InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(entityType,
                         entityName, instanceTime);
@@ -315,6 +340,30 @@ public class FalconUnitTestBase {
 
     public void assertStatus(APIResult apiResult) {
         Assert.assertEquals(APIResult.Status.SUCCEEDED, apiResult.getStatus());
+    }
+
+    public InstancesResult.WorkflowStatus getRetentionStatus(String feedName, String cluster) throws FalconException,
+            FalconCLIException {
+        Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
+        Frequency.TimeUnit timeUnit = feedEntity.getFrequency().getTimeUnit();
+        long endTimeInMillis = System.currentTimeMillis() + 30000;
+        String endTime = DateUtil.getDateFormatFromTime(endTimeInMillis);
+        long startTimeInMillis;
+        if (timeUnit == Frequency.TimeUnit.hours || timeUnit == Frequency.TimeUnit.minutes) {
+            startTimeInMillis = endTimeInMillis - (6 * DateUtil.HOUR_IN_MILLIS);
+        } else {
+            startTimeInMillis = endTimeInMillis - (24 * DateUtil.HOUR_IN_MILLIS);
+        }
+        String startTime = DateUtil.getDateFormatFromTime(startTimeInMillis);
+        List<LifeCycle> lifecycles = new ArrayList<>();
+        lifecycles.add(LifeCycle.EVICTION);
+        InstancesResult result = falconUnitClient.getStatusOfInstances("feed",
+                feedName, startTime, endTime, cluster,
+                lifecycles, null, "status", "asc", 0, 1, null);
+        if (result.getInstances() != null && result.getInstances().length > 0) {
+            return result.getInstances()[0].getStatus();
+        }
+        return null;
     }
 
 }

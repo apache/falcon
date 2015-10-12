@@ -576,12 +576,10 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public InstancesResult getLogsOfInstances(String type, String entity, String start,
-                                     String end, String colo, String runId,
-                                     List<LifeCycle> lifeCycles, String filterBy,
-                                     String orderBy, String sortOrder, Integer offset,
-                                     Integer numResults, String doAsUser)
-        throws FalconCLIException {
-
+                                              String end, String colo, String runId,
+                                              List<LifeCycle> lifeCycles, String filterBy,
+                                              String orderBy, String sortOrder, Integer offset,
+                                              Integer numResults, String doAsUser) throws FalconCLIException {
         return sendInstanceRequest(Instances.LOG, type, entity, start, end,
                 null, runId, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser)
                 .getEntity(InstancesResult.class);

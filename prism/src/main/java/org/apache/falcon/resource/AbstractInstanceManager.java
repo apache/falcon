@@ -842,8 +842,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return getStartAndEndDate(entityObject, startStr, endStr, getDefaultResultsPerPage());
     }
 
-    private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr, Integer numResults)
-        throws FalconException {
+    protected Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr,
+                                                  Integer numResults) throws FalconException {
         Pair<Date, Date> clusterStartEndDates = EntityUtil.getEntityStartEndDates(entityObject);
         Frequency frequency = EntityUtil.getFrequency(entityObject);
         Date endDate = getEndDate(endStr, clusterStartEndDates.second);
@@ -909,7 +909,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return start;
     }
 
-    private void validateParams(String type, String entity) throws FalconException {
+    protected void validateParams(String type, String entity) throws FalconException {
         validateNotEmpty("entityType", type);
         validateNotEmpty("entityName", entity);
     }

@@ -17,10 +17,13 @@
  */
 package org.apache.falcon.client;
 
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.InstancesResult;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Abstract Client API to submit and manage Falcon Entities (Cluster, Feed, Process) jobs
@@ -51,4 +54,31 @@ public abstract class AbstractFalconClient {
     public abstract APIResult schedule(EntityType entityType, String entityName, String colo, Boolean skipDryRun,
                                         String doAsuser, String properties) throws FalconCLIException;
 
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
+    /**
+     *
+     * @param type entity type
+     * @param entity entity name
+     * @param start start time
+     * @param end end time
+     * @param colo colo name
+     * @param lifeCycles lifecycle of an entity (for ex : feed has replication,eviction).
+     * @param filterBy filter operation can be applied to results
+     * @param orderBy
+     * @param sortOrder sort order can be asc or desc
+     * @param offset offset while displaying results
+     * @param numResults num of Results to output
+     * @param doAsUser
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract InstancesResult getStatusOfInstances(String type, String entity,
+                                                         String start, String end,
+                                                         String colo, List<LifeCycle> lifeCycles, String filterBy,
+                                                         String orderBy, String sortOrder,
+                                                         Integer offset, Integer numResults,
+                                                         String doAsUser) throws FalconCLIException;
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 }
