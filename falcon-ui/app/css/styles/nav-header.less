@@ -27,8 +27,25 @@
   border-width: 0;
   border-radius: 0;
   position: relative;
+  &:hover{
+    cursor: default;
+  }
 }
-
+.logoTitle {
+  background: transparent;
+  border: none;
+  float: left;
+  h1 span{
+    vertical-align: middle;
+    display: inline-block;
+  }
+  .falconLogo{
+    background: url(img/falcon.png) no-repeat center center;
+    background-size: 100%;
+    width: 30px;
+    height: 44px;
+  }
+}
 .navbar-header {
   margin: 5px 15px 5px 5px;
   font-size: 30px;
@@ -47,51 +64,177 @@
     font-weight: bold;
     margin: 2px 0;
   }
-  > div {
+  > button {
     padding: 5px 10px;
     border: 1px solid white;
     border-radius: 3px;
     display: inline-block;
     cursor: pointer;
+    background-color: transparent;
+  }
+  span {
+    vertical-align: middle;
+    margin-right: 6px;
+    &.entypo, &.glyphicon{
+      vertical-align: sub;
+      &.up{
+        font-size: 2.2em;
+      }
+    }
   }
   .disabled {
-    color: lighten(@headerNavBG, 10%);
-    border-color: lighten(@headerNavBG, 10%);
+    //color: lighten(@headerNavBG, 30%);
+    //border-color: lighten(@headerNavBG, 10%);
     cursor: default;
+    .background-opacity(black, 0.2);
   }
 }
 .uploadNavWrapper {
   > div {
     min-width:183px;
+    padding: 5px 10px;
+    border: 1px solid white;
+    border-radius: 3px;
+    display: inline-block;
+    cursor: pointer;
+    &.fakeFocus {
+      .box-shadow(0 0 2px white);
+    }
   }
 }
-
 .loginHeaderBox {
   margin: 0;
   display: inline-block;
   //width: 100%;
-  text-align:right;
+  text-align: right;
+  margin-top: 10px;
+
   .pull-right;
-  div {
+  >*{
+    vertical-align: middle;
     display: inline-block;
     margin-right: 10px;
+    >*{
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+  span.entypo{
+    vertical-align: sub;
+  }
+  span.user{
+    background: url(img/user.svg) no-repeat center center;
+    background-size: 35px 35px;
+    height: 35px;
+    width: 35px;
+  }
+  button {
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+  }
+  a {
+    color: white;
+    cursor: pointer;
+    overflow: hidden;
+    background-color: transparent;
+    &:hover {
+      text-decoration: none;
+    }
+    &:focus {
+      text-decoration: none;
+    }
   }
 }
 
-@media screen and (min-width:880px) {
-  .loginHeaderBox {
-    margin-top: 36px;
+/* NOTIFICATIONS */
+
+.notifications .messages {
+  display:none;
+  position: absolute;
+  top:50px;
+  right:0px;
+  width:280px;
+  max-width:280px;
+  max-height:300px;
+  overflow: auto;
+}
+
+.messagesArrow {
+  content:'.';
+  display:none;
+  position:absolute;
+  margin-left:-10px;
+  top:30px;
+  right:130px;
+  width:0;
+  height:0;
+  color:transparent;
+  border:10px solid black;
+  border-color:transparent transparent white;
+}
+
+.notifications .messages:before {
+  content:'.';
+  display:block;
+  position:absolute;
+  margin-left:-10px;
+  left:50%;
+  top:-18px;
+  width:0;
+  height:0;
+  color:transparent;
+  border:10px solid black;
+  border-color:transparent transparent white;
+}
+
+.badge-notify{
+  background:red;
+  position:relative;
+  top: -15px;
+  right: -35px;
+}
+
+.notifications .messages .message {
+  display:block;
+  position:relative;
+  padding:10px;
+  background-color:white;
+  text-decoration:none;
+  a {
+    font-weight: bold;
+    text-decoration: underline;
   }
 }
-@media screen and (max-width:880px) {
-  .loginHeaderBox {
-    //margin-top: 40px;
-    width: 100px;
-  }
+
+.notifications .messages .message + .message {
+  border-top:1px solid #e0e0e0;
 }
-@media screen and (max-width:610px) {
-  .loginHeaderBox {
-    //margin-top: 40px;
-    width: 100%;
-  }
+
+.icon-notif{
+  margin-right: 10px;
+}
+
+.no-margin-right{
+ margin-right: 0;
+}
+
+.bell-notif{
+  margin-right: 10px;
+}
+
+.header-icon{
+  font-size: 18px;
+}
+
+.logoutBT{
+  margin-right: -20px;
+}
+
+.no-outline{
+  outline: 0;
+}
+
+.unreaded-notif {
+  background-color: #EDEDED !important;
 }

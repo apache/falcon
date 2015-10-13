@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<div class="row">
+<div class="row" id="feedFormSummaryStep">
   <h4 class="col-sm-24">
     General
   </h4>
@@ -122,10 +122,10 @@
     <div class="clearfix hidden-md"></div>
 
     <div class="col-sm-12">
-      <label>Start</label>: {{cluster.validity.start.date}} {{cluster.validity.start.time}}
+      <label>Start</label>: {{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}
     </div>
     <div class="col-sm-12">
-      <label>End</label>: {{cluster.validity.end.date}} {{cluster.validity.end.time}}
+      <label>End</label>: {{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}
     </div>
     <div class="col-sm-24">
       <label>Timezone</label>: {{feed.timezone}}
@@ -146,14 +146,18 @@
   </div>
 </div>
 
-<div class="feedBottomButtons row">
-  <div class="btn btn-default col-xs-6" ng-click="goBack('forms.feed.clusters')" >
-    Previous
+<div class="row">
+  <div class="col-xs-24 mt20">
+    <button id="feed.backToStep4" class="btn prevBtn" type="button"
+         ng-click="goBack('forms.feed.clusters')"
+         ng-disabled="buttonSpinners.backShow">
+      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+    </button>
+    <button id="feed.step5" class="btn nextBtn pull-right" ng-click="saveEntity()">
+      Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+    </button>
+    <a class="pull-right" ui-sref="main">
+      Cancel
+    </a>
   </div>
-  <div class="btn btn-default col-xs-6 pull-right" ng-click="saveEntity()">
-    Save
-  </div>
-  <u class="col-xs-3 pull-right" ui-sref="main">
-    Cancel
-  </u>
 </div>

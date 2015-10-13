@@ -6,6 +6,8 @@ Trunk (Unreleased)
     FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
 
   NEW FEATURES
+    FALCON-1315 Update falcon ui for HiveDR, secure clusters and bug fixes(Armando Reyna/Venkat Ranganathan via Sowmya Ramesh)
+
     FALCON-1102 Gather data transfer details of filesystem replication(Peeyush Bishnoi via Sowmya Ramesh)
 
     FALCON-1316 Add supporting REST API calls for new UI(Balu Vellanki via Sowmya Ramesh)

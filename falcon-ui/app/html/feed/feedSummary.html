@@ -1,0 +1,214 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="summaryBox" id="feedFormSummary">
+  <div class="row">
+    <h5 class="col-sm-24">
+      General
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-12">
+      <label>Name</label>: {{feed.name}}
+    </div>
+    <div class="col-sm-12">
+      <label>Description</label>: {{feed.description}}
+    </div>
+  </div>
+
+  <div class="row">
+    <h5 class="col-sm-24">
+      Tags
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-24">
+      <div ng-repeat="tag in feed.tags | filter:{key: '!!'}">
+        {{tag.key}} = {{tag.value}}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <h5 class="col-sm-24">
+      Groups
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-24">
+      {{feed.groups}}
+    </div>
+  </div>
+
+  <div class="row">
+    <h5 class="col-sm-24">
+      Access Control List
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-8">
+      <label>Owner</label>: {{feed.ACL.owner}}
+    </div>
+    <div class="col-sm-8">
+      <label>Group</label>: {{feed.ACL.group}}
+    </div>
+    <div class="col-sm-8">
+      <label>Permissions</label>: {{feed.ACL.permission}}
+    </div>
+  </div>
+
+  <div class="row">
+    <h5 class="col-sm-24">
+      Schema
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-12">
+      <label>Location</label>: {{feed.schema.location}}
+    </div>
+    <div class="col-sm-12">
+      <label>Provider</label>: {{feed.schema.provider}}
+    </div>
+  </div>
+
+  <div class="row">
+    <h5 class="col-sm-24">
+      Properties
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-8">
+      <label>Frequency</label>:
+      <frequency value="feed.frequency" prefix="Every"/>
+    </div>
+    <div class="col-sm-8">
+      <label>Late Arrival</label>:
+      <frequency value="feed.lateArrival.cutOff" prefix="Up to"/>
+    </div>
+    <div class="col-sm-8">
+      <label>Availability Flag</label>: {{feed.availabilityFlag}}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-8" ng-repeat="property in feed.properties">
+      <label>{{property.key}}</label>:
+      <span ng-if="property.key !== 'timeout'">{{property.value}}</span>
+      <frequency ng-if="property.key === 'timeout'" value="property.value" prefix="at"/>
+    </div>
+
+    <div class="col-sm-8" ng-repeat="property in feed.customProperties | filter: {key: '!!'}">
+      <label>{{property.key}}</label>: {{property.value}}
+    </div>
+
+    <h5 class="col-xs-24">
+      Default Storage Type:
+    </h5>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-8 light" ng-show="feed.storage.fileSystem.active">File System</div>
+    <div class="col-sm-8 light" ng-show="feed.storage.catalog.active">Catalog Storage</div>
+  </div>
+
+  <div class="row">
+    <h5 class="col-sm-24">Default Location:</h5>
+  </div>
+
+
+  <div ng-repeat="location in feed.storage.fileSystem.locations" ng-show="feed.storage.fileSystem.active">
+    <div class="row">
+      <label class="col-sm-24">{{capitalize(location.type)}}</label>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-24">{{location.path}}</div>
+    </div>
+  </div>
+
+  <div ng-show="feed.storage.catalog.active">
+    <div class="row">
+      <label class="col-sm-24">Table uri</label>
+    </div>
+    <div class="row">
+      <div class="col-sm-24">{{feed.storage.catalog.catalogTable.uri}}</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="summaryBox">
+  <div ng-repeat="cluster in feed.clusters">
+    <div class="row">
+      <h5 class="col-sm-24">{{capitalize(cluster.type)}} Cluster</h5>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <label>Name</label>: {{cluster.name}}
+      </div>
+      <div class="clearfix hidden-md"></div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <label>Start</label>: {{dateFormatter(entity.start)}}
+      </div>
+      <div class="col-sm-12">
+        <label>End</label>: {{dateFormatter(entity.end)}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-24">
+        <label>Timezone</label>: {{feed.timezone}}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-24">
+        <label>Retention</label>:
+        <frequency value="cluster.retention" prefix="Archive in"/>
+      </div>
+    </div>
+  </div>
+  <div class="clearfix hidden-md"></div>
+  <div class="row">
+    <h5 class="col-sm-24">Location</h5>
+  </div>
+
+  <div ng-repeat="location in cluster.storage.fileSystem.locations" ng-show="cluster.storage.fileSystem">
+    <div class="row">
+      <label class="col-sm-24">{{capitalize(location.type)}}</label>
+    </div>
+    <div class="row">
+      <div class="col-sm-24">{{location.path}}</div>
+    </div>
+  </div>
+  <div ng-show="cluster.storage.catalog.active">
+    <div class="row">
+      <label class="col-sm-24">Table uri</label>
+    </div>
+    <div class="row">
+      <div class="col-sm-24">{{cluster.storage.catalog.catalogTable.uri}}</div>
+    </div>
+  </div>
+</div>

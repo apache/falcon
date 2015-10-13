@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<div class="row clusterSummaryRow">
+<div class="row clusterSummaryRow" id="clusterSummaryStep">
   <div class="col-sm-24">
     <label>Name</label>: {{clusterEntity.clusterModel.cluster._name}}
   </div>
@@ -50,7 +50,7 @@
     Properties
   </h4>
 
-  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0" 
+  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0"
     ng-repeat="property in clusterEntity.clusterModel.cluster.properties.property">
     <label>{{property._name}}</label>: {{property._value}}
   </div>
@@ -65,13 +65,23 @@
 </div>
 
 
-<div class="row clusterSummaryRow mt20">
-  <div class="btn btn-default col-xs-6" ui-sref="forms.cluster.general" ng-click="goGeneralStep()">
-    Previous
-  </div>
+<div class="row clusterSummaryRow">
+  <div class="col-xs-24 mt20">
+    <button id="cluster.backToStep1"
+         class="btn prevBtn"
+         ui-sref="forms.cluster.general"
+         ng-click="goGeneralStep()"
+         ng-disabled="buttonSpinners.backShow">
+      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+    </button>
 
-  <div class="btn btn-default col-xs-6 pull-right" ng-click="saveCluster()" ng-disabled="xmlPreview.edit">
-    Save
-  </div>
+    <button id="cluster.step2" class="btn btn-default nextBtn pull-right"
+         ng-click="saveCluster()" ng-disabled="xmlPreview.edit || buttonSpinners.show">
+      Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+    </button>
 
+    <a class="pull-right" ui-sref="main">
+      Cancel
+    </a>
+  </div>
 </div>

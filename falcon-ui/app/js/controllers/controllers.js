@@ -17,8 +17,9 @@
  */
 (function () {
   'use strict';
-  
+
   angular.module('app.controllers', [
+                                      'app.controllers.login',
                                       'app.controllers.navHeader',
                                       'app.controllers.rootCtrl',
                                       'app.controllers.dashboardCtrl',
@@ -26,7 +27,9 @@
                                       'app.controllers.cluster',
                                       'app.controllers.feed',
                                       'app.controllers.process',
-                                      'app.controllers.entity'   
+                                      'app.controllers.entity',
+                                      'app.controllers.instance',
+                                      'app.controllers.dataset'
                                     ]);
 
 })();

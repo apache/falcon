@@ -28,15 +28,13 @@
           dest: 'dist/',
           expand: true
         },
-
         dependencies: {
           cwd: 'app/',
           src: ['css/fonts/*', 'css/img/*'],
           dest: 'dist/',
           expand: true
         },
-
-        ambariview : {
+	ambariview : {
           cwd: 'dist',
           src: ['**/*.*'],
           dest: '../falcon-ambari-view/src/main/resources/ui/',
@@ -63,7 +61,12 @@
             'app/js/lib/angular-mocks.js',
             'app/js/lib/checklist-model.js',
             'app/js/lib/angular-animate.min.js',
-            'app/js/lib/angular-messages.min.js'
+            'app/js/lib/angular-messages.min.js',
+            'app/js/lib/ng-tags-input.js',
+            'app/js/lib/popover.js',
+            'app/js/lib/ng-mask.min.js',
+            'app/js/lib/dagre.min.js'
+            //'app/js/lib/bootstrap.notify.js'
           ],
           dest: 'dist/js/vendor.min.js'
         }
@@ -84,9 +87,9 @@
             'dist/js/main.min.js': [
 	      'app/js/controllers/**/*-module.js',
               'app/js/controllers/**/*.js',
-              'app/js/directives/*.js',
               'app/js/services/**/*.js',
               'app/js/services/services.js',
+              'app/js/directives/*.js',
               'app/js/app.js'
             ]
           }
@@ -191,10 +194,11 @@
 
       scp: {
         options: {
-          host: '127.0.0.1',
+          //host: 'sandbox.hortonworks.com',
+          host: '192.168.0.105',
+          //host: '192.168.0.106',
           username: 'root',
-          password: 'hadoop',
-          port: 2222
+          password: 'hadoop'
         },
 
         sandbox: {
@@ -203,8 +207,8 @@
               cwd: 'dist',
               src: '**',
               filter: 'isFile',
-              // path on the server
-              dest: '/usr/hdp/2.2.0.0-913/falcon/webapp/falcon/public'
+              dest: '/usr/hdp/2.2.0.0-2041/falcon-0.6.1.2.3.0.0-2357/server/webapp/falcon'
+              //dest: '/usr/hdp/2.3.0.0-1583/falcon/webapp/falcon'
             }
           ]
         }

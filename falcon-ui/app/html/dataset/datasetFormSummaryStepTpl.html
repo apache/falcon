@@ -1,0 +1,146 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div id="formSummaryBox" class="col-xs-24">
+  <div>
+    <h4 class="lightSubtitle">Name</h4>
+    {{UIModel.name}}
+  </div>
+  <div>
+    <h4 class="lightSubtitle">Type</h4>
+    {{UIModel.formType}}
+  </div>
+  <div>
+    <h4 class="lightSubtitle">Tags</h4>
+    <div ng-repeat="tag in UIModel.tags.tagsArray"><span>{{tag.key}}</span> - {{tag.value}}</div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Source</h4>
+  </div>
+  <div class="box">
+    <h3 ng-if="UIModel.formType === 'HIVE' || UIModel.source.location === 'HDFS'">{{UIModel.source.cluster}}</h3>
+
+    <h4 ng-if="UIModel.formType === 'HDFS'">Location</h4>
+    <div ng-if="UIModel.formType === 'HDFS'">{{UIModel.source.location}}</div>
+    <div ng-if="UIModel.formType === 'HDFS'"><span>Path:</span> {{UIModel.source.path}}</div>
+    <div ng-if="UIModel.formType === 'HDFS' && UIModel.source.location !== 'HDFS'"><span>URL:</span>{{UIModel.source.url}}</div>
+
+
+
+
+
+    <div ng-if="UIModel.formType === 'HIVE'">I want to copy <span>{{UIModel.source.hiveDatabaseType}}</span></div>
+    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'databases'"><span>Databases:</span> {{UIModel.source.hiveDatabases}}</div>
+    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'"><span>From Database </span>{{UIModel.source.hiveDatabase}}</div>
+    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'"><span>Tables:</span> {{UIModel.source.hiveTables}}</div>
+
+
+
+
+  </div>
+  <div>
+    <h4 class="lightSubtitle">Target</h4>
+  </div>
+  <div class="box">
+    <h3 ng-if="(UIModel.formType === 'HDFS' && UIModel.target.location === 'HDFS') || UIModel.formType === 'HIVE'">{{UIModel.target.cluster}}</h3>
+
+    <h4 ng-if="UIModel.formType === 'HDFS'">Location</h4>
+    <div ng-if="UIModel.formType === 'HDFS'">{{UIModel.target.location}}</div>
+    <div ng-if="UIModel.formType === 'HDFS'"><span>Path:</span> {{UIModel.target.path}}</div>
+    <div ng-if="UIModel.formType === 'HDFS' && UIModel.target.location !== 'HDFS'"><span>URL:</span> {{UIModel.target.url}}</div>
+
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Run On</h4>
+    <div ng-if="UIModel.runOn === 'source'">{{UIModel.source.cluster}}</div>
+    <div ng-if="UIModel.runOn === 'target'">{{UIModel.target.cluster}}</div>
+  </div>
+
+  <hr />
+
+  <div>
+    <h4 class="lightSubtitle">Schedule</h4>
+    <span>Start on: </span>{{UIModel.validity.startISO}} <br />
+    <span>End on: </span>{{UIModel.validity.endISO}}
+  </div>
+
+  <div ng-if="UIModel.formType === 'HDFS'">
+    <h4 class="lightSubtitle">Max Maps</h4>
+    {{UIModel.allocation.hdfs.maxMaps}}
+
+    <h4 class="lightSubtitle">Max Bandwidth</h4>
+    {{UIModel.allocation.hdfs.maxBandwidth}}
+  </div>
+  <div ng-if="UIModel.formType === 'HIVE'">
+
+    <h4 class="lightSubtitle">Max Maps for Distcp</h4>
+    {{UIModel.allocation.hive.maxMapsDistcp}}
+
+    <h4 class="lightSubtitle">Max Bandwidth</h4>
+    {{UIModel.allocation.hive.maxBandwidth}}
+
+    <h4 class="lightSubtitle">Max Events</h4>
+    {{UIModel.allocation.hive.maxMapsEvents}}
+
+    <h4 class="lightSubtitle">Max Maps for mirror</h4>
+    {{UIModel.allocation.hive.maxMapsMirror}}
+  </div>
+
+  <div>
+    <h4 ng-if="UIModel.alerts.alertsArray.length > 0" class="lightSubtitle">Alerts</h4>
+    {{ UIModel.alerts.alertsArray.join() }}
+  </div>
+
+  <hr />
+  <h4 class="lightSubtitle">ACL</h4>
+  <div><span>Owner:</span> {{UIModel.acl.owner}}</div>
+  <div><span>Group:</span> {{UIModel.acl.group}}</div>
+  <div><span>Permissions:</span> {{UIModel.acl.permissions}}</div>
+
+  <h4 class="lightSubtitle">Retry</h4>
+  <div><span>Policy: </span> {{UIModel.retry.policy}}</div>
+  <div><span>delay: </span> {{UIModel.retry.delay.number}} {{UIModel.retry.delay.unit}}</div>
+  <div><span>Attempts: </span> {{UIModel.retry.attempts}}</div>
+
+  <h4 class="lightSubtitle">Frequency</h4>
+  <div>{{UIModel.frequency.number}} {{UIModel.frequency.unit}}</div>
+
+  <hr />
+
+  <div class="row">
+    <div class="col-xs-24 mt20">
+      <button type="button" class="btn prevBtn"
+              ng-click="goBack('forms.dataset.general')"
+              ng-disabled="buttonSpinners.backShow">
+        Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+      </button>
+      <button class="btn nextBtn pull-right"
+              ng-disabled="buttonSpinners.show"
+              ng-click="save()">
+        Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
+      <a class="pull-right" ui-sref="main">
+        Cancel
+      </a>
+    </div>
+  </div>
+
+</div>

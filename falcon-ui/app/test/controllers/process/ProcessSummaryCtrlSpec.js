@@ -53,7 +53,7 @@
 
         expect(scope.editingMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
-        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<process/>', 'process', 'ProcessOne');
+        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process', 'ProcessOne');
       });
 
       it('Should save the update the entity if in cloning mode', function() {
@@ -66,7 +66,7 @@
         scope.saveEntity();
 
         expect(scope.cloningMode).toBe(false);
-        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<process/>', 'process');
+        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process');
         expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
       });
 

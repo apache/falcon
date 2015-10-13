@@ -20,11 +20,14 @@
 
   describe('EntityModel', function () {
 
-    var EntityModel, httpBackend, X2jsServiceMock;
+    var EntityModel, httpBackend, X2jsServiceMock, $cookieStoreMock;
 
     beforeEach(module('app.services.entity.model', function($provide) {
       X2jsServiceMock = jasmine.createSpyObj('X2jsService', ['xml_str2json']);
+      $cookieStoreMock = jasmine.createSpyObj('$cookieStore', ['get']);
+      $cookieStoreMock.get.andReturn(function () { return 'ambari-qa'; });
       $provide.value('X2jsService', X2jsServiceMock);
+      $provide.value('$cookieStore', $cookieStoreMock);
     }));
 
     beforeEach(inject(function($httpBackend, _EntityModel_) {
@@ -34,6 +37,7 @@
 
 
     it('Should set type as not recognized if the entity is not feed, cluster or process', function() {
+      //$cookieStore.get('userToken').user = 'ambari-qa';
       EntityModel.identifyType({});
 
       expect(EntityModel.type).toBe('Type not recognized');

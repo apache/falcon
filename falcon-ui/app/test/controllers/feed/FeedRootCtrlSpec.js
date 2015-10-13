@@ -26,9 +26,9 @@
     var controllerProvider;
     var falconServiceMock;
 
-    beforeEach(module('app.controllers.feed'));
+    beforeEach(module('app.controllers.feed', 'dateHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper) {
       scope = $rootScope.$new();
       scope.models = {};
       entityFactoryMock = jasmine.createSpyObj('EntityFactory', ['newEntity']);
@@ -79,8 +79,8 @@
         var createdFeed =  {};
         var deserialzedFeed =  {};
         var feedModel = {name: 'FeedName'};
-        
-        
+
+
         serializerMock.preDeserialize.andReturn(deserialzedFeed);
         entityFactoryMock.newEntity.andReturn(createdFeed);
         scope.models.feedModel = feedModel;
@@ -126,26 +126,44 @@
         scope.editingMode = true;//i think this one should be deprecated, because it doesnt work in the real app, just in the tests
         scope.cloningMode = false;
         scope.feed = { name:  'FeedOne'};
-        scope.xml = '<feed/>';
-        
+        scope.xml = '<feed>' +
+                      '<clusters>' +
+                        '<cluster>' +
+                          '<locations>' +
+                            '<location type="data" /></locations>' +
+                        '</cluster>' +
+                      '</clusters>' +
+                      '<locations><location /></locations>' +
+                      '<properties><property></properties>' +
+                    '</feed>';
+
         scope.saveEntity();
 
         expect(scope.editingMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
-        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<feed/>', 'feed', 'FeedOne');
+        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><feed><clusters><cluster></cluster></clusters></feed>', 'feed', 'FeedOne');
       });
 
       it('Should save the update the entity if in cloning mode', function() {
         falconServiceMock.postSubmitEntity.andReturn(successResponse({}));
         scope.cloningMode = true;//i think this one should be deprecated, because it doesnt work in the real app, just in the tests
         scope.feed = { name:  'FeedOne'};
-        scope.xml = '<feed/>';
+        scope.xml = '<feed>' +
+                      '<clusters>' +
+                        '<cluster>' +
+                          '<locations>' +
+                            '<location type="data" /></locations>' +
+                        '</cluster>' +
+                      '</clusters>' +
+                      '<locations><location /></locations>' +
+                      '<properties><property></properties>' +
+                    '</feed>';
         scope.$parent.cloningMode = true;
-        
+
         scope.saveEntity();
 
         expect(scope.cloningMode).toBe(false);
-        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<feed/>', 'feed');
+        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><feed><clusters><cluster></cluster></clusters></feed>', 'feed');
         expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
       });
 

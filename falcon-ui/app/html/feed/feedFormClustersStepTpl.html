@@ -17,37 +17,41 @@
  * limitations under the License.
  */
 -->
-<form name="feedForm">
+<form name="feedForm" novalidate id="feedFormClusterStep">
+  <button class="hidden" ng-click="goNext(feedForm.$invalid, 'forms.feed.summary')" ></button>
   <div ng-repeat="cluster in feed.clusters">
     <div class="row">
-      <h4 class="col-sm-24">{{capitalize(cluster.type)}} Cluster </h4>
+      <h4 class="col-xs-24">{{capitalize(cluster.type)}} Cluster </h4>
     </div>
 
     <div class="row detailsBox">
-      <div class="col-sm-offset-1 col-sm-22">
+      <div class="col-xs-offset-1 col-xs-22">
 
         <div class="row">
           <div class="col-xs-24">
             <select ng-model="cluster.name" validation-message="{{validations.messages.cluster}}"
-                    ng-required="true" class="col-sm-24 form-control padding0">
+                    ng-required="true" class="col-xs-24 form-control padding0" id="clusterNameSelect">
               <option value="" disabled selected style='display:none;'>-Select cluster-</option>
-              <option ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+              <option id="cluster_" ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
             </select>
           </div>
-            
+
 
           <div class="col-xs-24 feedLocationNavBox nopointer">
             <h4 class="col-xs-7" ng-show="!feed.storage.fileSystem.active">Default Storage type</h4>
             <h4 class="col-xs-7" ng-show="feed.storage.fileSystem.active">Storage type</h4>
 
-            <div class="col-xs-17 feedLocationNav">
-              <div class="btn btn-default pull-right" ng-class="{active: feed.storage.catalog.active}">
+            <div class="col-xs-17 feedLocationNav disabled">
+              <button class="btn btn-default pull-right"
+                      ng-class="{active: feed.storage.catalog.active}"
+                      ng-disabled="true">
                 Catalog Storage
-              </div>
-              <div class="btn btn-default pull-right" ng-class="{active: feed.storage.fileSystem.active}">
+              </button>
+              <button class="btn btn-default pull-right"
+                      ng-class="{active: feed.storage.fileSystem.active}"
+                      ng-disabled="true">
                 File System
-              </div>
-              <div class="clearfix"></div>
+              </button>
             </div>
           </div>
 
@@ -60,50 +64,84 @@
                ng-show="feed.storage.fileSystem.active"
                ng-repeat="location in cluster.storage.fileSystem.locations">
             <label class="light">{{location.type}} path</label>
-            <input type="text" class="form-control" ng-model="location.path" ng-pattern="validations.patterns.osPath" />
+            <input type="text"
+                   placeholder="{{clusterLocationsPlaceHolders[location.type]}}"
+                   class="form-control"
+                   ng-model="location.path"
+                   validation-optional-message="{{validations.messages.path}}"
+                   ng-pattern="validations.patterns.osPath" />
           </div>
 
           <div class="col-xs-24 mb10" ng-show="feed.storage.catalog.active">
             <label class="light">Table uri</label>
-            <input type="text" class="form-control" ng-model="cluster.storage.catalog.catalogTable.uri" ng-pattern="validations.patterns.osPath"/>
+            <input type="text" class="form-control"
+                   ng-model="cluster.storage.catalog.catalogTable.uri"
+                   validation-optional-message="{{validations.messages.path}}"
+                   ng-pattern="validations.patterns.osPath"/>
           </div>
-
+          <div class="clearfix mb20"></div>
           <label class="col-xs-24"> Validity </label>
-
-          <div class="col-xs-12">
-           
-              <label class="light col-xs-24">Start</label>
-            
-              <div class="input-group input-group-xs">
-                <span class="input-group-addon btn btn-default entypo calendar" ng-click="openDatePicker($event, cluster.validity.start)"></span>
-                <input type="text" class="form-control" placeholder="Select start Date"
-                  datepicker-popup="{{dateFormat}}"
-                  ng-model="cluster.validity.start.date"
-                  is-open="cluster.validity.start.opened"
-                  ng-required="true">
-              </div>
-            
-          </div>
-          <div class="col-xs-12">
-            <timepicker class="timePicker" ng-model="cluster.validity.start.time" hour-step="1" minute-step="1" ></timepicker>
-          </div>
-          <div class="col-xs-12">
-           
-            <label class="light col-xs-24">End</label>
-           
-            <div class="input-group input-group-xs">
-              <span class="input-group-addon btn btn-default entypo calendar" ng-click="openDatePicker($event, cluster.validity.end)"></span>
-              <input type="text" class="form-control" placeholder="Select end Date"
-                     datepicker-popup="{{dateFormat}}"
-                     ng-model="cluster.validity.end.date"
-                     is-open="cluster.validity.end.opened"
-                     ng-required="true">
+          <div class="col-xs-24 validityBox">
+            <div class="startDateBox">
+              <label>Start
+                <input type="text"
+                       name="startDateInput"
+                       class="form-control dateInput"
+                       placeholder="mm/dd/yyyy"
+                       datepicker-popup="{{dateFormat}}"
+                       ng-model="cluster.validity.start.date"
+                       is-open="cluster.validity.start.opened"
+                       ng-click="openDatePicker($event, cluster.validity.start)"
+                       ng-change="constructDate()"
+                       ng-required="true"
+                       simple-date>
+              </label>
+              <label class="col-xs-24 custom-danger validationMessageGral"
+                     ng-if="!cluster.validity.start.date">
+                {{validations.messages.date.empty}}
+              </label>
+            </div>
+            <div class="startTimeBox">
+              <label>Time
+                <timepicker ng-change="constructDate()"
+                            ng-model="cluster.validity.start.time"
+                            hour-step="1"
+                            minute-step="1"
+                            show-meridian="true">
+                </timepicker>
+              </label>
+            </div>
+            <div class="endDateBox">
+              <label>End
+                <input type="text"
+                       name="startDateInput"
+                       class="form-control dateInput"
+                       placeholder="mm/dd/yyyy"
+                       datepicker-popup="{{dateFormat}}"
+                       ng-model="cluster.validity.end.date"
+                       is-open="cluster.validity.end.opened"
+                       ng-click="openDatePicker($event, cluster.validity.end)"
+                       ng-change="constructDate()"
+                       ng-required="true"
+                       min-date="cluster.validity.start.date"
+                       simple-date>
+              </label>
+              <label class="col-xs-24 custom-danger validationMessageGral"
+                     ng-if="!cluster.validity.end.date">
+                {{validations.messages.date.empty}}
+              </label>
+            </div>
+            <div class="endTimeBox">
+              <label>Time
+                <timepicker ng-change="constructDate()"
+                            ng-model="cluster.validity.end.time"
+                            hour-step="1"
+                            minute-step="1"
+                            show-meridian="true">
+                </timepicker>
+              </label>
             </div>
           </div>
-          <div class="col-xs-12">
-            <timepicker class="timePicker" ng-model="cluster.validity.end.time" hour-step="1" minute-step="1" ></timepicker>
-          </div>
-
 
           <label class="light col-xs-24"> Retention </label>
 
@@ -122,31 +160,37 @@
           </div>
 
           <div class="row"  ng-if="cluster.type !== 'source'">
-            <div class="btn btn-default pull-right btn-xs" ng-click="removeCluster($index)">
-              - delete
-            </div>
+            <button type="button" class="btn btn-default pull-right btn-xs" ng-click="removeCluster($index)">
+              <span class="entypo minus"></span> delete
+            </button>
           </div>
+
 
         </div>
 
       </div>
     </div>
   </div>
-
-  <div class="btn btn-default btn-xs" ng-click="addCluster()">
-    + add cluster
+  <div class="col-xs-24 mt10">
+    <button type="button" class="btn btn-default btn-xs" ng-click="addCluster()">
+      <span class="entypo plus"></span> add cluster
+    </button>
   </div>
-  <div class="col-xs-24">
-    <div class="row feedBottomButtons">
-      <div class="btn btn-default col-xs-6" ng-click="goBack('forms.feed.location')" >
-        Previous
-      </div>
-      <div class="btn btn-default col-xs-6 pull-right" ng-click="goNext(feedForm.$invalid, 'forms.feed.summary')" >
-        Next
-      </div>
-      <u class="col-xs-3 pull-right" ui-sref="main">
-        Cancel
-      </u>
-    </div>
+
+  <div class="col-xs-24 mt20">
+    <button id="feed.backToStep3"
+            class="btn prevBtn"
+            type="button"
+            ng-click="goBack('forms.feed.location')"
+            ng-disabled="buttonSpinners.backShow" >
+      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+    </button>
+    <button id="feed.step4" class="btn nextBtn pull-right"
+            ng-click="goNext(feedForm.$invalid, 'forms.feed.summary')" >
+      Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+    </button>
+    <a class="pull-right" ui-sref="main">
+      Cancel
+    </a>
   </div>
 </form>

@@ -27,50 +27,73 @@
    */
   var feedModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessInputsAndOutputsCtrl',
+  feedModule.controller('ProcessInputsAndOutputsCtrl', ['$scope', 'EntityFactory', 'feedsList', '$timeout',
+    function ($scope, entityFactory, feedsList, $timeout) {
 
-    ['$scope', 'EntityFactory', 'feedsList', function($scope, entityFactory, feedsList) {
+      $timeout(function () {
+        if ($scope.process.inputs.length > 0) {
+          angular.element('.firstInput').trigger('focus');
+        }
+        else if ($scope.process.outputs.length > 0) {
+          angular.element('.firstOutput').trigger('focus');
+        }
+        else {
+          angular.element('.addInputButton').trigger('focus');
+        }
+      }, 500);
 
-      $scope.init = function() {
+      $scope.init = function () {
 
       };
 
-      $scope.addInput = function() {
+      $scope.addInput = function () {
         $scope.process.inputs.push(entityFactory.newInput());
       };
 
-      $scope.removeInput = function(index) {
-        if(index >= 0) {
+      $scope.removeInput = function (index) {
+        if (index >= 0) {
           $scope.process.inputs.splice(index, 1);
         }
       };
 
-      $scope.addOutput = function() {
+      $scope.addOutput = function () {
         $scope.process.outputs.push(entityFactory.newOutput());
       };
 
-      $scope.removeOutput = function(index) {
-        if(index >= 0) {
+      $scope.removeOutput = function (index) {
+        if (index >= 0) {
           $scope.process.outputs.splice(index, 1);
         }
       };
-
 
       unwrapClusters(feedsList);
 
       function unwrapClusters(feeds) {
         $scope.feedsList = [];
         var typeOfData = Object.prototype.toString.call(feeds.entity);
-        if(typeOfData === "[object Array]") {
+        if (typeOfData === "[object Array]") {
           $scope.feedsList = feeds.entity;
-        } else if(typeOfData === "[object Object]") {
+        } else if (typeOfData === "[object Object]") {
           $scope.feedsList = [feeds.entity];
         } else {
           //console.log("type of data not recognized");
         }
       }
 
+      $scope.validateStartEndDate = function () {
+        delete $scope.invalidEndDate;
+        if (this.input.start && this.input.end) {
+          var startDate = new Date(this.input.start),
+            endDate = new Date(this.input.end);
+          if (endDate.toString !== 'Invalid Date' && startDate.toString !== 'Invalid Date') {
+            if (startDate > endDate) {
+              $scope.invalidEndDate = "ng-dirty ng-invalid";
+            }
+          }
+        }
+      };
+
       $scope.init();
 
     }]);
-})();
+}());

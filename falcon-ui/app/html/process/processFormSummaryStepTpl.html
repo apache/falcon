@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 -->
-<form name="processForm" class="mt10">
+<form name="processForm" class="mt10" novalidate id="processFormSummaryStep">
 
   <div class="row">
     <h4 class="col-sm-24">Process</h4>
@@ -105,11 +105,11 @@
         <div class="row">
           <div class="col-sm-12">
             <label class="col-sm-24">Start</label>
-            <label class="col-sm-24 light">{{cluster.validity.start.date}} {{cluster.validity.start.time}}</label>
+            <label class="col-sm-24 light">{{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}</label>
           </div>
           <div class="col-sm-12">
             <label class="col-sm-24">End</label>
-            <label class="col-sm-24 light">{{cluster.validity.end.date}} {{cluster.validity.end.time}}</label>
+            <label class="col-sm-24 light">{{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}</label>
           </div>
         </div>
       </div>
@@ -152,17 +152,22 @@
   </div>
   <div class="clearfix hidden-md">&nbsp</div>
 
-  <div class="row feedBottomButtons">
-    <div class="btn btn-default col-sm-6" ng-click="goBack('forms.process.io')">
-      Previous
+  <div class="row">
+    <div class="col-xs-24 mt20">
+      <button type="button" class="btn prevBtn"
+           ng-click="goBack('forms.process.io')"
+           ng-disabled="buttonSpinners.backShow">
+        Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+      </button>
+      <button class="btn nextBtn pull-right"
+           ng-disabled="processForm.$invalid || buttonSpinners.show"
+           ng-click="saveEntity()">
+        Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
+      <a class="pull-right" ui-sref="main">
+        Cancel
+      </a>
     </div>
-    <div class="btn btn-default col-sm-6 pull-right"
-         ng-disabled="processForm.$invalid"
-         ng-click="saveEntity()">
-      Save
-    </div>
-    <u class="col-sm-3 pull-right" ui-sref="main">
-      Cancel
-    </u>
   </div>
+
 </form>

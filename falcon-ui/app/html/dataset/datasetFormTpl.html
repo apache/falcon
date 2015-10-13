@@ -1,0 +1,57 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div id="formBox">
+  <div class="formTitol">
+    <a>Falcon Mirrors</a>
+    <h1>New Mirror</h1>
+  </div>
+
+  <div class="col-sm-24">
+    <div class="formBoxWrapper">
+
+      <div class="progressBox col-xs-24" ng-class="{ general:isActive('forms.dataset.general'),
+                                                 summary:isActive('forms.dataset.summary')}">
+        <div class="progressBar">
+          <div class="bar1"></div>
+          <span>
+            <div class="fir">
+              <b>1</b>
+              <span class="glyphicon glyphicon-ok"></span>
+              <h6>General</h6>
+            </div>
+          </span>
+          <span>
+            <div class="sec">
+              <b>2</b>
+              <span class="glyphicon glyphicon-ok"></span>
+              <h6>Summary</h6>
+            </div>
+          </span>
+        </div>
+      </div>
+
+      <div class="row" ui-view></div>
+    </div>
+  </div>
+
+  <div class="col-sm-24">
+
+  </div>
+</div>

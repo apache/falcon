@@ -27,8 +27,12 @@
    */
   var feedModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessSummaryCtrl', [ '$scope', '$state', '$timeout', '$filter', 'Falcon',
-                                                  function($scope, $state, $timeout, $filter, Falcon) {
+  feedModule.controller('ProcessSummaryCtrl', [ '$scope', '$state', '$timeout', '$filter', 'Falcon', 'SpinnersFlag',
+                                                  function($scope, $state, $timeout, $filter, Falcon, SpinnersFlag) {
+
+    $timeout(function () {
+      angular.element('.nextBtn').trigger('focus');
+    }, 500);
 
     $scope.init = function() {
       if($scope.transform) {
@@ -47,28 +51,36 @@
 
     $scope.saveEntity = function() {
       var type = $scope.entityType;
-      if(!$scope.$parent.cloningMode) { 
+      SpinnersFlag.show = true;
+
+      if(!$scope.$parent.cloningMode) {
         Falcon.logRequest();
-        Falcon.postUpdateEntity($scope.xml, $scope.entityType, $scope[type].name)
+        Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'  + $scope.xml, $scope.entityType, $scope[type].name)
           .success(function (response) {
-             Falcon.logResponse('success', response, false); 
-             $state.go('main'); 
+             $scope.$parent.skipUndo = true;
+             Falcon.logResponse('success', response, false);
+             $state.go('main');
 
           })
-          .error(function (err) {   
-            Falcon.logResponse('error', err, false);          
+          .error(function (err) {
+            SpinnersFlag.show = false;
+            Falcon.logResponse('error', err, false);
+            angular.element('body, html').animate({scrollTop: 0}, 300);
           });
-      } 
+      }
       else {
         Falcon.logRequest();
-        Falcon.postSubmitEntity($scope.xml, $scope.entityType)
+        Falcon.postSubmitEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType)
           .success(function (response) {
-             Falcon.logResponse('success', response, false); 
-             $state.go('main'); 
- 
+             $scope.$parent.skipUndo = true;
+             Falcon.logResponse('success', response, false);
+             $state.go('main');
+
           })
-          .error(function (err) {   
-            Falcon.logResponse('error', err, false);          
+          .error(function (err) {
+            Falcon.logResponse('error', err, false);
+            SpinnersFlag.show = false;
+            angular.element('body, html').animate({scrollTop: 0}, 300);
           });
       }
 

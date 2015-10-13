@@ -17,18 +17,60 @@
  * limitations under the License.
  */
 -->
-<div class="col-sm-24 detailsHeaders"> 
-  <h3>
-    <small>{{clusterEntity._name}}</small>
-    {{ viewDock._name }}
-  </h3>
-</div>
-<div class="col-sm-23 detailsBox">
-  <h5>
-    Definition
-  </h5>
-  <div>
-    <textarea ng-model="prettyXml" rows="25" ng-disabled="true"></textarea>
+<div class="container" id="entityDetails">
+
+  <div class="row">
+    <div class="col-sm-24">
+      <button class="btn " ui-sref="main">< Back to Search</button>
+    </div>
   </div>
-    
+
+	<h3 class="link-icons entity-title entity-link-null" id="entity-title">
+		{{entity.name}} <button type="button" class="detailsBT">
+		<span ng-class="displayIcon((entity.type | uppercase), entity.model)"></span> {{entityTypeLabel}}
+	</button>
+	</h3>
+
+	<div class="row">
+		<div class="col-sm-24">
+			<div class="detailsBox">
+				<h4>
+					Dependencies
+				</h4>
+        <div class="dependencies-graph"><dependencies-graph name="entity.name" type="entity.type"/></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-16">
+			<div class="detailsBox">
+				<h4>
+					Instances
+				</h4>
+				<instances-list input="instancesList" type="entity.type" name="entity.name" instance-details="instanceDetails"
+												pages="pages" go-page="goPage" next-pages="nextPages" prev-pages="prevPages" change-pages-set="changePagesSet"
+												start="entity.start" end="entity.end"/>
+			</div>
+		</div>
+		<div class="col-sm-8">
+			<div class="summaryBox" ng-init="propsOpen = false">
+				<div class="row">
+					<div class="col-sm-21">
+						<h4>
+							Properties
+						</h4>
+					</div>
+					<div class="col-sm-3">
+						<h4 class="pointer glyphicon" ng-click="propsOpen = !propsOpen" ng-class="propsOpen ? 'glyphicon-chevron-up':'glyphicon-chevron-down'"></h4>
+					</div>
+				</div>
+        <div ng-show="propsOpen" class="animate-show">
+					<div ng-if="entity.type == 'feed'" ui-view="feedSummary"></div>
+					<div ng-if="entity.type == 'process'" ui-view="processSummary"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 </div>

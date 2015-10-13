@@ -19,10 +19,10 @@
   'use strict';
 
 	var entitiesListModule = angular.module('app.directives.entities-list', ['app.services' ]);
-	
+
   entitiesListModule.controller('EntitiesListCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService',
                                       function($scope, Falcon, X2jsService, $window, encodeService) {
-                                        
+
     $scope.downloadEntity = function(type, name) {
       Falcon.logRequest();
       Falcon.getEntityDefinition(type, name) .success(function (data) {
@@ -32,26 +32,26 @@
         Falcon.logResponse('error', err, false);
       });
     };
-    
+
   }]);
-	
+
 	entitiesListModule.filter('tagFilter', function () {
     return function (items) {
       var filtered = [], i;
       for (i = 0; i < items.length; i++) {
         var item = items[i];
         if(!item.list || !item.list.tag) { item.list = {tag:[""]}; }
-        filtered.push(item); 
+        filtered.push(item);
       }
       return filtered;
     };
   });
-	
+
   entitiesListModule.directive('entitiesList', ["$timeout", 'Falcon', function($timeout, Falcon) {
     return {
       scope: {
         input: "=",
-        schedule: "=",  
+        schedule: "=",
         suspend: "=",
         clone: "=",
         remove: "=",
@@ -73,6 +73,15 @@
         }, true);
 
         scope.selectedRows = [];
+        scope.checkedRow = function (name) {
+          var isInArray = false;
+          scope.selectedRows.forEach(function(item) {
+            if (name === item.name) {
+              isInArray = true;
+            }
+          });
+          return isInArray;
+        };
         scope.simpleFilter = {};
         scope.selectedDisabledButtons = {
           schedule:true,
@@ -131,10 +140,10 @@
         };
 
         scope.scopeEdit = function () {
-          scope.edit(scope.selectedRows[0].type, scope.selectedRows[0].name);       
+          scope.edit(scope.selectedRows[0].type, scope.selectedRows[0].name);
         };
         scope.scopeClone = function () {
-          scope.clone(scope.selectedRows[0].type, scope.selectedRows[0].name);        
+          scope.clone(scope.selectedRows[0].type, scope.selectedRows[0].name);
         };
         scope.goEntityDetails = function(name, type) {
           scope.entityDetails(name, type);
@@ -142,18 +151,18 @@
 
         scope.scopeRemove = function () {
           var i;
-          for(i = 0; i < scope.selectedRows.length; i++) {   
-            var multiRequestType = scope.selectedRows[i].type.toLowerCase();          
-            Falcon.responses.multiRequest[multiRequestType] += 1;          
-            scope.remove(scope.selectedRows[i].type, scope.selectedRows[i].name);          
+          for(i = 0; i < scope.selectedRows.length; i++) {
+            var multiRequestType = scope.selectedRows[i].type.toLowerCase();
+            Falcon.responses.multiRequest[multiRequestType] += 1;
+            scope.remove(scope.selectedRows[i].type, scope.selectedRows[i].name);
           }
         };
 
         scope.scopeSchedule = function () {
-          var i;      
+          var i;
           for(i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
-            Falcon.responses.multiRequest[multiRequestType] += 1;   
+            Falcon.responses.multiRequest[multiRequestType] += 1;
             scope.schedule(scope.selectedRows[i].type, scope.selectedRows[i].name);
           }
         };
@@ -162,7 +171,7 @@
           var i;
           for(i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
-            Falcon.responses.multiRequest[multiRequestType] += 1;   
+            Falcon.responses.multiRequest[multiRequestType] += 1;
             scope.suspend(scope.selectedRows[i].type, scope.selectedRows[i].name);
           }
         };
@@ -170,20 +179,20 @@
           var i;
           for(i = 0; i < scope.selectedRows.length; i++) {
             var multiRequestType = scope.selectedRows[i].type.toLowerCase();
-            Falcon.responses.multiRequest[multiRequestType] += 1;   
+            Falcon.responses.multiRequest[multiRequestType] += 1;
             scope.resume(scope.selectedRows[i].type, scope.selectedRows[i].name);
           }
         };
 
         scope.download = function() {
           var i;
-          for(i = 0; i < scope.selectedRows.length; i++) {       
+          for(i = 0; i < scope.selectedRows.length; i++) {
             scope.downloadEntity(scope.selectedRows[i].type, scope.selectedRows[i].name);
           }
         };
-   
+
       }
     };
   }]);
-   
+
 })();

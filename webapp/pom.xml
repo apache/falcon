@@ -541,6 +541,9 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes>
+		  <exclude>**/loginData.json</exclude>
+		  <exclude>**/src/main/webapp/css/*</exclude>
+		  <exclude>**/src/main/webapp/js/*</exclude>
 		  <exclude>*.txt</exclude>
 	          <exclude>**/*.txt</exclude>
 	          <exclude>.git/**</exclude>

@@ -21,69 +21,118 @@
   var app = angular.module('app.controllers.rootCtrl', ['app.services']);
 
   app.controller('RootCtrl', [
-    "$scope", "$timeout", "Falcon", "FileApi", "EntityModel", "$state", "X2jsService", "ValidationService",
-    function ($scope, $timeout, Falcon, FileApi, EntityModel, $state, X2jsService, validationService) {
+    "$scope", "$timeout", "Falcon", "FileApi", "EntityModel",
+    "$state", "X2jsService", "ValidationService", "SpinnersFlag", "EntityFalcon",
+    function ($scope, $timeout, Falcon, FileApi,
+              EntityModel, $state, X2jsService, validationService, SpinnersFlag, EntityFalcon) {
+
+      var resultsPerPage = 10;
 
       $scope.server = Falcon;
       $scope.validations = validationService;
+      $scope.buttonSpinners = SpinnersFlag;
       $scope.models = {};
+
+      $scope.pages = [];
+      $scope.nextPages = false;
 
       $scope.handleFile = function (evt) {
         Falcon.logRequest();
         FileApi.loadFile(evt).then(function () {
-          Falcon.postSubmitEntity(FileApi.fileRaw, EntityModel.type).success(function (response) {
-            Falcon.logResponse('success', response, false);
-            $scope.refreshList(EntityModel.type);
-          }).error(function (err) {
-            Falcon.logResponse('error', err, false);
-          });
+          if (EntityModel.type === 'Type not recognized') {
+            Falcon.logResponse('error', {status: 'ERROR', message:'Invalid xml. File not uploaded'}, false);
+          } else {
+            Falcon.postSubmitEntity(FileApi.fileRaw, EntityModel.type).success(function (response) {
+              Falcon.logResponse('success', response, false);
+              $scope.refreshList($scope.tags);
+            }).error(function (err) {
+              Falcon.logResponse('error', err, false);
+            });
+          }
+
         });
       };
 
-      $scope.lists = {};
-      $scope.lists.feedList = [];
-      $scope.lists.clusterList = [];
-      $scope.lists.processList = [];
-
-      $scope.refreshList = function (type) {
-        type = type.toLowerCase();
-        Falcon.responses.listLoaded[type] = false;
-        if (Falcon.responses.multiRequest[type] > 0) { return; }
-
-        Falcon.logRequest();
-
-        Falcon.getEntities(type)
-          .success(function (data) {
-            
-            Falcon.logResponse('success', data, false, true);
-            Falcon.responses.listLoaded[type] = true;
-            $scope.lists[type + 'List'] = [];
-
-            if (data === null) {
-              $scope.lists[type + 'List'] = [];
-            }else{
-              var typeOfData = Object.prototype.toString.call(data.entity);	
-        	  if (typeOfData === "[object Array]") {
-                $scope.lists[type + 'List'] = data.entity;
-              } else if (typeOfData === "[object Object]") {
-                $scope.lists[type + 'List'][0] = data.entity;
-              } else {
-                console.log("type of data not recognized");
+      $scope.goPage = function(page){
+        $scope.loading = true;
+        var offset = (page-1) * resultsPerPage;
+        EntityFalcon.searchEntities($scope.entityName, $scope.entityTags, $scope.entityType, offset).then(function() {
+          if (EntityFalcon.data !== null) {
+            $scope.actualPage = page;
+            $scope.searchList = EntityFalcon.data.entity;
+            var totalPages = Math.ceil(EntityFalcon.data.totalResults/resultsPerPage);
+            $scope.pages = []
+            for(var i=0; i<totalPages; i++){
+              $scope.pages[i] = {};
+              $scope.pages[i].index = (i+1);
+              $scope.pages[i].label = ""+(i+1);
+              if(page === (i+1)){
+                $scope.pages[i].enabled = false;
+              }else{
+                $scope.pages[i].enabled = true;
               }
             }
-          })
-          .error(function (err) {
-            Falcon.logResponse('error', err);
-          });
+            if($scope.searchList.length === 0){
+              Falcon.warningMessage("No results matched the search criteria.");
+            }
+            $timeout(function() {
+              angular.element('#tagsInput').focus();
+            }, 0, false);
+            Falcon.responses.listLoaded = true;
+            $scope.loading = false;
+          }
+        });
       };
 
-      $scope.refreshLists = function () {
-        $scope.refreshList('cluster');
-        $scope.refreshList('feed');
-        $scope.refreshList('process');
+      $scope.refreshList = function (tags) {
+
+        $scope.nameFounded = false;
+        $scope.typeFounded = false;
+        $scope.entityName = "";
+        $scope.entityType = "";
+        var tagsSt = "";
+
+        $scope.searchList = [];
+
+        if(tags === undefined || tags.length === 0){
+          $timeout(function() {
+            angular.element('#tagsInput').focus();
+          }, 0, false);
+          return;
+        }
+
+        for(var i=0; i<tags.length; i++){
+          var tag = tags[i].text;
+          if(tag.indexOf("Name:") !== -1){
+            $scope.nameFounded = true;
+            tag = tag.substring(5);
+            $scope.entityName = tag;
+          }else if(tag.indexOf("Type:") !== -1){
+            $scope.typeFounded = true;
+            tag = tag.substring(5);
+            $scope.entityType = tag;
+          }else{
+            tag = tag.substring(4);
+            tagsSt += tag;
+            if(i < tags.length-1){
+              tagsSt += ",";
+            }
+          }
+
+        }
+
+        $scope.entityTags = tagsSt;
+
+        $scope.goPage(1);
+
       };
-      $scope.closeAlert = function (index) {
-        Falcon.removeMessage(index);
+
+      $scope.cancel = function (type, state) {
+        var cancelInfo = {
+          state: state || $state.current.name,
+          message: type + ' edition canceled '
+        };
+        Falcon.logResponse('cancel', cancelInfo, type, false);
       };
 
     }]);

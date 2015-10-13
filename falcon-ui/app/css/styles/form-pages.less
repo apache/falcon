@@ -20,6 +20,9 @@
 .mt1 {
   margin-top: 1px;
 }
+.mt5 {
+  margin-top: 5px;
+}
 .mt10 {
   margin-top: 10px;
 }
@@ -31,19 +34,83 @@
 }
 .formViewContainer {
   .mt10;
+
 }
-.feedBottomButtons {
-  .mt20; 
+//-----------------next and previous buttons----------//
+@nextBtnBackground: #666666;
+@prevBtnBackground: #CCCCCC;
+.nextBtn, .prevBtn {
+  .transition(background, 0.3s, ease);
+  border: 0px none;
+  width: 90px;
+  border-radius: 7px!important;
+  padding: 10px;
+}
+.nextBtn {
+  background: @nextBtnBackground;
+  color: white;
+  &:hover {
+    background: darken(@nextBtnBackground, 10%);
+    color: white;
+    outline: hidden;
+    border-radius: 7px!important;
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@nextBtnBackground, 10%);
+    color: white;
+    outline: hidden;
+    border-radius: 10px!important;
+  }
+}
+.prevBtn {
+  background: @prevBtnBackground;
+  &:hover {
+    background: darken(@prevBtnBackground, 10%);
+    outline: hidden;
+    border-radius: 7px!important;
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@prevBtnBackground, 10%);
+    outline: hidden;
+    border-radius: 10px!important;
+  }
+}
+//-----------------------------------------------------//
+.aclBox {
+  .mt10;
+
+  > div {
+    label {
+      margin-top:5px;
+      font-weight: normal;
+      width: 95%;
+    }
+    width: 32%;
+    display: inline-block;
+    vertical-align: top;
+  }
+}
+.dt {
+  //display: table;
+}
+@media screen and (max-width: @grid-float-breakpoint) {
+  .xmlPreviewContainer {
+    position: relative;
+    left:0;
+    top:0;
+    width: 500px;
+  }
 }
 .formPage {
-  
+
   h3 {
     font-weight: bold;
   }
   .entypo {
     font-size: 22px;
-    line-height: 10px;
-    vertical-align: middle;
+   /* line-height: 14px;*/
+    /*vertical-align: top;
+    display: inline-table;*/
   }
   h4 {
     font-size: 14px;
@@ -66,30 +133,36 @@
   .light {
     font-weight: normal;
   }
-  u {
+  a {
     line-height: 30px;
     cursor: pointer;
+    margin: 5px 15px;
+    text-decoration: underline;
+    color: black;
+    &:focus {
+      color: red;
+    }
   }
   input, select {
-    color: black;
+    color: @gray-darker;
     font-size: 13px;
   }
   .input-group-addon {
     height:13px;
     border-radius:0;
   }
-  
+
 }
-select {  
-  .form-control;  
+select {
+  .form-control;
   padding:0;
 }
 #engineVersionField{ display: inline-block; width: auto; }
 .inlineInputsGroup {
-  input {   
-    display: inline-block;    
-    margin-right: 3px; 
-    &:last-child { margin-right:0;}   
+  input {
+    display: inline-block;
+    margin-right: 3px;
+    &:last-child { margin-right:0;}
   }
   input[type="text"] {
     width: 20px;
@@ -121,7 +194,7 @@ select {
     font-size: 35px;
     line-height: 9px;
   }
-  
+
 }
 .clusterSummaryRow {
   padding: 0 10px;
@@ -140,8 +213,8 @@ select {
     }
     margin-top: 5px;
   }
-  
-  
+
+
 }
 #feedPropertiesBox {
   label {
@@ -153,7 +226,7 @@ select {
     margin-top: 10px;
   }
   label {
-    font-size: 10px;
+    font-size: 12px;
     margin:0;
   }
   input[type="checkbox"] {
@@ -191,12 +264,34 @@ select {
   }
   .feedLocationNav {
     color: black;
+
     .btn {
-      background-color: @gray-light;
+      position: relative;
+      background-color: lighten(@gray-light2, 20%);
+      border-radius: 5px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      padding: 4px 20px;
+
+      &:last-child {
+        margin-right: -12px;
+      }
     }
     .active {
       color: white;
-      background-color: @gray-dark;
+      background-color:lighten(@gray, 20%);
+      z-index: 1234;
+    }
+    &.disabled {
+      .btn {
+        background-color: lighten(@gray-light2, 30%);
+        opacity:1;
+        color: @gray-light2;
+      }
+      .active {
+        background-color:lighten(@gray, 30%);
+        color: white;
+      }
     }
   }
 
@@ -234,7 +329,7 @@ select {
     }
 
   }
-  .validityDateBox {
+  /*.validityDateBox {
     .light {
       display: block;
     }
@@ -242,7 +337,7 @@ select {
       display: inline-block;
 
     }
-  }
+  }*/
   .input-group {
     input {
       font-size: 12px;
@@ -290,18 +385,24 @@ select {
     color: white;
   }
 }
+
+@media screen and (max-width: @grid-float-breakpoint) {
+  .detailsBox {
+    float:none!important;
+  }
+}
 .detailsBox {
   border-radius: 5px;
   border: 1px solid @gray-light2;
-  margin: 5px;
+  margin: 5px 0;
   padding: 15px 5px;
   font-size: 12px;
   background-color: #ffffff;
   h4 {
-    font-weight: bold;    
+    font-weight: bold;
     margin:5px 0;
   }
-  h5 { 
+  h5 {
     font-weight: bold;
     margin-top:2px;
   }
@@ -320,11 +421,100 @@ select {
   &.processCluster {
     padding: 15px 4%;
     margin: 5px auto;
-    h5 { 
+    h5 {
       margin-top:15px;
       &:first-child {
         margin-top:0;
       }
     }
+  }
+}
+
+.detailsBT{
+  .entypo{
+    font-size: 1.5em;
+  }
+  color: #fff;
+  padding: 3px 8px;
+  border: 1px solid white;
+  border-radius: 5px;
+  border-color: #fff;
+  display: inline-block;
+  cursor: auto;
+  background-color: #5fa33e;
+}
+
+
+///////////////////////////////////////////////
+///////VALIDITY BOXES//////////////////////////
+///////////////////////////////////////////////
+.validityBox {
+  label, input, button {
+    font-weight: normal;
+  }
+
+  > div {
+    display: inline-block;
+    margin: 0 2px;
+  }
+
+  h4 {
+    margin-top: 5px;
+    margin-bottom: 0;
+  }
+  .startDateBox, .endDateBox {
+    width: 20%;
+    vertical-align: top;
+  }
+  .startTimeBox, .endTimeBox {
+    width: 15%;
+    vertical-align: top;
+    padding-left:0;
+    input {
+      //width: 20px;
+      //margin:0;
+    }
+    button {
+      border-radius: 0;
+      width: 25px;
+      height: 25px;
+      padding:0;
+      margin-left: 1px;
+    }
+    table {
+      width: auto;
+      border-spacing: 0;
+      tr {
+        &:first-child {
+          display: none;
+        }
+        &:last-child {
+          display: none;
+        }
+      }
+    }
+
+    a {
+      display: none!important;
+    }
+  }
+  .endDateBox {
+
+  }
+  .endTimeBox {
+
+  }
+  .tzBox {
+    width: 22%;
+    //padding-top: 20px;
+  }
+}
+
+.feedForm, .entityForm {
+  .validityBox {
+    .startDateBox, .endDateBox { width: 27%;}
+    .startTimeBox, .endTimeBox {width: 17%;}
+    .endDateBox { margin-left: 20px;}
+    .error_input { border:1px solid red !important;}
   }
 }

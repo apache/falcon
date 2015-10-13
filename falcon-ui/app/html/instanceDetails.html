@@ -1,0 +1,78 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="container" id="instanceDetails">
+
+  <div class="row">
+    <div class="col-sm-24">
+      <div class="detailsBox">
+        <div class="row">
+          <div class="col-sm-9">
+            <h3 class="instance-title">
+              <a href="javascript:void(0);" ng-click="backToEntity()">{{ instance.name }}</a> | {{ instance.instance }}
+            </h3>
+          </div>
+          <div class="col-sm-3 instance-status">
+            <span class="text-success">STARTED</span><br/>
+            {{ instance.startTime | date :'MM/dd/yyyy HH:mm' }}
+          </div>
+          <div class="col-sm-5 border-left">
+            <h4 class="instance-title">
+              Status: <span ng-class="{
+              'blink-success': instance.status == 'RUNNING',
+              'text-success': instance.status == 'SUCCEEDED',
+              'blink-warning': instance.status == 'WAITING' || instance.status == 'UNKNOWN',
+              'blink-danger': instance.status == 'SUSPENDED',
+              'text-danger': instance.status == 'FAILED' || instance.status == 'KILLED',
+              }">{{ instance.status }}</span>
+            </h4>
+          </div>
+          <div class="col-sm-7 buttonCell">
+            <div class="btn btn-big btn-xs buttons-to-show" ng-click="resumeInstance()"
+                 ng-disabled="!(instance.status === 'SUSPENDED')">
+              <span class="entypo play"></span> <div>Resume</div>
+            </div>
+            <div class="btn btn-big btn-xs buttons-to-show" ng-click="reRunInstance()"
+                 ng-disabled="!(instance.status === 'KILLED' || instance.status === 'SUCCEEDED' || instance.status === 'FAILED')">
+              <span class="entypo play"></span> <div>Rerun</div>
+            </div>
+            <div class="btn btn-big btn-xs buttons-to-show" ng-click="suspendInstance()" ng-disabled="!(instance.status === 'RUNNING')">
+              <span class="entypo paus"></span> <div>Suspend</div>
+            </div>
+            <div class="btn btn-big btn-xs buttons-to-show" ng-click="killInstance()" ng-disabled="!(instance.status === 'SUSPENDED' || instance.status === 'RUNNING')">
+              <span class="entypo stop"></span> <div>Kill</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div ng-if="instance.status === 'SUCCEEDED'" class="row">
+    <div class="col-sm-24">
+      <div class="detailsBox">
+        <h4>
+          Lineage
+        </h4>
+        <div class="lineage-graph"><lineage-graph type="instance.type" name="instance.name" instance="instance.instance" start="instance.startTime" end="instance.endTime"/></div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,128 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+
+
+<table class="listTable table" id="entitiesSearchList">
+  <thead>
+    <tr>
+      <th><div class="filtersSearchBox"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
+      <th><div class="filtersSearchBox pointer" ng-click="toggleSortOrder()">Name <span class="glyphicon glyphicon-sort"></span></div> </th>
+      <th><div class="filtersSearchBox">Tags</div></th>
+      <th><div class="filtersSearchBox">Cluster</div></th>
+      <th><div class="filtersSearchBox">Type</div></th>
+      <th><div class="filtersSearchBox">Status</div></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr ng-if="input.length > 0" class="buttonsRow">
+      <td class="buttonCell" colspan="9">
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-disabled="selectedDisabledButtons.schedule">
+          <span class="entypo play"></span> <div>Schedule</div>
+        </div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selectedDisabledButtons.resume">
+          <span class="entypo play"></span> <div>Resume</div>
+        </div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-disabled="selectedDisabledButtons.suspend">
+          <span class="entypo paus"></span> <div>Suspend</div>
+        </div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeEdit()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
+          <span class="entypo cog"></span> <div>Edit</div>
+        </div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeClone()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
+          <span class="entypo docs"></span> <div>Copy</div>
+        </div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeRemove()" ng-disabled="selectedRows.length === 0">
+          <span class="entypo trash"></span> <div>Delete</div>
+        </div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="download()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
+          <span class="entypo down"></span> <div>XML</div>
+        </div>
+      </td>
+    </tr>
+
+    <tr ng-if="input.length === 0 && !server.responses.listLoaded">
+      <td> loading... </td>
+    </tr>
+    <tr ng-if="input.length === 0 && server.responses.listLoaded">
+      <td> There are no results </td>
+    </tr>
+
+    <tr ng-if="input.length !== 0"
+        ng-repeat="item in input | filter:{'name':simpleFilter.name} | filter:{'status':simpleFilter.status} |
+                          filter:{'list':simpleFilter.tags}"
+        class="entityRow"
+        ng-class="{
+              firstEntityRow:$first, lastEntityRow:$last,
+              rowSelected:checkedRow(item.name)
+            }">
+      <td class="checkboxCell">
+        <input type="checkbox" checklist-model="selectedRows" ng-model="$index"
+               checklist-value="{name:item.name, type:item.type, status:item.status}"
+               ng-change="checkButtonsToShow()"/>
+      </td>
+      <td class="nameCell" ng-init="entityType = item.type | uppercase">
+        <button type="button" class="btn btn-default" ng-click="goEntityDetails(item.name, item.type)">
+          <span ng-class="displayIcon((item.type | uppercase), item.tags.tag)"></span> {{ item.name }}
+        </button>
+      </td>
+      <td>
+        <span ng-repeat="tag in item.tags.tag" ng-click="addTag(tag)" class="tag">
+          {{ tag }}{{$last ? '' : ', '}}
+        </span>
+      </td>
+      <td>
+        <span ng-repeat="cluster in item.clusters.cluster">
+          {{ cluster }}{{$last ? '' : ', '}}
+        </span>
+      </td>
+      <td>
+        <span ng-repeat="tag in item.tags.tag" ng-init="type = displayType(tag)">
+          {{ type | uppercase}}
+        </span>
+      </td>
+      <td class="stateCell">
+        <span ng-class="{'blink-success': item.status == 'RUNNING',
+                         'text-success': item.status == 'SUCCEEDED',
+                         'blink-warning': item.status == 'SUSPENDED',
+                         'blink-danger': item.status == 'UNKNOWN'}">{{ item.status }}</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td ng-if="server.responses.multiRequest[type] > 0 || server.responses.count.pending > 0">
+        <div class="spinner" ng-class="{active: server.responses.multiRequest[type] > 0 || server.responses.count.pending > 0}">
+          <img src="css/img/ajax-loader_2.gif" />
+        </div>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="9">
+        <nav class="pull-right">
+          <ul class="pagination">
+            <li ng-repeat="page in pages"><a href="javascript:void(0);" ng-click="page.enabled ? scopeGoPage(page.index) : void(0)" ng-class="page.enabled ? '' : 'pagDisabled'">{{ page.label }}</a></li>
+          </ul>
+        </nav>
+      </td>
+    </tr>
+  </tbody>
+
+</table>

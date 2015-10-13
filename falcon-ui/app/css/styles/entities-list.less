@@ -16,16 +16,17 @@
  * limitations under the License.
  */
 .dashboardBox {
+  padding: 0;
   h3 {
     margin: 0 0 5px 0;
   }
 }
 
-.listTable { 
+.listTable {
   margin-top: 5px;
   border-collapse: separate;
   border-radius: 4px;
-  border: 1px solid @gray;
+  //border: 1px solid @gray;
   width: 100%;
   min-height: 140px;
   overflow: hidden;
@@ -55,7 +56,7 @@
         //.trayAnimation;
       }
     }
-    
+
   }
   h5 {
     text-align: left;
@@ -76,6 +77,7 @@
   tbody {
     padding: 5px;
     display: table-row-group;
+    background-color: white;
   }
   tr {
     width: 100%;
@@ -86,6 +88,9 @@
     width: 35%;
     float:left;
     margin: 3px 1%;
+    &.clusterFilters {
+      width: 48%;
+    }
   }
   .filtersSelectBox {
     float:left;
@@ -97,21 +102,30 @@
       padding:0;
       font-size: 10px;
     }
-  } 
-  .buttonsRow {
-    height: 41px;
-    td {
-      border-top: none;
-    }  
-  }  
-  .buttonCell {}
+  }
+
+
   .entityRow {
-    td {
-      padding: 0 5px;
-    }
-    &:last-child {
+    &:hover, &.rowSelected {
+      background: #F2F2F2;
       td {
-        border-bottom: none;
+        border-color: #E2E2E2;
+      }
+    }
+
+    td {
+      padding: 3px 3px;
+      line-height: 22px;
+      border-top: 1px solid transparent;
+      border-bottom: 1px solid transparent;
+      vertical-align: middle;
+    }
+    &.firstEntityRow {
+      td { padding-top: 6px; }
+    }
+    &.lastEntityRow {
+      td {
+        padding-bottom: 6px;
       }
     }
   }
@@ -130,12 +144,8 @@
   input[type="radio"] {
     margin: -1px 0 0 -18px;
     font-size: 10px;
-  } 
-  .entypo {
-    font-size: 20px;
-    margin: 8px 0 0 0;
-    display: inline-block;
-  }  
+  }
+
   .nameCell {
     cursor: pointer;
     &:hover {
@@ -143,7 +153,7 @@
     }
   }
 }
-.buttons-to-show { 
+.buttons-to-show {
   margin:2px 0;
 }
 /* LOGIN */
@@ -162,5 +172,41 @@
   }
   .hint{
     color: gray;
+  }
+}
+
+/* New Dashboard */
+
+.filtersResultBox {
+  font-weight: normal;
+//  font-size: 14px;
+  width: 35%;
+  float:left;
+  margin: 3px 1%;
+  &.clusterFilters {
+    width: 48%;
+  }
+}
+
+.tag:hover {
+  cursor: pointer;
+  color: #fff;
+  background-color: #5fa33e;
+  font-weight: bold;
+}
+
+
+
+
+.waitingLayer {
+  position: absolute;
+  background-color: red;
+  width: 100%;
+  height:100%;
+  opacity:0;
+  z-index: -1;
+  .active {
+    opacity:1;
+    z-index: 2;
   }
 }

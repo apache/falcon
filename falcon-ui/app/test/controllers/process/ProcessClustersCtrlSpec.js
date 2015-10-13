@@ -36,7 +36,7 @@
       it('Should add date format', function() {
         scope.init();
 
-        expect(scope.dateFormat).toBe('dd-MMMM-yyyy');
+        expect(scope.dateFormat).toBe('MM/dd/yyyy');
       });
     });
 
@@ -52,7 +52,7 @@
 
         scope.openDatePicker(eventMock, container);
 
-        expect(scope.dateFormat).toBe('dd-MMMM-yyyy');
+        expect(scope.dateFormat).toBe('MM/dd/yyyy');
       });
     });
 

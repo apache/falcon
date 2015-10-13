@@ -17,15 +17,37 @@
  * limitations under the License.
  */
 -->
-<div class="col-xs-24 messages-to-show" ng-show="server.responses.display">
-    
-    <div ng-repeat="message in server.responses.queue" class="alert repeat-animation" 
-      ng-class="{'bg-success': message.success, 'bg-danger': !message.success}">
-      
-      <span ng-class="{'text-success': message.success, 'text-danger': !message.success}">{{ message.status }}</span> 
-      {{ message.message }} 
-      <div class="entypo cross" ng-class="{'text-success': message.success, 'text-danger': !message.success}" ng-click="closeAlert($index)"></div>
-      
-    </div> 
-</div>
 
+<div class="messagesArrow notifs" ng-show="server.responses.queue.length > 0"></div>
+<div class="messages notifs">
+
+  <div ng-show="server.responses.showAll" ng-repeat="message in server.responses.queue | reverse" class="message"
+      ng-class="{ 'color-warning' : message.type === 'warning' || message.type === 'cancel',
+                    'color-success' : message.type === 'success',
+                    'color-danger' : message.type === 'error',
+                    'unreaded-notif' : !message.readed }">
+
+    <span class="glyphicon icon-notif"
+          ng-class="{ 'glyphicon-warning-sign' : message.type === 'warning' || message.type === 'cancel' || message.type === 'error',
+          'glyphicon-ok' : message.type === 'success' }"></span>
+
+    {{ message.message }}
+    <a class="color-warning" ng-if="message.type === 'cancel'" ng-click="restore(message.state)">UNDO</a>
+
+  </div>
+
+  <div ng-show="!server.responses.showAll" ng-repeat="message in server.responses.queue | limitTo: -1" class="message"
+       ng-class="{ 'color-warning' : message.type === 'warning' || message.type === 'cancel',
+                    'color-success' : message.type === 'success',
+                    'color-danger' : message.type === 'error' }">
+
+    <span class="glyphicon icon-notif"
+          ng-class="{ 'glyphicon-warning-sign' : message.type === 'warning' || message.type === 'cancel' || message.type === 'error',
+          'glyphicon-ok' : message.type === 'success' }"></span>
+
+    {{ message.message }}
+    <a class="color-warning" ng-if="message.type === 'cancel'" ng-click="restore(message.state)">UNDO</a>
+
+  </div>
+
+</div>

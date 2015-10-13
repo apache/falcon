@@ -1,0 +1,494 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//----------------mozilla outline hack-------------------//
+input[type="file"]:focus,
+input[type="radio"]:focus,
+input[type="checkbox"]:focus,
+.btn:focus, .btn:active, .btn:active:focus, .btn.active:focus, .btn:visited {
+  outline: none;
+  outline-offset: 0;
+}
+
+//--------helpers-----------------//
+.pa { position: absolute; }
+.pr { position: relative; }
+
+.p0 { padding: 0; }
+.p5 { padding: 5px; }
+.p10 { padding: 10px; }
+.p15 { padding: 15px; }
+.p20 { padding: 20px; }
+
+.m0 { margin: 0; }
+.m20 { margin: 20px; }
+.mt5 { margin-top: 5px; }
+.mt10 { margin-top: 10px; }
+.mt15 { margin-top: 15px; }
+.mt20 { margin-top: 20px; }
+.mb5 { margin-bottom: 5px; }
+.mb10 { margin-bottom: 10px; }
+.mb15 { margin-bottom: 15px; }
+.mb20 { margin-bottom: 20px; }
+
+.tl { text-align: left; }
+.tc { text-align: center; }
+.tr { text-align: right; }
+
+.pointer{ cursor: pointer; }
+.db { display: block; }
+
+//-----------------------------------------//
+
+@nextBtnBackground: #666666;
+@prevBtnBackground: #CCCCCC;
+
+#sourceClusterSelect, #targetClusterSelect {
+  display: block;
+  margin-bottom: 8px;
+}
+#formBox {
+  padding: 0 2%;
+  .dateInput {
+    padding-right:0!important;
+  }
+  .formBoxWrapper {
+    width: 500px;
+    margin:0 auto;
+  }
+  .locationBox {
+    label { margin:0 0 10px 0 };
+  }
+
+  label {
+    font-weight: normal;
+    font-size: 11px;
+    max-width: none;
+
+  }
+  input[type="text"], select {
+    .p0;
+    padding-left: 1px;
+    font-size: 13px;
+    line-height: 15px;
+    height: 25px;
+  }
+  textarea {
+    .p0;
+    padding-left: 1px;
+    font-size: 13px;
+    line-height: 15px;
+  }
+  .tablesTextArea {
+    height: 50px;
+  }
+  .databasesTextArea {
+    height: 97px;
+  }
+
+  a {
+    line-height: 30px;
+    cursor: pointer;
+    margin: 5px 15px;
+    text-decoration: underline;
+    color: black;
+    &:focus {
+      color: red;
+    }
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .formTitol {
+    width: 500px;
+    margin:0 auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    h1 {
+      font-size: 22px;
+      font-weight: bold;
+      margin:0;
+    }
+    a {
+      font-size: 12px;
+      line-height: 12px;
+      margin:0;
+      letter-spacing: 0.5px;
+    }
+  }
+  .tagsBox, .alertsBox {
+    .btn {
+      border-radius: 5px;
+      padding: 1px;
+      border-color: @gray;
+      height: 25px;
+      width: 65px;
+      line-height: 23px;
+      .glyphicon {
+        font-size: 8px;
+        line-height: 8px;
+        top:0;
+        color: @gray;
+      }
+    }
+  }
+
+  .typeButtonsBox {
+    background-color: @gray-lighter;
+    width: 264px;
+    padding:5px;
+    border-radius: 5px;
+    .btn {
+      padding: 5px 20px;
+      border-radius: 5px;
+      background-color: @gray-lighter;
+      border: none;
+      &.active {
+        background-color: @gray;
+        color: white;
+      }
+    }
+  }
+
+  .formBoxWrapper {
+    border: 1px solid @gray-lighter;
+    border-radius:3px;
+    .p20;
+  }
+
+  .clusterBox {
+    border: 1px solid @gray-light;
+    border-radius: 5px;
+    .mt20;
+    .mb10;
+    padding-top: 15px;
+    padding-bottom: 15px;
+
+    h3, .runJobOnBox {
+      .pa;
+      background-color: white;
+      padding: 0 5px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      display: inline-block;
+      top: -30px;
+
+    }
+    .runJobOnBox {
+      width: 110px;
+      right: 5px;
+      top: -13px;
+    }
+    .hiveDatabasesTitol {
+      font-size: 12px;
+      padding-left: 5px;
+    }
+    .databaseRadioBox{
+      font-size: 12px;
+      input {
+        margin-left: 5px;
+      }
+    }
+  }
+  .alertsBox {
+    .mt10;
+    h4 {
+      margin: 0;
+    }
+    .emailBox {
+      padding-right: 5px;
+      width: 82%;
+      display: inline-block;
+      vertical-align: top;
+      .db { margin:0; }
+      margin-bottom:5px;
+      label {
+        width: 100%;
+      }
+    }
+    .addAlertBox {
+      margin-bottom:5px;
+      margin-left: 10px;
+      display: inline-block;
+      vertical-align: top;
+      margin-top: 24px;
+    }
+    .emailArrayRow {
+      height: 25px;
+      font-size: 12px;
+      line-height: 25px;
+      margin-bottom: 5px;
+      span {
+        font-weight: bold;
+      }
+      button {
+        float: right;
+        margin-right: 4px;
+      }
+    }
+  }
+
+}
+.advancedOptionsButton {
+  cursor: pointer;
+  hr {
+    width: 67%;
+    margin-top: -7px;
+    margin-bottom:0;
+    margin-left: 128px;
+    border-top: 1px solid @gray-dark;
+  }
+  span.entypo {
+    float: right;
+    margin: 7px 5px;
+    font-size: 50px;
+  }
+}
+#advancedOptionsBox {
+  .transition(max-height 1s ease);
+  max-height: 0;
+  overflow: hidden;
+  &.expanded {
+    max-height: 850px;
+  }
+  .frequencyBox {
+    width: 36%;
+    display: inline-block;
+    vertical-align: top;
+    input, select {
+      display: inline-block;
+    }
+    input {
+      width: 20px;
+    }
+    select {
+      width: 80px;
+    }
+    label {
+      margin:0;
+    }
+  }
+
+  .allocationBox {
+    >div>div {
+      width: 24%;
+      display: inline-block;
+    }
+
+  }
+  .retryBox {
+    .policyBox {
+      width: 45%;
+      select {
+        width: 170px;
+      }
+    }
+
+    > div {
+      width: 30%;
+      display: inline-block;
+      input, select {
+        display: inline-block;
+      }
+      input {
+        width: 20px;
+      }
+      select {
+        width: 80px;
+      }
+      label {
+        margin:0;
+      }
+      &:last-child {
+        width: 20%;
+        text-align: right;
+        padding-right: 20px;
+      }
+    }
+  }
+
+  .hiveOptBox {
+    label {
+      display: block;
+    }
+  }
+}
+
+
+//---------------SUMMARY------------------//
+
+#formSummaryBox {
+  font-size: 12px;
+  h4 {
+    margin-bottom:0;
+    font-size: 12px;
+  }
+  h5 {
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+  }
+  span {
+    font-weight: bold;
+  }
+  .lightSubtitle {
+    color: @gray-light;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .box {
+    position: relative;
+    border: 1px solid @gray-lighter;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 15px;
+
+    h3 {
+      font-size: 18px;
+      margin-top: -25px;
+      margin-left: -10px;
+      padding: 0 5px;
+      background-color: white;
+      display: inline-block;
+      position: absolute;
+    }
+    h4 {
+      margin-top:0;
+    }
+
+  }
+  .allocationSubBox {
+    width: 32%;
+    display: inline-block;
+  }
+  .previewBox {
+    text-align: right;
+  }
+  #jsonPreview {
+    width: 190px;
+    .mt20;
+    .mb20;
+  }
+
+}
+
+
+//////////////////////////////
+
+#formBox {
+  .progressBox {
+    height: 75px;
+    .pr;
+  }
+  .progressBar {
+    overflow: hidden;
+    padding: 0 35px 10px;
+    height: 100px;
+
+    h6 {
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    span {
+      width: auto;
+    }
+  }
+
+  .fir, .sec {
+    .pa;
+    .transition(border, 0.4s, ease);
+    .transition(background, 0.4s, ease);
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    border: 3px solid @gray-light;
+    border-radius: 20px;
+    color: white;
+    line-height: 34px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    span {
+      display: none;
+    }
+    h6 { .m0; .pa; top: 40px; color: black; }
+
+  }
+  .fir {
+    left:0;
+    h6 {
+      left: -5%;
+    }
+  }
+  .sec {
+    right: 0;
+    margin-left: -20px;
+    z-index: 4;
+    h6 {
+      left: -10%;
+    }
+  }
+
+  .bar1 {
+    .transition(all, 0.4s, ease);
+    .pa;
+    z-index: 3;
+    top:13px;
+    height: 10px;
+    background-color: @gray-light;
+    z-index: 5;
+    left: 38px;
+    right: 32px;
+    border-width:0;
+  }
+  .general {
+    .bar1 { background-color: @gray-light; }
+    .fir {
+      background-color: @gray-dark;
+      h6 { font-weight: bold; }
+    }
+    .sec {
+      background-color: @gray-light;
+      h6 { font-weight: normal; }
+    }
+
+  }
+
+  .summary {
+    .bar1 { background-color: @gray-dark; }
+    .fir {
+      h6 { font-weight: normal; }
+      background-color: @gray-dark;
+      border-color: @gray-dark;
+      span {
+        display: inline-block;
+      }
+      b {
+        display: none;
+      }
+    }
+    .sec {
+      background-color: @gray-dark;
+      h6 { font-weight: bold; }
+    }
+  }
+}

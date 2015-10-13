@@ -33,102 +33,102 @@
  
   });
   
-  describe('Frequency Directive', function () {
-
-    var element, scope, compile, falconServiceMock, entitiesListController;
-    var windowMock, encoderServiceMock;
-
-    beforeEach(module('app.directives'));
-
-
-    beforeEach(inject(function($rootScope, $compile, $controller) {
-      falconServiceMock = jasmine.createSpyObj('Falcon', ['getEntityDefinition', 'logRequest', 'logResponse']);
-      encoderServiceMock = jasmine.createSpyObj('EncoderService', ['encode']);
-      windowMock = createWindowMock();
-
-      scope = $rootScope.$new();
-      compile = $compile;
-
-      entitiesListController = $controller('EntitiesListCtrl', {
-        $scope: scope,
-        Falcon: falconServiceMock,
-        EncodeService: encoderServiceMock,
-        $window: windowMock
-      });
-
-    }));
-    
-    it('Should render 2 hours', function() {
-      scope.someFrequency = {unit: 'hours', quantity: 2};
-      element = newElement('<frequency value="someFrequency" prefix="at"/>', scope);
-
-      expect(element.text()).toBe('at 2 hours');
-    });
-
-    it('Should render "Not specified"', function() {
-      scope.someFrequency = {unit: 'hours', quantity: null};
-      element = newElement('<frequency value="someFrequency"/>', scope);
-
-      expect(element.text()).toBe('Not specified');
-    });
-
-    describe('EntitiesListController', function() {
-      it('Should invoke the entity definition service', function() {
-        falconServiceMock.getEntityDefinition.andReturn(successResponse({}));
-        var type = 'feed';
-        var name = 'FeedOne';
-
-        scope.downloadEntity(type, name);
-
-        expect(falconServiceMock.getEntityDefinition).toHaveBeenCalledWith(type, name);
-      });
-
-      it('Should encode the response', function() {
-        var type = 'feed';
-        var name = 'FeedOne';
-        falconServiceMock.getEntityDefinition.andReturn(successResponse({}));
-
-
-        scope.downloadEntity(type, name);
-
-        expect(encoderServiceMock.encode).toHaveBeenCalled();
-      });
-
-      it('Should do a full page reload to a data uri to trigger the download', function() {
-        falconServiceMock.getEntityDefinition.andReturn(successResponse({}));
-        encoderServiceMock.encode.andReturn('[encodedResponse]');
-        windowMock.location.href = '';
-
-        scope.downloadEntity('feed', 'FeedOne');
-
-        expect(windowMock.location.href).toBe('data:application/octet-stream,[encodedResponse]');
-      });
-    });
-
-    function successResponse(value) {
-      var fakePromise = {};
-      fakePromise.success = function(callback) {
-        callback(value);
-        return fakePromise;
-      };
-      fakePromise.error = angular.noop;
-      return fakePromise;
-    }
-
-    function newElement(html) {
-      var element = compile(html)(scope);
-      scope.$digest();
-      return element;
-    }
-
-    function createWindowMock() {
-     return {
-       location: {
-         href: ''
-       }
-     };
-    }
-
-  });
+  //describe('Frequency Directive', function () {
+  //
+  //  var element, scope, compile, falconServiceMock, entitiesListController;
+  //  var windowMock, encoderServiceMock;
+  //
+  //  beforeEach(module('app.directives'));
+  //
+  //
+  //  beforeEach(inject(function($rootScope, $compile, $controller) {
+  //    falconServiceMock = jasmine.createSpyObj('Falcon', ['getEntityDefinition', 'logRequest', 'logResponse']);
+  //    encoderServiceMock = jasmine.createSpyObj('EncoderService', ['encode']);
+  //    windowMock = createWindowMock();
+  //
+  //    scope = $rootScope.$new();
+  //    compile = $compile;
+  //
+  //    entitiesListController = $controller('EntitiesListCtrl', {
+  //      $scope: scope,
+  //      Falcon: falconServiceMock,
+  //      EncodeService: encoderServiceMock,
+  //      $window: windowMock
+  //    });
+  //
+  //  }));
+  //
+  //  it('Should render 2 hours', function() {
+  //    scope.someFrequency = {unit: 'hours', quantity: 2};
+  //    element = newElement('<frequency value="someFrequency" prefix="at"/>', scope);
+  //
+  //    expect(element.text()).toBe('at 2 hours');
+  //  });
+  //
+  //  it('Should render "Not specified"', function() {
+  //    scope.someFrequency = {unit: 'hours', quantity: null};
+  //    element = newElement('<frequency value="someFrequency"/>', scope);
+  //
+  //    expect(element.text()).toBe('Not specified');
+  //  });
+  //
+  //  describe('EntitiesListController', function() {
+  //    it('Should invoke the entity definition service', function() {
+  //      falconServiceMock.getEntityDefinition.andReturn(successResponse({}));
+  //      var type = 'feed';
+  //      var name = 'FeedOne';
+  //
+  //      scope.downloadEntity(type, name);
+  //
+  //      expect(falconServiceMock.getEntityDefinition).toHaveBeenCalledWith(type, name);
+  //    });
+  //
+  //    it('Should encode the response', function() {
+  //      var type = 'feed';
+  //      var name = 'FeedOne';
+  //      falconServiceMock.getEntityDefinition.andReturn(successResponse({}));
+  //
+  //
+  //      scope.downloadEntity(type, name);
+  //
+  //      expect(encoderServiceMock.encode).toHaveBeenCalled();
+  //    });
+  //
+  //    it('Should do a full page reload to a data uri to trigger the download', function() {
+  //      falconServiceMock.getEntityDefinition.andReturn(successResponse({}));
+  //      encoderServiceMock.encode.andReturn('[encodedResponse]');
+  //      windowMock.location.href = '';
+  //
+  //      scope.downloadEntity('feed', 'FeedOne');
+  //
+  //      expect(windowMock.location.href).toBe('data:application/octet-stream,[encodedResponse]');
+  //    });
+  //  });
+  //
+  //  function successResponse(value) {
+  //    var fakePromise = {};
+  //    fakePromise.success = function(callback) {
+  //      callback(value);
+  //      return fakePromise;
+  //    };
+  //    fakePromise.error = angular.noop;
+  //    return fakePromise;
+  //  }
+  //
+  //  function newElement(html) {
+  //    var element = compile(html)(scope);
+  //    scope.$digest();
+  //    return element;
+  //  }
+  //
+  //  function createWindowMock() {
+  //   return {
+  //     location: {
+  //       href: ''
+  //     }
+  //   };
+  //  }
+  //
+  //});
 
 })();

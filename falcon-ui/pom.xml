@@ -76,7 +76,6 @@
               <arguments>test</arguments>
             </configuration>
           </execution>
-
         </executions>
       </plugin>
 
@@ -89,7 +88,9 @@
             <exclude>app/css/bootstrap/**</exclude>
             <exclude>app/test/lib/**</exclude>
             <exclude>app/css/fonts/**</exclude>
-            <exclude>app/config/loginData.js</exclude>
+            <exclude>app/css/styles/**</exclude>
+            <exclude>app/config/loginData.json</exclude>
+            <exclude>README.md</exclude>
             <exclude>dist/**</exclude>
             <exclude>node/**</exclude>
 	    <exclude>node_modules/**</exclude>
@@ -98,7 +99,9 @@
             <exclude>karma.conf.js</exclude>
             <exclude>bower.json</exclude>
             <exclude>app/css/main.css</exclude>
+	    <exclude>app/css/img/**</exclude>
             <exclude>app/test/e2e/protractor.js</exclude>
+            <exclude>app/js/directives/ng-tags-input.js</exclude>
           </excludes>
         </configuration>
       </plugin>

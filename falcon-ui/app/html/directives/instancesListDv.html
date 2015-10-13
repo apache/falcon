@@ -1,0 +1,148 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<table class="listTable table" id="instancesList">
+  <thead>
+  <tr>
+    <th><div class="filtersSearchBox vertical-align"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
+    <th><div class="filtersSearchBox vertical-align">Instance</div></th>
+    <th><div class="filtersSearchBox">Started&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('startTime')"></span>
+      <input type="text" class="form-control dateInput" ng-model="startFilter" ng-keypress="validateDate($event, 'start');"
+             ng-enter="filterInstances('startTime')" placeholder="mm/dd/yyyy hh:mm">
+      <label class="error" ng-if="startFilterError">Incorrect Date Format</label>
+      <label class="error" ng-if="startAfterEndError">Start date should be before end date</label>
+      <label class="error" ng-if="startAfterNominalError">Start date should be after nominal start date {{ start }}</label>
+      <label class="error" ng-if="startBeforeNominalError">Start date should be before nominal end date {{ end }}</label>
+    </div></th>
+    <th><div class="filtersSearchBox">Ended&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('endTime')"></span>
+      <input type="text" class="form-control dateInput" ng-model="endFilter" ng-keypress="validateDate($event, 'end');"
+             ng-enter="filterInstances('endTime')" placeholder="mm/dd/yyyy hh:mm">
+      <label class="error" ng-if="endFilterError">Incorrect Date Format</label>
+      <label class="error" ng-if="endAfterNominalError">End date should be after nominal start date {{ start }}</label>
+      <label class="error" ng-if="endBeforeNominalError">End date should be before nominal end date {{ end }}</label>
+    </div></th>
+    <th>
+      <div class="filtersSearchBox">Status&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('status')"></span>
+        <select class="form-control padding0" ng-model="statusFilter" ng-change="filterInstances('startTime')">
+          <option value="">ALL</option>
+          <option value="RUNNING">RUNNING</option>
+          <option value="SUCCEEDED">SUCCEEDED</option>
+          <option value="SUSPENDED">SUSPENDED</option>
+          <option value="WAITING">WAITING</option>
+          <option value="KILLED">KILLED</option>
+        </select>
+      </div>
+    </th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <tr ng-if="input.length > 0" class="buttonsRow">
+    <td class="buttonCell" colspan="9">
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="download()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
+        <span class="entypo down"></span> <div>Log</div>
+      </div>
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selectedDisabledButtons.resume">
+        <span class="entypo play"></span> <div>Resume</div>
+      </div>
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeRerun()" ng-disabled="selectedDisabledButtons.rerun">
+        <span class="entypo play"></span> <div>Rerun</div>
+      </div>
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-disabled="selectedDisabledButtons.suspend">
+        <span class="entypo paus"></span> <div>Suspend</div>
+      </div>
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeKill()" ng-disabled="selectedDisabledButtons.stop">
+        <span class="entypo stop"></span> <div>Kill</div>
+      </div>
+    </td>
+  </tr>
+  <tr ng-if="input.length < 1" class="buttonsRow">
+    <td class="buttonCell" colspan="9">
+      <div ng-if="" class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-disabled="selectedDisabledButtons.schedule">
+        <span class="entypo play"></span> <div>Schedule</div>
+      </div>
+    </td>
+  </tr>
+
+  <tr ng-if="input.length === 0 && !server.responses.listLoaded">
+    <td> loading... </td>
+  </tr>
+  <tr ng-if="input.length === 0 && server.responses.listLoaded">
+    <td> There are no results </td>
+  </tr>
+
+  <tr ng-if="input.length !== 0"
+      ng-repeat="item in input"
+      class="entityRow"
+      ng-class="{
+              firstEntityRow:$first, lastEntityRow:$last,
+              rowSelected:checkedRow(item.instance)
+            }">
+    <td class="checkboxCell">
+      <input type="checkbox" checklist-model="selectedRows" ng-model="$index"
+             checklist-value="{'instance':item.instance, 'startTime':item.startTime, 'endTime':item.endTime, 'status':item.status, 'type':type, 'logFile':item.logFile}"
+             ng-change="checkButtonsToShow()"/>
+    </td>
+    <td class="nameCell">
+      <button type="button" class="btn btn-default" ng-click="goInstanceDetails(item)">
+        {{ item.instance }}
+      </button>
+    </td>
+    <td>
+      <!--{{ item.startTime }}<br/>-->
+      <!--{{ item.startTime | date :'yyyy-MM-ddTHH:mm:ssZ' }}<br/>-->
+      {{ item.startTime | date :'MM/dd/yyyy HH:mm'}}
+    </td>
+    <td>
+      {{ item.endTime | date :'MM/dd/yyyy HH:mm'}}
+    </td>
+    <td class="stateCell">
+      <span ng-class="{
+      'blink-success': item.status == 'RUNNING',
+      'text-success': item.status == 'SUCCEEDED',
+      'blink-warning': item.status == 'WAITING' || item.status == 'UNKNOWN',
+      'blink-danger': item.status == 'SUSPENDED',
+      'text-danger': item.status == 'FAILED' || item.status == 'KILLED',
+      }">{{ item.status }}</span>
+    </td>
+
+  </tr>
+  <tr>
+    <td ng-if="server.responses.multiRequest[type] > 0 || server.responses.listLoaded[type] === false">
+      <div class="spinner" ng-class="{active: server.responses.multiRequest[type] > 0 || server.responses.listLoaded[type] === false}">
+        <img src="css/img/ajax-loader.gif" />
+      </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td colspan="5">
+      <nav class="pull-right">
+        <ul class="pagination">
+          <li ng-show="prevPages"><a href="javascript:void(0);" ng-click="scopePrevOffset(0)"> < </a></li>
+          <li ng-repeat="page in pages" ng-show="page.show"><a href="javascript:void(0);" ng-click="page.enabled ? scopeGoPage(page.index) : void(0)" ng-class="page.enabled ? '' : 'pagDisabled'">{{ page.label }}</a></li>
+          <li ng-show="nextPages"><a href="javascript:void(0);" ng-click="scopeNextOffset(0)"> > </a></li>
+        </ul>
+      </nav>
+    </td>
+  </tr>
+
+  </tbody>
+
+</table>

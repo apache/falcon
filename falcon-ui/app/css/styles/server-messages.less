@@ -18,13 +18,15 @@
 //------server messages ------//
 .alert {
   position: relative;
-  margin:5px 0;
+  display: inline-block;
+  margin:5px auto 0;
+  padding: 5px 20px 5px 10px;
   .box-shadow(~"1px 1px 5px black");
   border: 1px solid white;
   opacity: 1;
   span {
     display: inline-block;
-    margin: auto 5px;   
+    margin: auto 5px;
   }
   .entypo {
     position: absolute;
@@ -32,19 +34,35 @@
     right:5px;
     cursor: pointer;
   }
+  &.bg-danger {
+    border: 1px solid darken(@brand-danger, 10%);
+  }
+  &.bg-success {
+    border: 1px solid darken(@brand-success, 10%);
+  }
+  &.bg-warning {
+    border: 1px solid darken(@brand-warning, 10%);
+  }
+  a {
+    text-decoration: underline;
+    cursor: pointer;
+  }
 }
-.alert.repeat-animation.ng-enter, 
-.alert.repeat-animation.ng-leave{ 
- // .transition (all, 0.3s, ease); 
-} 
- 
+.repeat-animation {
+  text-align: center;
+}
+.repeat-animation.ng-enter,
+.repeat-animation.ng-leave{
+ // .transition (all, 0.3s, ease);
+}
+
 //.alert.repeat-animation.ng-leave.repeat-animation.ng-leave-active,
-.alert.repeat-animation.ng-enter {   
+.repeat-animation.ng-enter {
     .messageAnimation;
 }
- 
-.alert.repeat-animation.ng-enter.repeat-animation.ng-enter-active, 
-.alert.repeat-animation.ng-leave {
+
+.repeat-animation.ng-enter.repeat-animation.ng-enter-active,
+.repeat-animation.ng-leave {
     //.messageAnimation;
 }
 
@@ -54,7 +72,10 @@
 @keyframes messageAnimation { 0% { opacity: 0;} 20% { opacity: 1;} 40% { opacity: 0;}60% { opacity: 1;} 80% { opacity: 0;} 100% { opacity: 1;} }
 
 .messageAnimation {
-  .animation(messageAnimation, 1.5s, ease-in-out, 1); 
+  .animation(messageAnimation, 1.5s, ease-in-out, 1);
 }
 
- 
+.repeat-leyend{
+  text-align: center;
+  margin: 10px 0;
+}

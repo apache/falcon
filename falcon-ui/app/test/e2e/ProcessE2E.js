@@ -18,7 +18,7 @@
 (function () {
   'use strict';
 
-  var createProcessButton = element(by.id('createProcessButton'));
+  var createProcessButton = element(by.id('process.create'));
   var editXmlButton = element(by.id('editXmlButton'));
   var fieldWrapper = element(by.id('fieldWrapper'));
   var xmlPreviewArea = element(by.model('prettyXml'));
@@ -35,7 +35,7 @@
 
 
   beforeEach(function() {
-    browser.get('http://localhost.localdomain:3000');
+    browser.get('http://localhost:3000');
   });
 
   describe('Process Entity', function() {

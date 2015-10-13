@@ -27,8 +27,10 @@
    */
   var feedModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessPropertiesCtrl', [ '$scope', function() {
-
+  feedModule.controller('ProcessPropertiesCtrl', [ '$scope', '$timeout', function($scope, $timeout) {
+    $timeout(function () {
+      angular.element('#timeZoneSelect > select').trigger('focus');
+    }, 500);
   }]);
 
 })();

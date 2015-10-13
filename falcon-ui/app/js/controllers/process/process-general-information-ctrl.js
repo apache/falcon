@@ -29,9 +29,9 @@
 
   feedModule.controller('ProcessGeneralInformationCtrl', [ '$scope', function($scope) {
     var availableVerions = {
-      oozie: ['4.2.0', '4.1.0', '4.0.1', '4.0.0'],
-      pig: ['pig-0.13.0', 'pig-0.12.1', 'pig-0.12.0', 'pig-0.11.1', 'pig-0.11.0', 'pig-0.10.1'],
-      hive: ['hive-0.13.1', 'hive-0.13.0', 'hive-0.12.0', 'hive-0.11.0', 'hive-0.10.0']
+      oozie: ['3.1.3-incubating', '3.2.0-incubating', '3.3.0', '3.3.1', '3.3.2', '4.0.0', '4.0.1'],
+      pig: ['pig-0.10.0', 'pig-0.10.1', 'pig-0.11.0', 'pig-0.11.1', 'pig-0.12.0', 'pig-0.12.1', 'pig-0.13.0', 'pig-0.8.0', 'pig-0.8.1', ' pig-0.9.0', ' pig-0.9.1', 'pig-0.9.2'],
+      hive: ['hive-0.10.0', 'hive-0.11.0', 'hive-0.12.0', 'hive-0.13.0', 'hive-0.13.1', 'hive-0.6.0', 'hive-0.7.0', 'hive-0.8.0', 'hive-0.8.1', 'hive-0.9.0']
     };
     $scope.nameValid = false;
     
@@ -50,10 +50,9 @@
     };
 
     $scope.selectWorkflow = function() {
-      
       if($scope.process.workflow) {        
         var engine = $scope.process.workflow.engine;
-        $scope.process.workflow.version = null;
+        $scope.process.workflow.version = "";
         $scope.versions = availableVerions[engine];
       }
     };

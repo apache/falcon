@@ -1,0 +1,83 @@
+	<!--
+	/**
+	 * Licensed to the Apache Software Foundation (ASF) under one
+	 * or more contributor license agreements.  See the NOTICE file
+	 * distributed with this work for additional information
+	 * regarding copyright ownership.  The ASF licenses this file
+	 * to you under the Apache License, Version 2.0 (the
+	 * "License"); you may not use this file except in compliance
+	 * with the License.  You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+	-->
+
+	<form name="loginForm" ng-submit="loggUser(loginForm)" novalidate id="loginForm">
+
+	  <div class="col-sm-24 dashboardBox login" ng-class="{showValidationStyle:showLoginVal.show}">
+	    <div class="row">
+	      <div class="col-sm-6"></div>
+	      <div class="col-sm-12">
+
+		<div class="col-sm-15 detailsBox centered">
+		  <h3>Log In</h3>
+
+		  <!--<div class="clearfix hidden-md">&nbsp</div>-->
+
+		  <!--<div class="row">-->
+		    <!--<div class="col-sm-offset-1 col-sm-22 hint">-->
+		        <!--Default user: ambari-qa &nbsp Password: admin-->
+		    <!--</div>-->
+		  <!--</div>-->
+
+		  <div class="row">
+		    <div class="col-sm-offset-1 col-sm-22">
+		      <div class="clearfix hidden-md">&nbsp</div>
+		    </div>
+		  </div>
+
+		  <div class="row">
+		    <div class="col-sm-offset-1 col-sm-22">
+		        <label class="light">User</label>
+		        <input type="text" class="form-control"
+		          name="user"
+		          ng-model="login.user"
+		          ng-required="true"
+							ng-class="{'ng-invalid': showLoginVal.userPassInvalid}"
+		          validation-message="{{validations.messages.user}}"
+							ng-keydown="showLoginVal.userPassInvalid = false"
+		          ng-pattern="validations.patterns.id" autofocus/>
+		    </div>
+		  </div>
+
+		   <div class="row">
+				 <div class="col-sm-23 col-sm-offset-1 custom-danger" ng-if="showLoginVal.userPassInvalid">
+					 The user/password you have entered is invalid.
+				 </div>
+		     <div class="col-sm-offset-1 col-sm-22">
+		       <div class="clearfix hidden-md">&nbsp</div>
+		     </div>
+		   </div>
+
+		   <div class="row">
+		    <div class="col-sm-offset-1 col-sm-22">
+		        <button id="login.submit" type="submit" class="btn btn-default col-xs-6 pull-right dynamic-table-spacer">
+							Check-In
+		        </button>
+		    </div>
+		  </div>
+
+		</div>
+
+	      </div>
+	      <div class="col-sm-6"></div>
+	    </div>
+	  </div>
+
+	  </form>

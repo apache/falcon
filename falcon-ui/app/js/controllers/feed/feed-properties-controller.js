@@ -28,6 +28,7 @@
   var feedModule = angular.module('app.controllers.feed');
 
   feedModule.controller('FeedPropertiesController', [ "$scope",function($scope) {
+
     $scope.addCustomProperty = function () {
       $scope.feed.customProperties.push({key: null, value: null});
     };
@@ -37,6 +38,22 @@
         $scope.feed.customProperties.splice(index, 1);
       }
     };
+
+    $scope.propPlaceholders = {
+      queueName: 'default',
+      jobPriority: '',
+      parallel: 3,
+      maxMaps: 8,
+      mapBandwidthKB: 1024
+    };
+
+    /*new Entry('queueName', 'default'),
+     new Entry('jobPriority', ''),
+     new Entry('timeout', new Frequency(1, 'hours')),
+     new Entry('parallel', 3),
+     new Entry('maxMaps', 8),
+     new Entry('mapBandwidthKB', 1024)*/
+
   }]);
 
 })();

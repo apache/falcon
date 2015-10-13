@@ -81,7 +81,7 @@
 
   describe('Versions', function() {
     it('Should display the oozie versions when oozie workflow is selected', function() {
-      var expectedVersions = ['4.2.0', '4.1.0', '4.0.1', '4.0.0'];
+      var expectedVersions = ['3.1.3-incubating', '3.2.0-incubating', '3.3.0', '3.3.1', '3.3.2', '4.0.0', '4.0.1'];
       scope.process.workflow = {engine: 'oozie'};
 
       scope.selectWorkflow();
@@ -90,7 +90,7 @@
     });
 
     it('Should display the pig versions when pig workflow is selected', function() {
-      var expectedVersions = ['pig-0.13.0', 'pig-0.12.1', 'pig-0.12.0', 'pig-0.11.1', 'pig-0.11.0', 'pig-0.10.1'];
+      var expectedVersions = ['pig-0.10.0', 'pig-0.10.1', 'pig-0.11.0', 'pig-0.11.1', 'pig-0.12.0', 'pig-0.12.1', 'pig-0.13.0', 'pig-0.8.0', 'pig-0.8.1', ' pig-0.9.0', ' pig-0.9.1', 'pig-0.9.2'];
       scope.process.workflow = {engine: 'pig'};
 
       scope.selectWorkflow();
@@ -99,7 +99,7 @@
     });
 
     it('Should display the hive versions when hive workflow is selected', function() {
-      var expectedVersions = ['hive-0.13.1', 'hive-0.13.0', 'hive-0.12.0', 'hive-0.11.0', 'hive-0.10.0'];
+      var expectedVersions = ['hive-0.10.0', 'hive-0.11.0', 'hive-0.12.0', 'hive-0.13.0', 'hive-0.13.1', 'hive-0.6.0', 'hive-0.7.0', 'hive-0.8.0', 'hive-0.8.1', 'hive-0.9.0'];
       scope.process.workflow = {engine: 'hive'};
 
       scope.selectWorkflow();

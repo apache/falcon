@@ -1,0 +1,159 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//----------MENU-----------------//
+.chartMenuBox {
+  padding: 5px 0 0 40px;
+  h5 {
+    margin-bottom: 5px;
+  }
+  label {
+    font-weight: 500;
+  }
+}
+
+.entityBox {
+  display: inline-block;
+  .entityTypeButtons {
+    display: inline-block;
+    background-color: @gray-light2;
+    border-radius: 7px;
+    padding: 4px;
+
+    .btn {
+      background-color: @gray-light2;
+      border-radius: 7px;
+      border: none;
+      outline: none!important;
+      line-height: 1;
+      padding-right: 15px;
+      padding-left: 15px;
+      &.active {
+        background-color: @gray-dark;
+        color: white;
+      }
+      &:focus {
+
+      }
+    }
+  }
+}
+.dayBox {
+  position: absolute;
+  padding-left: 20px;
+  display: inline-block;
+  .dateInput {
+    padding-left: 2px;
+  }
+}
+.timeBox {
+  position: relative;
+  padding-left: 20px;
+  display: inline-block;
+  .dateInput {
+    padding-left: 2px;
+  }
+}
+//------------CHART------------------------//
+
+.chart {
+  /*svg {
+    .background-opacity(red, 0.3);
+  }*/
+  height:auto;
+  display: inline-block;
+  margin: 5px;
+
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #d3d3d3;
+  shape-rendering: crispEdges;
+}
+
+path, line,
+svg:path, svg:line{
+  shape-rendering: geometricPrecision;
+}
+
+.axis text {
+  font-family: sans-serif;
+  font-size: 8px;
+}
+.tick {
+  //stroke-dasharray: 1, 2;
+}
+.daily {
+  .axis text {
+    display: none;
+  }
+}
+
+.column {
+  opacity:0;
+  &:hover {
+    opacity: 1;
+  }
+}
+
+text {
+  font-size: 10px;
+}
+.dateAxis {
+  fill: @gray-darker;
+}
+
+
+
+.chartSideBar {
+  max-width: 155px;
+  h3, h4, h5 {
+    font-weight: bold;
+  }
+  h5 {
+    margin-bottom: 5px; font-weight: normal;
+  }
+  hr {
+    margin:5px 0;
+    border-top: 1px solid @gray-light;
+  }
+  span {
+    font-weight: bold;
+  }
+  .table {
+    font-size: 12px;
+    table-layout:fixed;
+    padding: 5px;
+    margin-bottom:0;
+    td {
+      border: 0;
+      padding: 0 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      &:first-child {
+
+      }
+      &:last-child {
+        padding-bottom:0;
+        width: 30%;
+      }
+    }
+  }
+
+}

@@ -27,7 +27,12 @@
    */
   var feedModule = angular.module('app.controllers.feed');
 
-  feedModule.controller('FeedSummaryController', [ "$scope", "$filter", function($scope, $filter) {
+  feedModule.controller('FeedSummaryController', [ "$scope", "$filter", "$timeout",
+                                                function($scope, $filter, $timeout) {
+
+    $timeout(function () {
+      angular.element('.nextBtn').trigger('focus');
+    }, 500);
 
     if($scope.transform) {
       $scope.transform();

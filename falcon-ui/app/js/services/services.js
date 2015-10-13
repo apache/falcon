@@ -17,16 +17,32 @@
  */
 (function () {
   'use strict';
-  
-  angular.module('app.services', [
-    'app.services.falcon', 
-    'app.services.fileapi', 
+
+  var services = angular.module('app.services', [
+    'app.services.falcon',
+    'app.services.fileapi',
     'app.services.json.transformer',
     'app.services.x2js',
-    'app.services.validation',   
+    'app.services.validation',
+    'app.services.entity',
     'app.services.entity.serializer',
     'app.services.entity.factory',
-    'app.services.entity.model'
+    'app.services.entity.model',
+    'app.services.instance',
+    'app.services.server'
   ]);
 
-})();
+  services.factory('SpinnersFlag', function () {
+    return {
+      show: false,
+      backShow: false
+    };
+  });
+  services.factory('SpinnersFlag', function () {
+    return {
+      show: false,
+      backShow: false
+    };
+  });
+
+}());

@@ -17,26 +17,31 @@
  * limitations under the License.
  */
 -->
-<div class="row entitySummary">
+<div class="row entitySummary" id="entitySummary">
 
-  <div class="col-xs-6">     
-    <h3>{{statusCount.TOTAL_AMOUNT}}</h3>   
-    <h5>Submitted</h5>      
+  <div class="whiteBox col-xs-6">
+    <div>
+      <h3>{{statusCount.TOTAL_AMOUNT}}</h3>
+      <h5 class="notBold">Total</h5>
+    </div>
   </div>
-  
-  <div class="col-xs-6 text-success" ng-if="type !== 'cluster'">     
-    <h3>{{statusCount.RUNNING}}</h3>   
-    <h5>Running</h5>      
+
+
+  <div class="whiteBox col-xs-16 pull-right" ng-if="type !== 'cluster'">
+    <div class="col-xs-8 text-success">
+      <h3>{{statusCount.RUNNING}}</h3>
+      <h5>RUNNING</h5>
+    </div>
+
+    <div class="col-xs-8 text-warning">
+      <h3>{{statusCount.SUSPENDED}}</h3>
+      <h5>SUSPENDED</h5>
+    </div>
+
+    <div class="col-xs-8 text-danger">
+      <h3>{{statusCount.UNKNOWN}}</h3>
+      <h5>UNKNOWN</h5>
+    </div>
   </div>
-  
-  <div class="col-xs-6 text-warning" ng-if="type !== 'cluster'">     
-    <h3>{{statusCount.SUSPENDED}}</h3>   
-    <h5>Suspended</h5>      
-  </div>
-  
-  <div class="col-xs-6 text-danger" ng-if="type !== 'cluster'">     
-    <h3>{{statusCount.UNKNOWN}}</h3>   
-    <h5>Unknown</h5>      
-  </div> 
-    
+
 </div>

@@ -19,9 +19,13 @@
   'use strict';
 
   describe('EntityFactory', function () {
-    var factory;
+    var factory, $cookieStoreMock;
 
-    beforeEach(module('app.services.entity.factory'));
+    beforeEach(module('ngCookies','app.services.entity.factory'), function ($provide) {
+      $cookieStoreMock = jasmine.createSpyObj('$cookieStore', ['get']);
+      $cookieStoreMock.get.andReturn(function () { return 'ambari-qa'; });
+      $provide.value('$cookieStore', $cookieStoreMock);
+    });
 
     beforeEach(inject(function(EntityFactory) {
       factory = EntityFactory;

@@ -25,35 +25,92 @@
   ]);
 
   navHeaderModule.controller('HeaderController', [
-    '$rootScope', '$scope', '$state', '$cookieStore', 'EntityModel', 'ValidationService',
-    function ($rootScope, $scope, $state, $cookieStore, EntityModel, validationService) {
+    '$rootScope', '$scope', '$state', '$cookieStore', '$timeout', 'EntityModel', 'ValidationService', 'Falcon',
+    function ($rootScope, $scope, $state, $cookieStore, $timeout, EntityModel, validationService, Falcon) {
+
+      $scope.fake = { focus: false }; //used in upload button to fake the focus borders
+      $scope.notifs = false;
+      $scope.responses = Falcon.responses;
+
+      $scope.isInForm = function (type) {
+        if($rootScope.currentState) {
+          var currState = $rootScope.currentState.split('.'),
+            formType = currState[1];
+          return type === formType;
+        }
+      };
 
       $scope.resetCluster = function () {
         validationService.displayValidations = {show: false, nameShow: false};
-        EntityModel.clusterModel = { cluster: { tags: "", interfaces: { interface: [
-            { _type: "readonly", _endpoint: "hftp://sandbox.hortonworks.com:50070", _version: "2.2.0"},
-            { _type: "write", _endpoint: "hdfs://sandbox.hortonworks.com:8020", _version: "2.2.0"},
-            { _type: "execute", _endpoint: "sandbox.hortonworks.com:8050", _version: "2.2.0"},
-            { _type: "workflow", _endpoint: "http://sandbox.hortonworks.com:11000/oozie/", _version: "4.0.0"},
-            { _type: "messaging", _endpoint: "tcp://sandbox.hortonworks.com:61616?daemon=true", _version: "5.1.6"}
-          ]}, locations: { location: [{ _name: "staging", _path: ""}, { _name: "temp", _path: ""}, { _name: "working", _path: ""}]},
-          ACL: { _owner: "", _group: "", _permission: ""}, properties: { property: [{ _name: "", _value: ""}]},
-          _xmlns: "uri:falcon:cluster:0.1", _name: "", _description: "", _colo: ""}};
+        angular.copy(EntityModel.defaultValues.cluster, EntityModel.clusterModel);
         $state.go("forms.cluster.general");
       };
 
       $scope.resetProcess = function () {
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
+        $scope.models.processModel = null;
         $state.go("forms.process.general");
       };
 
       $scope.resetFeed = function () {
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
+        $scope.models.feedModel = null;
         $state.go("forms.feed.general");
       };
-        
+
+      $scope.resetDataset = function () {
+        validationService.displayValidations = {show: false, nameShow: false};
+        EntityModel.datasetModel.toImportModel = undefined;
+        angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
+        $scope.cloningMode = true;
+        $scope.models.feedModel = null;
+        $state.go("forms.dataset.general");
+      };
+
+      $scope.userLogged = function () {
+        if($rootScope.isSecureMode()){
+          return true;
+        }else if($rootScope.userLogged()){
+		if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
+			$scope.userToken = $cookieStore.get('userToken').user;
+			return true;
+		}else{
+            return false;
+		}
+	  }else{
+		  return false;
+	  }
+      };
+
+      $scope.isSecureMode = function () {
+        return $rootScope.isSecureMode();
+      };
+
+      $scope.logOut = function() {
+	$cookieStore.put('userToken', null);
+	$state.transitionTo('login');
+      };
+
+      $scope.restore = function(state) {
+        $state.go(state);
+      };
+
+      $scope.notify = function() {
+        Falcon.notify(true);
+      };
+
+      $scope.hideNotifs = function() {
+        Falcon.hideNotifs();
+      };
+
     }]);
+
+    navHeaderModule.filter('reverse', function() {
+      return function(items) {
+        return items.slice().reverse();
+      };
+    });
 
 })();

@@ -18,33 +18,83 @@
  */
 -->
 <nav class="col-sm-24 navbar navbar-default" role="navigation">
-  <div class="navbar">
-
-      <h1 class="navbar-header" ui-sref="main">
-        <img src="css/img/falcon.png" /> Falcon
+  <div class="col-sm-offset-1 col-sm-22">
+    <button class="logoTitle" ui-sref="main">
+      <h1 class="navbar-header">
+        <span class="falconLogo"></span> <span>Falcon</span>
       </h1>
+    </button>
 
-      <div class="createNavWrapper">
+      <div class="createNavWrapper" ng-show="userLogged()">
         <h4>Create an entity</h4>
-        <div ng-click="resetCluster()">
-          <span class="entypo archive"></span> Cluster
-        </div>
-        <div ng-click="resetFeed()">
-          <span class="entypo download"></span> Feed
-        </div>
-        <div id="createProcessButton" ng-click="resetProcess()">
-          <span class="entypo cycle"></span> Process
-        </div>
+        <button type="button"
+                id="cluster.create"
+                ng-click="resetCluster()"
+                ng-disabled="isInForm('cluster')"
+                ng-class="{disabled:isInForm('cluster')}">
+          <span class="entypo archive"></span> <span>Cluster</span>
+        </button>
+        <button type="button"
+                id="feed.create"
+                ng-click="resetFeed()"
+                ng-disabled="isInForm('feed')"
+                ng-class="{disabled:isInForm('feed')}">
+          <span class="entypo download"></span> <span>Feed</span>
+        </button>
+        <button type="button"
+                id="process.create"
+                ng-click="resetProcess()"
+                ng-disabled="isInForm('process')"
+                ng-class="{disabled:isInForm('process')}">
+          <span class="entypo cycle"></span> <span>Process</span>
+        </button>
+        <button type="button"
+                id="dataset.create"
+                ng-click="resetDataset()"
+                ng-disabled="isInForm('dataset')"
+                ng-class="{disabled:isInForm('dataset')}">
+          <span class="glyphicon glyphicon-duplicate"></span> <span>Mirror</span>
+        </button>
       </div>
 
-      <div class="uploadNavWrapper">
-        <h4>Upload an entity</h4>
-        <div class="btn-file">
-          <span class="entypo up"></span>
-          <input type="file" id="files" name="files[]" multiple fileinput-change="handleFile" ng-model="fileJson">
-          Browse for the XML file
-        </div>
+    <div class="uploadNavWrapper" ng-show="userLogged()">
+      <h4>Upload an entity</h4>
+      <div class="btn-file" ng-class="{fakeFocus: fake.focus}">
+        <span class="entypo up"></span>
+        <input type="file"
+               id="files"
+               ng-focus="fake.focus = true"
+               ng-blur="fake.focus = false"
+               name="files[]"
+               multiple
+               fileinput-change="handleFile"
+               ng-model="fileJson">
+        <span>Browse for the XML file</span>
       </div>
-      
+    </div>
+
+    <div class="loginHeaderBox">
+      <div ng-show="userLogged()">
+        <span class="user"></span> <div><strong>{{userToken}}</strong></div>
+      </div>
+
+      <button ng-show="userLogged() && !ambariView() && !isSecureMode()" ng-click="logOut()" ng-class="responses.unreaded > 0 ? 'logoutBT' : ''">
+        <span class="glyphicon glyphicon-log-out header-icon"></span> <div><strong class="pointer">Logout</strong></div>
+      </button>
+
+      <button ng-click="notify()" ng-blur="hideNotifs()" class="no-outline">
+        <span class="badge badge-notify" ng-show="responses.unreaded > 0">{{ responses.unreaded }}</span>
+        <span class="glyphicon glyphicon-bell bell-notif header-icon"></span>
+        <strong class="pointer">Notifications</strong>
+        <div class="notifications">
+          <server-messages></server-messages>
+        </div>
+      </button>
+
+      <a href="http://hortonworks.com/hadoop/falcon/">
+        <span class="glyphicon glyphicon-question-sign header-icon"></span> <div>Help</div>
+      </a>
+    </div>
+
   </div>
 </nav>

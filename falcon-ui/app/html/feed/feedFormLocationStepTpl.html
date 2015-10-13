@@ -17,89 +17,97 @@
  * limitations under the License.
  */
 -->
-<form name="feedForm">
-  <div class="col-xs-24">
-  <div class="row">
-    <div class="col-xs-24 feedLocationNavBox">
-      <h4 class="col-xs-10" ng-show="feed.storage.fileSystem.active">Default Storage type </h4>
-      <h4 class="col-xs-10" ng-show="feed.storage.catalog.active"> Storage type </h4>
+<form name="feedForm" novalidate id="feedFormLocationStep">
+  <div class="col-xs-24 locationStep">
+    <div class="row">
+      <div class="col-xs-24 feedLocationNavBox">
+        <h4 class="col-xs-10" ng-show="feed.storage.fileSystem.active">Default Storage type </h4>
+        <h4 class="col-xs-10" ng-show="feed.storage.catalog.active"> Storage type </h4>
 
-      <div class="col-xs-14 feedLocationNav">
-        <div class="btn btn-default pull-right"
-          ng-class="{active: feed.storage.catalog.active}"
-          ng-click="toggleStorage()">
-          Catalog Storage
+        <div class="col-xs-14 feedLocationNav">
+          <button type="button"
+                  class="btn btn-default pull-right"
+                  ng-class="{active: feed.storage.catalog.active}"
+                  ng-click="toggleStorage()">
+            Catalog Storage
+          </button>
+          <button type="button"
+                  class="btn btn-default pull-right"
+                  ng-class="{active: feed.storage.fileSystem.active}"
+                  ng-click="toggleStorage()">
+            File System
+          </button>
+
         </div>
-        <div class="btn btn-default pull-right"
-          ng-class="{active: feed.storage.fileSystem.active}"
-          ng-click="toggleStorage()">
-          File System
-        </div>
-        
+        <div class="clearfix"></div>
       </div>
-      <div class="clearfix"></div>
-    </div>
-    <h4 class="col-xs-12">Default Location</h4>
-    <div class="col-xs-24">
-      <div ng-show="feed.storage.fileSystem.active"
-        ng-repeat="location in feed.storage.fileSystem.locations" class="row">
-  
-        <div class="col-xs-8">
-          <label class="light">{{capitalize(location.type)}} path</label>
+      <h4 class="col-xs-12">Default Location</h4>
+      <div class="col-xs-24">
+        <div ng-show="feed.storage.fileSystem.active"
+          ng-repeat="location in feed.storage.fileSystem.locations" class="row">
+
+          <div class="col-xs-8">
+            <label class="light">{{capitalize(location.type)}} path</label>
+          </div>
+          <div class="pull-right" ng-show="location.focused">
+            <label class="light">add</label>
+            <label ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
+                   ng-click="appendVariable(timeVariable, location, 'path')">
+              {{timeVariable}}
+            </label>
+          </div>
+          <div class="clearfix hidden-md"></div>
+          <div class="col-xs-24">
+            <input type="text" class="form-control" validation-message="{{validations.messages.path}}"
+              ng-required="true"
+              ng-model="location.path"
+              ng-pattern="validations.patterns.osPath"
+              ng-class="{firstInput: $index === 0}"
+              ng-focus="location.focused = true"/>
+          </div>
         </div>
-        <div class="pull-right" ng-show="location.focused">
+      </div>
+
+
+      <div ng-show="feed.storage.catalog.active">
+        <div class="col-xs-8">
+          <label class="light">Table uri</label>
+        </div>
+
+        <div class="pull-right" ng-show="feed.storage.catalog.catalogTable.focused">
           <label class="light">add</label>
           <label ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
-                 ng-click="appendVariable(timeVariable, location, 'path')">
+                 ng-click="appendVariable(timeVariable, feed.storage.catalog.catalogTable, 'uri')">
             {{timeVariable}}
           </label>
         </div>
-        <div class="clearfix hidden-md"></div>
+
         <div class="col-xs-24">
-          <input type="text" class="form-control" validation-message="{{validations.messages.path}}"
-            ng-required="true"
-            ng-model="location.path"
-            ng-pattern="validations.patterns.osPath"
-            ng-focus="location.focused = true"/>
+          <input type="text" class="form-control catalogStorageInput" custom-autofocus
+            ng-model="feed.storage.catalog.catalogTable.uri"
+            ng-pattern="validations.patterns.tableUri"
+            ng-required="feed.storage.catalog.active" validation-message="{{validations.messages.path}}"
+            ng-focus="feed.storage.catalog.catalogTable.focused = true"/>
         </div>
+
       </div>
     </div>
-    
 
-    <div ng-show="feed.storage.catalog.active">
-      <div class="col-xs-8">
-        <label class="light">Table uri</label>
+    <div class="row">
+      <div class="col-xs-24 mt20">
+        <button type="button"
+                id="feed.backToStep2" class="btn prevBtn"
+                ng-click="goBack('forms.feed.properties')"
+                ng-disabled="buttonSpinners.backShow">
+          Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+        </button>
+        <button id="feed.step3" class="btn nextBtn pull-right" ng-click="goNext(feedForm.$invalid, 'forms.feed.clusters')" >
+          Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+        </button>
+        <a class="pull-right" ui-sref="main">
+          Cancel
+        </a>
       </div>
-
-      <div class="pull-right" ng-show="feed.storage.catalog.catalogTable.focused">
-        <label class="light">add</label>
-        <label ng-repeat="timeVariable in ['${YEAR}', '${MONTH}', '${DAY} ', '${HOUR}']"
-               ng-click="appendVariable(timeVariable, feed.storage.catalog.catalogTable, 'uri')">
-          {{timeVariable}}
-        </label>
-      </div>
-
-      <div class="col-xs-24">
-        <input type="text" class="form-control"
-          ng-model="feed.storage.catalog.catalogTable.uri"
-          ng-pattern="validations.patterns.tableUri"
-          ng-required="feed.storage.catalog.active" validation-message="{{validations.messages.path}}"
-          ng-focus="feed.storage.catalog.catalogTable.focused = true"/>
-      </div>
-
     </div>
   </div>
-
-  <div class="row feedBottomButtons">
-    <div class="btn btn-default col-xs-6" ng-click="goBack('forms.feed.properties')" >
-      Previous
-    </div>
-    <div class="btn btn-default col-xs-6 pull-right" ng-click="goNext(feedForm.$invalid, 'forms.feed.clusters')" >
-      Next
-    </div>
-    <u class="col-xs-3 pull-right" ui-sref="main">
-      Cancel
-    </u>
-  </div>
-</div>
 </form>

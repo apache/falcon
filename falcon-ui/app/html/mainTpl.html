@@ -18,22 +18,58 @@
  */
 -->
 
-<div class="col-sm-24 dashboardBox"> 
-  <div class="row">   
-    <div class="col-sm-8">
-      <h3>Clusters</h3>
-      <entity-summary entities="lists.clusterList" type="cluster"></entity-summary>
-      <entities-list input="lists.clusterList" type="cluster" entity-details="entityDetails" clone="cloneEntity" remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity" resume="resumeEntity"></entities-list>
+<div class="col-sm-offset-1 col-sm-22">
+
+  <div class="row searchBoxContainer" id="searchBoxContainer">
+    <div class="col-sm-4"></div>
+    <div class="col-sm-16">
+
+      <img src="css/img/ajax-loader.gif" class="glyphicon search-loading-icon" ng-show="loading"/>
+      <i class="glyphicon glyphicon-search search-icon" ng-hide="loading"></i>
+
+      <tags-input ng-model="tags" min-length="1" add-on-space="true" add-from-autocomplete-only="true"
+                  on-tag-added="displayResults()" on-tag-removed="displayResults()" placeholder="Search">
+        <auto-complete source="loadTags($query)" min-length="0"></auto-complete>
+      </tags-input>
+
+      <i id="nsPopover" class="glyphicon glyphicon-question-sign" ng-class="tags.length > 0 ? 'question-icon' : 'remove-icon'"
+         ns-popover
+         ns-popover-template="menu"
+         ns-popover-trigger="click"
+         ns-popover-theme="ns-popover-tooltip-theme"
+         ns-popover-timeout="5"
+         ns-popover-placement="bottom|right"></i>
+      <script type="text/ng-template" id="menu">
+        <div class="triangle"></div>
+        <!--<div class="ns-popover-tooltip">-->
+          <!--<h5>Hey there! Want some search tips?</h5>-->
+          <!--The <strong>first word</strong> you type will be taken as the <strong>Name</strong> of the entity.-->
+          <!--<br/>-->
+          <!--You can search <strong>*</strong> for getting all the entities.-->
+          <!--<br/>-->
+          <!--The <strong>second and following</strong> words will be taken as <strong> Tags</strong>.-->
+          <!--<br/>-->
+          <!--For filtering by type, write <strong>type=feed|process|mirror</strong>-->
+        <!--</div>-->
+        <div class="ns-popover-tooltip">
+          <h5>Hey there! Want some search tips?</h5>
+          You can type <strong>*</strong> and select <strong>Name: *</strong> from the autocomplete for getting all the entities.
+        </div>
+      </script>
+      <i class="glyphicon glyphicon-remove remove-icon" ng-if="tags.length > 0" ng-click="clearTags()"></i>
+
     </div>
-    <div class="col-sm-8">
-      <h3>Feeds</h3>
-      <entity-summary entities="lists.feedList" type="feed"></entity-summary>    
-      <entities-list input="lists.feedList" type="feed" entity-details="entityDetails" clone="cloneEntity" remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity" resume="resumeEntity"></entities-list>
-    </div>
-    <div class="col-sm-8">
-      <h3>Processes</h3>
-      <entity-summary entities="lists.processList" type="process"></entity-summary>      
-      <entities-list input="lists.processList" entity-details="entityDetails" type="process" clone="cloneEntity" remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity" resume="resumeEntity"></entities-list>
+    <div class="col-sm-4"></div>
+  </div>
+
+  <div class="col-sm-24 dashboardBox" ng-show="searchList.length > 0" id="dashboardBox">
+    <div class="row">
+      <div class="col-sm-24">
+        <entities-search-list input="searchList" entity-details="entityDetails" clone="cloneEntity" tags="tags"
+                              remove="deleteEntity" edit="editEntity" schedule="scheduleEntity" suspend="suspendEntity"
+                              resume="resumeEntity" focus-search="focusSearch" pages="pages" go-page="goPage"/>
+      </div>
     </div>
   </div>
+
 </div>

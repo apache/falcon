@@ -24,7 +24,12 @@
 		return {
 			replace:false,
 			restrict: 'E',
-			templateUrl: 'html/directives/serverMessagesDv.html'
+			templateUrl: 'html/directives/serverMessagesDv.html',
+      link: function (scope, element) {
+
+        //scope.allMessages
+
+      }
 		};
 	});
 	  

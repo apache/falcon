@@ -19,15 +19,25 @@
   'use strict';
 
   var app = angular.module('app', [
-    'ui.bootstrap', 'ui.router', 'ngCookies', 'ngAnimate', 'ngMessages', 'checklist-model', 'app.controllers', 'app.directives', 'app.services'
+    'ui.bootstrap',
+    'ui.router',
+    'ngCookies',
+    'ngAnimate',
+    'ngMessages',
+    'checklist-model',
+    'app.controllers',
+    'app.directives',
+    'app.services',
+    'ngTagsInput',
+    'nsPopover', 'ngAnimate', 'ngMask', 'dateHelper'
   ]);
 
   app.config(["$stateProvider", "$urlRouterProvider", "$httpProvider", function ($stateProvider, $urlRouterProvider, $httpProvider) {
-  	
-  	$httpProvider.defaults.headers.common['X-CSRF-Token'] = $('meta[name=csrf-token]').attr('content');
-  	
-  	$httpProvider.defaults.headers.common["X-Requested-By"] = 'X-Requested-By';
-  	
+
+    $httpProvider.defaults.headers.common['X-CSRF-Token'] = $('meta[name=csrf-token]').attr('content');
+
+    $httpProvider.defaults.headers.common["X-Requested-By"] = 'X-Requested-By';
+
     $urlRouterProvider.otherwise("/");
 
     $stateProvider
@@ -36,9 +46,16 @@
         templateUrl: 'html/mainTpl.html',
         controller: 'DashboardCtrl'
       })
-      .state('entityDetails', {
-        controller: 'EntityDetailsCtrl',
-        templateUrl: 'html/entityDetailsTpl.html'
+      .state('authenticating', {
+        templateUrl: 'html/authenticating.html'
+      })
+      .state('login', {
+        controller: 'LoginFormCtrl',
+        templateUrl: 'html/login.html'
+      })
+      .state('entityDefinition', {
+        controller: 'EntityDefinitionCtrl',
+        templateUrl: 'html/entityDefinitionTpl.html'
       })
       .state('forms', {
         templateUrl: 'html/formsTpl.html'
@@ -73,9 +90,9 @@
         templateUrl: 'html/feed/feedFormClustersStepTpl.html',
         controller: 'FeedClustersController',
         resolve: {
-          clustersList: ['Falcon', function(Falcon) {
+          clustersList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('cluster').then(
-              function(response) {
+              function (response) {
                 return response.data;
               });
           }]
@@ -101,9 +118,9 @@
         templateUrl: 'html/process/processFormClustersStepTpl.html',
         controller: 'ProcessClustersCtrl',
         resolve: {
-          clustersList: ['Falcon', function(Falcon) {
+          clustersList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('cluster').then(
-              function(response) {
+              function (response) {
                 return response.data;
               });
           }]
@@ -113,9 +130,9 @@
         templateUrl: 'html/process/processFormInputsAndOutputsStepTpl.html',
         controller: 'ProcessInputsAndOutputsCtrl',
         resolve: {
-          feedsList: ['Falcon', function(Falcon) {
+          feedsList: ['Falcon', function (Falcon) {
             return Falcon.getEntities('feed').then(
-              function(response) {
+              function (response) {
                 return response.data;
               });
           }]
@@ -124,18 +141,201 @@
       .state('forms.process.summary', {
         templateUrl: 'html/process/processFormSummaryStepTpl.html',
         controller: 'ProcessSummaryCtrl'
-      });
-    
+      })
+      .state('entityDetails', {
+        views: {
+          '': {
+            controller: 'EntityDetailsCtrl',
+            templateUrl: 'html/entityDetailsTpl.html'
+          },
+          'feedSummary@entityDetails': {
+            templateUrl: 'html/feed/feedSummary.html'
+          },
+          'processSummary@entityDetails': {
+            templateUrl: 'html/process/processSummary.html'
+          }
+        }
+      })
+      .state('forms.dataset', {
+        controller: 'DatasetCtrl',
+        templateUrl: 'html/dataset/datasetFormTpl.html',
+        resolve: {
+          clustersList: ['Falcon', function (Falcon) {
+            return Falcon.getEntities('cluster').then(
+              function (response) {
+                return response.data.entity;
+              });
+          }]
+        }
+      })
+      .state('forms.dataset.general', {
+        templateUrl: 'html/dataset/datasetFormGeneralStepTpl.html'
+      })
+      .state('forms.dataset.summary', {
+        templateUrl: 'html/dataset/datasetFormSummaryStepTpl.html'
+      })
+      .state('instanceDetails', {
+        templateUrl: 'html/instanceDetails.html',
+        controller: 'InstanceDetailsCtrl'
+      })
+    ;
+
   }]);
 
-  app.run(['$rootScope', 
-           function ($rootScope) {	
-    
-    $rootScope.$on('$stateChangeError',
-      function(event, toState, toParams, fromState, fromParams, error){
-        console.log('Manual log of stateChangeError: ' + error);
+  app.run(['$rootScope', '$state', '$location', '$http', '$stateParams', '$cookieStore', 'SpinnersFlag', 'ServerAPI', '$timeout', '$interval',
+    function ($rootScope, $state, $location, $http, $stateParams, $cookieStore, SpinnersFlag, ServerAPI, $timeout, $interval) {
+
+      if(!$rootScope.secureModeDefined){
+        $rootScope.secureMode = false;
+        ServerAPI.clearUser().then(function() {
+          ServerAPI.getServerConfig().then(function() {
+            if (ServerAPI.data) {
+              ServerAPI.data.properties.forEach(function(property) {
+                if(property.key == 'authentication'){
+                  if(property.value == 'kerberos'){
+                    $rootScope.secureMode = true;
+                  }
+                }
+              });
+            }
+            $rootScope.secureModeDefined = true;
+          });
+        });
+      }
+
+      var location = $location.absUrl();
+      var index = location.indexOf("views/");
+      if (index !== -1) {
+        index = index + 6;
+        var path = location.substring(index);
+        var servicePaths = path.split("/");
+        $rootScope.serviceURI = '/api/v1/views/' + servicePaths[0] + '/versions/' + servicePaths[1] + '/instances/' + servicePaths[2] + '/resources/proxy';
+      }
+
+      $rootScope.ambariView = function () {
+        var location_call = $location.absUrl();
+        var index_call = location_call.indexOf("views/");
+        if (index_call !== -1) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      $rootScope.isSecureMode = function () {
+        if(!$rootScope.secureModeDefined){
+          return false;
+        }else if ($rootScope.secureMode) {
+          return true;
+        }else {
+          return false;
+        }
+      };
+
+      $rootScope.userLogged = function () {
+        if($rootScope.ambariView()){
+          return true;
+        } else {
+          if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      };
+
+      //$rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from, fromParams) {
+      $rootScope.$on('$stateChangeSuccess', function (ev, to, toParams, from) {
+        SpinnersFlag.show = false;
+        SpinnersFlag.backShow = false;
+
+        $rootScope.previousState = from.name;
+        $rootScope.currentState = to.name;
       });
-		
-  }]);
+
+      $rootScope.$on('$stateChangeError',
+        //function(event, toState, toParams, fromState, fromParams, error){
+        function (event, toState, toParams, fromState, error) {
+          console.log('Manual log of stateChangeError: ' + error);
+        });
+
+      var checkRedirect = function(event, toState){
+        if (toState.name !== 'login') {
+          if ($rootScope.ambariView()) {
+
+            if (angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null) {
+
+            } else {
+              event.preventDefault();
+              $http.get($rootScope.serviceURI).success(function (data) {
+                var userToken = {};
+                userToken.user = data;
+                $cookieStore.put('userToken', userToken);
+                $state.transitionTo('main');
+              });
+            }
+
+          }else if ($rootScope.secureMode) {
+
+            ServerAPI.getCurrentUser().then(function() {
+              var userToken = {};
+              userToken.user = ServerAPI.user;
+              $cookieStore.put('userToken', userToken);
+              $state.transitionTo('main');
+            });
+
+          }else if ($rootScope.userLogged()) {
+
+            var userToken = $cookieStore.get('userToken');
+            var timeOut = new Date().getTime();
+            timeOut = timeOut - userToken.timeOut;
+            if (timeOut > userToken.timeOutLimit) {
+              $cookieStore.put('userToken', null);
+              event.preventDefault();
+              $state.transitionTo('login');
+            } else {
+              userToken.timeOut = new Date().getTime();
+              $cookieStore.put('userToken', userToken);
+            }
+
+          } else {
+            event.preventDefault();
+            $state.transitionTo('login');
+          }
+        }
+      };
+
+      $rootScope.$on('$stateChangeStart',
+        function (event, toState) {
+          if ($rootScope.userLogged()) {
+            var userToken = $cookieStore.get('userToken');
+            var timeOut = new Date().getTime();
+            timeOut = timeOut - userToken.timeOut;
+            if (timeOut > userToken.timeOutLimit) {
+              $cookieStore.put('userToken', null);
+              event.preventDefault();
+              $state.transitionTo('login');
+            } else {
+              userToken.timeOut = new Date().getTime();
+              $cookieStore.put('userToken', userToken);
+            }
+          }else{
+            var interval;
+            if(!$rootScope.secureModeDefined){
+              if (toState.name !== 'authenticating') {
+                event.preventDefault();
+                $state.transitionTo('authenticating');
+              }
+              interval = $interval(function() {
+                if($rootScope.secureModeDefined){
+                  $interval.cancel(interval);
+                  checkRedirect(event, toState);
+                }
+              }, 1000);
+            }
+          }
+        });
+
+    }]);
 
 })();

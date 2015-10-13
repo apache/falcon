@@ -1,0 +1,70 @@
+.top-buffer{
+  padding-top:20px;
+}
+.tags-wrapper {
+  position: relative;
+}
+.tags-cloud .tag {
+  float: left;
+  padding: 4px 6px;
+  font-size: 1em;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  background: #f2f2f2;
+  font-weight: 600;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -moz-background-clip: padding;
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
+  border: 1px solid #dddddd;
+}
+.tags-cloud .tag:hover {
+  border: 1px solid #cccccc;
+}
+.tags-cloud .tag:hover .cross {
+  opacity: 1;
+}
+.tags-cloud .tag .cross {
+  margin-left: 5px;
+  margin-right: 3px;
+  font-size: 1em;
+  color: #20a28e;
+  opacity: .7;
+  cursor: pointer;
+}
+.suggestions-list {
+  position: absolute;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -moz-background-clip: padding;
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
+  font-size: 14px;
+}
+.suggestions-list li {
+  color: #333333;
+  font-weight: 600;
+  padding: 4px 25px;
+  font-size: 1em;
+  cursor: pointer;
+  background: #f2f2f2;
+  border-bottom: 1px solid #dddddd;
+}
+.suggestions-list li:hover {
+  background: #dddddd;
+}
+.suggestions-list li:active,
+.suggestions-list li.active {
+  color: #20a28e;
+  background: #dddddd;
+}
+.suggestions-list:focus{
+  outline:none;
+}
