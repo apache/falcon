@@ -171,7 +171,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                 for (Cluster cluster : feed.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName())) {
                         monitoredFeeds.remove(feed.getName());
-                        break;
+                        pendingInstances.remove(new Pair<>(feed.getName(), cluster.getName()));
                     }
                 }
             }
