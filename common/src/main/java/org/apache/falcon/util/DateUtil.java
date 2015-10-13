@@ -18,6 +18,7 @@
 package org.apache.falcon.util;
 
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.Frequency;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -27,6 +28,11 @@ import java.util.TimeZone;
  * Helper to get date operations.
  */
 public final class DateUtil {
+
+    private static final long MINUTE_IN_MS = 60 * 1000L;
+    private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
+    private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
+    private static final long MONTH_IN_MS = 31 * DAY_IN_MS;
 
     //Friday, April 16, 9999 7:12:55 AM UTC corresponding date
     public static final Date NEVER = new Date(Long.parseLong("253379862775000"));
@@ -45,6 +51,31 @@ public final class DateUtil {
 
     public static String getDateFormatFromTime(long milliSeconds) {
         return SchemaHelper.getDateFormat().format((new Date(milliSeconds)));
+    }
 
+    /**
+     * This function should not be used for scheduling related functions as it may cause correctness issues in those
+     * scenarios.
+     * @param frequency
+     * @return
+     */
+    public static Long getFrequencyInMillis(Frequency frequency){
+        switch (frequency.getTimeUnit()) {
+
+        case months:
+            return MONTH_IN_MS * frequency.getFrequencyAsInt();
+
+        case days:
+            return DAY_IN_MS * frequency.getFrequencyAsInt();
+
+        case hours:
+            return HOUR_IN_MS * frequency.getFrequencyAsInt();
+
+        case minutes:
+            return MINUTE_IN_MS * frequency.getFrequencyAsInt();
+
+        default:
+            return null;
+        }
     }
 }

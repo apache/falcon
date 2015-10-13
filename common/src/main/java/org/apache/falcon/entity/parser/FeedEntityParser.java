@@ -47,8 +47,8 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
-import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -133,10 +133,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     throw new ValidationException("Retention is a mandatory stage, didn't find it for cluster: "
                             + cluster.getName());
                 }
+                validateRetentionFrequency(feed, cluster.getName());
                 for (String policyName : FeedHelper.getPolicies(feed, cluster.getName())) {
                     map.get(policyName).validate(feed, cluster.getName());
                 }
             }
+        }
+    }
+
+    private void validateRetentionFrequency(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, clusterName);
+        Frequency feedFrequency = feed.getFrequency();
+        if (DateUtil.getFrequencyInMillis(retentionFrequency) < DateUtil.getFrequencyInMillis(feedFrequency)) {
+            throw new ValidationException("Retention can not be more frequent than data availability.");
         }
     }
 
