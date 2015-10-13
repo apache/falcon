@@ -183,6 +183,45 @@ public class FeedEntityParserTest extends AbstractTestBase {
         parser.validate(feed);
     }
 
+    @Test
+    public void testValidRetentionFrequency() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+
+        feed.setFrequency(Frequency.fromString("minutes(30)"));
+        Frequency frequency = Frequency.fromString("minutes(60)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed); // no validation exception should be thrown
+
+        frequency = Frequency.fromString("hours(1)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed); // no validation exception should be thrown
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+        expectedExceptionsMessageRegExp = ".*Retention can not be more frequent than data availability.*")
+    public void testRetentionFrequentThanFeed() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+
+        feed.setFrequency(Frequency.fromString("hours(2)"));
+        Frequency frequency = Frequency.fromString("minutes(60)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed);
+    }
+
+    @Test(expectedExceptions = ValidationException.class,
+        expectedExceptionsMessageRegExp = ".*Feed Retention can not be more frequent than.*")
+    public void testRetentionFrequency() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED3_XML));
+
+        feed.setFrequency(Frequency.fromString("minutes(30)"));
+        Frequency frequency = Frequency.fromString("minutes(59)");
+        feed.getLifecycle().getRetentionStage().setFrequency(frequency);
+        parser.validate(feed);
+    }
+
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidFeed() throws Exception {
         Feed feed = parser.parseAndValidate(ProcessEntityParserTest.class

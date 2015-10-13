@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.util.StartupProperties;
 
 import java.util.Date;
 
@@ -48,6 +49,21 @@ public class AgeBasedDelete extends RetentionPolicy {
         if (cluster != null) {
             validateLimitWithSla(feed, cluster, retentionLimit.toString());
             validateLimitWithLateData(feed, cluster, retentionLimit.toString());
+            String lifecycleEngine = StartupProperties.get().getProperty("lifecycle.engine.impl",
+                    "org.apache.falcon.lifecycle.engine.oozie.OoziePolicyBuilderFactory");
+            if ("org.apache.falcon.lifecycle.engine.oozie.OoziePolicyBuilderFactory".equals(lifecycleEngine)) {
+                validateRetentionFrequencyForOozie(feed, clusterName);
+            }
+        }
+    }
+
+
+    private void validateRetentionFrequencyForOozie(Feed feed, String clusterName) throws FalconException {
+        // retention shouldn't be more frequent than hours(1) for Oozie Builders.
+        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, clusterName);
+        if (retentionFrequency.getTimeUnit() == Frequency.TimeUnit.minutes
+                && retentionFrequency.getFrequencyAsInt() < 60) {
+            throw new ValidationException("Feed Retention can not be more frequent than hours(1)");
         }
     }
 
