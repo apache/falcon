@@ -61,6 +61,22 @@ public class LocalProxyOozieClient extends OozieClient {
         return localOozieClientCoord;
     }
 
+    private OozieClient getClient(String jobId) {
+        if (jobId != null) {
+            if (jobId.toUpperCase().endsWith("B")) { //checking if it's a bundle job
+                return getLocalOozieClientBundle();
+            } else if (jobId.toUpperCase().endsWith("C")) { //checking if it's a coordinator job
+                return getLocalOozieClientCoord();
+            } else if (jobId.toUpperCase().endsWith("W")) { //checking if it's a workflow job
+                return getLocalOozieClient();
+            } else {
+                throw new IllegalArgumentException("Couldn't decide the type for the job-id " + jobId);
+            }
+        } else {
+            throw new IllegalArgumentException("Job-id cannot be null");
+        }
+    }
+
     @Override
     public BundleJob getBundleJobInfo(String jobId) throws OozieClientException {
         return getLocalOozieClientBundle().getBundleJobInfo(jobId);
@@ -155,12 +171,12 @@ public class LocalProxyOozieClient extends OozieClient {
 
     @Override
     public void suspend(String jobId) throws OozieClientException {
-        throw new IllegalStateException("Suspend not supported ");
+        getClient(jobId).suspend(jobId);
     }
 
     @Override
     public void resume(String jobId) throws OozieClientException {
-        throw new IllegalStateException("Resume not supported ");
+        getClient(jobId).resume(jobId);
     }
 
     @Override

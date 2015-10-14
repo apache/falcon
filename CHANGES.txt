@@ -21,6 +21,8 @@ Trunk (Unreleased)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1519 Suspend And Resume API's in Falcon Unit(Narayan Periwal via Pallavi Rao)
+
     FALCON-1524 Improve Lifecycle Retention validation checks(Ajay Yadava)
 
     FALCON-1516 Feed Retention support in Falcon Unit(Pavan Kolamuri via Pallavi Rao) 

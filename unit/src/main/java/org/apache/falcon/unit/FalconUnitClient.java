@@ -198,6 +198,24 @@ public class FalconUnitClient extends AbstractFalconClient {
         return null;
     }
 
+    @Override
+    public APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser) throws
+            FalconCLIException {
+        return localSchedulableEntityManager.suspend(entityType.name(), entityName, colo);
+    }
+
+    @Override
+    public APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser) throws
+            FalconCLIException {
+        return localSchedulableEntityManager.resume(entityType.name(), entityName, colo);
+    }
+
+    @Override
+    public APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser) throws
+            FalconCLIException {
+        return localSchedulableEntityManager.getStatus(entityType.name(), entityName, colo);
+    }
+
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {
         if (entityType == EntityType.FEED) {
             return checkAndUpdateFeedClusters(entity, cluster);
