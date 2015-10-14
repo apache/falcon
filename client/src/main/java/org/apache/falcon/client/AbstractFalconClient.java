@@ -81,4 +81,40 @@ public abstract class AbstractFalconClient {
                                                          Integer offset, Integer numResults,
                                                          String doAsUser) throws FalconCLIException;
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    /**
+     * Suspend an entity.
+     * @param entityType Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param colo Colo on which the query should be run.
+     * @param doAsUser proxy user
+     * @return Status of the entity.
+     * @throws FalconCLIException
+     */
+    public abstract APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser) throws
+            FalconCLIException;
+
+    /**
+     * Resume a supended entity.
+     * @param entityType Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param colo Colo on which the query should be run.
+     * @param doAsUser proxy user
+     * @return Result of the resume command.
+     * @throws FalconCLIException
+     */
+    public abstract APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser) throws
+            FalconCLIException;
+
+    /**
+     * Get status of the entity.
+     * @param entityType Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param colo Colo on which the query should be run.
+     * @param doAsUser proxy user
+     * @return Status of the entity.
+     * @throws FalconCLIException
+     */
+    public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser) throws
+            FalconCLIException;
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.unit;
 
+import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 
 /**
@@ -24,4 +25,19 @@ import org.apache.falcon.resource.AbstractSchedulableEntityManager;
  */
 public class LocalSchedulableEntityManager extends AbstractSchedulableEntityManager {
     // Created for future purposes to add all entity API's here for falcon unit.
+
+    public LocalSchedulableEntityManager() {}
+
+    public APIResult suspend(String type, String entity, String colo) {
+        return super.suspend(null, type, entity, colo);
+    }
+
+    public APIResult resume(String type, String entity, String colo) {
+        return super.resume(null, type, entity, colo);
+    }
+
+    public APIResult getStatus(String type, String entity, String colo) {
+        return super.getStatus(type, entity, colo);
+    }
+
 }

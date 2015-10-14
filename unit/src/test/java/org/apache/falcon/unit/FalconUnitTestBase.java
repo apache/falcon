@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterTest;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 
 import java.io.File;
@@ -120,8 +120,13 @@ public class FalconUnitTestBase {
         FalconUnit.cleanup();
     }
 
-    @AfterTest
-    public void cleanUpActionXml() throws IOException {
+    @AfterMethod
+    public void cleanUpActionXml() throws IOException, FalconException {
+        for (EntityType type : EntityType.values()) {
+            for (String name : ConfigurationStore.get().getEntities(type)) {
+                ConfigurationStore.get().remove(type, name);
+            }
+        }
         //Needed since oozie writes action xml to current directory.
         FileUtils.deleteQuietly(new File("action.xml"));
         FileUtils.deleteQuietly(new File(".action.xml.crc"));

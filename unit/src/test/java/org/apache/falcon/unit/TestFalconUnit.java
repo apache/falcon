@@ -87,4 +87,34 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(InstancesResult.WorkflowStatus.SUCCEEDED, status);
         Assert.assertFalse(fs.exists(new Path(inPath)));
     }
+
+    @Test
+    public void testSuspendAndResume() throws Exception {
+        // submit with default props
+        submitCluster();
+        // submitting feeds
+        APIResult result = submit(EntityType.FEED, getAbsolutePath("/infeed.xml"));
+        assertStatus(result);
+        result = submit(EntityType.FEED, getAbsolutePath("/outfeed.xml"));
+        assertStatus(result);
+        // submitting and scheduling process
+        String scheduleTime = "2015-06-20T00:00Z";
+        createData("in", "local", scheduleTime, "input.txt");
+        result = submitProcess(getAbsolutePath("/process1.xml"), "/app/oozie-mr");
+        assertStatus(result);
+        result = scheduleProcess("process1", scheduleTime, 2, "local", getAbsolutePath("/workflow.xml"),
+                true, "");
+        assertStatus(result);
+        waitForStatus(EntityType.PROCESS, "process1", scheduleTime);
+        result = getClient().suspend(EntityType.PROCESS, "process1", "local", null);
+        assertStatus(result);
+        result = getClient().getStatus(EntityType.PROCESS, "process1", "local", null);
+        assertStatus(result);
+        Assert.assertEquals(result.getMessage(), "SUSPENDED");
+        result = getClient().resume(EntityType.PROCESS, "process1", "local", null);
+        assertStatus(result);
+        result = getClient().getStatus(EntityType.PROCESS, "process1", "local", null);
+        assertStatus(result);
+        Assert.assertEquals(result.getMessage(), "RUNNING");
+    }
 }
