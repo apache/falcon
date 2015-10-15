@@ -102,6 +102,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1543 Upgrade Falcon regression to use Active MQ 5.12(Pragya Mittal via Pallavi Rao)
+
    FALCON-1502 Checkstyle failures in Falcon Regression(Pragya Mittal via Ajay Yadava)
 
    FALCON-1384 AbstractEntityHelper.java cleanup (Paul Isaychuk)
