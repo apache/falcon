@@ -20,14 +20,15 @@ package org.apache.falcon.regression.ui.search;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.ui.pages.Page;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -50,11 +51,14 @@ public abstract class AbstractSearchPage extends Page {
     public static final String UI_URL = MerlinConstants.PRISM_URL;
     private static final Logger LOGGER = Logger.getLogger(AbstractSearchPage.class);
     public static final int PAGELOAD_TIMEOUT_THRESHOLD = 10;
+    public static final int ALERT_LIFETIME = 3000;
 
     public AbstractSearchPage(WebDriver driver) {
         super(driver);
         waitForAngularToFinish();
+        LOGGER.info("Going to initialize Page Header.");
         pageHeader = PageFactory.initElements(driver, PageHeader.class);
+        LOGGER.info("Initialization done.");
     }
 
     private PageHeader pageHeader;
@@ -163,9 +167,50 @@ public abstract class AbstractSearchPage extends Page {
     public String getActiveAlertText() {
         if (waitForAlert()) {
             waitForAngularToFinish();
-            return driver.findElement(By.xpath("//div[@class='messages notifs']/div[last()]")).getText();
+            String script = "return $('div.messages.notifs > div:last-child').text();";
+            String message = (String)((JavascriptExecutor)driver).executeScript(script);
+            return message.trim();
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Wait for active alert. Check it's lifetime (the period when alert is displayed).
+     */
+    public void validateAlertLifetime() {
+        final WebElement alertsBlock = driver.findElement(By.xpath("//div[@class='messages notifs']"));
+        try {
+            final MutablePair<Long, Long> pair = new MutablePair<>(Long.MAX_VALUE, Long.MAX_VALUE);
+            // wait 5 seconds for alert to start blinking and record time of first blink
+            new WebDriverWait(driver, 5, 100).until(new ExpectedCondition<Boolean>() {
+                @Nullable
+                @Override
+                public Boolean apply(WebDriver webDriver) {
+                    String style = alertsBlock.getAttribute("style");
+                    if ((style.contains("opacity") && !style.contains("opacity: 1;"))
+                            || style.contains("display: block;")) {
+                        pair.setLeft(System.currentTimeMillis());
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            // wait 5 seconds for alert to stop blinking and record time of stoppage
+            for (int i = 0; i < ALERT_LIFETIME + 3000; i += 100) {
+                String style = alertsBlock.getAttribute("style");
+                if (style.contains("display: none;")) {
+                    pair.setRight(Math.min(System.currentTimeMillis(), pair.getRight()));
+                } else {
+                    pair.setRight(Long.MAX_VALUE);
+                }
+                TimeUtil.sleepSeconds(0.1);
+            }
+            long diff = pair.getRight() - pair.getLeft();
+            LOGGER.info(String.format("Alert was live %d millis.", pair.getRight() - pair.getLeft()));
+            Assert.assertTrue(ALERT_LIFETIME <= diff, "Alert was present for too short period of time");
+        } catch (TimeoutException e) {
+            Assert.fail("Alert didn't appear in 5 seconds.");
         }
     }
 
@@ -181,12 +226,8 @@ public abstract class AbstractSearchPage extends Page {
                 @Override
                 public Boolean apply(WebDriver webDriver) {
                     String style = alertsBlock.getAttribute("style");
-                    if (style.contains("opacity") && !style.contains("opacity: 1;")) {
-                        String alert = alertsBlock.findElement(By.xpath("./div[last()]")).getText();
-                        return StringUtils.isNotEmpty(alert);
-                    } else {
-                        return false;
-                    }
+                    return (style.contains("opacity") && !style.contains("opacity: 1;"))
+                            || style.contains("display: block;");
                 }
             });
             return true;
@@ -194,6 +235,18 @@ public abstract class AbstractSearchPage extends Page {
             return false;
         }
     }
+
+    /**
+     * Performs simple check of element presence.
+     */
+    public WebElement getElementOrNull(String xpath) {
+        try {
+            return driver.findElement(By.xpath(xpath));
+        } catch (NoSuchElementException ignored) {
+            return null;
+        }
+    }
+
 
     /**
      * Method imitates click on check box. If click is not performed method retries the click.

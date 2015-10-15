@@ -34,7 +34,7 @@ import java.util.Date;
 import java.util.List;
 
 /** Page object of the Feed creation page. */
-public class FeedWizardPage extends AbstractSearchPage {
+public class FeedWizardPage extends EntityWizardPage {
 
     private static final Logger LOGGER = Logger.getLogger(FeedWizardPage.class);
 
@@ -83,16 +83,8 @@ public class FeedWizardPage extends AbstractSearchPage {
     })
     private WebElement saveFeedButton;
 
-    @FindBys({
-        @FindBy(id = "feed.editXML")
-    })
-    private WebElement editXmlButton;
-
     @FindBy(xpath = "//a[contains(.,'Cancel')]")
     private WebElement cancelButton;
-
-    @FindBy(xpath = "//textarea[@ng-model='prettyXml']")
-    private WebElement feedXml;
 
     public FeedWizardPage(WebDriver driver) {
         super(driver);
@@ -325,11 +317,6 @@ public class FeedWizardPage extends AbstractSearchPage {
 
     public void clickCancel(){
         cancelButton.click();
-    }
-
-    public void clickEditXml(){
-        waitForAngularToFinish();
-        editXmlButton.click();
     }
 
     public void clickCatalogStorageButton(){
@@ -652,14 +639,14 @@ public class FeedWizardPage extends AbstractSearchPage {
         waitForAlert();
     }
 
-    public FeedMerlin getFeedMerlinFromFeedXml() throws Exception{
-        waitForAngularToFinish();
-        return FeedMerlin.fromString(feedXml.getAttribute("value"));
+    @Override
+    public FeedMerlin getEntityFromXMLPreview() {
+        return FeedMerlin.fromString(getXMLPreview());
     }
 
-    public void setFeedXml(String xml) throws Exception{
-        feedXml.clear();
-        feedXml.sendKeys(xml);
+    @Override
+    public WebElement getEditXMLButton() {
+        return driver.findElement(By.id("feed.editXML"));
     }
 
 }

@@ -172,8 +172,8 @@ public class HomePageTest extends BaseUITestClass {
         alertText = homePage.getActiveAlertText();
         Assert.assertEquals(alertText, "Invalid xml. File not uploaded",
             "XML file with invalid text was allowed to be uploaded");
-
-
+        //check the same with notification bar
+        homePage.getPageHeader().validateNotificationCountAndCheckLast(2, "Invalid xml. File not uploaded");
     }
 
     /**

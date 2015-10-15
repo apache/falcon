@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1546 Add ProcessUpdateTest, PipelineInstanceDependencyTest and other tests and test fixes
+    (Raghav Gautam and Paul Isaychuk via Paul Isaychuk)
+
    FALCON-1387 Add Instance Dependency API Test(Pragya Mittal via Ajay Yadava)
 
    FALCON-1382 Add a test for feed retention to make sure that data directory is not deleted (Paul Isaychuk)

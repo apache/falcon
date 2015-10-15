@@ -37,6 +37,10 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONException;
 import org.testng.Assert;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -753,5 +758,52 @@ public final class OozieUtil {
             }
         }
         return conf;
+    }
+
+    /**
+     * Method retrieves and parses replication coordinator action workflow definition and checks whether specific
+     * properties are present in list of workflow args or not.
+     * @param workflowDefinition workflow definition
+     * @param actionName action within workflow, e.g pre-processing, replication etc.
+     * @param propMap specific properties which are expected to be in arg list
+     * @return true if all keys and values are present, false otherwise
+     */
+    public static boolean propsArePresentInWorkflow(String workflowDefinition, String actionName,
+                                              HashMap<String, String> propMap) {
+        //get action definition
+        Document definition = Util.convertStringToDocument(workflowDefinition);
+        Assert.assertNotNull(definition, "Workflow definition shouldn't be null.");
+        NodeList actions = definition.getElementsByTagName("action");
+        Element action = null;
+        for (int i = 0; i < actions.getLength(); i++) {
+            Node node = actions.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                action = (Element) node;
+                if (action.getAttribute("name").equals(actionName)) {
+                    break;
+                }
+                action = null;
+            }
+        }
+        Assert.assertNotNull(action, actionName + " action not found.");
+
+        //retrieve and checks whether properties are present in workflow args
+        Element javaElement = (Element) action.getElementsByTagName("java").item(0);
+        NodeList args = javaElement.getElementsByTagName("arg");
+        int counter = 0;
+        String key = null;
+        for (int i = 0; i < args.getLength(); i++) {
+            Node node = args.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                String argKey = node.getTextContent().replace("-", "");
+                if (key != null && propMap.get(key).equals(argKey)) {
+                    counter++;
+                    key = null;
+                } else if (key == null && propMap.containsKey(argKey)) {
+                    key = argKey;
+                }
+            }
+        }
+        return counter == propMap.size();
     }
 }

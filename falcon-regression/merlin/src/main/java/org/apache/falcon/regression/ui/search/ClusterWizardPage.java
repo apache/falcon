@@ -38,7 +38,7 @@ import org.testng.Assert;
 import java.util.List;
 
 /** Page object of the Cluster creation page. */
-public class ClusterWizardPage extends AbstractSearchPage {
+public class ClusterWizardPage extends EntityWizardPage {
     private static final Logger LOGGER = Logger.getLogger(ClusterWizardPage.class);
     @FindBys({
         @FindBy(className = "mainUIView"),
@@ -53,12 +53,8 @@ public class ClusterWizardPage extends AbstractSearchPage {
     private WebElement previous;
     @FindBy(xpath = "//a[contains(text(), 'Cancel')]")
     private WebElement cancel;
-    @FindBy(id = "cluster.editXML")
-    private WebElement editXML;
     @FindBy(xpath = "//div[contains(@class, 'clusterSummaryRow')][h4]")
     private WebElement summaryBox;
-    @FindBy(xpath = "//div[contains(@class, 'xmlPreviewContainer')]//textarea")
-    private WebElement xmlPreview;
 
     public ClusterWizardPage(WebDriver driver) {
         super(driver);
@@ -273,21 +269,6 @@ public class ClusterWizardPage extends AbstractSearchPage {
         return false;
     }
 
-    public ClusterMerlin getXmlPreview() {
-        //preview block fetches changes slower then they appear on the form
-        waitForAngularToFinish();
-        String previewData = xmlPreview.getAttribute("value");
-        return new ClusterMerlin(previewData);
-    }
-
-    public void setClusterXml(String clusterXml) {
-        clickEditXml(true);
-        xmlPreview.clear();
-        xmlPreview.sendKeys(clusterXml);
-        waitForAngularToFinish();
-        clickEditXml(false);
-    }
-
     /**
      * Retrieves hte value of the summary box and parses it to cluster properties.
      * @param draft empty cluster to contain all properties.
@@ -402,16 +383,6 @@ public class ClusterWizardPage extends AbstractSearchPage {
     }
 
     /**
-     * Clicks on editXml button.
-     */
-    public void clickEditXml(boolean shouldBeEnabled) {
-        editXML.click();
-        String disabled = xmlPreview.getAttribute("disabled");
-        Assert.assertEquals(disabled == null, shouldBeEnabled,
-            "Xml preview should be " + (shouldBeEnabled ? "enabled" : "disabled"));
-    }
-
-    /**
      *  Click on next button which is the same as finish step 1.
      */
     public void clickNext() {
@@ -486,4 +457,13 @@ public class ClusterWizardPage extends AbstractSearchPage {
         }
     }
 
+    @Override
+    public WebElement getEditXMLButton() {
+        return driver.findElement(By.id("cluster.editXML"));
+    }
+
+    @Override
+    public ClusterMerlin getEntityFromXMLPreview() {
+        return new ClusterMerlin(getXMLPreview());
+    }
 }

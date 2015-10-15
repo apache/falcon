@@ -40,6 +40,7 @@ import org.testng.asserts.SoftAssert;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Test list instances api for process.
@@ -58,21 +59,23 @@ public class ListProcessInstancesTest extends BaseTestClass {
 
     @BeforeClass(alwaysRun = true)
     public void setUp() throws IOException {
-        uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        startTime = TimeUtil.getTimeWrtSystemTime(-55);
-        endTime = TimeUtil.getTimeWrtSystemTime(5);
+        startTime = TimeUtil.getTimeWrtSystemTime(-65);
+        //setting end time in past to make "now" be later then actual end time
+        endTime = TimeUtil.getTimeWrtSystemTime(-5);
         LOGGER.info("Time range is between : " + startTime + " and " + endTime);
     }
 
     @BeforeMethod(alwaysRun = true)
     public void prepareData() throws Exception {
+        uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], servers.get(0));
         bundles[0].generateUniqueBundle(this);
         //prepare process
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setInputFeedDataPath(feedDataLocation);
-        bundles[0].setOutputFeedLocationData(baseTestHDFSDir + "/output" + MINUTE_DATE_PATTERN);
+        String suffix = UUID.randomUUID().toString();
+        bundles[0].setOutputFeedLocationData(baseTestHDFSDir + "/output/" + suffix + MINUTE_DATE_PATTERN);
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitAndScheduleProcess();
@@ -94,6 +97,9 @@ public class ListProcessInstancesTest extends BaseTestClass {
      */
     @Test
     public void testProcessOrderBy() throws Exception {
+        //provide data for 4th and 5th instances (fyi: indexing starts from 0th instance)
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
         SoftAssert softAssert = new SoftAssert();
         //orderBy startTime descending order
         InstancesResult r = prism.getProcessHelper().listInstances(processName,
@@ -152,6 +158,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     }
 
     /**
+     * List process instances using orderBy - status, -startTime, -endTime params
      * List process instances using -offset and -numResults params expecting list of process
      * instances to start at the right offset and give expected number of instances.
      */
@@ -214,6 +221,10 @@ public class ListProcessInstancesTest extends BaseTestClass {
      */
     @Test
     public void testProcessFilterBy() throws Exception {
+        //provide data for 4th and 5th instances (fyi: indexing starts from 0th instance)
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
+
         //test with simple filters
         InstancesResult r = prism.getProcessHelper().listInstances(processName,
             "filterBy=STATUS:RUNNING", null);
@@ -293,9 +304,13 @@ public class ListProcessInstancesTest extends BaseTestClass {
                 + "&end=" + TimeUtil.addMinsToTime(startTime, 16), null);
         InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
 
-        //only start, actual startTime (end is automatically set to start + frequency * 10)
+        //only start, actual startTime (end is automatically set to now - which is later then validity end time)
         r = prism.getProcessHelper().listInstances(processName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 3, 0, 7, 0);
+        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
+
+        //the same without start, end should be set to now
+        r = prism.getProcessHelper().listInstances(processName, "", null);
+        InstanceUtil.validateResponse(r, 10, 1, 0, 9, 0);
 
         //only start, greater then actual startTime
         r = prism.getProcessHelper().listInstances(processName,

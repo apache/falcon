@@ -77,7 +77,7 @@ public class TestngListener implements ITestListener, IExecutionListener {
             LOGGER.info("Dumping of falcon store failed: " + e);
         }
         LOGGER.info(
-            String.format("Testing going to end for: %s.%s(%s) %s", result.getTestClass().getName(),
+            String.format("Testing going to end for: %s.%s(%s) ----- Status: %s", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters()), outcome));
         NDC.pop();
         LOGGER.info(hr);

@@ -38,6 +38,7 @@ import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -551,6 +552,15 @@ public abstract class AbstractEntityHelper {
             entityName, "");
         return (InstancesResult) InstanceUtil
             .createAndSendRequestProcessInstance(url, params, allColo, null);
+    }
+
+    /**
+     * Retrieves instance triage.
+     */
+    public TriageResult getInstanceTriage(String entityName, String params)
+        throws AuthenticationException, IOException, URISyntaxException, InterruptedException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_TRIAGE.getValue(), getEntityType(), entityName);
+        return (TriageResult) InstanceUtil.createAndSendRequestProcessInstance(url, params, allColo, null);
     }
 
     /**

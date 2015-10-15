@@ -36,6 +36,7 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.http.HttpResponse;
@@ -96,8 +97,10 @@ public final class InstanceUtil {
             result = new InstancesSummaryResult(APIResult.Status.FAILED, responseString);
         }else if (url.contains("/listing/")) {
             result = new FeedInstanceResult(APIResult.Status.FAILED, responseString);
-        }else if (url.contains("/dependencies/")) {
+        }else if (url.contains("instance/dependencies")) {
             result = new InstanceDependencyResult(APIResult.Status.FAILED, responseString);
+        }else if (url.contains("instance/triage")) {
+            result = new TriageResult(APIResult.Status.FAILED, responseString);
         }else {
             result = new InstancesResult(APIResult.Status.FAILED, responseString);
         }
@@ -126,10 +129,7 @@ public final class InstanceUtil {
                 public Date deserialize(JsonElement json, Type t, JsonDeserializationContext c) {
                     return new DateTime(json.getAsString()).toDate();
                 }
-            }).create().fromJson(responseString,
-                    url.contains("/listing/") ? FeedInstanceResult.class : url.contains("/summary/")
-                            ? InstancesSummaryResult.class : url.contains("/dependencies/")
-                            ? InstanceDependencyResult.class : InstancesResult.class);
+            }).create().fromJson(responseString, getClassOfResult(url));
         } catch (JsonSyntaxException e) {
             Assert.fail("Not a valid json:\n" + responseString);
         }
@@ -137,6 +137,25 @@ public final class InstanceUtil {
         LOGGER.info("message: " + result.getMessage());
         LOGGER.info("APIResult.Status: " + result.getStatus());
         return result;
+    }
+
+    /**
+     * Returns API result class matching to API request url.
+     */
+    private static Class<? extends APIResult> getClassOfResult(String url) {
+        final Class<? extends APIResult> classOfResult;
+        if (url.contains("/listing/")) {
+            classOfResult = FeedInstanceResult.class;
+        } else if (url.contains("/summary/")) {
+            classOfResult = InstancesSummaryResult.class;
+        } else if (url.contains("instance/dependencies")) {
+            classOfResult = InstanceDependencyResult.class;
+        } else if (url.contains("instance/triage")) {
+            classOfResult = TriageResult.class;
+        } else {
+            classOfResult = InstancesResult.class;
+        }
+        return classOfResult;
     }
 
     /**
@@ -717,8 +736,8 @@ public final class InstanceUtil {
      * @throws ParseException
      */
     public static void assertProcessInstances(InstanceDependencyResult instancesResult, OozieClient oozieClient,
-                                        String bundleID, String time) throws OozieClientException,
-                                        JSONException, ParseException {
+                                        String bundleID, String time)
+        throws OozieClientException, ParseException, JSONException {
         List<String> inputPath = new ArrayList<>();
         List<String> outputPath = new ArrayList<>();
         SchedulableEntityInstance[] instances = instancesResult.getDependencies();
@@ -808,13 +827,10 @@ public final class InstanceUtil {
      * @param processName  process name for given bundle
      * @param tag     Input/Output
      * @param expectedInstances  instance for given instanceTime.
-     * @throws JSONException
      * @throws ParseException
-     * @throws OozieClientException
      */
     public static void assertFeedInstances(InstanceDependencyResult instancesResult, String processName, String tag,
-                                            List<String> expectedInstances)
-        throws OozieClientException, JSONException, ParseException {
+                                            List<String> expectedInstances) throws ParseException {
         List<String> actualInstances = new ArrayList<>();
         SchedulableEntityInstance[] instances = instancesResult.getDependencies();
         LOGGER.info("instances: " + Arrays.toString(instances));
@@ -833,7 +849,7 @@ public final class InstanceUtil {
 
         Set<String> expectedInstancesSet = new HashSet<>(expectedInstances);
         Set<String> actualInstancesSet = new HashSet<>(actualInstances);
-        Assert.assertEquals(expectedInstancesSet, actualInstancesSet, "Instances dont match");
+        Assert.assertEquals(expectedInstancesSet, actualInstancesSet, "Instances don't match");
     }
 }
 
