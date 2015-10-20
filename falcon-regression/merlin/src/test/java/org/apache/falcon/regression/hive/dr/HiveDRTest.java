@@ -30,6 +30,7 @@ import org.apache.falcon.regression.core.supportClasses.NotifyingAssert;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HiveAssert;
 import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
@@ -42,14 +43,12 @@ import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +75,7 @@ public class HiveDRTest extends BaseTestClass {
     private final FileSystem clusterFS3 = serverFS.get(2);
     private final OozieClient clusterOC = serverOC.get(0);
     private final OozieClient clusterOC2 = serverOC.get(1);
+    private final OozieClient clusterOC3 = serverOC.get(2);
     private final String baseTestHDFSDir = cleanAndGetTestDir() + "/HiveDR/";
     private HCatClient clusterHC;
     private HCatClient clusterHC2;
@@ -83,8 +83,12 @@ public class HiveDRTest extends BaseTestClass {
     private Connection connection;
     private Connection connection2;
 
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception {
+    @DataProvider
+    public Object[][] getRecipeLocation() {
+        return MatrixUtil.crossProduct(RecipeExecLocation.values());
+    }
+
+    private void setUp(RecipeExecLocation recipeExecLocation) throws Exception {
         clusterHC = cluster.getClusterHelper().getHCatClient();
         clusterHC2 = cluster2.getClusterHelper().getHCatClient();
         bundles[0] = new Bundle(BundleUtil.readHCatBundle(), cluster);
@@ -93,21 +97,17 @@ public class HiveDRTest extends BaseTestClass {
         bundles[1].generateUniqueBundle(this);
         final ClusterMerlin srcCluster = bundles[0].getClusterElement();
         final ClusterMerlin tgtCluster = bundles[1].getClusterElement();
-        Bundle.submitCluster(bundles[0]);
-
+        String recipeDir = "HiveDrRecipe";
         if (MerlinConstants.IS_SECURE) {
-            recipeMerlin = RecipeMerlin.readFromDir("HiveDrSecureRecipe",
-                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
-                .withRecipeCluster(srcCluster);
-        } else {
-            recipeMerlin = RecipeMerlin.readFromDir("HiveDrRecipe",
-                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
-                .withRecipeCluster(srcCluster);
+            recipeDir = "HiveDrSecureRecipe";
         }
+        Bundle.submitCluster(recipeExecLocation.getRecipeBundle(bundles[0], bundles[1]));
+        recipeMerlin = RecipeMerlin.readFromDir(recipeDir, FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
+            .withRecipeCluster(recipeExecLocation.getRecipeCluster(srcCluster, tgtCluster));
         recipeMerlin.withSourceCluster(srcCluster)
             .withTargetCluster(tgtCluster)
             .withFrequency(new Frequency("5", Frequency.TimeUnit.minutes))
-            .withValidity(TimeUtil.getTimeWrtSystemTime(-5), TimeUtil.getTimeWrtSystemTime(5));
+            .withValidity(TimeUtil.getTimeWrtSystemTime(-5), TimeUtil.getTimeWrtSystemTime(15));
         recipeMerlin.setUniqueName(this.getClass().getSimpleName());
 
         connection = cluster.getClusterHelper().getHiveJdbcConnection();
@@ -121,8 +121,9 @@ public class HiveDRTest extends BaseTestClass {
         runSql(connection2, "use hdr_sdb1");
     }
 
-    @Test
-    public void drPartition() throws Exception {
+    @Test(dataProvider = "getRecipeLocation")
+    public void drPartition(final RecipeExecLocation recipeExecLocation) throws Exception {
+        setUp(recipeExecLocation);
         final String tblName = "partitionDR";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
@@ -157,8 +158,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -167,6 +168,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drInsertOverwritePartition() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "drInsertOverwritePartition";
         final String hlpTblName = "drInsertOverwritePartitionHelperTbl";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
@@ -200,8 +203,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -210,6 +213,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drTwoTablesOneRequest() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.TargetCluster;
+        setUp(recipeExecLocation);
         final String tblName = "firstTableDR";
         final String tbl2Name = "secondTableDR";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName + ',' + tbl2Name);
@@ -232,8 +237,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final NotifyingAssert anAssert = new NotifyingAssert(true);
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
@@ -246,6 +251,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drSerDeWithProperties() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "serdeTable";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
@@ -265,8 +272,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -276,6 +283,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drChangeColumn() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "tableForColumnChange";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command1 = recipeMerlin.getSubmissionCommand();
@@ -289,10 +298,8 @@ public class HiveDRTest extends BaseTestClass {
         runSql(connection,
             "ALTER TABLE " + tblName + " CHANGE id id STRING COMMENT 'some_comment'");
 
-
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipe1Name, 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
-
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipe1Name, 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -302,6 +309,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drTwoDstTablesTwoRequests() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.TargetCluster;
+        setUp(recipeExecLocation);
         final HCatClient clusterHC3 = cluster3.getClusterHelper().getHCatClient();
         final Connection connection3 = cluster3.getClusterHelper().getHiveJdbcConnection();
         runSql(connection3, "drop database if exists hdr_sdb1 cascade");
@@ -313,9 +322,12 @@ public class HiveDRTest extends BaseTestClass {
         final String recipe1Name = recipeMerlin.getName();
         final List<String> command1 = recipeMerlin.getSubmissionCommand();
 
-        final Bundle bundle = BundleUtil.readHCatBundle();
-        bundle.generateUniqueBundle(this);
-        recipeMerlin.withTargetCluster(new Bundle(bundle, cluster3).getClusterElement());
+        final Bundle bundle3 = new Bundle(BundleUtil.readHCatBundle(), cluster3);
+        bundle3.generateUniqueBundle(this);
+        bundle3.submitClusters(prism);
+        recipeMerlin.withTargetCluster(bundle3.getClusterElement())
+                .withRecipeCluster(recipeExecLocation.getRecipeCluster(
+                        bundles[0].getClusterElement(), bundle3.getClusterElement()));
         recipeMerlin.setUniqueName(this.getClass().getSimpleName());
 
         final List<String> command2 = recipeMerlin.getSubmissionCommand();
@@ -334,10 +346,10 @@ public class HiveDRTest extends BaseTestClass {
         Assert.assertEquals(Bundle.runFalconCLI(command2), 0, "Recipe submission failed.");
 
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipe1Name, 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipe2Name, 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipe1Name, 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC3),
+            recipe2Name, 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final NotifyingAssert anAssert = new NotifyingAssert(true);
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
@@ -349,6 +361,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drExternalToNonExternal() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "externalToNonExternal";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
@@ -362,8 +376,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final NotifyingAssert anAssert = new NotifyingAssert(true);
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
@@ -379,6 +393,8 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void drExtPartitionedToNonExtPartitioned() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "extPartitionedToNonExtPartitioned";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
@@ -408,8 +424,8 @@ public class HiveDRTest extends BaseTestClass {
         runSql(connection,
             "alter table " + tblName + " change column data data_new string");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), anAssert, false);
@@ -428,6 +444,8 @@ public class HiveDRTest extends BaseTestClass {
      */
     @Test
     public void drChangeCommentAndPropertyTest() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "myTable";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
@@ -458,8 +476,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -468,6 +486,7 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test
     public void dataGeneration() throws Exception {
+        setUp(RecipeExecLocation.SourceCluster);
         runSql(connection, "use hdr_sdb1");
         createVanillaTable(connection, "store_sales");
         createSerDeTable(connection);
@@ -498,6 +517,7 @@ public class HiveDRTest extends BaseTestClass {
 
     @Test(enabled = false)
     public void assertionTest() throws Exception {
+        setUp(RecipeExecLocation.SourceCluster);
         final SoftAssert anAssert = new SoftAssert();
         HiveAssert.assertTableEqual(
             cluster, clusterHC.getTable("default", "hcatsmoke10546"),
@@ -515,7 +535,8 @@ public class HiveDRTest extends BaseTestClass {
      * @throws IOException
      */
     @Test
-    public void dynamicPartitionsTest() throws SQLException, IOException {
+    public void dynamicPartitionsTest() throws Exception {
+        setUp(RecipeExecLocation.SourceCluster);
         //create table with static partitions on first cluster
         createPartitionedTable(connection, false);
 
@@ -535,6 +556,8 @@ public class HiveDRTest extends BaseTestClass {
      */
     @Test
     public void drInsertDropReplaceDynamicPartition() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "dynamicPartitionDR";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
         final List<String> command = recipeMerlin.getSubmissionCommand();
@@ -577,8 +600,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -592,6 +615,8 @@ public class HiveDRTest extends BaseTestClass {
      */
     @Test
     public void drInsertOverwriteDynamicPartition() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String tblName = "drInsertOverwritePartition";
         final String hlpTblName = "drInsertOverwritePartitionHelperTbl";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName);
@@ -637,8 +662,8 @@ public class HiveDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
@@ -651,6 +676,7 @@ public class HiveDRTest extends BaseTestClass {
      */
     @Test(dataProvider = "frequencyGenerator")
     public void differentRecipeFrequenciesTest(String frequency) throws Exception {
+        setUp(RecipeExecLocation.SourceCluster);
         LOGGER.info("Testing with frequency: " + frequency);
         String tblName = "myTable";
         recipeMerlin.withSourceDb(DB_NAME).withSourceTable(tblName)

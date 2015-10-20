@@ -32,8 +32,8 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Retry;
-import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.log4j.Logger;
@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 /** Page object of the Process creation page. */
-public class ProcessWizardPage extends AbstractSearchPage {
+public class ProcessWizardPage extends EntityWizardPage {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessWizardPage.class);
 
@@ -61,9 +61,6 @@ public class ProcessWizardPage extends AbstractSearchPage {
         @FindBy(className = "entityForm")
     })
     private WebElement processBox;
-
-    @FindBy(xpath = "//textarea[@ng-model='prettyXml']")
-    private WebElement processXml;
 
     @FindBy(xpath = "//form[@name='processForm']/div[1]")
     private WebElement summaryBox;
@@ -82,15 +79,10 @@ public class ProcessWizardPage extends AbstractSearchPage {
     })
     private WebElement previousButton;
 
-    @FindBys({
-        @FindBy(id = "editXmlButton")
-    })
-    private WebElement editXmlButton;
-
     @FindBy(xpath = "//a[contains(.,'Cancel')]")
     private WebElement cancelButton;
 
-    @FindBy(xpath = "//div[contains(@class,'formBoxContainer')]")
+    @FindBy(xpath = "//fieldset[@id='fieldWrapper']")
     private WebElement formBox;
 
     public ProcessWizardPage(WebDriver driver) {
@@ -128,11 +120,6 @@ public class ProcessWizardPage extends AbstractSearchPage {
 
     public void clickCancel(){
         cancelButton.click();
-    }
-
-    public void clickEditXml(){
-        waitForAngularToFinish();
-        editXmlButton.click();
     }
 
     /*----- Step1 General info ----*/
@@ -828,20 +815,14 @@ public class ProcessWizardPage extends AbstractSearchPage {
         waitForAlert();
     }
 
-    /**
-     * Creates ProcessMerlin object from xml preview string.
-     */
-    public ProcessMerlin getProcessMerlinFromProcessXml() throws Exception{
-        waitForAngularToFinish();
-        return new ProcessMerlin(processXml.getAttribute("value"));
+    @Override
+    public ProcessMerlin getEntityFromXMLPreview() {
+        return new ProcessMerlin(getXMLPreview());
     }
 
-    /**
-     * Pushes xml string to xml preview.
-     */
-    public void setProcessXml(String xml) throws Exception{
-        processXml.clear();
-        processXml.sendKeys(xml);
+    @Override
+    public WebElement getEditXMLButton() {
+        return driver.findElement(By.id("editXmlButton"));
     }
 
     /**

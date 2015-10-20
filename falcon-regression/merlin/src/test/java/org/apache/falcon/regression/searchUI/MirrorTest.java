@@ -21,6 +21,7 @@ package org.apache.falcon.regression.searchUI;
 import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.Entities.RecipeMerlin;
@@ -39,15 +40,18 @@ import org.apache.falcon.regression.ui.search.SearchPage;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.util.Arrays;
 
@@ -75,6 +79,7 @@ public class MirrorTest extends BaseUITestClass {
     private Connection connection;
     private Connection connection2;
     private MirrorWizardPage mirrorPage;
+
     /**
      * Submit one cluster, 2 feeds and 10 processes with 1 to 10 tags (1st process has 1 tag,
      * 2nd - two tags.. 10th has 10 tags).
@@ -82,7 +87,6 @@ public class MirrorTest extends BaseUITestClass {
      * @throws IOException
      * @throws AuthenticationException
      * @throws InterruptedException
-     * @throws JAXBException
      */
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
@@ -148,7 +152,7 @@ public class MirrorTest extends BaseUITestClass {
         hdfsRecipe.withSourceDir(hdfsSrcDir).withTargetDir(hdfsTgtDir);
         hdfsRecipe.setTags(Arrays.asList("key1=val1", "key2=val2", "key3=val3"));
 
-        mirrorPage.applyRecipe(hdfsRecipe);
+        mirrorPage.applyRecipe(hdfsRecipe, true);
         mirrorPage.next();
         mirrorPage.save();
 
@@ -169,7 +173,7 @@ public class MirrorTest extends BaseUITestClass {
         recipeMerlin.withSourceDb(dbName);
         recipeMerlin.withSourceTable(tblName);
         recipeMerlin.setTags(Arrays.asList("key1=val1", "key2=val2", "key3=val3"));
-        mirrorPage.applyRecipe(recipeMerlin);
+        mirrorPage.applyRecipe(recipeMerlin, true);
         mirrorPage.next();
         mirrorPage.save();
         AssertUtil.assertSucceeded(prism.getProcessHelper().getStatus(
@@ -186,6 +190,66 @@ public class MirrorTest extends BaseUITestClass {
     }
 
     /**
+     *  If "send alerts to" is empty on HiveDR UI, default value for drNotificationReceivers property must be "NA".
+     */
+    @Test
+    public void testSendAlertsDefaultValue()
+        throws InterruptedException, IOException, URISyntaxException, AuthenticationException {
+        recipeMerlin.withSourceDb(DB_NAME);
+        recipeMerlin.withSourceTable(TBL1_NAME);
+        mirrorPage.applyRecipe(recipeMerlin, false);
+        mirrorPage.next();
+        mirrorPage.save();
+        ProcessMerlin process = bundles[0].getProcessObject();
+        process.setName(recipeMerlin.getName());
+        process = new ProcessMerlin(cluster.getProcessHelper().getEntityDefinition(process.toString()).getMessage());
+        String drNotificationReceivers = process.getProperty("drNotificationReceivers");
+        Assert.assertTrue(drNotificationReceivers != null && drNotificationReceivers.equals("NA"),
+            "Default value for drNotificationReceivers should be NA.");
+
+        /* particular check that on table replication scenario UI doesn't pick up thrift server
+           end point in place of Hive server2 end point*/
+        String expectedUri = recipeMerlin.getTgtCluster().getInterfaceEndpoint(Interfacetype.REGISTRY)
+            .replace("thrift", "hive2").replace("9083", "10000");
+        Assert.assertEquals(process.getProperty("targetHiveServer2Uri"), expectedUri,
+            "Hive server2 end point should be picked by UI.");
+        expectedUri = recipeMerlin.getSrcCluster().getInterfaceEndpoint(Interfacetype.REGISTRY)
+            .replace("thrift", "hive2").replace("9083", "10000");
+        Assert.assertEquals(process.getProperty("sourceHiveServer2Uri"), expectedUri,
+            "Hive server2 end point should be picked by UI.");
+    }
+
+    /**
+     * Test that Hive DR UI doesn't picks thrift server end point in place of Hive server2 end point.
+     * Test that specified HDFS target staging path on Hive DR UI, isn't getting assigned to "*".
+     */
+    @Test
+    public void testHDFSTargetStagingPath()
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+        recipeMerlin.withSourceDb(DB_NAME);
+        mirrorPage.applyRecipe(recipeMerlin, false);
+        mirrorPage.next();
+        mirrorPage.save();
+        ProcessMerlin process = bundles[0].getProcessObject();
+        process.setName(recipeMerlin.getName());
+        process = new ProcessMerlin(cluster.getProcessHelper().getEntityDefinition(process.toString()).getMessage());
+
+        // check that that Hive DR UI doesn't picks thrift server end point in place of Hive server2 end point
+        String expectedUri = recipeMerlin.getTgtCluster().getInterfaceEndpoint(Interfacetype.REGISTRY)
+            .replace("thrift", "hive2").replace("9083", "10000");
+        Assert.assertEquals(process.getProperty("targetHiveServer2Uri"), expectedUri,
+            "Hive server2 end point should be picked by UI.");
+        expectedUri = recipeMerlin.getSrcCluster().getInterfaceEndpoint(Interfacetype.REGISTRY)
+            .replace("thrift", "hive2").replace("9083", "10000");
+        Assert.assertEquals(process.getProperty("sourceHiveServer2Uri"), expectedUri,
+            "Hive server2 end point should be picked by UI.");
+
+        //check that that specified HDFS target staging path on Hive DR UI, isn't getting assigned to "*"
+        Assert.assertFalse(process.getProperty("targetStagingPath").equals("*"),
+            "HDFS target staging path shouldn't be assigned to '*'.");
+    }
+
+    /**
      * Test recipe with bad acls.
      * Set owner/group as invalid string (utf-8, special chars, number).
      * Check that user is not allowed to go to the next step and has been notified with an alert.
@@ -197,7 +261,7 @@ public class MirrorTest extends BaseUITestClass {
         final String goodAclOwner = MerlinConstants.CURRENT_USER_NAME;
         final String goodAclGroup = MerlinConstants.CURRENT_USER_GROUP;
         final String goodAclPerms = "777";
-        mirrorPage.applyRecipe(recipeMerlin);
+        mirrorPage.applyRecipe(recipeMerlin, true);
         NotifyingAssert notifyingAssert = new NotifyingAssert(true);
         for(String badAclOwner: new String[] {"utf8\u20ACchar", "speci@l", "123"}) {
             mirrorPage.setAclOwner(badAclOwner);
@@ -253,7 +317,7 @@ public class MirrorTest extends BaseUITestClass {
     public void testHiveAdvancedInvalidStaging() {
         recipeMerlin.withSourceDb(DB_NAME);
         recipeMerlin.setTags(Arrays.asList("key1=val1", "key2=val2", "key3=val3"));
-        mirrorPage.applyRecipe(recipeMerlin);
+        mirrorPage.applyRecipe(recipeMerlin, true);
         NotifyingAssert notifyingAssert = new NotifyingAssert(true);
         final String goodSrcStaging = recipeMerlin.getSrcCluster().getLocation(ClusterLocationType.STAGING).getPath();
         final String goodTgtStaging = recipeMerlin.getTgtCluster().getLocation(ClusterLocationType.STAGING).getPath();
@@ -297,7 +361,7 @@ public class MirrorTest extends BaseUITestClass {
     public void testHiveAdvancedStagingAcl() throws Exception {
         recipeMerlin.withSourceDb(DB_NAME);
         recipeMerlin.setTags(Arrays.asList("key1=val1", "key2=val2", "key3=val3"));
-        mirrorPage.applyRecipe(recipeMerlin);
+        mirrorPage.applyRecipe(recipeMerlin, true);
         NotifyingAssert notifyingAssert = new NotifyingAssert(true);
         final String goodSrcStaging = recipeMerlin.getSrcCluster().getLocation(ClusterLocationType.STAGING).getPath();
         final String goodTgtStaging = recipeMerlin.getTgtCluster().getLocation(ClusterLocationType.STAGING).getPath();

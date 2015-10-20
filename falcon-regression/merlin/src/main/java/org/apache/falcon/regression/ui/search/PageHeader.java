@@ -159,8 +159,8 @@ public class PageHeader {
             //checking if logged-in username is displayed
             if (!MerlinConstants.IS_SECURE) {
                 UIAssert.assertDisplayed(getLogoutButton(), "Logout button");
+                AssertUtil.assertNotEmpty(getLoggedInUser(), "Expecting logged-in username.");
             }
-            AssertUtil.assertNotEmpty(getLoggedInUser(), "Expecting logged-in username.");
 
             //create button navigation
             doCreateCluster();
@@ -249,7 +249,33 @@ public class PageHeader {
     }
 
     private WebElement getLogoutButton() {
-        return loginHeaderBox.findElements(By.tagName("button")).get(1);
+        return loginHeaderBox.findElements(By.xpath("button[@ng-click='logOut()']")).get(0);
+    }
+
+    private WebElement getNotificationButton() {
+        return loginHeaderBox.findElements(By.xpath("button[@ng-click='notify()']")).get(0);
+    }
+
+    /**
+     * Validates number of notifications contained by notification bar and last notification message.
+     */
+    public void validateNotificationCountAndCheckLast(int count, String message) {
+        WebElement notificationButton = getNotificationButton();
+        notificationButton.click();
+        waitForAngularToFinish();
+
+        // Test notifications dropdown visibility
+        WebElement notificationDropdown = notificationButton.findElement(By.className("messages"));
+        Assert.assertTrue(notificationDropdown.getAttribute("style").contains("display: block;"),
+            "Notifications are not visible.");
+
+        // Test validity of number of notifications
+        List<WebElement> notifications = notificationDropdown.findElements(By.xpath("div"));
+        Assert.assertEquals(notifications.size() - 1, count, "Invalid notification count.");
+
+        // Test validity of last notification
+        String lastNotification = notifications.get(0).getText();
+        Assert.assertTrue(lastNotification.contains(message), "Invalid last notification text.");
     }
 
     public LoginPage doLogout() {

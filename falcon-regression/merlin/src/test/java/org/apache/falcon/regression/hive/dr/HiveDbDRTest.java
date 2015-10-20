@@ -32,6 +32,7 @@ import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.HiveAssert;
 import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.MatrixUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -43,7 +44,6 @@ import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -67,14 +67,19 @@ public class HiveDbDRTest extends BaseTestClass {
     private final FileSystem clusterFS = serverFS.get(0);
     private final FileSystem clusterFS2 = serverFS.get(1);
     private final OozieClient clusterOC = serverOC.get(0);
+    private final OozieClient clusterOC2 = serverOC.get(1);
     private HCatClient clusterHC;
     private HCatClient clusterHC2;
     private RecipeMerlin recipeMerlin;
     private Connection connection;
     private Connection connection2;
 
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception {
+    @DataProvider
+    public Object[][] getRecipeLocation() {
+        return MatrixUtil.crossProduct(RecipeExecLocation.values());
+    }
+
+    private void setUp(RecipeExecLocation recipeExecLocation) throws Exception {
         clusterHC = cluster.getClusterHelper().getHCatClient();
         clusterHC2 = cluster2.getClusterHelper().getHCatClient();
         bundles[0] = new Bundle(BundleUtil.readHCatBundle(), cluster);
@@ -83,17 +88,14 @@ public class HiveDbDRTest extends BaseTestClass {
         bundles[1].generateUniqueBundle(this);
         final ClusterMerlin srcCluster = bundles[0].getClusterElement();
         final ClusterMerlin tgtCluster = bundles[1].getClusterElement();
-        Bundle.submitCluster(bundles[0]);
+        Bundle.submitCluster(recipeExecLocation.getRecipeBundle(bundles[0], bundles[1]));
 
+        String recipeDir = "HiveDrRecipe";
         if (MerlinConstants.IS_SECURE) {
-            recipeMerlin = RecipeMerlin.readFromDir("HiveDrSecureRecipe",
-                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
-                .withRecipeCluster(srcCluster);
-        } else {
-            recipeMerlin = RecipeMerlin.readFromDir("HiveDrRecipe",
-                FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
-                .withRecipeCluster(srcCluster);
+            recipeDir = "HiveDrSecureRecipe";
         }
+        recipeMerlin = RecipeMerlin.readFromDir(recipeDir, FalconCLI.RecipeOperation.HIVE_DISASTER_RECOVERY)
+            .withRecipeCluster(recipeExecLocation.getRecipeCluster(srcCluster, tgtCluster));
         recipeMerlin.withSourceCluster(srcCluster)
             .withTargetCluster(tgtCluster)
             .withFrequency(new Frequency("5", Frequency.TimeUnit.minutes))
@@ -111,8 +113,9 @@ public class HiveDbDRTest extends BaseTestClass {
         runSql(conn, "use " + dbName);
     }
 
-    @Test
-    public void drDbDropDb() throws Exception {
+    @Test(dataProvider = "getRecipeLocation")
+    public void drDbDropDb(final RecipeExecLocation recipeExecLocation) throws Exception {
+        setUp(recipeExecLocation);
         final String dbName = "drDbDropDb";
         setUpDb(dbName, connection);
         setUpDb(dbName, connection2);
@@ -123,8 +126,8 @@ public class HiveDbDRTest extends BaseTestClass {
 
         runSql(connection, "drop database " + dbName);
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final List<String> dstDbs = runSql(connection2, "show databases");
         Assert.assertFalse(dstDbs.contains(dbName), "dstDbs = " + dstDbs + " was not expected to "
@@ -134,6 +137,8 @@ public class HiveDbDRTest extends BaseTestClass {
 
     @Test(dataProvider = "isDBReplication")
     public void drDbFailPass(Boolean isDBReplication) throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String dbName = "drDbFailPass";
         final String tblName = "vanillaTable";
         final String hiveWarehouseLocation = Config.getProperty("hive.warehouse.location", "/apps/hive/warehouse/");
@@ -153,15 +158,15 @@ public class HiveDbDRTest extends BaseTestClass {
         LOGGER.info("Setting " + clusterFS2.getUri() + dbPath + " to : " + noReadWritePerm);
         clusterFS2.setPermission(new Path(dbPath), FsPermission.valueOf(noReadWritePerm));
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.KILLED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.KILLED, EntityType.PROCESS);
 
         final String readWritePerm = "drwxr-xr-x";
         LOGGER.info("Setting " + clusterFS2.getUri() + dbPath + " to : " + readWritePerm);
         clusterFS2.setPermission(new Path(dbPath), FsPermission.valueOf(readWritePerm));
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(dbName, tblName),
             cluster2, clusterHC2.getTable(dbName, tblName), new NotifyingAssert(true)
@@ -170,6 +175,8 @@ public class HiveDbDRTest extends BaseTestClass {
 
     @Test
     public void drDbAddDropTable() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String dbName = "drDbAddDropTable";
         final String tblToBeDropped = "table_to_be_dropped";
         final String tblToBeDroppedAndAdded = "table_to_be_dropped_and_readded";
@@ -195,8 +202,8 @@ public class HiveDbDRTest extends BaseTestClass {
 
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         final NotifyingAssert anAssert = new NotifyingAssert(true);
         HiveAssert.assertDbEqual(cluster, clusterHC.getDatabase(dbName),
@@ -205,16 +212,18 @@ public class HiveDbDRTest extends BaseTestClass {
         /* For second replication - a dropped tables is added back */
         createVanillaTable(connection, tblToBeDroppedAndAdded);
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 2,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 2, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         HiveAssert.assertDbEqual(cluster, clusterHC.getDatabase(dbName),
             cluster2, clusterHC2.getDatabase(dbName), anAssert);
         anAssert.assertAll();
     }
 
-    @Test(enabled = false)
+    @Test
     public void drDbNonReplicatableTable() throws Exception {
+        final RecipeExecLocation recipeExecLocation = RecipeExecLocation.SourceCluster;
+        setUp(recipeExecLocation);
         final String dbName = "drDbNonReplicatableTable";
         final String tblName = "vanillaTable";
         final String tblView = "vanillaTableView";
@@ -237,8 +246,8 @@ public class HiveDbDRTest extends BaseTestClass {
         runSql(connection, "alter table " + tblOffline + " enable offline");
         Assert.assertEquals(Bundle.runFalconCLI(command), 0, "Recipe submission failed.");
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, recipeMerlin.getName(), 1,
-            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(recipeExecLocation.getRecipeOC(clusterOC, clusterOC2),
+            recipeMerlin.getName(), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         //vanilla table gets replicated, offline table & view are not replicated
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(dbName, tblName),

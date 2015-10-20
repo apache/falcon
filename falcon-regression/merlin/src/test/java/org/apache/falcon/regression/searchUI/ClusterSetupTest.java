@@ -83,6 +83,7 @@ public class ClusterSetupTest extends BaseUITestClass{
     @Test
     public void testDefaultScenario()
         throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+        Assert.assertFalse(clusterSetup.isXmlPreviewExpanded(), "Xml preview should be collapsed by default.");
         clusterSetup.fillForm(sourceCluster);
         clusterSetup.clickNext();
         clusterSetup.clickPrevious();
@@ -93,6 +94,9 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.clickSave();
         String alertText = clusterSetup.getActiveAlertText();
         Assert.assertEquals(alertText, "falcon/default/Submit successful (cluster) " + sourceCluster.getName());
+        //check the same via notifications bar
+        clusterSetup.getPageHeader().validateNotificationCountAndCheckLast(1,
+            "falcon/default/Submit successful (cluster) " + sourceCluster.getName());
         ClusterMerlin definition = new ClusterMerlin(cluster.getClusterHelper()
             .getEntityDefinition(bundles[0].getClusterElement().toString()).getMessage());
         //definition should be the same that the source
@@ -106,11 +110,11 @@ public class ClusterSetupTest extends BaseUITestClass{
     @Test
     public void testXmlPreview() {
         clusterSetup.fillForm(sourceCluster);
-        ClusterMerlin generalStepPreview = clusterSetup.getXmlPreview();
+        ClusterMerlin generalStepPreview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(generalStepPreview);
         sourceCluster.assertEquals(generalStepPreview);
         clusterSetup.clickNext();
-        ClusterMerlin summaryStepPreview = clusterSetup.getXmlPreview();
+        ClusterMerlin summaryStepPreview = clusterSetup.getEntityFromXMLPreview();
         sourceCluster.assertEquals(summaryStepPreview);
         generalStepPreview.assertEquals(summaryStepPreview);
     }
@@ -145,7 +149,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.fillForm(sourceCluster);
 
         //check without extra location
-        ClusterMerlin preview = clusterSetup.getXmlPreview();
+        ClusterMerlin preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         sourceCluster.assertEquals(preview);
 
@@ -157,7 +161,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.clickAddLocation();
         clusterSetup.fillAdditionalLocation(location);
         Assert.assertTrue(clusterSetup.checkElementByContent("input", path), "Location should be present.");
-        preview = clusterSetup.getXmlPreview();
+        preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         //add location to source to compare equality
         sourceCluster.addLocation(ClusterLocationType.WORKING, path);
@@ -166,7 +170,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         //delete location and check results
         clusterSetup.clickDeleteLocation();
         Assert.assertFalse(clusterSetup.checkElementByContent("input", path), "Location should be absent.");
-        preview = clusterSetup.getXmlPreview();
+        preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         //remove location from source to check equality
         int last = sourceCluster.getLocations().getLocations().size() - 1;
@@ -183,7 +187,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.fillForm(sourceCluster);
 
         //check without extra tag
-        ClusterMerlin preview = clusterSetup.getXmlPreview();
+        ClusterMerlin preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         sourceCluster.assertEquals(preview);
 
@@ -192,7 +196,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.addTag("myTag2", "myValue2");
         Assert.assertTrue(clusterSetup.checkElementByContent("input", "myTag2"), "Tag should be present");
         Assert.assertTrue(clusterSetup.checkElementByContent("input", "myValue2"), "Tag should be present");
-        preview = clusterSetup.getXmlPreview();
+        preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         //add tag to source to compare equality
         sourceCluster.setTags("myTag1=myValue1,myTag2=myValue2");
@@ -202,7 +206,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.clickDeleteTag();
         Assert.assertFalse(clusterSetup.checkElementByContent("input", "myTag2"), "Tag should be absent.");
         Assert.assertFalse(clusterSetup.checkElementByContent("input", "myValue2"), "Tag should be absent.");
-        preview = clusterSetup.getXmlPreview();
+        preview = clusterSetup.getEntityFromXMLPreview();
         cleanGeneralPreview(preview);
         //remove location from source to check equality
         sourceCluster.setTags("myTag1=myValue1");
@@ -254,8 +258,24 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.clickNext();
         clusterSetup.clickSave();
         String alertMessage = clusterSetup.getActiveAlertText();
-        Assert.assertEquals(alertMessage,
+        Assert.assertTrue(alertMessage.contains(String.format("Location %s for cluster %s must exist.",
+            nonExistent, sourceCluster.getName())), "Alert message should match to expected.");
+        //check the same through notification bar
+        clusterSetup.getPageHeader().validateNotificationCountAndCheckLast(1,
             String.format("Location %s for cluster %s must exist.", nonExistent, sourceCluster.getName()));
+    }
+
+    /**
+     * Validate alert lifetime.
+     */
+    @Test
+    public void testValidateAlertLifeTime() throws IOException {
+        String nonExistent = "/non-existent-directory";
+        sourceCluster.getLocation(ClusterLocationType.STAGING).setPath(nonExistent);
+        clusterSetup.fillForm(sourceCluster);
+        clusterSetup.clickNext();
+        clusterSetup.clickSave();
+        clusterSetup.validateAlertLifetime();
     }
 
     /**
@@ -283,7 +303,7 @@ public class ClusterSetupTest extends BaseUITestClass{
         sourceCluster.getInterfaces().getInterfaces().add(iFace);
 
         //populate it to xmlPreview
-        clusterSetup.setClusterXml(sourceCluster.toString());
+        clusterSetup.setXmlPreview(sourceCluster.toString());
 
         //check values on wizard
         registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
@@ -304,24 +324,24 @@ public class ClusterSetupTest extends BaseUITestClass{
     @Test
     public void testEditXmlInvalidValues(){
         clusterSetup.fillForm(sourceCluster);
-        ClusterMerlin initialPreview = clusterSetup.getXmlPreview();
+        ClusterMerlin initialPreview = clusterSetup.getEntityFromXMLPreview();
 
         //break xml
         String brokenXml = new ClusterMerlin(sourceCluster.toString()).toString();
         brokenXml = brokenXml.substring(0, brokenXml.length() - 3);
 
         //enter it into xml preview form
-        clusterSetup.setClusterXml(brokenXml);
+        clusterSetup.setXmlPreview(brokenXml);
 
         //compare preview before and after changes
-        ClusterMerlin finalPreview = clusterSetup.getXmlPreview();
+        ClusterMerlin finalPreview = clusterSetup.getEntityFromXMLPreview();
         Assert.assertEquals(initialPreview, finalPreview, "Broken xml shouldn't be accepted.");
 
         //change properties to malformed
         sourceCluster.setName("abc123!@#");
 
         //enter it into xml preview form
-        clusterSetup.setClusterXml(sourceCluster.toString());
+        clusterSetup.setXmlPreview(sourceCluster.toString());
 
         //check the value on a wizard
         Assert.assertEquals(clusterSetup.getName(), sourceCluster.getName(), "Malformed name should be accepted.");

@@ -46,6 +46,7 @@ public class LoginPage extends AbstractSearchPage {
 
     public static LoginPage open(WebDriver driver) {
         driver.get(UI_URL);
+        LOGGER.info("Opened a URL: " + UI_URL);
         return PageFactory.initElements(driver, LoginPage.class);
     }
 

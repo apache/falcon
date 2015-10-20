@@ -193,6 +193,8 @@ public class MirrorSourceTargetOptionsTest extends BaseUITestClass{
         mirrorPage.save();
         Assert.assertTrue(mirrorPage.getActiveAlertText().contains("should be before process end"),
             "Warning about wrong Validity should be present");
+        //check the same through notification bar
+        mirrorPage.getPageHeader().validateNotificationCountAndCheckLast(1, "should be before process end");
     }
 
     @AfterClass(alwaysRun = true)

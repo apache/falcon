@@ -182,9 +182,9 @@ public class ExternalFSTest extends BaseTestClass{
         Path dstPath = new Path(endpoint + testWasbTargetDir + '/' + timePattern);
 
         //check if coordinator exists
+        TimeUtil.sleepSeconds(10);
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, feed.toString(), 0);
         Assert.assertEquals(OozieUtil.checkIfFeedCoordExist(clusterOC, feed.getName(), "REPLICATION"), 1);
-        TimeUtil.sleepSeconds(10);
 
         //replication should start, wait while it ends
         InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(feed.toString()), 1,
