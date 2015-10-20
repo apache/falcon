@@ -85,9 +85,31 @@ public final class EntityUtil {
     private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
     private static final long MONTH_IN_MS = 31 * DAY_IN_MS;
     private static final long ONE_MS = 1;
+    public static final String MR_JOB_PRIORITY = "jobPriority";
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
+
+    /** Priority with which the DAG will be scheduled.
+     *  Matches the five priorities of Hadoop jobs.
+     */
+    public enum JOBPRIORITY {
+        VERY_HIGH((short) 1),
+        HIGH((short) 2),
+        NORMAL((short) 3),
+        LOW((short) 4),
+        VERY_LOW((short) 5);
+
+        private short priority;
+
+        public short getPriority() {
+            return priority;
+        }
+
+        JOBPRIORITY(short priority) {
+            this.priority = priority;
+        }
+    }
 
     private EntityUtil() {}
 
@@ -1014,5 +1036,17 @@ public final class EntityUtil {
             }
         }
         return props;
+    }
+
+    public static JOBPRIORITY getPriority(Process process) {
+        org.apache.falcon.entity.v0.process.Properties processProps = process.getProperties();
+        if (processProps != null) {
+            for (org.apache.falcon.entity.v0.process.Property prop : processProps.getProperties()) {
+                if (prop.getName().equals(MR_JOB_PRIORITY)) {
+                    return JOBPRIORITY.valueOf(prop.getValue());
+                }
+            }
+        }
+        return JOBPRIORITY.NORMAL;
     }
 }

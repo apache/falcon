@@ -110,6 +110,9 @@
         <hive.version>0.13.1</hive.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
+        <quartz.version>2.2.1</quartz.version>
+        <joda.version>2.8.2</joda.version>
+        <mockito.version>1.9.5</mockito.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <excluded.test.groups>exhaustive</excluded.test.groups>
     </properties>
@@ -427,6 +430,7 @@
         <module>messaging</module>
         <module>oozie-el-extensions</module>
         <module>oozie</module>
+        <module>scheduler</module>
         <module>acquisition</module>
         <module>replication</module>
         <module>retention</module>
@@ -680,7 +684,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
-                <version>1.8.5</version>
+                <version>${mockito.version}</version>
                 <scope>provided</scope>
             </dependency>
 
