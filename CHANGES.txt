@@ -69,7 +69,10 @@ Trunk (Unreleased)
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1541 Bundle deploy.properties while packaging falcon (Pragya Mittal via Pallavi Rao)
+
     FALCON-1530 SLAMonitoring API is not honouring delete feature(Ajay Yadava).
+
     FALCON-1532 Incorrect documentation in SLA monitoring(Pragya Mittal via Ajay Yadava)
 
     FALCON-1466 Flaky unit tests in Proxy user feature(Sowmya Ramesh)

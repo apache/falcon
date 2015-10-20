@@ -41,8 +41,7 @@
                         <artifactId>maven-war-plugin</artifactId>
                         <version>2.4</version>
                         <configuration>
-                            <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
-                            <packagingExcludes>docs/downloads.html</packagingExcludes>
+                            <packagingExcludes>WEB-INF/classes/deploy.properties,docs/downloads.html</packagingExcludes>
                             <webResources>
                                 <resource>
                                     <directory>../falcon-ui/dist</directory>
