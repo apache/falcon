@@ -1,14 +1,25 @@
 Apache Falcon Change log
 Trunk (Unreleased)
-  FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+    FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
+
+  IMPROVEMENTS
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+    FALCON-1554 Fix Changes.txt after 0.8 branch cut(Sowmya Ramesh)
+
+Branch: 0.8 (Proposed Release Version: 0.8)
+    FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
 
   INCOMPATIBLE CHANGES
     FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
 
   NEW FEATURES
     FALCON-1485 Add documentation for data transfer details of filesystem replication(Peeyush Bishnoi via Sowmya Ramesh)
-
-    FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
     FALCON-1315 Update falcon ui for HiveDR, secure clusters and bug fixes(Armando Reyna/Venkat Ranganathan via Sowmya Ramesh)
 
