@@ -62,6 +62,10 @@ Recipe template will have <workflow name="##workflow.name##">. Recipe tool will 
 and replace it with the property value "hdfs-dr-workflow". Substituted template will have <workflow name="hdfs-dr-workflow">
 </verbatim>
 
+---++ Metrics
+HDFS DR recipes will capture the replication metrics like TIMETAKEN, COPY, BYTESCOPIED for an instance and populate to the
+GraphDB for display on UI.
+
 ---++ Managing the scheduled recipe process
    * Scheduled recipe process is similar to regular process
       * List : falcon entity -type process -name <recipe-process-name> -list
