@@ -43,9 +43,11 @@ public class JailedFileSystem extends FileSystem {
     private URI uri;
     private String basePath;
     private LocalFileSystem localFS;
+    private Path workingDir;
 
     public JailedFileSystem() {
         localFS = new LocalFileSystem();
+        this.workingDir = new Path("/user", System.getProperty("user.name"));
     }
 
     @Override
@@ -128,12 +130,21 @@ public class JailedFileSystem extends FileSystem {
 
     @Override
     public void setWorkingDirectory(Path newDir) {
-        throw new UnsupportedOperationException();
+        if (newDir != null) {
+            workingDir = makeAbsolute(newDir);
+        }
+    }
+
+    private Path makeAbsolute(Path path) {
+        if (path.isAbsolute()) {
+            return path;
+        }
+        return new Path(workingDir, path);
     }
 
     @Override
     public Path getWorkingDirectory() {
-        return new Path("/user/" + System.getProperty("user.name"));
+        return workingDir;
     }
 
     @Override
