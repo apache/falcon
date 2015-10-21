@@ -6,6 +6,8 @@ Trunk (Unreleased)
     FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
 
   NEW FEATURES
+    FALCON-1485 Add documentation for data transfer details of filesystem replication(Peeyush Bishnoi via Sowmya Ramesh)
+
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
     FALCON-1315 Update falcon ui for HiveDR, secure clusters and bug fixes(Armando Reyna/Venkat Ranganathan via Sowmya Ramesh)
