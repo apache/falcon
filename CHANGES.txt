@@ -1,5 +1,7 @@
 Apache Falcon Change log
 Trunk (Unreleased)
+    FALCON-1523 Update CHANGES.txt to change 0.8 branch to release(Sowmya Ramesh)
+
     FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
 
   INCOMPATIBLE CHANGES
@@ -14,7 +16,7 @@ Trunk (Unreleased)
   BUG FIXES
     FALCON-1554 Fix Changes.txt after 0.8 branch cut(Sowmya Ramesh)
 
-Branch: 0.8 (Proposed Release Version: 0.8)
+Release version: 0.8
     FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
 
   INCOMPATIBLE CHANGES
