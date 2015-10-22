@@ -1,5 +1,7 @@
 Apache Falcon Change log
-Trunk (Unreleased)
+Release version: 0.8
+  FALCON-1457 Update changes.txt for 0.8 branch(Sowmya Ramesh)
+
   FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
 
   FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
