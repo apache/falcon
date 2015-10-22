@@ -1,5 +1,7 @@
 Apache Falcon Change log
 Trunk (Unreleased)
+    FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
+
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
