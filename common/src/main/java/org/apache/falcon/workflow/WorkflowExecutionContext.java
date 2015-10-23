@@ -469,7 +469,6 @@ public class WorkflowExecutionContext {
                 if (fs.exists(counterFile)) {
                     fs.delete(counterFile, false);
                 }
-                fs.close();
             } catch (IOException e) {
                 LOG.error("Unable to delete counter file: {}", e);
             }
