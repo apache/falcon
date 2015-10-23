@@ -90,6 +90,8 @@ Release version: 0.8
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1555 succeeded-post-processing action fails in Oozie uber mode (Pragya Mittal via Pallavi Rao)
+
     FALCON-1551 Implement setWorkingDir Method in JailedFileSystem(Pavan Kolamuri via Pallavi Rao)
 
     FALCON-1541 Bundle deploy.properties while packaging falcon (Pragya Mittal via Pallavi Rao)

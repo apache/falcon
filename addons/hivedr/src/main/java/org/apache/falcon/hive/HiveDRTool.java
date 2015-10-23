@@ -320,19 +320,6 @@ public class HiveDRTool extends Configured implements Tool {
         cleanStagingDirectory();
         cleanInputDir();
         cleanTempFiles();
-        try {
-            if (jobFS != null) {
-                jobFS.close();
-            }
-            if (targetClusterFS != null) {
-                targetClusterFS.close();
-            }
-            if (sourceClusterFS != null) {
-                sourceClusterFS.close();
-            }
-        } catch (IOException e) {
-            LOG.error("Closing FS failed", e);
-        }
     }
 
     private void cleanTempFiles() {
