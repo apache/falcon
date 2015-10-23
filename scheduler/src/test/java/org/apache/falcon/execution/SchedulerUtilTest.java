@@ -37,14 +37,14 @@ public class SchedulerUtilTest {
 
     @DataProvider(name = "frequencies")
     public Object[][] getTestFrequencies() {
-        DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss x");
         return new Object[][] {
             {DateTime.now(), new Frequency("minutes(10)"), 10*60*1000L},
             {DateTime.now(), new Frequency("hours(6)"), 6*60*60*1000L},
             // Feb of leap year
-            {formatter.parseDateTime("04/02/2012 14:00:00"), new Frequency("months(1)"), 29*24*60*60*1000L},
+            {formatter.parseDateTime("04/02/2012 14:00:00 -0800"), new Frequency("months(1)"), 29*24*60*60*1000L},
             // Months with 31 and 30 days
-            {formatter.parseDateTime("02/10/2015 03:30:00"), new Frequency("months(2)"), (31+30)*24*60*60*1000L},
+            {formatter.parseDateTime("02/10/2015 03:30:00 +0530"), new Frequency("months(2)"), (31+30)*24*60*60*1000L},
         };
     }
 }

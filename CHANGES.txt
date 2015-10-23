@@ -14,6 +14,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1553 Flaky test in SchedulerUtilTest (Balu Vellanki via Pallavi Rao)   
+ 
     FALCON-1554 Fix Changes.txt after 0.8 branch cut(Sowmya Ramesh)
 
 Release version: 0.8
