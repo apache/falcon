@@ -1,10 +1,10 @@
 Apache Falcon Change log
 Release version: 0.8
-  FALCON-1457 Update changes.txt for 0.8 branch(Sowmya Ramesh)
+    FALCON-1457 Update changes.txt for 0.8 branch(Sowmya Ramesh)
 
-  FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
+    FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
 
-  FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
+    FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
 
   INCOMPATIBLE CHANGES
     FALCON-1401 MetadataMappingService fails to add an edge for a process instance(Pallavi Rao) 
@@ -75,6 +75,8 @@ Release version: 0.8
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1556 Falcon build fails when building with hivedr profile(Sowmya Ramesh)
+
     FALCON-1558 Sla API shows pending instance although _SUCCESS directory is present(Pragya Mittal via Ajay Yadava).
 
     FALCON-1555 succeeded-post-processing action fails in Oozie uber mode (Pragya Mittal via Pallavi Rao)
