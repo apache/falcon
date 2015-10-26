@@ -19,7 +19,7 @@ Trunk (Unreleased)
  
     FALCON-1554 Fix Changes.txt after 0.8 branch cut(Sowmya Ramesh)
 
-Release version: 0.8
+Branch : 0.8 (Proposed Release version: 0.8)
     FALCON-1349 Upgrade falcon POM for 0.7 release(Ajay Yadava)
 
   INCOMPATIBLE CHANGES
@@ -91,6 +91,8 @@ Release version: 0.8
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1558 Sla API shows pending instance although _SUCCESS directory is present(Pragya Mittal via Ajay Yadava).
+
     FALCON-1555 succeeded-post-processing action fails in Oozie uber mode (Pragya Mittal via Pallavi Rao)
 
     FALCON-1551 Implement setWorkingDir Method in JailedFileSystem(Pavan Kolamuri via Pallavi Rao)
