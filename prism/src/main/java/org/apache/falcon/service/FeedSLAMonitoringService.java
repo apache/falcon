@@ -334,7 +334,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     clusterName, nominalTime);
             FeedInstanceStatus.AvailabilityStatus status = FeedHelper.getFeedInstanceStatus(feed, clusterName,
                     nominalTime);
-            if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
+            if (status.equals(FeedInstanceStatus.AvailabilityStatus.AVAILABLE)
+                    || status.equals(FeedInstanceStatus.AvailabilityStatus.EMPTY)) {
                 LOG.debug("Feed instance(feed:{}, cluster:{}, instanceTime:{}) is available.", feed.getName(),
                     clusterName, nominalTime);
                 return true;
