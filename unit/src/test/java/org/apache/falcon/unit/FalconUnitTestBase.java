@@ -77,7 +77,6 @@ public class FalconUnitTestBase {
      * @throws Exception thrown if the predicate evaluation could not evaluate.
      */
     public interface Predicate {
-
         boolean evaluate() throws Exception;
     }
 
@@ -122,9 +121,9 @@ public class FalconUnitTestBase {
 
     @AfterMethod
     public void cleanUpActionXml() throws IOException, FalconException {
-        for (EntityType type : EntityType.values()) {
+        for (EntityType type : ConfigurationStore.ENTITY_DELETE_ORDER) {
             for (String name : ConfigurationStore.get().getEntities(type)) {
-                ConfigurationStore.get().remove(type, name);
+                getClient().delete(type, name, null);
             }
         }
         //Needed since oozie writes action xml to current directory.
@@ -275,7 +274,7 @@ public class FalconUnitTestBase {
                            String inputFile) throws FalconException, ParseException, IOException {
         String feedPath = getFeedPathForTS(cluster, feedName, time);
         fs.mkdirs(new Path(feedPath));
-        fs.copyFromLocalFile(new Path(getAbsolutePath("/" + inputFile)), new Path(feedPath));
+        fs.copyFromLocalFile(new Path(getAbsolutePath(inputFile)), new Path(feedPath));
     }
 
     protected String getFeedPathForTS(String cluster, String feedName,
@@ -295,7 +294,7 @@ public class FalconUnitTestBase {
 
 
     public String getAbsolutePath(String fileName) {
-        return this.getClass().getResource(fileName).getPath();
+        return this.getClass().getResource("/" + fileName).getPath();
     }
 
     public void createDir(String path) throws IOException {
@@ -333,7 +332,7 @@ public class FalconUnitTestBase {
         }
     }
 
-    protected long waitForStatus(final EntityType entityType, final String entityName, final String instanceTime) {
+    protected long waitForStatus(final String entityType, final String entityName, final String instanceTime) {
         return waitFor(WAIT_TIME, new Predicate() {
             public boolean evaluate() throws Exception {
                 InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(entityType,

@@ -18,6 +18,7 @@
 package org.apache.falcon.client;
 
 import org.apache.falcon.LifeCycle;
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -31,12 +32,14 @@ import java.util.List;
  */
 public abstract class AbstractFalconClient {
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
     /**
      * Submit a new entity. Entities can be of type feed, process or data end
      * points. Entity definitions are validated structurally against schema and
      * subsequently for other rules before they are admitted into the system.
-     * @param entityType
-     * @param filePath
+     * @param entityType Entity type. Valid options are cluster, feed or process.
+     * @param filePath Path for the entity definition
      * @return
      * @throws FalconCLIException
      */
@@ -45,17 +48,63 @@ public abstract class AbstractFalconClient {
 
     /**
      * Schedules an submitted process entity immediately.
-     * @param entityType
-     * @param entityName
-     * @param colo
+     * @param entityType Entity type. Valid options are cluster, feed or process.
+     * @param entityName Name of the entity.
+     * @param colo Cluster name.
      * @return
      * @throws FalconCLIException
      */
     public abstract APIResult schedule(EntityType entityType, String entityName, String colo, Boolean skipDryRun,
                                         String doAsuser, String properties) throws FalconCLIException;
 
+    /**
+     * Delete the specified entity.
+     * @param entityType Entity type. Valid options are cluster, feed or process.
+     * @param entityName Name of the entity.
+     * @param doAsUser Proxy User.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract APIResult delete(EntityType entityType, String entityName,
+                                     String doAsUser) throws FalconCLIException;
 
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    /**
+     * Validates the submitted entity.
+     * @param entityType Entity type. Valid options are cluster, feed or process.
+     * @param filePath Path for the entity definition to validate.
+     * @param skipDryRun Dry run.
+     * @param doAsUser Proxy User.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract APIResult validate(String entityType, String filePath, Boolean skipDryRun,
+                                       String doAsUser) throws FalconCLIException;
+
+    /**
+     * Updates the submitted entity.
+     * @param entityType Entity type. Valid options are cluster, feed or process.
+     * @param entityName Name of the entity.
+     * @param filePath Path for the entity definition to update.
+     * @param skipDryRun Dry run.
+     * @param doAsUser Proxy User.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract APIResult update(String entityType, String entityName, String filePath,
+                                                       Boolean skipDryRun, String doAsUser) throws FalconCLIException;
+
+    /**
+     * Get definition of the entity.
+     * @param entityType Entity type. Valid options are cluster, feed or process.
+     * @param entityName Name of the entity.
+     * @param doAsUser Proxy user.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract Entity getDefinition(String entityType, String entityName,
+                                         String doAsUser) throws FalconCLIException;
+
+
 
     /**
      *

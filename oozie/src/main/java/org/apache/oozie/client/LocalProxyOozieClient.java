@@ -166,7 +166,7 @@ public class LocalProxyOozieClient extends OozieClient {
 
     @Override
     public void reRun(String jobId, Properties conf) throws OozieClientException {
-        throw new IllegalStateException("Rerun not supported ");
+        getClient(jobId).reRun(jobId, conf);
     }
 
     @Override
@@ -181,7 +181,7 @@ public class LocalProxyOozieClient extends OozieClient {
 
     @Override
     public void kill(String jobId) throws OozieClientException {
-        throw new IllegalStateException("Kill not supported");
+        getClient(jobId).kill(jobId);
     }
 
     @Override

@@ -82,7 +82,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         }
     }
 
-    private synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun,
+    protected synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun,
             Map<String, String> properties) throws FalconException, AuthorizationException {
 
         checkSchedulableEntity(type);
@@ -187,7 +187,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
-            Entity entity = submitInternal(request, type);
+            Entity entity = submitInternal(request.getInputStream(), type, request.getParameter(DO_AS_PARAM));
             scheduleInternal(type, entity.getName(), skipDryRun, EntityUtil.getPropertyMap(properties));
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity.getName() + "(" + type + ") scheduled successfully");

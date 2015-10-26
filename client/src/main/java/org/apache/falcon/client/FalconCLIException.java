@@ -36,6 +36,10 @@ public class FalconCLIException extends Exception {
         super(msg);
     }
 
+    public FalconCLIException(Throwable e) {
+        super(e);
+    }
+
     public FalconCLIException(String msg, Throwable throwable) {
         super(msg, throwable);
     }

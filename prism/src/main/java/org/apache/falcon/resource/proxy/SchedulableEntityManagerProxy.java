@@ -199,7 +199,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     private Entity getEntity(HttpServletRequest request, String type) {
         try {
             request.getInputStream().reset();
-            Entity entity = deserializeEntity(request, EntityType.getEnum(type));
+            Entity entity = deserializeEntity(request.getInputStream(), EntityType.getEnum(type));
             request.getInputStream().reset();
             return entity;
         } catch (Exception e) {
@@ -225,7 +225,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         EntityType entityType = EntityType.getEnum(type);
         final Entity entity;
         try {
-            entity = deserializeEntity(bufferedRequest, entityType);
+            entity = deserializeEntity(bufferedRequest.getInputStream(), entityType);
             bufferedRequest.getInputStream().reset();
         } catch (Exception e) {
             throw FalconWebException.newException("Unable to parse the request", Response.Status.BAD_REQUEST);

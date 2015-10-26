@@ -17,14 +17,19 @@
  */
 package org.apache.falcon.unit;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * A proxy implementation of the schedulable entity operations in local mode.
  */
 public class LocalSchedulableEntityManager extends AbstractSchedulableEntityManager {
-    // Created for future purposes to add all entity API's here for falcon unit.
 
     public LocalSchedulableEntityManager() {}
 
@@ -40,4 +45,28 @@ public class LocalSchedulableEntityManager extends AbstractSchedulableEntityMana
         return super.getStatus(type, entity, colo);
     }
 
+    public APIResult delete(EntityType entityType, String entityName, String doAsUser) {
+        if (entityType == null) {
+            throw new IllegalStateException("Entity-Type cannot be null");
+        }
+        return super.delete(entityType.name(), entityName, doAsUser);
+    }
+
+    public APIResult validate(String entityType, String filePath, Boolean skipDryRun,
+                              String doAsUser) throws FalconException {
+        InputStream inputStream = FalconUnitHelper.getFileInputStream(filePath);
+        return super.validate(inputStream, entityType, skipDryRun);
+    }
+
+    public APIResult update(String entityType, String entityName, String filePath,
+                            Boolean skipDryRun, String doAsUser, String colo) throws FalconException {
+        InputStream inputStream = FalconUnitHelper.getFileInputStream(filePath);
+        return super.update(inputStream, entityType, entityName, colo, skipDryRun);
+    }
+
+    public APIResult submit(String entityType, String filePath, String doAsUser) throws FalconException, IOException {
+        InputStream inputStream = FalconUnitHelper.getFileInputStream(filePath);
+        Entity entity = super.submitInternal(inputStream, entityType, doAsUser);
+        return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entityType + ") " + entity.getName());
+    }
 }

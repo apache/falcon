@@ -75,7 +75,7 @@ import java.util.Set;
 public abstract class AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
-    private static final String DO_AS_PARAM = "doAs";
+    protected static final String DO_AS_PARAM = "doAs";
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     private AbstractWorkflowEngine workflowEngine;
@@ -195,7 +195,8 @@ public abstract class AbstractEntityManager {
 
         checkColo(colo);
         try {
-            Entity entity = submitInternal(request, type);
+            String doAsUser = request.getParameter(DO_AS_PARAM);
+            Entity entity = submitInternal(request.getInputStream(), type, doAsUser);
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
@@ -205,15 +206,24 @@ public abstract class AbstractEntityManager {
 
     /**
      * Post an entity XML with entity type. Validates the XML which can be
-     * Process, Feed or Dataendpoint
+     * Process, Feed or Data endpoint
      *
      * @param type entity type
-     * @return APIResule -Succeeded or Failed
+     * @return APIResult -Succeeded or Failed
      */
     public APIResult validate(HttpServletRequest request, String type, Boolean skipDryRun) {
         try {
+            return validate(request.getInputStream(), type, skipDryRun);
+        } catch (IOException e) {
+            LOG.error("Unable to get InputStream from Request", request, e);
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    protected APIResult validate(InputStream inputStream, String type, Boolean skipDryRun) {
+        try {
             EntityType entityType = EntityType.getEnum(type);
-            Entity entity = deserializeEntity(request, entityType);
+            Entity entity = deserializeEntity(inputStream, entityType);
             validate(entity);
 
             //Validate that the entity can be scheduled in the cluster
@@ -244,6 +254,11 @@ public abstract class AbstractEntityManager {
      * @return APIResult
      */
     public APIResult delete(HttpServletRequest request, String type, String entity, String colo) {
+        return delete(type, entity, colo);
+
+    }
+
+    protected APIResult delete(String type, String entity, String colo) {
         checkColo(colo);
         List<Entity> tokenList = new ArrayList<>();
         try {
@@ -277,12 +292,23 @@ public abstract class AbstractEntityManager {
 
     public APIResult update(HttpServletRequest request, String type, String entityName,
                             String colo, Boolean skipDryRun) {
+        try {
+            return update(request.getInputStream(), type, entityName, colo, skipDryRun);
+        } catch (IOException e) {
+            LOG.error("Unable to get InputStream from Request", request, e);
+            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+
+    }
+
+    protected APIResult update(InputStream inputStream, String type, String entityName,
+                            String colo, Boolean skipDryRun) {
         checkColo(colo);
         List<Entity> tokenList = new ArrayList<>();
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
-            Entity newEntity = deserializeEntity(request, entityType);
+            Entity newEntity = deserializeEntity(inputStream, entityType);
             // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
             decorateEntityWithACL(newEntity);
             validate(newEntity);
@@ -309,7 +335,6 @@ public abstract class AbstractEntityManager {
             }
 
             configStore.update(entityType, newEntity);
-
             return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
         } catch (Throwable e) {
             LOG.error("Update failed", e);
@@ -399,11 +424,11 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected Entity submitInternal(HttpServletRequest request, String type)
+    protected Entity submitInternal(InputStream inputStream, String type, String doAsUser)
         throws IOException, FalconException {
 
         EntityType entityType = EntityType.getEnum(type);
-        Entity entity = deserializeEntity(request, entityType);
+        Entity entity = deserializeEntity(inputStream, entityType);
         List<Entity> tokenList = new ArrayList<>();
         // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
         decorateEntityWithACL(entity);
@@ -425,7 +450,6 @@ public abstract class AbstractEntityManager {
                             + "Can't be submitted again. Try removing before submitting.");
         }
 
-        String doAsUser = request.getParameter(DO_AS_PARAM);
         SecurityUtil.tryProxy(entity, doAsUser); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
@@ -477,11 +501,10 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType)
+    protected Entity deserializeEntity(InputStream xmlStream, EntityType entityType)
         throws IOException, FalconException {
 
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
-        InputStream xmlStream = request.getInputStream();
         if (xmlStream.markSupported()) {
             xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
         }
