@@ -20,10 +20,12 @@ package org.apache.falcon.metadata;
 
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
@@ -64,6 +66,10 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         case FEED:
             addFeedEntity((Feed) entity);
             break;
+        case DATASOURCE:
+            addDatasourceEntity((Datasource) entity);
+            break;
+
         default:
             throw new IllegalArgumentException("Invalid EntityType " + entityType);
         }
@@ -91,7 +97,24 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
                 addRelationToCluster(feedVertex, feedCluster.getName(), RelationshipLabel.FEED_CLUSTER_EDGE);
             }
         }
+
+        for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
+            if (FeedHelper.isImportEnabled(feedCluster)) {
+                addRelationToDatasource(feedVertex, FeedHelper.getImportDatasourceName(feedCluster),
+                        RelationshipLabel.DATASOURCE_IMPORT_EDGE);
+            }
+        }
     }
+
+    public void addDatasourceEntity(Datasource dsEntity) {
+        LOG.info("Adding datasource entity: {}", dsEntity.getName());
+        Vertex dsVertex = addVertex(dsEntity.getName(), RelationshipType.DATASOURCE_ENTITY);
+
+        addUserRelation(dsVertex);
+        addColoRelation(dsEntity.getColo(), dsVertex);
+        addDataClassification(dsEntity.getTags(), dsVertex);
+    }
+
 
     public void updateEntity(Entity oldEntity, Entity newEntity) {
         EntityType entityType = oldEntity.getEntityType();
@@ -172,6 +195,16 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         if (clusterVertex == null) { // cluster must exist before adding other entities
             LOG.error("Illegal State: Cluster entity vertex must exist for {}", clusterName);
             throw new IllegalStateException("Cluster entity vertex must exist: " + clusterName);
+        }
+
+        addEdge(fromVertex, clusterVertex, edgeLabel.getName());
+    }
+
+    public void addRelationToDatasource(Vertex fromVertex, String datasourceName, RelationshipLabel edgeLabel) {
+        Vertex clusterVertex = findVertex(datasourceName, RelationshipType.DATASOURCE_ENTITY);
+        if (clusterVertex == null) { // cluster must exist before adding other entities
+            LOG.error("Illegal State: Datasource entity vertex must exist for {}", datasourceName);
+            throw new IllegalStateException("Datasource entity vertex must exist: " + datasourceName);
         }
 
         addEdge(fromVertex, clusterVertex, edgeLabel.getName());

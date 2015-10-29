@@ -7,6 +7,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1459 Ability to import from database(Venkat Ramachandran via Sowmya Ramesh)
+
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS

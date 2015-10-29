@@ -27,10 +27,12 @@ public enum RelationshipType {
     CLUSTER_ENTITY("cluster-entity"),
     FEED_ENTITY("feed-entity"),
     PROCESS_ENTITY("process-entity"),
+    DATASOURCE_ENTITY("datasource-entity"),
 
     // instance vertex types
     FEED_INSTANCE("feed-instance"),
     PROCESS_INSTANCE("process-instance"),
+    IMPORT_INSTANCE("import-instance"),
 
     // Misc vertex types
     USER("user"),

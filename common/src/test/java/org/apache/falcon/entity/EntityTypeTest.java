@@ -38,6 +38,7 @@ public class EntityTypeTest {
         Assert.assertTrue(EntityType.PROCESS.isSchedulable());
         Assert.assertTrue(EntityType.FEED.isSchedulable());
         Assert.assertFalse(EntityType.CLUSTER.isSchedulable());
+        Assert.assertFalse(EntityType.DATASOURCE.isSchedulable());
     }
 
     @Test
@@ -48,6 +49,8 @@ public class EntityTypeTest {
         Assert.assertEquals(EntityType.CLUSTER, EntityType.getEnum("cluSTER"));
         Assert.assertEquals(EntityType.PROCESS, EntityType.getEnum("process"));
         Assert.assertEquals(EntityType.PROCESS, EntityType.getEnum("pRocess"));
+        Assert.assertEquals(EntityType.DATASOURCE, EntityType.getEnum("datasource"));
+        Assert.assertEquals(EntityType.DATASOURCE, EntityType.getEnum("dataSource"));
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

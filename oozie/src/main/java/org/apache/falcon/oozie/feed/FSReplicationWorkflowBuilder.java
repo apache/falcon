@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -82,7 +83,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         } else {
             props.put("availabilityFlag", entity.getAvailabilityFlag());
         }
-
+        props.put(WorkflowExecutionArgs.DATASOURCE_NAME.getName(), "NA");
         return props;
     }
 }

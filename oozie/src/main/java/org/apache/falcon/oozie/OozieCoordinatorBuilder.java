@@ -75,6 +75,9 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
             case REPLICATION:
                 return new FeedReplicationCoordinatorBuilder((Feed)entity);
 
+            case IMPORT:
+                return new FeedImportCoordinatorBuilder((Feed)entity);
+
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType() + ", lifecycle " + tag);
             }

@@ -90,6 +90,9 @@ import java.util.regex.Pattern;
 public class TestContext {
     public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
+    public static final String FEED_TEMPLATE3 = "/feed-template3.xml";
+
+    public static final String DATASOURCE_TEMPLATE = "/datasource-template.xml";
 
     public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
 

@@ -287,8 +287,11 @@ public class MetadataMappingService
         case DELETE:
             onFeedInstanceEvicted(context);
             break;
+        case IMPORT:
+            onFeedInstanceImported(context);
+            break;
         default:
-            throw new IllegalArgumentException("Invalid EntityOperation" + entityOperation);
+            throw new IllegalArgumentException("Invalid EntityOperation - " + entityOperation);
         }
     }
 
@@ -327,5 +330,9 @@ public class MetadataMappingService
     private void onFeedInstanceEvicted(WorkflowExecutionContext context) throws FalconException {
         LOG.info("Adding evicted feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addEvictedInstance(context);
+    }
+    private void onFeedInstanceImported(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Adding imported feed instance: {}", context.getNominalTimeAsISO8601());
+        instanceGraphBuilder.addImportedInstance(context);
     }
 }

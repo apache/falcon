@@ -33,11 +33,14 @@ import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
+import org.apache.falcon.entity.v0.feed.Extract;
+import org.apache.falcon.entity.v0.feed.ExtractMethod;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Sla;
@@ -55,8 +58,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -95,6 +99,12 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);
             validateFeedCutOffPeriod(feed, cluster);
+            if (FeedHelper.isImportEnabled(cluster)) {
+                validateEntityExists(EntityType.DATASOURCE, FeedHelper.getImportDatasourceName(cluster));
+                validateFeedExtractionType(feed, cluster);
+                validateFeedImportArgs(cluster);
+                validateFeedImportFieldExcludes(cluster);
+            }
         }
 
         validateFeedStorage(feed);
@@ -551,6 +561,56 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     + "but it doesn't contain location type - data in cluster " + cluster.getName());
             }
 
+        }
+    }
+
+    /**
+     * Validate extraction and merge type combination. Currently supported combo:
+     *
+     * ExtractionType = FULL and MergeType = SNAPSHOT.
+     * ExtractionType = INCREMENTAL and MergeType = APPEND.
+     *
+     * @param feed Feed entity
+     * @param cluster Cluster referenced in the Feed definition
+     * @throws FalconException
+     */
+
+    private void validateFeedExtractionType(Feed feed, Cluster cluster) throws FalconException {
+        Extract extract = cluster.getImport().getSource().getExtract();
+
+        if (ExtractMethod.FULL == extract.getType())  {
+            if ((MergeType.SNAPSHOT != extract.getMergepolicy())
+                    || (extract.getDeltacolumn() != null)) {
+                throw new ValidationException(String.format("Feed %s is using FULL "
+                        + "extract method but specifies either a superfluous "
+                        + "deltacolumn  or a mergepolicy other than snapshot", feed.getName()));
+            }
+        }  else {
+            throw new ValidationException(String.format("Feed %s is using unsupported "
+                    + "extraction mechanism %s", feed.getName(), extract.getType().value()));
+        }
+    }
+
+    /**
+     * Validate improt arguments.
+     * @param feedCluster Cluster referenced in the feed
+     */
+    private void validateFeedImportArgs(Cluster feedCluster) throws FalconException {
+        Map<String, String> args = FeedHelper.getImportArguments(feedCluster);
+        int numMappers = 1;
+        if (args.containsKey("--num-mappers")) {
+            numMappers = Integer.parseInt(args.get("--num-mappers"));
+        }
+        if ((numMappers > 1) && (!args.containsKey("--split-by"))) {
+            throw new ValidationException(String.format("Feed import expects "
+                    + "--split-by column when --num-mappers > 1"));
+        }
+    }
+
+    private void validateFeedImportFieldExcludes(Cluster feedCluster) throws FalconException {
+        if (FeedHelper.isFieldExcludes(feedCluster)) {
+            throw new ValidationException(String.format("Field excludes are not supported "
+                    + "currently in Feed import policy"));
         }
     }
 }

@@ -568,6 +568,9 @@
 	          <exclude>**/data.txt</exclude>
 	          <exclude>**/maven-eclipse.xml</exclude>
 	          <exclude>**/.externalToolBuilders/**</exclude>
+                  <exclude>**/db1.log</exclude>
+                  <exclude>**/db1.properties</exclude>
+                  <exclude>**/db1.script</exclude>
                 </excludes>
               </configuration>
       	    </plugin>	

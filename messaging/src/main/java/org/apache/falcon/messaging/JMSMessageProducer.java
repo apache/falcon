@@ -251,7 +251,8 @@ public class JMSMessageProducer {
     private String[] getFeedPaths() throws Exception {
         WorkflowExecutionContext.EntityOperations operation = context.getOperation();
         if (operation == WorkflowExecutionContext.EntityOperations.GENERATE
-                || operation == WorkflowExecutionContext.EntityOperations.REPLICATE) {
+                || operation == WorkflowExecutionContext.EntityOperations.REPLICATE
+                || operation == WorkflowExecutionContext.EntityOperations.IMPORT) {
             LOG.debug("Returning instance paths: " + context.getOutputFeedInstancePaths());
             return context.getOutputFeedInstancePathsList();
         }

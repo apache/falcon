@@ -130,7 +130,6 @@
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="xs:string" name="description"/>
     </xs:complexType>
-
     <xs:complexType name="cluster">
         <xs:annotation>
             <xs:documentation>
@@ -157,6 +156,7 @@
             <xs:element type="validity" name="validity"/>
             <xs:element type="retention" name="retention"/>
             <xs:element type="sla" name="sla" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="import" name="import" minOccurs="0" maxOccurs="1"/>
             <xs:choice minOccurs="0" maxOccurs="1">
                 <xs:element type="locations" name="locations" minOccurs="0"/>
                 <xs:element type="catalog-table" name="table"/>
@@ -166,8 +166,7 @@
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="cluster-type" name="type" use="optional"/>
         <xs:attribute type="xs:string" name="partition" use="optional"/>
-        <xs:attribute type="frequency-type" name="delay" use="optional" /> 
-
+        <xs:attribute type="frequency-type" name="delay" use="optional" />
     </xs:complexType>
     <xs:complexType name="partitions">
         <xs:annotation>
@@ -301,7 +300,6 @@
     <xs:complexType name="partition">
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
     </xs:complexType>
-
     <xs:complexType name="notification">
         <xs:annotation>
             <xs:documentation>
@@ -331,7 +329,6 @@
         </xs:attribute>
         <xs:attribute type="xs:string" name="to" use="required"/>
     </xs:complexType>
-
     <xs:complexType name="ACL">
         <xs:annotation>
             <xs:documentation>
@@ -451,7 +448,90 @@
             <xs:minLength value="1"/>
         </xs:restriction>
     </xs:simpleType>
-
+    <xs:complexType name="import">
+       <xs:sequence>
+            <xs:element type="source" name="source"/>
+            <xs:element type="arguments" name="arguments" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="source">
+        <xs:annotation>
+            <xs:documentation>
+                Specifies the source entity name from which data will be imported.
+                This can be Database or other data source types in the future.
+                Table name specifies the table to import.
+                Extract type specifies a extraction method (full or incremental).
+                DeltaColumn specifies the column name on source databbase table
+                to identify the new data since the last extraction.
+                Merge type specifies how the data will be organized on Hadoop.
+                The supported types are snapshot (as in a particular time) or append
+                (as in timeseries partitions).
+            </xs:documentation>
+        </xs:annotation>
+       <xs:sequence>
+            <xs:element type="extract" name="extract" minOccurs="1"/>
+            <xs:element type="fields-type" name="fields" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="non-empty-string" name="name" use="required"/>
+        <xs:attribute type="non-empty-string" name="tableName" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="extract">
+        <xs:sequence>
+            <xs:element type="xs:string" name="deltacolumn" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="merge-type" name="mergepolicy" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute type="extract-method" name="type" use="required"/>
+    </xs:complexType>
+    <xs:simpleType name="extract-method">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="full"/>
+            <xs:enumeration value="incremental"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="merge-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="snapshot"/>
+            <xs:enumeration value="append"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="fields-type">
+        <xs:annotation>
+            <xs:documentation>
+                Specifies either an include or exclude fields list. If include field list is specified, only
+                the specified fields will be imported. If exclude field list is specified, all fields except
+                the ones specified will be imported from datasource to HDFS.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice minOccurs="1" maxOccurs="1">
+            <xs:element type="field-include-exclude" name="includes"/>
+            <xs:element type="field-include-exclude" name="excludes"/>
+        </xs:choice>
+    </xs:complexType>
+    <xs:complexType name="field-include-exclude">
+        <xs:sequence>
+            <xs:element type="xs:string" name="field" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="arguments">
+        <xs:annotation>
+            <xs:documentation>
+                A list of name-value pair of extra arguments to be passed to the concrete implementation.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="argument" name="argument" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="argument">
+        <xs:annotation>
+            <xs:documentation>
+                A key-value pair, which are used while invoking
+                ingestion engines.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
+    </xs:complexType>
     <xs:complexType name="retention-stage">
         <xs:annotation>
             <xs:documentation>
@@ -469,5 +549,4 @@
             <xs:element type="properties" name="properties" minOccurs="0" maxOccurs="1"></xs:element>
         </xs:all>
     </xs:complexType>
-
 </xs:schema>

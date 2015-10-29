@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.util.OozieUtils;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 
 import javax.xml.bind.JAXBElement;
 import java.util.Arrays;
@@ -153,7 +154,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
     protected Properties getWorkflowProperties(Feed feed) throws FalconException {
         Properties props = super.getWorkflowProperties(feed);
         props.put("availabilityFlag", "NA");
-
+        props.put(WorkflowExecutionArgs.DATASOURCE_NAME.getName(), "NA");
         return props;
     }
 

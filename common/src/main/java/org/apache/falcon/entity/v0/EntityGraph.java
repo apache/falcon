@@ -19,6 +19,7 @@
 package org.apache.falcon.entity.v0;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
@@ -189,6 +190,16 @@ public final class EntityGraph implements ConfigurationChangeListener {
             Set<Node> clusterEdges = nodeEdges.get(clusterNode);
             feedEdges.add(clusterNode);
             clusterEdges.add(feedNode);
+
+            if (FeedHelper.isImportEnabled(cluster)) {
+                Node dbNode = new Node(EntityType.DATASOURCE, FeedHelper.getImportDatasourceName(cluster));
+                if (!nodeEdges.containsKey(dbNode)) {
+                    nodeEdges.put(dbNode, new HashSet<Node>());
+                }
+                Set<Node> dbEdges = nodeEdges.get(dbNode);
+                feedEdges.add(dbNode);
+                dbEdges.add(feedNode);
+            }
         }
         return nodeEdges;
     }

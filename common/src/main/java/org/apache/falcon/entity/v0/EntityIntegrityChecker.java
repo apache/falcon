@@ -46,6 +46,9 @@ public final class EntityIntegrityChecker {
         case FEED:
             return filter(deps, EntityType.PROCESS);
 
+        case DATASOURCE:
+            return filter(deps, EntityType.FEED);
+
         default:
             return null;
         }

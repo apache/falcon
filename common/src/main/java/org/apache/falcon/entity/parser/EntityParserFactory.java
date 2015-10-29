@@ -45,6 +45,8 @@ public final class EntityParserFactory {
             return new FeedEntityParser();
         case CLUSTER:
             return new ClusterEntityParser();
+        case DATASOURCE:
+            return new DatasourceEntityParser();
         default:
             throw new IllegalArgumentException("Unhandled entity type: " + entityType);
         }

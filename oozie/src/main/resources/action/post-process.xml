@@ -88,6 +88,8 @@
         <arg>${falconInputFeeds}</arg>
         <arg>-falconInPaths</arg>
         <arg>${falconInPaths}</arg>
+        <arg>-datasource</arg>
+        <arg>${datasource == 'NA' ? 'IGNORE' : datasource}</arg>
     </java>
     <ok to="end"/>
     <error to="fail"/>

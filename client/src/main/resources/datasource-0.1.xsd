@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified"
+           targetNamespace="uri:falcon:datasource:0.1" xmlns="uri:falcon:datasource:0.1"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+    <xs:annotation>
+        <xs:documentation>
+            Licensed to the Apache Software Foundation (ASF) under one or more
+            contributor license agreements. See the NOTICE file distributed with
+            this work for additional information regarding copyright ownership.
+            The ASF licenses this file to You under the Apache License, Version
+            2.0
+            (the "License"); you may not use this file except in compliance with
+            the License. You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+            Unless required by applicable law or agreed to in writing, software
+            distributed under the License is distributed on an "AS IS" BASIS,
+            WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+            implied.
+            See the License for the specific language governing permissions and
+            limitations under the License.
+        </xs:documentation>
+        <xs:appinfo>
+            <jaxb:schemaBindings>
+                <jaxb:package name="org.apache.falcon.entity.v0.datasource"/>
+            </jaxb:schemaBindings>
+        </xs:appinfo>
+    </xs:annotation>
+    <xs:element name="datasource" type="datasource">
+    </xs:element>
+    <xs:complexType name="datasource">
+        <xs:annotation>
+            <xs:documentation>The datasource contains various information required
+                to connect to a data source like a MySQL datasource or Kafka cluster.
+                A datasource is referenced by feeds that represent an object like
+                Table (or Topic) in the MySQL database (or Kafka Cluster).
+                name: the name of datasource, which must be unique.
+                colo: the name of the colo to which this datasource belongs to.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="KEY_VALUE_PAIR" name="tags" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        tags: a process specifies an optional list of comma separated tags,
+                        Key Value Pairs, separated by comma,
+                        which is used for classification of datasource entity.
+                        Example: consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element type="interfaces" name="interfaces"/>
+            <xs:element type="driver" name="driver" minOccurs="1" maxOccurs="1" />
+            <xs:element type="properties" name="properties" minOccurs="0"/>
+            <xs:element type="ACL" name="ACL" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:string"  name="colo" use="required"/>
+        <xs:attribute type="xs:string"  name="description"/>
+        <xs:attribute type="datasource-type"  name="type" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    datasource type could be Relational Databases (MySQL, Oracle etc.), Messgaing systems like
+                    Kafka, etc.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="property">
+        <xs:annotation>
+            <xs:documentation>
+                A key-value pair to pass in any datasource specific properties.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="interface">
+        <xs:annotation>
+            <xs:documentation>
+                An interface specifies the interface type (read or write), and an
+                endpoint url. Falcon uses these endpoints to import or export
+                data from datasources.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="driver" name="driver" minOccurs="0" maxOccurs="1" />
+            <xs:element type="credential" name="credential" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="properties" name="properties" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="interfacetype" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="endpoint" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="properties">
+        <xs:annotation>
+            <xs:documentation>
+                A list of property elements.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="interfaces">
+        <xs:annotation>
+            <xs:documentation>
+                A list of interfaces.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="interface" name="interface" maxOccurs="2" minOccurs="1"/>
+            <xs:element type="credential" name="credential" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="interfacetype">
+        <xs:annotation>
+            <xs:documentation>
+                An interface for datasource has 2 different interface types: readonly, write.
+                The readonly endpoint specifies the url/mechanism to use for data IMPORT operation
+                from a datasource while write endpoint specifies the url/mechanism to use for data
+                EXPORT operatrion.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="readonly"/>
+            <xs:enumeration value="write"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="IDENTIFIER">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="KEY_VALUE_PAIR">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([\w_]+=[^,]+)?([,]?[ ]*[\w_]+=[^,]+)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="credential">
+        <xs:sequence  minOccurs="1" maxOccurs="1" >
+            <xs:element name="userName" minOccurs="1" maxOccurs="1" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>
+                        The User for the datasource.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:choice minOccurs="1" maxOccurs="1">
+                <xs:element name="passwordFile" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            The FQ path to a file on HDFS containing the datasource
+                            server password with 400 permissions. Only the user
+                            submitting the job has read access to this file which
+                            will be securely passed to the mappers.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+
+                <xs:element name="passwordText" type="xs:string">
+                <xs:annotation>
+                        <xs:documentation>
+                            Plain text password.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="type" type="credentialtype" use="required"/>
+    </xs:complexType>
+
+    <xs:simpleType name="credentialtype">
+        <xs:annotation>
+            <xs:documentation>
+                user-password credentials are supported today which can be extended.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="password-file" />
+            <xs:enumeration value="password-text" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="datasource-type">
+        <xs:annotation>
+            <xs:documentation>
+                The datasource type can be MySQL, ORACLE, Teradata etc.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="mysql"/>
+            <xs:enumeration value="oracle"/>
+            <xs:enumeration value="hsql"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="driver">
+        <xs:annotation>
+            <xs:documentation>
+                Driver information.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element type="xs:string" name="clazz" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Fully qualified class name for the datasource driver used
+                        for validating the datasource connection in Falcon.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element type="xs:string" name="jar" minOccurs="1" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Path to the connector jar files on HDFS thats shipped with the workflow.
+                        You'd need to put the connector jar files in oozie sharelib and since this
+                        is using all the latest features in sqoop 1.x, requires 1.5 snapshot.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="ACL">
+        <xs:annotation>
+            <xs:documentation>
+                Access control list for this cluster.
+                owner is the Owner of this entity.
+                group is the one which has access to read - not used at this time.
+                permission is not enforced at this time
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="owner"/>
+        <xs:attribute type="xs:string" name="group"/>
+        <xs:attribute type="xs:string" name="permission" default="*"/>
+    </xs:complexType>
+</xs:schema>

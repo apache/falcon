@@ -21,6 +21,7 @@ package org.apache.falcon.entity.v0;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -38,7 +39,8 @@ import java.util.Arrays;
 public enum EntityType {
     FEED(Feed.class, "/feed-0.1.xsd", "name"),
     PROCESS(Process.class, "/process-0.1.xsd", "name"),
-    CLUSTER(Cluster.class, "/cluster-0.1.xsd", "name");
+    CLUSTER(Cluster.class, "/cluster-0.1.xsd", "name"),
+    DATASOURCE(Datasource.class, "/datasource-0.1.xsd", "name");
 
     //Fail unmarshalling of whole xml if unmarshalling of any element fails
     private static class EventHandler implements ValidationEventHandler {
@@ -93,8 +95,10 @@ public enum EntityType {
         return unmarshaller;
     }
 
+
     public boolean isSchedulable() {
-        return this != EntityType.CLUSTER;
+        // Cluster and Datasource are not schedulable like Feed and Process
+        return ((this != EntityType.CLUSTER) && (this != EntityType.DATASOURCE));
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP"})

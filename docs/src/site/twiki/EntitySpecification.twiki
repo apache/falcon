@@ -98,6 +98,61 @@ A key-value pair, which are propagated to the workflow engine.
 Ideally JMS impl class name of messaging engine (brokerImplClass) 
 should be defined here.
 
+---++ Datasource Specification
+
+The datasource entity contains connection information required to connect to a data source like MySQL database.
+The datasource XSD specification is available here:
+A datasource contains read and write interfaces which are used by Falcon to import or export data from or to
+datasources respectively. A datasource is referenced by feeds which are on-boarded to Falcon by its name.
+
+Following are the tags defined in a datasource.xml:
+
+<verbatim>
+<datasource colo="west-coast" description="Customer database on west coast" type="mysql"
+ name="test-hsql-db" xmlns="uri:falcon:datasource:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+
+The colo specifies the colo to which the datasource belongs to and name is the name of the datasource which has to
+be unique.
+
+---+++ Interfaces
+
+A datasource has two interfaces as described below:
+<verbatim>
+    <interface type="readonly" endpoint="jdbc:hsqldb:localhost/db"/>
+</verbatim>
+
+A readonly interface specifies the endpoint and protocol to connect to a datasource.
+This would be used in the context of import from datasource into HDFS.
+
+<verbatim>
+<interface type="write" endpoint="jdbc:hsqldb:localhost/db1">
+</verbatim>
+
+A write interface specifies the endpoint and protocol to to write to the datasource.
+Falcon uses this interface to export data from hdfs to datasource.
+
+<verbatim>
+<credential type="password-text">
+    <userName>SA</userName>
+    <passwordText></passwordText>
+</credential>
+</verbatim>
+
+
+A credential is associated with an interface (read or write) providing user name and password to authenticate
+to the datasource.
+
+<verbatim>
+<credential type="password-text">
+     <userName>SA</userName>
+     <passwordFile>hdfs-file-path</passwordText>
+</credential>
+</verbatim>
+
+The credential can be specified via a password file present in the HDFS. This file should only be accessible by
+the user.
+
 ---++ Feed Specification
 The Feed XSD specification is available here.
 A Feed defines various attributes of feed like feed location, frequency, late-arrival handling and retention policies.
@@ -244,6 +299,35 @@ expressions like frequency. slaLow is intended to serve for alerting for feed in
 availability SLAs. slaHigh is intended to serve for reporting the feeds which missed their SLAs. SLAs are relative to
 feed instance time.
 
+---+++ Import
+
+<verbatim>
+<import>
+    <source name="test-hsql-db" tableName="customer">
+        <extract type="full">
+            <mergepolicy>snapshot</mergepolicy>
+         </extract>
+         <fields>
+            <includes>
+                <field>id</field>
+                <field>name</field>
+            </includes>
+         </fields>
+    </source>
+    <arguments>
+        <argument name="--split-by" value="id"/>
+        <argument name="--num-mappers" value="2"/>
+    </arguments>
+</import>
+
+A feed can have an import policy associated with it. The souce name specified the datasource reference to the
+datasource entity from which the data will be imported to HDFS. The tableName spcified the table or topic to be
+imported from the datasource. The extract type specifies the pull mechanism (full or
+incremental extract). Full extract method extracts all the data from the datasource. The incremental extraction
+method feature implementation is in progress. The mergeplocy determines how the data is to be layed out on HDFS.
+The snapshot layout creates a snapshot of the data on HDFS using the feed's location specification. Fields is used
+to specify the projection columns. Feed import from database underneath uses sqoop to achieve the task. Any advanced
+Sqoop options can be specified via the arguments.
 
 ---+++ Late Arrival
 

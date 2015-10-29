@@ -35,6 +35,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -681,7 +682,7 @@ public final class EntityUtil {
     //Staging path that stores scheduler configs like oozie coord/bundle xmls, parent workflow xml
     //Each entity update creates a new staging path
     //Base staging path is the base path for all staging dirs
-    public static Path getBaseStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+    public static Path getBaseStagingPath(Cluster cluster, Entity entity) {
         return new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING).getPath(),
                 "falcon/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
     }
@@ -723,7 +724,7 @@ public final class EntityUtil {
 
     //Creates new staging path for entity schedule/update
     //Staging path containd md5 of the cluster view of the entity. This is required to check if update is required
-    public static Path getNewStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+    public static Path getNewStagingPath(Cluster cluster, Entity entity)
         throws FalconException {
         Entity clusterView = getClusterView(entity, cluster.getName());
         return new Path(getBaseStagingPath(cluster, entity),
@@ -778,7 +779,7 @@ public final class EntityUtil {
         }
     }
 
-    public static Path getLogPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+    public static Path getLogPath(Cluster cluster, Entity entity) {
         return new Path(getBaseStagingPath(cluster, entity), "logs");
     }
 
@@ -999,6 +1000,20 @@ public final class EntityUtil {
             current = new Date(nextStartTime.getTime() + ONE_MS); // 1 milli seconds later
         }
         return result;
+    }
+
+    /**
+     * Returns Data Source Type given a feed with Import policy.
+     *
+     * @param cluster
+     * @param feed
+     * @return
+     * @throws FalconException
+     */
+
+    public static DatasourceType getImportDatasourceType(
+            Cluster cluster, Feed feed) throws FalconException {
+        return FeedHelper.getImportDatasourceType(cluster, feed);
     }
 
     public static EntityNotification getEntityNotification(Entity entity) {

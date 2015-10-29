@@ -40,6 +40,7 @@ import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -129,6 +130,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         Properties props = new Properties();
         props.setProperty("srcClusterName", "NA");
         props.setProperty("availabilityFlag", "NA");
+        props.setProperty(WorkflowExecutionArgs.DATASOURCE_NAME.getName(), "NA");
         return props;
     }
 

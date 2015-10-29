@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+
 /**
  * Captures the workflow execution context.
  */
@@ -74,7 +75,7 @@ public class WorkflowExecutionContext {
      * Entity operations supported.
      */
     public enum EntityOperations {
-        GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
+        GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD, IMPORT
     }
 
     public static final WorkflowExecutionArgs[] USER_MESSAGE_ARGS = {
@@ -299,8 +300,11 @@ public class WorkflowExecutionContext {
     }
 
     public long getExecutionCompletionTime() {
+
         return creationTime;
     }
+
+    public String getDatasourceName() { return getValue(WorkflowExecutionArgs.DATASOURCE_NAME); }
 
     public long getWorkflowStartTime() {
         return Long.parseLong(getValue(WorkflowExecutionArgs.WF_START_TIME));
