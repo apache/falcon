@@ -46,6 +46,7 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.util.BuildProperties;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -804,11 +805,12 @@ public final class FeedHelper {
         if (retentionStage != null && retentionStage.getFrequency() != null) {
             retentionFrequency = retentionStage.getFrequency();
         } else {
-            Frequency.TimeUnit timeUnit = feed.getFrequency().getTimeUnit();
-            if (timeUnit == Frequency.TimeUnit.hours || timeUnit == Frequency.TimeUnit.minutes) {
-                retentionFrequency = new Frequency("hours(6)");
+            Frequency feedFrequency = feed.getFrequency();
+            Frequency defaultFrequency = new Frequency("hours(6)");
+            if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
+                retentionFrequency = defaultFrequency;
             } else {
-                retentionFrequency = new Frequency("days(1)");
+                retentionFrequency = new Frequency(feedFrequency.toString());
             }
         }
         return  retentionFrequency;
