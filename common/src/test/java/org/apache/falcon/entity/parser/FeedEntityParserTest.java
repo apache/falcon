@@ -208,6 +208,22 @@ public class FeedEntityParserTest extends AbstractTestBase {
         parser.validate(feed); // no validation exception should be thrown
     }
 
+    @Test
+    public void testDefaultRetentionFrequencyConflict() throws Exception {
+        Feed feed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED3_XML));
+        feed.getLifecycle().getRetentionStage().setFrequency(null);
+        feed.getClusters().getClusters().get(0).getLifecycle().getRetentionStage().setFrequency(null);
+        feed.setFrequency(Frequency.fromString("minutes(10)"));
+        parser.validate(feed); // shouldn't throw a validation exception
+
+
+        feed.setFrequency(Frequency.fromString("hours(7)"));
+        parser.validate(feed); // shouldn't throw a validation exception
+
+        feed.setFrequency(Frequency.fromString("days(2)"));
+        parser.validate(feed); // shouldn't throw a validation exception
+    }
+
     @Test(expectedExceptions = ValidationException.class,
         expectedExceptionsMessageRegExp = ".*Retention can not be more frequent than data availability.*")
     public void testRetentionFrequentThanFeed() throws Exception {
