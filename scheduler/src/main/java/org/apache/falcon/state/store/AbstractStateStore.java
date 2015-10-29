@@ -79,7 +79,7 @@ public abstract class AbstractStateStore implements StateStore, ConfigurationCha
      */
     public static synchronized StateStore get() {
         if (stateStore == null) {
-            String storeImpl = StartupProperties.get().getProperty("state.store",
+            String storeImpl = StartupProperties.get().getProperty("state.store.impl",
                     "org.apache.falcon.state.store.InMemoryStateStore");
             try {
                 stateStore = ReflectionUtils.getInstanceByClassName(storeImpl);

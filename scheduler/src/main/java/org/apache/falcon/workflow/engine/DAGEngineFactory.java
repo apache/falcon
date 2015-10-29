@@ -37,7 +37,14 @@ public final class DAGEngineFactory {
     }
 
     public static DAGEngine getDAGEngine(Cluster cluster) throws FalconException {
-        return getDAGEngine(cluster.getName());
+        String clusterName = cluster.getName();
+        // Cache the DAGEngines for every cluster.
+        if (!DAG_ENGINES.containsKey(clusterName)) {
+            DAG_ENGINES.put(clusterName,
+                    (DAGEngine) ReflectionUtils.getInstance(DAG_ENGINE, Cluster.class, cluster));
+        }
+
+        return DAG_ENGINES.get(clusterName);
     }
 
     public static DAGEngine getDAGEngine(String clusterName) throws FalconException {
