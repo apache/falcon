@@ -604,7 +604,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 }
             }
         } catch (OozieClientException e) {
-            LOG.error("Error while retrieving JMS connection info", e);
+            LOG.debug("Error while retrieving JMS connection info", e);
         }
 
         return false;
