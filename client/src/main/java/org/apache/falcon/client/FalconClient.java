@@ -58,7 +58,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -85,9 +84,6 @@ public class FalconClient extends AbstractFalconClient {
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
     public static final String AUTH_URL = "api/options?" + PseudoAuthenticator.USER_NAME + "=" + USER;
-
-    private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
-    private static final String FALCON_INSTANCE_SOURCE_CLUSTERS = "falcon.instance.source.clusters";
 
     /**
      * Name of the HTTP cookie used for the authentication token between the client and the server.
@@ -668,25 +664,6 @@ public class FalconClient extends AbstractFalconClient {
             throw new FalconCLIException("File not found:", e);
         }
         return stream;
-    }
-
-    private InputStream getServletInputStream(String clusters,
-                                              String sourceClusters, String properties)
-        throws FalconCLIException, UnsupportedEncodingException {
-
-        InputStream stream;
-        StringBuilder buffer = new StringBuilder();
-        if (clusters != null) {
-            buffer.append(FALCON_INSTANCE_ACTION_CLUSTERS).append('=').append(clusters).append('\n');
-        }
-        if (sourceClusters != null) {
-            buffer.append(FALCON_INSTANCE_SOURCE_CLUSTERS).append('=').append(sourceClusters).append('\n');
-        }
-        if (properties != null) {
-            buffer.append(properties);
-        }
-        stream = new ByteArrayInputStream(buffer.toString().getBytes());
-        return (buffer.length() == 0) ? null : stream;
     }
 
     private APIResult sendEntityRequest(Entities entities, EntityType entityType,

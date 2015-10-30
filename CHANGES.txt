@@ -14,6 +14,8 @@ Trunk (Unreleased)
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1517 Instance Management Api in Falcon Unit (Narayan Periwal via Pallavi Rao)
+
     FALCON-1520 Delete, update, Validate entity operations support in Falcon Unit (Pavan Kolamuri via Pallavi Rao)
 
   OPTIMIZATIONS

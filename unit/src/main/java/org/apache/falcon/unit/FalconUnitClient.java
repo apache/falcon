@@ -32,7 +32,10 @@ import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
@@ -40,9 +43,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 
 /**
@@ -51,6 +56,7 @@ import java.util.TimeZone;
 public class FalconUnitClient extends AbstractFalconClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconUnitClient.class);
+    protected static final int XML_DEBUG_LEN = 10 * 1024;
 
     private static final String DEFAULT_ORDERBY = "status";
     private static final String DEFAULT_SORTED_ORDER = "asc";
@@ -162,7 +168,6 @@ public class FalconUnitClient extends AbstractFalconClient {
                 sortOrder, offset, numResults);
 
     }
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
 
     /**
@@ -237,6 +242,68 @@ public class FalconUnitClient extends AbstractFalconClient {
         return localSchedulableEntityManager.getStatus(entityType.name(), entityName, colo);
     }
 
+    public InstancesResult killInstances(String type, String entity, String start, String end, String colo,
+                                         String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                         String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+        Properties props = getProperties(clusters, sourceClusters);
+        return localInstanceManager.killInstance(props, type, entity, start, end, colo, lifeCycles);
+    }
+
+    public InstancesResult suspendInstances(String type, String entity, String start, String end, String colo,
+                                            String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                            String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+        Properties props = getProperties(clusters, sourceClusters);
+        return localInstanceManager.suspendInstance(props, type, entity, start, end, colo, lifeCycles);
+    }
+
+    public InstancesResult resumeInstances(String type, String entity, String start, String end, String colo,
+                                           String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                           String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+        Properties props = getProperties(clusters, sourceClusters);
+        return localInstanceManager.resumeInstance(props, type, entity, start, end, colo, lifeCycles);
+    }
+
+    public InstancesResult rerunInstances(String type, String entity, String start, String end, String filePath,
+                                          String colo, String clusters, String sourceClusters,
+                                          List<LifeCycle> lifeCycles, Boolean isForced, String doAsUser) throws
+            FalconCLIException, IOException {
+        Properties props = getProperties(clusters, sourceClusters);
+        return localInstanceManager.reRunInstance(type, entity, start, end, props, colo, lifeCycles, isForced);
+    }
+
+    public InstancesSummaryResult getSummaryOfInstances(String type, String entity, String start, String end,
+                                                        String colo, List<LifeCycle> lifeCycles, String filterBy,
+                                                        String orderBy, String sortOrder, String doAsUser) throws
+            FalconCLIException {
+        return localInstanceManager.getSummary(type, entity, start, end, colo, lifeCycles, filterBy, orderBy,
+                sortOrder);
+    }
+
+    public FeedInstanceResult getFeedListing(String type, String entity, String start, String end, String colo,
+                                             String doAsUser) throws FalconCLIException {
+        return localInstanceManager.getListing(type, entity, start, end, colo);
+    }
+
+    public InstancesResult getLogsOfInstances(String type, String entity, String start, String end, String colo,
+                                              String runId, List<LifeCycle> lifeCycles, String filterBy,
+                                              String orderBy, String sortOrder, Integer offset, Integer numResults,
+                                              String doAsUser) throws FalconCLIException {
+        return localInstanceManager.getLogs(type, entity, start, end, colo, runId, lifeCycles, filterBy, orderBy,
+                sortOrder, offset, numResults);
+    }
+
+    public InstancesResult getParamsOfInstance(String type, String entity, String start, String colo,
+                                               List<LifeCycle> lifeCycles, String doAsUser) throws FalconCLIException,
+            UnsupportedEncodingException {
+        return localInstanceManager.getInstanceParams(type, entity, start, colo, lifeCycles);
+    }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName, String instanceTime,
+                                                            String colo) throws FalconCLIException {
+        return localInstanceManager.getInstanceDependencies(entityType, entityName, instanceTime, colo);
+    }
+
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {
         if (entityType == EntityType.FEED) {
             return checkAndUpdateFeedClusters(entity, cluster);
@@ -303,5 +370,15 @@ public class FalconUnitClient extends AbstractFalconClient {
             }
         }
     }
-}
 
+    private Properties getProperties(String clusters, String sourceClusters) {
+        Properties props = new Properties();
+        if (StringUtils.isNotEmpty(clusters)) {
+            props.setProperty(FALCON_INSTANCE_ACTION_CLUSTERS, clusters);
+        }
+        if (StringUtils.isNotEmpty(sourceClusters)) {
+            props.setProperty(FALCON_INSTANCE_SOURCE_CLUSTERS, sourceClusters);
+        }
+        return props;
+    }
+}

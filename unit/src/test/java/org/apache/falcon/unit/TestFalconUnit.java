@@ -24,7 +24,10 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -54,7 +57,9 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String OUTPUT_FEED_NAME = "out";
     private static final String INPUT_FILE_NAME = "input.txt";
     private static final String SCHEDULE_TIME = "2015-06-20T00:00Z";
+    private static final String END_TIME = "2015-06-20T00:01Z";
     private static final String WORKFLOW = "workflow.xml";
+    private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
 
     @Test
     public void testProcessInstanceExecution() throws Exception {
@@ -66,7 +71,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
                 true, "");
         assertStatus(result);
-        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         InstancesResult.WorkflowStatus status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
                 PROCESS_NAME, SCHEDULE_TIME);
         Assert.assertEquals(status, InstancesResult.WorkflowStatus.SUCCEEDED);
@@ -113,7 +118,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         result = scheduleProcess(PROCESS_NAME, scheduleTime, 2, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
                 true, "");
         assertStatus(result);
-        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, scheduleTime);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, scheduleTime, InstancesResult.WorkflowStatus.SUCCEEDED);
         result = getClient().suspend(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
         assertStatus(result);
         result = getClient().getStatus(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
@@ -139,7 +144,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 10, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
                 true, "");
         assertStatus(result);
-        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         result = getClient().delete(EntityType.PROCESS, PROCESS_NAME, null);
         assertStatus(result);
         try {
@@ -186,10 +191,9 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
         result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
-        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 10, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
-                true, "");
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
         assertStatus(result);
-        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
 
         Process process = getEntity(EntityType.PROCESS, PROCESS_NAME);
         setDummyProperty(process);
@@ -227,5 +231,102 @@ public class TestFalconUnit extends FalconUnitTestBase {
         property.setValue("dummy");
         process.getProperties().getProperties().add(property);
 
+    }
+
+    @Test
+    public void testProcessInstanceManagementAPI1() throws Exception {
+        submitClusterAndFeeds();
+        // submitting and scheduling process
+        createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
+        APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
+        assertStatus(result);
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 3, CLUSTER_NAME, getAbsolutePath(SLEEP_WORKFLOW), true,
+                "");
+        assertStatus(result);
+        InstancesResult.WorkflowStatus currentStatus;
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.RUNNING);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
+
+        getClient().suspendInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null,
+                CLUSTER_NAME, null, null, null);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUSPENDED);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.SUSPENDED);
+
+        getClient().resumeInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null,
+                CLUSTER_NAME, null, null, null);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.RUNNING);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
+
+        getClient().killInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null, CLUSTER_NAME,
+                null, null, null);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.KILLED);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.KILLED);
+
+        getClient().rerunInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null, null,
+                CLUSTER_NAME, null, null, true, null);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.RUNNING);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
+    }
+
+    @Test
+    public void testProcessInstanceManagementAPI2() throws Exception {
+        submitClusterAndFeeds();
+        // submitting and scheduling process
+        createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
+        APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
+        assertStatus(result);
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 3, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
+        assertStatus(result);
+        InstancesResult.WorkflowStatus currentStatus;
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.SUCCEEDED);
+
+        InstancesSummaryResult summaryResult = getClient().getSummaryOfInstances(EntityType.PROCESS.name(),
+                PROCESS_NAME, SCHEDULE_TIME, END_TIME, null, null, null, "asc", null, null);
+        Assert.assertEquals(summaryResult.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertNotNull(summaryResult.getInstancesSummary());
+        Assert.assertEquals(summaryResult.getInstancesSummary().length, 1);
+
+
+        InstancesResult instancesResult = getClient().getLogsOfInstances(EntityType.PROCESS.name(), PROCESS_NAME,
+                SCHEDULE_TIME, END_TIME, null, "0", null, null, "asc", null, new Integer(0), new Integer(1), null);
+        Assert.assertEquals(instancesResult.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertNotNull(instancesResult.getInstances());
+        Assert.assertEquals(instancesResult.getInstances().length, 1);
+
+        instancesResult = getClient().getParamsOfInstance(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, null,
+                null, null);
+        Assert.assertEquals(instancesResult.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertNotNull(instancesResult.getInstances());
+        Assert.assertEquals(instancesResult.getInstances().length, 1);
+
+        InstanceDependencyResult dependencyResult = getClient().getInstanceDependencies(EntityType.PROCESS.name(),
+                PROCESS_NAME, SCHEDULE_TIME, null);
+        Assert.assertEquals(dependencyResult.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertNotNull(dependencyResult.getDependencies());
+        Assert.assertEquals(dependencyResult.getDependencies().length, 2); //2 for input and output feed
+    }
+
+    @Test
+    public void testFeedInstanceManagementAPI() throws Exception {
+        // submit with default props
+        submitCluster();
+        // submitting feeds
+        APIResult result = submit(EntityType.FEED, getAbsolutePath(INPUT_FEED));
+        assertStatus(result);
+        createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
+        String inPath = getFeedPathForTS(CLUSTER_NAME, INPUT_FEED_NAME, SCHEDULE_TIME);
+        Assert.assertTrue(fs.exists(new Path(inPath)));
+        result = schedule(EntityType.FEED, INPUT_FEED_NAME, CLUSTER_NAME);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        FeedInstanceResult feedInstanceResult = getClient().getFeedListing(EntityType.FEED.name(), INPUT_FEED_NAME,
+                SCHEDULE_TIME, END_TIME, null, null);
+        Assert.assertEquals(feedInstanceResult.getStatus(), APIResult.Status.SUCCEEDED);
     }
 }

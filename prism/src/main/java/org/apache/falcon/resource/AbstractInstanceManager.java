@@ -555,10 +555,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    public InstancesResult killInstance(HttpServletRequest request,
-                                        String type, String entity, String startStr,
-                                        String endStr, String colo,
-                                        List<LifeCycle> lifeCycles) {
+    public InstancesResult killInstance(HttpServletRequest request, String type, String entity, String startStr,
+                                        String endStr, String colo, List<LifeCycle> lifeCycles) {
+        Properties props = getProperties(request);
+        return killInstance(props, type, entity, startStr, endStr, colo, lifeCycles);
+    }
+
+    public InstancesResult killInstance(Properties props, String type, String entity, String startStr,
+                                        String endStr, String colo, List<LifeCycle> lifeCycles) {
         checkColo(colo);
         checkType(type);
         try {
@@ -568,7 +572,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.killInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
@@ -578,10 +581,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    public InstancesResult suspendInstance(HttpServletRequest request,
-                                           String type, String entity, String startStr,
-                                           String endStr, String colo,
-                                           List<LifeCycle> lifeCycles) {
+    public InstancesResult suspendInstance(HttpServletRequest request, String type, String entity, String startStr,
+                                           String endStr, String colo, List<LifeCycle> lifeCycles) {
+        Properties props = getProperties(request);
+        return suspendInstance(props, type, entity, startStr, endStr, colo, lifeCycles);
+    }
+
+    public InstancesResult suspendInstance(Properties props, String type, String entity, String startStr, String endStr,
+                                           String colo, List<LifeCycle> lifeCycles) {
         checkColo(colo);
         checkType(type);
         try {
@@ -591,7 +598,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.suspendInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
@@ -601,10 +607,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    public InstancesResult resumeInstance(HttpServletRequest request,
-                                          String type, String entity, String startStr,
-                                          String endStr, String colo,
-                                          List<LifeCycle> lifeCycles) {
+    public InstancesResult resumeInstance(HttpServletRequest request, String type, String entity, String startStr,
+                                          String endStr, String colo, List<LifeCycle> lifeCycles) {
+        Properties props = getProperties(request);
+        return resumeInstance(props, type, entity, startStr, endStr, colo, lifeCycles);
+    }
+
+    public InstancesResult resumeInstance(Properties props, String type, String entity, String startStr, String endStr,
+                                          String colo, List<LifeCycle> lifeCycles) {
         checkColo(colo);
         checkType(type);
         try {
@@ -614,7 +624,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.resumeInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
@@ -790,9 +799,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return null;
     }
 
+    public InstancesResult reRunInstance(String type, String entity, String startStr, String endStr,
+                                         HttpServletRequest request, String colo, List<LifeCycle> lifeCycles,
+                                         Boolean isForced) {
+        Properties props = getProperties(request);
+        return reRunInstance(type, entity, startStr, endStr, props, colo, lifeCycles, isForced);
+    }
 
-    public InstancesResult reRunInstance(String type, String entity, String startStr,
-                                         String endStr, HttpServletRequest request,
+    public InstancesResult reRunInstance(String type, String entity, String startStr, String endStr, Properties props,
                                          String colo, List<LifeCycle> lifeCycles, Boolean isForced) {
         checkColo(colo);
         checkType(type);
@@ -803,7 +817,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.reRunInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles, isForced);
@@ -814,14 +827,18 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private Properties getProperties(HttpServletRequest request) throws IOException {
+    private Properties getProperties(HttpServletRequest request) {
         Properties props = new Properties();
-        ServletInputStream xmlStream = request == null ? null : request.getInputStream();
-        if (xmlStream != null) {
-            if (xmlStream.markSupported()) {
-                xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
+        try {
+            ServletInputStream xmlStream = request == null ? null : request.getInputStream();
+            if (xmlStream != null) {
+                if (xmlStream.markSupported()) {
+                    xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
+                }
+                props.load(xmlStream);
             }
-            props.load(xmlStream);
+        } catch (IOException e) {
+            LOG.error("Failed to get properties from request", e);
         }
         return props;
     }

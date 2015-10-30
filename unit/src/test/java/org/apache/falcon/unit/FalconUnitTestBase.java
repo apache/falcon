@@ -174,7 +174,7 @@ public class FalconUnitTestBase {
             throw new FalconException("Process not found " + processName);
         }
         String workflowPath = processEntity.getWorkflow().getPath();
-        fs.copyFromLocalFile(new Path(localWfPath), new Path(workflowPath));
+        fs.copyFromLocalFile(new Path(localWfPath), new Path(workflowPath, "workflow.xml"));
         return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster,
                 skipDryRun, properties);
     }
@@ -332,12 +332,13 @@ public class FalconUnitTestBase {
         }
     }
 
-    protected long waitForStatus(final String entityType, final String entityName, final String instanceTime) {
+    protected long waitForStatus(final String entityType, final String entityName, final String instanceTime,
+                                 final InstancesResult.WorkflowStatus instanceStatus) {
         return waitFor(WAIT_TIME, new Predicate() {
             public boolean evaluate() throws Exception {
                 InstancesResult.WorkflowStatus status = falconUnitClient.getInstanceStatus(entityType,
                         entityName, instanceTime);
-                return InstancesResult.WorkflowStatus.SUCCEEDED.equals(status);
+                return instanceStatus.equals(status);
             }
         });
     }
