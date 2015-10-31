@@ -49,6 +49,8 @@ Branch : 0.8 (Proposed Release version: 0.8)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1564 Provide an option for users to disable system post-processing JMS notification (Pallavi Rao) 
+
     FALCON-1519 Suspend And Resume API's in Falcon Unit(Narayan Periwal via Pallavi Rao)
 
     FALCON-1524 Improve Lifecycle Retention validation checks(Ajay Yadava)

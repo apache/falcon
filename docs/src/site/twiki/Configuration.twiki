@@ -86,7 +86,6 @@ and change it to look as below
 export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
 </verbatim>
 
-
 ---+++Activemq
 
 * falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D
@@ -94,6 +93,11 @@ option in environment variable FALCON_OPTS:
    * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
    * falcon.embeddedmq.port=<port> - Port for embedded active mq, default 61616
    * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
+
+---+++Falcon System Notifications
+Some Falcon features such as late data handling, retries, metadata service, depend on JMS notifications sent when the Oozie workflow completes. These system notifications are sent as part of Falcon Post Processing action. Given that the post processing action is also a job, it is prone to failures and in case of failures, Falcon is blind to the status of the workflow. To alleviate this problem and make the notifications more reliable, you can enable Oozie's JMS notification feature and disable Falcon post-processing notification by making the following changes:
+   * In Falcon runtime.properties, set *.falcon.jms.notification.enabled to false. This will turn off JMS notification in post-processing.
+   * Copy notification related properties in oozie/conf/oozie-site.xml to oozie-site.xml of the Oozie installation.  Restart Oozie so changes get reflected.  
 
 ---+++Adding Extension Libraries
 

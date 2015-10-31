@@ -55,6 +55,7 @@ public class FalconPostProcessingTest {
     private String[] outputFeedNames = {"out-click-logs", "out-raw-logs"};
     private String[] outputFeedPaths = {"/out-click-logs/10/05/05/00/20", "/out-raw-logs/10/05/05/00/20"};
     private String userNotification = "true";
+    private String systemNotification = "true";
 
     @BeforeClass
     public void setup() throws Exception {
@@ -71,6 +72,7 @@ public class FalconPostProcessingTest {
             "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
             "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), userBrokerUrl,
             "-" + WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED, userNotification,
+            "-" + WorkflowExecutionArgs.SYSTEM_JMS_NOTIFICATION_ENABLED, systemNotification,
             "-" + WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
             "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), "process",
             "-" + WorkflowExecutionArgs.OPERATION.getName(), "GENERATE",
@@ -154,6 +156,38 @@ public class FalconPostProcessingTest {
 
         userNotification = "true";
         userBrokerUrl = ClusterHelper.NO_USER_BROKER_URL;
+        latch.await();
+        new FalconPostProcessing().run(this.args);
+        t.join();
+
+        if (error != null) {
+            throw error;
+        }
+    }
+
+    @Test
+    public void testSystemMessage() throws Exception {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    // falcon message [FALCON_TOPIC_NAME]
+                    consumer(BROKER_URL, "FALCON.>", false);
+                } catch (AssertionError e) {
+                    error = e;
+                } catch (JMSException ignore) {
+                    error = null;
+                }
+            }
+        };
+        t.start();
+
+        systemNotification = "false";
+        latch.await();
+        new FalconPostProcessing().run(this.args);
+        t.join();
+
+        systemNotification = "true";
         latch.await();
         new FalconPostProcessing().run(this.args);
         t.join();

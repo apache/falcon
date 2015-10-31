@@ -62,6 +62,8 @@
         <arg>${userBrokerUrl}</arg>
         <arg>-userJMSNotificationEnabled</arg>
         <arg>${userJMSNotificationEnabled}</arg>
+        <arg>-systemJMSNotificationEnabled</arg>
+        <arg>${systemJMSNotificationEnabled}</arg>
         <arg>-brokerTTL</arg>
         <arg>${brokerTTL}</arg>
         <arg>-feedNames</arg>

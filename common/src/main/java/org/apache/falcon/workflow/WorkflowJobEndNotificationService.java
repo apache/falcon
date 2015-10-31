@@ -214,7 +214,8 @@ public class WorkflowJobEndNotificationService implements FalconService {
                 engineNotifEnabled = WorkflowEngineFactory.getWorkflowEngine()
                         .isNotificationEnabled(context.getClusterName(), context.getWorkflowId());
             } catch (FalconException e) {
-                LOG.debug("Unable to determine if the notification is enabled on the wf engine. Assuming not.", e);
+                LOG.debug("Received error while checking if notification is enabled. "
+                        + "Hence, assuming notification is not enabled.");
             }
             // Ignore the message from post processing as there will be one more from Oozie.
             if (engineNotifEnabled) {
