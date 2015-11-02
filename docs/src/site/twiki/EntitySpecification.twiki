@@ -435,6 +435,10 @@ the existing one which is to delete all instances corresponding to instance-time
 "retention.policy.agebaseddelete.limit"
 
 Property "retention.policy.agebaseddelete.limit" is a mandatory property and must contain a valid duration e.g. "hours(1)"
+Retention frequency is not a mandatory parameter. If user doesn't specify the frequency in the retention stage then
+it doesn't fallback to old retention policy frequency. Its default value is set to 6 hours if feed frequency is less
+than 6 hours else its set to feed frequency as retention shouldn't be more frequent than data availability to avoid
+wastage of compute resources.
 
 In future, we will allow more customisation like customising how to choose instances to be deleted through this method.
 
