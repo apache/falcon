@@ -274,9 +274,13 @@ public final class FeedHelper {
         if (clusterSla != null) {
             return clusterSla;
         }
-
         final Sla feedSla = feed.getSla();
         return feedSla == null ? null : feedSla;
+    }
+
+    public static Sla getSLA(String clusterName, Feed feed) {
+        Cluster cluster = FeedHelper.getCluster(feed, clusterName);
+        return cluster != null ? getSLA(cluster, feed) : null;
     }
 
     protected static CatalogTable getTable(Cluster cluster, Feed feed) {

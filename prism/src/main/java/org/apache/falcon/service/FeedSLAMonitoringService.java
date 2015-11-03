@@ -47,9 +47,11 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -166,10 +168,11 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     public void onRemove(Entity entity) throws FalconException {
         if (entity.getEntityType() == EntityType.FEED) {
             Feed feed = (Feed) entity;
-            if (feed.getSla() != null) {
+            // currently sla service is enabled only for fileSystemStorage
+            if (feed.getLocations() != null) {
                 Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
                 for (Cluster cluster : feed.getClusters().getClusters()) {
-                    if (currentClusters.contains(cluster.getName())) {
+                    if (currentClusters.contains(cluster.getName()) && FeedHelper.getSLA(cluster, feed) != null) {
                         monitoredFeeds.remove(feed.getName());
                         pendingInstances.remove(new Pair<>(feed.getName(), cluster.getName()));
                     }
@@ -178,10 +181,41 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         }
     }
 
+    private boolean isSLAMonitoringEnabledInCurrentColo(Feed feed) {
+        if (feed.getLocations() != null) {
+            Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
+            for (Cluster cluster : feed.getClusters().getClusters()) {
+                if (currentClusters.contains(cluster.getName()) && FeedHelper.getSLA(cluster, feed) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
-        onRemove(oldEntity);
-        onAdd(newEntity);
+        if (newEntity.getEntityType() == EntityType.FEED) {
+            Feed oldFeed = (Feed) oldEntity;
+            Feed newFeed = (Feed) newEntity;
+            if (!isSLAMonitoringEnabledInCurrentColo(newFeed)) {
+                onRemove(oldFeed);
+            } else if (!isSLAMonitoringEnabledInCurrentColo(oldFeed)) {
+                onAdd(newFeed);
+            } else {
+                List<String> slaRemovedClusters = new ArrayList<>();
+                for (String oldCluster : EntityUtil.getClustersDefinedInColos(oldFeed)) {
+                    if (FeedHelper.getSLA(oldCluster, oldFeed) != null
+                        && FeedHelper.getSLA(oldCluster, newFeed) == null) {
+                        slaRemovedClusters.add(oldCluster);
+                    }
+                }
+
+                for (String clusterName : slaRemovedClusters) {
+                    pendingInstances.remove(new Pair<>(newFeed.getName(), clusterName));
+                }
+            }
+        }
     }
 
     @Override
