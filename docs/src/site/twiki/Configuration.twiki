@@ -99,6 +99,7 @@ Some Falcon features such as late data handling, retries, metadata service, depe
    * In Falcon runtime.properties, set *.falcon.jms.notification.enabled to false. This will turn off JMS notification in post-processing.
    * Copy notification related properties in oozie/conf/oozie-site.xml to oozie-site.xml of the Oozie installation.  Restart Oozie so changes get reflected.  
 
+*NOTE : If you disable Falcon post-processing JMS notification and not enable Oozie JMS notification, features such as failure retry, late data handling and metadata service will be disabled for all entities on the server.*
 ---+++Adding Extension Libraries
 
 Library extensions allows users to add custom libraries to entity lifecycles such as feed retention, feed replication
