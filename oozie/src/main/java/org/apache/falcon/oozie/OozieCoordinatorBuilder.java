@@ -50,9 +50,6 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
 
-    private static final String USER_JMS_NOTIFICATION_ENABLED = "userJMSNotificationEnabled";
-    private static final String SYSTEM_JMS_NOTIFICATION_ENABLED = "systemJMSNotificationEnabled";
-
     protected final LifeCycle lifecycle;
 
     public OozieCoordinatorBuilder(T entity, LifeCycle lifecycle) {
@@ -116,8 +113,8 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         props.put(OozieClient.EXTERNAL_ID,
             new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
-        props.put(USER_JMS_NOTIFICATION_ENABLED, "true");
-        props.put(SYSTEM_JMS_NOTIFICATION_ENABLED,
+        props.put(WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED.getName(), "true");
+        props.put(WorkflowExecutionArgs.SYSTEM_JMS_NOTIFICATION_ENABLED.getName(),
                 RuntimeProperties.get().getProperty("falcon.jms.notification.enabled", "true"));
 
         return props;

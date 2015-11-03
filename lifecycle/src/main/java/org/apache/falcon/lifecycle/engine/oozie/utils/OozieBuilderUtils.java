@@ -81,7 +81,6 @@ public final class OozieBuilderUtils {
     private static final String POSTPROCESS_TEMPLATE = "/action/post-process.xml";
 
     public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
-    private static final String USER_JMS_NOTIFICATION_ENABLED = "userJMSNotificationEnabled";
     public static final String MR_QUEUE_NAME = "queueName";
     public static final String MR_JOB_PRIORITY = "jobPriority";
     private static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
@@ -495,7 +494,9 @@ public final class OozieBuilderUtils {
         props.put(OozieClient.EXTERNAL_ID,
                 new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                         "${coord:nominalTime()}").getId());
-        props.put(USER_JMS_NOTIFICATION_ENABLED, "true");
+        props.put(WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED.getName(), "true");
+        props.put(WorkflowExecutionArgs.SYSTEM_JMS_NOTIFICATION_ENABLED.getName(),
+                RuntimeProperties.get().getProperty("falcon.jms.notification.enabled", "true"));
         //props in entity override the set props.
         props.putAll(EntityUtil.getEntityProperties(entity));
         return props;
