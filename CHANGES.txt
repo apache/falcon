@@ -81,6 +81,8 @@ Release version: 0.8
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1563 Old feed instances get deleted from SLA monitoring on feed update (Ajay Yadava)
+
     FALCON-1579 post-processing action fails with javax.servlet.jsp.el.ELException (Ajay Yadava via Pallavi Rao)
 
     FALCON-1560 Lifecycle does not allow feed with frequency greater than days(1) (Ajay Yadava)
