@@ -23,6 +23,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1578 post-processing action fails with javax.servlet.jsp.el.ELException(Venkat Ramachandran via Ajay Yadava)
+
     FALCON-1579 post-processing action fails with javax.servlet.jsp.el.ELException (Sowmya Ramesh via Pallavi Rao)
 
     FALCON-1553 Flaky test in SchedulerUtilTest (Balu Vellanki via Pallavi Rao)   

@@ -319,6 +319,7 @@ public final class OozieBuilderUtils {
         props.put(WorkflowExecutionArgs.ENTITY_NAME.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.ENTITY_TYPE.getName(), entity.getEntityType().name());
         props.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), cluster.getName());
+        props.put(WorkflowExecutionArgs.DATASOURCE_NAME.getName(), "NA");
         props.put("falconDataOperation", operation.name());
 
         props.put(WorkflowExecutionArgs.LOG_DIR.getName(),
