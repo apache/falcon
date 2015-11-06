@@ -1,0 +1,21 @@
+---+ HDFS DR Recipe
+---++ Overview
+Falcon supports HDFS DR recipe to replicate data from source cluster to destination cluster.
+
+---++ Usage
+---+++ Setup cluster definition.
+   <verbatim>
+    $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
+   </verbatim>
+
+---+++ Update recipes properties
+   Update recipe properties file in addons/recipes/hdfs-replication with required attributes for replicating
+   data from source cluster to destination cluster.
+
+---+++ Submit HDFS DR recipe
+   <verbatim>
+    $FALCON_HOME/bin/falcon recipe -name hdfs-replication -operation HDFS_REPLICATION
+   </verbatim>
+
+Recipe templates for HDFS DR is available in addons/recipes/hdfs-replication and copy it to
+recipe path (*falcon.recipe.path=<recipe directory path>*) by specifying in client.properties.

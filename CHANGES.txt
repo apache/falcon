@@ -57,6 +57,8 @@ Branch : 0.8 (Proposed Release version: 0.8)
     FALCON-1027 Falcon proxy user support(Sowmya Ramesh)
 
   IMPROVEMENTS
+    FALCON-1585 Documentation for HDFS and Hive DR(Peeyush Bishnoi via Sowmya Ramesh)
+
     FALCON-1574 Document behavior of lifecycle retention stage frequency behavior(Sowmya Ramesh via Ajay Yadava).
 
     FALCON-1564 Provide an option for users to disable system post-processing JMS notification (Pallavi Rao) 
