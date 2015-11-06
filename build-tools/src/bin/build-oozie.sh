@@ -28,6 +28,11 @@ echo "oozie version $OOZIE_VERSION"
 if [ -z "${MAVEN_HOME}" ]
 then
     export MVN_CMD=`which mvn`;
+    if [ -z "${MVN_CMD}" ]
+    then
+        echo "Maven is not installed.Please install and set MAVEN_HOME"
+        exit 1;
+    fi
 else
     export MVN_CMD=${MAVEN_HOME}/bin/mvn;
 fi
