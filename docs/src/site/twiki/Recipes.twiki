@@ -76,6 +76,10 @@ GraphDB for display on UI.
 
    * Sample recipes are published in addons/recipes
 
+---++ Types of recipes
+   * [[HDFSDR][HDFS Recipe]]
+   * [[HiveDR][HiveDR Recipe]]
+
 ---++ Packaging
 
    * There is no packaging for recipes at this time but will be added soon.
