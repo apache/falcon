@@ -350,11 +350,13 @@ public class FalconUnitTestBase {
     public InstancesResult.WorkflowStatus getRetentionStatus(String feedName, String cluster) throws FalconException,
             FalconCLIException {
         Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
-        Frequency.TimeUnit timeUnit = feedEntity.getFrequency().getTimeUnit();
+
+        Frequency feedFrequency = feedEntity.getFrequency();
+        Frequency defaultFrequency = new Frequency("hours(24)");
         long endTimeInMillis = System.currentTimeMillis() + 30000;
         String endTime = DateUtil.getDateFormatFromTime(endTimeInMillis);
         long startTimeInMillis;
-        if (timeUnit == Frequency.TimeUnit.hours || timeUnit == Frequency.TimeUnit.minutes) {
+        if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
             startTimeInMillis = endTimeInMillis - (6 * DateUtil.HOUR_IN_MILLIS);
         } else {
             startTimeInMillis = endTimeInMillis - (24 * DateUtil.HOUR_IN_MILLIS);

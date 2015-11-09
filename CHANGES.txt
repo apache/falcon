@@ -27,6 +27,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1569 Bug in setting the frequency of Feed retention coordinator(Sowmya Ramesh)
+
     FALCON-1578 post-processing action fails with javax.servlet.jsp.el.ELException(Venkat Ramachandran via Ajay Yadava)
 
     FALCON-1579 post-processing action fails with javax.servlet.jsp.el.ELException (Sowmya Ramesh via Pallavi Rao)

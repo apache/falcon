@@ -29,6 +29,7 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
@@ -184,6 +185,44 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("queueName"), "retention");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
+    }
+
+    @Test
+    public void testRetentionFrequency() throws Exception {
+        feed.setFrequency(new Frequency("minutes(36000)"));
+        buildCoordAndValidateFrequency("${coord:days(1)}");
+
+        feed.setFrequency(new Frequency("hours(2)"));
+        buildCoordAndValidateFrequency("${coord:hours(6)}");
+
+        feed.setFrequency(new Frequency("minutes(50)"));
+        buildCoordAndValidateFrequency("${coord:hours(6)}");
+
+        feed.setFrequency(new Frequency("days(1)"));
+        buildCoordAndValidateFrequency("${coord:days(1)}");
+    }
+
+    private void buildCoordAndValidateFrequency(final String expectedFrequency) throws Exception {
+        // retention on src cluster
+        OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(feed, Tag.RETENTION);
+        List<Properties> srcCoords = builder.buildCoords(
+                srcCluster, new Path("/projects/falcon/"));
+        COORDINATORAPP srcCoord = getCoordinator(srcMiniDFS, srcCoords.get(0).getProperty(OozieEntityBuilder
+                .ENTITY_PATH));
+
+        // Assert src coord frequency
+        Assert.assertEquals(srcCoord.getFrequency(), expectedFrequency);
+
+        // retention on target cluster
+        OozieEntityBuilder entityBuilder = OozieEntityBuilder.get(feed);
+        Path bundlePath = new Path("/projects/falcon/");
+        entityBuilder.build(trgCluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
+        List<COORDINATOR> coords = bundle.getCoordinator();
+
+        COORDINATORAPP tgtCoord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
+        // Assert target coord frequency
+        Assert.assertEquals(tgtCoord.getFrequency(), expectedFrequency);
     }
 
     @Test

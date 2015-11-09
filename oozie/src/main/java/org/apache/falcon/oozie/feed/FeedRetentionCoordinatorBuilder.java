@@ -24,7 +24,7 @@ import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -34,6 +34,7 @@ import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Arrays;
@@ -67,8 +68,9 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
             coord.setStart(SchemaHelper.formatDateUTC(new Date()));
         }
         coord.setTimezone(entity.getTimezone().getID());
-        TimeUnit timeUnit = entity.getFrequency().getTimeUnit();
-        if (timeUnit == TimeUnit.hours || timeUnit == TimeUnit.minutes) {
+        Frequency entityFrequency = entity.getFrequency();
+        Frequency defaultFrequency = new Frequency("hours(24)");
+        if (DateUtil.getFrequencyInMillis(entityFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
             coord.setFrequency("${coord:hours(6)}");
         } else {
             coord.setFrequency("${coord:days(1)}");
