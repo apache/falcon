@@ -34,6 +34,7 @@ import org.apache.falcon.execution.NotificationHandler;
 import org.apache.falcon.notification.service.FalconNotificationService;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.Event;
+import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.JobScheduledEvent;
 import org.apache.falcon.notification.service.request.JobCompletionNotificationRequest;
 import org.apache.falcon.notification.service.request.JobScheduleNotificationRequest;
@@ -179,7 +180,7 @@ public class SchedulerService implements FalconNotificationService, Notification
     @Override
     public void onEvent(Event event) throws FalconException {
         // Interested only in job completion events.
-        if (event.getSource() == NotificationServicesRegistry.SERVICE.JOB_COMPLETION) {
+        if (event.getType() == EventType.JOB_COMPLETED) {
             try {
                 // Check if the instance is awaited.
                 ID id = event.getTarget();

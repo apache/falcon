@@ -20,9 +20,9 @@ package org.apache.falcon.predicate;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.execution.NotificationHandler;
-import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.DataEvent;
 import org.apache.falcon.notification.service.event.Event;
+import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.state.ID;
 
@@ -173,7 +173,7 @@ public class Predicate implements Serializable {
      * @throws FalconException
      */
     public static Predicate getPredicate(Event event) throws FalconException {
-        if (event.getSource() == NotificationServicesRegistry.SERVICE.DATA) {
+        if (event.getType() == EventType.DATA_AVAILABLE) {
             DataEvent dataEvent = (DataEvent) event;
             if (dataEvent.getDataLocation() != null && dataEvent.getDataType() != null) {
                 Location loc = new Location();
@@ -183,7 +183,7 @@ public class Predicate implements Serializable {
             } else {
                 throw new FalconException("Event does not have enough data to create a predicate");
             }
-        } else if (event.getSource() == NotificationServicesRegistry.SERVICE.TIME) {
+        } else if (event.getType() == EventType.TIME_ELAPSED) {
             TimeElapsedEvent timeEvent = (TimeElapsedEvent) event;
             if (timeEvent.getStartTime() != null && timeEvent.getEndTime() != null) {
                 long instanceTime = (timeEvent.getInstanceTime() == null)? -1 : timeEvent.getInstanceTime().getMillis();
@@ -194,7 +194,7 @@ public class Predicate implements Serializable {
             }
 
         } else {
-            throw new FalconException("Unhandled event type " + event.getSource());
+            throw new FalconException("Unhandled event type " + event.getType());
         }
     }
 

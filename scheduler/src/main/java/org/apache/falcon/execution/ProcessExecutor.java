@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.exception.InvalidStateTransitionException;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.Event;
+import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.JobCompletedEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
@@ -271,7 +272,7 @@ public class ProcessExecutor extends EntityExecutor {
 
     private ProcessExecutionInstance buildInstance(Event event) throws FalconException {
         // If a time triggered instance, use nominal time from event
-        if (event.getSource() == NotificationServicesRegistry.SERVICE.TIME) {
+        if (event.getType() == EventType.TIME_ELAPSED) {
             TimeElapsedEvent timeEvent = (TimeElapsedEvent) event;
             LOG.debug("Creating a new process instance for nominal time {}.", timeEvent.getInstanceTime());
             return new ProcessExecutionInstance(process, timeEvent.getInstanceTime(), cluster);
@@ -299,7 +300,7 @@ public class ProcessExecutor extends EntityExecutor {
                 }
             }
         } catch (Exception e) {
-            throw new FalconException("Unable to handle event with source : " + event.getSource() + " with target:"
+            throw new FalconException("Unable to handle event of type : " + event.getType() + " with target:"
                     + event.getTarget(), e);
         }
     }
@@ -307,14 +308,14 @@ public class ProcessExecutor extends EntityExecutor {
     private void handleEvent(Event event) throws FalconException {
         ProcessExecutionInstance instance;
         try {
-            switch (event.getSource()) {
+            switch (event.getType()) {
             // TODO : Handle cases where scheduling fails.
-            case JOB_SCHEDULE:
+            case JOB_SCHEDULED:
                 instance = instances.get(event.getTarget());
                 instance.onEvent(event);
                 stateService.handleStateChange(instance, InstanceState.EVENT.SCHEDULE, this);
                 break;
-            case JOB_COMPLETION:
+            case JOB_COMPLETED:
                 instance = instances.get(event.getTarget());
                 instance.onEvent(event);
                 switch (((JobCompletedEvent) event).getStatus()) {
@@ -395,8 +396,8 @@ public class ProcessExecutor extends EntityExecutor {
     // Or, if it is job run or job complete notifications, so it can handle the instance's state transition.
     private boolean shouldHandleEvent(Event event) {
         return event.getTarget().equals(id)
-                || event.getSource() == NotificationServicesRegistry.SERVICE.JOB_COMPLETION
-                || event.getSource() == NotificationServicesRegistry.SERVICE.JOB_SCHEDULE;
+                || event.getType() == EventType.JOB_COMPLETED
+                || event.getType() == EventType.JOB_SCHEDULED;
     }
 
     @Override

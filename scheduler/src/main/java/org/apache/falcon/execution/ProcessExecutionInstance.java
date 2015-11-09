@@ -135,16 +135,16 @@ public class ProcessExecutionInstance extends ExecutionInstance {
 
     @Override
     public void onEvent(Event event) throws FalconException {
-        switch (event.getSource()) {
-        case JOB_SCHEDULE:
+        switch (event.getType()) {
+        case JOB_SCHEDULED:
             JobScheduledEvent jobScheduleEvent = (JobScheduledEvent) event;
             setExternalID(jobScheduleEvent.getExternalID());
             setActualStart(jobScheduleEvent.getStartTime());
             break;
-        case JOB_COMPLETION:
+        case JOB_COMPLETED:
             setActualEnd(((JobCompletedEvent)event).getEndTime());
             break;
-        case DATA:
+        case DATA_AVAILABLE:
             // Data has not become available and the wait time has passed
             if (((DataEvent) event).getStatus() == DataEvent.STATUS.UNAVAILABLE) {
                 if (getTimeOutInMillis() <= (System.currentTimeMillis() - getCreationTime().getMillis())) {
