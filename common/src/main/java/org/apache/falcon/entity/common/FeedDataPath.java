@@ -30,10 +30,12 @@ public final class FeedDataPath {
     /**
      * Standard variables for feed time components.
      */
-    public static enum VARS {
-        YEAR("([0-9]{4})", Calendar.YEAR, 4), MONTH("(0[1-9]|1[0-2])", Calendar.MONTH, 2),
+    public enum VARS {
+        YEAR("([0-9]{4})", Calendar.YEAR, 4),
+        MONTH("(0[1-9]|1[0-2])", Calendar.MONTH, 2),
         DAY("(0[1-9]|1[0-9]|2[0-9]|3[0-1])", Calendar.DAY_OF_MONTH, 2),
-        HOUR("([0-1][0-9]|2[0-4])", Calendar.HOUR_OF_DAY, 2), MINUTE("([0-5][0-9]|60)", Calendar.MINUTE, 2);
+        HOUR("([0-1][0-9]|2[0-4])", Calendar.HOUR_OF_DAY, 2),
+        MINUTE("([0-5][0-9]|60)", Calendar.MINUTE, 2);
 
         private final Pattern pattern;
         private final String valuePattern;

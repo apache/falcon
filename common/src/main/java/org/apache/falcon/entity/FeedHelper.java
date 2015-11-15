@@ -475,8 +475,16 @@ public final class FeedHelper {
         //Reset other fields
         for (FeedDataPath.VARS var : FeedDataPath.VARS.values()) {
             if (!matchedVars.contains(var)) {
-                cal.set(var.getCalendarField(), 0);
+                switch (var.getCalendarField()) {
+                case Calendar.DAY_OF_MONTH:
+                    cal.set(var.getCalendarField(), 1);
+                    break;
+                default:
+                    cal.set(var.getCalendarField(), 0);
+                }
             }
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
         }
         return cal.getTime();
     }

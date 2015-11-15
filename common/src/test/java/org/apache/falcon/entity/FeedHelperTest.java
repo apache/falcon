@@ -30,23 +30,22 @@ import org.apache.falcon.entity.v0.cluster.Properties;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.Arguments;
-import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.Extract;
+import org.apache.falcon.entity.v0.feed.ExtractMethod;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.FieldsType;
 import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
+import org.apache.falcon.entity.v0.feed.FieldsType;
 import org.apache.falcon.entity.v0.feed.Import;
 import org.apache.falcon.entity.v0.feed.Lifecycle;
 import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.MergeType;
-import org.apache.falcon.entity.v0.feed.Source;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
+import org.apache.falcon.entity.v0.feed.Source;
 import org.apache.falcon.entity.v0.feed.Validity;
-
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Output;
@@ -290,21 +289,33 @@ public class FeedHelperTest extends AbstractTestBase {
 
     @DataProvider(name = "fsPathsforDate")
     public Object[][] createPathsForGetDate() {
+        final TimeZone utc = TimeZone.getTimeZone("UTC");
+        final TimeZone pacificTime = TimeZone.getTimeZone("america/los_angeles");
+        final TimeZone ist = TimeZone.getTimeZone("IST");
+
         return new Object[][] {
-            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}", "/data/2015/01/01/00/30", "2015-01-01T00:30Z"},
-            {"/data/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}", "/data/2015-01-01-01-00", "2015-01-01T01:00Z"},
-            {"/data/${YEAR}/${MONTH}/${DAY}", "/data/2015/01/01", "2015-01-01T00:00Z"},
-            {"/data/${YEAR}/${MONTH}/${DAY}/data", "/data/2015/01/01/data", "2015-01-01T00:00Z"},
-            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}", "/data/2015-01-01/00/30", null},
-            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/data", "/data/2015-01-01/00/30", null},
-            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/data", "/data/2015/05/25/00/data/{p1}/p2", "2015-05-25T00:00Z"},
-            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/data", "/data/2015/05/25/00/00/{p1}/p2", null},
+            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}", "/data/2015/01/01/00/30", utc, "2015-01-01T00:30Z"},
+            {"/data/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}", "/data/2015-01-01-01-00", utc, "2015-01-01T01:00Z"},
+            {"/data/${YEAR}/${MONTH}/${DAY}", "/data/2015/01/01", utc, "2015-01-01T00:00Z"},
+            {"/data/${YEAR}/${MONTH}/${DAY}/data", "/data/2015/01/01/data", utc, "2015-01-01T00:00Z"},
+            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}", "/data/2015-01-01/00/30", utc, null},
+            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/data", "/data/2015-01-01/00/30", utc, null},
+            {"/d/${YEAR}/${MONTH}/${DAY}/${HOUR}/data", "/d/2015/05/25/00/data/{p1}/p2", utc, "2015-05-25T00:00Z"},
+            {"/data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/data", "/data/2015/05/25/00/00/{p1}/p2", utc, null},
+            {"/d/${YEAR}/${MONTH}/M", "/d/2015/11/M", utc, "2015-11-01T00:00Z"},
+            {"/d/${YEAR}/${MONTH}/${DAY}/M", "/d/2015/11/02/M", utc, "2015-11-02T00:00Z"},
+            {"/d/${YEAR}/${MONTH}/${DAY}/${HOUR}/M", "/d/2015/11/01/04/M", utc, "2015-11-01T04:00Z"},
+            {"/d/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/M", "/d/2015/11/01/04/15/M", utc, "2015-11-01T04:15Z"},
+            {"/d/${YEAR}/${MONTH}/M", "/d/2015/11/M", pacificTime, "2015-11-01T07:00Z"},
+            {"/d/${YEAR}/${MONTH}/${DAY}/M", "/d/2015/11/02/M", pacificTime, "2015-11-02T08:00Z"},
+            {"/d/${YEAR}/${MONTH}/${DAY}/${HOUR}/M", "/d/2015/11/01/04/M", pacificTime, "2015-11-01T12:00Z"},
+            {"/d/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/M", "/d/2015/11/01/04/15/M", ist, "2015-10-31T22:45Z"},
         };
     }
 
     @Test(dataProvider = "fsPathsforDate")
-    public void testGetDateFromPath(String template, String path, String expectedDate) throws Exception {
-        Date date = FeedHelper.getDate(template, new Path(path), UTC);
+    public void testGetDateFromPath(String template, String path, TimeZone tz, String expectedDate) throws Exception {
+        Date date = FeedHelper.getDate(template, new Path(path), tz);
         Assert.assertEquals(SchemaHelper.formatDateUTC(date), expectedDate);
     }
 
