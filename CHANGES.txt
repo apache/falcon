@@ -29,6 +29,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1603 FeedHelperTest::testGetDateFromPath fails in some environments(Balu Vellanki via Ajay Yadava)
+
     FALCON-1372 Retention does not work in corner cases(Balu Vellanki via Ajay Yadava)
 
     FALCON-1569 Bug in setting the frequency of Feed retention coordinator(Sowmya Ramesh)

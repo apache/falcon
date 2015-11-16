@@ -290,7 +290,7 @@ public class FeedHelperTest extends AbstractTestBase {
     @DataProvider(name = "fsPathsforDate")
     public Object[][] createPathsForGetDate() {
         final TimeZone utc = TimeZone.getTimeZone("UTC");
-        final TimeZone pacificTime = TimeZone.getTimeZone("america/los_angeles");
+        final TimeZone pacificTime = TimeZone.getTimeZone("America/Los_Angeles");
         final TimeZone ist = TimeZone.getTimeZone("IST");
 
         return new Object[][] {
