@@ -30,6 +30,7 @@ import org.apache.falcon.hive.util.EventSourcerUtils;
 import org.apache.falcon.hive.util.FileUtils;
 import org.apache.falcon.hive.util.HiveDRStatusStore;
 import org.apache.falcon.hive.util.HiveDRUtils;
+import org.apache.falcon.hive.util.HiveMetastoreUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -43,6 +44,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hive.hcatalog.api.HCatClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -257,8 +259,11 @@ public class HiveDRTool extends Configured implements Tool {
                 +inputOptions.getJobName()+".id";
         Map<String, Long> lastEventsIdMap = getLastDBTableEvents(new Path(lastEventsIdFile));
         try {
-            defaultSourcer = new MetaStoreEventSourcer(inputOptions.getSourceMetastoreUri(),
-                    inputOptions.getSourceMetastoreKerberosPrincipal(), inputOptions.getSourceHive2KerberosPrincipal(),
+            HCatClient sourceMetastoreClient = HiveMetastoreUtils.initializeHiveMetaStoreClient(
+                    inputOptions.getSourceMetastoreUri(),
+                    inputOptions.getSourceMetastoreKerberosPrincipal(),
+                    inputOptions.getSourceHive2KerberosPrincipal());
+            defaultSourcer = new MetaStoreEventSourcer(sourceMetastoreClient,
                     new DefaultPartitioner(drStore, eventSoucerUtil), eventSoucerUtil, lastEventsIdMap);
             inputFilename = defaultSourcer.sourceEvents(inputOptions);
         } finally {

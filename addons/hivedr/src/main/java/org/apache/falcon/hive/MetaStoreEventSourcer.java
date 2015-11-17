@@ -21,7 +21,6 @@ package org.apache.falcon.hive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.hive.util.EventSourcerUtils;
 import org.apache.falcon.hive.util.HiveDRUtils;
-import org.apache.falcon.hive.util.HiveMetastoreUtils;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.api.repl.ReplicationTask;
 import org.apache.hive.hcatalog.api.repl.StagingDirectoryProvider;
@@ -49,14 +48,11 @@ public class MetaStoreEventSourcer implements EventSourcer {
     private long lastCounter;
 
     /* TODO handle cases when no events. files will be empty and lists will be empty */
-    public MetaStoreEventSourcer(String sourceMetastoreUri, String sourceMetastoreKerberosPrincipal,
-                                 String sourceHive2KerberosPrincipal, Partitioner partitioner,
-                                 EventSourcerUtils eventSourcerUtils,  Map<String, Long> lastEventsIdMap)
-        throws Exception {
-
-        sourceMetastoreClient = HiveMetastoreUtils.initializeHiveMetaStoreClient(sourceMetastoreUri,
-                sourceMetastoreKerberosPrincipal, sourceHive2KerberosPrincipal);
-        eventMetadata = new ReplicationEventMetadata();
+    public MetaStoreEventSourcer(HCatClient sourceMetastoreClient, Partitioner partitioner,
+                                 EventSourcerUtils eventSourcerUtils,
+                                 Map<String, Long> lastEventsIdMap) throws Exception {
+        this.sourceMetastoreClient = sourceMetastoreClient;
+        this.eventMetadata = new ReplicationEventMetadata();
         this.partitioner = partitioner;
         this.eventSourcerUtils = eventSourcerUtils;
         this.lastEventsIdMap = lastEventsIdMap;
@@ -149,7 +145,7 @@ public class MetaStoreEventSourcer implements EventSourcer {
     }
 
 
-    private void processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
+    protected void processTableReplicationEvents(Iterator<ReplicationTask> taskIter, String dbName,
                                                String tableName, String srcStagingDirProvider,
                                                String dstStagingDirProvider) throws Exception {
         String srcFilename = null;
@@ -194,6 +190,10 @@ public class MetaStoreEventSourcer implements EventSourcer {
         eventSourcerUtils.closeOutputStream(srcOutputStream);
         eventSourcerUtils.closeOutputStream(tgtOutputStream);
         EventSourcerUtils.updateEventMetadata(eventMetadata, dbName, tableName, srcFilename, tgtFilename);
+    }
+
+    public String persistToMetaFile(String jobName) throws Exception {
+        return eventSourcerUtils.persistToMetaFile(eventMetadata, jobName);
     }
 
     public void cleanUp() throws Exception {
