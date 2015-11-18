@@ -60,6 +60,7 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -106,6 +107,28 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     }
 
     public abstract Properties build(Cluster cluster, Path buildPath) throws FalconException;
+
+    public Properties build(Cluster cluster, Path buildPath, Map<String, String> properties) throws FalconException {
+        Properties builderProperties = build(cluster, buildPath);
+        if (properties == null || properties.isEmpty()) {
+            return builderProperties;
+        }
+
+        Properties propertiesCopy = new Properties();
+        propertiesCopy.putAll(properties);
+
+        // Builder properties shadow any user-defined property
+        for(String propertyName : builderProperties.stringPropertyNames()) {
+            String propertyValue = builderProperties.getProperty(propertyName);
+            if (propertiesCopy.contains(propertyName)) {
+                LOG.warn("User provided property {} is already declared in the entity and will be ignored.",
+                    propertyName);
+            }
+            propertiesCopy.put(propertyName, propertyValue);
+        }
+
+        return propertiesCopy;
+    }
 
     protected String getStoragePath(Path path) {
         if (path != null) {
