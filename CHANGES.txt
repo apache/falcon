@@ -35,6 +35,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1605 Instance API is not working as expected in case of Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1603 FeedHelperTest::testGetDateFromPath fails in some environments(Balu Vellanki via Ajay Yadava)
 
     FALCON-1372 Retention does not work in corner cases(Balu Vellanki via Ajay Yadava)
