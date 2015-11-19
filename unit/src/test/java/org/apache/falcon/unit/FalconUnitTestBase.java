@@ -94,9 +94,9 @@ public class FalconUnitTestBase {
     private static final String DEFAULT_COLO = "local";
     private static final String CLUSTER = "cluster";
     private static final String COLO = "colo";
-    private static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
-    private static final String STAGING_PATH = "/projects/falcon/staging";
-    private static final String WORKING_PATH = "/projects/falcon/working";
+    private static final String CLUSTER_TEMPLATE = "/local-cluster-template.xml";
+    protected static final String STAGING_PATH = "/projects/falcon/staging";
+    protected static final String WORKING_PATH = "/projects/falcon/working";
 
     public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_.]*##");
     protected static final int WAIT_TIME = 90000;

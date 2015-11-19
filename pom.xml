@@ -1348,6 +1348,10 @@
                     <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=
                         -Dhadoop.tmp.dir=${project.build.directory}/tmp-hadoop-${user.name}</argLine>
                     <excludedGroups>${excluded.test.groups}</excludedGroups>
+                    <systemPropertyVariables>
+                        <project.version>${project.version}</project.version>
+                        <project.build.directory>${project.build.directory}</project.build.directory>
+                    </systemPropertyVariables>
                 </configuration>
                 <executions>
                     <execution>
