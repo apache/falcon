@@ -109,7 +109,7 @@ public class AlarmService implements FalconNotificationService {
             }
         }
         // All past events have been scheduled. Nothing to schedule in the future.
-        if (request.getEndTime().isBefore(currentTime)) {
+        if (request.getEndTime().isBefore(nextStartTime)) {
             return;
         }
         LOG.debug("Scheduling to trigger events from {} to {} with frequency {}", nextStartTime, request.getEndTime(),
