@@ -1,0 +1,10 @@
+---+++ Relations
+
+[[CommonCLI][Common CLI Options]]
+
+List all dimensions related to specified Dimension identified by dimension-type and dimension-name.
+Usage:
+$FALCON_HOME/bin/falcon metadata -relations -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines] -name <<Dimension Name>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -relations -type process_entity -name sample-process

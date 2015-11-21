@@ -1,0 +1,20 @@
+---+++Summary
+
+[[CommonCLI][Common CLI Options]]
+
+Summary option via CLI can be used to get the consolidated status of the instances between the specified time period.
+Each status along with the corresponding instance count are listed for each of the applicable colos.
+The unscheduled instances between the specified time period are included as UNSCHEDULED in the output to provide more clarity.
+
+Example : Suppose a process has 3 instance, one has succeeded,one is in running state and other one is waiting, the expected output is:
+
+{"status":"SUCCEEDED","message":"getSummary is successful", instancesSummary:[{"cluster": <<name>> "map":[{"SUCCEEDED":"1"}, {"WAITING":"1"}, {"RUNNING":"1"}]}]}
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -summary
+
+Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" -colo <<colo>>
+-filterBy <<field1:value1,field2:value2>> -lifecycle <<lifecycles>>
+-orderBy field -sortOrder <<sortOrder>>
+
+<a href="../Restapi/InstanceSummary.html">Optional params described here.</a>

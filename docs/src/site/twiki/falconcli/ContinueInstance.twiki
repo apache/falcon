@@ -1,0 +1,8 @@
+---+++Continue
+
+[[CommonCLI][Common CLI Options]]
+
+Continue option is used to continue the failed workflow instance. This option is valid only for process instances in terminal state, i.e. KILLED or FAILED.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -continue -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"

@@ -1,0 +1,8 @@
+---+++Suspend
+
+[[CommonCLI][Common CLI Options]]
+
+Suspend is used to suspend a instance or instances  for the given process. This option pauses the parent workflow at the state, which it was in at the time of execution of this command.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -suspend -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"

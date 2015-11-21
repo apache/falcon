@@ -1,0 +1,13 @@
+---+++Schedule
+
+[[CommonCLI][Common CLI Options]]
+
+Once submitted, an entity can be scheduled using schedule option. Process and feed can only be scheduled.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [process|feed] -name <<name>> -schedule
+
+Optional Arg : -skipDryRun -doAs <username>
+-properties <<key1:val1,...,keyN:valN>>
+
+

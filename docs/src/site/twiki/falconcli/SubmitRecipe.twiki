@@ -1,0 +1,17 @@
+---+++ Submit Recipe
+
+[[CommonCLI][Common CLI Options]]
+
+Submit the specified recipe.
+
+Usage:
+$FALCON_HOME/bin/falcon recipe -name <name>
+Name of the recipe. User should have defined <name>-template.xml and <name>.properties in the path specified by falcon.recipe.path in client.properties file. falcon.home path is used if its not specified in client.properties file.
+If its not specified in client.properties file and also if files cannot be found at falcon.home, Falcon CLI will fail.
+
+Optional Args : -tool <recipeToolClassName>
+Falcon provides a base tool that recipes can override. If this option is not specified the default Recipe Tool
+RecipeTool defined is used. This option is required if user defines his own recipe tool class.
+
+Example:
+$FALCON_HOME/bin/falcon recipe -name hdfs-replication

@@ -1,0 +1,33 @@
+---+++Dependency
+Display the dependent instances which are dependent on the given instance. For example for a given process instance it will
+list all the input feed instances(if any) and the output feed instances(if any).
+
+An example use case of this command is as follows:
+Suppose you find out that the data in a feed instance was incorrect and you need to figure out which all process instances
+consumed this feed instance so that you can reprocess them after correcting the feed instance. You can give the feed instance
+and it will tell you which process instance produced this feed and which all process instances consumed this feed.
+
+NOTE:
+1. instanceTime must be a valid instanceTime e.g. instanceTime of a feed should be in it's validity range on applicable clusters,
+ and it should be in the range of instances produced by the producer process(if any)
+
+2. For processes with inputs like latest() which vary with time the results are not guaranteed to be correct.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -instanceTime "yyyy-MM-dd'T'HH:mm'Z'"
+
+For example:
+$FALCON_HOME/bin/falcon instance -dependency -type feed -name out -instanceTime 2014-12-15T00:00Z
+name: producer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:00Z, tags: Output
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:03Z, tags: Input
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:04Z, tags: Input
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:02Z, tags: Input
+name: consumer, type: PROCESS, cluster: local, instanceTime: 2014-12-15T00:05Z, tags: Input
+
+
+Response: default/Success!
+
+Request Id: default/1125035965@qtp-503156953-7 - 447be0ad-1d38-4dce-b438-20f3de69b172
+
+
+<a href="../Restapi/InstanceDependencies.html">Optional params described here.</a>
