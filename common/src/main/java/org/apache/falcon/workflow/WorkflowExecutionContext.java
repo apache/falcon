@@ -134,6 +134,18 @@ public class WorkflowExecutionContext {
         return Status.FAILED.name().equals(getValue(WorkflowExecutionArgs.STATUS));
     }
 
+    public boolean isWorkflowKilledManually(){
+        try {
+            return WorkflowEngineFactory.getWorkflowEngine().
+                    isWorkflowKilledByUser(
+                            getValue(WorkflowExecutionArgs.CLUSTER_NAME),
+                            getValue(WorkflowExecutionArgs.WORKFLOW_ID));
+        } catch (Exception e) {
+            LOG.error("Got Error in getting error codes from actions: " + e);
+        }
+        return false;
+    }
+
     public boolean hasWorkflowTimedOut() {
         return Status.TIMEDOUT.name().equals(getValue(WorkflowExecutionArgs.STATUS));
     }

@@ -33,6 +33,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1597 Falcon should not retry in case of an instance being manual kill from user (Sandeep Samudrala via Pallavi Rao)
+
     FALCON-1603 FeedHelperTest::testGetDateFromPath fails in some environments(Balu Vellanki via Ajay Yadava)
 
     FALCON-1372 Retention does not work in corner cases(Balu Vellanki via Ajay Yadava)
