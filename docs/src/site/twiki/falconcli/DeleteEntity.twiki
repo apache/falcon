@@ -1,0 +1,8 @@
+---+++Delete
+
+[[CommonCLI][Common CLI Options]]
+
+Delete removes the submitted entity definition for the specified entity and put it into the archive.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [cluster|datasource|feed|process] -name <<name>> -delete

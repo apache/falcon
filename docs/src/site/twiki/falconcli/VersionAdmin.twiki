@@ -1,0 +1,7 @@
+---+++Version
+
+[[CommonCLI][Common CLI Options]]
+
+Version returns the current version of Falcon installed.
+Usage:
+$FALCON_HOME/bin/falcon admin -version

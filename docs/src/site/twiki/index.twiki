@@ -28,7 +28,7 @@ to Falcon architecture and documentation in [[FalconDocumentation][Documentation
 describes steps to on-board a pipeline to Falcon. It also gives a sample pipeline for reference.
 [[EntitySpecification][Entity Specification]] gives complete details of all Falcon entities.
 
-[[FalconCLI][Falcon CLI]] implements [[restapi/ResourceList][Falcon's RESTful API]] and
+[[falconcli/FalconCLI][Falcon CLI]] implements [[restapi/ResourceList][Falcon's RESTful API]] and
 describes various options for the command line utility provided by Falcon.
 
 Falcon provides OOTB [[HiveIntegration][lifecycle management for Tables in Hive (HCatalog)]]

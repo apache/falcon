@@ -12,15 +12,81 @@ Schedule an entity.
    * :entity-name is name of the entity.
    * skipDryRun : Optional query param, Falcon skips oozie dryrun when value is set to true.
    * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+   * properties <key1:val1,...,keyN:valN> : Optional query param, supplies a set of key-value pairs that will be available to the entity in the coordinator configuration. These values will not override properties with the same name predefined in the entity specification. For example, to change the scheduler used for scheduling the entity you would set the property _falcon.scheduler_ in the properties parameter to _native_ to use the Falcon Scheduler or to _oozie_ to use the Oozie Scheduler.
 
 
 ---++ Results
 Result of the schedule command.
 
 ---++ Examples
+---+++ Oozie Workflow
+<verbatim>
+<workflow-app xmlns="uri:oozie:workflow:0.4" name="aggregator-wf">
+  <start to="aggregator" />
+  <action name="aggregator">
+    <java>
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <main-class>com.company.hadoop.AggregatorJob</main-class>
+      <java-opts>-Dframework.instrumentation.host=${instrumentationServer}</java-opts>
+      <arg>--input.path=${inputBasePath}</arg>
+      <arg>--output.path=${outputBasePath}</arg>
+    </java>
+    <ok to="end" />
+    <error to="fail" />
+  </action>
+  <kill name="fail">
+    <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+</workflow-app>
+</verbatim>
+---+++ Submitted Process
+<verbatim>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
+<process xmlns="uri:falcon:process:0.1" name="SampleProcess" >
+    <clusters>
+      <cluster name="primary-cluster">
+        <validity start="2012-04-03T06:00Z" end="2022-12-30T00:00Z" />
+      </cluster>
+    </clusters>
+
+    <parallel>1</parallel>
+    <order>FIFO</order>
+    <frequency>hours(1)</frequency>
+
+    <inputs>
+        <input name="input" feed="SampleInput" start="yesterday(0,0)" end="today(-1,0)" />
+    </inputs>
+
+    <outputs>
+        <output name="output" feed="SampleOutput" instance="yesterday(0,0)" />
+    </outputs>
+
+    <properties>
+        <property name="queueName" value="default" />
+        <property name="ssh.host" value="localhost" />
+        <property name="fileTimestamp" value="${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd')}" />
+        <property name="instrumentationServer" value="${coord:conf('instrumentation.host')}" />
+    </properties>
+
+    <workflow engine="oozie" path="/examples/apps/aggregator" />
+    <retry policy="exp-backoff" delay="minutes(5)" attempts="3" />
+    
+    <late-process policy="exp-backoff" delay="hours(1)">
+        <late-input input="input" workflow-path="/projects/bootcamp/workflow/lateinput" />
+    </late-process>
+</process>
+</verbatim>
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/entities/schedule/process/SampleProcess?skipDryRun=false&doAs=joe
+POST http://localhost:15000/api/entities/schedule/process/SampleProcess?skipDryRun=false&doAs=joe&properties=instrumentation.host:intrumentation.localdomain
 </verbatim>
 ---+++ Result
 <verbatim>
@@ -30,3 +96,5 @@ POST http://localhost:15000/api/entities/schedule/process/SampleProcess?skipDryR
     "status": "SUCCEEDED"
 }
 </verbatim>
+---+++ Notes
+In this example, the value of _framework.instrumentation.host_ in the Oozie workflow will be _intrumentation.localdomain_ which is the property passed when the process is scheduled.

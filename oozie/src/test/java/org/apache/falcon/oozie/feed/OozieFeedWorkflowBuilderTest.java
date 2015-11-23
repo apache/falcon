@@ -869,4 +869,20 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         property.setValue(umask);
         cluster.getProperties().getProperties().add(property);
     }
+
+    @Test
+    public void testUserDefinedProperties() throws Exception {
+        Map<String, String> suppliedProps = new HashMap<>();
+        suppliedProps.put("custom.property", "custom value");
+        suppliedProps.put("ENTITY_NAME", "MyEntity");
+
+        OozieEntityBuilder builder = OozieEntityBuilder.get(lifecycleRetentionFeed);
+        Path bundlePath = new Path("/projects/falcon/");
+        Properties props = builder.build(trgCluster, bundlePath, suppliedProps);
+
+        Assert.assertNotNull(props);
+        Assert.assertEquals(props.get("ENTITY_NAME"), lifecycleRetentionFeed.getName());
+        Assert.assertEquals(props.get("custom.property"), "custom value");
+    }
+
 }

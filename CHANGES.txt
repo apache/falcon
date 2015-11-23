@@ -9,6 +9,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1573 Supply user-defined properties to Oozie workflows during schedule(Daniel Del Castillo via Ajay Yadava)
+
     FALCON-1559 Config changes required for native scheduler (Pallavi Rao)
 
     FALCON-1459 Ability to import from database(Venkat Ramachandran via Sowmya Ramesh)
@@ -34,6 +36,10 @@ Trunk (Unreleased)
 
   BUG FIXES
     FALCON-1597 Falcon should not retry in case of an instance being manual kill from user (Sandeep Samudrala via Pallavi Rao)
+
+    FALCON-1606 Process schedule fails in some cases in case of NativeScheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
+    FALCON-1605 Instance API is not working as expected in case of Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1603 FeedHelperTest::testGetDateFromPath fails in some environments(Balu Vellanki via Ajay Yadava)
 

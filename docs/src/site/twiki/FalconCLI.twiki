@@ -44,7 +44,10 @@ Once submitted, an entity can be scheduled using schedule option. Process and fe
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [process|feed] -name <<name>> -schedule
 
-Optional Arg : -skipDryRun. When this argument is specified, Falcon skips oozie dryrun.
+Optional Arg : -skipDryRun -doAs <username>
+-properties <<key1:val1,...,keyN:valN>>
+
+<a href="./Restapi/EntitySchedule.html">Optional params described here.</a>
 
 Example:
 $FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule

@@ -167,10 +167,11 @@ public final class InMemoryStateStore extends AbstractStateStore {
         ID id = new ID(entity, cluster);
         for (InstanceState state : getExecutionInstances(id, states)) {
             ExecutionInstance instance = state.getInstance();
-            // if end time is before start time of instance
-            // or start time is after end time of instance ignore.
-            if ((instance.getActualStart() != null && !(end.isBefore(instance.getActualStart()))
-                    || (instance.getActualEnd() != null && start.isAfter(instance.getActualEnd())))) {
+            DateTime instanceTime = instance.getInstanceTime();
+            // Start date inclusive and end date exclusive.
+            // If start date and end date are equal no instances will be added.
+            if ((instanceTime.isEqual(start) || instanceTime.isAfter(start))
+                    && instanceTime.isBefore(end)) {
                 instancesToReturn.add(state);
             }
         }
