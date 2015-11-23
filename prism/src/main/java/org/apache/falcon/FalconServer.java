@@ -34,8 +34,8 @@ import org.apache.falcon.util.StartupProperties;
 /**
  * Driver for running Falcon as a standalone server with embedded jetty server.
  */
-public final class Main {
-    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+public final class FalconServer {
+    private static final Logger LOG = LoggerFactory.getLogger(FalconServer.class);
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
     private static EmbeddedServer server;
@@ -44,7 +44,7 @@ public final class Main {
     /**
      * Prevent users from constructing this.
      */
-    private Main() {
+    private FalconServer() {
     }
 
     private static CommandLine parseArgs(String[] args) throws ParseException {

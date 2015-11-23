@@ -52,7 +52,7 @@ while [[ ${1} =~ ^\-D ]]; do
 done
 TIME=`date +%Y%m%d%H%M%s`
 
-nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/${APP_TYPE} $* > "${FALCON_LOG_DIR}/$APP_TYPE.out.$TIME" 2>&1 < /dev/null &
+nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.FalconServer -app ${BASEDIR}/server/webapp/${APP_TYPE} $* > "${FALCON_LOG_DIR}/$APP_TYPE.out.$TIME" 2>&1 < /dev/null &
 echo $! > $FALCON_PID_FILE
 popd > /dev/null
 

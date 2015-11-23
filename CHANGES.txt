@@ -18,6 +18,8 @@ Trunk (Unreleased)
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1622 On starting falcon server JPS shows Main and not Falcon(Sandeep Samudrala via Ajay Yadava)
+
     FALCON-1607 Native Scheduler - Code refactoring: Refactor ID into more specific sub classes(Ajay Yadava)
 
     FALCON-1587 Divide FalconCLI.twiki into sub sections for different modules on the lines of REST Api(Praveen Adlakha via Ajay Yadava)
