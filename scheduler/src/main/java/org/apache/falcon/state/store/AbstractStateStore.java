@@ -21,8 +21,8 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.service.ConfigurationChangeListener;
+import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
-import org.apache.falcon.state.ID;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.slf4j.Logger;
@@ -46,14 +46,14 @@ public abstract class AbstractStateStore implements StateStore, ConfigurationCha
     public void onRemove(Entity entity) throws FalconException {
         // Delete entity should remove its instances too.
         if (entity.getEntityType() != EntityType.CLUSTER) {
-            deleteEntity(new ID(entity));
+            deleteEntity(new EntityID(entity));
         }
     }
 
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
         if (newEntity.getEntityType() != EntityType.CLUSTER) {
-            EntityState entityState = getEntity(new ID(oldEntity));
+            EntityState entityState = getEntity(new EntityID(oldEntity));
             if (entityState == null) {
                 onAdd(newEntity);
             } else {
@@ -67,7 +67,7 @@ public abstract class AbstractStateStore implements StateStore, ConfigurationCha
     public void onReload(Entity entity) throws FalconException {
         if (entity.getEntityType() != EntityType.CLUSTER) {
             // To ensure the config store and state store are in sync
-            if (!entityExists(new ID(entity))) {
+            if (!entityExists(new EntityID(entity))) {
                 LOG.info("State store missing entity {}. Adding it.", entity.getName());
                 onAdd(entity);
             }

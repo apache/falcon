@@ -19,8 +19,8 @@ package org.apache.falcon.state.store;
 
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
+import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
-import org.apache.falcon.state.ID;
 
 import java.util.Collection;
 
@@ -39,13 +39,13 @@ public interface EntityStateStore {
      * @return Entity corresponding to the key
      * @throws StateStoreException - If entity does not exist.
      */
-    EntityState getEntity(ID entityId) throws StateStoreException;
+    EntityState getEntity(EntityID entityId) throws StateStoreException;
 
     /**
      * @param entityId
      * @return true, if entity exists in store.
      */
-    boolean entityExists(ID entityId);
+    boolean entityExists(EntityID entityId);
 
     /**
      * @param state
@@ -72,5 +72,5 @@ public interface EntityStateStore {
      * @param entityId
      * @throws StateStoreException
      */
-    void deleteEntity(ID entityId) throws StateStoreException;
+    void deleteEntity(EntityID entityId) throws StateStoreException;
 }

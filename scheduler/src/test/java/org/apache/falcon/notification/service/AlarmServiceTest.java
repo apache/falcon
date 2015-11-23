@@ -23,7 +23,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.execution.NotificationHandler;
 import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.notification.service.impl.AlarmService;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.EntityID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
@@ -57,8 +57,8 @@ public class AlarmServiceTest {
 
         Process mockProcess = new Process();
         mockProcess.setName("test");
-        ID id = new ID(mockProcess);
-        id.setCluster("testCluster");
+        EntityID id = new EntityID(mockProcess);
+//        id.setCluster("testCluster");
 
         AlarmService.AlarmRequestBuilder request =
                 new AlarmService.AlarmRequestBuilder(handler, id);

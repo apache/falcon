@@ -62,7 +62,7 @@ public class InstanceStateServiceTest {
     public void testLifeCycle() throws FalconException {
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.TRIGGER, listener);
         InstanceState instanceFromStore = AbstractStateStore.get()
-                .getExecutionInstance(new ID(mockInstance));
+                .getExecutionInstance(new InstanceID(mockInstance));
         Mockito.verify(listener).onTrigger(mockInstance);
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.WAITING));
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.CONDITIONS_MET, listener);

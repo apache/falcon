@@ -247,4 +247,9 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
         states.add(STATE.SUCCEEDED);
         return states;
     }
+
+    @Override
+    public String toString() {
+        return instance.getId().toString() + "STATE: " + currentState.toString();
+    }
 }

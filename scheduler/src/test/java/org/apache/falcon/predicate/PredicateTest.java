@@ -18,12 +18,12 @@
 package org.apache.falcon.predicate;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.EntityID;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.falcon.entity.v0.process.Process;
 
 /**
  * Tests the predicate class.
@@ -35,7 +35,7 @@ public class PredicateTest {
         Process process = new Process();
         process.setName("test");
         DateTime now = DateTime.now();
-        TimeElapsedEvent te = new TimeElapsedEvent(new ID(process), now, now, now);
+        TimeElapsedEvent te = new TimeElapsedEvent(new EntityID(process), now, now, now);
         Predicate.getPredicate(te);
     }
 

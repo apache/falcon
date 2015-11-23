@@ -40,7 +40,9 @@ import org.apache.falcon.notification.service.request.JobCompletionNotificationR
 import org.apache.falcon.notification.service.request.JobScheduleNotificationRequest;
 import org.apache.falcon.notification.service.request.NotificationRequest;
 import org.apache.falcon.predicate.Predicate;
+import org.apache.falcon.state.EntityClusterID;
 import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
@@ -81,9 +83,9 @@ public class SchedulerService implements FalconNotificationService, Notification
 
     private static final StateStore STATE_STORE = AbstractStateStore.get();
 
-    private Cache<ID, Object> instancesToIgnore;
+    private Cache<InstanceID, Object> instancesToIgnore;
     // TODO : limit the no. of awaiting instances per entity
-    private LoadingCache<ID, List<ExecutionInstance>> awaitedInstances;
+    private LoadingCache<EntityClusterID, List<ExecutionInstance>> executorAwaitedInstances;
 
     @Override
     public void register(NotificationRequest notifRequest) throws NotificationServiceException {
@@ -102,11 +104,10 @@ public class SchedulerService implements FalconNotificationService, Notification
     @Override
     public void unregister(NotificationHandler handler, ID listenerID) {
         // If ID is that of an entity, do nothing
-        if (listenerID.getInstanceTime() == null) {
-            return;
+        if (listenerID instanceof InstanceID) {
+            // Not efficient to iterate over elements to remove this. Add to ignore list.
+            instancesToIgnore.put((InstanceID) listenerID, new Object());
         }
-        // Not efficient to iterate over elements to remove this. Add to ignore list.
-        instancesToIgnore.put(listenerID, new Object());
 
     }
 
@@ -129,21 +130,21 @@ public class SchedulerService implements FalconNotificationService, Notification
         PriorityBlockingQueue<Runnable> pq = new PriorityBlockingQueue<Runnable>(20, new PriorityComparator());
         runQueue = new ThreadPoolExecutor(1, numThreads, 0L, TimeUnit.MILLISECONDS, pq);
 
-        CacheLoader instanceCacheLoader = new CacheLoader<ID, Collection<ExecutionInstance>>() {
+        CacheLoader instanceCacheLoader = new CacheLoader<EntityClusterID, Collection<ExecutionInstance>>() {
             @Override
-            public Collection<ExecutionInstance> load(ID id) throws Exception {
+            public Collection<ExecutionInstance> load(EntityClusterID id) throws Exception {
                 List<InstanceState.STATE> states = new ArrayList<InstanceState.STATE>();
                 states.add(InstanceState.STATE.READY);
                 List<ExecutionInstance> readyInstances = new ArrayList<>();
                 // TODO : Limit it to no. of instances that can be run in parallel.
-                for (InstanceState state : STATE_STORE.getExecutionInstances(id.getEntityID(), states)) {
+                for (InstanceState state : STATE_STORE.getExecutionInstances(id, states)) {
                     readyInstances.add(state.getInstance());
                 }
                 return readyInstances;
             }
         };
 
-        awaitedInstances = CacheBuilder.newBuilder()
+        executorAwaitedInstances = CacheBuilder.newBuilder()
                 .maximumSize(100)
                 .concurrencyLevel(1)
                 .removalListener(this)
@@ -182,13 +183,18 @@ public class SchedulerService implements FalconNotificationService, Notification
         // Interested only in job completion events.
         if (event.getType() == EventType.JOB_COMPLETED) {
             try {
+                ID targetID = event.getTarget();
+                List<ExecutionInstance> instances = null;
                 // Check if the instance is awaited.
-                ID id = event.getTarget();
-                List<ExecutionInstance> instances = awaitedInstances.get(id);
-                // Else, check if the entity is awaited.
-                if (instances == null) {
-                    id = id.getEntityID();
-                    instances = awaitedInstances.get(id);
+                if (targetID instanceof EntityClusterID) {
+                    EntityClusterID id = (EntityClusterID) event.getTarget();
+                    instances = executorAwaitedInstances.get(id);
+                    if (instances != null && instances.isEmpty()) {
+                        executorAwaitedInstances.invalidate(id);
+                    }
+                } else if (targetID instanceof InstanceID) {
+                    InstanceID id = (InstanceID) event.getTarget();
+                    instances = executorAwaitedInstances.get(id.getEntityClusterID());
                 }
                 if (instances != null && !instances.isEmpty()) {
                     ExecutionInstance instance = instances.get(0);
@@ -202,18 +208,11 @@ public class SchedulerService implements FalconNotificationService, Notification
                                         handler, instance.getId());
                                 requestBuilder.setInstance(instance);
                                 InstanceRunner runner = new InstanceRunner(requestBuilder.build());
-                                // Since an instance just finished of the same entity just finished
-                                if (id.equals(instance.getId())) {
-                                    runner.incrementAllowedInstances();
-                                }
                                 runQueue.execute(runner);
                                 instances.remove(instance);
                             }
                         }
                     }
-                }
-                if (instances != null && instances.isEmpty()) {
-                    awaitedInstances.invalidate(id);
                 }
             } catch (Exception e) {
                 throw new FalconException(e);
@@ -304,11 +303,11 @@ public class SchedulerService implements FalconNotificationService, Notification
                 if (instanceCheck() && dependencyCheck()) {
                     return true;
                 } else {
-                    ID entityID = instance.getId().getEntityID();
+                    EntityClusterID entityID = instance.getId().getEntityClusterID();
                     // Instance is awaiting scheduling conditions to be met. Add predicate to that effect.
                     instance.getAwaitingPredicates().add(Predicate.createJobCompletionPredicate(request.getHandler(),
                             entityID));
-                    updateAwaitedInstances(entityID);
+                    updateExecutorAwaitedInstances(entityID);
                     LOG.debug("Schedule conditions not met for instance {}. Awaiting on {}",
                             instance.getId(), entityID);
                 }
@@ -319,13 +318,13 @@ public class SchedulerService implements FalconNotificationService, Notification
             return false;
         }
 
-        private void updateAwaitedInstances(ID id) throws ExecutionException {
+        private void updateExecutorAwaitedInstances(EntityClusterID id) throws ExecutionException {
             synchronized (id) {
-                List<ExecutionInstance> instances = awaitedInstances.get(id);
+                List<ExecutionInstance> instances = executorAwaitedInstances.get(id);
                 if (instances == null) {
                     // Order is FIFO.
                     instances = new LinkedList<>();
-                    awaitedInstances.put(id, instances);
+                    executorAwaitedInstances.put(id, instances);
                 }
                 instances.add(instance);
             }
@@ -340,7 +339,7 @@ public class SchedulerService implements FalconNotificationService, Notification
                 // Dependants should wait for this instance to complete. Add predicate to that effect.
                 instance.getAwaitingPredicates().add(Predicate.createJobCompletionPredicate(
                         request.getHandler(), execInstance.getId()));
-                updateAwaitedInstances(execInstance.getId());
+                updateExecutorAwaitedInstances(execInstance.getId().getEntityClusterID());
             }
             return false;
         }

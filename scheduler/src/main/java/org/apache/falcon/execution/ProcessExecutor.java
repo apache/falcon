@@ -32,12 +32,13 @@ import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.JobCompletedEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
+import org.apache.falcon.notification.service.impl.AlarmService;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
 import org.apache.falcon.notification.service.impl.SchedulerService;
-import org.apache.falcon.notification.service.impl.AlarmService;
 import org.apache.falcon.predicate.Predicate;
+import org.apache.falcon.state.EntityClusterID;
 import org.apache.falcon.state.EntityState;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.StateService;
 import org.apache.falcon.util.StartupProperties;
@@ -58,7 +59,7 @@ import java.util.TimeZone;
  */
 public class ProcessExecutor extends EntityExecutor {
     private static final Logger LOG = LoggerFactory.getLogger(ProcessExecutor.class);
-    protected LoadingCache<ID, ProcessExecutionInstance> instances;
+    protected LoadingCache<InstanceID, ProcessExecutionInstance> instances;
     private Predicate triggerPredicate;
     private final Process process;
     private final StateService stateService = StateService.get();
@@ -74,7 +75,7 @@ public class ProcessExecutor extends EntityExecutor {
     public ProcessExecutor(Process proc, String clusterName) throws FalconException {
         process = proc;
         cluster = clusterName;
-        id = new ID(proc, clusterName);
+        id = new EntityClusterID(proc, clusterName);
     }
 
     @Override
@@ -84,7 +85,7 @@ public class ProcessExecutor extends EntityExecutor {
             initInstances();
         }
         // Check to handle restart and restoration from state store.
-        if (STATE_STORE.getEntity(id).getCurrentState() != EntityState.STATE.SCHEDULED) {
+        if (STATE_STORE.getEntity(id.getEntityID()).getCurrentState() != EntityState.STATE.SCHEDULED) {
             dryRun();
         } else {
             LOG.info("Process, {} was already scheduled on cluster, {}.", process.getName(), cluster);
@@ -105,9 +106,9 @@ public class ProcessExecutor extends EntityExecutor {
 
         instances = CacheBuilder.newBuilder()
                 .maximumSize(cacheSize)
-                .build(new CacheLoader<ID, ProcessExecutionInstance>() {
+                .build(new CacheLoader<InstanceID, ProcessExecutionInstance>() {
                     @Override
-                    public ProcessExecutionInstance load(ID id) throws Exception {
+                    public ProcessExecutionInstance load(InstanceID id) throws Exception {
                         return (ProcessExecutionInstance) STATE_STORE.getExecutionInstance(id).getInstance();
                     }
                 });
@@ -289,13 +290,16 @@ public class ProcessExecutor extends EntityExecutor {
                 handleEvent(event);
             } else {
                 // Else, pass it along to the execution instance
-                ProcessExecutionInstance instance = instances.get(event.getTarget());
-                if (instance != null) {
-                    instance.onEvent(event);
-                    if (instance.isReady()) {
-                        stateService.handleStateChange(instance, InstanceState.EVENT.CONDITIONS_MET, this);
-                    } else if (instance.hasTimedout()) {
-                        stateService.handleStateChange(instance, InstanceState.EVENT.TIME_OUT, this);
+                if (event.getTarget() instanceof InstanceID) {
+                    InstanceID instanceID = (InstanceID) event.getTarget();
+                    ProcessExecutionInstance instance = instances.get(instanceID);
+                    if (instance != null) {
+                        instance.onEvent(event);
+                        if (instance.isReady()) {
+                            stateService.handleStateChange(instance, InstanceState.EVENT.CONDITIONS_MET, this);
+                        } else if (instance.hasTimedout()) {
+                            stateService.handleStateChange(instance, InstanceState.EVENT.TIME_OUT, this);
+                        }
                     }
                 }
             }
@@ -307,16 +311,17 @@ public class ProcessExecutor extends EntityExecutor {
 
     private void handleEvent(Event event) throws FalconException {
         ProcessExecutionInstance instance;
+        InstanceID instanceID;
         try {
             switch (event.getType()) {
             // TODO : Handle cases where scheduling fails.
             case JOB_SCHEDULED:
-                instance = instances.get(event.getTarget());
+                instance = instances.get((InstanceID)event.getTarget());
                 instance.onEvent(event);
                 stateService.handleStateChange(instance, InstanceState.EVENT.SCHEDULE, this);
                 break;
             case JOB_COMPLETED:
-                instance = instances.get(event.getTarget());
+                instance = instances.get((InstanceID)event.getTarget());
                 instance.onEvent(event);
                 switch (((JobCompletedEvent) event).getStatus()) {
                 case SUCCEEDED:
@@ -387,11 +392,6 @@ public class ProcessExecutor extends EntityExecutor {
         triggerPredicate = Predicate.createTimePredicate(startTime.getTime(), endTime.getTime(), -1);
     }
 
-    @Override
-    public ID getId() {
-        return id;
-    }
-
     // This executor must handle any events intended for itself.
     // Or, if it is job run or job complete notifications, so it can handle the instance's state transition.
     private boolean shouldHandleEvent(Event event) {
@@ -402,7 +402,7 @@ public class ProcessExecutor extends EntityExecutor {
 
     @Override
     public void onTrigger(ExecutionInstance instance) throws FalconException {
-        instances.put(new ID(instance), (ProcessExecutionInstance) instance);
+        instances.put(new InstanceID(instance), (ProcessExecutionInstance) instance);
     }
 
     @Override

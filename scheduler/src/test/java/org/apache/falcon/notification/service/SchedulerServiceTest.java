@@ -35,7 +35,9 @@ import org.apache.falcon.notification.service.impl.DataAvailabilityService;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
 import org.apache.falcon.notification.service.impl.SchedulerService;
 import org.apache.falcon.service.Services;
+import org.apache.falcon.state.EntityClusterID;
 import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.InMemoryStateStore;
@@ -147,16 +149,16 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance1), new Integer(1));
         // Simulate the completion of previous instance.
         stateStore.getExecutionInstance(instance1.getId()).setCurrentState(STATE.SUCCEEDED);
-        scheduler.onEvent(new JobCompletedEvent(new ID(mockProcess, cluster), WorkflowJob.Status.SUCCEEDED,
+        scheduler.onEvent(new JobCompletedEvent(new EntityClusterID(mockProcess, cluster), WorkflowJob.Status.SUCCEEDED,
                 DateTime.now()));
         // When an instance completes instance2 should get scheduled next iteration
-        Thread.sleep(100);
+        Thread.sleep(300);
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
         // Simulate another completion and ensure instance3 runs.
         stateStore.getExecutionInstance(instance2.getId()).setCurrentState(STATE.SUCCEEDED);
-        scheduler.onEvent(new JobCompletedEvent(new ID(mockProcess, cluster), WorkflowJob.Status.SUCCEEDED,
+        scheduler.onEvent(new JobCompletedEvent(new EntityClusterID(mockProcess, cluster), WorkflowJob.Status.SUCCEEDED,
                 DateTime.now()));
-        Thread.sleep(100);
+        Thread.sleep(300);
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), new Integer(1));
     }
 
@@ -193,7 +195,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
         Mockito.verify(handler, Mockito.times(1)).onEvent(Mockito.any(JobScheduledEvent.class));
         stateStore.getExecutionInstance(instance2.getId()).setCurrentState(STATE.SUCCEEDED);
-        scheduler.onEvent(new JobCompletedEvent(new ID(mockProcess, cluster, instance2.getInstanceTime()),
+        scheduler.onEvent(new JobCompletedEvent(new InstanceID(mockProcess, cluster, instance2.getInstanceTime()),
                 WorkflowJob.Status.SUCCEEDED, DateTime.now()));
         // Dependency now satisfied. Now, the first instance should get scheduled after retry delay.
         Thread.sleep(100);
@@ -300,8 +302,9 @@ public class SchedulerServiceTest extends AbstractTestBase {
             JobScheduledEvent scheduledEvent = ((JobScheduledEvent) event);
             Process p = (Process) process.copy();
             p.setName(scheduledEvent.getTarget().getEntityName());
-            ProcessExecutionInstance instance = new ProcessExecutionInstance(p,
-                    scheduledEvent.getTarget().getInstanceTime(), cluster);
+            InstanceID instanceID = (InstanceID) scheduledEvent.getTarget();
+            DateTime instanceTime = new DateTime(instanceID.getInstanceTime());
+            ProcessExecutionInstance instance = new ProcessExecutionInstance(p, instanceTime, cluster);
             InstanceState state = new InstanceState(instance).setCurrentState(STATE.RUNNING);
             if (!stateStore.executionInstanceExists(instance.getId())) {
                 stateStore.putExecutionInstance(state);

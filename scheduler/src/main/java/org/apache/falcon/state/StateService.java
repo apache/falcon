@@ -64,7 +64,7 @@ public final class StateService {
      */
     public void handleStateChange(Entity entity, EntityState.EVENT event, EntityStateChangeHandler handler)
         throws FalconException {
-        ID id = new ID(entity);
+        EntityID id = new EntityID(entity);
         if (!stateStore.entityExists(id)) {
             // New entity
             if (event == EntityState.EVENT.SUBMIT) {
@@ -122,7 +122,7 @@ public final class StateService {
      */
     public void handleStateChange(ExecutionInstance instance, InstanceState.EVENT event,
                                   InstanceStateChangeHandler handler) throws FalconException {
-        ID id = new ID(instance);
+        InstanceID id = new InstanceID(instance);
         if (!stateStore.executionInstanceExists(id)) {
             // New instance
             if (event == InstanceState.EVENT.TRIGGER) {

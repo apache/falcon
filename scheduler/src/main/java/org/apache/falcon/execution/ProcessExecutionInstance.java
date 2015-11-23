@@ -36,7 +36,7 @@ import org.apache.falcon.notification.service.event.JobCompletedEvent;
 import org.apache.falcon.notification.service.event.JobScheduledEvent;
 import org.apache.falcon.notification.service.impl.DataAvailabilityService;
 import org.apache.falcon.predicate.Predicate;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
@@ -60,7 +60,7 @@ public class ProcessExecutionInstance extends ExecutionInstance {
     private List<Predicate> awaitedPredicates = new ArrayList<Predicate>();
     private DAGEngine dagEngine = null;
     private boolean hasTimedOut = false;
-    private ID id;
+    private InstanceID id;
     private int instanceSequence;
     private final FalconExecutionService executionService = FalconExecutionService.get();
 
@@ -75,7 +75,7 @@ public class ProcessExecutionInstance extends ExecutionInstance {
     public ProcessExecutionInstance(Process process, DateTime instanceTime, String cluster) throws FalconException {
         super(instanceTime, cluster);
         this.process = process;
-        this.id = new ID(process, cluster, getInstanceTime());
+        this.id = new InstanceID(process, cluster, getInstanceTime());
         computeInstanceSequence();
         dagEngine = DAGEngineFactory.getDAGEngine(cluster);
         registerForNotifications(false);
@@ -210,7 +210,7 @@ public class ProcessExecutionInstance extends ExecutionInstance {
     }
 
     @Override
-    public ID getId() {
+    public InstanceID getId() {
         return id;
     }
 

@@ -21,7 +21,7 @@ package org.apache.falcon.execution;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.predicate.Predicate;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -84,7 +84,7 @@ public abstract class ExecutionInstance implements NotificationHandler {
     /**
      * @return The unique ID of this instance. The instance is referred using this ID inside the system.
      */
-    public abstract ID getId();
+    public abstract InstanceID getId();
 
     /**
      * @return - The entity to which this instance belongs.

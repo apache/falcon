@@ -20,7 +20,7 @@ package org.apache.falcon.execution;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.EntityClusterID;
 import org.apache.falcon.state.InstanceStateChangeHandler;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
@@ -37,7 +37,7 @@ public abstract class EntityExecutor implements NotificationHandler, InstanceSta
     public static final String DEFAULT_CACHE_SIZE = "20";
     protected String cluster;
     protected static final StateStore STATE_STORE = AbstractStateStore.get();
-    protected ID id;
+    protected EntityClusterID id;
 
     /**
      * Schedules execution instances for the entity. Idempotent operation.
@@ -105,7 +105,7 @@ public abstract class EntityExecutor implements NotificationHandler, InstanceSta
     /**
      * @return ID of the entity
      */
-    public ID getId() {
+    public EntityClusterID getId() {
         return id;
     }
 }

@@ -29,6 +29,7 @@ import org.apache.falcon.notification.service.request.JobCompletionNotificationR
 import org.apache.falcon.notification.service.request.NotificationRequest;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowExecutionListener;
@@ -46,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 
 /**
  * This notification service notifies {@link NotificationHandler} when an external job
@@ -55,7 +55,7 @@ import java.util.TimeZone;
 public class JobCompletionService implements FalconNotificationService, WorkflowExecutionListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobCompletionService.class);
-    private static DateTimeZone utc = DateTimeZone.forTimeZone(TimeZone.getTimeZone("UTC"));
+    private static final DateTimeZone UTC = DateTimeZone.UTC;
 
     private List<NotificationHandler> listeners = Collections.synchronizedList(new ArrayList<NotificationHandler>());
 
@@ -152,11 +152,12 @@ public class JobCompletionService implements FalconNotificationService, Workflow
     }
 
     // Constructs the callback ID from the details available in the context.
-    private ID constructCallbackID(WorkflowExecutionContext context) throws FalconException {
-        ID id = new ID(EntityType.valueOf(context.getEntityType()), context.getEntityName());
-        id.setCluster(context.getClusterName());
-        id.setInstanceTime(new DateTime(EntityUtil.parseDateUTC(context.getNominalTimeAsISO8601()), utc));
-        return id;
+    private InstanceID constructCallbackID(WorkflowExecutionContext context) throws FalconException {
+        EntityType entityType = EntityType.valueOf(context.getEntityType());
+        String entityName = context.getEntityName();
+        String clusterName = context.getClusterName();
+        DateTime instanceTime = new DateTime(EntityUtil.parseDateUTC(context.getNominalTimeAsISO8601()), UTC);
+        return new InstanceID(entityType, entityName, clusterName, instanceTime);
     }
 
     private WorkflowExecutionContext createContext(Properties props) {

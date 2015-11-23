@@ -19,7 +19,9 @@ package org.apache.falcon.state.store;
 
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
-import org.apache.falcon.state.ID;
+import org.apache.falcon.state.EntityClusterID;
+import org.apache.falcon.state.EntityID;
+import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.joda.time.DateTime;
 
@@ -43,7 +45,7 @@ public interface InstanceStateStore {
      * @return Execution instance corresponding to the name.
      * @throws StateStoreException - When instance does not exist
      */
-    InstanceState getExecutionInstance(ID instanceId) throws StateStoreException;
+    InstanceState getExecutionInstance(InstanceID instanceId) throws StateStoreException;
 
     /**
      * Updates an execution instance in the store.
@@ -83,13 +85,13 @@ public interface InstanceStateStore {
                                                     DateTime start, DateTime end) throws StateStoreException;
 
     /**
-     * @param entityId
+     * @param entityClusterID
      * @param states
      * @return - All execution instance for an given entityKey (that includes the cluster name)
      * @throws StateStoreException
      */
-    Collection<InstanceState> getExecutionInstances(ID entityId, Collection<InstanceState.STATE> states)
-        throws StateStoreException;
+    Collection<InstanceState> getExecutionInstances(EntityClusterID entityClusterID,
+                                                    Collection<InstanceState.STATE> states) throws StateStoreException;
     /**
      * @param entity
      * @param cluster
@@ -102,12 +104,12 @@ public interface InstanceStateStore {
      * @param instanceId
      * @return true, if instance exists.
      */
-    boolean executionInstanceExists(ID instanceId);
+    boolean executionInstanceExists(InstanceID instanceId);
 
     /**
      * Delete instances of a given entity.
      *
      * @param entityId
      */
-    void deleteExecutionInstances(ID entityId);
+    void deleteExecutionInstances(EntityID entityId);
 }
