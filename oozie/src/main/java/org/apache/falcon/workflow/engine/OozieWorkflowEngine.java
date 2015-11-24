@@ -1302,7 +1302,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                             coord.getId(), SchemaHelper.formatDateUTC(pauseTime));
                     change(cluster, coord.getId(), concurrency, null, SchemaHelper.formatDateUTC(pauseTime));
                 }
-                change(cluster, coord.getId(), concurrency, endTime, "");
+                change(cluster, coord.getId(), concurrency, endTime, null);
             }
         }
     }

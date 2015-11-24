@@ -188,7 +188,7 @@ public class LocalProxyOozieClient extends OozieClient {
 
     @Override
     public void change(final String jobId, final String changeValue) throws OozieClientException {
-        throw new IllegalStateException("Change not supported");
+        getClient(jobId).change(jobId, changeValue);
     }
 
     @Override

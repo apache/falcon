@@ -123,22 +123,22 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         submitCluster(context.colo, context.clusterName, null);
         context.scheduleProcess();
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
-        String endTime = "2012-04-21T00:00Z";
+        String endTime = "2012-04-20T00:01Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
                 context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
-        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+        Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.RUNNING);
     }
 
     @Test
     public void testGetInstanceStatusPagination() throws Exception {
         UnitTestContext context = new UnitTestContext();
         submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcessForPagination();
+        context.scheduleProcess();
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
-        String endTime = "2012-04-20T00:03Z";
+        String endTime = "2012-04-20T00:02Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
                 context.processName, START_INSTANCE, endTime, context.colo, null, "STATUS:RUNNING", "startTime",
                 "", 0, new Integer(1), null);
@@ -154,7 +154,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         submitCluster(context.colo, context.clusterName, null);
         context.scheduleProcess();
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
-        String endTime = "2012-04-21T00:00Z";
+        String endTime = "2012-04-20T00:01Z";
         context.getClient().killInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE, endTime,
                 context.colo, null, null, null, null);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.KILLED);
@@ -172,7 +172,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
-        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
+        Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.KILLED);
     }
 
     @Test
@@ -181,7 +181,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         submitCluster(context.colo, context.clusterName, null);
         context.scheduleProcess();
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
-        String endTime = "2012-04-21T00:00Z";
+        String endTime = "2012-04-20T00:01Z";
         context.getClient().killInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE, endTime,
                 context.colo, null, null, null, null);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.KILLED);
@@ -202,7 +202,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
-        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+        Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.RUNNING);
     }
 
     @Test
@@ -211,7 +211,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         submitCluster(context.colo, context.clusterName, null);
         context.scheduleProcess();
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
-        String endTime = "2012-04-21T00:00Z";
+        String endTime = "2012-04-20T00:01Z";
         context.getClient().suspendInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
                 endTime, context.colo, context.clusterName, null, null, null);
 
@@ -222,7 +222,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
-        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.SUSPENDED);
+        Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.SUSPENDED);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         submitCluster(context.colo, context.clusterName, null);
         context.scheduleProcess();
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
-        String endTime = "2012-04-21T00:00Z";
+        String endTime = "2012-04-20T00:01Z";
         context.getClient().suspendInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
                 endTime, context.colo, context.clusterName, null, null, null);
 
@@ -253,6 +253,6 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
-        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+        Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.RUNNING);
     }
 }

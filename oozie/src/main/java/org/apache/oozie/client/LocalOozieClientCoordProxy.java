@@ -20,6 +20,7 @@ package org.apache.oozie.client;
 
 import org.apache.oozie.BaseEngineException;
 import org.apache.oozie.CoordinatorEngine;
+import org.apache.oozie.CoordinatorEngineException;
 import org.apache.oozie.LocalOozieClientCoord;
 
 /**
@@ -57,6 +58,21 @@ public class LocalOozieClientCoordProxy extends LocalOozieClientCoord {
             return coordEngine.getCoordJob(jobId, filter, start, len, false);
         } catch (BaseEngineException bex) {
             throw new OozieClientException(bex.getErrorCode().toString(), bex);
+        }
+    }
+
+    /**
+     * Change a coordinator job.
+     *
+     * @param jobId job Id.
+     * @param changeValue change value.
+     * @throws OozieClientException thrown if the job could not be changed.
+     */
+    public void change(String jobId, String changeValue) throws OozieClientException {
+        try {
+            coordEngine.change(jobId, changeValue);
+        } catch (CoordinatorEngineException e) {
+            throw new OozieClientException(e.getErrorCode().toString(), e);
         }
     }
 }

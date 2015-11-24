@@ -151,20 +151,28 @@ public class AdminResource {
     }
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+
+    /**
+     * Class for property.
+     */
     @XmlRootElement(name = "property")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    protected static class Property {
+    public static class Property {
         public String key;
         public String value;
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+
+    /**
+     * Class for list of Properties.
+     */
     @XmlRootElement(name = "properties")
     @XmlAccessorType(XmlAccessType.FIELD)
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
-    protected static class PropertyList {
+    public static class PropertyList {
         public List<Property> properties;
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck

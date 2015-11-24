@@ -377,6 +377,7 @@ public class FalconClient extends AbstractFalconClient {
         return parseAPIResult(clientResponse);
     }
 
+    @Override
     public APIResult submitAndSchedule(String entityType, String filePath,
                                        Boolean skipDryRun, String doAsUser, String properties)
         throws FalconCLIException {
@@ -439,6 +440,7 @@ public class FalconClient extends AbstractFalconClient {
         return clientResponse.getEntity(TriageResult.class);
     }
 
+    @Override
     public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
                                     Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
@@ -446,6 +448,7 @@ public class FalconClient extends AbstractFalconClient {
                 filterTags, orderBy, sortOrder, offset, numResults, doAsUser);
     }
 
+    @Override
     public EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
                                    String fields, String filterBy, String filterTags,
                                    String orderBy, String sortOrder,
@@ -455,6 +458,7 @@ public class FalconClient extends AbstractFalconClient {
                 orderBy, sortOrder, offset, numResults, numInstances, doAsUser);
     }
 
+    @Override
     public APIResult touch(String entityType, String entityName, String colo,
                            Boolean skipDryRun, String doAsUser) throws FalconCLIException {
         Entities operation = Entities.TOUCH;
@@ -595,6 +599,7 @@ public class FalconClient extends AbstractFalconClient {
         return sendAdminRequest(AdminOperations.STACK, doAsUser);
     }
 
+    @Override
     public String getVersion(String doAsUser) throws FalconCLIException {
         return sendAdminRequest(AdminOperations.VERSION, doAsUser);
     }

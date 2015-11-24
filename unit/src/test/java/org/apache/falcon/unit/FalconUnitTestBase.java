@@ -179,15 +179,15 @@ public class FalconUnitTestBase {
                 skipDryRun, properties);
     }
 
-    public APIResult scheduleProcess(String processName, String startTime, int numInstances,
-                                   String cluster, Boolean skipDryRun,
-                                   String properties) throws FalconException, FalconCLIException {
+    public APIResult scheduleProcess(String processName, String cluster, String localWfPath) throws FalconException,
+            IOException, FalconCLIException {
         Process processEntity = configStore.get(EntityType.PROCESS, processName);
         if (processEntity == null) {
             throw new FalconException("Process not found " + processName);
         }
-        return falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, numInstances, cluster,
-                skipDryRun, properties);
+        String workflowPath = processEntity.getWorkflow().getPath();
+        fs.copyFromLocalFile(new Path(localWfPath), new Path(workflowPath, "workflow.xml"));
+        return falconUnitClient.schedule(EntityType.PROCESS, processName, cluster, false, null, null);
     }
 
     public APIResult schedule(EntityType entityType, String entityName, String cluster) throws FalconException,
@@ -197,6 +197,14 @@ public class FalconUnitTestBase {
             throw new FalconException("Process not found " + entityName);
         }
         return falconUnitClient.schedule(entityType, entityName, cluster, false, null, null);
+    }
+
+    public APIResult submitAndSchedule(String type, String filePath, String localWfPath, Boolean skipDryRun,
+                                       String doAsUser, String properties, String appDirectory) throws IOException,
+            FalconException, FalconCLIException {
+        createDir(appDirectory);
+        fs.copyFromLocalFile(new Path(localWfPath), new Path(appDirectory, "workflow.xml"));
+        return falconUnitClient.submitAndSchedule(type, filePath, skipDryRun, doAsUser, properties);
     }
 
     private Map<String, String> updateColoAndCluster(String colo, String cluster, Map<String, String> props) {

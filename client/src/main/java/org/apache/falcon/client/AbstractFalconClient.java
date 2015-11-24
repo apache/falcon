@@ -21,6 +21,8 @@ import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -174,6 +176,100 @@ public abstract class AbstractFalconClient {
      */
     public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser) throws
             FalconCLIException;
+
+    /**
+     * Submits and schedules an entity.
+     * @param entityType Valid options are feed or process.
+     * @param filePath Path for the entity definition
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @param doAsUser proxy user
+     * @return Result of the submit and schedule command.
+     */
+    public abstract APIResult submitAndSchedule(String entityType, String filePath, Boolean skipDryRun, String doAsUser,
+                                       String properties) throws FalconCLIException;
+
+    /**
+     *
+     * Get list of the entities.
+     * We have two filtering parameters for entity tags: "tags" and "tagkeys".
+     * "tags" does the exact match in key=value fashion, while "tagkeys" finds all the entities with the given key as a
+     * substring in the tags. This "tagkeys" filter is introduced for the user who doesn't remember the exact tag but
+     * some keywords in the tag. It also helps users to save the time of typing long tags.
+     * The returned entities will match all the filtering criteria.
+     * @param entityType Comma-separated entity types. Can be empty. Valid entity types are cluster, feed or process.
+     * @param fields <optional param> Fields of entity that the user wants to view, separated by commas.
+     *               Valid options are STATUS, TAGS, PIPELINES, CLUSTERS.
+     * @param nameSubsequence <optional param> Subsequence of entity name. Not case sensitive.
+     *                        The entity name needs to contain all the characters in the subsequence in the same order.
+     *                        Example 1: "sample1" will match the entity named "SampleFeed1-2".
+     *                        Example 2: "mhs" will match the entity named "New-My-Hourly-Summary".
+     * @param tagKeywords <optional param> Keywords in tags, separated by comma. Not case sensitive.
+     *                    The returned entities will have tags that match all the tag keywords.
+     * @param filterTags <optional param> Return list of entities that have specified tags, separated by a comma.
+     *             Query will do AND on tag values.
+     *             Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+     * @param filterBy <optional param> Filter results by list of field:value pairs.
+     *                 Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+     *                 Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
+     *                 Query will do an AND among filterBy fields.
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                Supports ordering by "name".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numResults <optional param> Number of results to show per request, used for pagination. Only
+     *                       integers > 0 are valid, Default is 10.
+     * @param doAsUser proxy user
+     * @return Total number of results and a list of entities.
+     */
+    public abstract EntityList getEntityList(String entityType, String fields, String nameSubsequence, String
+            tagKeywords, String filterBy, String filterTags, String orderBy, String sortOrder, Integer offset, Integer
+            numResults, String doAsUser) throws FalconCLIException;
+
+    /**
+     * Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity.
+     * @param entityType Valid options are feed or process.
+     * @param cluster Show entities that belong to this cluster.
+     * @param start <optional param> Show entity summaries from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *                 By default, it is set to (end - 2 days).
+     * @param end <optional param> Show entity summary up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+     *               Default is set to now.
+     * @param fields <optional param> Fields of entity that the user wants to view, separated by commas.
+     *                     Valid options are STATUS, TAGS, PIPELINES.
+     * @param filterBy <optional param> Filter results by list of field:value pairs.
+     *                     Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+     *                     Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
+     *                     Query will do an AND among filterBy fields.
+     * @param filterTags <optional param> Return list of entities that have specified tags, separated by a comma.
+     *                   Query will do AND on tag values.
+     *                   Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+     * @param orderBy <optional param> Field by which results should be ordered.
+     *                      Supports ordering by "name".
+     * @param sortOrder <optional param> Valid options are "asc" and "desc"
+     * @param offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+     * @param numInstances <optional param> Number of results to show per request, used for pagination. Only
+     *                    integers > 0 are valid, Default is 10.
+     * @param numResults <optional param> Number of recent instances to show per entity. Only integers > 0 are
+     *                           valid, Default is 7.
+     * @param doAsUser proxy user
+     * @return Show entities along with summary of N instances for each entity.
+     */
+    public abstract EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
+                                                         String fields, String filterBy, String filterTags, String
+                                                         orderBy, String sortOrder, Integer offset, Integer
+                                                         numResults, Integer numInstances, String doAsUser) throws
+            FalconCLIException;
+
+    /**
+     * Force updates the entity.
+     * @param entityType Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param colo Colo on which the query should be run.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @param doAsUser proxy user
+     * @return Result of the validation.
+     */
+    public abstract APIResult touch(String entityType, String entityName, String colo, Boolean skipDryRun,
+                                    String doAsUser) throws FalconCLIException;
 
     /**
      * Kill currently running instance(s) of an entity.
@@ -344,6 +440,12 @@ public abstract class AbstractFalconClient {
     public abstract InstanceDependencyResult getInstanceDependencies(String entityType, String entityName,
                                                                      String instanceTime, String colo) throws
             FalconCLIException;
+
+    /**
+     * Get version of the falcon server.
+     * @return Version of the server.
+     */
+    public abstract String getVersion(String doAsUser) throws FalconCLIException;
 
     protected InputStream getServletInputStream(String clusters, String sourceClusters, String properties) throws
             FalconCLIException, UnsupportedEncodingException {

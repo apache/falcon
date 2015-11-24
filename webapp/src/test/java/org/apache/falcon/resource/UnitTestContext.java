@@ -44,8 +44,6 @@ public class UnitTestContext {
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
 
-    private static final String START_INSTANCE = "2012-04-20T00:00Z";
-
     protected String colo;
     protected String clusterName;
     protected String processName;
@@ -99,14 +97,10 @@ public class UnitTestContext {
     }
 
     public void scheduleProcess() throws Exception {
-        scheduleProcess(PROCESS_TEMPLATE, overlay, 1);
+        scheduleProcess(PROCESS_TEMPLATE, overlay);
     }
 
-    public void scheduleProcessForPagination() throws Exception {
-        scheduleProcess(PROCESS_TEMPLATE, overlay, 2);
-    }
-
-    public void scheduleProcess(String processTemplate, Map<String, String> uniqueOverlay, int numInstances) throws
+    public void scheduleProcess(String processTemplate, Map<String, String> uniqueOverlay) throws
             Exception {
         prepare();
 
@@ -122,9 +116,7 @@ public class UnitTestContext {
         result = client.submit(EntityType.PROCESS.name(), tmpFile, null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        String scheduleTime = START_INSTANCE;
-
-        result = client.schedule(EntityType.PROCESS, processName, scheduleTime, numInstances, clusterName, true, "");
+        result = client.schedule(EntityType.PROCESS, processName, clusterName, true, null, null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 

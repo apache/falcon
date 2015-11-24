@@ -24,6 +24,8 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -56,8 +58,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String PROCESS_NAME = "process";
     private static final String OUTPUT_FEED_NAME = "out";
     private static final String INPUT_FILE_NAME = "input.txt";
-    private static final String SCHEDULE_TIME = "2015-06-20T00:00Z";
-    private static final String END_TIME = "2015-06-20T00:01Z";
+    private static final String SCHEDULE_TIME = "2013-11-18T00:05Z";
+    private static final String END_TIME = "2013-11-18T00:07Z";
     private static final String WORKFLOW = "workflow.xml";
     private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
 
@@ -68,8 +70,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
-        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
-                true, "");
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
         assertStatus(result);
         waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         InstancesResult.WorkflowStatus status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
@@ -80,7 +81,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         FileStatus[] files = getFileSystem().listStatus(new Path(outPath));
         Assert.assertTrue(files.length > 0);
     }
-
 
     @Test
     public void testRetention() throws IOException, FalconCLIException, FalconException,
@@ -109,16 +109,13 @@ public class TestFalconUnit extends FalconUnitTestBase {
     @Test
     public void testSuspendAndResume() throws Exception {
         submitClusterAndFeeds();
-        // submitting and scheduling process
-        String scheduleTime = "2015-06-20T00:00Z";
-        //String processName = "process1";
-        createData(INPUT_FEED_NAME, CLUSTER_NAME, scheduleTime, INPUT_FILE_NAME);
+        // submitting and scheduling process;
+        createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
-        result = scheduleProcess(PROCESS_NAME, scheduleTime, 2, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
-                true, "");
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 2, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
         assertStatus(result);
-        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, scheduleTime, InstancesResult.WorkflowStatus.SUCCEEDED);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         result = getClient().suspend(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
         assertStatus(result);
         result = getClient().getStatus(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
@@ -141,8 +138,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
         result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
-        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 10, CLUSTER_NAME, getAbsolutePath(WORKFLOW),
-                true, "");
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 2, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
         assertStatus(result);
         waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         result = getClient().delete(EntityType.PROCESS, PROCESS_NAME, null);
@@ -180,8 +176,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
-    public void testUpdate() throws IOException, FalconCLIException, FalconException,
-            ParseException, InterruptedException {
+    public void testUpdateAndTouch() throws IOException, FalconCLIException, FalconException, ParseException,
+            InterruptedException {
         submitClusterAndFeeds();
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
@@ -208,6 +204,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         result = falconUnitClient.update(EntityType.PROCESS.name(), PROCESS_NAME, file.getAbsolutePath(), true, null);
         assertStatus(result);
+        result = falconUnitClient.touch(EntityType.PROCESS.name(), PROCESS_NAME, null, true, null);
+        assertStatus(result);
 
         process = getEntity(EntityType.PROCESS,
                 PROCESS_NAME);
@@ -230,7 +228,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         property.setName("dummy");
         property.setValue("dummy");
         process.getProperties().getProperties().add(property);
-
     }
 
     @Test
@@ -240,7 +237,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
-        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 3, CLUSTER_NAME, getAbsolutePath(SLEEP_WORKFLOW), true,
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 2, CLUSTER_NAME, getAbsolutePath(SLEEP_WORKFLOW), true,
                 "");
         assertStatus(result);
         InstancesResult.WorkflowStatus currentStatus;
@@ -280,8 +277,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
-        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 3, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
-        assertStatus(result);
+        result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 2, CLUSTER_NAME, getAbsolutePath(SLEEP_WORKFLOW), true,
+                "");
         InstancesResult.WorkflowStatus currentStatus;
         waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
@@ -328,5 +325,45 @@ public class TestFalconUnit extends FalconUnitTestBase {
         FeedInstanceResult feedInstanceResult = getClient().getFeedListing(EntityType.FEED.name(), INPUT_FEED_NAME,
                 SCHEDULE_TIME, END_TIME, null, null);
         Assert.assertEquals(feedInstanceResult.getStatus(), APIResult.Status.SUCCEEDED);
+    }
+
+    @Test
+    public void testEntityList() throws Exception {
+        submitClusterAndFeeds();
+        // submitting and scheduling process
+        createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
+        APIResult result = submitAndSchedule(EntityType.PROCESS.name(), getAbsolutePath(PROCESS),
+                getAbsolutePath(SLEEP_WORKFLOW), true, null, "", PROCESS_APP_PATH);
+        assertStatus(result);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.RUNNING);
+        InstancesResult.WorkflowStatus currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(),
+                PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
+
+        EntityList entityList = getClient().getEntityList(EntityType.PROCESS.name(), "", "", null, null, null, null,
+                null, new Integer(0), new Integer(1), null);
+        Assert.assertNotNull(entityList.getElements());
+        Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertEquals(entityList.getElements()[0].name, PROCESS_NAME);
+    }
+
+    @Test
+    public void testEntitySummary() throws Exception {
+        submitClusterAndFeeds();
+        // submitting and scheduling process
+        createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
+        APIResult result = submitAndSchedule(EntityType.PROCESS.name(), getAbsolutePath(PROCESS),
+                getAbsolutePath(SLEEP_WORKFLOW), true, null, "", PROCESS_APP_PATH);
+        assertStatus(result);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.RUNNING);
+        InstancesResult.WorkflowStatus currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(),
+                PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
+        EntitySummaryResult summaryResult = getClient().getEntitySummary(EntityType.PROCESS.name(), CLUSTER_NAME,
+                SCHEDULE_TIME, END_TIME, "", "", null, null, null, new Integer(0), new Integer(1), new Integer(1),
+                null);
+        Assert.assertEquals(summaryResult.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertNotNull(summaryResult.getEntitySummaries());
+        Assert.assertEquals(summaryResult.getEntitySummaries().length, 1);
     }
 }
