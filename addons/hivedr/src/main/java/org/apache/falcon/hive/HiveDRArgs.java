@@ -78,7 +78,8 @@ public enum HiveDRArgs {
     FALCON_LIBPATH("falconLibPath", "Falcon Lib Path for Jar files", false),
 
     KEEP_HISTORY("keepHistory", "Keep history of events file generated", false),
-    EXECUTION_STAGE("executionStage", "Flag for workflow stage execution", false);
+    EXECUTION_STAGE("executionStage", "Flag for workflow stage execution", false),
+    COUNTER_LOGDIR("counterLogDir", "Log directory to store counter file", false);
 
     private final String name;
     private final String description;

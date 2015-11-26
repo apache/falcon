@@ -244,6 +244,8 @@
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>
             <arg>export</arg>
+            <arg>-counterLogDir</arg>
+            <arg>${logDir}/job-${nominalTime}/${srcClusterName == 'NA' ? '' : srcClusterName}/</arg>
         </java>
         <ok to="import-dr-replication"/>
         <error to="fail"/>

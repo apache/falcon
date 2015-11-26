@@ -9,7 +9,11 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1480 Gather data transfer details of Hive DR. (Peeyush Bishnoi via Ajay Yadava)
+    
     FALCON-1234 State Store for instances scheduled by Falcon (Pavan Kolamuri via Pallavi Rao)
+    
+    FALCON-1480 Gather data transfer details of Hive DR(Peeyush Bishnoi via Ajay Yadava)
 
     FALCON-1588 Add ability to provide the path for recipe files in command line(Peeyush Bishnoi via Ajay Yadava)
 

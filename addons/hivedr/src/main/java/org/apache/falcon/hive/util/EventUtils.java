@@ -27,11 +27,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobStatus;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hive.hcatalog.api.repl.Command;
 import org.apache.hive.hcatalog.api.repl.ReplicationUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -80,6 +83,8 @@ public class EventUtils {
     private Statement sourceStatement = null;
     private Statement targetStatement = null;
 
+    private Map<String, Long> countersMap = null;
+
     private List<ReplicationStatus> listReplicationStatus;
 
     public EventUtils(Configuration conf) {
@@ -97,6 +102,7 @@ public class EventUtils {
         targetNNKerberosPrincipal = conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName());
         sourceCleanUpList = new ArrayList<Path>();
         targetCleanUpList = new ArrayList<Path>();
+        countersMap = new HashMap<>();
     }
 
     public void setupConnection() throws Exception {
@@ -312,6 +318,9 @@ public class EventUtils {
         Job distcpJob = distCp.execute();
         LOG.info("Distp Hadoop job: {}", distcpJob.getJobID().toString());
         LOG.info("Completed DistCp");
+        if (distcpJob.getStatus().getState() == JobStatus.State.SUCCEEDED) {
+            countersMap = HiveDRUtils.fetchReplicationCounters(conf, distcpJob);
+        }
     }
 
     public DistCpOptions getDistCpOptions(List<Path> srcStagingPaths) {
@@ -336,6 +345,14 @@ public class EventUtils {
         distcpOptions.setMaxMaps(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAX_MAPS.getName())));
         distcpOptions.setMapBandwidth(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAP_BANDWIDTH.getName())));
         return distcpOptions;
+    }
+
+    public Long getCounterValue(String counterKey) {
+        return countersMap.get(counterKey);
+    }
+
+    public boolean isCountersMapEmtpy() {
+        return countersMap.size() == 0 ? true : false;
     }
 
     public void cleanEventsDirectory() throws IOException {

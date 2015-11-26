@@ -99,7 +99,10 @@
             <artifactId>falcon-hadoop-dependencies</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-metrics</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>

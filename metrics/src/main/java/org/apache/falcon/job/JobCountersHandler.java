@@ -32,6 +32,8 @@ public final class JobCountersHandler {
     public static JobCounters getCountersType(String jobType) {
         if (jobType.equals(JobType.FSREPLICATION.name())) {
             return new FSReplicationCounters();
+        } else if (jobType.equals(JobType.HIVEREPLICATION.name())) {
+            return new HiveReplicationCounters();
         }
 
         LOG.error("JobType is not supported:" + jobType);

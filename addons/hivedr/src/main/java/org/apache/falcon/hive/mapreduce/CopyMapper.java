@@ -22,6 +22,7 @@ import org.apache.falcon.hive.HiveDRArgs;
 import org.apache.falcon.hive.util.EventUtils;
 import org.apache.falcon.hive.util.HiveDRUtils;
 import org.apache.falcon.hive.util.ReplicationStatus;
+import org.apache.falcon.job.ReplicationJobCountersList;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -69,6 +70,16 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
             for (ReplicationStatus rs : replicationStatusList) {
                 context.write(new Text(rs.getJobName()), new Text(rs.toString()));
             }
+        }
+
+        // In case of export stage, populate custom counters
+        if (context.getConfiguration().get(HiveDRArgs.EXECUTION_STAGE.getName())
+                .equalsIgnoreCase(HiveDRUtils.ExecutionStage.EXPORT.name())
+                && !eventUtils.isCountersMapEmtpy()) {
+            context.getCounter(ReplicationJobCountersList.BYTESCOPIED).increment(
+                    eventUtils.getCounterValue(ReplicationJobCountersList.BYTESCOPIED.getName()));
+            context.getCounter(ReplicationJobCountersList.COPY).increment(
+                    eventUtils.getCounterValue(ReplicationJobCountersList.COPY.getName()));
         }
     }
 

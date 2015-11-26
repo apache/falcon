@@ -22,5 +22,6 @@ package org.apache.falcon.job;
  * Types of the job for which counters need to obtain.
  */
 public enum JobType {
-    FSREPLICATION
+    FSREPLICATION,
+    HIVEREPLICATION
 }

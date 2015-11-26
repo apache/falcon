@@ -18,13 +18,18 @@
 
 package org.apache.falcon.hive.util;
 
+import org.apache.falcon.job.JobCounters;
+import org.apache.falcon.job.JobCountersHandler;
+import org.apache.falcon.job.JobType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Shell;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Hive replication utility class.
@@ -82,5 +87,13 @@ public final class HiveDRUtils {
             }
         }
         return path;
+    }
+
+    public static Map<String, Long> fetchReplicationCounters(Configuration conf,
+                                                             Job job) throws IOException, InterruptedException {
+        JobCounters hiveReplicationCounters = JobCountersHandler.getCountersType(
+                JobType.HIVEREPLICATION.name());
+        hiveReplicationCounters.obtainJobCounters(conf, job, true);
+        return hiveReplicationCounters.getCountersMap();
     }
 }
