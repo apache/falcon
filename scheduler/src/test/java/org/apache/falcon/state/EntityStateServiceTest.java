@@ -18,55 +18,72 @@
 package org.apache.falcon.state;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.exception.InvalidStateTransitionException;
+import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.state.store.AbstractStateStore;
-import org.apache.falcon.state.store.InMemoryStateStore;
+import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
  * Tests to ensure entity state changes happen correctly.
  */
-public class EntityStateServiceTest {
+public class EntityStateServiceTest extends AbstractSchedulerTestBase{
 
     private EntityStateChangeHandler listener = Mockito.mock(EntityStateChangeHandler.class);
 
-    @BeforeMethod
-    public void setUp() {
-        ((InMemoryStateStore) AbstractStateStore.get()).clear();
+    @BeforeClass
+    public void setup() throws Exception {
+        StartupProperties.get().setProperty("falcon.state.store.impl",
+                "org.apache.falcon.state.store.InMemoryStateStore");
+        super.setup();
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
+        this.conf = dfsCluster.getConf();
+    }
+
+    @AfterMethod
+    public void setUp() throws StateStoreException {
+        AbstractStateStore.get().clear();
     }
 
     // Tests a schedulable entity's lifecycle : Submit -> run -> suspend -> resume
     @Test
-    public void testLifeCycle() throws FalconException {
+    public void testLifeCycle() throws Exception {
         Process mockEntity = new Process();
         mockEntity.setName("test");
-
+        storeEntity(EntityType.PROCESS, "test");
         StateService.get().handleStateChange(mockEntity, EntityState.EVENT.SUBMIT, listener);
         EntityState entityFromStore = AbstractStateStore.get().getAllEntities().iterator().next();
         Mockito.verify(listener).onSubmit(mockEntity);
         Assert.assertTrue(entityFromStore.getCurrentState().equals(EntityState.STATE.SUBMITTED));
         StateService.get().handleStateChange(mockEntity, EntityState.EVENT.SCHEDULE, listener);
         Mockito.verify(listener).onSchedule(mockEntity);
+        entityFromStore = AbstractStateStore.get().getAllEntities().iterator().next();
         Assert.assertTrue(entityFromStore.getCurrentState().equals(EntityState.STATE.SCHEDULED));
         StateService.get().handleStateChange(mockEntity, EntityState.EVENT.SUSPEND, listener);
         Mockito.verify(listener).onSuspend(mockEntity);
+        entityFromStore = AbstractStateStore.get().getAllEntities().iterator().next();
         Assert.assertTrue(entityFromStore.getCurrentState().equals(EntityState.STATE.SUSPENDED));
         StateService.get().handleStateChange(mockEntity, EntityState.EVENT.RESUME, listener);
         Mockito.verify(listener).onResume(mockEntity);
+        entityFromStore = AbstractStateStore.get().getAllEntities().iterator().next();
         Assert.assertTrue(entityFromStore.getCurrentState().equals(EntityState.STATE.SCHEDULED));
     }
 
     @Test
-    public void testInvalidTransitions() throws FalconException {
+    public void testInvalidTransitions() throws Exception {
         Feed mockEntity = new Feed();
         mockEntity.setName("test");
+        storeEntity(EntityType.FEED, "test");
         StateService.get().handleStateChange(mockEntity, EntityState.EVENT.SUBMIT, listener);
         // Attempt suspending a submitted entity
         try {
@@ -99,10 +116,10 @@ public class EntityStateServiceTest {
 
     @Test(dataProvider = "state_and_events")
     public void testIdempotency(EntityState.STATE state, EntityState.EVENT event)
-        throws InvalidStateTransitionException {
+        throws Exception {
         Process mockEntity = new Process();
         mockEntity.setName("test");
-
+        storeEntity(EntityType.PROCESS, "test");
         EntityState entityState = new EntityState(mockEntity).setCurrentState(state);
         entityState.nextTransition(event);
         Assert.assertEquals(entityState.getCurrentState(), state);

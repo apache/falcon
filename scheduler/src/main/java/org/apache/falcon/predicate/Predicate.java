@@ -27,14 +27,19 @@ import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.state.ID;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Represents the gating condition for which an instance is waiting before it is scheduled.
  * This will be serialized and stored in state store.
  */
 public class Predicate implements Serializable {
+
     /**
      * Type of predicate, currently data and time are supported.
      */
@@ -47,7 +52,10 @@ public class Predicate implements Serializable {
     private final TYPE type;
 
     // A key-value pair of clauses that need make this predicate.
-    private Map<String, Comparable> clauses = new HashMap<String, Comparable>();
+    private Map<String, Comparable> clauses = new TreeMap<>();
+
+    // Id for a predicate used for comparison.
+    private String id;
 
     // A generic "any" object that can be used when a particular key is allowed to have any value.
     public static final Comparable<? extends Serializable> ANY = new Any();
@@ -57,6 +65,10 @@ public class Predicate implements Serializable {
      */
     public TYPE getType() {
         return type;
+    }
+
+    public String getId() {
+        return id;
     }
 
     /**
@@ -106,6 +118,7 @@ public class Predicate implements Serializable {
      */
     public Predicate(TYPE type) {
         this.type = type;
+        this.id = this.type + String.valueOf(System.currentTimeMillis());
     }
 
     /**
@@ -120,7 +133,7 @@ public class Predicate implements Serializable {
      * @param rhs - The value in the key-value pair of a clause
      * @return This instance
      */
-    public Predicate addClause(String lhs, Comparable<? extends Serializable> rhs) {
+    Predicate addClause(String lhs, Comparable<? extends Serializable> rhs) {
         clauses.put(lhs, rhs);
         return this;
     }
@@ -215,6 +228,37 @@ public class Predicate implements Serializable {
         @Override
         public int hashCode() {
             return super.hashCode();
+        }
+    }
+
+    public static boolean isEqualAwaitingPredicates(List<Predicate> thisAwaitingPredicates,
+                                              List<Predicate> otherAwaitingPredicates) {
+        if (thisAwaitingPredicates == null && otherAwaitingPredicates == null) {
+            return true;
+        } else if (thisAwaitingPredicates != null && otherAwaitingPredicates != null) {
+            if (thisAwaitingPredicates.size() != otherAwaitingPredicates.size()) {
+                return false;
+            }
+            Collections.sort(thisAwaitingPredicates, new PredicateComparator());
+            Collections.sort(otherAwaitingPredicates, new PredicateComparator());
+
+            Iterator<Predicate> thisIterator = thisAwaitingPredicates.iterator();
+            Iterator<Predicate> otherIterator = otherAwaitingPredicates.iterator();
+
+            while (thisIterator.hasNext()) {
+                if (!thisIterator.next().evaluate(otherIterator.next())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    static class PredicateComparator implements Serializable, Comparator<Predicate> {
+        @Override
+        public int compare(Predicate o1, Predicate o2) {
+            return o1.getId().compareTo(o2.getId());
         }
     }
 }

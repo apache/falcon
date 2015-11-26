@@ -252,4 +252,36 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
     public String toString() {
         return instance.getId().toString() + "STATE: " + currentState.toString();
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        InstanceState other = (InstanceState) o;
+
+        if (this.getCurrentState() != null ? !this.getCurrentState().equals(other.getCurrentState())
+                : other.getCurrentState() != null) {
+            return false;
+        }
+
+        if (this.getInstance() != null ? !this.getInstance().equals(other.getInstance())
+                : other.getInstance() != null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currentState != null ? currentState.hashCode() : 0;
+        result = 31 * result + (instance != null ? instance.hashCode() : 0);
+        return result;
+    }
+
 }

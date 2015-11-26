@@ -40,7 +40,7 @@ import org.apache.falcon.state.ID;
 import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
-import org.apache.falcon.state.store.InMemoryStateStore;
+import org.apache.falcon.state.store.StateStore;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
@@ -63,10 +63,10 @@ import static org.apache.falcon.state.InstanceState.STATE;
  */
 public class SchedulerServiceTest extends AbstractTestBase {
 
-    private SchedulerService scheduler = Mockito.spy(new SchedulerService());
+    private SchedulerService scheduler;
     private NotificationHandler handler;
     private static String cluster = "testCluster";
-    private static InMemoryStateStore stateStore = (InMemoryStateStore) AbstractStateStore.get();
+    private static StateStore stateStore;
     private static DAGEngine mockDagEngine;
     private static Process process;
     private volatile boolean failed = false;
@@ -79,6 +79,10 @@ public class SchedulerServiceTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
+        StartupProperties.get().setProperty("falcon.state.store.impl",
+                "org.apache.falcon.state.store.InMemoryStateStore");
+        stateStore = AbstractStateStore.get();
+        scheduler = Mockito.spy(new SchedulerService());
         this.dfsCluster = EmbeddedCluster.newCluster(cluster);
         this.conf = dfsCluster.getConf();
         setupConfigStore();
@@ -97,6 +101,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         scheduler.init();
         StartupProperties.get().setProperty("dag.engine.impl", MockDAGEngine.class.getName());
         mockDagEngine =  DAGEngineFactory.getDAGEngine("testCluster");
+
     }
 
     @AfterClass
@@ -199,7 +204,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
                 WorkflowJob.Status.SUCCEEDED, DateTime.now()));
         // Dependency now satisfied. Now, the first instance should get scheduled after retry delay.
         Thread.sleep(100);
-        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance1), new Integer(1));
+        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
     }
 
     @Test

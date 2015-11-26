@@ -113,6 +113,10 @@
         <quartz.version>2.2.1</quartz.version>
         <joda.version>2.8.2</joda.version>
         <mockito.version>1.9.5</mockito.version>
+        <openjpa.version>2.4.0</openjpa.version>
+        <javax-validation.version>1.0.0.GA</javax-validation.version>
+        <derby.version>10.10.1.1</derby.version>
+        <commons-dbcp.version>1.4</commons-dbcp.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <excluded.test.groups>exhaustive</excluded.test.groups>
     </properties>

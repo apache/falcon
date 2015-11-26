@@ -130,4 +130,34 @@ public class EntityState implements StateMachine<EntityState.STATE, EntityState.
     public STATE nextTransition(EVENT event) throws InvalidStateTransitionException {
         return currentState.nextTransition(event);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        EntityState other = (EntityState) o;
+
+        if (this.getCurrentState() != null ? !this.getCurrentState().equals(other.getCurrentState())
+                : other.getCurrentState() != null) {
+            return false;
+        }
+
+        if (this.getEntity() != null ? !this.getEntity().equals(other.getEntity())
+                : other.getEntity() != null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currentState != null ? currentState.hashCode() : 0;
+        result = 31 * result + (entity != null ? entity.hashCode() : 0);
+        return result;
+    }
 }

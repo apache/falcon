@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.state.EntityClusterID;
@@ -58,17 +59,22 @@ public final class FalconExecutionService implements FalconService, EntityStateC
     public void init() {
         LOG.debug("State store instance being used : {}", AbstractStateStore.get());
         // Initialize all executors from store
-        for (Entity entity : AbstractStateStore.get().getEntities(EntityState.STATE.SCHEDULED)) {
-            try {
-                for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
-                    EntityExecutor executor = createEntityExecutor(entity, cluster);
-                    executors.put(new EntityClusterID(entity, cluster), executor);
-                    executor.schedule();
+        try {
+            for (Entity entity : AbstractStateStore.get().getEntities(EntityState.STATE.SCHEDULED)) {
+                try {
+                    for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+                        EntityExecutor executor = createEntityExecutor(entity, cluster);
+                        executors.put(new EntityClusterID(entity, cluster), executor);
+                        executor.schedule();
+                    }
+                } catch (FalconException e) {
+                    LOG.error("Unable to load entity : " + entity.getName(), e);
+                    throw new RuntimeException(e);
                 }
-            } catch (FalconException e) {
-                LOG.error("Unable to load entity : " + entity.getName(), e);
-                throw new RuntimeException(e);
             }
+        } catch (StateStoreException e) {
+            LOG.error("Unable to get Entities from State Store ", e);
+            throw new RuntimeException(e);
         }
         // TODO : During migration, the state store itself may not have been completely bootstrapped.
     }

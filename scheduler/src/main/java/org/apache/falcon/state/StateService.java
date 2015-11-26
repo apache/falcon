@@ -136,6 +136,7 @@ public final class StateService {
             InstanceState instanceState = stateStore.getExecutionInstance(id);
             InstanceState.STATE newState = instanceState.nextTransition(event);
             callbackHandler(instance, event, handler);
+            instanceState = new InstanceState(instance);
             instanceState.setCurrentState(newState);
             stateStore.updateExecutionInstance(instanceState);
             LOG.debug("State of instance: {} changed to: {} as a result of event: {}.", id,

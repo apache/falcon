@@ -23,11 +23,12 @@ import org.apache.falcon.exception.InvalidStateTransitionException;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ProcessExecutionInstance;
 import org.apache.falcon.state.store.AbstractStateStore;
-import org.apache.falcon.state.store.InMemoryStateStore;
+import org.apache.falcon.util.StartupProperties;
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -40,6 +41,12 @@ public class InstanceStateServiceTest {
     private InstanceStateChangeHandler listener = Mockito.mock(InstanceStateChangeHandler.class);
     private ProcessExecutionInstance mockInstance;
 
+    @BeforeClass
+    public void init() {
+        StartupProperties.get().setProperty("falcon.state.store.impl",
+                "org.apache.falcon.state.store.InMemoryStateStore");
+    }
+
     @BeforeMethod
     public void setup() {
         Process testProcess = new Process();
@@ -47,13 +54,14 @@ public class InstanceStateServiceTest {
         // Setup new mocks so we can verify the no. of invocations
         mockInstance = Mockito.mock(ProcessExecutionInstance.class);
         Mockito.when(mockInstance.getEntity()).thenReturn(testProcess);
+        Mockito.when(mockInstance.getCreationTime()).thenReturn(DateTime.now());
         Mockito.when(mockInstance.getInstanceTime()).thenReturn(DateTime.now());
         Mockito.when(mockInstance.getCluster()).thenReturn("testCluster");
     }
 
     @AfterMethod
-    public void tearDown() {
-        ((InMemoryStateStore) AbstractStateStore.get()).clear();
+    public void tearDown() throws StateStoreException {
+        AbstractStateStore.get().clear();
     }
 
     // Tests an entity instance's lifecycle : Trigger -> waiting -> ready -> running
@@ -67,18 +75,28 @@ public class InstanceStateServiceTest {
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.WAITING));
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.CONDITIONS_MET, listener);
         Mockito.verify(listener).onConditionsMet(mockInstance);
+        instanceFromStore = AbstractStateStore.get()
+                .getExecutionInstance(new InstanceID(mockInstance));
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.READY));
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.SCHEDULE, listener);
         Mockito.verify(listener).onSchedule(mockInstance);
+        instanceFromStore = AbstractStateStore.get()
+                .getExecutionInstance(new InstanceID(mockInstance));
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.RUNNING));
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.SUSPEND, listener);
         Mockito.verify(listener).onSuspend(mockInstance);
+        instanceFromStore = AbstractStateStore.get()
+                .getExecutionInstance(new InstanceID(mockInstance));
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.SUSPENDED));
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.RESUME_RUNNING, listener);
         Mockito.verify(listener).onResume(mockInstance);
+        instanceFromStore = AbstractStateStore.get()
+                .getExecutionInstance(new InstanceID(mockInstance));
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.RUNNING));
         StateService.get().handleStateChange(mockInstance, InstanceState.EVENT.SUCCEED, listener);
         Mockito.verify(listener).onSuccess(mockInstance);
+        instanceFromStore = AbstractStateStore.get()
+                .getExecutionInstance(new InstanceID(mockInstance));
         Assert.assertTrue(instanceFromStore.getCurrentState().equals(InstanceState.STATE.SUCCEEDED));
         Assert.assertEquals(AbstractStateStore.get().getAllEntities().size(), 0);
     }

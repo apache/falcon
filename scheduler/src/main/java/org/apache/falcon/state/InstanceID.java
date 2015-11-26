@@ -80,4 +80,23 @@ public class InstanceID extends ID {
     public EntityClusterID getEntityClusterID() {
         return new EntityClusterID(entityType, entityName, clusterName);
     }
+
+    public static EntityType getEntityType(String id) {
+        if (id == null) {
+            return null;
+        }
+        String[] values = id.split(KEY_SEPARATOR);
+        String entityType = values[0];
+        return EntityType.valueOf(entityType);
+    }
+
+    public static String getEntityName(String id) {
+        if (id == null) {
+            return null;
+        }
+        String[] values = id.split(KEY_SEPARATOR);
+        String entityName = values[1];
+        return entityName;
+    }
+
 }

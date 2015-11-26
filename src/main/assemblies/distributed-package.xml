@@ -41,6 +41,11 @@
         </fileSet>
 
         <fileSet>
+            <directory>scheduler/target/dependency</directory>
+            <outputDirectory>client/lib</outputDirectory>
+        </fileSet>
+
+        <fileSet>
             <directory>oozie-el-extensions/target/dependency</directory>
             <outputDirectory>oozie/libext</outputDirectory>
         </fileSet>

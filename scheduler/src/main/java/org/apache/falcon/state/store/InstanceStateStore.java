@@ -104,12 +104,26 @@ public interface InstanceStateStore {
      * @param instanceId
      * @return true, if instance exists.
      */
-    boolean executionInstanceExists(InstanceID instanceId);
+    boolean executionInstanceExists(InstanceID instanceId) throws StateStoreException;
 
     /**
      * Delete instances of a given entity.
      *
      * @param entityId
      */
-    void deleteExecutionInstances(EntityID entityId);
+    void deleteExecutionInstances(EntityID entityId) throws StateStoreException;
+
+
+    /**
+     * Delete an instance based on ID.
+     *
+     * @param instanceID
+     * @throws StateStoreException
+     */
+    void deleteExecutionInstance(InstanceID instanceID) throws StateStoreException;
+
+    /**
+     * Delete all instances.
+     */
+    void deleteExecutionInstances();
 }

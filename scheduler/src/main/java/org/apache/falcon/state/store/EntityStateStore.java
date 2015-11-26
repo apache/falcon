@@ -45,18 +45,18 @@ public interface EntityStateStore {
      * @param entityId
      * @return true, if entity exists in store.
      */
-    boolean entityExists(EntityID entityId);
+    boolean entityExists(EntityID entityId) throws StateStoreException;;
 
     /**
      * @param state
      * @return Entities in a given state.
      */
-    Collection<Entity> getEntities(EntityState.STATE state);
+    Collection<Entity> getEntities(EntityState.STATE state) throws StateStoreException;
 
     /**
      * @return All Entities in the store.
      */
-    Collection<EntityState> getAllEntities();
+    Collection<EntityState> getAllEntities() throws StateStoreException;
 
     /**
      * Update an existing entity with the new values.
@@ -73,4 +73,12 @@ public interface EntityStateStore {
      * @throws StateStoreException
      */
     void deleteEntity(EntityID entityId) throws StateStoreException;
+
+
+    /**
+     * Removes all entities and its instances from the store.
+     *
+     * @throws StateStoreException
+     */
+    void deleteEntities() throws StateStoreException;
 }

@@ -17,11 +17,15 @@
  */
 package org.apache.falcon.state.store;
 
+import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.service.ConfigurationChangeListener;
 
 /**
  * Interface that combines entity, instance store APIs and also config change listener's.
  */
 public interface StateStore extends ConfigurationChangeListener, EntityStateStore, InstanceStateStore {
-
+    /**
+     * Deletes all entities and instances.
+     */
+    void clear() throws StateStoreException;
 }

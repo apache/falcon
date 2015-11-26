@@ -26,7 +26,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * Represents an execution instance of an entity.
@@ -38,20 +37,31 @@ public abstract class ExecutionInstance implements NotificationHandler {
     // External ID is the ID used to identify the Job submitted to the DAG Engine, as returned by the DAG Engine.
     // For example, for Oozie this would be the workflow Id.
     private String externalID;
+    // Time at which instance has to be run.
     private final DateTime instanceTime;
+    // Time at which instance is created.
     private final DateTime creationTime;
     private DateTime actualStart;
     private DateTime actualEnd;
-    private static final DateTimeZone UTC = DateTimeZone.forTimeZone(TimeZone.getTimeZone("UTC"));
+    protected static final DateTimeZone UTC = DateTimeZone.UTC;
+
+    /**
+     * @param instanceTime Time at which instance has to be run.
+     * @param cluster
+     * @param creationTime Time at which instance is created to run.
+     */
+    public ExecutionInstance(DateTime instanceTime, String cluster, DateTime creationTime) {
+        this.instanceTime = new DateTime(instanceTime, UTC);
+        this.cluster = cluster;
+        this.creationTime = new DateTime(creationTime, UTC);
+    }
 
     /**
      * @param instanceTime
      * @param cluster
      */
     public ExecutionInstance(DateTime instanceTime, String cluster) {
-        this.instanceTime = new DateTime(instanceTime, UTC);
-        this.cluster = cluster;
-        this.creationTime = DateTime.now(UTC);
+        this(instanceTime, cluster, DateTime.now());
     }
 
     /**
@@ -92,7 +102,7 @@ public abstract class ExecutionInstance implements NotificationHandler {
     public abstract Entity getEntity();
 
     /**
-     * @return - The nominal time of the instance.
+     * @return - The instance time of the instance.
      */
     public DateTime getInstanceTime() {
         return instanceTime;
@@ -138,16 +148,31 @@ public abstract class ExecutionInstance implements NotificationHandler {
         this.actualEnd = actualEnd;
     }
 
-
+    /**
+     * Creation time of an instance.
+     * @return
+     */
     public DateTime getCreationTime() {
         return creationTime;
     }
 
     /**
+     * Set the gating conditions on which this instance is waiting before it is scheduled for execution.
+     * @param predicates
+     */
+    public abstract void setAwaitingPredicates(List<Predicate> predicates);
+
+    /**
      * @return - The gating conditions on which this instance is waiting before it is scheduled for execution.
      * @throws FalconException
      */
-    public abstract List<Predicate> getAwaitingPredicates() throws FalconException;
+    public abstract List<Predicate> getAwaitingPredicates();
+
+    /**
+     * set the sequential numerical id of the instance.
+     */
+    public abstract void setInstanceSequence(int sequence);
+
 
     /**
      * Suspends the instance if it is in one of the active states, waiting, ready or running.

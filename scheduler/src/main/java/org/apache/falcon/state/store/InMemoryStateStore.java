@@ -50,8 +50,7 @@ public final class InMemoryStateStore extends AbstractStateStore {
 
     private static final StateStore STORE = new InMemoryStateStore();
 
-    private InMemoryStateStore() {
-    }
+    private InMemoryStateStore() {}
 
     public static StateStore get() {
         return STORE;
@@ -111,6 +110,11 @@ public final class InMemoryStateStore extends AbstractStateStore {
         }
         deleteExecutionInstances(entityId);
         entityStates.remove(entityId.getKey());
+    }
+
+    @Override
+    public void deleteEntities() throws StateStoreException {
+        entityStates.clear();
     }
 
     @Override
@@ -223,6 +227,20 @@ public final class InMemoryStateStore extends AbstractStateStore {
         }
     }
 
+    @Override
+    public void deleteExecutionInstances() {
+        instanceStates.clear();
+    }
+
+    @Override
+    public void deleteExecutionInstance(InstanceID instanceID) throws StateStoreException {
+        if (!instanceStates.containsKey(instanceID.toString())) {
+            throw new StateStoreException("Instance with key, " + instanceID.toString() + " does not exist.");
+        }
+        instanceStates.remove(instanceID.toString());
+    }
+
+    @Override
     public void clear() {
         entityStates.clear();
         instanceStates.clear();
