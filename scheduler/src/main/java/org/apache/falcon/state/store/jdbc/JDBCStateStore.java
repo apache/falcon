@@ -168,6 +168,12 @@ public final class JDBCStateStore extends AbstractStateStore {
     }
 
     @Override
+    public boolean isEntityCompleted(EntityID entityId) {
+        // ToDo need to implement this, currently returning false.
+        return false;
+    }
+
+    @Override
     public void putExecutionInstance(InstanceState instanceState) throws StateStoreException {
         InstanceID instanceID = new InstanceID(instanceState.getInstance());
         if (executionInstanceExists(instanceID)) {

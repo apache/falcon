@@ -97,7 +97,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public boolean isCompleted(Entity entity) throws FalconException {
-        throw new FalconException("Not yet implemented.");
+        return STATE_STORE.isEntityCompleted(new EntityID(entity));
     }
 
     @Override

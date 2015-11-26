@@ -81,4 +81,11 @@ public interface EntityStateStore {
      * @throws StateStoreException
      */
     void deleteEntities() throws StateStoreException;
+
+    /**
+     * Checks whether entity completed or not.
+     * @param entityId
+     * @return
+     */
+    boolean isEntityCompleted(EntityID entityId);
 }
