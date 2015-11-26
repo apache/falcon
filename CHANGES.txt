@@ -20,6 +20,8 @@ Trunk (Unreleased)
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1634 Add .reviewboardrc file so that review requests can be created using just command line(Rajat Khandelwal via Ajay Yadava)
+
     FALCON-1557 Supporting some Entity Management Api's and admin api in Falcon Unit (Narayan Periwal via Pallavi Rao)
 
     FALCON-1622 On starting falcon server JPS shows Main and not Falcon(Sandeep Samudrala via Ajay Yadava)
