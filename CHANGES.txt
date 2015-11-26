@@ -53,6 +53,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON- 1589 Package sample recipe properties file(Peeyush Bishnoi via Ajay Yadava)
+
     FALCON-1597 Falcon should not retry in case of an instance being manual kill from user (Sandeep Samudrala via Pallavi Rao)
 
     FALCON-1606 Process schedule fails in some cases in case of NativeScheduler(Pavan Kumar Kolamuri via Ajay Yadava)

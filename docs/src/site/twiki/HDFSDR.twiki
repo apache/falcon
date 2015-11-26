@@ -9,13 +9,26 @@ Falcon supports HDFS DR recipe to replicate data from source cluster to destinat
    </verbatim>
 
 ---+++ Update recipes properties
-   Update recipe properties file in addons/recipes/hdfs-replication with required attributes for replicating
-   data from source cluster to destination cluster.
+   Copy HDFS replication recipe properties, workflow and template file from $FALCON_HOME/data-mirroring/hdfs-replication to the accessible
+   directory path or to the recipe directory path (*falcon.recipe.path=<recipe directory path>*). *"falcon.recipe.path"* must be specified
+   in Falcon conf client.properties. Now update the copied recipe properties file with required attributes to replicate data from source cluster to
+   destination cluster for HDFS DR.
 
 ---+++ Submit HDFS DR recipe
+
+   After updating the recipe properties file with required attributes in directory path or in falcon.recipe.path,
+   there are two ways of submitting the HDFS DR recipe:
+
+   * 1. Specify Falcon recipe properties file through recipe command line.
+   <verbatim>
+    $FALCON_HOME/bin/falcon recipe -name hdfs-replication -operation HDFS_REPLICATION
+    -properties /cluster/hdfs-replication.properties
+   </verbatim>
+
+   * 2. Use Falcon recipe path specified in Falcon conf client.properties .
    <verbatim>
     $FALCON_HOME/bin/falcon recipe -name hdfs-replication -operation HDFS_REPLICATION
    </verbatim>
 
-Recipe templates for HDFS DR is available in addons/recipes/hdfs-replication and copy it to
-recipe path (*falcon.recipe.path=<recipe directory path>*) by specifying in client.properties.
+
+*Note:* Recipe properties file, workflow file and template file name must match to the recipe name, it must be unique and in the same directory.
