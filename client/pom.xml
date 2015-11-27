@@ -28,8 +28,8 @@
         <version>0.9-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-client</artifactId>
-    <description>Apache Falcon CLI client</description>
-    <name>Apache Falcon CLI client</name>
+    <description>Apache Falcon Java client</description>
+    <name>Apache Falcon Java client</name>
     <packaging>jar</packaging>
 
     <profiles>
