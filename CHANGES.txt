@@ -9,8 +9,6 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-    FALCON-1490 Fixing inconsistencies in filterBy behavior (Narayan Periwal via Balu Vellanki)
-
     FALCON-1233 Support co-existence of Oozie scheduler (coord) and Falcon native scheduler (Pallavi Rao)
 
     FALCON-1596 Spring shell based CLI for Falcon
@@ -60,6 +58,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1490 Fixing inconsistencies in filterBy behavior (Narayan Periwal via Balu Vellanki)
+
     FALCON-1604 Status API Not working in case of Falcon Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON- 1589 Package sample recipe properties file(Peeyush Bishnoi via Ajay Yadava)
