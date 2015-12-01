@@ -109,4 +109,11 @@ public abstract class AbstractWorkflowEngine {
     public abstract boolean isNotificationEnabled(String cluster, String jobID) throws FalconException;
 
     public abstract Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException;
+
+
+    /**
+     * Returns the short name of the Workflow Engine.
+     * @return
+     */
+    public abstract String getName();
 }

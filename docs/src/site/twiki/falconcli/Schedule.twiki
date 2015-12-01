@@ -7,7 +7,16 @@ Once submitted, an entity can be scheduled using schedule option. Process and fe
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [process|feed] -name <<name>> -schedule
 
-Optional Arg : -skipDryRun -doAs <username>
--properties <<key1:val1,...,keyN:valN>>
+Optional Args :
 
+-skipDryRun When this argument is specified, Falcon skips oozie dryrun.
 
+-doAs <username>
+
+-properties <<key1:val1,...,keyN:valN>>. Specifying 'falcon.scheduler:native' as a property will schedule the entity on the the native scheduler of Falcon. Else, it will default to the engine specified in startup.properties.
+
+Examples:
+
+ $FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule
+
+ $FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule -properties falcon.scheduler:native

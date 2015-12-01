@@ -1684,6 +1684,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    @Override
+    public String getName() {
+        return "oozie";
+    }
+
     private String getUserWorkflowAction(List<WorkflowAction> actionsList){
         for (WorkflowAction wfAction : actionsList) {
             if (StringUtils.equals(wfAction.getName(), "user-action")) {

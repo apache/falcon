@@ -123,8 +123,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateNotEmpty("entityName", entity);
             validateInstanceFilterByClause(filterBy);
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
                     filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
@@ -175,7 +175,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr, numResults);
 
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceResultSubset(wfEngine.getStatus(entityObject,
                             startAndEndDate.first, startAndEndDate.second, lifeCycles),
                     filterBy, orderBy, sortOrder, offset, numResults);
@@ -255,7 +255,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceSummaryResultSubset(wfEngine.getSummary(entityObject,
                     startAndEndDate.first, startAndEndDate.second, lifeCycles),
                     filterBy, orderBy, sortOrder);
@@ -547,7 +547,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Date start = startAndEndDate.first;
             Date end = EntityUtil.getNextInstanceTime(start, EntityUtil.getFrequency(entityObject),
                     EntityUtil.getTimeZone(entityObject), 1);
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to display params of an instance", e);
@@ -572,7 +572,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.killInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
@@ -598,7 +598,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.suspendInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
@@ -624,7 +624,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.resumeInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
@@ -787,7 +787,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     private InstancesResult.WorkflowStatus getProcessInstanceStatus(Process process, Date instanceTime)
         throws FalconException {
-        AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+        AbstractWorkflowEngine wfEngine = getWorkflowEngine(process);
         List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
         lifeCycles.add(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
         Date endRange = new Date(instanceTime.getTime() + 200);
@@ -817,7 +817,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.reRunInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles, isForced);
         } catch (Exception e) {

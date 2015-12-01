@@ -86,7 +86,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public boolean isActive(Entity entity) throws FalconException {
-        return STATE_STORE.getEntity(new EntityID(entity)).getCurrentState() != EntityState.STATE.SUBMITTED;
+        EntityID id = new EntityID(entity);
+        // Ideally state store should have all entities, but, check anyway.
+        if (STATE_STORE.entityExists(id)) {
+            return STATE_STORE.getEntity(id).getCurrentState() != EntityState.STATE.SUBMITTED;
+        }
+        return false;
     }
 
     @Override
@@ -366,6 +371,11 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException {
         throw new UnsupportedOperationException("Not yet Implemented");
+    }
+
+    @Override
+    public String getName() {
+        return "native";
     }
 }
 

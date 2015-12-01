@@ -159,6 +159,7 @@ public class OozieDAGEngine implements DAGEngine {
         props.put("feedNames", "NONE");
         props.put("feedInstancePaths", "NONE");
         props.put("userJMSNotificationEnabled", "true");
+        props.put("systemJMSNotificationEnabled", "false");
         return props;
     }
 
@@ -176,6 +177,7 @@ public class OozieDAGEngine implements DAGEngine {
         props.put("feedNames", "NONE");
         props.put("feedInstancePaths", "NONE");
         props.put("userJMSNotificationEnabled", "true");
+        props.put("systemJMSNotificationEnabled", "false");
         return props;
     }
 

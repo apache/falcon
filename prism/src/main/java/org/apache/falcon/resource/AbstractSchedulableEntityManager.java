@@ -33,6 +33,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.service.FeedSLAMonitoringService;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,10 +61,13 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
 
     /**
-     * Schedules an submitted entity immediately.
+     * Schedules a submitted entity immediately.
      *
      * @param type   entity type
      * @param entity entity name
+     * @param properties Specifying 'falcon.scheduler:native' as a property will schedule the entity on the
+     *                   native workflow engine, else it will default to the workflow engine
+     *                   as defined in startup.properties.
      * @return APIResult
      */
     public APIResult schedule(
@@ -95,7 +99,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                         + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            getWorkflowEngine().schedule(entityObj, skipDryRun, properties);
+            WorkflowEngineFactory.getWorkflowEngine(entityObj, properties).schedule(entityObj, skipDryRun, properties);
         } catch (Exception e) {
             throw new FalconException("Entity schedule failed for " + type + ": " + entity, e);
         } finally {
@@ -177,6 +181,9 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
      * Submits a new entity and schedules it immediately.
      *
      * @param type   entity type
+     * @param properties Specifying 'falcon.scheduler:native' as a property will schedule the entity on the
+     *                   native workflow engine, else it will default to the workflow engine
+     *                   as defined in startup.properties.
      * @return APIResult
      */
     public APIResult submitAndSchedule(
@@ -212,8 +219,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj)) {
-                getWorkflowEngine().suspend(entityObj);
+            if (getWorkflowEngine(entityObj).isActive(entityObj)) {
+                getWorkflowEngine(entityObj).suspend(entityObj);
             } else {
                 throw new FalconException(entity + "(" + type + ") is not scheduled");
             }
@@ -240,8 +247,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj)) {
-                getWorkflowEngine().resume(entityObj);
+            if (getWorkflowEngine(entityObj).isActive(entityObj)) {
+                getWorkflowEngine(entityObj).resume(entityObj);
             } else {
                 throw new FalconException(entity + "(" + type + ") is not scheduled");
             }
@@ -347,7 +354,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             decorateEntityWithACL(entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             for (String cluster : clusters) {
-                result.append(getWorkflowEngine().touch(entity, cluster, skipDryRun));
+                result.append(getWorkflowEngine(entity).touch(entity, cluster, skipDryRun));
             }
         } catch (Throwable e) {
             LOG.error("Touch failed", e);

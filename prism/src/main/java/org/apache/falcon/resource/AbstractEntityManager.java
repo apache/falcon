@@ -78,15 +78,9 @@ public abstract class AbstractEntityManager {
     protected static final String DO_AS_PARAM = "doAs";
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
-    private AbstractWorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
 
     public AbstractEntityManager() {
-        try {
-            workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
-        } catch (FalconException e) {
-            throw new FalconRuntimException(e);
-        }
     }
 
     protected static Integer getDefaultResultsPerPage() {
@@ -231,7 +225,7 @@ public abstract class AbstractEntityManager {
                 Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
                 for (String cluster : clusters) {
                     try {
-                        getWorkflowEngine().dryRun(entity, cluster, skipDryRun);
+                        getWorkflowEngine(entity).dryRun(entity, cluster, skipDryRun);
                     } catch (FalconException e) {
                         throw new FalconException("dryRun failed on cluster " + cluster, e);
                     }
@@ -270,8 +264,8 @@ public abstract class AbstractEntityManager {
                 canRemove(entityObj);
                 obtainEntityLocks(entityObj, "delete", tokenList);
                 if (entityType.isSchedulable() && !DeploymentUtil.isPrism()) {
-                    getWorkflowEngine().delete(entityObj);
-                    removedFromEngine = "(KILLED in ENGINE)";
+                    getWorkflowEngine(entityObj).delete(entityObj);
+                    removedFromEngine = "(KILLED in WF_ENGINE)";
                 }
 
                 configStore.remove(entityType, entity);
@@ -327,10 +321,10 @@ public abstract class AbstractEntityManager {
                 oldClusters.removeAll(newClusters); //deleted clusters
 
                 for (String cluster : newClusters) {
-                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster, skipDryRun));
+                    result.append(getWorkflowEngine(oldEntity).update(oldEntity, newEntity, cluster, skipDryRun));
                 }
                 for (String cluster : oldClusters) {
-                    getWorkflowEngine().delete(oldEntity, cluster);
+                    getWorkflowEngine(oldEntity).delete(oldEntity, cluster);
                 }
             }
 
@@ -568,6 +562,7 @@ public abstract class AbstractEntityManager {
     protected EntityStatus getStatus(Entity entity, EntityType type) throws FalconException {
         EntityStatus status = EntityStatus.SUBMITTED;
 
+        AbstractWorkflowEngine workflowEngine = getWorkflowEngine(entity);
         if (type.isSchedulable()) {
             if (workflowEngine.isActive(entity)) {
                 if (workflowEngine.isSuspended(entity)) {
@@ -1104,8 +1099,8 @@ public abstract class AbstractEntityManager {
     }
 
 
-    protected AbstractWorkflowEngine getWorkflowEngine() {
-        return this.workflowEngine;
+    protected AbstractWorkflowEngine getWorkflowEngine(Entity entity) throws FalconException {
+        return WorkflowEngineFactory.getWorkflowEngine(entity);
     }
 
     protected <T extends APIResult> T consolidateResult(Map<String, T> results, Class<T> clazz) {

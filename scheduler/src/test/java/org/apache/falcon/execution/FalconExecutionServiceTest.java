@@ -121,7 +121,6 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         mockSchedulerService = Mockito.mock(SchedulerService.class);
         Mockito.when(mockSchedulerService.getName()).thenReturn("JobSchedulerService");
         StartupProperties.get().setProperty("dag.engine.impl", MockDAGEngine.class.getName());
-        StartupProperties.get().setProperty("execution.service.impl", FalconExecutionService.class.getName());
         dagEngine = Mockito.spy(DAGEngineFactory.getDAGEngine("testCluster"));
         Mockito.when(mockSchedulerService.createRequestBuilder(Mockito.any(NotificationHandler.class),
                 Mockito.any(ID.class))).thenCallRealMethod();
