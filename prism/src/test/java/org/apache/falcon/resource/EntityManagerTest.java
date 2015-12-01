@@ -196,6 +196,32 @@ public class EntityManagerTest extends AbstractEntityManager {
     }
 
     @Test
+    public void testGetEntityListPipelinesFilterBy() throws Exception {
+        Entity process2 = buildProcess("processAuthUserPipelinesFilterBy", System.getProperty("user.name"), "",
+                "USER-DATA1");
+        configStore.publish(EntityType.PROCESS, process2);
+
+        EntityList entityList = this.getEntityList("", "", "", "process", "",
+                "PIPELINES:USER-DATA2,PIPELINES:USER-DATA1", "", "asc", 0, 10, "");
+        Assert.assertNotNull(entityList.getElements());
+        Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertNotNull(entityList.getElements()[0].pipeline);
+        Assert.assertEquals(entityList.getElements()[0].pipeline.get(0), "USER-DATA1");
+    }
+
+    @Test
+    public void testGetEntityListClustersFilterBy() throws Exception {
+        Entity process2 = buildProcess("processClusters1", System.getProperty("user.name"), "", "");
+        configStore.publish(EntityType.PROCESS, process2);
+
+        EntityList entityList = this.getEntityList("", "", "", "process", "",
+                "CLUSTER:clusterprocessClusters2,CLUSTER:clusterprocessClusters1", "", "asc", 0, 10, "");
+        Assert.assertNotNull(entityList.getElements());
+        Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertEquals(entityList.getElements()[0].name, "processClusters1");
+    }
+
+    @Test
     public void testNumberOfResults() {
         Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 10000), 10000);
         Assert.assertEquals(getRequiredNumberOfResults(10000, 0, 4000), 4000);

@@ -890,6 +890,36 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
+    private boolean isFilteredByPipelines(List<String> filterPipelinesList, List<String> pipelines) {
+        if (filterPipelinesList.isEmpty()) {
+            return false;
+        } else if (pipelines.isEmpty()) {
+            return true;
+        }
+
+        for (String pipeline : filterPipelinesList) {
+            if (pipelines.contains(pipeline)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isFilteredByClusters(List<String> filterClustersList, Set<String> clusters) {
+        if (filterClustersList.isEmpty()) {
+            return false;
+        } else if (clusters.isEmpty()) {
+            return true;
+        }
+
+        for (String cluster : filterClustersList) {
+            if (clusters.contains(cluster)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean isFilteredByFields(Entity entity, Map<String, List<String>> filterKeyVals) {
         if (filterKeyVals.isEmpty()) {
             return false;
@@ -924,10 +954,10 @@ public abstract class AbstractEntityManager {
                         "Invalid filterBy key for non process entities " + pair.getKey(),
                         Response.Status.BAD_REQUEST);
             }
-            return !EntityUtil.getPipelines(entity).contains(pair.getValue().get(0));
+            return isFilteredByPipelines(pair.getValue(), EntityUtil.getPipelines(entity));
 
         case CLUSTER:
-            return !EntityUtil.getClustersDefined(entity).contains(pair.getValue().get(0));
+            return isFilteredByClusters(pair.getValue(), EntityUtil.getClustersDefined(entity));
 
         case TAGS:
             return isFilteredByTags(getFilterByTags(pair.getValue()), EntityUtil.getTags(entity));
