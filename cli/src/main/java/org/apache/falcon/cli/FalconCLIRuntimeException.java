@@ -18,6 +18,8 @@
 
 package org.apache.falcon.cli;
 
+import org.apache.falcon.client.FalconCLIException;
+
 /**
  * Runtime exception in CLI. Since most methods are invoked through reflection, checked exceptions
  * end up being thrown as UndeclaredThrowableException. Instead of that, let's throw our own RuntimeException.
@@ -26,6 +28,9 @@ public class FalconCLIRuntimeException extends RuntimeException {
     public FalconCLIRuntimeException(Throwable e) {
         super(e);
     }
+    public FalconCLIRuntimeException(FalconCLIException e) {
+        this(e.getMessage(), e.getCause());
+    }
 
     public FalconCLIRuntimeException(String message) {
         super(message);
@@ -33,5 +38,13 @@ public class FalconCLIRuntimeException extends RuntimeException {
 
     public FalconCLIRuntimeException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof FalconCLIRuntimeException)) {
+            return false;
+        }
+        return getMessage().equals(((FalconCLIRuntimeException) obj).getMessage());
     }
 }

@@ -408,7 +408,7 @@ public class FalconClient extends AbstractFalconClient {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 
     public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
-                                           String startTime, String endTime, String colo) throws FalconCLIException {
+                                           String startTime, String endTime, String colo) throws  FalconCLIException {
 
         WebResource resource = service.path(Entities.SLA.path).path(entityType).queryParam("start", startTime)
                 .queryParam("colo", colo);
@@ -813,7 +813,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private EntityList sendDependencyRequest(Entities entities, String entityType,
-                                         String entityName, String doAsUser) throws FalconCLIException {
+                                         String entityName, String doAsUser)  {
 
         WebResource resource = service.path(entities.path).path(entityType).path(entityName);
         if (StringUtils.isNotEmpty(doAsUser)) {

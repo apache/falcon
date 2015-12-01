@@ -21,6 +21,7 @@ package org.apache.falcon.cli.commands;
 
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.client.FalconCLIException;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 
@@ -52,5 +53,10 @@ public class FalconConnectionCommands extends BaseFalconCommands {
             value = kvArray[1];
         }
         setClientProperty(key, value);
+    }
+
+    @CliCommand(value = "throw", help = "throw exception")
+    public void throwException() throws FalconCLIException {
+        throw new FalconCLIException("Random Exception");
     }
 }

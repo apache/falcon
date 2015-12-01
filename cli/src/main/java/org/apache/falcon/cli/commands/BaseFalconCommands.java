@@ -30,18 +30,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import static org.apache.falcon.cli.FalconCLI.*;
+
 /**
  * Common code for all falcon command classes.
  */
 public class BaseFalconCommands implements ExecutionProcessor {
-    private static final String FALCON_URL = "FALCON_URL";
     private static final String FALCON_URL_PROPERTY = "falcon.url";
     private static final String DO_AS = "DO_AS";
     private static final String DO_AS_PROPERTY = "do.as";
     private static final String CLIENT_PROPERTIES = "/client.properties";
+    protected static final String FALCON_URL_ABSENT = "Failed to get falcon url from environment or client properties";
     private static Properties clientProperties;
     private static Properties backupProperties = new Properties();
-    private static FalconClient client;
+    protected static FalconClient client;
 
     protected static Properties getClientProperties() {
         if (clientProperties == null) {
@@ -65,7 +67,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
                 prop.setProperty(FALCON_URL_PROPERTY, urlOverride);
             }
             if (prop.getProperty(FALCON_URL_PROPERTY) == null) {
-                throw new FalconCLIRuntimeException("Failed to get falcon url from environment or client properties");
+                throw new FalconCLIRuntimeException(FALCON_URL_ABSENT);
             }
             String doAsOverride = System.getenv(DO_AS);
             if (doAsOverride != null) {
@@ -103,6 +105,17 @@ public class BaseFalconCommands implements ExecutionProcessor {
             }
         }
         return client;
+    }
+
+    protected String getColo(String colo) {
+        if (colo == null) {
+            Properties prop = getClientProperties();
+            colo = prop.getProperty(CURRENT_COLO, "*");
+        }
+        return colo;
+    }
+    protected String getDoAs() {
+        return getClientProperties().getProperty(DO_AS_PROPERTY);
     }
 
     @Override
