@@ -58,6 +58,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1595 In secure cluster, Falcon server loses ability to communicate with HDFS over time (Balu Vellanki)
+
     FALCON-1490 Fixing inconsistencies in filterBy behavior (Narayan Periwal via Balu Vellanki)
 
     FALCON-1604 Status API Not working in case of Falcon Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)

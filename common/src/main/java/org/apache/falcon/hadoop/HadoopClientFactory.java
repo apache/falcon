@@ -173,17 +173,16 @@ public final class HadoopClientFactory {
         Validate.notNull(ugi, "ugi cannot be null");
         Validate.notNull(conf, "configuration cannot be null");
 
-        String nameNode = uri.getAuthority();
-        if (nameNode == null) {
-            nameNode = getNameNode(conf);
-            if (nameNode != null) {
-                try {
-                    new URI(nameNode).getAuthority();
-                } catch (URISyntaxException ex) {
-                    throw new FalconException("Exception while getting FileSystem", ex);
-                }
+        try {
+            if (UserGroupInformation.isSecurityEnabled()) {
+                ugi.checkTGTAndReloginFromKeytab();
             }
+        } catch (IOException ioe) {
+            throw new FalconException("Exception while getting FileSystem. Unable to check TGT for user "
+                    + ugi.getShortUserName(), ioe);
         }
+
+        validateNameNode(uri, conf);
 
         try {
             // prevent falcon impersonating falcon, no need to use doas
@@ -256,6 +255,20 @@ public final class HadoopClientFactory {
                               FsPermission permission) throws IOException {
         if (!FileSystem.mkdirs(fs, path, permission)) {
             throw new IOException("mkdir failed for " + path);
+        }
+    }
+
+    private void validateNameNode(URI uri, Configuration conf) throws FalconException {
+        String nameNode = uri.getAuthority();
+        if (nameNode == null) {
+            nameNode = getNameNode(conf);
+            if (nameNode != null) {
+                try {
+                    new URI(nameNode).getAuthority();
+                } catch (URISyntaxException ex) {
+                    throw new FalconException("Exception while getting FileSystem", ex);
+                }
+            }
         }
     }
 }
