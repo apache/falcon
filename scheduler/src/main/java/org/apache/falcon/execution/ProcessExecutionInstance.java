@@ -320,6 +320,8 @@ public class ProcessExecutionInstance extends ExecutionInstance {
 
     @Override
     public void destroy() throws FalconException {
-        NotificationServicesRegistry.unregister(executionService, getId());
+        // Only Registration to Data service happens via process execution instance. So, handle just that.
+        NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
+                .unregister(executionService, getId());
     }
 }

@@ -58,6 +58,10 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1598 Flaky test : EntityManagerJerseyIT.testDuplicateDeleteCommands (Narayan Periwal via Pallavi Rao)
+
+    FALCON-1568 Process Instances are not getting scheduled in Falcon Native Scheduler (Pallavi Rao)
+
     FALCON-1595 In secure cluster, Falcon server loses ability to communicate with HDFS over time (Balu Vellanki)
 
     FALCON-1490 Fixing inconsistencies in filterBy behavior (Narayan Periwal via Balu Vellanki)

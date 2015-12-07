@@ -41,12 +41,13 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * This notification service notifies {@link NotificationHandler} when an external job
@@ -57,7 +58,7 @@ public class JobCompletionService implements FalconNotificationService, Workflow
     private static final Logger LOG = LoggerFactory.getLogger(JobCompletionService.class);
     private static final DateTimeZone UTC = DateTimeZone.UTC;
 
-    private List<NotificationHandler> listeners = Collections.synchronizedList(new ArrayList<NotificationHandler>());
+    private Set<NotificationHandler> listeners = Collections.synchronizedSet(new HashSet<NotificationHandler>());
 
     @Override
     public void register(NotificationRequest notifRequest) throws NotificationServiceException {
@@ -140,9 +141,13 @@ public class JobCompletionService implements FalconNotificationService, Workflow
 
     private void onEnd(WorkflowExecutionContext context, WorkflowJob.Status status) throws FalconException {
         JobCompletedEvent event = new JobCompletedEvent(constructCallbackID(context), status, getEndTime(context));
-        for (NotificationHandler handler : listeners) {
-            LOG.debug("Notifying {} with event {}", handler, event.getTarget());
-            handler.onEvent(event);
+        synchronized (listeners) {
+            Iterator<NotificationHandler> iterator = listeners.iterator();
+            while(iterator.hasNext()) {
+                NotificationHandler handler = iterator.next();
+                LOG.debug("Notifying {} with event {}", handler, event.getTarget());
+                handler.onEvent(event);
+            }
         }
     }
 
