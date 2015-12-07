@@ -607,18 +607,19 @@ public class EntityManagerJerseyIT {
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
         context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
 
-        ExecutorService service = Executors.newSingleThreadExecutor();
-        ExecutorService duplicateService = Executors.newSingleThreadExecutor();
+        ExecutorService service = Executors.newFixedThreadPool(2);
 
-        Future<ClientResponse> future = service.submit(new DeleteCommand(context, overlay.get("cluster"), "cluster"));
-        Future<ClientResponse> duplicateFuture = duplicateService.submit(new DeleteCommand(context,
-                overlay.get("cluster"), "cluster"));
+        Future<ClientResponse> future = service.submit(new DeleteCommand(context, overlay.get("inputFeedName"),
+                "feed"));
+        Future<ClientResponse> duplicateFuture = service.submit(new DeleteCommand(context,
+                overlay.get("inputFeedName"), "feed"));
 
         ClientResponse response = future.get();
         ClientResponse duplicateSubmitThreadResponse = duplicateFuture.get();
 
-        // since there are duplicate threads for deletion, there is no guarantee which request will succeed.
+        // since there are two threads for deletion, there is no guarantee which request will succeed.
         testDuplicateCommandsResponse(context, response, duplicateSubmitThreadResponse);
     }
 
