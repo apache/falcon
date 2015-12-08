@@ -97,7 +97,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      * Map<Pair<feedName, clusterName>, Set<instanceTime> to store
      * each missing instance of a feed.
      */
-    private Map<Pair<String, String>, BlockingQueue<Date>> pendingInstances;
+    protected Map<Pair<String, String>, BlockingQueue<Date>> pendingInstances;
 
 
     /**
@@ -264,6 +264,13 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     @Override
     public void destroy() throws FalconException {
         serializeState(); // store the state of monitoring service to the disk.
+    }
+
+    public void makeFeedInstanceAvailable(String feedName, String clusterName, Date nominalTime) {
+        LOG.info("Removing {} feed's instance {} in cluster {} from pendingSLA", feedName,
+                clusterName, nominalTime);
+        Pair<String, String> feedCluster = new Pair<>(feedName, clusterName);
+        pendingInstances.get(feedCluster).remove(nominalTime);
     }
 
     private FileSystem initializeFileSystem() {
@@ -437,7 +444,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         }
     }
 
-    private void initializeService() {
+    protected void initializeService() {
         pendingInstances = new ConcurrentHashMap<>();
         lastCheckedAt = new Date();
         lastSerializedAt = new Date();
