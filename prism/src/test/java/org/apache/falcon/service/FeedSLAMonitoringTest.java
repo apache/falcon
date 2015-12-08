@@ -105,4 +105,21 @@ public class FeedSLAMonitoringTest {
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-05T00:00Z", "", "*");
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-05T00:00Z", null, "*");
     }
+
+    @Test
+    public void  testMakeFeedInstanceAvailable() {
+        Date instanceDate = SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+        Date nextInstanceDate = SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
+        Pair<String, String> feedCluster = new Pair<>("testFeed", "testCluster");
+
+        BlockingQueue<Date> missingInstances = new LinkedBlockingQueue<>();
+        missingInstances.add(instanceDate);
+        missingInstances.add(nextInstanceDate);
+
+        FeedSLAMonitoringService.get().initializeService();
+        FeedSLAMonitoringService.get().pendingInstances.put(feedCluster, missingInstances);
+        FeedSLAMonitoringService.get().makeFeedInstanceAvailable("testFeed", "testCluster", instanceDate);
+
+        Assert.assertEquals(FeedSLAMonitoringService.get().pendingInstances.get(feedCluster).size(), 1);
+    }
 }
