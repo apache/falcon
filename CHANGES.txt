@@ -60,6 +60,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1647 Unable to create feed : FilePermission error under cluster staging directory(Balu Vellanki via Ajay Yadava)
+
     FALCON-1651 Falcon doesn't start (Ajay Yadava)
 
     FALCON-1598 Flaky test : EntityManagerJerseyIT.testDuplicateDeleteCommands (Narayan Periwal via Pallavi Rao)
