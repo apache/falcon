@@ -60,6 +60,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1651 Falcon doesn't start (Ajay Yadava)
+
     FALCON-1598 Flaky test : EntityManagerJerseyIT.testDuplicateDeleteCommands (Narayan Periwal via Pallavi Rao)
 
     FALCON-1568 Process Instances are not getting scheduled in Falcon Native Scheduler (Pallavi Rao)
