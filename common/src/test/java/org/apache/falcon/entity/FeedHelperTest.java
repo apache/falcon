@@ -745,6 +745,7 @@ public class FeedHelperTest extends AbstractTestBase {
         Assert.assertEquals(result, expected);
     }
 
+    @Test
     public void testIsLifeCycleEnabled() throws Exception {
         Feed feed = new Feed();
 
@@ -782,23 +783,26 @@ public class FeedHelperTest extends AbstractTestBase {
         Feed feed = new Feed();
         feed.setFrequency(new Frequency("days(1)"));
 
-        // lifecycle is not defined
+        // retention stage frequency is not defined
+        Lifecycle globalLifecycle = new Lifecycle();
+        RetentionStage globalRetentionStage = new RetentionStage();
+        globalLifecycle.setRetentionStage(globalRetentionStage);
+        feed.setLifecycle(globalLifecycle);
+
         Clusters clusters = new Clusters();
         org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
         cluster.setName("cluster1");
         clusters.getClusters().add(cluster);
         feed.setClusters(clusters);
-        Assert.assertNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("days(1)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("days(1)"));
 
-        // lifecycle is defined at global level
-        Lifecycle globalLifecycle = new Lifecycle();
-        RetentionStage globalRetentionStage = new RetentionStage();
+        // lifecycle is defined only at global level
         globalRetentionStage.setFrequency(new Frequency("hours(2)"));
         globalLifecycle.setRetentionStage(globalRetentionStage);
         feed.setLifecycle(globalLifecycle);
         Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
                 feed.getLifecycle().getRetentionStage().getFrequency());
 
         // lifecycle is defined at both global and cluster level
@@ -808,27 +812,27 @@ public class FeedHelperTest extends AbstractTestBase {
         clusterLifecycle.setRetentionStage(clusterRetentionStage);
         feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
         Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
                 cluster.getLifecycle().getRetentionStage().getFrequency());
 
         // lifecycle at both level - retention only at cluster level.
         feed.getLifecycle().setRetentionStage(null);
         Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
                 cluster.getLifecycle().getRetentionStage().getFrequency());
 
         // lifecycle at both level - retention only at global level.
         feed.getLifecycle().setRetentionStage(globalRetentionStage);
         feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(null);
         Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
                 feed.getLifecycle().getRetentionStage().getFrequency());
 
         // lifecycle is defined only at cluster level
         feed.setLifecycle(null);
         feed.getClusters().getClusters().get(0).getLifecycle().setRetentionStage(clusterRetentionStage);
         Assert.assertNotNull(FeedHelper.getRetentionStage(feed, cluster.getName()));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()),
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
                 cluster.getLifecycle().getRetentionStage().getFrequency());
     }
 
@@ -837,30 +841,38 @@ public class FeedHelperTest extends AbstractTestBase {
         Feed feed = new Feed();
         feed.setFrequency(new Frequency("days(10)"));
 
-        // no lifecycle defined - test both daily and monthly feeds
+        // no retention stage frequency defined - test both daily and monthly feeds
+        Lifecycle globalLifecycle = new Lifecycle();
+        RetentionStage globalRetentionStage = new RetentionStage();
+        globalLifecycle.setRetentionStage(globalRetentionStage);
+        feed.setLifecycle(globalLifecycle);
+
         Clusters clusters = new Clusters();
         org.apache.falcon.entity.v0.feed.Cluster cluster = new org.apache.falcon.entity.v0.feed.Cluster();
         cluster.setName("cluster1");
         clusters.getClusters().add(cluster);
         feed.setClusters(clusters);
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("days(10)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("days(10)"));
 
         feed.setFrequency(new Frequency("hours(1)"));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(6)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("hours(6)"));
 
         feed.setFrequency(new Frequency("minutes(10)"));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(6)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("hours(6)"));
 
         feed.setFrequency(new Frequency("hours(7)"));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(7)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("hours(7)"));
 
         feed.setFrequency(new Frequency("days(2)"));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("days(2)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("days(2)"));
 
         // lifecycle at both level - retention only at global level.
         feed.setFrequency(new Frequency("hours(1)"));
-        Lifecycle globalLifecycle = new Lifecycle();
-        RetentionStage globalRetentionStage = new RetentionStage();
         globalRetentionStage.setFrequency(new Frequency("hours(2)"));
         globalLifecycle.setRetentionStage(globalRetentionStage);
         feed.setLifecycle(globalLifecycle);
@@ -869,12 +881,14 @@ public class FeedHelperTest extends AbstractTestBase {
         RetentionStage clusterRetentionStage = new RetentionStage();
         clusterLifecycle.setRetentionStage(clusterRetentionStage);
         feed.getClusters().getClusters().get(0).setLifecycle(clusterLifecycle);
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(6)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("hours(6)"));
 
         // lifecycle at both level - retention only at cluster level.
         feed.getLifecycle().getRetentionStage().setFrequency(null);
         clusterRetentionStage.setFrequency(new Frequency("hours(4)"));
-        Assert.assertEquals(FeedHelper.getRetentionFrequency(feed, cluster.getName()), new Frequency("hours(4)"));
+        Assert.assertEquals(FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName()),
+                            new Frequency("hours(4)"));
     }
 
     @Test

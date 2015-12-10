@@ -993,18 +993,20 @@ public final class FeedHelper {
         return cluster != null && (feed.getLifecycle() != null || cluster.getLifecycle() != null);
     }
 
-    public static Frequency getRetentionFrequency(Feed feed, String clusterName) throws FalconException {
-        Frequency retentionFrequency;
+    public static Frequency getLifecycleRetentionFrequency(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionFrequency = null;
         RetentionStage retentionStage = getRetentionStage(feed, clusterName);
-        if (retentionStage != null && retentionStage.getFrequency() != null) {
-            retentionFrequency = retentionStage.getFrequency();
-        } else {
-            Frequency feedFrequency = feed.getFrequency();
-            Frequency defaultFrequency = new Frequency("hours(6)");
-            if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
-                retentionFrequency = defaultFrequency;
+        if (retentionStage != null) {
+            if (retentionStage.getFrequency() != null) {
+                retentionFrequency = retentionStage.getFrequency();
             } else {
-                retentionFrequency = new Frequency(feedFrequency.toString());
+                Frequency feedFrequency = feed.getFrequency();
+                Frequency defaultFrequency = new Frequency("hours(6)");
+                if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
+                    retentionFrequency = defaultFrequency;
+                } else {
+                    retentionFrequency = new Frequency(feedFrequency.toString());
+                }
             }
         }
         return  retentionFrequency;

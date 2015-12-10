@@ -152,7 +152,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateRetentionFrequency(Feed feed, String clusterName) throws FalconException {
-        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, clusterName);
+        Frequency retentionFrequency = FeedHelper.getLifecycleRetentionFrequency(feed, clusterName);
         Frequency feedFrequency = feed.getFrequency();
         if (DateUtil.getFrequencyInMillis(retentionFrequency) < DateUtil.getFrequencyInMillis(feedFrequency)) {
             throw new ValidationException("Retention can not be more frequent than data availability.");

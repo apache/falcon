@@ -77,7 +77,7 @@ public final class AgeBasedCoordinatorBuilder {
         coord.setStart(SchemaHelper.formatDateUTC(new Date()));
         coord.setTimezone(feed.getTimezone().getID());
 
-        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, cluster.getName());
+        Frequency retentionFrequency = FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName());
         // set controls
         long frequencyInMillis = ExpressionHelper.get().evaluate(retentionFrequency.toString(), Long.class);
         CONTROLS controls = new CONTROLS();
