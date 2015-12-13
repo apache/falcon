@@ -106,6 +106,11 @@
             <directory>addons/recipes/hive-disaster-recovery/src/main/resources</directory>
             <outputDirectory>data-mirroring/hive-disaster-recovery</outputDirectory>
         </fileSet>
+
+        <fileSet>
+            <directory>src/main/examples</directory>
+            <outputDirectory>examples</outputDirectory>
+        </fileSet>
     </fileSets>
 
     <files>
