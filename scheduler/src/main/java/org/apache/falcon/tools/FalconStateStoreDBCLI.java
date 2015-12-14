@@ -51,7 +51,7 @@ public class FalconStateStoreDBCLI {
 
     // Represents whether DB instance exists or not.
     private boolean instanceExists;
-    private static final String[] FALCON_HELP = {"Falcon DB initialization tool currently supports Derby DB"};
+    private static final String[] FALCON_HELP = {"Falcon DB initialization tool currently supports Derby DB/ Mysql"};
 
     public static void main(String[] args) {
         new FalconStateStoreDBCLI().run(args);

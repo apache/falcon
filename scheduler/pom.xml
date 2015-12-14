@@ -135,7 +135,13 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <version>10.10.1.1</version>
+            <version>${derby.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.version}</version>
         </dependency>
 
         <dependency>
@@ -196,7 +202,10 @@
                             <artifactItem>
                                 <groupId>commons-dbcp</groupId>
                                 <artifactId>commons-dbcp</artifactId>
-                                <version>${commons-dbcp.version}</version>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>mysql</groupId>
+                                <artifactId>mysql-connector-java</artifactId>
                             </artifactItem>
                         </artifactItems>
                         <outputDirectory>${project.build.directory}/dependency</outputDirectory>
