@@ -62,6 +62,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1572 Only one instance is running in a process when run using Native Scheduler(Pallavi Rao via Ajay Yadava)
+
     FALCON-1660 Examples directory missing in distributed mode(Praveen Adlakha via Ajay Yadava)
 
     FALCON-1647 Unable to create feed : FilePermission error under cluster staging directory(Balu Vellanki via Ajay Yadava)

@@ -108,4 +108,9 @@ public abstract class EntityExecutor implements NotificationHandler, InstanceSta
     public EntityClusterID getId() {
         return id;
     }
+
+    @Override
+    public PRIORITY getPriority() {
+        return PRIORITY.MEDIUM;
+    }
 }

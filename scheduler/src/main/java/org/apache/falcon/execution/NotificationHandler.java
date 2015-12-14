@@ -24,6 +24,23 @@ import org.apache.falcon.notification.service.event.Event;
  * An interface that every class that handles notifications from notification services must implement.
  */
 public interface NotificationHandler {
+
+    /**
+     * When there are multiple notification handlers for the same event,
+     * the priority determines which handler gets notified first.
+     */
+    enum PRIORITY {HIGH(5), MEDIUM(3), LOW(0);
+
+        private final int priority;
+
+        PRIORITY(int i) {
+            this.priority = i;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+    }
     /**
      * The method a notification service calls to onEvent an event.
      *
@@ -31,4 +48,11 @@ public interface NotificationHandler {
      * @throws FalconException
      */
     void onEvent(Event event) throws FalconException;
+
+    /**
+     * When there are multiple notification handlers for the same event,
+     * the priority determines which handler gets notified first.
+     * @return
+     */
+    PRIORITY getPriority();
 }

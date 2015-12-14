@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.notification.service.impl;
 
+import java.util.Comparator;
+import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
@@ -43,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -58,7 +59,13 @@ public class JobCompletionService implements FalconNotificationService, Workflow
     private static final Logger LOG = LoggerFactory.getLogger(JobCompletionService.class);
     private static final DateTimeZone UTC = DateTimeZone.UTC;
 
-    private Set<NotificationHandler> listeners = Collections.synchronizedSet(new HashSet<NotificationHandler>());
+    private Set<NotificationHandler> listeners = Collections.synchronizedSet(new TreeSet<>(
+            new Comparator<NotificationHandler>() {
+                @Override
+                public int compare(NotificationHandler o1, NotificationHandler o2) {
+                    return Integer.compare(o1.getPriority().getPriority(), o2.getPriority().getPriority());
+                }
+            }));
 
     @Override
     public void register(NotificationRequest notifRequest) throws NotificationServiceException {

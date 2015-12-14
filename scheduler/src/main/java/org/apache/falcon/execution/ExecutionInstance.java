@@ -202,4 +202,9 @@ public abstract class ExecutionInstance implements NotificationHandler {
      * @throws FalconException
      */
     public abstract void destroy() throws FalconException;
+
+    @Override
+    public PRIORITY getPriority() {
+        return PRIORITY.MEDIUM;
+    }
 }

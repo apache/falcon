@@ -287,6 +287,11 @@ public class SchedulerServiceTest extends AbstractTestBase {
                     failed = true;
                 }
             }
+
+            @Override
+            public PRIORITY getPriority() {
+                return PRIORITY.MEDIUM;
+            }
         };
         SchedulerService.JobScheduleRequestBuilder request = (SchedulerService.JobScheduleRequestBuilder)
                 scheduler.createRequestBuilder(failureHandler, instance1.getId());
@@ -316,6 +321,11 @@ public class SchedulerServiceTest extends AbstractTestBase {
             } else {
                 stateStore.updateExecutionInstance(state);
             }
+        }
+
+        @Override
+        public PRIORITY getPriority() {
+            return PRIORITY.MEDIUM;
         }
     }
 }

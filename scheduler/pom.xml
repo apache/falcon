@@ -137,6 +137,12 @@
             <artifactId>derby</artifactId>
             <version>10.10.1.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>${commons-dbcp.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

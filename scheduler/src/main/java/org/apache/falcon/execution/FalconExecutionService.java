@@ -133,6 +133,11 @@ public final class FalconExecutionService implements FalconService, EntityStateC
     }
 
     @Override
+    public PRIORITY getPriority() {
+        return PRIORITY.HIGH;
+    }
+
+    @Override
     public void onSubmit(Entity entity) throws FalconException {
         // Do nothing
     }
