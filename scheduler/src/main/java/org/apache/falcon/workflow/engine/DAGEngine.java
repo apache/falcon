@@ -112,4 +112,12 @@ public interface DAGEngine {
      * @throws DAGEngineException
      */
     Properties getConfiguration(String externalID) throws DAGEngineException;
+
+    /**
+     * Re-builds the workflow.
+     * @param entity
+     * @param skipDryRun
+     * @return
+     */
+    void touch(Entity entity, Boolean skipDryRun) throws DAGEngineException;
 }

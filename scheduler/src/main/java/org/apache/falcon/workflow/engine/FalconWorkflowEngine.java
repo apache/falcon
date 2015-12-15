@@ -24,6 +24,7 @@ import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.execution.EntityExecutor;
@@ -37,12 +38,15 @@ import org.apache.falcon.state.EntityState;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
+import org.apache.falcon.util.DateUtil;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -340,7 +344,49 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public String touch(Entity entity, String cluster, Boolean skipDryRun) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        EntityID id = new EntityID(entity);
+        // Ideally state store should have all entities, but, check anyway.
+        if (STATE_STORE.entityExists(id)) {
+            Date endTime = EntityUtil.getEndTime(entity, cluster);
+            if (endTime.before(DateUtil.now())) {
+                throw new FalconException("Entity's end time " + SchemaHelper.formatDateUTC(endTime)
+                        + " is before current time. Entity can't be touch-ed as it has completed.");
+            }
+            Collection<InstanceState> instances =
+                    STATE_STORE.getExecutionInstances(entity, cluster, InstanceState.getRunningStates());
+            // touch should happen irrespective of the state the entity is in.
+            DAGEngineFactory.getDAGEngine(cluster).touch(entity, (skipDryRun == null)? Boolean.FALSE : skipDryRun);
+            StringBuilder builder = new StringBuilder();
+            builder.append(entity.toShortString()).append("/Effective Time: ")
+                    .append(getEffectiveTime(entity, cluster, instances));
+            return builder.toString();
+        }
+        throw new FalconException("Could not find entity " + id + " in state store.");
+    }
+
+    // Effective time will be right after the last running instance.
+    private String getEffectiveTime(Entity entity, String cluster, Collection<InstanceState> instances)
+        throws FalconException {
+        if (instances == null || instances.isEmpty()) {
+            return SchemaHelper.formatDateUTC(DateUtil.now());
+        } else {
+            List<InstanceState> instanceList = new ArrayList(instances);
+            Collections.sort(instanceList, new Comparator<InstanceState>() {
+                @Override
+                public int compare(InstanceState x, InstanceState y) {
+                    return (x.getInstance().getInstanceSequence() < y.getInstance().getInstanceSequence()) ? -1
+                            : (x.getInstance().getInstanceSequence() == y.getInstance().getInstanceSequence() ? 0 : 1);
+                }
+            });
+            // Get the last element as the list is sorted in ascending order
+            Date lastRunningInstanceTime = instanceList.get(instanceList.size() - 1)
+                    .getInstance().getInstanceTime().toDate();
+            Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+            // Offset the time by a few seconds, else nextStartTime will be same as the reference time.
+            Date effectiveTime = EntityUtil
+                    .getNextStartTime(entity, clusterEntity, DateUtil.offsetTime(lastRunningInstanceTime, 10));
+            return SchemaHelper.formatDateUTC(effectiveTime);
+        }
     }
 
     @Override

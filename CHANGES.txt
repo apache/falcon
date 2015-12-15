@@ -9,6 +9,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1512 Implement touch feature for native scheduler (Pallavi Rao)
+
     FALCON-1233 Support co-existence of Oozie scheduler (coord) and Falcon native scheduler (Pallavi Rao)
 
     FALCON-1596 Spring shell based CLI for Falcon

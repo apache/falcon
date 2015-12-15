@@ -103,7 +103,7 @@ public class OozieDAGEngine implements DAGEngine {
             properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
             return client.run(properties);
         } catch (OozieClientException e) {
-            LOG.error("Ozie client exception:", e);
+            LOG.error("Oozie client exception:", e);
             throw new DAGEngineException(e);
         } catch (FalconException e1) {
             LOG.error("Falcon Exception : ", e1);
@@ -125,9 +125,21 @@ public class OozieDAGEngine implements DAGEngine {
         }
     }
 
-    private void dryRunInternal(Properties props) throws OozieClientException {
-        LOG.info("Dry run with properties {}", props);
-        client.dryrun(props);
+    private void dryRunInternal(Properties properties, Path buildPath, Entity entity)
+        throws OozieClientException, DAGEngineException {
+        if (properties == null) {
+            LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
+            throw new DAGEngineException("Properties for entity " + entity.getName() + " is empty");
+        }
+
+        switchUser();
+        LOG.debug("Logged in user is " + CurrentUser.getUser());
+        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+        properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
+        properties.putAll(getDryRunProperties(entity));
+        //Do dryrun before run as run is asynchronous
+        LOG.info("Dry run with properties {}", properties);
+        client.dryrun(properties);
     }
 
     private void switchUser() {
@@ -230,18 +242,7 @@ public class OozieDAGEngine implements DAGEngine {
             prepareEntityBuildPath(entity);
             Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
             Properties properties = builder.build(cluster, buildPath);
-            if (properties == null) {
-                LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
-                throw new DAGEngineException("Properties for entity " + entity.getName() + " is empty");
-            }
-
-            switchUser();
-            LOG.debug("Logged in user is " + CurrentUser.getUser());
-            properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
-            properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
-            properties.putAll(getDryRunProperties(entity));
-            //Do submit before run as run is asynchronous
-            dryRunInternal(properties);
+            dryRunInternal(properties, buildPath, entity);
         } catch (OozieClientException e) {
             LOG.error("Oozie client exception:", e);
             throw new DAGEngineException(e);
@@ -358,6 +359,29 @@ public class OozieDAGEngine implements DAGEngine {
         }
 
         return props;
+    }
+
+    @Override
+    public void touch(Entity entity, Boolean skipDryRun) throws DAGEngineException {
+        // TODO : remove hardcoded Tag value when feed support is added.
+        try {
+            OozieOrchestrationWorkflowBuilder builder =
+                    OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT);
+            if (!skipDryRun) {
+                Path buildPath = new Path("/tmp", "falcon" + entity.getName() + System.currentTimeMillis());
+                Properties props = builder.build(cluster, buildPath);
+                dryRunInternal(props, buildPath, entity);
+            }
+            Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
+            // build it and forget it. The next run will always pick up from the latest staging path.
+            builder.build(cluster, buildPath);
+        } catch (FalconException fe) {
+            LOG.error("Falcon Exception : ", fe);
+            throw new DAGEngineException(fe);
+        } catch (OozieClientException e) {
+            LOG.error("Oozie client exception:", e);
+            throw new DAGEngineException(e);
+        }
     }
 
     // Get status of a workflow (with retry) and ensure it is one of statuses requested.

@@ -46,6 +46,7 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.update.UpdateHelper;
+import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
@@ -1130,7 +1131,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         if (bundle != MISSING && entityUpdated) {
             LOG.info("Updating entity through Workflow Engine {}", newEntity.toShortString());
             Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
-            if (newEndTime.before(now())) {
+            if (newEndTime.before(DateUtil.now())) {
                 throw new FalconException("Entity's end time " + SchemaHelper.formatDateUTC(newEndTime)
                     + " is before current time. Entity can't be updated. Use remove and add");
             }
@@ -1234,17 +1235,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return result.toString();
     }
 
-    private Date now() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTime();
-    }
-
-    private Date offsetTime(Date date, int minute) {
-        return new Date(1000L * 60 * minute + date.getTime());
-    }
-
     @SuppressWarnings("MagicConstant")
     private Date getCoordLastActionTime(CoordinatorJob coord) {
         if (coord.getNextMaterializedTime() != null) {
@@ -1259,7 +1249,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private void updateCoords(String cluster, BundleJob bundle,
                               int concurrency, Date endTime, Entity entity) throws FalconException {
-        if (endTime.compareTo(now()) <= 0) {
+        if (endTime.compareTo(DateUtil.now()) <= 0) {
             throw new FalconException("End time " + SchemaHelper.formatDateUTC(endTime) + " can't be in the past");
         }
 
@@ -1296,7 +1286,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 LOG.info("Actions have materialized for this coord: {}, last action {}",
                         coord.getId(), SchemaHelper.formatDateUTC(lastActionTime));
                 if (!endTime.after(lastActionTime)) {
-                    Date pauseTime = offsetTime(endTime, -1);
+                    Date pauseTime = DateUtil.offsetTime(endTime, -1*60);
                     // set pause time which deletes future actions
                     LOG.info("Setting pause time on coord: {} to {}",
                             coord.getId(), SchemaHelper.formatDateUTC(pauseTime));
@@ -1352,7 +1342,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private Date getEffectiveTime(Cluster cluster, Entity newEntity) {
         //pick effective time as now() + 3 min to handle any time diff between falcon and oozie
         //oozie rejects changes with endtime < now
-        Date effectiveTime = offsetTime(now(), 3);
+        Date effectiveTime = DateUtil.offsetTime(DateUtil.now(), 3*60);
 
         //pick start time for new bundle which is after effectiveTime
         return EntityUtil.getNextStartTime(newEntity, cluster, effectiveTime);

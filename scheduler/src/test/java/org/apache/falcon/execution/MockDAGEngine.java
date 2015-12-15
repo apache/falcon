@@ -108,6 +108,10 @@ public class MockDAGEngine implements DAGEngine {
         return null;
     }
 
+    @Override
+    public void touch(Entity entity, Boolean skipDryRun) throws DAGEngineException {
+    }
+
     public void addFailInstance(ExecutionInstance failInstance) {
         this.failInstances.add(failInstance);
     }
