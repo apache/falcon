@@ -313,7 +313,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         // Sort the ArrayList using orderBy
         instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
         result.setCollection(instanceSet.subList(
-                offset, (offset+pageCount)).toArray(new Instance[pageCount]));
+                offset, (offset + pageCount)).toArray(new Instance[pageCount]));
         return result;
     }
 
@@ -706,9 +706,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
                 // add vertex to the graph
                 vertices.add(currentInstance.toString());
-                instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
-                if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
-                    continue;
+                if (status == null) {
+                    instanceStatusMap.put(currentInstance.toString(), "[ Not Available ]");
+                } else {
+                    instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
+                    if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
+                        continue;
+                    }
                 }
 
                 // find producer process instance and add it to the queue
@@ -782,7 +786,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         Date endRange = new Date(instanceTime.getTime() + 200);
         List<FeedInstanceStatus> feedListing = storage.getListing(feed, cluster.getName(), LocationType.DATA,
                 instanceTime, endRange);
-        return feedListing.get(0).getStatus();
+        if (feedListing.size() > 0) {
+            return feedListing.get(0).getStatus();
+        }
+        LOG.warn("No instances were found for the given feed: {} & instanceTime: {}", feed, instanceTime);
+        return null;
     }
 
     private InstancesResult.WorkflowStatus getProcessInstanceStatus(Process process, Date instanceTime)
