@@ -43,6 +43,7 @@ import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.json.simple.JSONValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -354,14 +357,16 @@ public class FalconUnitClient extends AbstractFalconClient {
     public String getVersion(String doAsUser) throws FalconCLIException {
         AdminResource resource = new AdminResource();
         AdminResource.PropertyList propertyList = resource.getVersion();
-        StringBuilder properties = new StringBuilder();
-        for(AdminResource.Property property : propertyList.properties) {
-            if (properties.length() > 1) {
-                properties.append(",");
-            }
-            properties.append(property.key).append(":").append(property.value);
+        Map<String, String> version = new LinkedHashMap<>();
+        List<String> list = new ArrayList<>();
+        for (AdminResource.Property property : propertyList.properties) {
+            Map<String, String> map = new LinkedHashMap<>();
+            map.put("key", property.key);
+            map.put("value", property.value);
+            list.add(JSONValue.toJSONString(map));
         }
-        return properties.toString();
+        version.put("properties", list.toString());
+        return version.toString();
     }
 
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {

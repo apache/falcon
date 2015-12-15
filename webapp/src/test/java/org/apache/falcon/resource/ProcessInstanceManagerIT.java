@@ -20,6 +20,7 @@ package org.apache.falcon.resource;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
@@ -34,6 +35,7 @@ import org.testng.annotations.Test;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Test class for Process Instance REST API.
@@ -41,6 +43,7 @@ import java.io.IOException;
 public class ProcessInstanceManagerIT extends FalconUnitTestBase {
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
+    private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
 
     @BeforeClass
     @Override
@@ -57,6 +60,37 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         //Needed since oozie writes action xml to current directory.
         FileUtils.deleteQuietly(new File("action.xml"));
         FileUtils.deleteQuietly(new File(".action.xml.crc"));
+    }
+
+    private void submitFeeds(Map<String, String> overlay) throws IOException, FalconCLIException {
+        String tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE1, overlay);
+        APIResult result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE2, overlay);
+        result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    }
+
+
+    private void submitProcess(String template, Map<String, String> overlay) throws IOException, FalconCLIException {
+        String tmpFile = TestContext.overlayParametersOverTemplate(template, overlay);
+        APIResult result = falconUnitClient.submit(EntityType.PROCESS.name(), tmpFile, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    }
+
+    private void schedule(UnitTestContext context) throws FalconCLIException, IOException, FalconException {
+        String scheduleTime = START_INSTANCE;
+        APIResult result = scheduleProcess(context.getProcessName(), scheduleTime, 1, context.getClusterName(),
+                getAbsolutePath(SLEEP_WORKFLOW), true, "");
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    }
+
+    private void scheduleProcess(UnitTestContext context) throws Exception {
+        submitCluster(context.colo, context.clusterName, null);
+        context.prepare();
+        submitFeeds(context.overlay);
+        submitProcess(UnitTestContext.PROCESS_TEMPLATE, context.overlay);
+        schedule(context);
     }
 
     protected void schedule(TestContext context) throws Exception {
@@ -120,8 +154,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testGetInstanceStatus() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        scheduleProcess(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
@@ -135,8 +168,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testGetInstanceStatusPagination() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        scheduleProcess(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:02Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
@@ -151,8 +183,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testKillInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        scheduleProcess(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().killInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE, endTime,
@@ -178,8 +209,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testReRunInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        scheduleProcess(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().killInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE, endTime,
@@ -208,8 +238,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testSuspendInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        scheduleProcess(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().suspendInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
@@ -228,8 +257,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testResumesInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        scheduleProcess(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().suspendInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE,

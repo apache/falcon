@@ -20,7 +20,6 @@ package org.apache.falcon.resource;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.unit.FalconUnit;
 import org.apache.falcon.unit.FalconUnitClient;
@@ -28,8 +27,8 @@ import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.testng.Assert;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +42,7 @@ public class UnitTestContext {
     public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
+    public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     protected String colo;
     protected String clusterName;
@@ -54,13 +54,21 @@ public class UnitTestContext {
     private static FalconUnitClient client;
     private static FileSystem fs;
     protected static ConfigurationStore configStore;
-    private Map<String, String> overlay;
+    protected Map<String, String> overlay;
 
     public UnitTestContext() throws FalconException, IOException {
         client = FalconUnit.getClient();
         fs = FalconUnit.getFileSystem();
         configStore = client.getConfigStore();
         overlay = getUniqueOverlay();
+    }
+
+    public String getProcessName() {
+        return processName;
+    }
+
+    public String getClusterName() {
+        return clusterName;
     }
 
     public static FalconUnitClient getClient() {
@@ -79,7 +87,7 @@ public class UnitTestContext {
         }
     }
 
-    private void prepare() throws Exception {
+    protected void prepare() throws Exception {
         mkdir(fs, new Path("/falcon"), new FsPermission((short) 511));
 
         Path wfParent = new Path("/falcon/test");
@@ -96,28 +104,22 @@ public class UnitTestContext {
         mkdir(fs, outPath, new FsPermission((short) 511));
     }
 
-    public void scheduleProcess() throws Exception {
-        scheduleProcess(PROCESS_TEMPLATE, overlay);
+    public static File getTempFile() throws IOException {
+        return getTempFile("test", ".xml");
     }
 
-    public void scheduleProcess(String processTemplate, Map<String, String> uniqueOverlay) throws
-            Exception {
-        prepare();
+    public static File getTempFile(String prefix, String suffix) throws IOException {
+        return getTempFile("target", prefix, suffix);
+    }
 
-        String tmpFile = TestContext.overlayParametersOverTemplate(FEED_TEMPLATE1, uniqueOverlay);
-        APIResult result = client.submit(EntityType.FEED.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static File getTempFile(String path, String prefix, String suffix) throws IOException {
+        File f = new File(path);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
 
-        tmpFile = TestContext.overlayParametersOverTemplate(FEED_TEMPLATE2, uniqueOverlay);
-        result = client.submit(EntityType.FEED.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-        tmpFile = TestContext.overlayParametersOverTemplate(processTemplate, uniqueOverlay);
-        result = client.submit(EntityType.PROCESS.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-        result = client.schedule(EntityType.PROCESS, processName, clusterName, true, null, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        return File.createTempFile(prefix, suffix, f);
     }
 
     public Map<String, String> getUniqueOverlay() throws FalconException {

@@ -24,6 +24,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.resource.UnitTestContext;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
@@ -54,6 +55,10 @@ public final class OozieTestUtils {
         return getOozieClient(context.getCluster().getCluster());
     }
 
+    public static OozieClient getOozieClient(UnitTestContext context) throws FalconException {
+        return OozieClientFactory.get(context.getClusterName());
+    }
+
     public static OozieClient getOozieClient(Cluster cluster) throws FalconException {
         return OozieClientFactory.get(cluster);
     }
@@ -65,6 +70,16 @@ public final class OozieTestUtils {
         }
 
         OozieClient ozClient = OozieClientFactory.get(context.getCluster().getCluster());
+        return ozClient.getBundleJobsInfo("name=FALCON_PROCESS_" + context.getProcessName(), 0, 10);
+    }
+
+    public static List<BundleJob> getBundles(UnitTestContext context) throws Exception {
+        List<BundleJob> bundles = new ArrayList<BundleJob>();
+        if (context.getClusterName() == null) {
+            return bundles;
+        }
+
+        OozieClient ozClient = OozieClientFactory.get(context.getClusterName());
         return ozClient.getBundleJobsInfo("name=FALCON_PROCESS_" + context.getProcessName(), 0, 10);
     }
 
@@ -133,7 +148,46 @@ public final class OozieTestUtils {
         waitForBundleStart(context, bundles.get(0).getId(), status);
     }
 
+    public static void waitForBundleStart(UnitTestContext context, Job.Status... status) throws Exception {
+        List<BundleJob> bundles = getBundles(context);
+        if (bundles.isEmpty()) {
+            return;
+        }
+
+        waitForBundleStart(context, bundles.get(0).getId(), status);
+    }
+
     public static void waitForBundleStart(TestContext context, String bundleId, Job.Status... status) throws Exception {
+        OozieClient ozClient = getOozieClient(context);
+        Set<Job.Status> statuses = new HashSet<Job.Status>(Arrays.asList(status));
+
+        Status bundleStatus = null;
+        for (int i = 0; i < 15; i++) {
+            Thread.sleep(i * 1000);
+            BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
+            bundleStatus = bundle.getStatus();
+            if (statuses.contains(bundleStatus)) {
+                if (statuses.contains(Job.Status.FAILED) || statuses.contains(Job.Status.KILLED)) {
+                    return;
+                }
+
+                boolean done = false;
+                for (CoordinatorJob coord : bundle.getCoordinators()) {
+                    if (statuses.contains(coord.getStatus())) {
+                        done = true;
+                    }
+                }
+                if (done) {
+                    return;
+                }
+            }
+            System.out.println("Waiting for bundle " + bundleId + " in " + statuses + " state");
+        }
+        throw new Exception("Bundle " + bundleId + " is not " + statuses + ". Last seen status " + bundleStatus);
+    }
+
+    public static void waitForBundleStart(UnitTestContext context, String bundleId, Job.Status... status) throws
+            Exception {
         OozieClient ozClient = getOozieClient(context);
         Set<Job.Status> statuses = new HashSet<Job.Status>(Arrays.asList(status));
 
