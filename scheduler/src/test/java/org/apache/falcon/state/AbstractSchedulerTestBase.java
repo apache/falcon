@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * TestBase for tests in scheduler.
+ * TestBase for tests using Falcon Native Scheduler.
  */
 public class AbstractSchedulerTestBase extends AbstractTestBase {
     private static final String DB_BASE_DIR = "target/test-data/falcondb";
@@ -56,7 +56,7 @@ public class AbstractSchedulerTestBase extends AbstractTestBase {
         fs.delete(new Path(DB_BASE_DIR), true);
     }
 
-    protected void createDB(String file) {
+    public void createDB(String file) {
         File sqlFile = new File(file);
         String[] argsCreate = { "create", "-sqlfile", sqlFile.getAbsolutePath(), "-run" };
         int result = execDBCLICommands(argsCreate);

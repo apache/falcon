@@ -89,7 +89,7 @@ public class EntityManagerJerseyIT extends FalconUnitTestBase {
 
     @BeforeClass
     @Override
-    public void setup() throws FalconException, IOException {
+    public void setup() throws Exception {
         String version = System.getProperty("project.version");
         String buildDir = System.getProperty("project.build.directory");
         System.setProperty("falcon.libext", buildDir + "/../../unit/target/falcon-unit-" + version + ".jar");

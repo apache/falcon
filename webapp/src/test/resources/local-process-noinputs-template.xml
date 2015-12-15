@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<process name="##processName##" xmlns="uri:falcon:process:0.1">
+    <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting</tags>
+    <pipelines>testPipeline,dataReplicationPipeline</pipelines>
+    <clusters>
+        <cluster name="##src.cluster.name##">
+            <validity end="##processEndDate##" start="2012-04-20T00:00Z"/>
+        </cluster>
+    </clusters>
+
+    <parallel>2</parallel>
+    <order>FIFO</order>
+    <frequency>days(1)</frequency>
+    <timezone>UTC</timezone>
+
+    <properties>
+        <property name="fileTime" value="${formatTime(dateOffset(instanceTime(), 1, 'DAY'), 'yyyy-MMM-dd')}"/>
+        <property name="user" value="${user()}"/>
+        <property name="baseTime" value="${today(0,0)}"/>
+        <property name="sundayThisWeek" value="${currentWeek('SUN', 0, 0)}"/>
+    </properties>
+    <workflow engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+</process>

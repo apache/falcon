@@ -530,7 +530,7 @@ public abstract class AbstractEntityManager {
         return new String(data);
     }
 
-    private enum EntityStatus {
+    protected enum EntityStatus {
         SUBMITTED, SUSPENDED, RUNNING, COMPLETED
     }
 
@@ -553,7 +553,6 @@ public abstract class AbstractEntityManager {
         } catch (FalconWebException e) {
             throw e;
         } catch (Exception e) {
-
             LOG.error("Unable to get status for entity {} ({})", entity, type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }

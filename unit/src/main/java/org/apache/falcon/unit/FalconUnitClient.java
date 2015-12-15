@@ -128,8 +128,8 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public APIResult delete(EntityType entityType, String entityName, String doAsUser) {
-        return localSchedulableEntityManager.delete(entityType, entityName, doAsUser);
+    public APIResult delete(EntityType entityType, String entityName, String colo) {
+        return localSchedulableEntityManager.delete(entityType, entityName, colo);
     }
 
     @Override

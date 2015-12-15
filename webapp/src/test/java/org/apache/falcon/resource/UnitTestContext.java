@@ -87,7 +87,7 @@ public class UnitTestContext {
         }
     }
 
-    protected void prepare() throws Exception {
+    protected void prepare(String workflow) throws Exception {
         mkdir(fs, new Path("/falcon"), new FsPermission((short) 511));
 
         Path wfParent = new Path("/falcon/test");
@@ -96,12 +96,16 @@ public class UnitTestContext {
         mkdir(fs, wfPath);
         mkdir(fs, new Path("/falcon/test/workflow/lib"));
         fs.copyFromLocalFile(false, true,
-                new Path(TestContext.class.getResource("/sleepWorkflow.xml").getPath()),
+                new Path(TestContext.class.getResource("/" + workflow).getPath()),
                 new Path(wfPath, "workflow.xml"));
         mkdir(fs, new Path(wfParent, "input/2012/04/20/00"));
         mkdir(fs, new Path(wfParent, "input/2012/04/21/00"));
         Path outPath = new Path(wfParent, "output");
         mkdir(fs, outPath, new FsPermission((short) 511));
+    }
+
+    protected void prepare() throws Exception {
+        prepare("sleepWorkflow.xml");
     }
 
     public static File getTempFile() throws IOException {

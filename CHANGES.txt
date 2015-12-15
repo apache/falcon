@@ -35,6 +35,8 @@ Trunk (Unreleased)
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1447 Integration Tests for native scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1617 Enable SLA monitoring for instances in past(Narayan Periwal via Ajay Yadava)
 
     FALCON-1577 Migration of EntityManagerJerseyIT to use falcon unit (Narayan Periwal via Pallavi Rao)

@@ -175,10 +175,14 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             states = new ArrayList<>();
             states.add(InstanceState.STATE.SUSPENDED);
             break;
-        case STATUS:
         case PARAMS:
             // Applicable only for running and finished jobs.
             states = InstanceState.getRunningStates();
+            states.addAll(InstanceState.getTerminalStates());
+            states.add(InstanceState.STATE.SUSPENDED);
+            break;
+        case STATUS:
+            states = InstanceState.getActiveStates();
             states.addAll(InstanceState.getTerminalStates());
             states.add(InstanceState.STATE.SUSPENDED);
             break;

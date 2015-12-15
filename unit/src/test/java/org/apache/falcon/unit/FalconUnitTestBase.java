@@ -92,8 +92,8 @@ public class FalconUnitTestBase {
 
     private static final String DEFAULT_CLUSTER = "local";
     private static final String DEFAULT_COLO = "local";
-    private static final String CLUSTER = "cluster";
-    private static final String COLO = "colo";
+    protected static final String CLUSTER = "cluster";
+    protected static final String COLO = "colo";
     protected static final String CLUSTER_TEMPLATE = "/local-cluster-template.xml";
     protected static final String STAGING_PATH = "/projects/falcon/staging";
     protected static final String WORKING_PATH = "/projects/falcon/working";
@@ -105,7 +105,7 @@ public class FalconUnitTestBase {
     protected static ConfigurationStore configStore;
 
     @BeforeClass
-    public void setup() throws FalconException, IOException {
+    public void setup() throws Exception {
         FalconUnit.start(true);
         falconUnitClient = FalconUnit.getClient();
         fs = (JailedFileSystem) FalconUnit.getFileSystem();

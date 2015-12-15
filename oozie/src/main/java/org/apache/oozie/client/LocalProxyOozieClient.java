@@ -90,7 +90,13 @@ public class LocalProxyOozieClient extends OozieClient {
     }
 
     public String run(Properties conf) throws OozieClientException {
-        return getLocalOozieClientBundle().run(conf);
+        if (conf.getProperty("oozie.wf.application.path") != null) {
+            return getLocalOozieClient().run(conf);
+        } else if (conf.getProperty("oozie.coord.application.path") != null) {
+            return getLocalOozieClientCoordProxy().run(conf);
+        } else {
+            return getLocalOozieClientBundle().run(conf);
+        }
     }
 
     @Override

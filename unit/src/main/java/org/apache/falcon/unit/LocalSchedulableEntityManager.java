@@ -49,11 +49,11 @@ public class LocalSchedulableEntityManager extends AbstractSchedulableEntityMana
         return super.getStatus(type, entity, colo);
     }
 
-    public APIResult delete(EntityType entityType, String entityName, String doAsUser) {
+    public APIResult delete(EntityType entityType, String entityName, String colo) {
         if (entityType == null) {
             throw new IllegalStateException("Entity-Type cannot be null");
         }
-        return super.delete(entityType.name(), entityName, doAsUser);
+        return super.delete(entityType.name(), entityName, colo);
     }
 
     public APIResult validate(String entityType, String filePath, Boolean skipDryRun,
