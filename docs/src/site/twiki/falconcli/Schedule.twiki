@@ -13,7 +13,7 @@ Optional Args :
 
 -doAs <username>
 
--properties <<key1:val1,...,keyN:valN>>. Specifying 'falcon.scheduler:native' as a property will schedule the entity on the the native scheduler of Falcon. Else, it will default to the engine specified in startup.properties.
+-properties <<key1:val1,...,keyN:valN>>. Specifying 'falcon.scheduler:native' as a property will schedule the entity on the the native scheduler of Falcon. Else, it will default to the engine specified in startup.properties. For details on Native scheduler, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
 
 Examples:
 

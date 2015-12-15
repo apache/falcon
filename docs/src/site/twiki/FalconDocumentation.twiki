@@ -37,6 +37,8 @@ Falcon system has picked Oozie as the default scheduler. However the system is o
 other schedulers. Lot of the data processing in hadoop requires scheduling to be based on both data availability
 as well as time. Oozie currently supports these capabilities off the shelf and hence the choice.
 
+While the use of Oozie works reasonably well, there are scenarios where Oozie scheduling is proving to be a limiting factor. In its current form, Falcon relies on Oozie for both scheduling and for workflow execution, due to which the scheduling is limited to time based/cron based scheduling with additional gating conditions on data availability. Also, this imposes restrictions on datasets being periodic/cyclic in nature. In order to offer better scheduling capabilities, Falcon comes with its own native scheduler. Refer to [[FalconNativeScheduler][Falcon Native Scheduler]] for details.
+
 ---+++ Control flow
 Though the actual responsibility of the workflow is with the scheduler (Oozie), Falcon remains in the
 execution path, by subscribing to messages that each of the workflow may generate. When Falcon generates a
