@@ -326,6 +326,15 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     BlockingQueue<Date> instances = pendingInstances.get(key);
                     if (instances == null) {
                         instances = new LinkedBlockingQueue<>(queueSize);
+                        Date feedStartTime = feedCluster.getValidity().getStart();
+                        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, feedCluster);
+                        ExpressionHelper evaluator = ExpressionHelper.get();
+                        ExpressionHelper.setReferenceDate(new Date());
+                        Date retention = new Date(evaluator.evaluate(retentionFrequency.toString(), Long.class));
+                        if (feedStartTime.before(retention)) {
+                            feedStartTime = retention;
+                        }
+                        nextInstanceTime = feedStartTime;
                     }
                     Set<Date> exists = new HashSet<>(instances);
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =

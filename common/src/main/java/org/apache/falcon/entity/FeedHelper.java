@@ -1011,4 +1011,23 @@ public final class FeedHelper {
         }
         return  retentionFrequency;
     }
+
+    public static Frequency getOldRetentionFrequency(Feed feed) {
+        Frequency feedFrequency = feed.getFrequency();
+        Frequency defaultFrequency = new Frequency("hours(24)");
+        if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
+            return new Frequency("hours(6)");
+        } else {
+            return defaultFrequency;
+        }
+    }
+
+    public static Frequency getRetentionFrequency(Feed feed, Cluster feedCluster) throws FalconException {
+        Frequency retentionFrequency;
+        retentionFrequency = getLifecycleRetentionFrequency(feed, feedCluster.getName());
+        if (retentionFrequency == null) {
+            retentionFrequency = getOldRetentionFrequency(feed);
+        }
+        return retentionFrequency;
+    }
 }

@@ -35,6 +35,8 @@ Trunk (Unreleased)
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1617 Enable SLA monitoring for instances in past(Narayan Periwal via Ajay Yadava)
+
     FALCON-1577 Migration of EntityManagerJerseyIT to use falcon unit (Narayan Periwal via Pallavi Rao)
 
     FALCON-1658 MySql Support for Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
