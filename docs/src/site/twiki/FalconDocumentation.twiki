@@ -257,7 +257,11 @@ feed/data xml in the following manner for each cluster the feed can belong to :
 
 The 'limit' attribute can be specified in units of minutes/hours/days/months, and a corresponding numeric value can
 be attached to it. It essentially instructs the system to retain data till the time specified
-in the attribute spanning backwards in time, from now. Any data older than that is erased from the system.
+in the attribute spanning backwards in time, from now. Any data older than that is erased from the system. By default,
+Falcon runs retention jobs up to the cluster validity end time. This causes the instances created within the endTime
+and "endTime - retentionLimit" to be retained forever. If the users do not want to retain any instances of the
+feed past the cluster validity end time, user should set property "falcon.retention.keep.instances.beyond.validity"
+to false in runtime.properties.
 
 With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
 

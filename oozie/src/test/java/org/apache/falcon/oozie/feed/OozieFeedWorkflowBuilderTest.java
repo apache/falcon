@@ -18,6 +18,7 @@
 package org.apache.falcon.oozie.feed;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
@@ -51,6 +52,7 @@ import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -161,21 +163,30 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         trgMiniDFS.shutdown();
     }
 
-    @Test
-    public void testRetentionWithLifecycle() throws Exception {
+    @DataProvider(name = "keepInstancesPostValidity")
+    private Object[][] keepInstancesPostValidity() {
+        return new Object[][] {
+            {"false", "2099-01-01T02:00Z"},
+            {"true", "2099-01-01T00:00Z"},
+        };
+    }
+
+    @Test(dataProvider = "keepInstancesPostValidity")
+    public void testRetentionWithLifecycle(String keepInstancesPostValidity, String endTime) throws Exception {
+        RuntimeProperties.get().setProperty("falcon.retention.keep.instances.beyond.validity",
+                keepInstancesPostValidity);
         OozieEntityBuilder builder = OozieEntityBuilder.get(lifecycleRetentionFeed);
         Path bundlePath = new Path("/projects/falcon/");
         builder.build(trgCluster, bundlePath);
 
         BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
         List<COORDINATOR> coords = bundle.getCoordinator();
-
         COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
         assertLibExtensions(coord, "retention");
         HashMap<String, String> props = getCoordProperties(coord);
         Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(17)}");
-        Assert.assertEquals(coord.getEnd(), "2099-01-01T00:00Z");
+        Assert.assertEquals(coord.getEnd(), endTime);
         Assert.assertEquals(coord.getTimezone(), "UTC");
 
         HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
@@ -186,6 +197,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
     }
+
 
     @Test
     public void testRetentionFrequency() throws Exception {
@@ -675,9 +687,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed,
                 srcCluster.getName());
-        final Calendar instance = Calendar.getInstance();
-        instance.roll(Calendar.YEAR, 1);
-        cluster.getValidity().setEnd(instance.getTime());
+        Calendar startCal = Calendar.getInstance();
+        Calendar endCal = Calendar.getInstance();
+        endCal.roll(Calendar.DATE, 1);
+        cluster.getValidity().setEnd(endCal.getTime());
+        RuntimeProperties.get().setProperty("falcon.retention.keep.instances.beyond.validity", "false");
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(feed, Tag.RETENTION);
         List<Properties> coords = builder.buildCoords(
@@ -688,6 +702,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 "${nameNode}/projects/falcon/" + umask + "/RETENTION");
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + feed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
+
+        Assert.assertEquals(coord.getStart(), DateUtil.getDateFormatFromTime(startCal.getTimeInMillis()));
+        Date endDate = DateUtils.addSeconds(endCal.getTime(),
+                FeedHelper.getRetentionLimitInSeconds(feed, srcCluster.getName()));
+        Assert.assertEquals(coord.getEnd(), DateUtil.getDateFormatFromTime(endDate.getTime()));
 
         HashMap<String, String> props = getCoordProperties(coord);
 

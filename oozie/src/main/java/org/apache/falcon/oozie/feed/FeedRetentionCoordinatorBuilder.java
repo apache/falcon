@@ -35,6 +35,7 @@ import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.util.DateUtil;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Arrays;
@@ -59,8 +60,15 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
         COORDINATORAPP coord = new COORDINATORAPP();
         String coordName = getEntityName();
         coord.setName(coordName);
+
         Date endDate = feedCluster.getValidity().getEnd();
+        if (RuntimeProperties.get().getProperty(
+                "falcon.retention.keep.instances.beyond.validity", "true").equalsIgnoreCase("false")) {
+            int retentionLimitinSecs = FeedHelper.getRetentionLimitInSeconds(entity, cluster.getName());
+            endDate = DateUtils.addSeconds(endDate, retentionLimitinSecs);
+        }
         coord.setEnd(SchemaHelper.formatDateUTC(endDate));
+
         if (feedCluster.getValidity().getEnd().before(new Date())) {
             Date startDate = DateUtils.addMinutes(endDate, -1);
             coord.setStart(SchemaHelper.formatDateUTC(startDate));

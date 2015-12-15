@@ -38,6 +38,7 @@ import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.MergeType;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.entity.v0.process.Input;
@@ -1029,5 +1030,22 @@ public final class FeedHelper {
             retentionFrequency = getOldRetentionFrequency(feed);
         }
         return retentionFrequency;
+    }
+
+    public static int getRetentionLimitInSeconds(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionLimit = new Frequency("minutes(0)");
+        RetentionStage retentionStage = getRetentionStage(feed, clusterName);
+        if (retentionStage != null) {
+            for (Property property : retentionStage.getProperties().getProperties()) {
+                if (property.getName().equalsIgnoreCase("retention.policy.agebaseddelete.limit")) {
+                    retentionLimit = new Frequency(property.getValue());
+                    break;
+                }
+            }
+        } else {
+            retentionLimit = getCluster(feed, clusterName).getRetention().getLimit();
+        }
+        Long freqInMillis = DateUtil.getFrequencyInMillis(retentionLimit);
+        return (int) (freqInMillis/1000);
     }
 }
