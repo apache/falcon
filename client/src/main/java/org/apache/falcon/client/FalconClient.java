@@ -150,6 +150,7 @@ public class FalconClient extends AbstractFalconClient {
             client.resource(UriBuilder.fromUri(baseUrl).build());
             authenticationToken = getToken(baseUrl);
         } catch (Exception e) {
+        	e.printStackTrace();
             throw new FalconCLIException("Unable to initialize Falcon Client object", e);
         }
     }
