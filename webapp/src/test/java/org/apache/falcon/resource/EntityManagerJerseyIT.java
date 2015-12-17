@@ -19,7 +19,6 @@ package org.apache.falcon.resource;
 
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.Entity;
@@ -35,15 +34,12 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.unit.FalconUnit;
-import org.apache.falcon.unit.FalconUnitTestBase;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.OozieTestUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
@@ -58,9 +54,6 @@ import org.testng.annotations.Test;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -80,12 +73,10 @@ import java.util.regex.Pattern;
  * Tests should be enabled only in local environments as they need running instance of the web server.
  */
 @Test(groups = {"exhaustive"})
-public class EntityManagerJerseyIT extends FalconUnitTestBase {
+public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
     private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
-    private static final String LOCAL_MODE = "local";
-    private static final String IT_RUN_MODE = "it.run.mode";
 
     @BeforeClass
     @Override
@@ -125,52 +116,6 @@ public class EntityManagerJerseyIT extends FalconUnitTestBase {
     private void updateEndtime(Process process) {
         Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
         processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
-    }
-
-    private void submitCluster(UnitTestContext context) throws IOException, FalconCLIException {
-        String mode = System.getProperty(IT_RUN_MODE);
-        if (StringUtils.isNotEmpty(mode) && mode.toLowerCase().equals(LOCAL_MODE)) {
-            submitCluster(context.colo, context.clusterName, null);
-        } else {
-            String tmpFile = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, context.overlay);
-            submit(EntityType.CLUSTER, tmpFile);
-        }
-    }
-
-    private APIResult submitFeed(String template, Map<String, String> overlay) throws IOException, FalconCLIException {
-        String tmpFile = TestContext.overlayParametersOverTemplate(template, overlay);
-        APIResult result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
-        return result;
-    }
-
-    private void submitProcess(String template, Map<String, String> overlay) throws IOException, FalconCLIException {
-        String tmpFile = TestContext.overlayParametersOverTemplate(template, overlay);
-        APIResult result = falconUnitClient.submit(EntityType.PROCESS.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-    }
-
-    private void scheduleProcess(UnitTestContext context) throws FalconCLIException, IOException, FalconException {
-        String scheduleTime = START_INSTANCE;
-        APIResult result = scheduleProcess(context.getProcessName(), scheduleTime, 1, context.getClusterName(),
-                getAbsolutePath(SLEEP_WORKFLOW), true, "");
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-    }
-
-    private void schedule(UnitTestContext context) throws Exception {
-        submitCluster(context);
-        context.prepare();
-        submitFeeds(context.overlay);
-        submitProcess(UnitTestContext.PROCESS_TEMPLATE, context.overlay);
-        scheduleProcess(context);
-    }
-
-    private void submitFeeds(Map<String, String> overlay) throws IOException, FalconCLIException {
-        String tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE1, overlay);
-        APIResult result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-        tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE2, overlay);
-        result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     @Test
@@ -729,105 +674,6 @@ public class EntityManagerJerseyIT extends FalconUnitTestBase {
         result = falconUnitClient.schedule(EntityType.FEED, context.overlay.get("inputFeedName"), null, true, null,
                 null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-    }
-
-    static List<Path> createTestData() throws Exception {
-        List<Path> list = new ArrayList<Path>();
-        fs.mkdirs(new Path("/user/guest"));
-        fs.setOwner(new Path("/user/guest"), TestContext.REMOTE_USER, "users");
-
-        DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date date = new Date(System.currentTimeMillis() + 3 * 3600000);
-        Path path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        new FsShell(new Configuration()).run(new String[] {
-            "-chown", "-R", "guest:users", "/examples/input-data/rawLogs", });
-        return list;
-    }
-
-    static List<Path> createTestData(TestContext context) throws Exception {
-        List<Path> list = new ArrayList<Path>();
-        FileSystem fs = context.cluster.getFileSystem();
-        fs.mkdirs(new Path("/user/guest"));
-        fs.setOwner(new Path("/user/guest"), TestContext.REMOTE_USER, "users");
-
-        DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date date = new Date(System.currentTimeMillis() + 3 * 3600000);
-        Path path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        new FsShell(context.cluster.getConf()).
-                run(new String[]{"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
-        return list;
     }
 
     public void testDeleteDataSet() throws Exception {

@@ -18,13 +18,11 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.falcon.FalconException;
-import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -36,6 +34,11 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
     private static final String END_TIME = "2012-04-21T00:00Z";
     private static final String HELLO_WORLD_WORKFLOW = "helloworldworkflow.xml";
 
+    @BeforeClass
+    public void setup() throws Exception {
+        updateStartUpProps();
+        super.setup();
+    }
 
     @Test
     public void testProcessInstanceExecution() throws Exception {

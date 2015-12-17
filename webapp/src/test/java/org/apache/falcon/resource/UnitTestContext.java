@@ -28,20 +28,16 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Test Utility.
+ * Context used to run unit tests using Falcon Unit.
  */
-public class UnitTestContext {
+public class UnitTestContext extends AbstractTestContext {
 
-    public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
-    public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
-    public static final String PROCESS_TEMPLATE = "/process-template.xml";
     public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     protected String colo;
@@ -71,20 +67,12 @@ public class UnitTestContext {
         return clusterName;
     }
 
+    public String getInputFeedName() {
+        return inputFeedName;
+    }
+
     public static FalconUnitClient getClient() {
         return client;
-    }
-
-    private static void mkdir(FileSystem fileSystem, Path path) throws Exception {
-        if (!fileSystem.exists(path) && !fileSystem.mkdirs(path)) {
-            throw new Exception("mkdir failed for " + path);
-        }
-    }
-
-    private static void mkdir(FileSystem fileSystem, Path path, FsPermission perm) throws Exception {
-        if (!fileSystem.exists(path) && !fileSystem.mkdirs(path, perm)) {
-            throw new Exception("mkdir failed for " + path);
-        }
     }
 
     protected void prepare(String workflow) throws Exception {
@@ -106,24 +94,6 @@ public class UnitTestContext {
 
     protected void prepare() throws Exception {
         prepare("sleepWorkflow.xml");
-    }
-
-    public static File getTempFile() throws IOException {
-        return getTempFile("test", ".xml");
-    }
-
-    public static File getTempFile(String prefix, String suffix) throws IOException {
-        return getTempFile("target", prefix, suffix);
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static File getTempFile(String path, String prefix, String suffix) throws IOException {
-        File f = new File(path);
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-
-        return File.createTempFile(prefix, suffix, f);
     }
 
     public Map<String, String> getUniqueOverlay() throws FalconException {
@@ -148,6 +118,7 @@ public class UnitTestContext {
         uniqueOverlay.put("user", System.getProperty("user.name"));
         uniqueOverlay.put("workflow.path", "/falcon/test/workflow");
         uniqueOverlay.put("workflow.lib.path", "/falcon/test/workflow/lib");
+        overlay = uniqueOverlay;
         return uniqueOverlay;
     }
 }

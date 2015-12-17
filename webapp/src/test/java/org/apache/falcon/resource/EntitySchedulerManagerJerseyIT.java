@@ -19,6 +19,7 @@ package org.apache.falcon.resource;
 
 import org.apache.falcon.entity.v0.EntityType;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.Map;
@@ -28,6 +29,13 @@ import java.util.Map;
  * Test cases for Entity operations using Falcon Native Scheduler.
  */
 public class EntitySchedulerManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
+
+
+    @BeforeClass
+    public void setup() throws Exception {
+        updateStartUpProps();
+        super.setup();
+    }
 
     @Test
     public void testEntitySubmitAndSchedule() throws Exception {

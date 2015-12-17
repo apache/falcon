@@ -17,7 +17,8 @@
  */
 package org.apache.falcon.resource;
 
-import com.sun.jersey.api.client.ClientResponse;
+import org.apache.commons.io.FileUtils;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -29,8 +30,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -40,11 +41,17 @@ import java.util.Map;
  * Tests should be enabled only in local environments as they need running instance of the web server.
  */
 @Test
-public class EntityManagerJerseySmokeIT {
+public class EntityManagerJerseySmokeIT extends AbstractSchedulerManagerJerseyIT {
+
+    private UnitTestContext context;
 
     @BeforeClass
-    public void prepare() throws Exception {
-        TestContext.prepare();
+    @Override
+    public void setup() throws Exception {
+        String version = System.getProperty("project.version");
+        String buildDir = System.getProperty("project.build.directory");
+        System.setProperty("falcon.libext", buildDir + "/../../unit/target/falcon-unit-" + version + ".jar");
+        super.setup();
     }
 
     @AfterClass
@@ -52,28 +59,27 @@ public class EntityManagerJerseySmokeIT {
         TestContext.deleteEntitiesFromStore();
     }
 
-    private ThreadLocal<TestContext> contexts = new ThreadLocal<TestContext>();
+    private ThreadLocal<UnitTestContext> contexts = new ThreadLocal<UnitTestContext>();
 
-    private TestContext newContext() {
-        contexts.set(new TestContext());
+    private UnitTestContext newContext() throws FalconException, IOException {
+        contexts.set(new UnitTestContext());
         return contexts.get();
     }
 
     @AfterMethod
-    public void cleanup() throws Exception {
-        TestContext testContext = contexts.get();
-        if (testContext != null) {
-            OozieTestUtils.killOozieJobs(testContext);
-        }
+    @Override
+    public void cleanUpActionXml() throws IOException, FalconException {
+        //Needed since oozie writes action xml to current directory.
+        FileUtils.deleteQuietly(new File("action.xml"));
+        FileUtils.deleteQuietly(new File(".action.xml.crc"));
         contexts.remove();
     }
 
     @Test (dependsOnMethods = "testFeedSchedule")
     public void testProcessDeleteAndSchedule() throws Exception {
         //Schedule process, delete and then submitAndSchedule again should create new bundle
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        String tmpFileName = TestContext.overlayParametersOverTemplate(UnitTestContext.PROCESS_TEMPLATE,
+                context.overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         Property prop = new Property();
         prop.setName("newProp");
@@ -81,25 +87,20 @@ public class EntityManagerJerseySmokeIT {
         process.getProperties().getProperties().add(prop);
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        context.prepare();
+        submitProcess(tmpFile.getAbsolutePath(), context.overlay);
+        scheduleProcess(context);
 
-        //Delete and re-submit the process with correct workflow
-        ClientResponse clientResponse = context.service
-                .path("api/entities/delete/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
+        APIResult result = falconUnitClient.delete(EntityType.PROCESS, context.getProcessName(), null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         process.getWorkflow().setPath("/falcon/test/workflow");
         tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
 
-        clientResponse = context.service.path("api/entities/submitAndSchedule/process")
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(clientResponse);
+        falconUnitClient.submitAndSchedule(EntityType.PROCESS.name(), tmpFile.getAbsolutePath(), true,
+                null, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         //Assert that new schedule creates new bundle
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
@@ -108,22 +109,16 @@ public class EntityManagerJerseySmokeIT {
 
     @Test
     public void testFeedSchedule() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        context = newContext();
+        Map<String, String> overlay = context.overlay;
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        submitFeed(UnitTestContext.FEED_TEMPLATE1, overlay);
+        submitFeed(UnitTestContext.FEED_TEMPLATE2, overlay);
 
-        EntityManagerJerseyIT.createTestData(context);
-        ClientResponse clientRepsonse = context.service
-                .path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        context.assertSuccessful(clientRepsonse);
+        createTestData();
+        APIResult result = schedule(EntityType.FEED, context.getInputFeedName(), context.getClusterName());
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 }
