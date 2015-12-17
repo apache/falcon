@@ -35,6 +35,8 @@ Trunk (Unreleased)
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1669 Falcon should show more helpful message when it is unable to initialize Falcon Client object(Baishuo via Ajay Yadava)
+
     FALCON-1635 Migration of EntityManagerJerseySmokeIT to use falcon unit(Narayan Periwal via Ajay Yadava)
 
     FALCON-1447 Integration Tests for native scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
