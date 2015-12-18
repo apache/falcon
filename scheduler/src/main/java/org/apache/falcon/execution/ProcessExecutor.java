@@ -20,18 +20,22 @@ package org.apache.falcon.execution;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import java.util.concurrent.ExecutionException;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.exception.InvalidStateTransitionException;
+import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.JobCompletedEvent;
 import org.apache.falcon.notification.service.event.RerunEvent;
+import org.apache.falcon.notification.service.event.JobScheduledEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.notification.service.impl.AlarmService;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
@@ -53,7 +57,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is responsible for managing execution instances of a process.
@@ -65,7 +68,7 @@ public class ProcessExecutor extends EntityExecutor {
     private static final Logger LOG = LoggerFactory.getLogger(ProcessExecutor.class);
     protected LoadingCache<InstanceID, ProcessExecutionInstance> instances;
     private Predicate triggerPredicate;
-    private final Process process;
+    private Process process;
     private final StateService stateService = StateService.get();
     private final FalconExecutionService executionService = FalconExecutionService.get();
 
@@ -96,7 +99,7 @@ public class ProcessExecutor extends EntityExecutor {
             LOG.info("Loading instances for process {} from state store.", process.getName());
             reloadInstances();
         }
-        registerForNotifications();
+        registerForNotifications(getLastInstanceTime());
     }
 
     private void dryRun() throws FalconException {
@@ -170,6 +173,16 @@ public class ProcessExecutor extends EntityExecutor {
         }
     }
 
+    //  Returns last materialized instance's time.
+    private Date getLastInstanceTime() throws StateStoreException {
+        InstanceState instanceState = STATE_STORE.getLastExecutionInstance(process, cluster);
+        if (instanceState == null) {
+            return null;
+        }
+        return EntityUtil.getNextInstanceTime(instanceState.getInstance().getInstanceTime().toDate(),
+                EntityUtil.getFrequency(process), EntityUtil.getTimeZone(process), 1);
+    }
+
     @Override
     public void resumeAll() throws FalconException {
         if (instances == null) {
@@ -189,7 +202,7 @@ public class ProcessExecutor extends EntityExecutor {
                 LOG.error("Instance suspend failed for : " + instance.getId(), e);
             }
         }
-        registerForNotifications();
+        registerForNotifications(getLastInstanceTime());
         // Some errors
         if (errMsg.length() != 0) {
             throw new FalconException("Some instances failed to resume : " + errMsg.toString());
@@ -286,15 +299,39 @@ public class ProcessExecutor extends EntityExecutor {
     }
 
     @Override
+    public void update(Entity newEntity) throws FalconException {
+        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
+        if (newEndTime.before(new Date())) {
+            throw new FalconException("Entity's end time " + SchemaHelper.formatDateUTC(newEndTime)
+                    + " is before current time. Entity can't be updated. Use remove and add");
+        }
+        LOG.debug("Updating for cluster: {}, entity: {}", cluster, newEntity.toShortString());
+        // Unregister from the service that causes an instance to trigger,
+        // so the new instances are triggered with the new definition.
+        switch(triggerPredicate.getType()) {
+        case TIME:
+            NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.TIME)
+                    .unregister(executionService, getId());
+            break;
+        default:
+            throw new FalconException("Internal Error : Wrong instance trigger type.");
+        }
+        // Update process
+        process = (Process) newEntity;
+        // Re-register with new start, end, frequency etc.
+        registerForNotifications(getLastInstanceTime());
+    }
+
+    @Override
     public Entity getEntity() {
         return process;
     }
 
     private ProcessExecutionInstance buildInstance(Event event) throws FalconException {
-        // If a time triggered instance, use nominal time from event
+        // If a time triggered instance, use instance time from event
         if (event.getType() == EventType.TIME_ELAPSED) {
             TimeElapsedEvent timeEvent = (TimeElapsedEvent) event;
-            LOG.debug("Creating a new process instance for nominal time {}.", timeEvent.getInstanceTime());
+            LOG.debug("Creating a new process instance for instance time {}.", timeEvent.getInstanceTime());
             return new ProcessExecutionInstance(process, timeEvent.getInstanceTime(), cluster);
         } else {
             return new ProcessExecutionInstance(process, DateTime.now(), cluster);
@@ -332,11 +369,19 @@ public class ProcessExecutor extends EntityExecutor {
         ProcessExecutionInstance instance;
         try {
             switch (event.getType()) {
-            // TODO : Handle cases where scheduling fails.
             case JOB_SCHEDULED:
                 instance = instances.get((InstanceID)event.getTarget());
                 instance.onEvent(event);
-                stateService.handleStateChange(instance, InstanceState.EVENT.SCHEDULE, this);
+                switch(((JobScheduledEvent)event).getStatus()) {
+                case SUCCESSFUL:
+                    stateService.handleStateChange(instance, InstanceState.EVENT.SCHEDULE, this);
+                    break;
+                case FAILED:
+                    stateService.handleStateChange(instance, InstanceState.EVENT.FAIL, this);
+                    break;
+                default:
+                    throw new InvalidStateTransitionException("Invalid job scheduler status.");
+                }
                 break;
             case JOB_COMPLETED:
                 instance = instances.get((InstanceID)event.getTarget());
@@ -377,7 +422,7 @@ public class ProcessExecutor extends EntityExecutor {
                 }
             }
         } catch (ExecutionException ee) {
-            throw new FalconException("Unable to cache execution instance", ee);
+            throw new FalconException("Unable to handle event for execution instance", ee);
         }
     }
 
@@ -392,18 +437,15 @@ public class ProcessExecutor extends EntityExecutor {
 
     // Registers for all notifications that should trigger an instance.
     // Currently, only time based triggers are handled.
-    protected void registerForNotifications() throws FalconException {
+    protected void registerForNotifications(Date instanceTime) throws FalconException {
         AlarmService.AlarmRequestBuilder requestBuilder =
                 (AlarmService.AlarmRequestBuilder)
                 NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.TIME)
                         .createRequestBuilder(executionService, getId());
         Cluster processCluster = ProcessHelper.getCluster(process, cluster);
 
-        InstanceState instanceState = STATE_STORE.getLastExecutionInstance(process, cluster);
-        // If there are no instances, use process's start, else, use last materialized instance's nominal time
-        Date startTime = (instanceState == null) ? processCluster.getValidity().getStart()
-                : EntityUtil.getNextInstanceTime(instanceState.getInstance().getInstanceTime().toDate(),
-                    EntityUtil.getFrequency(process), EntityUtil.getTimeZone(process), 1);
+        // If there are no instances, use process's start, else, use last materialized instance's time
+        Date startTime = (instanceTime == null) ? processCluster.getValidity().getStart() : instanceTime;
         Date endTime = processCluster.getValidity().getEnd();
         // TODO : Handle cron based and calendar based time triggers
         // TODO : Set execution order details.
@@ -460,6 +502,8 @@ public class ProcessExecutor extends EntityExecutor {
 
     @Override
     public void onSuspend(ExecutionInstance instance) throws FalconException {
+        NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.JOB_SCHEDULE)
+                .unregister(executionService, instance.getId());
         instances.invalidate(instance.getId());
     }
 
@@ -470,6 +514,8 @@ public class ProcessExecutor extends EntityExecutor {
 
     @Override
     public void onKill(ExecutionInstance instance) throws FalconException {
+        NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.JOB_SCHEDULE)
+                .unregister(executionService, instance.getId());
         instances.invalidate(instance.getId());
     }
 

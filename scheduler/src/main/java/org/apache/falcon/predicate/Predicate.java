@@ -172,12 +172,14 @@ public class Predicate implements Serializable {
      *
      * @param handler
      * @param id
+     * @param parallelInstances
      * @return
      */
-    public static Predicate createJobCompletionPredicate(NotificationHandler handler, ID id) {
+    public static Predicate createJobCompletionPredicate(NotificationHandler handler, ID id, int parallelInstances) {
         return new Predicate(TYPE.JOB_COMPLETION)
                 .addClause("instanceId", id.toString())
-                .addClause("handler", handler.getClass().getName());
+                .addClause("handler", handler.getClass().getName())
+                .addClause("parallelInstances", parallelInstances);
     }
 
     /**

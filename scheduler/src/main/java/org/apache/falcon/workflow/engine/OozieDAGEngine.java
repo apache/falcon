@@ -372,6 +372,7 @@ public class OozieDAGEngine implements DAGEngine {
     public Properties getConfiguration(String externalID) throws DAGEngineException {
         Properties props = new Properties();
         try {
+            switchUser();
             WorkflowJob jobInfo = client.getJobInfo(externalID);
             Configuration conf = new Configuration(false);
             conf.addResource(new ByteArrayInputStream(jobInfo.getConf().getBytes()));

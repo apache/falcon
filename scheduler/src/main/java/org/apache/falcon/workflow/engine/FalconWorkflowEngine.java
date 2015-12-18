@@ -38,6 +38,7 @@ import org.apache.falcon.state.EntityState;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
+import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.DateUtil;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -360,7 +361,34 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public String update(Entity oldEntity, Entity newEntity, String cluster, Boolean skipDryRun)
         throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        boolean entityUpdated =
+                UpdateHelper.isEntityUpdated(oldEntity, newEntity, cluster,
+                        EntityUtil.getLatestStagingPath(clusterEntity, oldEntity));
+
+        if (!entityUpdated) {
+            throw new FalconException("No relevant updates detected in the new entity definition!");
+        }
+
+        Date oldEndTime = EntityUtil.getEndTime(oldEntity, cluster);
+        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
+        if (newEndTime.before(DateUtil.now()) || newEndTime.before(oldEndTime)) {
+            throw new FalconException("New Entity's end time " + SchemaHelper.formatDateUTC(newEndTime)
+                    + " is before current time or before old end time. Entity can't be updated.");
+        }
+
+        // The steps required are the same as touch.
+        DAGEngineFactory.getDAGEngine(cluster).touch(newEntity, (skipDryRun == null) ? Boolean.FALSE : skipDryRun);
+        // Additionally, update the executor.
+        // The update will kick in for new instances created and not for READY/WAITING instances, as with Oozie.
+        Collection<InstanceState> instances = new ArrayList<>();
+        instances.add(STATE_STORE.getLastExecutionInstance(oldEntity, cluster));
+        EXECUTION_SERVICE.getEntityExecutor(oldEntity, cluster).update(newEntity);
+        StringBuilder result = new StringBuilder();
+        result.append(newEntity.toShortString()).append("/Effective Time: ")
+                .append(getEffectiveTime(newEntity, cluster, instances));
+        return result.toString();
     }
 
     @Override

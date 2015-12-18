@@ -29,7 +29,7 @@ public interface NotificationHandler {
      * When there are multiple notification handlers for the same event,
      * the priority determines which handler gets notified first.
      */
-    enum PRIORITY {HIGH(10), MEDIUM(5), LOW(0);
+    enum PRIORITY {HIGH(0), MEDIUM(5), LOW(10);
 
 
         private final int priority;

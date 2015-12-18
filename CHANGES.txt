@@ -9,6 +9,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1639 Implement update feature for native scheduler (Pallavi Rao)
+
     FALCON-1636 Add Rerun API In Falcon Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1562 Documentation for enabling native scheduler in falcon (Pallavi Rao)

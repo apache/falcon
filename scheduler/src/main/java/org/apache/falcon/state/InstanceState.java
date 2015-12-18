@@ -52,6 +52,8 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
                     return this;
                 case EXTERNAL_TRIGGER:
                     return this;
+                case FAIL:
+                    return FAILED;
                 default:
                     throw new InvalidStateTransitionException("Event " + event.name() + " not valid for state, "
                             + STATE.WAITING.name());

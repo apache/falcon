@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.DataEvent;
@@ -34,6 +35,7 @@ import org.apache.falcon.notification.service.impl.AlarmService;
 import org.apache.falcon.notification.service.impl.DataAvailabilityService;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
 import org.apache.falcon.notification.service.impl.SchedulerService;
+import org.apache.falcon.notification.service.request.AlarmRequest;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.state.AbstractSchedulerTestBase;
 import org.apache.falcon.state.EntityClusterID;
@@ -52,6 +54,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -555,6 +558,37 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
             {"summarize8", "suspend", InstanceState.STATE.SUSPENDED},
             {"summarize9", "delete", InstanceState.STATE.KILLED},
         };
+    }
+
+    @Test
+    public void testUpdate() throws Exception {
+        storeEntity(EntityType.PROCESS, "summarize10");
+        Process process = getStore().get(EntityType.PROCESS, "summarize10");
+        Assert.assertNotNull(process);
+        EntityID processKey = new EntityID(process);
+        String clusterName = dfsCluster.getCluster().getName();
+        Date now = new Date();
+        process.getClusters().getClusters().get(0).getValidity().setStart(now);
+
+        // Schedule a process
+        Assert.assertEquals(stateStore.getEntity(processKey).getCurrentState(), EntityState.STATE.SUBMITTED);
+        FalconExecutionService.get().schedule(process);
+        Assert.assertEquals(stateStore.getEntity(processKey).getCurrentState(), EntityState.STATE.SCHEDULED);
+        // Simulate a time notification
+        Event event = createEvent(NotificationServicesRegistry.SERVICE.TIME, process, clusterName);
+        FalconExecutionService.get().onEvent(event);
+
+        // Update the process with a new dummy input
+        Process newProcess = (Process) process.copy();
+        newProcess.getInputs().getInputs().add(new Input());
+        EntityExecutor executor = FalconExecutionService.get().getEntityExecutor(process, clusterName);
+        executor.update(newProcess);
+        EntityClusterID executorID = new EntityClusterID(process, clusterName);
+        Mockito.verify(mockTimeService).unregister(FalconExecutionService.get(), executorID);
+        ArgumentCaptor<AlarmRequest> argumentCaptor = ArgumentCaptor.forClass(AlarmRequest.class);
+        Mockito.verify(mockTimeService, Mockito.atLeast(2)).register(argumentCaptor.capture());
+        // The second time registration after update should be after now.
+        Assert.assertTrue(argumentCaptor.getValue().getStartTime().isAfter(now.getTime()));
     }
 
     private Event createEvent(NotificationServicesRegistry.SERVICE type, Process process, String cluster) {

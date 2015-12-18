@@ -121,4 +121,11 @@ public abstract class EntityExecutor implements NotificationHandler, InstanceSta
     public PRIORITY getPriority() {
         return PRIORITY.MEDIUM;
     }
+
+    /**
+     * Update the definition of the the entity and re-register to appropriate services.
+     * @param newEntity
+     * @throws FalconException
+     */
+    public abstract void update(Entity newEntity) throws FalconException;
 }
