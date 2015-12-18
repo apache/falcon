@@ -52,6 +52,7 @@ import org.apache.falcon.state.store.StateStore;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -274,12 +276,20 @@ public class SchedulerService implements FalconNotificationService, Notification
                 }
                 LOG.debug("Received request to run instance {}", instance.getId());
                 if (checkConditions()) {
-                    // If instance not already scheduled.
                     String externalId = instance.getExternalID();
-                    if (externalId == null) {
+                    if (externalId != null) {
+                        Properties props = instance.getProperties();
+                        boolean isForced = false;
+                        if (props != null) {
+                            isForced = Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_FORCE_RERUN));
+                        }
+                        if (isReRun(props)) {
+                            DAGEngineFactory.getDAGEngine(instance.getCluster()).reRun(instance, props, isForced);
+                        }
+                    } else {
                         externalId = DAGEngineFactory.getDAGEngine(instance.getCluster()).run(instance);
-                        LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     }
+                    LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     JobScheduledEvent event = new JobScheduledEvent(instance.getId(),
                             JobScheduledEvent.STATUS.SUCCESSFUL);
                     event.setExternalID(externalId);
@@ -295,6 +305,13 @@ public class SchedulerService implements FalconNotificationService, Notification
                     throw new RuntimeException("Unable to onEvent : " + request.getCallbackId(), fe);
                 }
             }
+        }
+
+        private boolean isReRun(Properties props) {
+            if (props != null && !props.isEmpty()) {
+                return Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_RERUN));
+            }
+            return false;
         }
 
         public short getPriority() {

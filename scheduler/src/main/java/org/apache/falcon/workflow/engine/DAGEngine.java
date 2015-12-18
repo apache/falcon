@@ -75,9 +75,11 @@ public interface DAGEngine {
      * Re-run a terminated instance.
      *
      * @param instance
+     * @param props
+     * @param isForced
      * @throws DAGEngineException
      */
-    void reRun(ExecutionInstance instance) throws DAGEngineException;
+    void reRun(ExecutionInstance instance, Properties props, boolean isForced) throws DAGEngineException;
 
     /**
      * Perform dryrun of an instance.

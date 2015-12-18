@@ -31,6 +31,7 @@ import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.JobCompletedEvent;
+import org.apache.falcon.notification.service.event.RerunEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.notification.service.impl.AlarmService;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
@@ -43,13 +44,16 @@ import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.StateService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This class is responsible for managing execution instances of a process.
@@ -267,6 +271,21 @@ public class ProcessExecutor extends EntityExecutor {
     }
 
     @Override
+    public void rerun(ExecutionInstance instance, Properties props, boolean isForced) throws FalconException {
+        if (props == null) {
+            props = new Properties();
+        }
+        if (isForced) {
+            props.put(FalconWorkflowEngine.FALCON_FORCE_RERUN, "true");
+        }
+        props.put(FalconWorkflowEngine.FALCON_RERUN, "true");
+        instance.setProperties(props);
+        instances.put(new InstanceID(instance), (ProcessExecutionInstance) instance);
+        RerunEvent rerunEvent = new RerunEvent(instance.getId(), instance.getInstanceTime());
+        onEvent(rerunEvent);
+    }
+
+    @Override
     public Entity getEntity() {
         return process;
     }
@@ -311,7 +330,6 @@ public class ProcessExecutor extends EntityExecutor {
 
     private void handleEvent(Event event) throws FalconException {
         ProcessExecutionInstance instance;
-        InstanceID instanceID;
         try {
             switch (event.getType()) {
             // TODO : Handle cases where scheduling fails.
@@ -341,17 +359,24 @@ public class ProcessExecutor extends EntityExecutor {
                             "Job seems to be have been managed outside Falcon.");
                 }
                 break;
+            case RE_RUN:
+                instance = instances.get((InstanceID)event.getTarget());
+                stateService.handleStateChange(instance, InstanceState.EVENT.EXTERNAL_TRIGGER, this);
+                if (instance.isReady()) {
+                    stateService.handleStateChange(instance, InstanceState.EVENT.CONDITIONS_MET, this);
+                }
+                break;
             default:
                 if (isTriggerEvent(event)) {
                     instance = buildInstance(event);
                     stateService.handleStateChange(instance, InstanceState.EVENT.TRIGGER, this);
                     // This happens where are no conditions the instance is waiting on (for example, no data inputs).
-                    if (instance.isReady()) {
+                    if (!instance.isScheduled() && instance.isReady()) {
                         stateService.handleStateChange(instance, InstanceState.EVENT.CONDITIONS_MET, this);
                     }
                 }
             }
-        } catch (Exception ee) {
+        } catch (ExecutionException ee) {
             throw new FalconException("Unable to cache execution instance", ee);
         }
     }
@@ -397,12 +422,19 @@ public class ProcessExecutor extends EntityExecutor {
     private boolean shouldHandleEvent(Event event) {
         return event.getTarget().equals(id)
                 || event.getType() == EventType.JOB_COMPLETED
-                || event.getType() == EventType.JOB_SCHEDULED;
+                || event.getType() == EventType.JOB_SCHEDULED
+                || event.getType() == EventType.RE_RUN;
     }
 
     @Override
     public void onTrigger(ExecutionInstance instance) throws FalconException {
         instances.put(new InstanceID(instance), (ProcessExecutionInstance) instance);
+    }
+
+    @Override
+    public void onExternalTrigger(ExecutionInstance instance) throws FalconException {
+        instances.put(new InstanceID(instance), (ProcessExecutionInstance) instance);
+        ((ProcessExecutionInstance) instance).rerun();
     }
 
     @Override

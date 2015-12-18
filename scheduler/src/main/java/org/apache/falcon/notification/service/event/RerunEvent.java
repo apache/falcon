@@ -15,16 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.falcon.notification.service.event;
 
+import org.apache.falcon.state.ID;
+import org.apache.falcon.state.InstanceID;
+import org.joda.time.DateTime;
+
 /**
- * Types of event.
+ * Rerun Event used while rerunning an instance.
  */
-public enum EventType {
-        TIME_ELAPSED,
-        DATA_AVAILABLE,
-        JOB_COMPLETED,
-        JOB_SCHEDULED,
-        RE_RUN
+public class RerunEvent extends Event {
+    private DateTime instanceTime;
+    private final InstanceID callbackID;
+
+    public DateTime getInstanceTime() {
+        return instanceTime;
+    }
+
+    public RerunEvent(InstanceID callbackID, DateTime instanceTime) {
+        this.callbackID = callbackID;
+        this.instanceTime = instanceTime;
+        this.type = EventType.RE_RUN;
+    }
+
+    @Override
+    public ID getTarget() {
+        return callbackID;
+    }
 }

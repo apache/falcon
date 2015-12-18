@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.state.store.jdbc;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
@@ -217,6 +218,29 @@ public final class JDBCStateStore extends AbstractStateStore {
     }
 
     @Override
+    public InstanceState getExecutionInstance(String externalID) throws StateStoreException {
+        if (StringUtils.isEmpty(externalID)) {
+            throw new StateStoreException("External ID for retrieving instance cannot be null or empty");
+        }
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery("GET_INSTANCE_FOR_EXTERNAL_ID");
+        q.setParameter("externalID", externalID);
+        List result = q.getResultList();
+        entityManager.close();
+        if (result.isEmpty()) {
+            return null;
+        }
+        try {
+            InstanceBean instanceBean = (InstanceBean)(result.get(0));
+            return BeanMapperUtil.convertToInstanceState(instanceBean);
+        } catch (IOException e) {
+            throw new StateStoreException(e);
+        }
+
+    }
+
+
+    @Override
     public void updateExecutionInstance(InstanceState instanceState) throws StateStoreException {
         InstanceID id = new InstanceID(instanceState.getInstance());
         String key = id.toString();
@@ -244,6 +268,13 @@ public final class JDBCStateStore extends AbstractStateStore {
                 && !instanceState.getInstance().getAwaitingPredicates().isEmpty()) {
             try {
                 q.setParameter("awaitedPredicates", BeanMapperUtil.getAwaitedPredicates(instanceState));
+            } catch (IOException e) {
+                throw new StateStoreException(e);
+            }
+        }
+        if (instance.getProperties() != null && !instance.getProperties().isEmpty()) {
+            try {
+                q.setParameter("properties", BeanMapperUtil.getProperties(instanceState));
             } catch (IOException e) {
                 throw new StateStoreException(e);
             }

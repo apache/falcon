@@ -18,6 +18,7 @@
 package org.apache.falcon.state.store;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
@@ -138,6 +139,19 @@ public final class InMemoryStateStore extends AbstractStateStore {
             throw new StateStoreException("Instance with key, " + instanceId + " does not exist.");
         }
         return instanceStates.get(instanceId.toString());
+    }
+
+    @Override
+    public InstanceState getExecutionInstance(String externalID) throws StateStoreException {
+        if (StringUtils.isEmpty(externalID)) {
+            throw new StateStoreException("External ID for retrieving instance cannot be null");
+        }
+        for (InstanceState instanceState : instanceStates.values()) {
+            if (externalID.equals(instanceState.getInstance().getExternalID())) {
+                return instanceState;
+            }
+        }
+        return null;
     }
 
     @Override

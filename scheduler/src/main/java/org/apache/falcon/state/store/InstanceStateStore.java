@@ -48,6 +48,15 @@ public interface InstanceStateStore {
     InstanceState getExecutionInstance(InstanceID instanceId) throws StateStoreException;
 
     /**
+     * Retrieves ExecutionInstance from external ID.
+     *
+     * @param externalID
+     * @return
+     * @throws StateStoreException
+     */
+    InstanceState getExecutionInstance(String externalID) throws StateStoreException;
+
+    /**
      * Updates an execution instance in the store.
      *
      * @param instanceState

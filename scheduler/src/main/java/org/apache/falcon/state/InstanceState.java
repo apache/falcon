@@ -50,6 +50,8 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
                     return TIMED_OUT;
                 case TRIGGER:
                     return this;
+                case EXTERNAL_TRIGGER:
+                    return this;
                 default:
                     throw new InvalidStateTransitionException("Event " + event.name() + " not valid for state, "
                             + STATE.WAITING.name());
@@ -68,6 +70,8 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
                     return RUNNING;
                 case CONDITIONS_MET:
                     return this;
+                case FAIL:
+                    return FAILED;
                 default:
                     throw new InvalidStateTransitionException("Event " + event.name()
                             + " not valid for state, " + this.name());
@@ -99,6 +103,9 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
                 if (event == EVENT.SUCCEED) {
                     return this;
                 }
+                if (event == EVENT.EXTERNAL_TRIGGER) {
+                    return WAITING;
+                }
                 throw new InvalidStateTransitionException("Instance is in terminal state, " + this.name()
                         + ". Cannot apply transitions.");
             }
@@ -108,6 +115,9 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
             public STATE nextTransition(EVENT event) throws InvalidStateTransitionException {
                 if (event == EVENT.FAIL) {
                     return this;
+                }
+                if (event == EVENT.EXTERNAL_TRIGGER) {
+                    return WAITING;
                 }
                 throw new InvalidStateTransitionException("Instance is in terminal state, " + this.name()
                         + ". Cannot apply transitions.");
@@ -119,6 +129,9 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
                 if (event == EVENT.KILL) {
                     return this;
                 }
+                if (event == EVENT.EXTERNAL_TRIGGER) {
+                    return WAITING;
+                }
                 throw new InvalidStateTransitionException("Instance is in terminal state, " + this.name()
                         + ". Cannot apply transitions.");
             }
@@ -128,6 +141,9 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
             public STATE nextTransition(EVENT event) throws InvalidStateTransitionException {
                 if (event == EVENT.TIME_OUT) {
                     return this;
+                }
+                if (event == EVENT.EXTERNAL_TRIGGER) {
+                    return WAITING;
                 }
                 throw new InvalidStateTransitionException("Instance is in terminal state, " + this.name()
                         + ". Cannot apply transitions.");
@@ -176,7 +192,8 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
         RESUME_RUNNING,
         KILL,
         SUCCEED,
-        FAIL
+        FAIL,
+        EXTERNAL_TRIGGER
     }
 
     /**
@@ -245,6 +262,7 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
         states.add(STATE.FAILED);
         states.add(STATE.KILLED);
         states.add(STATE.SUCCEEDED);
+        states.add(STATE.TIMED_OUT);
         return states;
     }
 

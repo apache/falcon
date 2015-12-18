@@ -63,6 +63,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     private static final StateStore STATE_STORE = AbstractStateStore.get();
     private static final ConfigurationStore CONFIG_STORE = ConfigurationStore.get();
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
+    public static final String FALCON_FORCE_RERUN = "falcon.system.force.rerun";
+    public static final String FALCON_RERUN = "falcon.system.rerun";
 
     private enum JobAction {
         KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
@@ -160,6 +162,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(action, entity, start, end, props, lifeCycles, false);
+    }
+
+    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
+                                        Properties props, List<LifeCycle> lifeCycles,
+                                        boolean isForced) throws FalconException {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
         APIResult.Status overallStatus = APIResult.Status.SUCCEEDED;
@@ -186,6 +194,10 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             states.addAll(InstanceState.getTerminalStates());
             states.add(InstanceState.STATE.SUSPENDED);
             break;
+        case RERUN:
+            // Applicable only for terminated States
+            states = InstanceState.getTerminalStates();
+            break;
         default:
             throw new IllegalArgumentException("Unhandled action " + action);
         }
@@ -210,7 +222,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
             InstancesResult.Instance instance = null;
             try {
-                instance = performAction(ins.getCluster(), entity, action, ins);
+                instance = performAction(ins.getCluster(), entity, action, ins, props, isForced);
                 instance.instance = instanceTimeStr;
             } catch (FalconException e) {
                 LOG.warn("Unable to perform action {} on cluster", action, e);
@@ -241,7 +253,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private InstancesResult.Instance performAction(String cluster, Entity entity, JobAction action,
-                                                   ExecutionInstance instance) throws FalconException {
+                                                   ExecutionInstance instance, Properties userProps,
+                                                   boolean isForced) throws FalconException {
         EntityExecutor executor = EXECUTION_SERVICE.getEntityExecutor(entity, cluster);
         InstancesResult.Instance instanceInfo = null;
         LOG.debug("Retrieving information for {} for action {}", instance.getId(), action);
@@ -266,6 +279,10 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
                             .getExecutionInstance(instance.getId()).getCurrentState().name());
             break;
         case RERUN:
+            executor.rerun(instance, userProps, isForced);
+            instanceInfo.status =
+                    InstancesResult.WorkflowStatus.valueOf(STATE_STORE
+                            .getExecutionInstance(instance.getId()).getCurrentState().name());
             break;
         case STATUS:
             if (StringUtils.isNotEmpty(instance.getExternalID())) {
@@ -302,7 +319,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
                                           List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles, isForced);
     }
 
     @Override
@@ -395,7 +412,10 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        InstanceState instanceState = STATE_STORE.getExecutionInstance(jobId);
+        ExecutionInstance instance = instanceState.getInstance();
+        EntityExecutor executor = EXECUTION_SERVICE.getEntityExecutor(instance.getEntity(), cluster);
+        executor.rerun(instance, props, isForced);
     }
 
     @Override

@@ -187,9 +187,6 @@ public class ProcessExecutionInstance extends ExecutionInstance {
      * @return true when it is not already scheduled or is gated on some conditions.
      */
     public boolean isReady() {
-        if (getExternalID() != null) {
-            return false;
-        }
         if (awaitedPredicates.isEmpty()) {
             return true;
         } else {
@@ -323,5 +320,9 @@ public class ProcessExecutionInstance extends ExecutionInstance {
         // Only Registration to Data service happens via process execution instance. So, handle just that.
         NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
                 .unregister(executionService, getId());
+    }
+
+    public void rerun() throws FalconException {
+        registerForNotifications(false);
     }
 }

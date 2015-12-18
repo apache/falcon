@@ -129,6 +129,10 @@ public final class StateService {
                 callbackHandler(instance, InstanceState.EVENT.TRIGGER, handler);
                 stateStore.putExecutionInstance(new InstanceState(instance));
                 LOG.debug("Instance {} triggered due to event {}.", id, event.name());
+            } else if (event == InstanceState.EVENT.EXTERNAL_TRIGGER) {
+                callbackHandler(instance, InstanceState.EVENT.EXTERNAL_TRIGGER, handler);
+                stateStore.updateExecutionInstance(new InstanceState(instance));
+                LOG.debug("Instance {} triggered due to event {}.", id, event.name());
             } else {
                 throw new FalconException("Instance " + id + "does not exist.");
             }
@@ -153,6 +157,9 @@ public final class StateService {
         switch (event) {
         case TRIGGER:
             handler.onTrigger(instance);
+            break;
+        case EXTERNAL_TRIGGER:
+            handler.onExternalTrigger(instance);
             break;
         case CONDITIONS_MET:
             handler.onConditionsMet(instance);

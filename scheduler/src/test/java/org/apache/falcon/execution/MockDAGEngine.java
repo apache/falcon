@@ -79,8 +79,10 @@ public class MockDAGEngine implements DAGEngine {
     }
 
     @Override
-    public void reRun(ExecutionInstance instance) throws DAGEngineException {
-
+    public void reRun(ExecutionInstance instance, Properties props, boolean isForced) throws DAGEngineException {
+        if (failInstances.contains(instance)) {
+            throw new DAGEngineException("mock failure.");
+        }
     }
 
     @Override

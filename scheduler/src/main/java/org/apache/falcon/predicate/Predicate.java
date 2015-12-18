@@ -23,6 +23,7 @@ import org.apache.falcon.execution.NotificationHandler;
 import org.apache.falcon.notification.service.event.DataEvent;
 import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.notification.service.event.EventType;
+import org.apache.falcon.notification.service.event.RerunEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.state.ID;
 
@@ -46,7 +47,8 @@ public class Predicate implements Serializable {
     public enum TYPE {
         DATA,
         TIME,
-        JOB_COMPLETION
+        JOB_COMPLETION,
+        RE_RUN
     }
 
     private final TYPE type;
@@ -179,6 +181,16 @@ public class Predicate implements Serializable {
     }
 
     /**
+     * Creates a predicate of type Rerun.
+     * @param instanceTime
+     * @return
+     */
+    public static Predicate createRerunPredicate(long instanceTime) {
+        return new Predicate(TYPE.RE_RUN)
+                .addClause("instanceTime", (instanceTime < 0) ? ANY : instanceTime);
+    }
+
+    /**
      * Creates a predicate from an event based on the event source and values in the event.
      *
      * @param event
@@ -206,6 +218,13 @@ public class Predicate implements Serializable {
                 throw new FalconException("Event does not have enough data to create a predicate");
             }
 
+        } else if (event.getType() == EventType.RE_RUN) {
+            RerunEvent rerunEvent = (RerunEvent) event;
+            if (rerunEvent.getInstanceTime() != null) {
+                return Predicate.createRerunPredicate(rerunEvent.getInstanceTime().getMillis());
+            } else {
+                throw new FalconException("Event does not have enough data to create a predicate");
+            }
         } else {
             throw new FalconException("Unhandled event type " + event.getType());
         }

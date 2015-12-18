@@ -25,6 +25,8 @@ import org.apache.falcon.state.InstanceStateChangeHandler;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
 
+import java.util.Properties;
+
 /**
  * This class is responsible for creation of execution instances for a given entity.
  * An execution instance is created upon receipt of a "trigger event".
@@ -96,6 +98,12 @@ public abstract class EntityExecutor implements NotificationHandler, InstanceSta
      * @throws FalconException
      */
     public abstract void kill(ExecutionInstance instance) throws FalconException;
+
+    /**
+     * Reruns a specified execution instance.It relies on the DAGEngine to maintain a details of
+     * reruns and no rerun information is stored in Falcon.
+     */
+    public abstract void rerun(ExecutionInstance instance, Properties props, boolean isForced) throws FalconException;
 
     /**
      * @return The entity

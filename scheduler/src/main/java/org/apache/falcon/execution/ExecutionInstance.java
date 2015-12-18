@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Represents an execution instance of an entity.
@@ -43,6 +44,7 @@ public abstract class ExecutionInstance implements NotificationHandler {
     private final DateTime creationTime;
     private DateTime actualStart;
     private DateTime actualEnd;
+    private Properties properties;
     protected static final DateTimeZone UTC = DateTimeZone.UTC;
 
     /**
@@ -146,6 +148,15 @@ public abstract class ExecutionInstance implements NotificationHandler {
      */
     public void setActualEnd(DateTime actualEnd) {
         this.actualEnd = actualEnd;
+    }
+
+
+    public Properties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     /**

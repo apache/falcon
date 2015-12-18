@@ -32,6 +32,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -199,7 +200,8 @@ public class OozieDAGEngine implements DAGEngine {
             client.suspend(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED, Job.Status.SUCCEEDED,
                     Job.Status.FAILED, Job.Status.KILLED);
-            LOG.info("Suspended job {} on cluster {}", instance.getExternalID(), instance.getCluster());
+            LOG.info("Suspended job {} of entity {} of time {} on cluster {}", instance.getExternalID(),
+                    instance.getEntity().getName(), instance.getInstanceTime(), instance.getCluster());
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
@@ -211,7 +213,8 @@ public class OozieDAGEngine implements DAGEngine {
             client.resume(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUCCEEDED,
                     Job.Status.FAILED, Job.Status.KILLED);
-            LOG.info("Resumed job {} on cluster {}", instance.getExternalID(), instance.getCluster());
+            LOG.info("Resumed job {} of entity {} of time {} on cluster {}", instance.getExternalID(),
+                    instance.getEntity().getName(), instance.getInstanceTime(), instance.getCluster());
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
@@ -222,15 +225,37 @@ public class OozieDAGEngine implements DAGEngine {
         try {
             client.kill(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.KILLED, Job.Status.SUCCEEDED, Job.Status.FAILED);
-            LOG.info("Killed job {} on cluster {}", instance.getExternalID(), instance.getCluster());
+            LOG.info("Killed job {} of entity {} of time {} on cluster {}", instance.getExternalID(),
+                    instance.getEntity().getName(), instance.getInstanceTime(), instance.getCluster());
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
     }
 
     @Override
-    public void reRun(ExecutionInstance instance) throws DAGEngineException {
-        // TODO : Implement this
+    public void reRun(ExecutionInstance instance, Properties props, boolean isForced) throws DAGEngineException {
+        String jobId = instance.getExternalID();
+        try {
+            WorkflowJob jobInfo = client.getJobInfo(jobId);
+            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
+            if (props != null) {
+                jobprops.putAll(props);
+            }
+            //if user has set any of these oozie rerun properties then force rerun flag is ignored
+            if (!jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && !jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                jobprops.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+            }
+            jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
+            jobprops.remove(OozieClient.BUNDLE_APP_PATH);
+            client.reRun(jobId, jobprops);
+            assertStatus(instance.getExternalID(), Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUCCEEDED);
+            LOG.info("Rerun job {} of entity {} of time {} on cluster {}", jobId, instance.getEntity().getName(),
+                    instance.getInstanceTime(), instance.getCluster());
+        } catch (Exception e) {
+            LOG.error("Unable to rerun workflows", e);
+            throw new DAGEngineException(e);
+        }
     }
 
     @Override

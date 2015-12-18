@@ -364,6 +364,40 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
 
     }
 
+    @Test
+    public void testGetInstanceFromExternalID() throws Exception {
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.FEED, "clicksFeed");
+        storeEntity(EntityType.FEED, "clicksSummary");
+
+        long instance1Time = System.currentTimeMillis() - 180000;
+        long instance2Time = System.currentTimeMillis();
+        EntityState entityState = getEntityState(EntityType.PROCESS, "processext");
+        ExecutionInstance processExecutionInstance1 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance1Time, "cluster1", instance1Time);
+        processExecutionInstance1.setExternalID("external_id_1");
+        InstanceState instanceState1 = new InstanceState(processExecutionInstance1);
+        instanceState1.setCurrentState(InstanceState.STATE.RUNNING);
+
+        ExecutionInstance processExecutionInstance2 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance2Time, "cluster1", instance2Time);
+        processExecutionInstance2.setExternalID("external_id_2");
+        InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
+        instanceState2.setCurrentState(InstanceState.STATE.RUNNING);
+
+        stateStore.putExecutionInstance(instanceState1);
+        stateStore.putExecutionInstance(instanceState2);
+
+        InstanceState actualInstanceState = stateStore.getExecutionInstance("external_id_1");
+        Assert.assertEquals(actualInstanceState.getInstance(), processExecutionInstance1);
+
+        actualInstanceState = stateStore.getExecutionInstance("external_id_2");
+        Assert.assertEquals(actualInstanceState.getInstance(), processExecutionInstance2);
+
+    }
+
 
     private void initInstanceState(InstanceState instanceState) {
         instanceState.setCurrentState(InstanceState.STATE.READY);
