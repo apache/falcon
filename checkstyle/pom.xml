@@ -21,8 +21,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.apache.falcon</groupId>
+    <parent>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
+        <version>0.9-SNAPSHOT</version>
+    </parent>
     <artifactId>checkstyle</artifactId>
-    <version>0.9-SNAPSHOT</version>
     <name>Checkstyle</name>
 </project>
