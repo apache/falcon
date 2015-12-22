@@ -1016,6 +1016,20 @@ public final class EntityUtil {
         return FeedHelper.getImportDatasourceType(cluster, feed);
     }
 
+    /**
+     * Returns Data Source Type given a feed with Export policy.
+     *
+     * @param cluster
+     * @param feed
+     * @return
+     * @throws FalconException
+     */
+
+    public static DatasourceType getExportDatasourceType(
+            Cluster cluster, Feed feed) throws FalconException {
+        return FeedHelper.getExportDatasourceType(cluster, feed);
+    }
+
     public static EntityNotification getEntityNotification(Entity entity) {
         switch (entity.getEntityType()) {
         case FEED:

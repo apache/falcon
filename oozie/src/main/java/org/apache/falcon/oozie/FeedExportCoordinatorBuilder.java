@@ -30,9 +30,9 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
-import org.apache.falcon.oozie.coordinator.DATAOUT;
+import org.apache.falcon.oozie.coordinator.DATAIN;
 import org.apache.falcon.oozie.coordinator.DATASETS;
-import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
+import org.apache.falcon.oozie.coordinator.INPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.hadoop.fs.Path;
@@ -44,27 +44,27 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Builds Oozie coordinator for database import.
+ * Builds Oozie coordinator for database export.
  */
 
-public class FeedImportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> {
-    public FeedImportCoordinatorBuilder(Feed entity) {
-        super(entity, LifeCycle.IMPORT);
+public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> {
+    public FeedExportCoordinatorBuilder(Feed entity) {
+        super(entity, LifeCycle.EXPORT);
     }
 
-    public static final String IMPORT_DATASET_NAME = "import-dataset";
+    public static final String EXPORT_DATASET_NAME = "export-dataset";
 
-    public static final String IMPORT_DATAOUT_NAME = "import-output";
+    public static final String EXPORT_DATAIN_NAME = "export-input";
 
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(FeedImportCoordinatorBuilder.class);
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(FeedExportCoordinatorBuilder.class);
 
 
     @Override
     public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
-        LOG.info("Generating Feed IMPORT coordinator.");
 
+        LOG.info("Generating Feed EXPORT coordinator.");
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster((Feed) entity, cluster.getName());
-        if (!FeedHelper.isImportEnabled(feedCluster)) {
+        if (!FeedHelper.isExportEnabled(feedCluster)) {
             return null;
         }
 
@@ -77,13 +77,13 @@ public class FeedImportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
         COORDINATORAPP coord = new COORDINATORAPP();
         initializeCoordAttributes(coord, (Feed) entity, cluster);
         Properties props = createCoordDefaultConfiguration(getEntityName());
-        initializeOutputPath(coord, cluster, props);
+        initializeInputPath(coord, cluster, props);
 
         props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
 
         WORKFLOW workflow = new WORKFLOW();
         Path coordPath = getBuildPath(buildPath);
-        Properties wfProp = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.IMPORT).build(cluster,
+        Properties wfProp = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.EXPORT).build(cluster,
                 coordPath);
         workflow.setAppPath(getStoragePath(wfProp.getProperty(OozieEntityBuilder.ENTITY_PATH)));
         props.putAll(wfProp);
@@ -97,7 +97,7 @@ public class FeedImportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
         return Arrays.asList(getProperties(marshalPath, getEntityName()));
     }
 
-    private void initializeOutputPath(COORDINATORAPP coord, Cluster cluster, Properties props)
+    private void initializeInputPath(COORDINATORAPP coord, Cluster cluster, Properties props)
         throws FalconException {
 
         if (coord.getDatasets() == null) {
@@ -105,28 +105,28 @@ public class FeedImportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
         }
 
         if (coord.getOutputEvents() == null) {
-            coord.setOutputEvents(new OUTPUTEVENTS());
+            coord.setInputEvents(new INPUTEVENTS());
         }
 
         Storage storage = FeedHelper.createStorage(cluster, (Feed) entity);
         SYNCDATASET syncdataset = createDataSet((Feed) entity, cluster, storage,
-                IMPORT_DATASET_NAME, LocationType.DATA);
+                EXPORT_DATASET_NAME, LocationType.DATA);
 
         if (syncdataset == null) {
             return;
         }
         coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
-
-        DATAOUT dataout = createDataOut(entity);
-        coord.getOutputEvents().getDataOut().add(dataout);
+        DATAIN datain = createDataIn(entity, cluster);
+        coord.getInputEvents().getDataIn().add(datain);
     }
 
-    private DATAOUT createDataOut(Feed feed) {
-        DATAOUT dataout = new DATAOUT();
-        dataout.setName(IMPORT_DATAOUT_NAME);
-        dataout.setDataset(IMPORT_DATASET_NAME);
-        dataout.setInstance("${coord:current(0)}");
-        return dataout;
+    private DATAIN createDataIn(Feed feed, Cluster cluster) {
+        DATAIN datain = new DATAIN();
+        datain.setName(EXPORT_DATAIN_NAME);
+        datain.setDataset(EXPORT_DATASET_NAME);
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+        datain.getInstance().add(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
+        return datain;
     }
 
     /**
@@ -190,3 +190,4 @@ public class FeedImportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
         coord.setFrequency("${coord:" + entity.getFrequency().toString() + "}");
     }
 }
+

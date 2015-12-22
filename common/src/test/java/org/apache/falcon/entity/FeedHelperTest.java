@@ -44,7 +44,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
-import org.apache.falcon.entity.v0.feed.Source;
+import org.apache.falcon.entity.v0.feed.Datasource;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
@@ -906,7 +906,7 @@ public class FeedHelperTest extends AbstractTestBase {
         Assert.assertEquals(getDate("2012-02-07 00:00 UTC"), feedCluster.getValidity().getStart());
         Assert.assertTrue(FeedHelper.isImportEnabled(feedCluster));
         Assert.assertEquals(MergeType.SNAPSHOT, FeedHelper.getImportMergeType(feedCluster));
-        Assert.assertNotEquals(startInstResult, feedCluster.getValidity().getStart());
+        Assert.assertEquals(startInstResult, feedCluster.getValidity().getStart());
     }
 
     @Test
@@ -915,9 +915,9 @@ public class FeedHelperTest extends AbstractTestBase {
         Feed feed = importFeedSnapshot(cluster, "hours(1)", "2012-02-07 00:00 UTC", "2020-02-25 00:00 UTC");
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
         Date startInstResult = FeedHelper.getImportInitalInstance(feedCluster);
-        List<String> fieldList = FeedHelper.getFieldList(feedCluster);
+        List<String> fieldList = FeedHelper.getImportFieldList(feedCluster);
         Assert.assertEquals(2, fieldList.size());
-        Assert.assertFalse(FeedHelper.isFieldExcludes(feedCluster));
+        Assert.assertFalse(FeedHelper.isFieldExcludes(feedCluster.getImport().getSource()));
     }
 
     @Test
@@ -1028,7 +1028,7 @@ public class FeedHelperTest extends AbstractTestBase {
         FieldsType fields = new FieldsType();
         fields.setIncludes(fieldInclude);
 
-        Source source = new Source();
+        Datasource source = new Datasource();
         source.setName("test-db");
         source.setTableName("test-table");
         source.setExtract(extract);

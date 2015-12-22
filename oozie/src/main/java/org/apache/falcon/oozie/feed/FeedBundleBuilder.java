@@ -77,6 +77,11 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
             props.addAll(importProps);
         }
 
+        List<Properties> exportProps = OozieCoordinatorBuilder.get(entity, Tag.EXPORT).buildCoords(cluster, buildPath);
+        if (exportProps != null) {
+            props.addAll(exportProps);
+        }
+
         if (!props.isEmpty()) {
             copySharedLibs(cluster, new Path(getLibPath(buildPath)));
         }

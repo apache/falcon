@@ -1208,4 +1208,31 @@ public class FeedEntityParserTest extends AbstractTestBase {
         feed.getClusters().getClusters().get(0).getValidity().setEnd(null);
         parser.validate(feed);
     }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testExportFeedSqoopExcludeFields() throws Exception {
+
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-exclude-fields-0.1.xml");
+        Feed feed = parser.parseAndValidate(feedStream);
+        Assert.fail("An exception should have been thrown: Feed Export policy not yet implement Field exclusion.");
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testExportFeedSqoopArgsNumMapper() throws Exception {
+        final InputStream inputStream = this.getClass().getResourceAsStream("/config/feed/feed-export-0.1.xml");
+        Feed exportFeed = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.feed.Arguments args =
+                exportFeed.getClusters().getClusters().get(0).getExport().getArguments();
+        Argument numMappersArg = new Argument();
+        numMappersArg.setName("--split-by");
+        numMappersArg.setValue("id");
+
+        args.getArguments().clear();
+        args.getArguments().add(numMappersArg);
+
+        parser.validate(exportFeed);
+        Assert.fail("An exception should have been thrown: Feed export should specify --split-by");
+    }
 }

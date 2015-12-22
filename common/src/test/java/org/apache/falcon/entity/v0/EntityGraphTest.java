@@ -31,7 +31,6 @@ import org.apache.falcon.entity.v0.feed.FieldsType;
 import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
 import org.apache.falcon.entity.v0.feed.Import;
 import org.apache.falcon.entity.v0.feed.MergeType;
-import org.apache.falcon.entity.v0.feed.Source;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.process.Input;
@@ -162,7 +161,7 @@ public class EntityGraphTest extends AbstractTestBase {
         fieldInclude.getFields().add("name");
         fields.setIncludes(fieldInclude);
 
-        Source source = new Source();
+        org.apache.falcon.entity.v0.feed.Datasource source = new org.apache.falcon.entity.v0.feed.Datasource();
         source.setName(ds.getName());
         source.setTableName("test-table");
         source.setExtract(extract);

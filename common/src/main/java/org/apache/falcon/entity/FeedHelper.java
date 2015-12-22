@@ -27,16 +27,17 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.ExtractMethod;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
 import org.apache.falcon.entity.v0.feed.Lifecycle;
+import org.apache.falcon.entity.v0.feed.Load;
 import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
@@ -817,7 +818,11 @@ public final class FeedHelper {
             org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
             Feed feed) throws FalconException {
         Cluster feedCluster = getCluster(feed, clusterEntity.getName());
-        return DatasourceHelper.getImportSourceType(feedCluster);
+        if (isImportEnabled(feedCluster)) {
+            return DatasourceHelper.getDatasourceType(getImportDatasourceName(feedCluster));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -834,6 +839,8 @@ public final class FeedHelper {
         return false;
     }
 
+
+
     /**
      * Returns the data source name associated with the Feed's import policy.
      *
@@ -847,6 +854,8 @@ public final class FeedHelper {
             return null;
         }
     }
+
+
 
     /**
      * Returns Datasource table name.
@@ -863,6 +872,8 @@ public final class FeedHelper {
         }
     }
 
+
+
     /**
      * Returns the extract method type.
      *
@@ -877,6 +888,8 @@ public final class FeedHelper {
             return null;
         }
     }
+
+
 
     /**
      * Returns the merge type of the Feed import policy.
@@ -893,21 +906,15 @@ public final class FeedHelper {
     }
 
     /**
-     * Returns the initial instance date for the import data set or coorinator.
-     *
-     * For snapshot merge type, a latest time will be used since the source data is dumped in whole.
-     * For incremental merge type, start date specified in the cluster validity will be used.
+     * Returns the initial instance date for the import data set for coorinator.
      *
      * @param feedCluster
      * @return Feed cluster validity start date or recent time
      */
     public static Date getImportInitalInstance(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
-        Date initialInstance = new Date();
-        if (!FeedHelper.isSnapshotMergeType(feedCluster)) {
-            initialInstance = feedCluster.getValidity().getStart();
-        }
-        return initialInstance;
+        return feedCluster.getValidity().getStart();
     }
+
 
     /**
      * Helper method to check if the merge type is snapshot.
@@ -941,6 +948,9 @@ public final class FeedHelper {
         return argsMap;
     }
 
+
+
+
     /**
      * Returns Fields list specified in the Import Policy.
      *
@@ -948,7 +958,7 @@ public final class FeedHelper {
      * @return List of String
      * @throws FalconException
      */
-    public static List<String> getFieldList(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+    public static List<String> getImportFieldList(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
         throws FalconException {
         if (feedCluster.getImport().getSource().getFields() == null) {
             return null;
@@ -965,15 +975,15 @@ public final class FeedHelper {
     /**
      * Returns true if exclude field lists are used. This is a TBD feature.
      *
-     * @param feedCluster
+     * @param ds Feed Datasource
      * @return true of exclude field list is used or false.
      * @throws FalconException
      */
 
-    public static boolean isFieldExcludes(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+    public static boolean isFieldExcludes(org.apache.falcon.entity.v0.feed.Datasource ds)
         throws FalconException {
-        if (feedCluster.getImport().getSource().getFields() != null) {
-            org.apache.falcon.entity.v0.feed.FieldsType fieldType = feedCluster.getImport().getSource().getFields();
+        if (ds.getFields() != null) {
+            org.apache.falcon.entity.v0.feed.FieldsType fieldType = ds.getFields();
             FieldIncludeExclude excludeFileds = fieldType.getExcludes();
             if ((excludeFileds != null) && (excludeFileds.getFields().size() > 0)) {
                 return true;
@@ -1011,6 +1021,111 @@ public final class FeedHelper {
             }
         }
         return  retentionFrequency;
+    }
+
+    /**
+     * Returns the data source type associated with the Feed's export policy.
+     *
+     * @param clusterEntity
+     * @param feed
+     * @return {@link org.apache.falcon.entity.v0.datasource.DatasourceType}
+     * @throws FalconException
+     */
+    public static DatasourceType getExportDatasourceType(
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+            Feed feed) throws FalconException {
+        Cluster feedCluster = getCluster(feed, clusterEntity.getName());
+        if (isExportEnabled(feedCluster)) {
+            return DatasourceHelper.getDatasourceType(getExportDatasourceName(feedCluster));
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Return if Export policy is enabled in the Feed definition.
+     *
+     * @param feedCluster
+     * @return true if export policy is enabled else false
+     */
+
+    public static boolean isExportEnabled(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        return (feedCluster.getExport() != null);
+    }
+
+    /**
+     * Returns the data source name associated with the Feed's export policy.
+     *
+     * @param feedCluster
+     * @return DataSource name defined in the Datasource Entity
+     */
+    public static String getExportDatasourceName(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        if (isExportEnabled(feedCluster)) {
+            return feedCluster.getExport().getTarget().getName();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns Datasource table name.
+     *
+     * @param feedCluster
+     * @return Table or Topic name of the Datasource
+     */
+
+    public static String getExportDataSourceTableName(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        if (isExportEnabled(feedCluster)) {
+            return feedCluster.getExport().getTarget().getTableName();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the export load type.
+     *
+     * @param feedCluster
+     * @return {@link org.apache.falcon.entity.v0.feed.Load}
+     */
+
+    public static Load getExportLoadMethod(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        if (isExportEnabled(feedCluster)) {
+            return feedCluster.getExport().getTarget().getLoad();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the initial instance date for the export data set for coorinator.
+     *
+     * @param feedCluster
+     * @return Feed cluster validity start date or recent time
+     */
+    public static Date getExportInitalInstance(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        return feedCluster.getValidity().getStart();
+    }
+
+    /**
+     * Returns extra arguments specified in the Feed export policy.
+     *
+     * @param feedCluster
+     * @return
+     * @throws FalconException
+     */
+    public static Map<String, String> getExportArguments(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+        throws FalconException {
+
+        Map<String, String> argsMap = new HashMap<String, String>();
+        if (feedCluster.getExport().getArguments() == null) {
+            return argsMap;
+        }
+
+        for(org.apache.falcon.entity.v0.feed.Argument p : feedCluster.getExport().getArguments().getArguments()) {
+            argsMap.put(p.getName().toLowerCase(), p.getValue());
+        }
+        return argsMap;
     }
 
     public static Frequency getOldRetentionFrequency(Feed feed) {

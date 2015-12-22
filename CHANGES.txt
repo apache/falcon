@@ -9,6 +9,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1645 Ability to export to database(Venkat Ramachandran via Balu Vellanki)
+
     FALCON-1639 Implement update feature for native scheduler (Pallavi Rao)
 
     FALCON-1636 Add Rerun API In Falcon Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)

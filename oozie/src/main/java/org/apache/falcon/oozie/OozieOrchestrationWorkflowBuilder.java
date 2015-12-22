@@ -143,6 +143,17 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 }
                 break;
 
+            case EXPORT:
+                dsType = EntityUtil.getExportDatasourceType(cluster, feed);
+                if ((dsType == DatasourceType.MYSQL)
+                        || (dsType == DatasourceType.ORACLE)
+                        || (dsType == DatasourceType.HSQL)) {
+                    return new DatabaseExportWorkflowBuilder(feed);
+                } else {
+                    LOG.info("Export policy not implemented for DataSourceType : " + dsType);
+                }
+                break;
+
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
                        + ", lifecycle " + lifecycle);

@@ -30,7 +30,6 @@ import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.datasource.Interface;
 import org.apache.falcon.entity.v0.datasource.Interfaces;
 import org.apache.falcon.entity.v0.datasource.Interfacetype;
-import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -51,18 +50,18 @@ public final class DatasourceHelper {
 
     private static final ConfigurationStore STORE = ConfigurationStore.get();
 
-    public static DatasourceType getImportSourceType(Cluster feedCluster) throws FalconException {
-        Datasource ds = STORE.get(EntityType.DATASOURCE, feedCluster.getImport().getSource().getName());
-        return ds.getType();
+    public static DatasourceType getDatasourceType(String datasourceName) throws FalconException {
+        return getDatasource(datasourceName).getType();
     }
 
     private DatasourceHelper() {}
 
-    public static Datasource getDatasource(Cluster feedCluster) throws FalconException {
-        return STORE.get(EntityType.DATASOURCE, feedCluster.getImport().getSource().getName());
+    public static Datasource getDatasource(String datasourceName) throws FalconException {
+        return STORE.get(EntityType.DATASOURCE, datasourceName);
     }
-    public static String getReadOnlyEndpoint(Datasource db) {
-        return getInterface(db, Interfacetype.READONLY);
+
+    public static String getReadOnlyEndpoint(Datasource datasource) {
+        return getInterface(datasource, Interfacetype.READONLY);
     }
 
     /**

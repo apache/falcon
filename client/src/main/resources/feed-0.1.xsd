@@ -157,6 +157,7 @@
             <xs:element type="retention" name="retention"/>
             <xs:element type="sla" name="sla" minOccurs="0" maxOccurs="1"/>
             <xs:element type="import" name="import" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="export" name="export" minOccurs="0" maxOccurs="1"/>
             <xs:choice minOccurs="0" maxOccurs="1">
                 <xs:element type="locations" name="locations" minOccurs="0"/>
                 <xs:element type="catalog-table" name="table"/>
@@ -450,27 +451,44 @@
     </xs:simpleType>
     <xs:complexType name="import">
        <xs:sequence>
-            <xs:element type="source" name="source"/>
+            <xs:element type="datasource" name="source"/>
             <xs:element type="arguments" name="arguments" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
-    <xs:complexType name="source">
+    <xs:complexType name="export">
+        <xs:sequence>
+            <xs:element type="datasource" name="target"/>
+            <xs:element type="arguments" name="arguments" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="datasource">
         <xs:annotation>
             <xs:documentation>
-                Specifies the source entity name from which data will be imported.
-                This can be Database or other data source types in the future.
-                Table name specifies the table to import.
+                Specifies the source entity name from which data can be imported or exported.
+                This can be Database or other data source types in the future. The connection
+                and authentication details of the data source are defined in the Datasource
+                entity.
+                Table name specifies the table to import or export depending on the action type.
                 Extract type specifies a extraction method (full or incremental).
                 DeltaColumn specifies the column name on source databbase table
                 to identify the new data since the last extraction.
                 Merge type specifies how the data will be organized on Hadoop.
                 The supported types are snapshot (as in a particular time) or append
                 (as in timeseries partitions).
+                Load type specifies if new rows are inserted (load type=insertallowed) into
+                the database table or updated (load type=updateonly). If updateonly load type
+                is specified, then update columns need to be passed via the arguments.
+                Fields can be specified as includes or excludes of fields. If exlusion list
+                is specified, all column except the ones specified will not be imported or exported.
+                If inclusion list is specified, only the specified columns are exported or imported.
             </xs:documentation>
         </xs:annotation>
        <xs:sequence>
-            <xs:element type="extract" name="extract" minOccurs="1"/>
-            <xs:element type="fields-type" name="fields" minOccurs="0"/>
+           <xs:choice minOccurs="1" maxOccurs="1">
+               <xs:element type="extract" name="extract"/>
+               <xs:element type="load" name="load"/>
+           </xs:choice>
+           <xs:element type="fields-type" name="fields" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="non-empty-string" name="name" use="required"/>
         <xs:attribute type="non-empty-string" name="tableName" use="required"/>
@@ -482,12 +500,22 @@
         </xs:sequence>
         <xs:attribute type="extract-method" name="type" use="required"/>
     </xs:complexType>
+    <xs:complexType name="load">
+        <xs:attribute type="load-method" name="type" use="required"/>
+    </xs:complexType>
     <xs:simpleType name="extract-method">
         <xs:restriction base="xs:string">
             <xs:enumeration value="full"/>
             <xs:enumeration value="incremental"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="load-method">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="updateonly"/>
+            <xs:enumeration value="allowinsert"/>
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:simpleType name="merge-type">
         <xs:restriction base="xs:string">
             <xs:enumeration value="snapshot"/>
