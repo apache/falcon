@@ -44,7 +44,7 @@ public class FalconWebException extends WebApplicationException {
             status = Response.Status.FORBIDDEN;
         }
 
-        return newException(e.getMessage(), status);
+        return newException(getMessage(e), status);
     }
 
     public static FalconWebException newTriageResultException(Throwable e, Response.Status status) {

@@ -86,6 +86,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1680 Error message is not intuitive when entity schedule fails(Pallavi Rao via Ajay Yadava)
+
     FALCON-1644 Retention : Some feed instances are never deleted by retention jobs(Balu Vellanki via Ajay Yadava)
 
     FALCON-1641 Triage on an invalid feed instance throws IndexOutOfBoundException(Karishma Gulati via Ajay Yadava)
