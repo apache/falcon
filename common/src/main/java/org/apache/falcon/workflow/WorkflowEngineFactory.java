@@ -69,13 +69,17 @@ public final class WorkflowEngineFactory {
     public static AbstractWorkflowEngine getWorkflowEngine(Entity entity, Map<String, String> props)
         throws FalconException {
         // If entity is null or not schedulable and the engine property is not specified, return the configured WE.
-        if (entity == null || !entity.getEntityType().isSchedulable()
-                || props == null || props.isEmpty() || !props.containsKey(ENGINE_PROP)) {
+        if (entity == null || !entity.getEntityType().isSchedulable()) {
             LOG.debug("Returning configured workflow engine for entity {}.", entity);
             return getWorkflowEngine();
         }
 
-        String engineName = props.get(ENGINE_PROP);
+        // Default to configured workflow engine when no properties are specified.
+        String engineName = getWorkflowEngine().getName();
+        if (props != null && props.containsKey(ENGINE_PROP)) {
+            engineName = props.get(ENGINE_PROP);
+        }
+
         if (engineName.equalsIgnoreCase(getWorkflowEngine().getName())) {
             // If already active on native
             if (getNativeWorkflowEngine().isActive(entity)) {
