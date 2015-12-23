@@ -145,10 +145,14 @@ public final class FalconExecutionService implements FalconService, EntityStateC
     @Override
     public void onSchedule(Entity entity) throws FalconException {
         for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
-            EntityExecutor executor = createEntityExecutor(entity, cluster);
             EntityClusterID id = new EntityClusterID(entity, cluster);
+            if (executors.containsKey(id)) {
+                LOG.info("Entity {} is already scheduled on cluster {}.", id, cluster);
+                continue;
+            }
+            EntityExecutor executor = createEntityExecutor(entity, cluster);
             executors.put(id, executor);
-            LOG.info("Scheduling entity {}.", id);
+            LOG.info("Scheduling entity {} on cluster {}.", id, cluster);
             executor.schedule();
         }
     }
@@ -156,7 +160,13 @@ public final class FalconExecutionService implements FalconService, EntityStateC
     @Override
     public void onSuspend(Entity entity) throws FalconException {
         for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+            EntityClusterID id = new EntityClusterID(entity, cluster);
+            if (!executors.containsKey(id)) {
+                LOG.info("Entity {} is already suspended on cluster {}.", id, cluster);
+                continue;
+            }
             EntityExecutor executor = getEntityExecutor(entity, cluster);
+            LOG.info("Suspending entity, {} on cluster {}.", id, cluster);
             executor.suspendAll();
         }
     }
@@ -164,10 +174,11 @@ public final class FalconExecutionService implements FalconService, EntityStateC
     @Override
     public void onResume(Entity entity) throws FalconException {
         for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+            EntityClusterID id = new EntityClusterID(entity, cluster);
+            // Create even if it exists in cache, as the instances need to be refreshed.
             EntityExecutor executor = createEntityExecutor(entity, cluster);
             executors.put(new EntityClusterID(entity, cluster), executor);
-            LOG.info("Resuming entity, {} of type {} on cluster {}.", entity.getName(),
-                    entity.getEntityType(), cluster);
+            LOG.info("Resuming entity, {} on cluster {}.", id, cluster);
             executor.resumeAll();
         }
     }
