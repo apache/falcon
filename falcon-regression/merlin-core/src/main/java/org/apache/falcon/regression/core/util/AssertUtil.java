@@ -96,7 +96,7 @@ public final class AssertUtil {
             LOGGER.info("elements = " + elements);
         }
         Assert.assertEquals(elements.size(), expectedSize,
-            "Size of expected and actual list don't match.");
+                "Size of expected and actual list don't match.");
     }
 
     /**
@@ -218,7 +218,7 @@ public final class AssertUtil {
         Assert.assertFalse(execResult.hasSuceeded(),
             "Unexpectedly succeeded execResult: " + execResult);
         Assert.assertTrue((execResult.getError() + execResult.getOutput()).contains(expectedMessage),
-            "Expected error: " + expectedMessage + " in execResult: " + execResult);
+                "Expected error: " + expectedMessage + " in execResult: " + execResult);
     }
 
     /**
@@ -258,10 +258,22 @@ public final class AssertUtil {
      */
     public static void assertFailed(ServiceResponse response) throws JAXBException {
         Assert.assertNotEquals(response.getMessage(), "null",
-            "response message should not be null");
+                "response message should not be null");
 
         Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.FAILED);
         Assert.assertEquals(response.getCode(), 400);
+    }
+
+    /**
+     * Checks that Instance/Triage result status is FAILED.
+     *
+     * @param response APIResult response
+     */
+    public static void assertFailed(APIResult response) {
+        Assert.assertNotEquals(response.getMessage(), "null",
+                "response message should not be null");
+        Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
+                "Status should be FAILED. Message: " + response.getMessage());
     }
 
     /**

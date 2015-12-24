@@ -18,7 +18,9 @@
 
 package org.apache.falcon.regression.core.util;
 
+import org.apache.falcon.regression.core.enumsAndConstants.ResponseErrors;
 import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -59,17 +61,38 @@ public final class EntityLineageUtil{
                                                   LineageGraphResult.Edge[] expectedEdgeArray) {
         String[] actualVertices;
         LineageGraphResult.Edge[] actualEdgeArray;
-        actualVertices = lineageGraphResult.getVertices();
-        actualEdgeArray = lineageGraphResult.getEdges();
+        Set<String> actualVerticesSet = new HashSet<>();
+        Set<LineageGraphResult.Edge> actualEdgeSet = new HashSet<>();
+
+        try {
+            actualVertices = lineageGraphResult.getVertices();
+            actualVerticesSet = new HashSet<>(Arrays.asList(actualVertices));
+        } catch (NullPointerException e) {
+            Assert.assertEquals(expectedVertices.length, 0);
+        }
+        try {
+            actualEdgeArray = lineageGraphResult.getEdges();
+            actualEdgeSet = new HashSet<>(Arrays.asList(actualEdgeArray));
+        } catch (NullPointerException e) {
+            Assert.assertEquals(expectedEdgeArray.length, 0);
+        }
 
         Set<LineageGraphResult.Edge> expectedEdgeSet = new HashSet<>(Arrays.asList(expectedEdgeArray));
-        Set<LineageGraphResult.Edge> actualEdgeSet = new HashSet<>(Arrays.asList(actualEdgeArray));
-
         Set<String> expectedVerticesSet = new HashSet<>(Arrays.asList(expectedVertices));
-        Set<String> actualVerticesSet = new HashSet<>(Arrays.asList(actualVertices));
 
-        Assert.assertEquals(expectedEdgeSet, actualEdgeSet, "Edges dont match");
-        Assert.assertEquals(expectedVerticesSet, actualVerticesSet, "Vertices dont match");
+        Assert.assertEquals(actualEdgeSet, expectedEdgeSet, "Edges dont match");
+        Assert.assertEquals(actualVerticesSet, expectedVerticesSet, "Vertices dont match");
+    }
+
+    /**
+     * Validates that failed response contains specific error message.
+     * @param triageResult response
+     * @param error expected error
+     */
+    public static void validateError(TriageResult triageResult, ResponseErrors error) {
+        AssertUtil.assertFailed(triageResult);
+        Assert.assertTrue(triageResult.getMessage().contains(error.getError()),
+                "Error should contain '" + error + "'");
     }
 
     /**
