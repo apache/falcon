@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+
+   FALCON-1689 NoOutputProcessTest fails due to scheme missing in workflow.xml(Pragya Mittal)
+
    FALCON-1377 Add tests in Falcon for the Triage API(Karishma Gulati via Pragya Mittal)
 
    FALCON-1546 Add ProcessUpdateTest, PipelineInstanceDependencyTest and other tests and test fixes

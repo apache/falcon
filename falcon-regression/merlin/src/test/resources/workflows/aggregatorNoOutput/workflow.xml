@@ -19,11 +19,14 @@
 <start to="hdfscommands"/>
 <action name="hdfscommands">
          <fs>
-            <delete path='/noinput/nooutput/test'/>
-            <mkdir path='/noinput/nooutput/test'/>       
+            <delete path='${nameNode}/noinput/nooutput/test'/>
+            <mkdir path='${nameNode}/noinput/nooutput/test'/>
 	 </fs>
 	<ok to="end"/> 
-       <error to="end"/>
+       <error to="fail"/>
     </action>
-<end name="end"/>
+    <kill name="fail">
+        <message>Job failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
 </workflow-app>
