@@ -139,6 +139,12 @@ public class AbstractTestBase {
         }
     }
 
+    protected void deleteEntity(EntityType type, String name) throws FalconException {
+        store.remove(type, name);
+    }
+
+
+
     private void decorateACL(String proxyUser, String defaultGroupName, Cluster cluster) {
         if (cluster.getACL() != null) {
             return;

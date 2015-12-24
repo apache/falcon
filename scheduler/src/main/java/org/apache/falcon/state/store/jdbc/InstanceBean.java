@@ -17,13 +17,17 @@
  */
 package org.apache.falcon.state.store.jdbc;
 
+import org.apache.openjpa.persistence.jdbc.ForeignKey;
+import org.apache.openjpa.persistence.jdbc.ForeignKeyAction;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -103,6 +107,10 @@ public class InstanceBean {
     @NotNull
     @Column(name = "instance_sequence")
     private Integer instanceSequence;
+
+    @ForeignKey(deleteAction= ForeignKeyAction.CASCADE)
+    @ManyToOne(cascade= CascadeType.REMOVE)
+    private EntityBean entityBean;
 
 
     @Column(name = "awaited_predicates", columnDefinition = "BLOB")
@@ -208,5 +216,13 @@ public class InstanceBean {
 
     public void setProperties(byte[] properties) {
         this.properties = properties;
+    }
+
+    public EntityBean getEntityBean() {
+        return entityBean;
+    }
+
+    public void setEntityBean(EntityBean entityBean) {
+        this.entityBean = entityBean;
     }
 }

@@ -398,6 +398,41 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
 
     }
 
+    @Test
+    public void testCascadingDelete() throws Exception {
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.FEED, "clicksFeed");
+        storeEntity(EntityType.FEED, "clicksSummary");
+        EntityState entityState = getEntityState(EntityType.PROCESS, "process1");
+        stateStore.putEntity(entityState);
+        ExecutionInstance processExecutionInstance1 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                System.currentTimeMillis() - 60000, "cluster1", System.currentTimeMillis() - 60000);
+        InstanceState instanceState1 = new InstanceState(processExecutionInstance1);
+        instanceState1.setCurrentState(InstanceState.STATE.READY);
+
+        ExecutionInstance processExecutionInstance2 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                System.currentTimeMillis(), "cluster1", System.currentTimeMillis());
+        InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
+        instanceState2.setCurrentState(InstanceState.STATE.RUNNING);
+
+        stateStore.putExecutionInstance(instanceState1);
+        stateStore.putExecutionInstance(instanceState2);
+
+        Collection<InstanceState> instances = stateStore.getAllExecutionInstances(entityState.getEntity(), "cluster1");
+        Assert.assertEquals(instances.size(), 2);
+
+
+        stateStore.deleteEntity(new EntityID(entityState.getEntity()));
+        deleteEntity(EntityType.PROCESS, "process1");
+
+
+        instances = stateStore.getAllExecutionInstances(entityState.getEntity(), "cluster1");
+        Assert.assertEquals(instances.size(), 0);
+    }
+
+
 
     private void initInstanceState(InstanceState instanceState) {
         instanceState.setCurrentState(InstanceState.STATE.READY);
@@ -420,8 +455,11 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
 
     @AfterTest
     public void cleanUpTables() throws StateStoreException {
-        stateStore.deleteEntities();
-        stateStore.deleteExecutionInstances();
+        try {
+            stateStore.deleteEntities();
+        } catch (Exception e) {
+            // ignore
+        }
     }
 
     @AfterClass

@@ -89,6 +89,14 @@ public final class JDBCStateStore extends AbstractStateStore {
     }
 
     private EntityState getEntityByKey(EntityID id) throws StateStoreException {
+        EntityBean entityBean = getEntityBean(id);
+        if (entityBean == null) {
+            return null;
+        }
+        return BeanMapperUtil.convertToEntityState(entityBean);
+    }
+
+    private EntityBean getEntityBean(EntityID id) {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery("GET_ENTITY");
         q.setParameter("id", id.getKey());
@@ -97,7 +105,7 @@ public final class JDBCStateStore extends AbstractStateStore {
             return null;
         }
         entityManager.close();
-        return BeanMapperUtil.convertToEntityState((EntityBean) result.get(0));
+        return ((EntityBean)result.get(0));
     }
 
     @Override
@@ -182,6 +190,8 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         try {
             InstanceBean instanceBean = BeanMapperUtil.convertToInstanceBean(instanceState);
+            EntityBean entityBean = getEntityBean(new InstanceID(instanceState.getInstance()).getEntityID());
+            instanceBean.setEntityBean(entityBean);
             EntityManager entityManager = getEntityManager();
             beginTransaction(entityManager);
             entityManager.persist(instanceBean);
