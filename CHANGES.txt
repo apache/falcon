@@ -88,6 +88,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1694 Status API shows params along with instance status(Pallavi Rao via Ajay Yadava)
+
     FALCON-1681 Improve logging for idempotent behaviour while scheduling entities(Pallavi Rao via Ajay Yadava)
 
     FALCON-1680 Error message is not intuitive when entity schedule fails(Pallavi Rao via Ajay Yadava)

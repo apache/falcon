@@ -286,6 +286,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
                             .getExecutionInstance(instance.getId()).getCurrentState().name());
             break;
         case STATUS:
+            // Mask wfParams
+            instanceInfo.wfParams = null;
             if (StringUtils.isNotEmpty(instance.getExternalID())) {
                 List<InstancesResult.InstanceAction> instanceActions =
                         DAGEngineFactory.getDAGEngine(cluster).getJobDetails(instance.getExternalID());
