@@ -90,6 +90,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1696 Falcon build failing in checkstyle module (Praveen Adlakha via Pallavi Rao)
+
     FALCON-1694 Status API shows params along with instance status(Pallavi Rao via Ajay Yadava)
 
     FALCON-1681 Improve logging for idempotent behaviour while scheduling entities(Pallavi Rao via Ajay Yadava)
