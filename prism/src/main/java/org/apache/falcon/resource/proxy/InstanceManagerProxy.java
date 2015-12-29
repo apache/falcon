@@ -619,10 +619,13 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 try {
                     T resultHolder = doExecute(colo);
                     results.put(colo, resultHolder);
+                } catch (FalconWebException e){
+                    APIResult result = (APIResult)e.getResponse().getEntity();
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, result.getMessage()));
                 } catch (Throwable e) {
                     LOG.error("Failed to fetch results for colo:{}", colo, e);
                     results.put(colo, getResultInstance(APIResult.Status.FAILED,
-                            e.getClass().getName() + "::" + e.getMessage()));
+                        e.getClass().getName() + "::" + e.getMessage()));
                 }
             }
             T finalResult = consolidateResult(results, clazz);

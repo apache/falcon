@@ -48,6 +48,7 @@ import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -952,6 +953,36 @@ public class FalconClient extends AbstractFalconClient {
         return clientResponse;
     }
 
+
+    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end, String colo
+            , String doAsUser) throws FalconCLIException {
+
+        checkType(type);
+        Instances api = Instances.LISTING;
+        WebResource resource = service.path(api.path).path(type).path(entity);
+        if (colo != null) {
+            resource = resource.queryParam("colo", colo);
+        }
+        if (StringUtils.isNotEmpty(doAsUser)) {
+            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+        if (StringUtils.isNotEmpty(start)){
+            resource = resource.queryParam("start", start);
+        }
+        if (StringUtils.isNotEmpty(end)) {
+            resource = resource.queryParam("end", end);
+        }
+
+        ClientResponse clientResponse = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                                                .accept(api.mimeType)
+                                                .method(api.method, ClientResponse.class);
+
+        printClientResponse(clientResponse);
+        checkIfSuccessful(clientResponse, FeedInstanceResult.class);
+        return clientResponse.getEntity(FeedInstanceResult.class);
+    }
+
+
     public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName, String instanceTime,
                                                             String colo) throws FalconCLIException {
         checkType(entityType);
@@ -1232,7 +1263,10 @@ public class FalconClient extends AbstractFalconClient {
         printClientResponse(clientResponse);
         return clientResponse.getEntity(String.class);
     }
-
+    /*
+     * Donot use this getMessage use the overloaded one
+    * with clazz as param for better error handling
+    * */
     private void checkIfSuccessful(ClientResponse clientResponse) throws FalconCLIException {
         Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
         if (statusFamily != Response.Status.Family.SUCCESSFUL
@@ -1240,6 +1274,15 @@ public class FalconClient extends AbstractFalconClient {
             throw FalconCLIException.fromReponse(clientResponse);
         }
     }
+
+    private void checkIfSuccessful(ClientResponse clientResponse, Class clazz) throws FalconCLIException {
+        Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
+        if (statusFamily != Response.Status.Family.SUCCESSFUL
+            && statusFamily != Response.Status.Family.INFORMATIONAL) {
+            throw FalconCLIException.fromReponse(clientResponse, clazz);
+        }
+    }
+
 
     private void printClientResponse(ClientResponse clientResponse) {
         if (getDebugMode()) {

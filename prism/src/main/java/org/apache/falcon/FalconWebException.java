@@ -104,6 +104,19 @@ public class FalconWebException extends WebApplicationException {
         return e.getCause()==null? e.getMessage():e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
     }
 
+
+    public static FalconWebException newAPIException(String message) {
+        Response response = Response.status(Response.Status.BAD_REQUEST)
+                            .entity(new APIResult(APIResult.Status.FAILED, message))
+                            .type(MediaType.TEXT_XML_TYPE)
+                            .build();
+        return new FalconWebException(response);
+    }
+
+    public FalconWebException(Response response) {
+        super(response);
+    }
+
     public FalconWebException(Throwable e, Response response) {
         super(e, response);
     }

@@ -90,6 +90,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1565 Listing API non-intuitive response if time > endTime (Praveen Adlakha via Ajay Yadava)
+
     FALCON-1696 Falcon build failing in checkstyle module (Praveen Adlakha via Pallavi Rao)
 
     FALCON-1694 Status API shows params along with instance status(Pallavi Rao via Ajay Yadava)

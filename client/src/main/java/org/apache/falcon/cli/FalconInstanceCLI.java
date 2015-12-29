@@ -267,8 +267,7 @@ public class FalconInstanceCLI extends FalconCLI {
             result = ResponseHelper.getString(client.getParamsOfInstance(type, entity,
                     start, colo, lifeCycles, doAsUser));
         } else if (optionsList.contains(LISTING_OPT)) {
-            result = ResponseHelper.getString(client
-                    .getFeedListing(type, entity, start, end, colo, doAsUser));
+            result = ResponseHelper.getString(client.getFeedInstanceListing(type, entity, start, end, colo, doAsUser));
         } else {
             throw new FalconCLIException("Invalid command");
         }

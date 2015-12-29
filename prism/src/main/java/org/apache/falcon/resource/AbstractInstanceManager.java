@@ -179,10 +179,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return getInstanceResultSubset(wfEngine.getStatus(entityObject,
                             startAndEndDate.first, startAndEndDate.second, lifeCycles),
                     filterBy, orderBy, sortOrder, offset, numResults);
-        } catch (Throwable e) {
+        } catch (FalconException e) {
             LOG.error("Failed to get instances status", e);
-            throw FalconWebException
-                    .newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e.getMessage());
         }
     }
 
@@ -515,18 +514,20 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                          String endStr, String colo) {
         checkColo(colo);
         EntityType entityType = checkType(type);
+
+        if (entityType != EntityType.FEED) {
+            throw FalconWebException.newAPIException("getLocation is not applicable for " + entityType);
+        }
         try {
-            if (entityType != EntityType.FEED) {
-                throw new IllegalArgumentException("getLocation is not applicable for " + type);
-            }
+
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             return FeedHelper.getFeedInstanceListing(entityObject, startAndEndDate.first, startAndEndDate.second);
-        } catch (Throwable e) {
+        } catch (FalconException e) {
             LOG.error("Failed to get instances listing", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e.getMessage());
         }
     }
 
@@ -873,12 +874,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         Frequency frequency = EntityUtil.getFrequency(entityObject);
         Date endDate = getEndDate(endStr, clusterStartEndDates.second);
         Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency, numResults);
-
         if (startDate.after(endDate)) {
-            throw new FalconException("Specified End date " + SchemaHelper.getDateFormat().format(endDate)
-                    + " is before the entity was scheduled " + SchemaHelper.getDateFormat().format(startDate));
+            throw FalconWebException.newAPIException("Specified End date "
+                    + SchemaHelper.getDateFormat().format(endDate)
+                    + " is before the entity was scheduled "
+                    + SchemaHelper.getDateFormat().format(startDate));
         }
-        return new Pair<Date, Date>(startDate, endDate);
+        return new Pair<>(startDate, endDate);
     }
 
     private Date getEndDate(String endStr, Date clusterEndDate) throws FalconException {
