@@ -75,7 +75,7 @@ public class WorkflowExecutionContext {
      * Entity operations supported.
      */
     public enum EntityOperations {
-        GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD, IMPORT, EXPORT
+        GENERATE, DELETE, REPLICATE, IMPORT, EXPORT
     }
 
     public static final WorkflowExecutionArgs[] USER_MESSAGE_ARGS = {
