@@ -18,7 +18,6 @@
 package org.apache.falcon.resource;
 
 import org.apache.falcon.entity.v0.EntityType;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -49,16 +48,14 @@ public class EntitySchedulerManagerJerseyIT extends AbstractSchedulerManagerJers
         submitProcess(overlay);
 
         String processName = overlay.get(PROCESS_NAME);
-        APIResult result = falconUnitClient.getStatus(EntityType.PROCESS, overlay.get(PROCESS_NAME), cluster, null);
-        assertStatus(result);
-        Assert.assertEquals(AbstractEntityManager.EntityStatus.SUBMITTED.name(), result.getMessage());
+        APIResult result = falconUnitClient.getStatus(EntityType.PROCESS, overlay.get(PROCESS_NAME), cluster, null,
+                true);
+        assertEntityStatus(result);
 
         scheduleProcess(processName, cluster, START_INSTANCE, 1);
 
-        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null);
-        assertStatus(result);
-        Assert.assertEquals(AbstractEntityManager.EntityStatus.RUNNING.name(), result.getMessage());
-
+        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null, true);
+        assertEntityStatus(result);
     }
 
     @Test
@@ -73,28 +70,23 @@ public class EntitySchedulerManagerJerseyIT extends AbstractSchedulerManagerJers
         submitProcess(overlay);
 
         String processName = overlay.get(PROCESS_NAME);
-        APIResult result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null);
-        assertStatus(result);
-        Assert.assertEquals(AbstractEntityManager.EntityStatus.SUBMITTED.name(), result.getMessage());
+        APIResult result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null, true);
+        assertEntityStatus(result);
 
         scheduleProcess(processName, cluster, START_INSTANCE, 1);
 
         result = falconUnitClient.suspend(EntityType.PROCESS, processName, cluster, null);
         assertStatus(result);
 
-        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null);
-        assertStatus(result);
-        Assert.assertEquals(AbstractEntityManager.EntityStatus.SUSPENDED.name(), result.getMessage());
+        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null, true);
+        assertEntityStatus(result);
 
         result = falconUnitClient.resume(EntityType.PROCESS, processName, cluster, null);
         assertStatus(result);
 
-        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null);
-        assertStatus(result);
-        Assert.assertEquals(AbstractEntityManager.EntityStatus.RUNNING.name(), result.getMessage());
-
+        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null, true);
+        assertEntityStatus(result);
     }
-
 
     @Test
     public void testProcessDelete() throws Exception {
@@ -108,14 +100,13 @@ public class EntitySchedulerManagerJerseyIT extends AbstractSchedulerManagerJers
         submitProcess(overlay);
 
         String processName = overlay.get(PROCESS_NAME);
-        APIResult result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null);
-        assertStatus(result);
-        Assert.assertEquals(AbstractEntityManager.EntityStatus.SUBMITTED.name(), result.getMessage());
+        APIResult result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null, true);
+        assertEntityStatus(result);
 
         scheduleProcess(processName, cluster, START_INSTANCE, 1);
 
-        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null);
-        assertStatus(result);
+        result = falconUnitClient.getStatus(EntityType.PROCESS, processName, cluster, null, true);
+        assertEntityStatus(result);
 
         result = falconUnitClient.delete(EntityType.PROCESS, processName, cluster);
         assertStatus(result);

@@ -387,10 +387,10 @@ public class FalconClient extends AbstractFalconClient {
                 entityType, entityStream, null, skipDryRun, doAsUser, properties);
     }
 
-    public APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser)
-        throws FalconCLIException {
+    public APIResult getStatus(EntityType entityType, String entityName, String colo,
+                               String doAsUser, boolean showScheduler) throws FalconCLIException {
 
-        return sendEntityRequest(Entities.STATUS, entityType, entityName, colo, null, doAsUser, null);
+        return sendEntityRequest(Entities.STATUS, entityType, entityName, colo, null, doAsUser, null, showScheduler);
     }
 
     public Entity getDefinition(String entityType, String entityName, String doAsUser)
@@ -671,10 +671,9 @@ public class FalconClient extends AbstractFalconClient {
         return stream;
     }
 
-    private APIResult sendEntityRequest(Entities entities, EntityType entityType,
-                                     String entityName, String colo, Boolean skipDryRun,
-                                     String doAsUser, String properties) throws FalconCLIException {
-
+    private APIResult sendEntityRequest(Entities entities, EntityType entityType, String entityName,
+                                        String colo, Boolean skipDryRun, String doAsUser, String properties,
+                                        boolean showScheduler) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
                 .path(entityType.toString().toLowerCase()).path(entityName);
         if (colo != null) {
@@ -691,6 +690,8 @@ public class FalconClient extends AbstractFalconClient {
             resource = resource.queryParam("properties", properties);
         }
 
+        resource = resource.queryParam("showScheduler", Boolean.toString(showScheduler));
+
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
@@ -702,6 +703,12 @@ public class FalconClient extends AbstractFalconClient {
 
         // should be removed return parseAPIResult(clientResponse);
         return clientResponse.getEntity(APIResult.class);
+    }
+
+    private APIResult sendEntityRequest(Entities entities, EntityType entityType,
+                                     String entityName, String colo, Boolean skipDryRun,
+                                     String doAsUser, String properties) throws FalconCLIException {
+        return sendEntityRequest(entities, entityType, entityName, colo, skipDryRun, doAsUser, properties, false);
     }
 
     private WebResource addParamsToResource(WebResource resource,

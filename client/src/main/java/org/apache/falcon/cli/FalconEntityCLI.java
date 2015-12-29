@@ -59,6 +59,7 @@ public class FalconEntityCLI extends FalconCLI {
     private static final String NUM_INSTANCES_OPT = "numInstances";
     private static final String NAMESEQ_OPT = "nameseq";
     private static final String TAGKEYS_OPT = "tagkeys";
+    private static final String SHOWSCHEDULER_OPT = "showScheduler";
 
     public FalconEntityCLI() throws Exception {
         super();
@@ -148,6 +149,8 @@ public class FalconEntityCLI extends FalconCLI {
         Option skipDryRun = new Option(SKIPDRYRUN_OPT, false, "skip dry run in workflow engine");
         Option doAs = new Option(DO_AS_OPT, true, "doAs user");
         Option userProps = new Option(PROPS_OPT, true, "User supplied comma separated key value properties");
+        Option showScheduler = new Option(SHOWSCHEDULER_OPT, false, "To return the scheduler "
+                + "on which the entity is scheduled.");
         Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
 
         entityOptions.addOption(url);
@@ -174,6 +177,7 @@ public class FalconEntityCLI extends FalconCLI {
         entityOptions.addOption(doAs);
         entityOptions.addOption(userProps);
         entityOptions.addOption(debug);
+        entityOptions.addOption(showScheduler);
 
         return entityOptions;
     }
@@ -213,6 +217,10 @@ public class FalconEntityCLI extends FalconCLI {
         }
 
         String userProps = commandLine.getOptionValue(PROPS_OPT);
+        boolean showScheduler = false;
+        if (optionsList.contains(SHOWSCHEDULER_OPT)) {
+            showScheduler = true;
+        }
 
         EntityType entityTypeEnum = null;
         if (optionsList.contains(LIST_OPT)) {
@@ -280,7 +288,7 @@ public class FalconEntityCLI extends FalconCLI {
         } else if (optionsList.contains(STATUS_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.getStatus(entityTypeEnum, entityName, colo, doAsUser).getMessage();
+            result = client.getStatus(entityTypeEnum, entityName, colo, doAsUser, showScheduler).getMessage();
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);

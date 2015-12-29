@@ -416,6 +416,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
      * @param type Valid options are cluster, feed or process.
      * @param entity Name of the entity.
      * @param coloExpr Colo on which the query should be run.
+     * @param showScheduler whether the call should return the scheduler on which the entity is scheduled.
      * @return Status of the entity.
      */
     @GET
@@ -425,7 +426,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") final String type,
                                @Dimension("entityName") @PathParam("entity") final String entity,
-                               @Dimension("colo") @QueryParam("colo") final String coloExpr) {
+                               @Dimension("colo") @QueryParam("colo") final String coloExpr,
+                               @Dimension("showScheduler") @QueryParam("showScheduler") final Boolean showScheduler) {
         return new EntityProxy(type, entity) {
             @Override
             protected Set<String> getColosToApply() {
@@ -434,7 +436,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
             @Override
             protected APIResult doExecute(String colo) throws FalconException {
-                return getEntityManager(colo).invoke("getStatus", type, entity, colo);
+                return getEntityManager(colo).invoke("getStatus", type, entity, colo, showScheduler);
             }
         }.execute();
     }

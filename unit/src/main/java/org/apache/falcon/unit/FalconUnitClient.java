@@ -250,9 +250,9 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException {
-        return localSchedulableEntityManager.getStatus(entityType.name(), entityName, colo);
+    public APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser,
+                               boolean showScheduler) throws FalconCLIException {
+        return localSchedulableEntityManager.getStatus(entityType.name(), entityName, colo, showScheduler);
     }
 
     @Override

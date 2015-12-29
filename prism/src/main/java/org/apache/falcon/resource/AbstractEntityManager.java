@@ -530,7 +530,10 @@ public abstract class AbstractEntityManager {
         return new String(data);
     }
 
-    protected enum EntityStatus {
+    /**
+     * Enumeration of all possible status of an entity.
+     */
+    public enum EntityStatus {
         SUBMITTED, SUSPENDED, RUNNING, COMPLETED
     }
 
@@ -539,17 +542,21 @@ public abstract class AbstractEntityManager {
      *
      * @param type  entity type
      * @param entity entity name
+     * @param showScheduler whether to return the scheduler on which the entity is scheduled.
      * @return String
      */
-    public APIResult getStatus(String type, String entity, String colo) {
+    public APIResult getStatus(String type, String entity, String colo, Boolean showScheduler) {
 
         checkColo(colo);
         Entity entityObj;
         try {
             entityObj = EntityUtil.getEntity(type, entity);
             EntityType entityType = EntityType.getEnum(type);
-            EntityStatus status = getStatus(entityObj, entityType);
-            return new APIResult(Status.SUCCEEDED, status.name());
+            Pair<EntityStatus, String> status = getStatus(entityObj, entityType);
+            String statusString = status.first.name();
+            return new APIResult(Status.SUCCEEDED, (status.first != EntityStatus.SUBMITTED
+                    && showScheduler != null && showScheduler)
+                    ? statusString + " (scheduled on " + status.second + ")" : statusString);
         } catch (FalconWebException e) {
             throw e;
         } catch (Exception e) {
@@ -558,9 +565,8 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected EntityStatus getStatus(Entity entity, EntityType type) throws FalconException {
+    protected Pair<EntityStatus, String> getStatus(Entity entity, EntityType type) throws FalconException {
         EntityStatus status = EntityStatus.SUBMITTED;
-
         AbstractWorkflowEngine workflowEngine = getWorkflowEngine(entity);
         if (type.isSchedulable()) {
             if (workflowEngine.isActive(entity)) {
@@ -573,7 +579,7 @@ public abstract class AbstractEntityManager {
                 status = EntityStatus.COMPLETED;
             }
         }
-        return status;
+        return new Pair<>(status, workflowEngine.getName());
     }
 
     /**
@@ -851,7 +857,7 @@ public abstract class AbstractEntityManager {
     protected String getStatusString(Entity entity) {
         String statusString;
         try {
-            statusString = getStatus(entity, entity.getEntityType()).name();
+            statusString = getStatus(entity, entity.getEntityType()).first.name();
         } catch (Throwable throwable) {
             // Unable to fetch statusString, setting it to unknown for backwards compatibility
             statusString = "UNKNOWN";

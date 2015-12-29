@@ -171,11 +171,12 @@ public abstract class AbstractFalconClient {
      * @param entityName Name of the entity.
      * @param colo Colo on which the query should be run.
      * @param doAsUser proxy user
+     * @param showScheduler whether the call should return the scheduler on which the entity is scheduled.
      * @return Status of the entity.
      * @throws FalconCLIException
      */
-    public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException;
+    public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser,
+                                        boolean showScheduler) throws FalconCLIException;
 
     /**
      * Submits and schedules an entity.

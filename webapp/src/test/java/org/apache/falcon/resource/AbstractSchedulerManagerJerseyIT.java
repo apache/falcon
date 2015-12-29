@@ -232,4 +232,12 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
         return list;
     }
 
+    public void assertEntityStatus(APIResult apiResult) {
+        super.assertStatus(apiResult);
+        String message = apiResult.getMessage();
+        if (!message.contains(AbstractEntityManager.EntityStatus.SUBMITTED.name())) {
+            Assert.assertTrue(message.contains("native"));
+        }
+    }
+
 }

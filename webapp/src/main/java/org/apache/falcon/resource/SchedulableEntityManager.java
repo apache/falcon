@@ -49,8 +49,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") String type,
                                @Dimension("entityName") @PathParam("entity") String entity,
-                               @Dimension("colo") @QueryParam("colo") final String colo) {
-        return super.getStatus(type, entity, colo);
+                               @Dimension("colo") @QueryParam("colo") final String colo,
+                               @Dimension("showScheduler") @QueryParam("showScheduler") final Boolean showScheduler) {
+        return super.getStatus(type, entity, colo, showScheduler);
     }
 
     @GET

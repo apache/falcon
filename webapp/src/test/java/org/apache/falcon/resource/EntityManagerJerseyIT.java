@@ -258,7 +258,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
                 null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         result = falconUnitClient.getStatus(EntityType.PROCESS, context.processName, context.clusterName,
-                null);
+                null, false);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertEquals(result.getMessage(), "SUSPENDED");
 
@@ -415,7 +415,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
         submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
 
         APIResult result = falconUnitClient.getStatus(EntityType.FEED, context.overlay.get("inputFeedName"),
-                context.colo, null);
+                context.colo, null, false);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertEquals(result.getMessage(), "SUBMITTED");
     }
@@ -431,7 +431,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
     public void testNotFoundStatus() throws FalconException, IOException, FalconCLIException {
         String feed1 = "f1" + System.currentTimeMillis();
         try {
-            falconUnitClient.getStatus(EntityType.FEED, feed1, null, null);
+            falconUnitClient.getStatus(EntityType.FEED, feed1, null, null, false);
             Assert.fail("Exception should be Thrown");
         } catch (Exception e) {
             //ignore
@@ -648,7 +648,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
                 context.colo, null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         result = falconUnitClient.getStatus(EntityType.PROCESS, context.processName, context.clusterName,
-                null);
+                null, false);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertEquals(result.getMessage(), "SUSPENDED");
 
@@ -656,7 +656,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
                 context.colo, null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         result = falconUnitClient.getStatus(EntityType.PROCESS, context.processName, context.clusterName,
-                null);
+                null, false);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertEquals(result.getMessage(), "RUNNING");
     }

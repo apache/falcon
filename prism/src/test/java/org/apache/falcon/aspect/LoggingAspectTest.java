@@ -37,13 +37,13 @@ public class LoggingAspectTest {
 
     @Test(expectedExceptions = FalconWebException.class)
     public void testBeanLoading() {
-        em.getStatus("type", "entity", "colo");
+        em.getStatus("type", "entity", "colo", false);
     }
 
     @Test
     public void testExceptionBeanLoading() {
         try {
-            em.getStatus("type", "entity", "colo");
+            em.getStatus("type", "entity", "colo", false);
             System.out.println();
 
         } catch (Exception e) {
