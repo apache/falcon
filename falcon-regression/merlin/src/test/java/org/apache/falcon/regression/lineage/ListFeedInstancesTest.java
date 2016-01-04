@@ -23,7 +23,6 @@ import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
-import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -42,8 +41,9 @@ import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
 
@@ -55,12 +55,13 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Testing the list instances api for feed.
+ * Testing the list instances api for feed. Testing is based on initial scenario and sets of
+ * expected instance statuses which are being compared with actual result of -list request
+ * with different parameters in different order, variation, etc.
  */
 @Test(groups = "embedded")
 public class ListFeedInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListFeedInstancesTest.class);
-    private ColoHelper cluster2 = servers.get(1);
     private OozieClient cluster2OC = serverOC.get(1);
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -68,7 +69,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
     private String feedDataLocation = sourcePath + MINUTE_DATE_PATTERN;
     private String targetPath = baseTestHDFSDir + "/target";
     private String targetDataLocation = targetPath + MINUTE_DATE_PATTERN;
-    private String startTime, endTime;
+    private final String startTime = "2010-01-02T00:00Z";
+    private final String endTime = "2010-01-02T00:57Z";
     private String feedName;
 
     @BeforeClass(alwaysRun = true)
@@ -76,23 +78,21 @@ public class ListFeedInstancesTest extends BaseTestClass {
         throws IOException, OozieClientException, JAXBException, AuthenticationException,
         URISyntaxException, InterruptedException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        startTime = TimeUtil.getTimeWrtSystemTime(-55);
-        endTime = TimeUtil.getTimeWrtSystemTime(3);
-        LOGGER.info("Time range is between : " + startTime + " and " + endTime);
         Bundle bundle = BundleUtil.readELBundle();
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
             bundles[i].generateUniqueBundle(this);
         }
-        prepareScenario();
     }
 
     /*
      * Prepares running feed with instances ordered (desc): 1 waiting, 1 running, 1 suspended,
-     * 3 waiting and 6 killed. Testing is based on expected instances statuses.
+     * 5 waiting, 2 killed, 2 waiting. Testing is based on expected sets of instance statuses.
+     * Variety of instance statuses increases accuracy of testing.
      */
+    @BeforeMethod(alwaysRun = true)
     private void prepareScenario() throws AuthenticationException, IOException, URISyntaxException,
-            JAXBException, OozieClientException, InterruptedException {
+        JAXBException, OozieClientException, InterruptedException {
         bundles[0].setInputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setInputFeedDataPath(feedDataLocation);
         String feed = bundles[0].getInputFeedFromBundle();
@@ -127,23 +127,23 @@ public class ListFeedInstancesTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feedName, 12,
             CoordinatorAction.Status.WAITING, EntityType.FEED);
 
-        //retrieve specific instances to rule them directly
+        //retrieve instances to rule them directly
         List<CoordinatorAction> actions = getReplicationInstances(cluster2OC, feedName);
         LOGGER.info(actions);
         Assert.assertNotNull(actions, "Required coordinator not found.");
         Assert.assertEquals(actions.size(), 12, "Unexpected number of actions.");
 
-        //killing first 6 instances
+        //killing the 3d and the 4th instances
         String range;
         InstancesResult r;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 2; i <= 3; i++) {
             HadoopUtil.createFolders(serverFS.get(0), "", Arrays.asList(actions.get(i)
                 .getMissingDependencies().split("#")));
             //only running instance can be killed, so we should make it running and then kill it
             InstanceUtil.waitTillInstanceReachState(cluster2OC, feedName, 1,
                 CoordinatorAction.Status.RUNNING, EntityType.FEED, 3);
-            range = "?start=" + TimeUtil.addMinsToTime(startTime, i * 5 - 1)
-                + "&end=" + TimeUtil.addMinsToTime(startTime, i * 5 + 1);
+            range = "?start=" + TimeUtil.addMinsToTime(startTime, i * 5 - 2)
+                + "&end=" + TimeUtil.addMinsToTime(startTime, i * 5 + 2);
             r = prism.getFeedHelper().getProcessInstanceKill(feedName, range);
             InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
         }
@@ -166,11 +166,17 @@ public class ListFeedInstancesTest extends BaseTestClass {
         //check that the scenario works as expected.
         r = prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + startTime + "&numResults=12");
-        InstanceUtil.validateResponse(r, 12, 1, 1, 4, 6);
+        InstanceUtil.validateResponse(r, 12, 1, 1, 8, 2);
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws IOException {
+        removeTestClassEntities();
+        HadoopUtil.deleteDirIfExists(sourcePath, serverFS.get(0));
     }
 
     /*
-     * Retrieves replication coordinator instances.
+     * Retrieves replication coordinator actions (replication instances).
      * @param client target oozie client
      * @param fName feed name
      */
@@ -204,7 +210,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
         IOException, InterruptedException {
         SoftAssert softAssert = new SoftAssert();
-        //orderBy start time
+        //orderBy start time, check an order
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "orderBy=startTime&sortOrder=desc", null);
         InstancesResult.Instance[] instances = r.getInstances();
@@ -217,10 +223,10 @@ public class ListFeedInstancesTest extends BaseTestClass {
                 previousDate = (Date) current.clone();
             }
         }
-        //orderBy status
+        //orderBy status, check an order
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=12&orderBy=status&sortOrder=desc", null);
-        InstanceUtil.validateResponse(r, 12, 1, 1, 4, 6);
+        InstanceUtil.validateResponse(r, 12, 1, 1, 8, 2);
         instances = r.getInstances();
         InstancesResult.WorkflowStatus previousStatus = InstancesResult.WorkflowStatus.WAITING;
         for (InstancesResult.Instance instance : instances) {
@@ -229,7 +235,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
                 "Wrong order. Compared " + current + " and " + previousStatus + " statuses.");
             previousStatus = current;
         }
-        //sort by endTime
+        //sort by endTime, check an order
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=12&orderBy=endTime&sortOrder=desc", null);
         instances = r.getInstances();
@@ -246,7 +252,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     }
 
     /**
-     * Test the list feed instance api using start/end parameters. Check instances number.
+     * List instances through api using start/end parameters. Check a number of instances.
      */
     @Test
     public void testFeedStartEnd()
@@ -255,60 +261,64 @@ public class ListFeedInstancesTest extends BaseTestClass {
         //actual start/end values.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&end=" + endTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
 
-        //without params, the default start/end should be applied.
+        //without params, the default start/end should be applied. End is set to now,
+        // start is set to end - (10 * entityFrequency)
         r = prism.getFeedHelper().listInstances(feedName, null, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
 
-        //increasing a -start, the -end stays the same.
+        //increasing -start, -end stays the same.
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + TimeUtil.addMinsToTime(startTime, 6)
                 + "&end=" + TimeUtil.addMinsToTime(endTime, -5), null);
-        InstanceUtil.validateResponse(r, 9, 1, 1, 3, 4);
+        InstanceUtil.validateResponse(r, 9, 1, 1, 5, 2);
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + TimeUtil.addMinsToTime(startTime, 11)
                 + "&end=" + TimeUtil.addMinsToTime(endTime, -5), null);
-        InstanceUtil.validateResponse(r, 8, 1, 1, 3, 3);
+        InstanceUtil.validateResponse(r, 8, 1, 1, 5, 1);
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + TimeUtil.addMinsToTime(startTime, 16)
                 + "&end=" + TimeUtil.addMinsToTime(endTime, -5), null);
-        InstanceUtil.validateResponse(r, 7, 1, 1, 3, 2);
+        InstanceUtil.validateResponse(r, 7, 1, 1, 5, 0);
 
-        //one instance between start/end, use instances with different statuses.
+        //one instance between start/end, killed instance
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + TimeUtil.addMinsToTime(startTime, 12)
                 + "&end=" + TimeUtil.addMinsToTime(startTime, 16), null);
         InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
+
+        //one instance between start/end, waiting instance
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + TimeUtil.addMinsToTime(endTime, -5) + "&end=" + endTime, null);
         InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
 
-        //only start, actual feed startTime, should get 1-10 instances(end is automatically set to freq*10).
+        //only start, actual feed startTime, should get 1-10 instances(end is automatically set to now).
         r = prism.getFeedHelper().listInstances(feedName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 0, 1, 3, 6);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
 
         //only start, greater then the actual startTime.
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + TimeUtil.addMinsToTime(startTime, 16), null);
-        InstanceUtil.validateResponse(r, 8, 1, 1, 4, 2);
+        InstanceUtil.validateResponse(r, 8, 1, 1, 6, 0);
 
         //only end, 1 instance is expected
         r = prism.getFeedHelper().listInstances(feedName,
             "end=" + TimeUtil.addMinsToTime(startTime, 4), null);
-        InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
+        InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
 
-        //only the end, 10 the most recent instances are expected
+        //only end, actual value, 10 the most recent instances are expected
         r = prism.getFeedHelper().listInstances(feedName, "end=" + endTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
 
-        //only the end
+        //only end, first 6 instances
         r = prism.getFeedHelper().listInstances(feedName,
             "end=" + TimeUtil.addMinsToTime(endTime, -31), null);
-        InstanceUtil.validateResponse(r, 6, 0, 0, 0, 6);
+        InstanceUtil.validateResponse(r, 6, 0, 0, 4, 2);
+        //only end, first 8 instances
         r = prism.getFeedHelper().listInstances(feedName,
             "end=" + TimeUtil.addMinsToTime(endTime, -21), null);
-        InstanceUtil.validateResponse(r, 8, 0, 0, 2, 6);
+        InstanceUtil.validateResponse(r, 8, 0, 0, 6, 2);
     }
 
     /**
@@ -320,7 +330,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         //check the default value of the numResults param. Expecting 10 instances.
         InstancesResult r = prism.getFeedHelper().listInstances(feedName, null, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
 
         //changing a value to 6. 6 instances are expected
         r = prism.getFeedHelper().listInstances(feedName, "numResults=6", null);
@@ -328,17 +338,17 @@ public class ListFeedInstancesTest extends BaseTestClass {
 
         //use a start option without a numResults parameter. 10 instances are expected
         r = prism.getFeedHelper().listInstances(feedName, "start=" + startTime, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
 
         //use a start option with a numResults value which is smaller then the default.
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=8", null);
-        InstanceUtil.validateResponse(r, 8, 1, 1, 4, 2);
+        InstanceUtil.validateResponse(r, 8, 1, 1, 6, 0);
 
         //use a start option with a numResults value greater then the default.
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=12", null);
-        InstanceUtil.validateResponse(r, 12, 1, 1, 4, 6);
+        InstanceUtil.validateResponse(r, 12, 1, 1, 8, 2);
 
         //get all instances
         InstancesResult.Instance[] allInstances = r.getInstances();
@@ -347,7 +357,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         int offset = 3;
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&offset=" + offset + "&numResults=12", null);
-        InstanceUtil.validateResponse(r, 9, 0, 0, 3, 6);
+        InstanceUtil.validateResponse(r, 9, 0, 0, 7, 2);
 
         //check that expected instances were retrieved
         InstancesResult.Instance[] instances = r.getInstances();
@@ -359,7 +369,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         offset = 6;
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&offset=" + offset + "&numResults=6", null);
-        InstanceUtil.validateResponse(r, 6, 0, 0, 0, 6);
+        InstanceUtil.validateResponse(r, 6, 0, 0, 4, 2);
 
         //check that expected instances are present in response
         instances = r.getInstances();
@@ -370,7 +380,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     }
 
     /**
-     * Test the list feed instances api using filterBy parameter.
+     * List feed instances with filterBy parameter.
      */
     @Test
     public void testFeedFilterBy()
@@ -380,18 +390,20 @@ public class ListFeedInstancesTest extends BaseTestClass {
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "filterBy=STATUS:RUNNING", null);
         InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
+        //end is set to now (actual end), start is set to (end - (10 * entityFrequency))
+        //filtered range is from 3rd till 12th instance
         r = prism.getFeedHelper().listInstances(feedName, "filterBy=STATUS:WAITING", null);
-        InstanceUtil.validateResponse(r, 4, 0, 0, 4, 0);
+        InstanceUtil.validateResponse(r, 6, 0, 0, 6, 0);
 
         //get all instances.
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=12", null);
-        InstanceUtil.validateResponse(r, 12, 1, 1, 4, 6);
+        InstanceUtil.validateResponse(r, 12, 1, 1, 8, 2);
 
         //use different statuses, filterBy among all instances.
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&filterBy=STATUS:KILLED", null);
-        InstanceUtil.validateResponse(r, 6, 0, 0, 0, 6);
+        InstanceUtil.validateResponse(r, 2, 0, 0, 0, 2);
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&filterBy=STATUS:SUSPENDED", null);
         InstanceUtil.validateResponse(r, 1, 0, 1, 0, 0);
@@ -400,24 +412,17 @@ public class ListFeedInstancesTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&filterBy=STATUS:WAITING", null);
-        InstanceUtil.validateResponse(r, 4, 0, 0, 4, 0);
+        InstanceUtil.validateResponse(r, 8, 0, 0, 8, 0);
 
         //use additional filters.
-        String sourceCluster = bundles[0].getClusterNames().get(0);
         String clusterName = bundles[1].getClusterNames().get(0);
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&filterBy=CLUSTER:" + clusterName, null);
-        InstanceUtil.validateResponse(r, 10, 1, 1, 4, 4);
-        r = prism.getFeedHelper().listInstances(feedName, "start=" + startTime + "&numResults=12"
-                + "&filterBy=SOURCECLUSTER:" + sourceCluster, null);
-        InstanceUtil.validateResponse(r, 8, 1, 1, 0, 6);
-        r = prism.getFeedHelper().listInstances(feedName,
-            "filterBy=SOURCECLUSTER:" + sourceCluster, null);
-        InstanceUtil.validateResponse(r, 6, 1, 1, 0, 4);
+        InstanceUtil.validateResponse(r, 10, 1, 1, 6, 2);
     }
 
     /**
-     * Test list feed instances using custom filter. Expecting list of feed instances which
+     * List feed instances using custom filter. Expecting list of feed instances which
      * satisfy custom filters.
      */
     @Test
@@ -427,33 +432,39 @@ public class ListFeedInstancesTest extends BaseTestClass {
         InstancesResult r = prism.getFeedHelper().listInstances(feedName, params, null);
         InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
 
+        //expecting 0 instances, because RUNNING instance is out of range start + 10 instances
         params = "start=" + startTime + "&end=" + endTime + "&filterBy=status:RUNNING&offset=2";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
         InstanceUtil.validateSuccessWOInstances(r);
 
+        //offset is absent that's why whole range is filtered
         params = "start=" + startTime + "&end=" + endTime + "&filterBy=status:WAITING";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 4, 0, 0, 4, 0);
+        InstanceUtil.validateResponse(r, 8, 0, 0, 8, 0);
 
+        //filtered range is from 1st till 9th instances inclusively
         params = "start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 41)
             + "&filterBy=status:WAITING";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 3, 0, 0, 3, 0);
+        InstanceUtil.validateResponse(r, 7, 0, 0, 7, 0);
 
-        params = "start=" + startTime + "&offset=1&numResults=1&filterBy=status:WAITING";
+        //filtered range is within 3nd till 8th instance inclusively
+        params = "start=" + startTime + "&offset=4&numResults=6&filterBy=status:WAITING";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 1, 0, 0, 1, 0);
+        InstanceUtil.validateResponse(r, 4, 0, 0, 4, 0);
 
+        //filtered range is within 4th till 10th instances inclusively
         params = "start=" + TimeUtil.addMinsToTime(startTime, 16) + "&offset=2&numResults=12";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 6, 0, 1, 3, 2);
+        InstanceUtil.validateResponse(r, 6, 0, 1, 5, 0);
 
+        //use mix of params
         String sourceCluster = bundles[0].getClusterNames().get(0);
         String clusterName = bundles[1].getClusterNames().get(0);
         params = "start=" + startTime + "&filterBy=STATUS:KILLED,CLUSTER:"+ clusterName
             + "&numResults=5&orderBy=startTime&sortOrder=desc";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 5, 0, 0, 0, 5);
+        InstanceUtil.validateResponse(r, 2, 0, 0, 0, 2);
 
         //should be ordered by a start time
         SoftAssert softAssert = new SoftAssert();
@@ -468,21 +479,15 @@ public class ListFeedInstancesTest extends BaseTestClass {
         }
         softAssert.assertAll();
 
-        //missing 1st, 11th, 12th instances, all other instances should be retrieved.
+        // filtered range is within 2nd and 10th instance inclusively
         params = "start=" + TimeUtil.addMinsToTime(startTime, 2) + "&offset=2";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 9, 0, 1, 3, 5);
+        InstanceUtil.validateResponse(r, 9, 0, 1, 6, 2);
 
-        //missing the 1st, 11th, 12th instance, all instances which have progressed should be present:
-        //5 killed + 1 suspended, but numResults=5, so expecting 1 suspended and 4 killed instances.
+        //filtered range is within 7nd and 11th instances inclusively
         params = "start=" + TimeUtil.addMinsToTime(startTime, 2) + "&filterBy=SOURCECLUSTER:"
-            + sourceCluster + "&offset=1&numResults=5";
+            + sourceCluster + "&offset=1&numResults=5" + "&colo=*";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
-        InstanceUtil.validateResponse(r, 5, 0, 1, 0, 4);
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDown() throws IOException {
-        removeTestClassEntities();
+        InstanceUtil.validateResponse(r, 5, 1, 1, 3, 0);
     }
 }

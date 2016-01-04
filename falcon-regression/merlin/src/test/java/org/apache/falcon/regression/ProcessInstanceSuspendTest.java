@@ -63,8 +63,9 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle(this);
         bundles[0].setInputFeedDataPath(feedInputPath);
-        bundles[0].setProcessWorkflow(aggregateWorkflowDir);
+        bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         processName = bundles[0].getProcessName();
     }
@@ -171,7 +172,9 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 1);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 2);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult result = prism.getProcessHelper().getProcessInstanceStatus(processName,

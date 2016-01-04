@@ -73,8 +73,8 @@ public final class InstanceUtil {
 
     public static final int INSTANCES_CREATED_TIMEOUT = OSUtil.IS_WINDOWS ? 20 : 10;
     private static final Logger LOGGER = Logger.getLogger(InstanceUtil.class);
-    private static final EnumSet<Status> RUNNING_PREP_SUCCEEDED = EnumSet.of(Status.RUNNING,
-        Status.PREP, Status.SUCCEEDED);
+    private static final EnumSet<Status> LIVE_STATUS = EnumSet.of(Status.RUNNING,
+        Status.PREP, Status.SUCCEEDED, Status.SUSPENDED);
 
     private InstanceUtil() {
         throw new AssertionError("Instantiating utility class...");
@@ -573,7 +573,7 @@ public final class InstanceUtil {
         for (String bundleId : bundleIds) {
             LOGGER.info(String.format("Using bundle %s", bundleId));
             final Status status = client.getBundleJobInfo(bundleId).getStatus();
-            Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(status),
+            Assert.assertTrue(LIVE_STATUS.contains(status),
                 String.format("Bundle job %s is should be prep/running but is %s", bundleId, status));
             OozieUtil.waitForCoordinatorJobCreation(client, bundleId);
             List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
@@ -607,7 +607,7 @@ public final class InstanceUtil {
             CoordinatorJob coordinatorJob = client.getCoordJobInfo(coordId);
             final Status coordinatorStatus = coordinatorJob.getStatus();
             if (expectedStatus != CoordinatorAction.Status.TIMEDOUT){
-                Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(coordinatorStatus),
+                Assert.assertTrue(LIVE_STATUS.contains(coordinatorStatus),
                         String.format("Coordinator %s should be running/prep but is %s.", coordId, coordinatorStatus));
             }
             List<CoordinatorAction> coordinatorActions = coordinatorJob.getActions();
