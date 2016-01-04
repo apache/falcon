@@ -1,5 +1,5 @@
 Apache Falcon Change log
-Trunk (Unreleased)
+Proposed Release Version: 0.9
     FALCON-1594 Update changes.txt to reflect 0.8 as released version(Sowmya Ramesh via Ajay Yadava)
 
     FALCON-1523 Update CHANGES.txt to change 0.8 branch to release(Sowmya Ramesh)
