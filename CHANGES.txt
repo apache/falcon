@@ -90,6 +90,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1709 FIFO order is not followed when scheduled using native scheduler (Pallavi Rao)
+
     FALCON-1711 DependencyInstance twiki does not contain correct documentation	(Praveen Adlakha via Pallavi Rao)
 
     FALCON-1702 Exception thrown by workflow status listeners on success notification(Pallavi Rao via Ajay Yadava)

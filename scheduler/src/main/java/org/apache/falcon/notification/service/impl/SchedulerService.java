@@ -101,6 +101,8 @@ public class SchedulerService implements FalconNotificationService, Notification
         if (obj != null) {
             instancesToIgnore.invalidate(request.getInstance().getId());
         }
+        LOG.debug("Received request to schedule instance {} with sequence {}.", request.getInstance().getId(),
+                request.getInstance().getInstanceSequence());
         runQueue.execute(new InstanceRunner(request));
     }
 
@@ -281,6 +283,10 @@ public class SchedulerService implements FalconNotificationService, Notification
             }
         }
 
+        public ExecutionInstance getInstance() {
+            return instance;
+        }
+
         @Override
         public void run() {
             try {
@@ -387,6 +393,10 @@ public class SchedulerService implements FalconNotificationService, Notification
     private static class PriorityComparator<T extends InstanceRunner> implements Comparator<T>, Serializable {
         @Override
         public int compare(T o1, T o2) {
+            // If both instances have same priority, go by instance sequence.
+            if (o1.getPriority() == o2.getPriority()) {
+                return o1.getInstance().getInstanceSequence() - o2.getInstance().getInstanceSequence();
+            }
             return o1.getPriority() - o2.getPriority();
         }
     }
