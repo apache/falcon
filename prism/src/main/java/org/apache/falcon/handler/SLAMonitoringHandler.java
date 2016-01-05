@@ -18,6 +18,7 @@
 package org.apache.falcon.handler;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
@@ -53,12 +54,14 @@ public class SLAMonitoringHandler implements WorkflowExecutionListener {
                                      String[] outputFeedInstancePathsList) throws FalconException {
         Storage storage;
         for (int index=0; index<outputFeedNamesList.length; index++) {
-            Feed feed = EntityUtil.getEntity(EntityType.FEED, outputFeedNamesList[index]);
-            storage = FeedHelper.createStorage(clusterName, feed);
-            String templatePath = new Path(storage.getUriTemplate(LocationType.DATA)).toUri().getPath();
-            Date date = FeedHelper.getDate(templatePath, new Path(outputFeedInstancePathsList[index]),
+            if (!StringUtils.equals(outputFeedNamesList[index], "NONE")) {
+                Feed feed = EntityUtil.getEntity(EntityType.FEED, outputFeedNamesList[index]);
+                storage = FeedHelper.createStorage(clusterName, feed);
+                String templatePath = new Path(storage.getUriTemplate(LocationType.DATA)).toUri().getPath();
+                Date date = FeedHelper.getDate(templatePath, new Path(outputFeedInstancePathsList[index]),
                     EntityUtil.getTimeZone(feed));
-            FeedSLAMonitoringService.get().makeFeedInstanceAvailable(outputFeedNamesList[index], clusterName, date);
+                FeedSLAMonitoringService.get().makeFeedInstanceAvailable(outputFeedNamesList[index], clusterName, date);
+            }
         }
     }
 
