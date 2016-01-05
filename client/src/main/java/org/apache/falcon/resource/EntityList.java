@@ -43,6 +43,10 @@ public class EntityList {
     public static final String INPUT_TAG = "Input";
     public static final String OUTPUT_TAG = "Output";
 
+    public int getTotalResults() {
+        return totalResults;
+    }
+
     @XmlElement
     private int totalResults;
 
@@ -141,6 +145,7 @@ public class EntityList {
 
     public EntityList(Entity[] dependentEntities, Entity entity) {
         int len = dependentEntities.length;
+        this.totalResults = len;
         EntityElement[] items = new EntityElement[len];
         for (int i = 0; i < len; i++) {
             Entity e = dependentEntities[i];

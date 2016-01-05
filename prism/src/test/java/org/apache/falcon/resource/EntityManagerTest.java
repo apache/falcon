@@ -151,6 +151,7 @@ public class EntityManagerTest extends AbstractEntityManager {
         EntityList entityList = this.getEntityList("", "", "", "process", "", "", "", "asc", 0, 10, "");
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertEquals(entityList.getTotalResults(), 1);
 
         /*
          * Both entities should be returned when the user is SuperUser.

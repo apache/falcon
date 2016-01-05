@@ -90,6 +90,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1710 dependency API sets totalResults as 0 by default(Praveen Adlakha via Ajay Yadava)
+
     FALCON-1714 EntityNotRegisteredException when process with no input/output feed is scheduled(Ajay Yadava)
 
     FALCON-1674 Fix the mapping of InstanceState status to workflow Status in InstancesResult (Pallavi Rao via Ajay Yadava)
