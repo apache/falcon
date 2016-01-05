@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.EntityExecutor;
 import org.apache.falcon.execution.ExecutionInstance;
 import org.apache.falcon.execution.FalconExecutionService;
@@ -267,23 +268,19 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
         switch(action) {
         case KILL:
             executor.kill(instance);
-            instanceInfo.status = InstancesResult.WorkflowStatus.KILLED;
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case SUSPEND:
             executor.suspend(instance);
-            instanceInfo.status = InstancesResult.WorkflowStatus.SUSPENDED;
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case RESUME:
             executor.resume(instance);
-            instanceInfo.status =
-                    InstancesResult.WorkflowStatus.valueOf(STATE_STORE
-                            .getExecutionInstance(instance.getId()).getCurrentState().name());
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case RERUN:
             executor.rerun(instance, userProps, isForced);
-            instanceInfo.status =
-                    InstancesResult.WorkflowStatus.valueOf(STATE_STORE
-                            .getExecutionInstance(instance.getId()).getCurrentState().name());
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case STATUS:
             // Mask wfParams
@@ -293,6 +290,9 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
                         DAGEngineFactory.getDAGEngine(cluster).getJobDetails(instance.getExternalID());
                 instanceInfo.actions = instanceActions
                         .toArray(new InstancesResult.InstanceAction[instanceActions.size()]);
+            // If not scheduled externally yet, get details from state
+            } else {
+                populateInstanceInfo(instanceInfo, instance);
             }
             break;
 
@@ -311,6 +311,39 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             throw new IllegalArgumentException("Unhandled action " + action);
         }
         return instanceInfo;
+    }
+
+    // Populates the InstancesResult.Instance instance using ExecutionInstance
+    private void populateInstanceInfo(InstancesResult.Instance instanceInfo, ExecutionInstance instance)
+        throws StateStoreException {
+        instanceInfo.cluster = instance.getCluster();
+        InstanceState.STATE state = STATE_STORE.getExecutionInstance(instance.getId()).getCurrentState();
+        switch (state) {
+        case SUCCEEDED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.SUCCEEDED;
+            break;
+        case FAILED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.FAILED;
+            break;
+        case KILLED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.KILLED;
+            break;
+        case READY:
+            instanceInfo.status = InstancesResult.WorkflowStatus.READY;
+            break;
+        case WAITING:
+            instanceInfo.status = InstancesResult.WorkflowStatus.WAITING;
+            break;
+        case SUSPENDED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.SUSPENDED;
+            break;
+        case RUNNING:
+            instanceInfo.status = InstancesResult.WorkflowStatus.RUNNING;
+            break;
+        default:
+            instanceInfo.status = InstancesResult.WorkflowStatus.UNDEFINED;
+            break;
+        }
     }
 
     @Override

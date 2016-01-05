@@ -29,6 +29,16 @@ Get list of all instances of a given entity.
 ---++ Results
 List of instances of given entity.
 
+The possible instance status returned and its meaning are as follows:
+   * WAITING - The instance is waiting for the corresponding data(feed) instances to become available.
+   * READY - The instance is ready to be scheduled. But, is waiting for scheduling conditions to be met. For example, limitation on number of instances that can be run in parallel.
+   * RUNNING - The instance is running on the workflow engine.
+   * FAILED - The instance has failed during execution.
+   * KILLED - The instance has been killed either manually or by the system.
+   * SUCCEEDED - The instance has executed successfully.
+   * SKIPPED - This instance was not executed, but was skipped. For example, when the execution order is LAST_ONLY, the older instances are skipped.
+   * ERROR - There was error while executing this instance on the workflow engine.
+   * UNDEFINED - The status of the instance could not be determined.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
