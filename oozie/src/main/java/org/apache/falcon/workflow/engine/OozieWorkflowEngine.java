@@ -953,8 +953,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String mapActionStatus(String status) {
-        if (CoordinatorAction.Status.READY.toString().equals(status)
-            || CoordinatorAction.Status.WAITING.toString().equals(status)
+        if (CoordinatorAction.Status.READY.toString().equals(status)) {
+            return InstancesResult.WorkflowStatus.READY.name();
+        } else if (CoordinatorAction.Status.WAITING.toString().equals(status)
             || CoordinatorAction.Status.SUBMITTED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.WAITING.name();
         } else if (CoordinatorAction.Status.IGNORED.toString().equals(status)) {
