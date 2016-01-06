@@ -165,7 +165,7 @@ public class MirrorSummaryTest extends BaseUITestClass{
         mirrorPage.setHdfsMaxBandwidth("50");
         mirrorPage.setAclOwner("somebody");
         mirrorPage.setAclGroup("somegroup");
-        mirrorPage.setAclPermission("0x000");
+        mirrorPage.setAclPermission("0000");
         mirrorPage.setFrequency(new Frequency("8", Frequency.TimeUnit.hours));
         Retry retry = new Retry();
         retry.setAttempts(8);
@@ -180,7 +180,7 @@ public class MirrorSummaryTest extends BaseUITestClass{
         Map<Summary, String> expectedParams = new EnumMap<>(baseMap);
         expectedParams.put(Summary.ACL_OWNER, "somebody");
         expectedParams.put(Summary.ACL_GROUP, "somegroup");
-        expectedParams.put(Summary.ACL_PERMISSIONS, "0x000");
+        expectedParams.put(Summary.ACL_PERMISSIONS, "0000");
         expectedParams.put(Summary.MAX_MAPS, "9");
         expectedParams.put(Summary.MAX_BANDWIDTH, "50");
         expectedParams.put(Summary.FREQUENCY, "8 hours");

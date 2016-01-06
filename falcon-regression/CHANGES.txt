@@ -5,7 +5,7 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-   FALCON-1697 Stabilization of scenarios which are based on instances lifecycle(Paul Isaychuk via Ajay Yadava)
+   FALCON-1698 New tests for ProcessSetupTest, ClusterSetupTest, UI test fixes(Paul Isaychuk via Ajay Yadava)
 
    FALCON-1700 Add new test cases to HiveDRTest(Paul Isaychuk & Murali Ramasami via Ajay Yadava)
 

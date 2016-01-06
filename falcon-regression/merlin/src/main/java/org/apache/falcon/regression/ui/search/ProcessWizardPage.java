@@ -694,7 +694,16 @@ public class ProcessWizardPage extends EntityWizardPage {
             getInputFeed(i).selectByVisibleText(inputs.getInputs().get(i).getFeed());
             sendKeysSlowly(getInputStart(i), inputs.getInputs().get(i).getStart());
             sendKeysSlowly(getInputEnd(i), inputs.getInputs().get(i).getEnd());
+            clickCheckBoxSecurely(getOptionalCheckbox(), inputs.getInputs().get(i).isOptional());
         }
+    }
+
+    private WebElement getOptionalCheckbox() {
+        return formBox.findElement(By.xpath("//input[@ng-model='input.optional']"));
+    }
+
+    public boolean isOptionalSelected() {
+        return getOptionalCheckbox().isSelected();
     }
 
     public void clickAddInput(){
@@ -832,7 +841,7 @@ public class ProcessWizardPage extends EntityWizardPage {
     public ProcessMerlin getProcessFromSummaryBox(ProcessMerlin draft) {
         String text = summaryBox.getText().trim();
         draft.setName(getProperty(text, null, "Tags", 2));
-        String currentBlock = text.substring(text.indexOf("Tags"), text.indexOf("Workflow"));
+        String currentBlock = text.substring(text.indexOf("Tags"), text.indexOf("Access Control List"));
         String [] parts;
         parts = currentBlock.trim().split("\\n");
         String tags = "";
@@ -846,6 +855,7 @@ public class ProcessWizardPage extends EntityWizardPage {
         if (!tags.isEmpty()) {
             draft.setTags(tags);
         }
+
         Workflow workflow = new Workflow();
         workflow.setName(getProperty(text, "Workflow", "Engine", 2));
         workflow.setEngine(EngineType.fromValue(getProperty(text, "Engine", "Version", 1)));
@@ -858,6 +868,11 @@ public class ProcessWizardPage extends EntityWizardPage {
         draft.setFrequency(new Frequency(parts[1], Frequency.TimeUnit.valueOf(parts[2])));
         draft.setParallel(Integer.parseInt(getProperty(text, "Max. parallel instances", "Order", 1)));
         draft.setOrder(ExecutionType.fromValue(getProperty(text, "Order", "Retry", 1)));
+
+        String aclOwner = getProperty(text, "Owner", "Group", 1);
+        String aclGroup = getProperty(text, "Group", "Permissions", 1);
+        String aclPermission = getProperty(text, "Permissions", "Workflow", 1);
+        draft.setACL(aclOwner, aclGroup, aclPermission);
 
         Retry retry = new Retry();
         retry.setPolicy(PolicyType.fromValue(getProperty(text, "Retry", "Attempts", 2)));
