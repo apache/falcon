@@ -138,16 +138,32 @@ public class ClusterWizardPage extends EntityWizardPage {
      * Common method to fill interfaces.
      */
     public void setInterface(Interface iface) {
-        String root = String.format("//div[contains(., '%s')]", iface.getType().value());
-        String xpath = root + "/div/input[contains(@ng-model, '%s')]";
-        WebElement ifaceEndpoint = clusterBox.findElement(By.xpath(String.format(xpath, "_interface._endpoint")));
-        WebElement ifaceVersion = clusterBox.findElement(By.xpath(String.format(xpath, "_interface._version")));
+        String xpath = "//input[contains(@ng-model,"
+            + " 'clusterEntity.clusterModel.cluster.interfaces.interface[%sPos]._endpoint')]";
+        WebElement ifaceEndpoint = clusterBox.findElement(By.xpath(String.format(xpath, iface.getType().value())));
         ifaceEndpoint.clear();
         sendKeysSlowly(ifaceEndpoint, iface.getEndpoint());
+        setInterfaceVersion(iface);
+    }
+
+    /**
+     * Set interface version by interface type.
+     */
+    public void setInterfaceVersion(Interface iface) {
+        WebElement ifaceVersion = getInterfaceVersionInput(iface.getType());
         if (iface.getVersion() != null) {
             ifaceVersion.clear();
             sendKeysSlowly(ifaceVersion, iface.getVersion());
         }
+    }
+
+    /**
+     * Get input for interface version by interface type.
+     */
+    private WebElement getInterfaceVersionInput(Interfacetype interfacetype) {
+        return clusterBox.findElement(By.xpath(String.format(
+            "//input[@ng-model='clusterEntity.clusterModel.cluster.interfaces.interface[%sPos]._version']",
+            interfacetype.value())));
     }
 
     /**
@@ -199,7 +215,7 @@ public class ClusterWizardPage extends EntityWizardPage {
         List<WebElement> valueInputs = clusterBox.findElements(By.xpath("//input[@ng-model='property._value']"));
         WebElement propInput = propInputs.get(propInputs.size()-1);
         sendKeysSlowly(propInput, name);
-        WebElement valueInput = valueInputs.get(valueInputs.size()-1);
+        WebElement valueInput = valueInputs.get(valueInputs.size() - 1);
         sendKeysSlowly(valueInput, value);
         clickAddProperty();
     }
@@ -418,25 +434,32 @@ public class ClusterWizardPage extends EntityWizardPage {
         waitForAngularToFinish();
     }
 
-    public String getInterfaceEndpoint(Interfacetype interfacetype) {
-        String xpath = String.format("(//input[@ng-model='_interface._endpoint'])[%s]", interfacetype.ordinal() + 1);
-        WebElement endpoint = clusterBox.findElement(By.xpath(xpath));
-        return endpoint.getAttribute("value");
+    public WebElement getInterfaceEndpoint(Interfacetype interfacetype) {
+        String xpath = String.format("//input[@ng-model='clusterEntity.clusterModel.cluster.interfaces"
+            + ".interface[%sPos]._endpoint']", interfacetype.value());
+        return clusterBox.findElement(By.xpath(xpath));
     }
 
-    public String getInterfaceVersion(Interfacetype interfacetype) {
-        String xpath = String.format("(//input[@ng-model='_interface._version'])[%s]", interfacetype.ordinal() + 1);
-        WebElement version = clusterBox.findElement(By.xpath(xpath));
-        return version.getAttribute("value");
+    public String getInterfaceEndpointValue(Interfacetype interfacetype) {
+        return getInterfaceEndpoint(interfacetype).getAttribute("value");
+    }
+
+    public WebElement getInterfaceVersion(Interfacetype interfacetype) {
+        String xpath = String.format("//input[@ng-model='clusterEntity.clusterModel.cluster.interfaces"
+            + ".interface[%sPos]._version']", interfacetype.value());
+        return clusterBox.findElement(By.xpath(xpath));
+    }
+
+    public String getInterfaceVersionValue(Interfacetype interfacetype) {
+        return getInterfaceVersion(interfacetype).getAttribute("value");
     }
 
     /**
      * Checks whether registry interface is enabled for input or not.
      */
     public boolean isRegistryEnabled() {
-        WebElement endpoint = clusterBox.findElement(By.xpath("(//input[@ng-model='_interface._endpoint'])[6]"));
-        WebElement version = clusterBox.findElement(By.xpath("(//input[@ng-model='_interface._version'])[6]"));
-        return endpoint.isEnabled() && version.isEnabled();
+        return getInterfaceEndpoint(Interfacetype.REGISTRY).isEnabled()
+            && getInterfaceVersion(Interfacetype.REGISTRY).isEnabled();
     }
 
     private WebElement getNameUnavailable(){

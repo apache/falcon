@@ -226,6 +226,26 @@ public class ClusterSetupTest extends BaseUITestClass{
     }
 
     /**
+     * Check that interface version with different length and parts is allowed.
+     */
+    @Test
+    public void testDifferentInterfaceVersions() {
+        sourceCluster.addInterface(Interfacetype.REGISTRY, "http://colo-1.example.com:15000", "1.1.1");
+        clusterSetup.checkRegistry(true);
+        clusterSetup.fillForm(sourceCluster);
+        StringBuilder partialVersion = new StringBuilder("");
+        for (String c : new String[]{"3", ".", "2", ".", "0"}) {
+            partialVersion.append(c);
+            for (Interface inface : sourceCluster.getInterfaces().getInterfaces()) {
+                inface.setVersion(partialVersion.toString());
+                clusterSetup.setInterfaceVersion(inface);
+            }
+            clusterSetup.clickNext();
+            clusterSetup.clickPrevious();
+        }
+    }
+
+    /**
      * Populate working location with value pointing to directory with wider permissions then 755.
      * Check that user is not allowed to create a cluster and is notified with an alert.
      */
@@ -287,9 +307,9 @@ public class ClusterSetupTest extends BaseUITestClass{
     public void testEditXml() {
         clusterSetup.fillForm(sourceCluster);
         //check that registry is empty
-        String registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
+        String registryEndpoint = clusterSetup.getInterfaceEndpointValue(Interfacetype.REGISTRY);
         Assert.assertTrue(StringUtils.isEmpty(registryEndpoint), "Registry endpoint should be empty");
-        String registryVersion = clusterSetup.getInterfaceVersion(Interfacetype.REGISTRY);
+        String registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
         Assert.assertTrue(StringUtils.isEmpty(registryVersion), "Registry version should be empty");
         Assert.assertFalse(clusterSetup.isRegistryEnabled(), "Registry should be disabled.");
 
@@ -306,10 +326,10 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.setXmlPreview(sourceCluster.toString());
 
         //check values on wizard
-        registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
+        registryEndpoint = clusterSetup.getInterfaceEndpointValue(Interfacetype.REGISTRY);
         Assert.assertEquals(registryEndpoint, sourceCluster.getInterfaces().getInterfaces().get(5).getEndpoint(),
             "Registry endpoint on wizard should match to endpoint on preview xml.");
-        registryVersion = clusterSetup.getInterfaceVersion(Interfacetype.REGISTRY);
+        registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
         Assert.assertEquals(registryVersion, sourceCluster.getInterfaces().getInterfaces().get(5).getVersion(),
             "Registry version on wizard should match to endpoint on preview xml.");
         Assert.assertTrue(clusterSetup.isRegistryEnabled(), "Registry should be enabled.");

@@ -89,13 +89,11 @@ public class PageHeader {
     private WebElement mirrorCreateButton;
 
     @FindBys({
-        @FindBy(className = "navbar"),
-        @FindBy(className = "uploadNavWrapper")
+        @FindBy(className = "uploadNavWrapper"),
     })
     private WebElement uploadEntityBox;
 
     @FindBys({
-        @FindBy(className = "navbar"),
         @FindBy(className = "uploadNavWrapper"),
         @FindBy(className = "btn-file")
     })
@@ -153,7 +151,6 @@ public class PageHeader {
             final WebElement uploadEntityLabel = uploadEntityBox.findElement(By.tagName("h4"));
             Assert.assertEquals(uploadEntityLabel.getText(), "Upload an entity",
                 "Unexpected upload entity text");
-            UIAssert.assertDisplayed(uploadEntityButton, "Create entity box");
             Assert.assertEquals(uploadEntityButton.getText(), "Browse for the XML file",
                 "Unexpected text on upload entity button");
             //checking if logged-in username is displayed
@@ -180,12 +177,21 @@ public class PageHeader {
 
         //help link navigation
         Assert.assertEquals(helpLink.getText(), "Help", "Help link expected to have text 'Help'");
-        helpLink.click();
-        new WebDriverWait(driver, AbstractSearchPage.PAGELOAD_TIMEOUT_THRESHOLD).until(
+        clickLink(helpLink);
+        int helpPageloadTimeoutThreshold = 30;
+        new WebDriverWait(driver, helpPageloadTimeoutThreshold).until(
             ExpectedConditions.stalenessOf(helpLink));
         Assert.assertEquals(driver.getCurrentUrl(), MerlinConstants.HELP_URL,
             "Unexpected help url");
         driver.get(oldUrl);
+    }
+
+    /**
+     * Useful in cases when selenium fails to click a link due to it's bugs.
+     */
+    private void clickLink(WebElement link) {
+        JavascriptExecutor executor = (JavascriptExecutor) driver;
+        executor.executeScript("arguments[0].click();", link);
     }
 
     public void uploadXml(String filePath) throws IOException {

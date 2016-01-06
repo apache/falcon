@@ -785,6 +785,9 @@ public class ProcessSetupTest extends BaseUITestClass {
         Assert.assertEquals(processWizardPage.getInputEndText(0), process.getInputs().getInputs().get(0).getEnd(),
             "Unexpected Input End on the Wizard window");
 
+        //assert that optional checkbox is not checked
+        Assert.assertFalse(processWizardPage.isOptionalSelected(), "Optional checkbox shouldn't be selected.");
+
         // Get process from XML Preview
         ProcessMerlin processFromXML = processWizardPage.getEntityFromXMLPreview();
 
@@ -792,8 +795,9 @@ public class ProcessSetupTest extends BaseUITestClass {
         LOGGER.info(String.format("Comparing source process: %n%s%n and preview: %n%s%n.", process, processFromXML));
         process.assertInputValues(processFromXML);
 
-        // Change Input Name and Set Output in the XML
+        // Change Input Name, make it optional, set Output in the XML
         processFromXML.getInputs().getInputs().get(0).setName("newInputData");
+        processFromXML.getInputs().getInputs().get(0).setOptional(true);
         processFromXML.setOutputs(process.getOutputs());
 
         // Now click EditXML and set the updated XML here
@@ -812,6 +816,16 @@ public class ProcessSetupTest extends BaseUITestClass {
         Assert.assertEquals(processWizardPage.getOutputInstanceText(0),
             process.getOutputs().getOutputs().get(0).getInstance(),
             "Unexpected Output Instance on the Wizard window");
+
+        //assert that optional checkbox is selected
+        Assert.assertTrue(processWizardPage.isOptionalSelected(), "Optional checkbox should be selected.");
+
+        //make input compulsory again
+        processFromXML.getInputs().getInputs().get(0).setOptional(false);
+        processWizardPage.setXmlPreview(processFromXML.toString());
+
+        //assert that optional checkbox isn't  selected
+        Assert.assertFalse(processWizardPage.isOptionalSelected(), "Optional checkbox shouldn't be selected.");
     }
 
     /**
@@ -898,10 +912,11 @@ public class ProcessSetupTest extends BaseUITestClass {
 
     /**
      * Create process. Using API check that process was created.
-     * @throws Exception
+     * Additionally check that process input was set optional.
      */
     @Test
     public void testSummaryStepDefaultScenario() throws Exception{
+        process.getInputs().getInputs().get(0).setOptional(true);
 
         bundles[0].submitClusters(cluster);
         bundles[0].submitFeeds(prism);
@@ -930,6 +945,12 @@ public class ProcessSetupTest extends BaseUITestClass {
         // Assert the response using API to validate if the feed creation went successfully
         ServiceResponse response = prism.getProcessHelper().getEntityDefinition(process.toString());
         AssertUtil.assertSucceeded(response);
+
+        //particular check for optional param
+        ProcessMerlin submittedProcess = new ProcessMerlin(response.getMessage());
+        LOGGER.info(
+            String.format("Comparing source process: %n%s%n and submitted one: %n%s%n.", process, submittedProcess));
+        process.assertInputValues(submittedProcess);
     }
 
     /**

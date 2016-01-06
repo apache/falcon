@@ -559,7 +559,7 @@ public class Bundle {
 
     public void setClusterInterface(Interfacetype interfacetype, String value) {
         ClusterMerlin c = getClusterElement();
-        c.setInterface(interfacetype, value);
+        c.setInterface(interfacetype, value, null);
         writeClusterElement(c);
     }
 

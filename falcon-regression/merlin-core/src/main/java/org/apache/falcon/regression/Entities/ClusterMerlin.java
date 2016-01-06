@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.Entities;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
@@ -92,12 +93,15 @@ public class ClusterMerlin extends Cluster {
         this.setACL(acl);
     }
 
-    public void setInterface(Interfacetype interfacetype, String value) {
+    public void setInterface(Interfacetype interfacetype, String endpoint, String version) {
         final Interfaces interfaces = this.getInterfaces();
         final List<Interface> interfaceList = interfaces.getInterfaces();
         for (final Interface anInterface : interfaceList) {
             if (anInterface.getType() == interfacetype) {
-                anInterface.setEndpoint(value);
+                anInterface.setEndpoint(endpoint);
+                if (StringUtils.isNotBlank(version)) {
+                    anInterface.setVersion(version);
+                }
             }
         }
     }
