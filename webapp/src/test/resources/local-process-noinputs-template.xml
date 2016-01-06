@@ -38,5 +38,5 @@
         <property name="sundayThisWeek" value="${currentWeek('SUN', 0, 0)}"/>
     </properties>
     <workflow engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>
-    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="1"/>
 </process>

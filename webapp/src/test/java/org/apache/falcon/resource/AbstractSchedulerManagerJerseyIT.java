@@ -62,7 +62,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
     private static final String DB_BASE_DIR = "target/test-data/falcondb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
-    protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
+    protected static final String DB_SQL_FILE = dbLocation + File.separator + "out.sql";
     protected LocalFileSystem localFS = new LocalFileSystem();
 
 

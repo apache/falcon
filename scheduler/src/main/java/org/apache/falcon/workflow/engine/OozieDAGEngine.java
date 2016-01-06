@@ -237,17 +237,29 @@ public class OozieDAGEngine implements DAGEngine {
         String jobId = instance.getExternalID();
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
-            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
-            if (props != null) {
-                jobprops.putAll(props);
+            if (props == null) {
+                props = new Properties();
             }
             //if user has set any of these oozie rerun properties then force rerun flag is ignored
-            if (!jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
-                    && !jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
-                jobprops.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+            if (!props.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && !props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
             }
+
+            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
+            jobprops.putAll(props);
+
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
+            // In case if both props exists one should be removed otherwise it will fail.
+            // This case will occur when user runs workflow with skip-nodes property and
+            // try to do force rerun or rerun with fail-nodes property.
+            if (jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                LOG.warn("Both " + OozieClient.RERUN_SKIP_NODES + " and " +  OozieClient.RERUN_FAIL_NODES
+                        + " are present in workflow params removing" + OozieClient.RERUN_SKIP_NODES);
+                jobprops.remove(OozieClient.RERUN_SKIP_NODES);
+            }
             client.reRun(jobId, jobprops);
             assertStatus(instance.getExternalID(), Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUCCEEDED);
             LOG.info("Rerun job {} of entity {} of time {} on cluster {}", jobId, instance.getEntity().getName(),

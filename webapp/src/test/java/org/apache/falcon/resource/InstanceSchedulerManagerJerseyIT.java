@@ -64,7 +64,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
     }
 
     @Test
-    public void testKillInstances() throws Exception {
+    public void testKillAndRerunInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
@@ -83,6 +83,16 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         InstancesResult.WorkflowStatus status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
                 processName, START_INSTANCE);
         Assert.assertEquals(status, InstancesResult.WorkflowStatus.KILLED);
+
+        result = falconUnitClient.rerunInstances(EntityType.PROCESS.toString(),
+                processName, START_INSTANCE, END_TIME, colo, null, null, null, null, true, null);
+        assertStatus(result);
+
+        waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
+                InstancesResult.WorkflowStatus.RUNNING);
+        status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
+                processName, START_INSTANCE);
+        Assert.assertEquals(status, InstancesResult.WorkflowStatus.RUNNING);
 
 
     }
