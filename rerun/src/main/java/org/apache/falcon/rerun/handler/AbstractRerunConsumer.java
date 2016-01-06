@@ -26,6 +26,7 @@ import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.ExpBackoffPolicy;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,9 +75,12 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
 
                 // Login the user to access WfEngine as this user
                 CurrentUser.authenticate(message.getWorkflowUser());
-                String jobStatus = handler.getWfEngine().getWorkflowStatus(
+                AbstractWorkflowEngine wfEngine = handler.getWfEngine(message.getEntityType(),
+                        message.getEntityName());
+                String jobStatus = wfEngine.getWorkflowStatus(
                         message.getClusterName(), message.getWfId());
-                handleRerun(message.getClusterName(), jobStatus, message);
+                handleRerun(message.getClusterName(), jobStatus, message,
+                        message.getEntityType(), message.getEntityName());
 
             } catch (Throwable e) {
                 LOG.error("Error in rerun consumer", e);
@@ -84,5 +88,6 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
         }
     }
 
-    protected abstract void handleRerun(String clusterName, String jobStatus, T message);
+    protected abstract void handleRerun(String clusterName, String jobStatus, T message,
+                                        String entityType, String entityName);
 }

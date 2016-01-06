@@ -53,7 +53,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
     @Override
     protected void handleRerun(String clusterName, String jobStatus,
-                               LaterunEvent message) {
+                               LaterunEvent message, String entityType, String entityName) {
         try {
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
                     || jobStatus.equals("SUSPENDED")) {
@@ -77,7 +77,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
             LOG.info("Late changes detected in the following feeds: {}", detectLate);
 
-            handler.getWfEngine().reRun(message.getClusterName(), message.getWfId(), null, true);
+            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), message.getWfId(), null, true);
             LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
                     message.getWfId(), message.getClusterName());
         } catch (Exception e) {
@@ -91,8 +91,9 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
     public String detectLate(LaterunEvent message) throws Exception {
         LateDataHandler late = new LateDataHandler();
-        Properties properties = handler.getWfEngine().getWorkflowProperties(
-                message.getClusterName(), message.getWfId());
+        AbstractWorkflowEngine wfEngine = handler.getWfEngine(message.getEntityType(),
+                message.getEntityName());
+        Properties properties = wfEngine.getWorkflowProperties(message.getClusterName(), message.getWfId());
         String falconInputs = properties.getProperty(WorkflowExecutionArgs.INPUT_NAMES.getName());
         String falconInPaths = properties.getProperty(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName());
         String falconInputFeedStorageTypes =
