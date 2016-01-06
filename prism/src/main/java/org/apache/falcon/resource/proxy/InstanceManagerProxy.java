@@ -18,6 +18,23 @@
 
 package org.apache.falcon.resource.proxy;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -33,25 +50,9 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A proxy implementation of the entity instance operations.
@@ -625,12 +626,12 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 } catch (Throwable e) {
                     LOG.error("Failed to fetch results for colo:{}", colo, e);
                     results.put(colo, getResultInstance(APIResult.Status.FAILED,
-                        e.getClass().getName() + "::" + e.getMessage()));
+                            e.getClass().getName() + "::" + e.getMessage()));
                 }
             }
             T finalResult = consolidateResult(results, clazz);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
-                throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(finalResult.getMessage());
             } else {
                 return finalResult;
             }

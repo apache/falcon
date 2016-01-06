@@ -18,11 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.falcon.FalconWebException;
-import org.apache.falcon.monitors.Dimension;
-import org.apache.falcon.monitors.Monitored;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -34,7 +29,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.monitors.Dimension;
+import org.apache.falcon.monitors.Monitored;
 
 /**
  * Entity management operations as REST API for feed and process.
@@ -67,7 +66,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         try {
             validateSlaParams(entityType, entityName, start, end, colo);
         } catch (Exception e) {
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         return super.getFeedSLAMissPendingAlerts(entityName, start, end, colo);
     }

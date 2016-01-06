@@ -119,8 +119,8 @@ public class HTTPChannel extends AbstractChannel {
             } else if (response.getClientResponseStatus().getStatusCode()
                     == Response.Status.BAD_REQUEST.getStatusCode()) {
                 LOG.error("Request failed: {}", response.getClientResponseStatus().getStatusCode());
-                throw FalconWebException.newInstanceException(response.
-                        getEntity(APIResult.class).getMessage(), Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(response.
+                        getEntity(APIResult.class).getMessage());
             } else {
                 LOG.error("Request failed: {}", response.getClientResponseStatus().getStatusCode());
                 throw new FalconException(response.getEntity(String.class));

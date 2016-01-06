@@ -18,6 +18,25 @@
 
 package org.apache.falcon.resource.proxy;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
@@ -38,25 +57,6 @@ import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.util.DeploymentUtil;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A proxy implementation of the schedulable entity operations.
@@ -124,10 +124,10 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         try {
             validateSlaParams(entityType, entityName, start, end, colo);
         } catch (Exception e) {
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         return new EntityProxy<SchedulableEntityInstanceResult>(entityType, entityName,
-            SchedulableEntityInstanceResult.class) {
+                SchedulableEntityInstanceResult.class) {
             @Override
             protected Set<String> getColosToApply() {
                 return getApplicableColos(entityType, entityName);
@@ -191,8 +191,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         // If the submitted entity is a cluster, ensure its spec. has one of the valid colos
         String colo = ((Cluster) entity).getColo();
         if (!applicableColos.contains(colo)) {
-            throw FalconWebException.newException("The colo mentioned in the cluster specification, "
-                    + colo + ", is not listed in Prism runtime.", Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("The colo mentioned in the cluster specification, "
+                    + colo + ", is not listed in Prism runtime.");
         }
     }
 
@@ -203,7 +203,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             request.getInputStream().reset();
             return entity;
         } catch (Exception e) {
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -228,7 +228,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             entity = deserializeEntity(bufferedRequest.getInputStream(), entityType);
             bufferedRequest.getInputStream().reset();
         } catch (Exception e) {
-            throw FalconWebException.newException("Unable to parse the request", Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Unable to parse entity definition");
         }
         return new EntityProxy(type, entity.getName()) {
             @Override
@@ -274,7 +274,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                     return new APIResult(APIResult.Status.SUCCEEDED,
                             entity + "(" + type + ") doesn't exist. Nothing to do");
                 } catch (FalconException e) {
-                    throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+                    throw FalconWebException.newAPIException(e);
                 }
             }
 
@@ -779,7 +779,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
             T finalResult = consolidateResult(results, clazz);
             if (finalResult.getStatus() == APIResult.Status.FAILED) {
-                throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(finalResult.getMessage());
             } else {
                 return finalResult;
             }
