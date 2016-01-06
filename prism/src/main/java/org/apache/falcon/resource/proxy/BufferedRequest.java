@@ -85,7 +85,7 @@ public class BufferedRequest implements HttpServletRequest {
             };
             stream.mark(10 * 1024 * 1024);
         } catch (IOException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

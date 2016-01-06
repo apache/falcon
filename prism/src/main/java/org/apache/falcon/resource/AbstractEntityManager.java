@@ -101,9 +101,8 @@ public abstract class AbstractEntityManager {
         }
         if (StringUtils.isNotEmpty(colo) && !colo.equals("*")) {
             if (!DeploymentUtil.getCurrentColo().equals(colo)) {
-                throw FalconWebException.newException(
-                        "Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Current colo (" + DeploymentUtil.getCurrentColo()
+                        + ") is not " + colo);
             }
         }
     }
@@ -127,8 +126,7 @@ public abstract class AbstractEntityManager {
         } else {
             colos = new HashSet<String>(Arrays.asList(coloExpr.split(",")));
             if (!applicableColos.containsAll(colos)) {
-                throw FalconWebException.newException("Given colos not applicable for entity operation",
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Given colos not applicable for entity operation");
             }
         }
         return colos;
@@ -146,7 +144,7 @@ public abstract class AbstractEntityManager {
 
             return getApplicableColos(type, EntityUtil.getEntity(type, name));
         } catch (FalconException e) {
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -168,7 +166,7 @@ public abstract class AbstractEntityManager {
             }
             return colos;
         } catch (FalconException e) {
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -194,7 +192,7 @@ public abstract class AbstractEntityManager {
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -210,7 +208,7 @@ public abstract class AbstractEntityManager {
             return validate(request.getInputStream(), type, skipDryRun);
         } catch (IOException e) {
             LOG.error("Unable to get InputStream from Request", request, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -235,7 +233,7 @@ public abstract class AbstractEntityManager {
                     "Validated successfully (" + entityType + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Validation failed for entity ({})", type, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -278,7 +276,7 @@ public abstract class AbstractEntityManager {
                     entity + "(" + type + ") removed successfully " + removedFromEngine);
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } finally {
             releaseEntityLocks(entity, tokenList);
         }
@@ -290,13 +288,13 @@ public abstract class AbstractEntityManager {
             return update(request.getInputStream(), type, entityName, colo, skipDryRun);
         } catch (IOException e) {
             LOG.error("Unable to get InputStream from Request", request, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
 
     }
 
     protected APIResult update(InputStream inputStream, String type, String entityName,
-                            String colo, Boolean skipDryRun) {
+                               String colo, Boolean skipDryRun) {
         checkColo(colo);
         List<Entity> tokenList = new ArrayList<>();
         try {
@@ -332,7 +330,7 @@ public abstract class AbstractEntityManager {
             return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
         } catch (Throwable e) {
             LOG.error("Update failed", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
             releaseEntityLocks(entityName, tokenList);
@@ -561,7 +559,7 @@ public abstract class AbstractEntityManager {
             throw e;
         } catch (Exception e) {
             LOG.error("Unable to get status for entity {} ({})", entity, type, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -596,7 +594,7 @@ public abstract class AbstractEntityManager {
             return EntityUtil.getEntityDependencies(entityObj);
         } catch (Exception e) {
             LOG.error("Unable to get dependencies for entityName {} ({})", entityName, type, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -652,7 +650,7 @@ public abstract class AbstractEntityManager {
             }
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
 
         // sort entities and pagination
@@ -685,8 +683,7 @@ public abstract class AbstractEntityManager {
             try {
                 EntityList.EntityFilterByFields.valueOf(entry.getKey().toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw FalconWebException.newInstanceException(
-                        "Invalid filter key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Invalid filter key: " + entry.getKey());
             }
         }
         return filterByFieldsValues;
@@ -724,7 +721,7 @@ public abstract class AbstractEntityManager {
                 }
             } catch (FalconException e1) {
                 LOG.error("Unable to get list for entities for ({})", entityType.getEntityClass().getSimpleName(), e1);
-                throw FalconWebException.newException(e1, Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(e1);
             }
 
             if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)) {
@@ -955,9 +952,9 @@ public abstract class AbstractEntityManager {
 
         case PIPELINES:
             if (!entity.getEntityType().equals(EntityType.PROCESS)) {
-                throw FalconWebException.newException(
-                        "Invalid filterBy key for non process entities " + pair.getKey(),
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Invalid filterBy key for non"
+                    + " process entities " + pair.getKey());
+
             }
             return isFilteredByPipelines(pair.getValue(), EntityUtil.getPipelines(entity));
 
@@ -1009,7 +1006,7 @@ public abstract class AbstractEntityManager {
 
         String err = "Value for param sortOrder should be \"asc\" or \"desc\". It is  : " + sortOrder;
         LOG.error(err);
-        throw FalconWebException.newException(err, Response.Status.BAD_REQUEST);
+        throw FalconWebException.newAPIException(err);
     }
 
     protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults) {
@@ -1021,8 +1018,7 @@ public abstract class AbstractEntityManager {
 
         if (numresults < 1) {
             LOG.error("Value for param numResults should be > than 0  : {}", numresults);
-            throw FalconWebException.newException("Value for param numResults should be > than 0  : " + numresults,
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Value for param numResults should be > than 0  : " + numresults);
         }
 
         if (offset < 0) { offset = 0; }
@@ -1084,7 +1080,7 @@ public abstract class AbstractEntityManager {
             return entity.toString();
         } catch (Throwable e) {
             LOG.error("Unable to get entity definition from config store for ({}): {}", type, entityName, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
 
         }
     }
@@ -1126,10 +1122,10 @@ public abstract class AbstractEntityManager {
             return result;
 
         } catch (IllegalArgumentException e) {
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } catch (Throwable throwable) {
             LOG.error("reverse look up failed", throwable);
-            throw FalconWebException.newException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(throwable, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

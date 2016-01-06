@@ -43,6 +43,8 @@ Proposed Release Version: 0.9
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1705 Standardization of error handling in falcon Server(Praveen Adlakha via Ajay Yadava)
+
     FALCON-1640 Cascading Delete for instances in Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1683 Inconsistent behavior when user tries to switch schedulers(Pallavi Rao via Ajay Yadava)

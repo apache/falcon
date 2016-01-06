@@ -85,7 +85,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             response.put(TOTAL_SIZE, dimensionValues.length());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -124,7 +124,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             vertexProperties.put("outVertices", getAdjacentVerticesJson(outEdges, Direction.IN));
 
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
         return Response.ok(vertexProperties).build();

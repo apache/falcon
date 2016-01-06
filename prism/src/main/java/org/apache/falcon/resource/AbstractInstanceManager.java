@@ -18,6 +18,25 @@
 
 package org.apache.falcon.resource;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -44,27 +63,9 @@ import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Set;
 
 /**
  * A base class for managing Entity's Instance operations.
@@ -79,14 +80,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     protected EntityType checkType(String type) {
         if (StringUtils.isEmpty(type)) {
-            throw FalconWebException.newInstanceException("entity type is empty",
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("entity type is empty");
         } else {
             EntityType entityType = EntityType.getEnum(type);
             if (entityType == EntityType.CLUSTER) {
-                throw FalconWebException.newInstanceException(
-                        "Instance management functions don't apply to Cluster entities",
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(
+                        "Instance management functions don't apply to Cluster entities");
             }
             return entityType;
         }
@@ -129,7 +128,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -143,11 +142,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     getEarliestDate(entry.getValue());
                 }
             } catch (IllegalArgumentException e) {
-                throw FalconWebException.newInstanceException(
-                        "Invalid filter key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Invalid filter key: " + entry.getKey());
             } catch (FalconException e) {
-                throw FalconWebException.newInstanceException(
-                        "Invalid date value for key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Invalid date value for key: " + entry.getKey());
             }
         }
     }
@@ -228,14 +225,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     break;
 
                 default:
-                    throw FalconWebException.newInstanceDependencyResult("Instance dependency isn't supported for type:"
-                        + entityType, Response.Status.BAD_REQUEST);
+                    throw FalconWebException.newAPIException("Instance dependency isn't supported for type:"
+                        + entityType);
                 }
             }
 
         } catch (Throwable throwable) {
             LOG.error("Failed to get instance dependencies:", throwable);
-            throw FalconWebException.newInstanceDependencyResult(throwable, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(throwable);
         }
 
         InstanceDependencyResult res = new InstanceDependencyResult(APIResult.Status.SUCCEEDED, "Success!");
@@ -261,7 +258,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
         } catch (Throwable e) {
             LOG.error("Failed to get instance summary", e);
-            throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -282,8 +279,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return result;
         } catch (Exception e) {
             LOG.error("Failed to get logs for instances", e);
-            throw FalconWebException.newInstanceException(e,
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -552,7 +548,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to display params of an instance", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -578,7 +574,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -604,7 +600,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -630,7 +626,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -666,20 +662,19 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return result;
         } catch (IllegalArgumentException e) { // bad entityType
             LOG.error("Bad Entity Type: {}", entityType);
-            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } catch (EntityNotRegisteredException e) { // bad entityName
             LOG.error("Bad Entity Name : {}", entityName);
-            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } catch (Throwable e) {
             LOG.error("Failed to triage", e);
-            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
     private void checkName(String entityName) {
         if (StringUtils.isBlank(entityName)) {
-            throw FalconWebException.newInstanceException("Instance name is mandatory and shouldn't be blank",
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Instance name is mandatory and shouldn't be blank");
         }
     }
 
@@ -831,7 +826,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles, isForced);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck

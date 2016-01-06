@@ -92,7 +92,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             GraphUtils.dump(getGraph(), file);
             return Response.ok().build();
         } catch (Exception e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -125,17 +125,15 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                 }
             } catch (Exception e) {
                 LOG.error("Error while fetching entity lineage: ", e);
-                throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+                throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
             }
 
             if (processes.isEmpty()) {
-                throw FalconWebException.newException("No processes belonging to pipeline " + pipeline,
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("No processes belonging to pipeline " + pipeline);
             }
             return Response.ok(buildJSONGraph(processes)).build();
         } else {
-            throw FalconWebException.newException("Pipeline name can not be blank",
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Pipeline name can not be blank");
         }
     }
 
@@ -155,7 +153,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             JSONObject response = buildJSONResponse(getGraph().getVertices());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -181,7 +179,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                     vertex, getVertexIndexedKeys(), GraphSONMode.NORMAL));
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -224,7 +222,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             response.put(TOTAL_SIZE, vertexProperties.size());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -429,7 +427,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             return Response.ok(response).build();
 
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -461,7 +459,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                     edge, getEdgeIndexedKeys(), GraphSONMode.NORMAL));
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

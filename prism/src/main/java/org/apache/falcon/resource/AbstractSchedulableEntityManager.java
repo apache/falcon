@@ -18,6 +18,19 @@
 
 package org.apache.falcon.resource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -35,21 +48,9 @@ import org.apache.falcon.service.FeedSLAMonitoringService;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * REST resource of allowed actions on Schedulable Entities, Only Process and
@@ -82,12 +83,12 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
     protected synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun,
-            Map<String, String> properties) throws FalconException, AuthorizationException {
+                                 Map<String, String> properties) throws FalconException, AuthorizationException {
 
         checkSchedulableEntity(type);
         Entity entityObj = null;
@@ -111,7 +112,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     }
 
     public static void validateSlaParams(String entityType, String entityName, String start, String end,
-                                  String colo) throws FalconException {
+                                         String colo) throws FalconException {
         EntityType type = EntityType.getEnum(entityType);
         if (type != EntityType.FEED) {
             throw new ValidationException("SLA monitoring is not supported for: " + type);
@@ -169,7 +170,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                 }
             }
         } catch (FalconException e) {
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         SchedulableEntityInstanceResult result = new SchedulableEntityInstanceResult(APIResult.Status.SUCCEEDED,
                 "Success!");
@@ -200,7 +201,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                     entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -227,7 +228,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -255,7 +256,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
         } catch (Throwable e) {
             LOG.error("Unable to resume entity", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -301,7 +302,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
         } catch (Exception e) {
             LOG.error("Failed to get entities", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
 
         List<EntitySummaryResult.EntitySummary> entitySummaries = new ArrayList<EntitySummaryResult.EntitySummary>();
@@ -358,7 +359,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             }
         } catch (Throwable e) {
             LOG.error("Touch failed", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
     }
@@ -367,9 +368,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     private void validateTypeForEntitySummary(String type) {
         EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
-            throw FalconWebException.newException("Invalid entity type " + type
-                + " for EntitySummary API. Valid options are feed or process",
-                Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Invalid entity type " + type
+                            + " for EntitySummary API. Valid options are feed or process");
         }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
