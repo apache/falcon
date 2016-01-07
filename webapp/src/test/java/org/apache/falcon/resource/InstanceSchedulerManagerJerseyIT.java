@@ -139,6 +139,9 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
 
         InstancesResult result = falconUnitClient.getStatusOfInstances(EntityType.PROCESS.toString(), processName,
                 START_INSTANCE, "2012-04-23T00:00Z", colo, null, null, null, null, 0, 3, null);
-        Assert.assertEquals(3, result.getInstances().length);
+        Assert.assertEquals(result.getInstances().length, 3);
+        // Ensure the latest instance is on top and oldest at the bottom
+        Assert.assertEquals(result.getInstances()[0].getInstance(), "2012-04-22T00:00Z");
+        Assert.assertEquals(result.getInstances()[2].getInstance(), START_INSTANCE);
     }
 }
