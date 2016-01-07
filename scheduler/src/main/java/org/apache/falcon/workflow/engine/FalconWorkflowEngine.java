@@ -217,6 +217,10 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             }
         }
 
+        // To ensure compatibility with OozieWorkflowEngine.
+        // Also because users would like to see the most recent instances first.
+        sortInstancesDescBySequence(instancesToActOn);
+
         List<InstancesResult.Instance> instances = new ArrayList<>();
         for (ExecutionInstance ins : instancesToActOn) {
             instanceCount++;
@@ -241,6 +245,16 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
         InstancesResult instancesResult = new InstancesResult(overallStatus, action.name());
         instancesResult.setInstances(instances.toArray(new InstancesResult.Instance[instances.size()]));
         return instancesResult;
+    }
+
+    // Sort the instances in descending order of their sequence, so the latest is on top.
+    private void sortInstancesDescBySequence(List<ExecutionInstance> instancesToActOn) {
+        Collections.sort(instancesToActOn, new Comparator<ExecutionInstance>() {
+            @Override
+            public int compare(ExecutionInstance o1, ExecutionInstance o2) {
+                return o2.getInstanceSequence() - o1.getInstanceSequence();
+            }
+        });
     }
 
     private List<String> getIncludedClusters(Properties props, String clustersType) {
