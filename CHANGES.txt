@@ -92,6 +92,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1708  params API does not take start as a mandatory option(Praveen Adlakha via Ajay Yadava)
+
     FALCON-1725 Falcon API shows results in ascending order in native scheduler (Pallavi Rao)
 
     FALCON-1720 Rerun API does not rerun succeeded instances (Pavan Kolamuri via Pallavi Rao)
