@@ -25,7 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon.recipes</groupId>
     <artifactId>falcon-hive-replication-recipe</artifactId>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.10-SNAPSHOT</version>
     <description>Apache Falcon Hive Disaster Recovery Recipe</description>
     <name>Apache Falcon Sample Hive Disaster Recovery Recipe</name>
     <packaging>jar</packaging>

@@ -1,5 +1,8 @@
 Apache Falcon Change log
 Proposed Release Version: 0.9
+  TASKS:
+    FALCON-1718 Change versions in pom.xml of master and 0.9 branch(Pallavi Rao via Ajay Yadava)
+
     FALCON-1594 Update changes.txt to reflect 0.8 as released version(Sowmya Ramesh via Ajay Yadava)
 
     FALCON-1523 Update CHANGES.txt to change 0.8 branch to release(Sowmya Ramesh)
