@@ -29,6 +29,7 @@ import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.cli.FalconMetadataCLI;
+import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.recipe.RecipeTool;
@@ -591,7 +592,10 @@ public class FalconClient extends AbstractFalconClient {
                                       List<LifeCycle> lifeCycles,
                                       String doAsUser)
         throws FalconCLIException, UnsupportedEncodingException {
-
+        if (!DateValidator.validate(start)) {
+            throw new FalconCLIException("Start date is mandatory and should be"
+                    + " a valid date in  YYYY-MM-DDTHH:MMZ format.");
+        }
         return sendInstanceRequest(Instances.PARAMS, type, entity,
                 start, null, null, null, colo, lifeCycles, doAsUser);
     }
