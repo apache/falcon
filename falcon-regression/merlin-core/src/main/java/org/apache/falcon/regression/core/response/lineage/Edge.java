@@ -58,6 +58,9 @@ public class Edge extends GraphEntity {
         @SerializedName("ninth")NINTH,
         @SerializedName("tenth")TENTH,
         @SerializedName("value")VALUE,
+        @SerializedName("_falcon_mirroring_type")MIRRORING_TYPE,
+        @SerializedName("specific")SPECIFIC,
+        @SerializedName("myTag1")MY_TAG
     }
     @SerializedName("_id")
     private String id;

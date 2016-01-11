@@ -502,29 +502,45 @@ public final class OozieUtil {
         Assert.assertEquals(actualRun, attempts, "Rerun attempts did not match");
     }
 
+    /**
+     * Try to find feed coordinators of given type.
+     */
     public static int checkIfFeedCoordExist(OozieClient oozieClient,
-            String feedName, String coordType) throws OozieClientException {
-        LOGGER.info("feedName: " + feedName);
-        int numberOfCoord = 0;
-        if (getBundles(oozieClient, feedName, EntityType.FEED).size() == 0) {
-            return 0;
-        }
-        List<String> bundleIds = getBundles(oozieClient, feedName, EntityType.FEED);
-        LOGGER.info("bundleIds: " + bundleIds);
+                                            String feedName, String coordType) throws OozieClientException {
+        return checkIfFeedCoordExist(oozieClient, feedName, coordType, 5);
+    }
 
-        for (String aBundleId : bundleIds) {
-            LOGGER.info("aBundleId: " + aBundleId);
-            waitForCoordinatorJobCreation(oozieClient, aBundleId);
-            List<CoordinatorJob> coords =
-                    getBundleCoordinators(oozieClient, aBundleId);
-            LOGGER.info("coords: " + coords);
-            for (CoordinatorJob coord : coords) {
-                if (coord.getAppName().contains(coordType)) {
-                    numberOfCoord++;
+    /**
+     * Try to find feed coordinators of given type given number of times.
+     */
+    public static int checkIfFeedCoordExist(OozieClient oozieClient,
+            String feedName, String coordType, int numberOfRetries) throws OozieClientException {
+        LOGGER.info("feedName: " + feedName);
+        for (int retryAttempt = 0; retryAttempt < numberOfRetries; retryAttempt++) {
+            int numberOfCoord = 0;
+            List<String> bundleIds = getBundles(oozieClient, feedName, EntityType.FEED);
+            if (bundleIds.size() == 0) {
+                TimeUtil.sleepSeconds(4);
+                continue;
+            }
+            LOGGER.info("bundleIds: " + bundleIds);
+            for (String aBundleId : bundleIds) {
+                LOGGER.info("aBundleId: " + aBundleId);
+                waitForCoordinatorJobCreation(oozieClient, aBundleId);
+                List<CoordinatorJob> coords = getBundleCoordinators(oozieClient, aBundleId);
+                LOGGER.info("coords: " + coords);
+                for (CoordinatorJob coord : coords) {
+                    if (coord.getAppName().contains(coordType)) {
+                        numberOfCoord++;
+                    }
                 }
             }
+            if (numberOfCoord > 0) {
+                return numberOfCoord;
+            }
+            TimeUtil.sleepSeconds(4);
         }
-        return numberOfCoord;
+        return 0;
     }
 
     /**

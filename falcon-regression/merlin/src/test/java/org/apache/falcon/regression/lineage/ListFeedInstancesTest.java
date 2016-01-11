@@ -69,8 +69,8 @@ public class ListFeedInstancesTest extends BaseTestClass {
     private String feedDataLocation = sourcePath + MINUTE_DATE_PATTERN;
     private String targetPath = baseTestHDFSDir + "/target";
     private String targetDataLocation = targetPath + MINUTE_DATE_PATTERN;
-    private final String startTime = "2010-01-02T00:00Z";
-    private final String endTime = "2010-01-02T00:57Z";
+    private final String startTime = "2015-01-02T00:00Z";
+    private final String endTime = "2015-01-02T00:57Z";
     private String feedName;
 
     @BeforeClass(alwaysRun = true)
@@ -210,7 +210,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         throws URISyntaxException, OozieClientException, JAXBException, AuthenticationException,
         IOException, InterruptedException {
         SoftAssert softAssert = new SoftAssert();
-        //orderBy start time, check an order
+        //orderBy start time, check on order
         InstancesResult r = prism.getFeedHelper().listInstances(feedName,
             "orderBy=startTime&sortOrder=desc", null);
         InstancesResult.Instance[] instances = r.getInstances();
@@ -223,7 +223,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
                 previousDate = (Date) current.clone();
             }
         }
-        //orderBy status, check an order
+        //orderBy status, check on order
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=12&orderBy=status&sortOrder=desc", null);
         InstanceUtil.validateResponse(r, 12, 1, 1, 8, 2);
@@ -235,7 +235,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
                 "Wrong order. Compared " + current + " and " + previousStatus + " statuses.");
             previousStatus = current;
         }
-        //sort by endTime, check an order
+        //sort by endTime, check on order
         r = prism.getFeedHelper().listInstances(feedName,
             "start=" + startTime + "&numResults=12&orderBy=endTime&sortOrder=desc", null);
         instances = r.getInstances();
@@ -252,7 +252,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
     }
 
     /**
-     * List instances through api using start/end parameters. Check a number of instances.
+     * Test the list feed instance api using start/end parameters. Check instances number.
      */
     @Test
     public void testFeedStartEnd()

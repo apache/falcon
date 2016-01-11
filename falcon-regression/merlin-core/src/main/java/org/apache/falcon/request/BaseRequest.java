@@ -45,6 +45,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -198,6 +199,8 @@ public class BaseRequest {
                     LOGGER.info(String.format("Request Header: Name=%s Value=%s", header.getName(),
                         header.getValue()));
                 }
+                // Must call this to release the connection
+                EntityUtils.consume(response.getEntity());
                 response = client.execute(target, request);
             }
         }

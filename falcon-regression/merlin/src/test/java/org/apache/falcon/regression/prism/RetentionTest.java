@@ -54,6 +54,7 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -181,10 +182,13 @@ public class RetentionTest extends BaseTestClass {
         JmsMessageConsumer messageConsumer = new JmsMessageConsumer("FALCON." + feedName,
                 cluster.getClusterHelper().getActiveMQ());
         messageConsumer.start();
-        final DateTime currentTime = new DateTime(DateTimeZone.UTC);
         String bundleId = OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0);
 
         List<String> workflows = OozieUtil.waitForRetentionWorkflowToSucceed(bundleId, clusterOC);
+
+        //get current time minus duration of last status check - to get actual time when eviction has started
+        final DateTime currentTime = new DateTime(new DateTime(DateTimeZone.UTC).toDate().getTime() - 10000);
+        LOGGER.info("Current time is " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentTime.toDate()));
         LOGGER.info("workflows: " + workflows);
         messageConsumer.interrupt();
         Util.printMessageData(messageConsumer);

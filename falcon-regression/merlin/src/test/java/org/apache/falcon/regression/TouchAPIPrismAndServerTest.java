@@ -105,6 +105,7 @@ public class TouchAPIPrismAndServerTest extends BaseTestClass {
 
         // via server
         oldbundleId = bundleId;
+        InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 1);
         coordId = OozieUtil.getLatestCoordinatorID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
         response = cluster.getProcessHelper().touchEntity(bundles[0].getProcessData());
         bundleId = OozieUtil.getLatestBundleID(clusterOC, bundles[0].getProcessName(), EntityType.PROCESS);
