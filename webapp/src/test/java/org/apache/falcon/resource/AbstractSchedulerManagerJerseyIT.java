@@ -27,6 +27,7 @@ import org.apache.falcon.state.AbstractSchedulerTestBase;
 import org.apache.falcon.state.store.service.FalconJPAService;
 import org.apache.falcon.unit.FalconUnitTestBase;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.LocalFileSystem;
@@ -88,7 +89,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
         configListeners.remove("org.apache.falcon.service.SharedLibraryHostingService");
         configListeners.add("org.apache.falcon.state.store.jdbc.JDBCStateStore");
         StartupProperties.get().setProperty("configstore.listeners", StringUtils.join(configListeners, ","));
-        StartupProperties.get().getProperty("falcon.state.store.impl",
+        StateStoreProperties.get().getProperty("falcon.state.store.impl",
                 "org.apache.falcon.state.store.jdbc.JDBCStateStore");
     }
 
@@ -119,7 +120,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
 
     private void createDB() throws Exception {
         AbstractSchedulerTestBase abstractSchedulerTestBase = new AbstractSchedulerTestBase();
-        StartupProperties.get().setProperty(FalconJPAService.URL, url);
+        StateStoreProperties.get().setProperty(FalconJPAService.URL, url);
         abstractSchedulerTestBase.createDB(DB_SQL_FILE);
     }
 

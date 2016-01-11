@@ -26,7 +26,7 @@ import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -47,7 +47,7 @@ public class WorkflowEngineFactoryTest extends AbstractTestBase {
     public void init() throws Exception {
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
-        StartupProperties.get().setProperty("falcon.state.store.impl",
+        StateStoreProperties.get().setProperty("falcon.state.store.impl",
                 "org.apache.falcon.state.store.InMemoryStateStore");
         setupConfigStore();
     }

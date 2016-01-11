@@ -24,7 +24,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.falcon.cli.CLIParser;
 import org.apache.falcon.state.store.service.FalconJPAService;
 import org.apache.falcon.util.BuildProperties;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -205,11 +205,11 @@ public class FalconStateStoreDBCLI {
 
     private Map<String, String> getJdbcConf() throws Exception {
         Map<String, String> jdbcConf = new HashMap<String, String>();
-        jdbcConf.put("driver", StartupProperties.get().getProperty(FalconJPAService.DRIVER));
-        String url = StartupProperties.get().getProperty(FalconJPAService.URL);
+        jdbcConf.put("driver", StateStoreProperties.get().getProperty(FalconJPAService.DRIVER));
+        String url = StateStoreProperties.get().getProperty(FalconJPAService.URL);
         jdbcConf.put("url", url);
-        jdbcConf.put("user", StartupProperties.get().getProperty(FalconJPAService.USERNAME));
-        jdbcConf.put("password", StartupProperties.get().getProperty(FalconJPAService.PASSWORD));
+        jdbcConf.put("user", StateStoreProperties.get().getProperty(FalconJPAService.USERNAME));
+        jdbcConf.put("password", StateStoreProperties.get().getProperty(FalconJPAService.PASSWORD));
         String dbType = url.substring("jdbc:".length());
         if (dbType.indexOf(":") <= 0) {
             throw new RuntimeException("Invalid JDBC URL, missing vendor 'jdbc:[VENDOR]:...'");

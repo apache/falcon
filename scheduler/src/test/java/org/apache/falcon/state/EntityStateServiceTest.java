@@ -26,7 +26,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.exception.InvalidStateTransitionException;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.state.store.AbstractStateStore;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -43,7 +43,7 @@ public class EntityStateServiceTest extends AbstractSchedulerTestBase{
 
     @BeforeClass
     public void setup() throws Exception {
-        StartupProperties.get().setProperty("falcon.state.store.impl",
+        StateStoreProperties.get().setProperty("falcon.state.store.impl",
                 "org.apache.falcon.state.store.InMemoryStateStore");
         super.setup();
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");

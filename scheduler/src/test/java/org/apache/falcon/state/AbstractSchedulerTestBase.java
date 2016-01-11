@@ -20,7 +20,7 @@ package org.apache.falcon.state;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.state.store.service.FalconJPAService;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
@@ -41,8 +41,7 @@ public class AbstractSchedulerTestBase extends AbstractTestBase {
     protected LocalFileSystem fs = new LocalFileSystem();
 
     public void setup() throws Exception {
-        StartupProperties.get();
-        StartupProperties.get().setProperty(FalconJPAService.URL, url);
+        StateStoreProperties.get().setProperty(FalconJPAService.URL, url);
         Configuration localConf = new Configuration();
         fs.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
         fs.mkdirs(new Path(DB_BASE_DIR));
