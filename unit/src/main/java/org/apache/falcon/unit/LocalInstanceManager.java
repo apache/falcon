@@ -59,9 +59,9 @@ public class LocalInstanceManager extends AbstractInstanceManager {
     public InstancesResult getStatusOfInstances(String type, String entity, String start, String end,
                                                 String colo, List<LifeCycle> lifeCycles, String filterBy,
                                                 String orderBy, String sortOrder, Integer offset,
-                                                Integer numResults) {
+                                                Integer numResults, Boolean allAttempts) {
         return super.getStatus(type, entity, start, end, colo, lifeCycles, filterBy, orderBy, sortOrder,
-                offset, numResults);
+                offset, numResults, allAttempts);
     }
 
     public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr, String colo,

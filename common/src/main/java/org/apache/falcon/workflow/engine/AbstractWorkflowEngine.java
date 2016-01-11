@@ -87,7 +87,7 @@ public abstract class AbstractWorkflowEngine {
                                                     List<LifeCycle> lifeCycles) throws FalconException;
 
     public abstract InstancesResult getStatus(Entity entity, Date start, Date end,
-                                              List<LifeCycle> lifeCycles) throws FalconException;
+                                              List<LifeCycle> lifeCycles, Boolean allAttempts) throws FalconException;
 
     public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
                                                       List<LifeCycle> lifeCycles) throws FalconException;

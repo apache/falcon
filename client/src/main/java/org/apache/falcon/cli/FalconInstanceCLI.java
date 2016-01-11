@@ -45,6 +45,7 @@ public class FalconInstanceCLI extends FalconCLI {
     private static final String KILL_OPT = "kill";
     private static final String RERUN_OPT = "rerun";
     private static final String LOG_OPT = "logs";
+    private static final String ALL_ATTEMPTS = "allAttempts";
     private static final String RUNID_OPT = "runid";
     private static final String CLUSTERS_OPT = "clusters";
     private static final String SOURCECLUSTER_OPT = "sourceClusters";
@@ -151,6 +152,8 @@ public class FalconInstanceCLI extends FalconCLI {
 
         Option instanceTime = new Option(INSTANCE_TIME_OPT, true, "Time for an instance");
 
+        Option allAttempts = new Option(ALL_ATTEMPTS, false, "To get all attempts of corresponding instances");
+
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);
         instanceOptions.addOption(start);
@@ -172,6 +175,7 @@ public class FalconInstanceCLI extends FalconCLI {
         instanceOptions.addOption(doAs);
         instanceOptions.addOption(debug);
         instanceOptions.addOption(instanceTime);
+        instanceOptions.addOption(allAttempts);
 
         return instanceOptions;
     }
@@ -224,10 +228,14 @@ public class FalconInstanceCLI extends FalconCLI {
             result = ResponseHelper.getString(client.getRunningInstances(type,
                     entity, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser));
         } else if (optionsList.contains(STATUS_OPT) || optionsList.contains(LIST_OPT)) {
+            boolean allAttempts = false;
+            if (optionsList.contains(ALL_ATTEMPTS)) {
+                allAttempts = true;
+            }
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
             result = ResponseHelper.getString(client.getStatusOfInstances(type, entity, start, end, colo,
-                    lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser));
+                    lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser, allAttempts));
         } else if (optionsList.contains(SUMMARY_OPT)) {
             validateOrderBy(orderBy, "summary");
             validateFilterBy(filterBy, "summary");

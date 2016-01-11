@@ -310,7 +310,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             InstancesResult instancesResult = getInstances(entity.getEntityType().name(), entity.getName(),
                     SchemaHelper.getDateFormat().format(startAndEndDates.first),
                     SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    colo, null, "", "", "", 0, numInstances);
+                    colo, null, "", "", "", 0, numInstances, null);
 
             /* ToDo - Use oozie bulk API after FALCON-591 is implemented
              *       getBulkInstances(entity, cluster,

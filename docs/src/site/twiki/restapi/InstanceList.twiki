@@ -25,6 +25,7 @@ Get list of all instances of a given entity.
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
    * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+   * allAttempts <optional query param> To get all the attempts for corresponding instances.
    
 ---++ Results
 List of instances of given entity.
@@ -96,5 +97,55 @@ GET http://localhost:15000/api/instance/list/process/SampleProcess?colo=*&start=
     "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
     "message": "default\/STATUS\n",
     "status": "SUCCEEDED"
+}
+</verbatim>
+
+
+---+++ Rest Call
+<verbatim>
+GET https://localhost:15443/api/instance/status/process/oozie-mr-process?user.name=narayan&start=2013-11-15T00:05Z&end=2013-11-15T01:00Z&colo=*&offset=0&allAttempts=true
+</verbatim>
+---+++ Result
+<verbatim>
+{
+   "status":"SUCCEEDED",
+   "message":"default/STATUS\n",
+   "requestId":"default/942519651@qtp-1386909980-16 - 5b11a8ba-402b-4cc7-969c-256e0ed18ae2\n",
+   "instances":[
+      {
+         "instance":"2013-11-15T00:05Z",
+         "status":"SUCCEEDED",
+         "logFile":"http://IM1948-X0:11000/oozie?job=0000010-160106121750678-oozie-oozi-W",
+         "cluster":"local",
+         "startTime":"2016-01-06T12:39:22+05:30",
+         "endTime":"2016-01-06T12:40:05+05:30",
+         "runId":0,
+         "details":"",
+         "actions":[
+            {
+               "action":"mr-node",
+               "status":"SUCCEEDED",
+               "logFile":"http://localhost:8088/proxy/application_1452062826344_0010/"
+            }
+         ]
+      },
+      {
+         "instance":"2013-11-15T00:05Z",
+         "status":"SUCCEEDED",
+         "logFile":"http://IM1948-X0:11000/oozie?job=0000011-160106121750678-oozie-oozi-W",
+         "cluster":"local",
+         "startTime":"2016-01-06T12:40:27+05:30",
+         "endTime":"2016-01-06T12:41:05+05:30",
+         "runId":0,
+         "details":"",
+         "actions":[
+            {
+               "action":"mr-node",
+               "status":"SUCCEEDED",
+               "logFile":"http://localhost:8088/proxy/application_1452062826344_0012/"
+            }
+         ]
+      }
+   ]
 }
 </verbatim>

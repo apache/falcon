@@ -161,10 +161,10 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @Override
-    public InstancesResult getStatusOfInstances(String type, String entity, String start, String end,
-                                                String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                                String orderBy, String sortOrder, Integer offset,
-                                                Integer numResults, String doAsUser) throws FalconCLIException {
+    public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
+                                                List<LifeCycle> lifeCycles, String filterBy, String orderBy,
+                                                String sortOrder, Integer offset, Integer numResults, String doAsUser,
+                                                Boolean allAttempts) throws FalconCLIException {
         if (orderBy == null) {
             orderBy = DEFAULT_ORDERBY;
         }
@@ -178,7 +178,7 @@ public class FalconUnitClient extends AbstractFalconClient {
             numResults = 1;
         }
         return localInstanceManager.getStatusOfInstances(type, entity, start, end, colo, lifeCycles, filterBy, orderBy,
-                sortOrder, offset, numResults);
+                sortOrder, offset, numResults, allAttempts);
 
     }
 
@@ -228,7 +228,7 @@ public class FalconUnitClient extends AbstractFalconClient {
         Date endTimeDate = DateUtil.getNextMinute(startTime);
         String endTime = DateUtil.getDateFormatFromTime(endTimeDate.getTime());
         InstancesResult instancesResult = getStatusOfInstances(entityType, entityName, nominalTime, endTime, null,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
         if (instancesResult.getInstances() != null && instancesResult.getInstances().length > 0
                 && instancesResult.getInstances()[0] != null) {
             LOG.info("Instance status is " + instancesResult.getInstances()[0].getStatus());

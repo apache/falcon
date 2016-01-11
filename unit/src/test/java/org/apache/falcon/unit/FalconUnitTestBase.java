@@ -372,9 +372,8 @@ public class FalconUnitTestBase {
         String startTime = DateUtil.getDateFormatFromTime(startTimeInMillis);
         List<LifeCycle> lifecycles = new ArrayList<>();
         lifecycles.add(LifeCycle.EVICTION);
-        InstancesResult result = falconUnitClient.getStatusOfInstances("feed",
-                feedName, startTime, endTime, cluster,
-                lifecycles, null, "status", "asc", 0, 1, null);
+        InstancesResult result = falconUnitClient.getStatusOfInstances("feed", feedName, startTime, endTime, cluster,
+                lifecycles, null, "status", "asc", 0, 1, null, null);
         if (result.getInstances() != null && result.getInstances().length > 0) {
             return result.getInstances()[0].getStatus();
         }

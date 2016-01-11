@@ -492,14 +492,13 @@ public class FalconClient extends AbstractFalconClient {
                 .getEntity(InstancesResult.class);
     }
 
-    public InstancesResult getStatusOfInstances(String type, String entity,
-                                       String start, String end,
-                                       String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                       String orderBy, String sortOrder,
-                                       Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
-
+    @Override
+    public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
+                                                List<LifeCycle> lifeCycles, String filterBy, String orderBy,
+                                                String sortOrder, Integer offset, Integer numResults, String doAsUser,
+                                                Boolean allAttempts) throws FalconCLIException {
         return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
-                null, null, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser)
+                null, null, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser, allAttempts)
                 .getEntity(InstancesResult.class);
     }
 
@@ -721,7 +720,7 @@ public class FalconClient extends AbstractFalconClient {
                                             String fields, String nameSubsequence, String tagKeywords, String filterBy,
                                             String tags, String orderBy, String sortOrder, Integer offset,
                                             Integer numResults, Integer numInstances, Boolean isForced,
-                                            String doAsUser) {
+                                            String doAsUser, Boolean allAttempts) {
         if (StringUtils.isNotEmpty(fields)) {
             resource = resource.queryParam("fields", fields);
         }
@@ -771,6 +770,9 @@ public class FalconClient extends AbstractFalconClient {
         if (StringUtils.isNotEmpty(doAsUser)) {
             resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
         }
+        if (allAttempts != null) {
+            resource = resource.queryParam("allAttempts", String.valueOf(allAttempts));
+        }
         return resource;
 
     }
@@ -788,7 +790,7 @@ public class FalconClient extends AbstractFalconClient {
         resource = addParamsToResource(resource, start, end, null, null,
                 fields, null, null, filterBy, filterTags,
                 orderBy, sortOrder,
-                offset, numResults, numInstances, null, doAsUser);
+                offset, numResults, numInstances, null, doAsUser, false);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -898,7 +900,7 @@ public class FalconClient extends AbstractFalconClient {
                                        String runid, String colo,
                                        List<LifeCycle> lifeCycles, String doAsUser) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", "", 0, null, doAsUser)
+                runid, colo, lifeCycles, "", "", "", 0, null, doAsUser, null)
                 .getEntity(InstancesResult.class);
     }
 
@@ -907,10 +909,9 @@ public class FalconClient extends AbstractFalconClient {
                                                 String runid, String colo, List<LifeCycle> lifeCycles,
                                                 Boolean isForced, String doAsUser) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", "", 0, null, isForced, doAsUser).getEntity(InstancesResult.class);
+                runid, colo, lifeCycles, "", "", "", 0, null, isForced, doAsUser,
+                null).getEntity(InstancesResult.class);
     }
-
-
 
     private ClientResponse sendInstanceRequest(Instances instances, String type, String entity,
                                        String start, String end, InputStream props, String runid, String colo,
@@ -918,20 +919,30 @@ public class FalconClient extends AbstractFalconClient {
                                        Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
 
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, null, doAsUser);
+                runid, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, null, doAsUser, null);
+    }
+
+    private ClientResponse sendInstanceRequest(Instances instances, String type, String entity, String start,
+                                               String end, InputStream props, String runid, String colo,
+                                               List<LifeCycle> lifeCycles, String filterBy, String orderBy,
+                                               String sortOrder, Integer offset, Integer numResults, String doAsUser,
+                                               Boolean allAttempts) throws FalconCLIException {
+        return sendInstanceRequest(instances, type, entity, start, end, props, runid, colo, lifeCycles, filterBy,
+                orderBy, sortOrder, offset, numResults, null, doAsUser, allAttempts);
     }
 
     private ClientResponse sendInstanceRequest(Instances instances, String type, String entity,
                                        String start, String end, InputStream props, String runid, String colo,
                                        List<LifeCycle> lifeCycles, String filterBy, String orderBy,
                                        String sortOrder, Integer offset, Integer numResults, Boolean isForced,
-                                       String doAsUser) throws FalconCLIException {
+                                       String doAsUser, Boolean allAttempts) throws FalconCLIException {
         checkType(type);
         WebResource resource = service.path(instances.path).path(type)
                 .path(entity);
 
         resource = addParamsToResource(resource, start, end, runid, colo,
-                null, null, null, filterBy, null, orderBy, sortOrder, offset, numResults, null, isForced, doAsUser);
+                null, null, null, filterBy, null, orderBy, sortOrder, offset, numResults, null, isForced, doAsUser,
+                allAttempts);
 
         if (lifeCycles != null) {
             checkLifeCycleOption(lifeCycles, type);
@@ -1037,7 +1048,7 @@ public class FalconClient extends AbstractFalconClient {
         WebResource resource = service.path(entities.path)
                 .path(entityType);
         resource = addParamsToResource(resource, null, null, null, null, fields, nameSubsequence, tagKeywords,
-                filterBy, filterTags, orderBy, sortOrder, offset, numResults, null, null, doAsUser);
+                filterBy, filterTags, orderBy, sortOrder, offset, numResults, null, null, doAsUser, false);
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)

@@ -12,6 +12,8 @@ Proposed Release Version: 0.9
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
+
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1679 API to get type of scheduler(native/oozie) (Pallavi Rao)

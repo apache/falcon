@@ -124,7 +124,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -139,7 +139,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         String endTime = "2012-04-20T00:02Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
                 context.processName, START_INSTANCE, endTime, context.colo, null, "STATUS:RUNNING", "startTime",
-                "", 0, new Integer(1), null);
+                "", 0, new Integer(1), null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -157,14 +157,14 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.KILLED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(), context.processName,
-                START_INSTANCE, endTime, context.colo, null, "STATUS:KILLED", "startTime", "", 0, 1, null);
+                START_INSTANCE, endTime, context.colo, null, "STATUS:KILLED", "startTime", "", 0, 1, null, null);
 
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
@@ -183,7 +183,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.KILLED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -194,7 +194,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -213,7 +213,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.SUSPENDED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -232,7 +232,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.SUSPENDED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -243,7 +243,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);

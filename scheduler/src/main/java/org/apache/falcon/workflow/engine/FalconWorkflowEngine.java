@@ -386,8 +386,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public InstancesResult getStatus(Entity entity, Date start, Date end,
-                                     List<LifeCycle> lifeCycles) throws FalconException {
+    public InstancesResult getStatus(Entity entity, Date start, Date end, List<LifeCycle> lifeCycles,
+                                     Boolean allAttempts) throws FalconException {
         return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
     }
 

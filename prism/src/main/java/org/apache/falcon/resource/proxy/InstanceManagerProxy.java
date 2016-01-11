@@ -175,14 +175,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @QueryParam("numResults") Integer numResults) {
+            @QueryParam("numResults") Integer numResults,
+            @Dimension("allAttempts") @QueryParam("allAttempts") final Boolean allAttempts) {
         final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getInstances",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
             }
         }.execute(colo, type, entity);
     }
@@ -227,14 +228,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @QueryParam("numResults") final Integer numResults) {
+            @QueryParam("numResults") final Integer numResults,
+            @Dimension("allAttempts") @QueryParam("allAttempts") final Boolean allAttempts) {
         final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
             }
         }.execute(colo, type, entity);
     }

@@ -575,9 +575,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public InstancesResult getStatus(Entity entity, Date start, Date end,
-                                     List<LifeCycle> lifeCycles) throws FalconException {
+                                     List<LifeCycle> lifeCycles, Boolean allAttempts) throws FalconException {
 
-        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
+        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles, allAttempts);
     }
 
     @Override
@@ -624,8 +624,21 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private List<WorkflowJob> getWfsForCoordAction(String cluster, String coordActionId) throws FalconException {
+        try {
+            return OozieClientFactory.get(cluster).getWfsForCoordAction(coordActionId);
+        } catch (OozieClientException e) {
+            throw new FalconException(e);
+        }
+    }
+
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(action, entity, start, end, props, lifeCycles, null);
+    }
+
+    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end, Properties props,
+                                        List<LifeCycle> lifeCycles, Boolean allAttempts) throws FalconException {
         Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end, lifeCycles);
         List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
         List<String> sourceClusterList = getIncludedClusters(props, FALCON_INSTANCE_SOURCE_CLUSTERS);
@@ -650,20 +663,39 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 }
                 instanceCount++;
                 String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
-
+                List<InstancesResult.Instance> instanceList = new ArrayList<>();
                 InstancesResult.Instance instance =
                         new InstancesResult.Instance(cluster, nominalTimeStr, null);
                 instance.sourceCluster = sourceCluster;
-                try {
-                    performAction(cluster, action, coordinatorAction, props, instance);
-                } catch (FalconException e) {
-                    LOG.warn("Unable to perform action {} on cluster", action, e);
-                    instance.status = WorkflowStatus.ERROR;
-                    overallStatus = APIResult.Status.PARTIAL;
+                if (action.equals(JobAction.STATUS) && Boolean.TRUE.equals(allAttempts)) {
+                    try {
+                        performAction(cluster, action, coordinatorAction, props, instance);
+                        if (instance.getRunId() > 0) {
+                            instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
+                        } else {
+                            instanceList.add(instance);
+                        }
+                    } catch (FalconException e) {
+                        LOG.warn("Unable to perform action {} on cluster", action, e);
+                        instance.status = WorkflowStatus.ERROR;
+                        overallStatus = APIResult.Status.PARTIAL;
+                    }
+                    for (InstancesResult.Instance instanceResult : instanceList) {
+                        instanceResult.details = coordinatorAction.getMissingDependencies();
+                        instanceResult.sourceCluster = sourceCluster;
+                        instances.add(instanceResult);
+                    }
+                } else {
+                    try {
+                        performAction(cluster, action, coordinatorAction, props, instance);
+                    } catch (FalconException e) {
+                        LOG.warn("Unable to perform action {} on cluster", action, e);
+                        instance.status = WorkflowStatus.ERROR;
+                        overallStatus = APIResult.Status.PARTIAL;
+                    }
+                    instance.details = coordinatorAction.getMissingDependencies();
+                    instances.add(instance);
                 }
-
-                instance.details = coordinatorAction.getMissingDependencies();
-                instances.add(instance);
             }
         }
         if (instanceCount < 2 && overallStatus == APIResult.Status.PARTIAL) {
@@ -755,6 +787,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         List<InstancesResult.InstanceAction> instanceActions = new ArrayList<InstancesResult.InstanceAction>();
 
         List<WorkflowAction> wfActions = wfJob.getActions();
+
         // We wanna capture job urls for all user-actions & non succeeded actions of the main workflow
         for (WorkflowAction action : wfActions) {
             if (action.getType().equalsIgnoreCase("sub-workflow") && StringUtils.isNotEmpty(action.getExternalId())) {
@@ -816,6 +849,29 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private List<InstancesResult.Instance> getAllInstances(String cluster, CoordinatorAction coordinatorAction,
+                                                           String nominalTimeStr) throws FalconException {
+        List<InstancesResult.Instance> instanceList = new ArrayList<>();
+        if (StringUtils.isNotBlank(coordinatorAction.getExternalId())) {
+            List<WorkflowJob> workflowJobList = getWfsForCoordAction(cluster, coordinatorAction.getExternalId());
+            if (workflowJobList != null && workflowJobList.size()>0) {
+                for (WorkflowJob workflowJob : workflowJobList) {
+                    InstancesResult.Instance newInstance = new InstancesResult.Instance(cluster, nominalTimeStr, null);
+                    WorkflowJob wfJob = getWorkflowInfo(cluster, workflowJob.getId());
+                    if (wfJob!=null) {
+                        newInstance.startTime = wfJob.getStartTime();
+                        newInstance.endTime = wfJob.getEndTime();
+                        newInstance.logFile = wfJob.getConsoleUrl();
+                        populateInstanceActions(cluster, wfJob, newInstance);
+                        newInstance.status = WorkflowStatus.valueOf(mapActionStatus(wfJob.getStatus().name()));
+                        instanceList.add(newInstance);
+                    }
+                }
+            }
+        }
+        return instanceList;
+    }
+
     private void performAction(String cluster, JobAction action, CoordinatorAction coordinatorAction,
         Properties props, InstancesResult.Instance instance) throws FalconException {
         WorkflowJob jobInfo = null;
@@ -826,6 +882,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             instance.startTime = jobInfo.getStartTime();
             instance.endTime = jobInfo.getEndTime();
             instance.logFile = jobInfo.getConsoleUrl();
+            instance.runId = jobInfo.getRun();
         }
 
         switch (action) {

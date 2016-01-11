@@ -25,6 +25,7 @@ Get status of a specific instance of an entity.
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
    * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+   * allAttempts <optional query param> To get all the attempts for corresponding instances.
    
 ---++ Results
 Status of the specified instance along with job urls for all actions of user workflow and non-succeeded actions of the main-workflow.

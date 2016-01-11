@@ -81,10 +81,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage,
+            @Dimension("allAttempts") @QueryParam("allAttempts") Boolean allAttempts) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
     }
 
     @GET
@@ -103,10 +104,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage) {
+            @QueryParam("numResults") Integer resultsPerPage,
+            @Dimension("allAttempts") @QueryParam("allAttempts") Boolean allAttempts) {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
     }
 
     @GET
