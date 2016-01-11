@@ -17,27 +17,34 @@
  */
 package org.apache.falcon.notification.service.request;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.execution.NotificationHandler;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.state.ID;
 import org.apache.hadoop.fs.Path;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Request intended for {@link import org.apache.falcon.notification.service.impl.DataAvailabilityService}
  * for data notifications.
  * The setter methods of the class support chaining similar to a builder class.
- * TODO : Complete/modify this skeletal class
  */
-public class DataNotificationRequest extends NotificationRequest {
-    private final Path dataLocation;
+public class DataNotificationRequest extends NotificationRequest implements Delayed {
+    // Boolean represents path availability to avoid checking all paths for every poll.
+    private Map<Path, Boolean> locations;
+    private long pollingFrequencyInMillis;
+    private long timeoutInMillis;
     private String cluster;
+    private long accessTimeInMillis;
+    private long createdTimeInMillis;
+    // Represents request was accessed by DataAvailability service first time or not.
+    private boolean isFirst;
 
-    /**
-     * @return data location to be watched.
-     */
-    public Path getDataLocation() {
-        return dataLocation;
-    }
 
     /**
      * Given a number of instances, should the service wait for exactly those many,
@@ -53,27 +60,106 @@ public class DataNotificationRequest extends NotificationRequest {
      * Constructor.
      * @param notifHandler
      * @param callbackId
+     * @param cluster
+     * @param pollingFrequencyInMillis
+     * @param timeoutInMillis
+     * @param locations
      */
-    public DataNotificationRequest(NotificationHandler notifHandler, ID callbackId, Path location) {
+    public DataNotificationRequest(NotificationHandler notifHandler, ID callbackId,
+                                   String cluster, long pollingFrequencyInMillis,
+                                   long timeoutInMillis, Map<Path, Boolean> locations) {
         this.handler = notifHandler;
         this.callbackId = callbackId;
-        this.dataLocation = location;
         this.service = NotificationServicesRegistry.SERVICE.DATA;
+        this.cluster = cluster;
+        this.pollingFrequencyInMillis = pollingFrequencyInMillis;
+        this.timeoutInMillis = timeoutInMillis;
+        this.locations = locations;
+        this.accessTimeInMillis = System.currentTimeMillis();
+        this.createdTimeInMillis = accessTimeInMillis;
+        this.isFirst = true;
     }
 
-    /**
-     * @return cluster name
-     */
+
+    public void accessed() {
+        this.accessTimeInMillis = System.currentTimeMillis();
+    }
+
     public String getCluster() {
         return cluster;
     }
 
-    /**
-     * @param clusterName
-     * @return This instance
-     */
-    public DataNotificationRequest setCluster(String clusterName) {
-        this.cluster = clusterName;
-        return this;
+
+    public boolean isTimedout() {
+        long currentTimeInMillis = System.currentTimeMillis();
+        if (currentTimeInMillis - createdTimeInMillis > timeoutInMillis) {
+            return true;
+        }
+        return false;
     }
+
+
+    /**
+     * Obtain list of paths from locations map.
+     * @return List of paths to check.
+     */
+    public List<Path> getLocations() {
+        if (this.locations == null) {
+            return null;
+        }
+        List<Path> paths = new ArrayList<>();
+        for (Path path : this.locations.keySet()) {
+            paths.add(path);
+        }
+        return paths;
+    }
+
+    /**
+     * @return Map of locations and their availabilities.
+     */
+    public Map<Path, Boolean> getLocationMap() {
+        return this.locations;
+    }
+
+    @Override
+    public long getDelay(TimeUnit unit) {
+        if (isFirst) {
+            this.isFirst = false;
+            return 0;
+        }
+        long age = System.currentTimeMillis() - accessTimeInMillis;
+        return unit.convert(pollingFrequencyInMillis - age, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public int compareTo(Delayed other) {
+        return (int) (this.getDelay(TimeUnit.MILLISECONDS) - other.getDelay(TimeUnit.MILLISECONDS));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DataNotificationRequest that = (DataNotificationRequest) o;
+        if (!StringUtils.equals(cluster, that.cluster)) {
+            return false;
+        }
+        if (!locations.equals(that.locations)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = cluster.hashCode();
+        result = 31 * result + (locations != null ? locations.hashCode() : 0);
+        return result;
+    }
+
+
 }

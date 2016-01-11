@@ -17,8 +17,8 @@
  */
 package org.apache.falcon.predicate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.execution.NotificationHandler;
 import org.apache.falcon.notification.service.event.DataEvent;
 import org.apache.falcon.notification.service.event.Event;
@@ -26,6 +26,7 @@ import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.RerunEvent;
 import org.apache.falcon.notification.service.event.TimeElapsedEvent;
 import org.apache.falcon.state.ID;
+import org.apache.hadoop.fs.Path;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -158,14 +159,14 @@ public class Predicate implements Serializable {
     /**
      * Creates a predicate of type DATA.
      *
-     * @param location
+     * @param paths List of paths to check
      * @return
      */
-    public static Predicate createDataPredicate(Location location) {
+    public static Predicate createDataPredicate(List<Path> paths) {
         return new Predicate(TYPE.DATA)
-                .addClause("path", (location == null) ? ANY : location.getPath())
-                .addClause("type", (location == null) ? ANY : location.getType());
+                .addClause("path", StringUtils.join(paths, ","));
     }
+
 
     /**
      * Creates a predicate of type JOB_COMPLETION.
@@ -202,11 +203,8 @@ public class Predicate implements Serializable {
     public static Predicate getPredicate(Event event) throws FalconException {
         if (event.getType() == EventType.DATA_AVAILABLE) {
             DataEvent dataEvent = (DataEvent) event;
-            if (dataEvent.getDataLocation() != null && dataEvent.getDataType() != null) {
-                Location loc = new Location();
-                loc.setPath(dataEvent.getDataLocation().toString());
-                loc.setType(dataEvent.getDataType());
-                return createDataPredicate(loc);
+            if (dataEvent.getDataLocations() != null) {
+                return createDataPredicate(dataEvent.getDataLocations());
             } else {
                 throw new FalconException("Event does not have enough data to create a predicate");
             }

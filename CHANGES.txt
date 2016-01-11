@@ -12,6 +12,8 @@ Proposed Release Version: 0.9
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1679 API to get type of scheduler(native/oozie) (Pallavi Rao)
 
     FALCON-1645 Ability to export to database(Venkat Ramachandran via Balu Vellanki)
