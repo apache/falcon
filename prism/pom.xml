@@ -265,15 +265,17 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.enunciate</groupId>
-                <artifactId>maven-enunciate-plugin</artifactId>
-                <version>1.30.1</version>
+                <groupId>com.webcohesion.enunciate</groupId>
+                <artifactId>enunciate-maven-plugin</artifactId>
+                <version>2.1.1</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>docs</goal>
                         </goals>
                         <configuration>
+                            <source>1.7</source>
+                            <target>1.7</target>
                             <configFile>enunciate.xml</configFile>
                             <!-- the directory where to put the docs -->
                             <docsDir>${project.build.directory}/restapi/docs</docsDir>

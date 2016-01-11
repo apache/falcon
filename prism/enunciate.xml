@@ -16,27 +16,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<enunciate label="falcon" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.25.xsd">
+<enunciate slug="falcon" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-2.0.0-M.4.xsd">
     <namespaces>
         <namespace uri="https://git-wip-us.apache.org/repos/asf/falcon.git" id="falcon"/>
     </namespaces>
-    <services>
-        <rest defaultRestSubcontext="/api" >
-            <custom-resource-parameter-annotation qualifiedName="org.glassfish.jersey.media.multipart.FormDataParam"/>
-        </rest>
-        <api-import pattern="org.apache.falcon.resource.admin.AdminResource" />
-        <api-import pattern="org.apache.falcon.resource.proxy.InstanceManagerProxy" />
-        <api-import pattern="org.apache.falcon.resource.proxy.SchedulableEntityManagerProxy" />
-        <api-import pattern="org.apache.falcon.resource.metadata.LineageMetadataResource" />
-        <api-import pattern="org.apache.falcon.resource.metadata.MetadataDiscoveryResource" />
-    </services>
-
     <modules>
-        <docs docsDir="docs" title="Falcon Server REST API"/>
+        <api-classes>
+            <include pattern="org.apache.falcon.resource.admin.AdminResource" />
+            <include pattern="org.apache.falcon.resource.proxy.InstanceManagerProxy" />
+            <include pattern="org.apache.falcon.resource.proxy.SchedulableEntityManagerProxy" />
+            <include pattern="org.apache.falcon.resource.metadata.LineageMetadataResource" />
+            <include pattern="org.apache.falcon.resource.metadata.MetadataDiscoveryResource" />
+        </api-classes>
+        <docs/>
         <csharp disabled="true"/>
         <c disabled="true"/>
         <obj-c disabled="true"></obj-c>
+        <java-json-client disabled="true"/>
     </modules>
 </enunciate>
