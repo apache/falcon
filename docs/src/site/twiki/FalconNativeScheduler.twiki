@@ -167,3 +167,47 @@ Currently, user will have to delete and re-create entities in order to move acro
 <verbatim>$FALCON_HOME/bin/falcon entity -type process -submit <path to process xml> </verbatim>
    * Schedule the entity on the default scheduler (Oozie).
  <verbatim> $FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule </verbatim>
+
+---+++ Differences in API responses between Oozie and Native Scheduler
+Most API responses are similar whether the entity is scheduled via Oozie or via Native scheduler. However, there are a few exceptions and those are listed below.
+---++++ Rerun API
+When a user performs a rerun using Oozie scheduler, Falcon directly reruns the workflow on Oozie and the instance will be moved to 'RUNNING'.
+
+Example response:
+<verbatim>
+$ falcon instance -rerun processMerlinOozie -start 2016-01-08T12:13Z -end 2016-01-08T12:15Z
+Consolidated Status: SUCCEEDED
+
+Instances:
+Instance		Cluster		SourceCluster		Status		Start		End		Details					Log
+-----------------------------------------------------------------------------------------------
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-9706f068	-	RUNNING	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://8RPCG32.corp.inmobi.com:11000/oozie?job=0001811-160104160825636-oozie-oozi-W
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-0b270a1d	-	RUNNING	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://lda01:11000/oozie?job=0002247-160104115615658-oozie-oozi-W
+
+Additional Information:
+Response: ua1/RERUN
+ua2/RERUN
+Request Id: ua1/871377866@qtp-630572412-35 - 7190c4c8-bacb-4639-8d48-c9e639f544da
+ua2/1554129706@qtp-536122141-13 - bc18127b-1bf8-4ea1-99e6-b1f10ba3a441
+</verbatim>
+
+However, when a user performs a rerun on native scheduler, the instance is scheduled again. This is done intentionally so as to not violate the number of instances running in parallel.  Hence, the user will see the status of the instance as 'READY'.
+
+Example response:
+<verbatim>
+$ falcon instance -rerun ProcessMultipleClustersTest-agregator-coord16-8f55f59b -start 2016-01-08T12:13Z -end 2016-01-08T12:15Z
+Consolidated Status: SUCCEEDED
+
+Instances:
+Instance		Cluster		SourceCluster		Status		Start		End		Details					Log
+-----------------------------------------------------------------------------------------------
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-9706f068	-	READY	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://8RPCG32.corp.inmobi.com:11000/oozie?job=0001812-160104160825636-oozie-oozi-W
+
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-0b270a1d	-	READY	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://lda01:11000/oozie?job=0002248-160104115615658-oozie-oozi-W
+
+Additional Information:
+Response: ua1/RERUN
+ua2/RERUN
+Request Id: ua1/871377866@qtp-630572412-35 - 8d118d4d-c0ef-4335-a9af-10364498ec4f
+ua2/1554129706@qtp-536122141-13 - c2a3fc50-8b05-47ce-9c85-ca432b96d923
+</verbatim>
