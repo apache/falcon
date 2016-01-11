@@ -24,7 +24,7 @@ import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
 import org.apache.falcon.util.ReflectionUtils;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +79,7 @@ public abstract class AbstractStateStore implements StateStore, ConfigurationCha
      */
     public static synchronized StateStore get() {
         if (stateStore == null) {
-            String storeImpl = StartupProperties.get().getProperty("falcon.state.store.impl",
+            String storeImpl = StateStoreProperties.get().getProperty("falcon.state.store.impl",
                     "org.apache.falcon.state.store.InMemoryStateStore");
             try {
                 stateStore = ReflectionUtils.getInstanceByClassName(storeImpl);

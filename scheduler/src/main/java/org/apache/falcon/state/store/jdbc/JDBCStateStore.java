@@ -30,7 +30,7 @@ import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
 import org.apache.falcon.state.store.service.FalconJPAService;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.joda.time.DateTime;
 
 import javax.persistence.EntityManager;
@@ -444,7 +444,7 @@ public final class JDBCStateStore extends AbstractStateStore {
 
     // Debug enabled for test cases
     private boolean isModeDebug() {
-        return DEBUG.equals(StartupProperties.get().getProperty("domain")) ? true : false;
+        return DEBUG.equals(StateStoreProperties.get().getProperty("domain")) ? true : false;
     }
 
     private void commitAndCloseTransaction(EntityManager entityManager) {

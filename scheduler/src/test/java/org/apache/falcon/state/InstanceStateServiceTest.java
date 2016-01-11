@@ -23,7 +23,7 @@ import org.apache.falcon.exception.InvalidStateTransitionException;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ProcessExecutionInstance;
 import org.apache.falcon.state.store.AbstractStateStore;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -43,7 +43,7 @@ public class InstanceStateServiceTest {
 
     @BeforeClass
     public void init() {
-        StartupProperties.get().setProperty("falcon.state.store.impl",
+        StateStoreProperties.get().setProperty("falcon.state.store.impl",
                 "org.apache.falcon.state.store.InMemoryStateStore");
     }
 

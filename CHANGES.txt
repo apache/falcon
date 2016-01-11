@@ -46,6 +46,8 @@ Proposed Release Version: 0.9
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1601 Make Falcon StateStore more secure by not disclosing imp params in startup.props(Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1705 Standardization of error handling in falcon Server(Praveen Adlakha via Ajay Yadava)
 
     FALCON-1640 Cascading Delete for instances in Native Scheduler(Pavan Kumar Kolamuri via Ajay Yadava)
