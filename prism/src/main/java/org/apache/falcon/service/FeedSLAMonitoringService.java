@@ -80,7 +80,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         return SERVICE;
     }
 
-    private int queueSize;
+    protected int queueSize;
 
     /**
      * Permissions for storePath.
@@ -90,7 +90,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     /**
      * Feeds to be monitored.
      */
-    private Set<String> monitoredFeeds;
+    protected Set<String> monitoredFeeds;
 
 
     /**
@@ -340,7 +340,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =
                             EntityUtil.getEntity(EntityType.CLUSTER, feedCluster.getName());
                     nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
-                    while (nextInstanceTime.before(to)) {
+                    Date endDate = FeedHelper.getClusterValidity(feed, currentCluster.getName()).getEnd();
+                    while (nextInstanceTime.before(to) && nextInstanceTime.before(endDate)) {
                         if (instances.size() >= queueSize) { // if no space, first make some space
                             LOG.debug("Removing instance={} for <feed,cluster>={}", instances.peek(), key);
                             exists.remove(instances.peek());
