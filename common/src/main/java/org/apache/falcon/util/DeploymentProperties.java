@@ -31,7 +31,7 @@ public final class DeploymentProperties extends ApplicationProperties {
     private static final String PROPERTY_FILE = "deploy.properties";
 
     private static final AtomicReference<DeploymentProperties> INSTANCE =
-            new AtomicReference<DeploymentProperties>();
+            new AtomicReference<>();
 
     private DeploymentProperties() throws FalconException {
         super();

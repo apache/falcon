@@ -929,6 +929,22 @@ public class FeedHelperTest extends AbstractTestBase {
         Assert.assertEquals(startInstResult, feed.getClusters().getClusters().get(0).getValidity().getStart());
     }
 
+    @Test
+    public void testGetFeedClusterValidity() throws  Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "hours(1)",  "2012-02-07 00:00 UTC", "2020-02-25 00:00 UTC");
+        Validity validity = FeedHelper.getClusterValidity(feed, cluster.getName());
+        Assert.assertEquals(validity.getStart(), getDate("2012-02-07 00:00 UTC"));
+        Assert.assertEquals(validity.getEnd(), getDate("2020-02-25 00:00 UTC"));
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testGetClusterValidityInvalidCluster() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "hours(1)",  "2012-02-07 00:00 UTC", "2020-02-25 00:00 UTC");
+        FeedHelper.getClusterValidity(feed, "abracadabra");
+    }
+
     private Validity getFeedValidity(String start, String end) throws ParseException {
         Validity validity = new Validity();
         validity.setStart(getDate(start));

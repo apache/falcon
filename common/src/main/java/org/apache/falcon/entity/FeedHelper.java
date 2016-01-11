@@ -42,6 +42,7 @@ import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -1126,6 +1127,14 @@ public final class FeedHelper {
             argsMap.put(p.getName().toLowerCase(), p.getValue());
         }
         return argsMap;
+    }
+
+    public static Validity getClusterValidity(Feed feed, String clusterName) throws FalconException {
+        Cluster cluster = getCluster(feed, clusterName);
+        if (cluster == null) {
+            throw new FalconException("Invalid cluster: " + clusterName + " for feed: " + feed.getName());
+        }
+        return cluster.getValidity();
     }
 
     public static Frequency getOldRetentionFrequency(Feed feed) {
