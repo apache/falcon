@@ -56,9 +56,4 @@ public class FalconConnectionCommands extends BaseFalconCommands {
         }
         setClientProperty(key, value);
     }
-
-    @CliCommand(value = "throw", help = "throw exception")
-    public void throwException() throws FalconCLIException {
-        throw new FalconCLIException("Random Exception");
-    }
 }

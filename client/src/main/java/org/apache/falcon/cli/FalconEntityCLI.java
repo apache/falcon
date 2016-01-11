@@ -45,12 +45,12 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String SUBMIT_OPT = "submit";
     public static final String SUBMIT_OPT_DESCRIPTION = "Submits an entity xml to Falcon";
     public static final String UPDATE_OPT = "update";
-    public static final String UPDATE_OPT_DESCRIPTION = "Updates an existing entity xml";
+    public static final String UPDATE_OPT_DESCRIPTION = "Updates an existing entity";
     public static final String DELETE_OPT = "delete";
     public static final String DELETE_OPT_DESCRIPTION = "Deletes an entity in Falcon, and kills its instance from workflow engine";
     public static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
     public static final String SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION
-            = "Submits and entity to Falcon and schedules it immediately";
+            = "Submits an entity to Falcon and schedules it immediately";
     public static final String VALIDATE_OPT = "validate";
     public static final String VALIDATE_OPT_DESCRIPTION = "Validates an entity based on the entity type";
     public static final String DEFINITION_OPT = "definition";
