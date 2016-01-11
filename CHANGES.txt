@@ -99,6 +99,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1735 FalconException shouldn't be caught in AbstractRerunHandler in case of obtaining Workflow engine from entity(Pavan Kumar Kolamuri via Ajay Yadava)
+
     FALCON-1678 SLA Monitoring does not honour entity end date(Ajay Yadava)
 
     FALCON-1708  params API does not take start as a mandatory option(Praveen Adlakha via Ajay Yadava)

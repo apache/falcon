@@ -60,17 +60,13 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
                                      String wfId, String workflowUser, long msgReceivedTime);
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    public AbstractWorkflowEngine getWfEngine(String entityType, String entityName) {
+    public AbstractWorkflowEngine getWfEngine(String entityType, String entityName) throws FalconException {
         if (StringUtils.isBlank(entityType) || StringUtils.isBlank(entityName)) {
             return wfEngine;
         }
-        try {
-            Entity entity = EntityUtil.getEntity(EntityType.valueOf(entityType), entityName);
-            return WorkflowEngineFactory.getWorkflowEngine(entity);
-        } catch (FalconException e) {
-            // Just to make sure of backward compatibility in case of any exceptions.
-            return wfEngine;
-        }
+        Entity entity = EntityUtil.getEntity(EntityType.valueOf(entityType), entityName);
+        return WorkflowEngineFactory.getWorkflowEngine(entity);
+
     }
 
     public boolean offerToQueue(T event) throws FalconException {
