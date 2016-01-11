@@ -60,7 +60,7 @@ public class MirrorSummaryTest extends BaseUITestClass{
         baseMap.put(Summary.MAX_BANDWIDTH, "100");
         baseMap.put(Summary.ACL_OWNER, LoginPage.UI_DEFAULT_USER);
         baseMap.put(Summary.ACL_GROUP, "users");
-        baseMap.put(Summary.ACL_PERMISSIONS, "0x755");
+        baseMap.put(Summary.ACL_PERMISSIONS, "0755");
         baseMap.put(Summary.RETRY_POLICY, "periodic");
         baseMap.put(Summary.RETRY_DELAY, "30 minutes");
         baseMap.put(Summary.RETRY_ATTEMPTS, "3");

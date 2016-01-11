@@ -286,7 +286,46 @@ public class ClusterWizardPage extends EntityWizardPage {
     }
 
     /**
-     * Retrieves hte value of the summary box and parses it to cluster properties.
+     * Method to assert the staging and Working location are same.
+     */
+    public void assertLocationsEqualError(){
+
+        // Assertion for Staging Location.
+        LOGGER.info(" Assertion for Staging Directory ");
+        Assert.assertTrue(checkErrorMessageByElement("input[contains(@id,'location.staging')]//following-sibling::"
+                + "span[contains(@ng-show, 'locationsEqualError')]",
+                "Staging and Working location should be different"));
+
+        // Assertion for Working Location.
+        LOGGER.info("Assertion for Working Directory");
+        Assert.assertTrue(checkErrorMessageByElement("input[contains(@id,'location.working')]//following-sibling::"
+                + "span[contains(@ng-show, 'locationsEqualError')]",
+                "Staging and Working location should be different"));
+    }
+
+    /**
+     * Method to get the Error text message displayed based on Xpath and compares.
+     * with the input string paramater : errMessage
+     * @param elementTag elementTag
+     * @param errMessage errMessage
+     */
+    public boolean checkErrorMessageByElement(String elementTag, String errMessage) {
+
+        List<WebElement> elements = clusterBox.findElements(By.xpath("//" + elementTag));
+        if (!elements.isEmpty()){
+            for (WebElement element : elements) {
+                Assert.assertEquals(element.getText(), errMessage);
+                LOGGER.info("Error Message Displayed : " + element.getText());
+            }
+            return true;
+        }else{
+            LOGGER.info(" No Elements found with the xpath " + elementTag);
+            return false;
+        }
+    }
+
+    /**
+     * Retrieves the value of the summary box and parses it to cluster properties.
      * @param draft empty cluster to contain all properties.
      * @return cluster filled with properties from the summary.
      */
@@ -296,12 +335,16 @@ public class ClusterWizardPage extends EntityWizardPage {
         LOGGER.info("Summary block text : " + summaryBoxText);
 
         String[] slices;
+        String value;
+        String path;
+        String label;
+
         //retrieve basic properties
         String basicProps = summaryBoxText.split("ACL")[0];
         for (String line : basicProps.split("\\n")) {
             slices = line.split(" ");
-            String label = slices[0].replace(":", "").trim();
-            String value = slices[1].trim();
+            label = slices[0].replace(":", "").trim();
+            value = getValueFromSlices(slices, line);
             switch (label) {
             case "Name":
                 cluster.setName(value);
@@ -333,7 +376,7 @@ public class ClusterWizardPage extends EntityWizardPage {
         String interfaces = propsLeft.split(nextLabel)[0].trim();
         for (String line : interfaces.split("\\n")) {
             slices = line.split(" ");
-            String label = slices[0].replace(":", "").trim();
+            label = slices[0].replace(":", "").trim();
             String endpoint = slices[1].trim();
             String version = slices[3].trim();
             switch (label) {
@@ -366,16 +409,16 @@ public class ClusterWizardPage extends EntityWizardPage {
             for (String line : properties.split("\\n")) {
                 int indx = line.indexOf(":");
                 String name = line.substring(0, indx).trim();
-                String value = line.substring(indx + 1, line.length()).trim();
+                value = line.substring(indx + 1, line.length()).trim();
                 cluster.withProperty(name, value);
             }
         }
         //retrieve locations
         propsLeft = propsLeft.split("Locations")[1].trim();
         for (String line : propsLeft.split("\\n")) {
-            slices = line.split(":");
-            String label = slices[0].trim();
-            String path = slices[1].trim();
+            slices = line.split(" ");
+            label = slices[0].replace(":", "").trim();
+            path = getValueFromSlices(slices, line);
             switch (label) {
             case "staging":
                 cluster.addLocation(ClusterLocationType.STAGING, path);
@@ -405,6 +448,14 @@ public class ClusterWizardPage extends EntityWizardPage {
         next.click();
         waitForAngularToFinish();
         Assert.assertTrue(summaryBox.isDisplayed(), "Summary box should be displayed.");
+    }
+
+    /**
+     *  Click on next button in the cluster creation page.
+     */
+    public void clickJustNext() {
+        next.click();
+        waitForAngularToFinish();
     }
 
     /**
@@ -452,6 +503,19 @@ public class ClusterWizardPage extends EntityWizardPage {
 
     public String getInterfaceVersionValue(Interfacetype interfacetype) {
         return getInterfaceVersion(interfacetype).getAttribute("value");
+    }
+
+    /**
+     * Method preventing the NullPointerException.
+     */
+    public String getValueFromSlices(String[] slices, String line) {
+        String trimValue;
+        if (slices[0].length()==(line.length())) {
+            trimValue = "";
+        }else {
+            trimValue = slices[1].trim();
+        }
+        return trimValue;
     }
 
     /**
