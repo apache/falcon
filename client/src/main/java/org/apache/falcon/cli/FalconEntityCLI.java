@@ -323,7 +323,7 @@ public class FalconEntityCLI extends FalconCLI {
         }
     }
 
-    private void validateEntityFields(String fields) throws FalconCLIException {
+    public static void validateEntityFields(String fields) throws FalconCLIException {
         if (StringUtils.isEmpty(fields)) {
             return;
         }

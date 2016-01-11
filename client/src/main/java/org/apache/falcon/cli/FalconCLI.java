@@ -229,7 +229,7 @@ public class FalconCLI {
         return integer;
     }
 
-    protected void validateEntityTypeForSummary(String type) throws FalconCLIException {
+    public static void validateEntityTypeForSummary(String type) throws FalconCLIException {
         EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
             throw new FalconCLIException("Invalid entity type " + entityType
@@ -260,7 +260,7 @@ public class FalconCLI {
         return colo;
     }
 
-    protected void validateFilterBy(String filterBy, String filterType) throws FalconCLIException {
+    public static void validateFilterBy(String filterBy, String filterType) throws FalconCLIException {
         if (StringUtils.isEmpty(filterBy)) {
             return;
         }
@@ -283,7 +283,7 @@ public class FalconCLI {
         }
     }
 
-    protected void validateOrderBy(String orderBy, String action) throws FalconCLIException {
+    public static void validateOrderBy(String orderBy, String action) throws FalconCLIException {
         if (StringUtils.isBlank(orderBy)) {
             return;
         }

@@ -813,7 +813,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private EntityList sendDependencyRequest(Entities entities, String entityType,
-                                         String entityName, String doAsUser)  {
+                                         String entityName, String doAsUser) throws FalconCLIException  {
 
         WebResource resource = service.path(entities.path).path(entityType).path(entityName);
         if (StringUtils.isNotEmpty(doAsUser)) {

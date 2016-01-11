@@ -28,7 +28,7 @@ import java.io.InputStream;
 /**
  * Exception thrown by FalconClient.
  */
-public class FalconCLIException extends Exception {
+public class FalconCLIException extends RuntimeException{
 
     private static final int MB = 1024 * 1024;
 

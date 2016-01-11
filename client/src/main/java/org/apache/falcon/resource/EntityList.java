@@ -52,14 +52,14 @@ public class EntityList {
     /**
      * List of fields returned by RestAPI.
      */
-    public static enum EntityFieldList {
+    public enum EntityFieldList {
         TYPE, NAME, STATUS, TAGS, PIPELINES, CLUSTERS
     }
 
     /**
      * Filter by these Fields is supported by RestAPI.
      */
-    public static enum EntityFilterByFields {
+    public enum EntityFilterByFields {
         TYPE, NAME, STATUS, PIPELINES, CLUSTER, TAGS
     }
 
