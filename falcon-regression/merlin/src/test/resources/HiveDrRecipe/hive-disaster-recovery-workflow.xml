@@ -84,7 +84,7 @@
             <arg>lastevents</arg>
         </java>
         <ok to="export-dr-replication"/>
-        <error to="failure"/>
+        <error to="fail"/>
     </action>
     <!-- Export Replication action -->
     <action name="export-dr-replication">
@@ -160,7 +160,7 @@
             <arg>export</arg>
         </java>
         <ok to="import-dr-replication"/>
-        <error to="failure"/>
+        <error to="fail"/>
     </action>
     <!-- Import Replication action -->
     <action name="import-dr-replication">
@@ -235,52 +235,6 @@
             <arg>-executionStage</arg>
             <arg>import</arg>
         </java>
-        <ok to="success"/>
-        <error to="failure"/>
-    </action>
-    <decision name="success">
-        <switch>
-            <case to="successAlert">
-                ${drNotificationReceivers ne 'NA'}
-            </case>
-            <default to="end"/>
-        </switch>
-    </decision>
-    <decision name="failure">
-        <switch>
-            <case to="failureAlert">
-                ${drNotificationReceivers ne 'NA'}
-            </case>
-            <default to="fail"/>
-        </switch>
-    </decision>
-    <action name="successAlert">
-        <email xmlns="uri:oozie:email-action:0.2">
-            <to>${drNotificationReceivers}</to>
-            <subject>INFO: Hive DR workflow ${drJobName} completed successfully</subject>
-            <body>
-                The Hive DR workflow ${wf:id()} is successful.
-                Source          = ${sourceCluster}
-                Target          = ${targetCluster}
-                DB Name         = ${sourceDatabase}
-                Table Name      = ${sourceTable}
-            </body>
-        </email>
-        <ok to="end"/>
-        <error to="end"/>
-    </action>
-    <action name="failureAlert">
-        <email xmlns="uri:oozie:email-action:0.2">
-            <to>${drNotificationReceivers}</to>
-            <subject>ERROR: Hive DR workflow ${drJobName} failed</subject>
-            <body>
-                The Hive DR workflow ${wf:id()} had issues and was killed.  The error message is: ${wf:errorMessage(wf:lastErrorNode())}
-                Source          = ${sourceCluster}
-                Target          = ${targetCluster}
-                DB Name         = ${sourceDatabase}
-                Table Name      = ${sourceTable}
-            </body>
-        </email>
         <ok to="end"/>
         <error to="fail"/>
     </action>

@@ -286,6 +286,65 @@ public class ClusterSetupTest extends BaseUITestClass{
     }
 
     /**
+     * Specify the same directory locations for staging and working location.
+     * Check that user is not allowed to create a cluster with same directory for both with proper error message.
+     */
+    @Test
+    public void testSameLocations() throws IOException {
+
+        //get the staging directory location
+        String staging = sourceCluster.getLocation(ClusterLocationType.STAGING).getPath();
+
+        //set the working directory to staging directory
+        sourceCluster.getLocation(ClusterLocationType.WORKING).setPath(staging);
+
+        clusterSetup.fillForm(sourceCluster);
+        clusterSetup.clickJustNext();
+        clusterSetup.assertLocationsEqualError();
+    }
+
+    /**
+     * Default cluster creation scenario with Optional fields set with Empty values. Click next. Return back and click.
+     * next again. Check that all values are present on Summary page. Save cluster.
+     * Check the cluster definition trough /definition API.
+     */
+    @Test
+    public void testOptionalfields()
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+
+        // Set the Description value to empty
+        sourceCluster.setDescription("");
+        // Set the temp location value to empty
+        sourceCluster.getLocation(ClusterLocationType.TEMP).setPath("");
+        // Now fill the form with the above values for optional fields
+        clusterSetup.fillForm(sourceCluster);
+
+        clusterSetup.clickNext();
+        clusterSetup.clickPrevious();
+        clusterSetup.clickNext();
+
+        ClusterMerlin summaryBlock = clusterSetup.getSummary(sourceCluster.getEmptyCluster());
+        //summary block should contain the same info as source
+        sourceCluster.assertEquals(summaryBlock);
+        clusterSetup.clickSave();
+
+        String alertText = clusterSetup.getActiveAlertText();
+        Assert.assertEquals(alertText, "falcon/default/Submit successful (cluster) " + sourceCluster.getName());
+
+        //check the same via notifications bar
+        clusterSetup.getPageHeader().validateNotificationCountAndCheckLast(1,
+                "falcon/default/Submit successful (cluster) " + sourceCluster.getName());
+
+        ClusterMerlin definition = new ClusterMerlin(cluster.getClusterHelper().
+                getEntityDefinition(bundles[0].getClusterElement().toString()).getMessage());
+
+        //definition should be the same that the source
+        sourceCluster.assertEquals(definition);
+    }
+
+
+
+    /**
      * Validate alert lifetime.
      */
     @Test

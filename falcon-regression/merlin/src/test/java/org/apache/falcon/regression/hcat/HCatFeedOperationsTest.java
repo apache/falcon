@@ -152,35 +152,6 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     }
 
     /**
-     * Submit Hcat Replication feed when Hcat table mentioned in table uri does not exist on target. The response is
-     * Partial, with successful with submit/schedule on source.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void submitAndScheduleReplicationFeedWhenTableDoesNotExistOnTarget() throws Exception {
-        Bundle.submitCluster(bundles[0], bundles[1]);
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2099-01-01T00:00Z";
-        String tableUri = "catalog:" + dbName + ":" + randomTblName + "#year=${YEAR}";
-        bundles[0].setInputFeedPeriodicity(1, Frequency.TimeUnit.hours);
-        bundles[0].setInputFeedValidity(startDate, endDate);
-        bundles[0].setInputFeedTableUri(tableUri);
-
-        feed = bundles[0].getDataSets().get(0);
-        // set cluster 2 as the target.
-        feed = FeedMerlin.fromString(feed).addFeedCluster(
-            new FeedMerlin.FeedClusterBuilder(Util.readEntityName(bundles[1].getClusters().get(0)))
-                .withRetention("months(9000)", ActionType.DELETE)
-                .withValidity(startDate, endDate)
-                .withClusterType(ClusterType.TARGET)
-                .withTableUri(tableUri)
-                .build()).toString();
-
-        AssertUtil.assertPartial(prism.getFeedHelper().submitAndSchedule(feed));
-    }
-
-    /**
      * Submit Hcat Replication feed when Hcat table mentioned in table uri exists on both source and target.
      * The response is  Psucceeded, and a replication co-rdinator should apear on target oozie.
      * The test however does not ensure that
