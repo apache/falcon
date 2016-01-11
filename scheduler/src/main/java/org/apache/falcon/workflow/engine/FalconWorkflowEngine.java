@@ -309,7 +309,6 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
                 populateInstanceInfo(instanceInfo, instance);
             }
             break;
-
         case PARAMS:
             // Mask details, log
             instanceInfo.details = null;
@@ -358,6 +357,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             instanceInfo.status = InstancesResult.WorkflowStatus.UNDEFINED;
             break;
         }
+        // Mask wfParams by default
+        instanceInfo.wfParams = null;
     }
 
     @Override
