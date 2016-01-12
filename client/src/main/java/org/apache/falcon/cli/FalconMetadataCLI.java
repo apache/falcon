@@ -25,6 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.metadata.RelationshipType;
 
 import java.io.PrintStream;
@@ -85,6 +86,10 @@ public class FalconMetadataCLI extends FalconCLI {
         Option type = new Option(TYPE_OPT, true, "Dimension type");
         Option name = new Option(NAME_OPT, true, "Dimension name");
         Option cluster = new Option(CLUSTER_OPT, true, "Cluster name");
+        Option feed = new Option(FEED_OPT, true, "Feed Entity name");
+        Option process = new Option(PROCESS_OPT, true, "Process Entity name");
+        Option numResults = new Option(NUM_RESULTS_OPT, true,
+                "Number of results to return per request");
 
         // Add lineage options
         metadataOptions.addOption(pipeline);
@@ -93,6 +98,9 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(type);
         metadataOptions.addOption(cluster);
         metadataOptions.addOption(name);
+        metadataOptions.addOption(feed);
+        metadataOptions.addOption(process);
+        metadataOptions.addOption(numResults);
 
         Option vertex = new Option(VERTEX_CMD, false, "show the vertices");
         Option vertices = new Option(VERTICES_CMD, false, "show the vertices");
@@ -129,6 +137,8 @@ public class FalconMetadataCLI extends FalconCLI {
         String result;
         String dimensionType = commandLine.getOptionValue(TYPE_OPT);
         String cluster = commandLine.getOptionValue(CLUSTER_OPT);
+        String feed = commandLine.getOptionValue(FEED_OPT);
+        String process = commandLine.getOptionValue(PROCESS_OPT);
         String dimensionName = commandLine.getOptionValue(NAME_OPT);
         String id = commandLine.getOptionValue(ID_OPT);
         String key = commandLine.getOptionValue(KEY_OPT);
@@ -136,13 +146,31 @@ public class FalconMetadataCLI extends FalconCLI {
         String direction = commandLine.getOptionValue(DIRECTION_OPT);
         String pipeline = commandLine.getOptionValue(PIPELINE_OPT);
         String doAsUser = commandLine.getOptionValue(FalconCLI.DO_AS_OPT);
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT), null, "numResults");
 
         if (optionsList.contains(LINEAGE_OPT)) {
             validatePipelineName(pipeline);
             result = client.getEntityLineageGraph(pipeline, doAsUser).getDotNotation();
         } else if (optionsList.contains(LIST_OPT)) {
             validateDimensionType(dimensionType.toUpperCase());
-            result = client.getDimensionList(dimensionType, cluster, doAsUser);
+            if (!(dimensionType.toUpperCase())
+                    .equals(RelationshipType.REPLICATION_METRICS.name())) {
+                result = client.getDimensionList(dimensionType, cluster, doAsUser);
+            } else {
+                String schedEntityType = null;
+                String schedEntityName = null;
+                if (StringUtils.isNotEmpty(feed)) {
+                    schedEntityType = EntityType.getEnum(FEED_OPT).name();
+                    schedEntityName = feed;
+                } else if (StringUtils.isNotEmpty(process)) {
+                    schedEntityType = EntityType.getEnum(PROCESS_OPT).name();
+                    schedEntityName = process;
+                }
+                validateScheduleEntity(schedEntityType, schedEntityName);
+
+                result = client.getReplicationMetricsDimensionList(schedEntityType, schedEntityName,
+                        numResults, doAsUser);
+            }
         } else if (optionsList.contains(RELATIONS_OPT)) {
             validateDimensionType(dimensionType.toUpperCase());
             validateDimensionName(dimensionName, RELATIONS_OPT);
@@ -187,6 +215,16 @@ public class FalconMetadataCLI extends FalconCLI {
     private void validateDimensionName(String dimensionName, String action) throws FalconCLIException {
         if (StringUtils.isEmpty(dimensionName)) {
             throw new FalconCLIException("Dimension ID cannot be empty or null for action " + action);
+        }
+    }
+
+    private void validateScheduleEntity(String schedEntityType, String schedEntityName) throws FalconCLIException {
+        if (StringUtils.isBlank(schedEntityType)) {
+            throw new FalconCLIException("Entity must be schedulable type : -feed/process");
+        }
+
+        if (StringUtils.isBlank(schedEntityName)) {
+            throw new FalconCLIException("Entity name is missing");
         }
     }
 

@@ -19,6 +19,7 @@
 package org.apache.falcon.resource.metadata;
 
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.metadata.RelationshipType;
 import org.json.simple.JSONValue;
 import org.testng.Assert;
@@ -149,6 +150,20 @@ public class MetadataDiscoveryResourceTest {
         results = (Map) JSONValue.parse(response.getEntity().toString());
         Assert.assertEquals(Integer.parseInt(results.get(MetadataDiscoveryResource.TOTAL_SIZE).toString()), 0);
     }
+
+    @Test
+    public void testListDimensionsMetrics() throws Exception {
+        MetadataDiscoveryResource resource = new MetadataDiscoveryResource();
+        Response response = resource.listReplicationMetricsDimensionValues("sample-process",
+                EntityType.PROCESS.name(), 5);
+        Map results = (Map) JSONValue.parse(response.getEntity().toString());
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        List metrics = (List) results.get(MetadataDiscoveryResource.RESULTS);
+        Assert.assertEquals(metrics.size(), 1);
+        Assert.assertTrue(metrics.get(0).toString().contains("BYTESCOPIED"));
+        Assert.assertTrue(metrics.get(0).toString().contains("COPY"));
+    }
+
 
     @Test(expectedExceptions = FalconWebException.class)
     public void testListInvalidDimensionType() throws Exception {
