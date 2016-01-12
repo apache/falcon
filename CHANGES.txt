@@ -19,7 +19,7 @@ Proposed Release Version: 0.9
     FALCON-1523 Update CHANGES.txt to change 0.8 branch to release(Sowmya Ramesh)
 
     FALCON-1453 Upgrade falcon POM for 0.8 release(Sowmya Ramesh)
-
+    
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
@@ -57,6 +57,8 @@ Proposed Release Version: 0.9
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1545 Add documentation for Hive replication job counters(Peeyush Bishnoi via Ajay Yadava)
+
     FALCON-1601 Make Falcon StateStore more secure by not disclosing imp params in startup.props(Pavan Kumar Kolamuri via Ajay Yadava)
 
     FALCON-1705 Standardization of error handling in falcon Server(Praveen Adlakha via Ajay Yadava)
