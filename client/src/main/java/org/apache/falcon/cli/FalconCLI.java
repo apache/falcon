@@ -61,6 +61,8 @@ public class FalconCLI {
     public static final String TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
     public static final String CLUSTER_OPT = "cluster";
+    public static final String FEED_OPT = "feed";
+    public static final String PROCESS_OPT = "process";
     public static final String ENTITY_NAME_OPT = "name";
     public static final String FILE_PATH_OPT = "file";
     public static final String VERSION_OPT = "version";

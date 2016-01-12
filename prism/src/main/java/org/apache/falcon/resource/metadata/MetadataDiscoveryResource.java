@@ -26,6 +26,8 @@ import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.job.ReplicationJobCountersList;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.metadata.RelationshipType;
@@ -40,7 +42,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Jersey Resource for metadata operations.
@@ -84,6 +90,58 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             response.put(RESULTS, dimensionValues);
             response.put(TOTAL_SIZE, dimensionValues.length());
             return Response.ok(response).build();
+        } catch (JSONException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get list of dimensions for the replication metrics.
+     * <p/>
+     * GET http://host/metadata/discovery/replication-metrics/list
+     * @param schedEntityType Type of the schedulable entity
+     * @param schedEntityName Name of the schedulable entity.
+     * @param numResults limit the number of metrics to return sorted in ascending order.
+     * @return List of dimensions that match requested type [and cluster].
+     */
+    @GET
+    @Path("/{name}/replication-metrics/list")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response listReplicationMetricsDimensionValues(@PathParam("name") final String schedEntityName,
+                                                          @QueryParam("type") final String schedEntityType,
+                                                          @QueryParam("numResults") Integer numResults) {
+        JSONArray dimensionValues = new JSONArray();
+        int resultsPerQuery = numResults == null ? 10 : numResults;
+        if (StringUtils.isNotBlank(schedEntityName)) {
+            try {
+                EntityUtil.getEntity(schedEntityType, schedEntityName);
+            } catch (Throwable e) {
+                throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            }
+            dimensionValues = getReplicationEntityDimensionValues(schedEntityName, resultsPerQuery);
+        }
+
+        try {
+            JSONObject response = new JSONObject();
+            response.put(RESULTS, dimensionValues);
+            response.put(TOTAL_SIZE, dimensionValues.length());
+            return Response.ok(response).build();
+        } catch (JSONException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    public JSONArray getReplicationEntityDimensionValues(final String schedEntityName,
+                                            final int resultsPerQuery) {
+        // Get schedule entity Vertex, get adjacent vertices of schedule entity Vertex that match dimension type.
+        Vertex schedEntityVertex = getVertexByName(schedEntityName);
+        if (schedEntityVertex == null) {
+            return new JSONArray();
+        }
+        try {
+            Iterator<Edge> inEdges = schedEntityVertex.query().direction(Direction.IN).edges().iterator();
+            return getAdjacentVerticesForVertexMetrics(inEdges, Direction.OUT, resultsPerQuery);
         } catch (JSONException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -148,9 +206,64 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
         return adjVertices;
     }
 
+    private JSONArray getAdjacentVerticesForVertexMetrics(Iterator<Edge> edges, Direction direction,
+                                                          int resultsPerQuery) throws JSONException {
+        JSONArray adjVertices = new JSONArray();
+        Iterator<Edge> sortedEdge = sortEdgesById(edges, direction);
+        while (sortedEdge.hasNext() && resultsPerQuery!=0) {
+            Edge edge = sortedEdge.next();
+            Vertex vertex = edge.getVertex(direction);
+            if (vertex.getProperty(ReplicationJobCountersList.BYTESCOPIED.getName()) != null) {
+                JSONObject vertexObject = new JSONObject();
+                vertexObject.put(RelationshipProperty.NAME.getName(),
+                        vertex.getProperty(RelationshipProperty.NAME.getName()));
+                vertexObject.put(ReplicationJobCountersList.TIMETAKEN.getName(),
+                        vertex.getProperty(ReplicationJobCountersList.TIMETAKEN.getName()));
+                vertexObject.put(ReplicationJobCountersList.BYTESCOPIED.getName(),
+                        vertex.getProperty(ReplicationJobCountersList.BYTESCOPIED.getName()));
+                vertexObject.put(ReplicationJobCountersList.COPY.getName(),
+                        vertex.getProperty(ReplicationJobCountersList.COPY.getName()));
+                adjVertices.put(vertexObject);
+
+                resultsPerQuery--;
+            }
+        }
+
+        return adjVertices;
+    }
+
+    Iterator<Edge> sortEdgesById(Iterator<Edge> edges, final Direction direction) {
+        List<Edge> edgeList = new ArrayList<Edge>();
+
+        while(edges.hasNext()) {
+            Edge e = edges.next();
+            edgeList.add(e);
+        }
+
+        Collections.sort(edgeList, new Comparator<Edge>() {
+            @Override
+            public int compare(Edge e1, Edge e2) {
+                long l1 = (long)e1.getVertex(direction).getId();
+                long l2 = (long)e2.getVertex(direction).getId();
+
+                return l1 > l2 ? -1 : 1;
+            }
+        });
+
+        return edgeList.iterator();
+    }
+
     private String getVertexRelationshipType(Vertex vertex) {
         String type = vertex.getProperty(RelationshipProperty.TYPE.getName());
         return RelationshipType.fromString(type).toString();
+    }
+
+    private Vertex getVertexByName(String name) {
+        Iterator<Vertex> vertexIterator = getGraph().query()
+                .has(RelationshipProperty.NAME.getName(), name)
+                .vertices().iterator();
+
+        return vertexIterator.hasNext() ? vertexIterator.next() : null;
     }
 
     private Vertex getVertex(String name, String type) {

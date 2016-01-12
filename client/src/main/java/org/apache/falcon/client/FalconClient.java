@@ -32,6 +32,7 @@ import org.apache.falcon.cli.FalconMetadataCLI;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.recipe.RecipeTool;
 import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
@@ -629,6 +630,12 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataDiscoveryRequest(MetadataOperations.LIST, dimensionType, null, cluster, doAsUser);
     }
 
+    public String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName,
+                                                     Integer numResults, String doAsUser) throws FalconCLIException {
+        return sendRequestForReplicationMetrics(MetadataOperations.LIST,
+                schedEntityType, schedEntityName, numResults, doAsUser);
+    }
+
     public LineageGraphResult getEntityLineageGraph(String pipelineName, String doAsUser) throws FalconCLIException {
         MetadataOperations operation = MetadataOperations.LINEAGE;
 
@@ -1077,6 +1084,38 @@ public class FalconClient extends AbstractFalconClient {
                 .method(job.method, ClientResponse.class);
         printClientResponse(clientResponse);
         return clientResponse.getEntity(String.class);
+    }
+
+    private String sendRequestForReplicationMetrics(final MetadataOperations operation, final String schedEntityType,
+                                                    final String schedEntityName, Integer numResults,
+                                                    final String doAsUser) throws FalconCLIException {
+        WebResource resource = service.path(operation.path)
+                .path(schedEntityName)
+                .path(RelationshipType.REPLICATION_METRICS.getName())
+                .path(FalconMetadataCLI.LIST_OPT);
+
+        if (StringUtils.isNotEmpty(schedEntityName)) {
+            resource = resource.queryParam(FalconCLI.TYPE_OPT, schedEntityType);
+        }
+
+        if (numResults != null) {
+            resource = resource.queryParam(FalconCLI.NUM_RESULTS_OPT, numResults.toString());
+        }
+
+        if (StringUtils.isNotEmpty(doAsUser)) {
+            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+        }
+
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(operation.mimeType).type(operation.mimeType)
+                .method(operation.method, ClientResponse.class);
+
+        printClientResponse(clientResponse);
+
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(String.class);
+
     }
 
     private String sendMetadataDiscoveryRequest(final MetadataOperations operation,

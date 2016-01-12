@@ -1,4 +1,15 @@
 Apache Falcon Change log
+Trunk
+  TASKS:
+  INCOMPATIBLE CHANGES
+  NEW FEATURES
+    FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
+
+    FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
+  IMPROVEMENTS
+  BUG FIXES
+
+
 Proposed Release Version: 0.9
   TASKS:
     FALCON-1718 Change versions in pom.xml of master and 0.9 branch(Pallavi Rao via Ajay Yadava)
@@ -12,9 +23,7 @@ Proposed Release Version: 0.9
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-    FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
-
-    FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
+    FALCON-1643 Add CLI option to display captured replication metrics(Peeyush Bishnoi via Ajay Yadava)
 
     FALCON-1679 API to get type of scheduler(native/oozie) (Pallavi Rao)
 
@@ -33,8 +42,6 @@ Proposed Release Version: 0.9
     FALCON-1596 Spring shell based CLI for Falcon
 	FALCON-1608 Base framework for Spring Shell based shell for Falcon (Rajat Khandelwal via Ajay Yadava)
  
-    FALCON-1480 Gather data transfer details of Hive DR. (Peeyush Bishnoi via Ajay Yadava)
-    
     FALCON-1234 State Store for instances scheduled by Falcon (Pavan Kolamuri via Pallavi Rao)
     
     FALCON-1480 Gather data transfer details of Hive DR(Peeyush Bishnoi via Ajay Yadava)

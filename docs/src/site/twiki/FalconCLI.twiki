@@ -471,13 +471,24 @@ $FALCON_HOME/bin/falcon metadata -edge -id Q9n-Q-5g
 
 Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
 Usage:
-$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|datasource_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
+$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|datasource_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines|replication_metrics]
 
 Optional Args : -cluster <<cluster name>>
 
 Example:
 $FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
 $FALCON_HOME/bin/falcon metadata -list -type tags
+
+
+To display replication metrics from recipe based replication process and from feed replication.
+Usage:
+$FALCON_HOME/bin/falcon metadata -list -type replication_metrics -process/-feed <entity name>
+Optional Args : -numResults <<value>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -list -type replication_metrics -process hdfs-replication
+$FALCON_HOME/bin/falcon metadata -list -type replication_metrics -feed fs-replication
+
 
 ---+++ Relations
 

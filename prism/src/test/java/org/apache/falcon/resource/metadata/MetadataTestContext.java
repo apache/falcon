@@ -32,15 +32,20 @@ import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.process.EngineType;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.metadata.MetadataMappingService;
+import org.apache.falcon.metadata.MetadataMappingServiceTest;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -194,6 +199,7 @@ public class MetadataTestContext {
     }
 
     public void addInstance() throws Exception {
+        createJobCountersFileForTest();
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(),
                 WorkflowExecutionContext.Type.POST_PROCESSING);
         service.onSuccess(context);
@@ -217,6 +223,20 @@ public class MetadataTestContext {
             for (String entity : entities) {
                 store.remove(type, entity);
             }
+        }
+    }
+
+    private void createJobCountersFileForTest() throws Exception {
+        Path counterFile = new Path(LOGS_DIR, "counter.txt");
+        OutputStream out = null;
+        try {
+            FileSystem fs = HadoopClientFactory.get().createFalconFileSystem(
+                    new Path(LOGS_DIR).toUri());
+            out = fs.create(counterFile);
+            out.write((MetadataMappingServiceTest.COUNTERS).getBytes());
+            out.flush();
+        } finally {
+            out.close();
         }
     }
 
