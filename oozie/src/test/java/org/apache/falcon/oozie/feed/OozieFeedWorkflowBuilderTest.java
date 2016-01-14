@@ -93,7 +93,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private Feed tableFeed;
     private Feed fsReplFeed;
     private Feed lifecycleRetentionFeed;
-    private Feed retentionFeed;
+    private Feed lifecycleLocalRetentionFeed;
     private Feed fsReplFeedCounter;
 
     private static final String SRC_CLUSTER_PATH = "/feed/src-cluster.xml";
@@ -102,7 +102,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private static final String TABLE_FEED = "/feed/table-replication-feed.xml";
     private static final String FS_REPLICATION_FEED = "/feed/fs-replication-feed.xml";
     private static final String FS_RETENTION_LIFECYCLE_FEED = "/feed/fs-retention-lifecycle-feed.xml";
-    private static final String FS_RETENTION_ORIG_FEED = "/feed/fs-retention-feed.xml";
+    private static final String FS_LOCAL_RETENTION_LIFECYCLE_FEED = "/feed/fs-local-retention-lifecycle-feed.xml";
     private static final String FS_REPLICATION_FEED_COUNTER = "/feed/fs-replication-feed-counters.xml";
 
     @BeforeClass
@@ -137,7 +137,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         fsReplFeedCounter = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED_COUNTER);
         tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED);
         lifecycleRetentionFeed = (Feed) storeEntity(EntityType.FEED, FS_RETENTION_LIFECYCLE_FEED);
-        retentionFeed = (Feed) storeEntity(EntityType.FEED, FS_RETENTION_ORIG_FEED);
+        lifecycleLocalRetentionFeed = (Feed) storeEntity(EntityType.FEED, FS_LOCAL_RETENTION_LIFECYCLE_FEED);
     }
 
     private Entity storeEntity(EntityType type, String resource) throws Exception {
@@ -198,6 +198,29 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
     }
 
+    @Test
+    public void testLocalOnlyRetentionLifecycle() throws Exception {
+        OozieEntityBuilder builder = OozieEntityBuilder.get(lifecycleLocalRetentionFeed);
+        Path bundlePath = new Path("/projects/falcon/");
+        builder.build(trgCluster, bundlePath);
+
+        BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
+        List<COORDINATOR> coords = bundle.getCoordinator();
+        COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
+        assertLibExtensions(coord, "retention");
+        HashMap<String, String> props = getCoordProperties(coord);
+        Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
+        Assert.assertEquals(coord.getFrequency(), "${coord:hours(12)}");
+        Assert.assertEquals(coord.getTimezone(), "UTC");
+
+        HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
+        Assert.assertEquals(wfProps.get("feedNames"), lifecycleLocalRetentionFeed.getName());
+        Assert.assertTrue(StringUtils.equals(wfProps.get("entityType"), EntityType.FEED.name()));
+        Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
+        Assert.assertEquals(wfProps.get("queueName"), "local");
+        Assert.assertEquals(wfProps.get("limit"), "hours(4)");
+        Assert.assertEquals(wfProps.get("jobPriority"), "HIGH");
+    }
 
     @Test
     public void testRetentionFrequency() throws Exception {
