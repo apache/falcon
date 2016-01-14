@@ -670,6 +670,7 @@ public final class EntityUtil {
                     "feed.retry.frequency", "minutes(5)")));
             retry.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
                     .getProperty("feed.retry.policy", "exp-backoff")));
+            retry.setOnTimeout(Boolean.valueOf(RuntimeProperties.get().getProperty("feed.retry.onTimeout", "false")));
             return retry;
         case PROCESS:
             Process process = (Process) entity;

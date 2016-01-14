@@ -897,12 +897,12 @@ Feeds with Hive table storage will send one more parameter apart from the genera
 <verbatim>$input_filter</verbatim>
 
 ---+++ Retry
-Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
+Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.
 Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts]/>
+    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts] onTimeout=[retry onTimeout]/>
 ...
 </process>
 </verbatim>
@@ -911,12 +911,19 @@ Examples:
 <verbatim>
 <process name="sample-process">
 ...
-    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3" onTimeout="true"/>
 ...
 </process>
 </verbatim>
 The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential backoff, the workflow will be re-tried after 10 mins, 20 mins and 40 mins.
 
+To enable retries for instances for feeds, user will have to set the following properties in runtime.properties
+<verbatim>
+falcon.recipe.retry.policy=periodic
+falcon.recipe.retry.delay=minutes(30)
+falcon.recipe.retry.attempts=3
+falcon.recipe.retry.onTimeout=false
+<verbatim>
 ---+++ Late data
 Late data handling defines how the late data should be handled. Each feed is defined with a late cut-off value which specifies the time till which late data is valid. For example, late cut-off of hours(6) means that data for nth hour can get delayed by upto 6 hours. Late data specification in process defines how this late data is handled.
 

@@ -175,6 +175,11 @@ public final class RecipeProcessBuilderUtils {
         if (StringUtils.isNotEmpty(retryDelay)) {
             processRetry.setDelay(Frequency.fromString(retryDelay));
         }
+
+        String retryOnTimeout = recipeProperties.getProperty(RecipeToolOptions.RETRY_ON_TIMEOUT.getName());
+        if (StringUtils.isNotEmpty(retryOnTimeout)) {
+            processRetry.setOnTimeout(Boolean.valueOf(retryOnTimeout));
+        }
     }
 
     private static void bindNotificationProperties(final Notification processNotification,

@@ -344,6 +344,7 @@
                 </xs:restriction>
             </xs:simpleType>
         </xs:attribute>
+        <xs:attribute type="xs:boolean" name="onTimeout" use="optional" default="false"/>
     </xs:complexType>
 
     <xs:simpleType name="policy-type">

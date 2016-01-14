@@ -38,6 +38,7 @@ public enum RecipeToolOptions {
     RETRY_POLICY("falcon.recipe.retry.policy", "Retry policy", false),
     RETRY_DELAY("falcon.recipe.retry.delay", "Retry delay", false),
     RETRY_ATTEMPTS("falcon.recipe.retry.attempts", "Retry attempts", false),
+    RETRY_ON_TIMEOUT("falcon.recipe.retry.onTimeout", "Retry onTimeout", false),
     RECIPE_TAGS("falcon.recipe.tags", "Recipe tags", false),
     RECIPE_ACL_OWNER("falcon.recipe.acl.owner", "Recipe acl owner", false),
     RECIPE_ACL_GROUP("falcon.recipe.acl.group", "Recipe acl group", false),
