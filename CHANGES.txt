@@ -112,6 +112,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1732 Folders not getting deleted after testing (Praveen Adlakha via Pallavi Rao)
+
     FALCON-1675 Lifecycle stage is not honoured when only cluster level lifecycle is implemented (Ajay Yadava via Pallavi Rao)
 
     FALCON-1730 Upgrade enunciate for JDK 8 compatibility(Deepak Barr via Ajay Yadava)
