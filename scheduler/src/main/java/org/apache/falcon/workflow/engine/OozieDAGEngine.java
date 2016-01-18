@@ -99,8 +99,8 @@ public class OozieDAGEngine implements DAGEngine {
         try {
             Properties properties = getRunProperties(instance);
             Path buildPath = EntityUtil.getLatestStagingPath(cluster, instance.getEntity());
-            switchUser();
-            properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+            switchUserTo(instance.getEntity().getACL().getOwner());
+            properties.setProperty(OozieClient.USER_NAME, instance.getEntity().getACL().getOwner());
             properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
             return client.run(properties);
         } catch (OozieClientException e) {
@@ -110,6 +110,10 @@ public class OozieDAGEngine implements DAGEngine {
             LOG.error("Falcon Exception : ", e1);
             throw new DAGEngineException(e1);
         }
+    }
+
+    private void switchUserTo(String user) {
+        CurrentUser.authenticate(user);
     }
 
     private void prepareEntityBuildPath(Entity entity) throws FalconException {
@@ -129,13 +133,13 @@ public class OozieDAGEngine implements DAGEngine {
     private void dryRunInternal(Properties properties, Path buildPath, Entity entity)
         throws OozieClientException, DAGEngineException {
         if (properties == null) {
-            LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
+            LOG.info("Entity {} is not scheduled on cluster {} with user {}", entity.getName(), cluster,
+                    entity.getACL().getOwner());
             throw new DAGEngineException("Properties for entity " + entity.getName() + " is empty");
         }
 
-        switchUser();
-        LOG.debug("Logged in user is " + CurrentUser.getUser());
-        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+        switchUserTo(entity.getACL().getOwner());
+        properties.setProperty(OozieClient.USER_NAME, entity.getACL().getOwner());
         properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
         properties.putAll(getDryRunProperties(entity));
         //Do dryrun before run as run is asynchronous
@@ -144,8 +148,7 @@ public class OozieDAGEngine implements DAGEngine {
     }
 
     private void switchUser() {
-        String user = System.getProperty("user.name");
-        CurrentUser.authenticate(user);
+        switchUserTo(System.getProperty("user.name"));
     }
 
     @Override
