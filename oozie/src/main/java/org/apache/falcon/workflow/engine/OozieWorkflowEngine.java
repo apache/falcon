@@ -269,11 +269,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private boolean isBundleInState(Map<String, BundleJob> bundles,
                                     BundleStatus status) throws FalconException {
 
+        // Need a separate list to avoid concurrent modification.
+        List<String> bundlesToRemove = new ArrayList<>();
         // After removing MISSING bundles for clusters, if bundles.size() == 0, entity is not scheduled. Return false.
         for (Map.Entry<String, BundleJob> clusterBundle : bundles.entrySet()) {
             if (clusterBundle.getValue() == MISSING) { // There is no active bundle for this cluster
-                bundles.remove(clusterBundle.getKey());
+                bundlesToRemove.add(clusterBundle.getKey());
             }
+        }
+        for (String bundleToRemove : bundlesToRemove) {
+            bundles.remove(bundleToRemove);
         }
         if (bundles.size() == 0) {
             return false;

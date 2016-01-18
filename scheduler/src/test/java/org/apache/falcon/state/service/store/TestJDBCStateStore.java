@@ -346,21 +346,34 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
         InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
         instanceState2.setCurrentState(InstanceState.STATE.RUNNING);
 
+        ExecutionInstance processExecutionInstance3 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance2Time, "cluster2", instance2Time);
+        InstanceState instanceState3 = new InstanceState(processExecutionInstance3);
+        instanceState3.setCurrentState(InstanceState.STATE.RUNNING);
+
         stateStore.putExecutionInstance(instanceState1);
         stateStore.putExecutionInstance(instanceState2);
+        stateStore.putExecutionInstance(instanceState3);
 
         List<InstanceState.STATE> states = new ArrayList<>();
         states.add(InstanceState.STATE.RUNNING);
 
         Collection<InstanceState> actualInstances = stateStore.getExecutionInstances(entityState.getEntity(),
                 "cluster1", states, new DateTime(instance1Time), new DateTime(instance1Time + 60000));
-        Assert.assertEquals(1, actualInstances.size());
-        Assert.assertEquals(instanceState1, actualInstances.toArray()[0]);
+        Assert.assertEquals(actualInstances.size(), 1);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState1);
 
         actualInstances = stateStore.getExecutionInstances(entityState.getEntity(),
                 "cluster1", states, new DateTime(instance2Time), new DateTime(instance2Time + 60000));
-        Assert.assertEquals(1, actualInstances.size());
-        Assert.assertEquals(instanceState2, actualInstances.toArray()[0]);
+        Assert.assertEquals(actualInstances.size(), 1);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState2);
+
+        // Ensure we can get instances for a different cluster
+        actualInstances = stateStore.getExecutionInstances(entityState.getEntity(),
+                "cluster2", states, new DateTime(instance2Time), new DateTime(instance2Time + 60000));
+        Assert.assertEquals(actualInstances.size(), 1);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState3);
 
     }
 
