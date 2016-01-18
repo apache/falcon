@@ -221,6 +221,11 @@ public final class FalconExecutionService implements FalconService, EntityStateC
      */
     public void delete(Entity entity) throws FalconException {
         for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+            EntityClusterID id = new EntityClusterID(entity, cluster);
+            if (!executors.containsKey(id)) {
+                LOG.info("Entity {} is already deleted on cluster {}.", id, cluster);
+                continue;
+            }
             EntityExecutor executor = getEntityExecutor(entity, cluster);
             executor.killAll();
             executors.remove(executor.getId());

@@ -362,7 +362,7 @@ public final class JDBCStateStore extends AbstractStateStore {
                                                            DateTime end) throws StateStoreException {
         String entityKey = new EntityClusterID(entity, cluster).getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_FOR_STATES_WITH_RANGE");
+        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_CLUSTER_FOR_STATES_WITH_RANGE");
         q.setParameter("entityId", entityKey);
         List<String> instanceStates = new ArrayList<>();
         for (InstanceState.STATE state : states) {
@@ -371,6 +371,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         q.setParameter("currentState", instanceStates);
         q.setParameter("startTime", new Timestamp(start.getMillis()));
         q.setParameter("endTime", new Timestamp(end.getMillis()));
+        q.setParameter("cluster", cluster);
         List result  = q.getResultList();
         entityManager.close();
         try {

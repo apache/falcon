@@ -59,6 +59,8 @@ Proposed Release Version: 0.9
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1662 Ensure entity can be scheduled on multiple clusters on same colo (Pallavi Rao)
+
     FALCON-1545 Add documentation for Hive replication job counters(Peeyush Bishnoi via Ajay Yadava)
 
     FALCON-1601 Make Falcon StateStore more secure by not disclosing imp params in startup.props(Pavan Kumar Kolamuri via Ajay Yadava)

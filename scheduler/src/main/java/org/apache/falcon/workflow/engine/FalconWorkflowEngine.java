@@ -319,6 +319,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             for (String name : props.stringPropertyNames()) {
                 keyValuePairs[i++] = new InstancesResult.KeyValuePair(name, props.getProperty(name));
             }
+            instanceInfo.wfParams = keyValuePairs;
             break;
         default:
             throw new IllegalArgumentException("Unhandled action " + action);
@@ -416,9 +417,11 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
         boolean entityUpdated =
                 UpdateHelper.isEntityUpdated(oldEntity, newEntity, cluster,
                         EntityUtil.getLatestStagingPath(clusterEntity, oldEntity));
-
+        StringBuilder result = new StringBuilder();
         if (!entityUpdated) {
-            throw new FalconException("No relevant updates detected in the new entity definition!");
+            // Ideally should throw an exception, but, keeping it backward-compatible.
+            LOG.warn("No relevant updates detected in the new entity definition for entity {}!", newEntity.getName());
+            return result.toString();
         }
 
         Date oldEndTime = EntityUtil.getEndTime(oldEntity, cluster);
@@ -435,7 +438,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
         Collection<InstanceState> instances = new ArrayList<>();
         instances.add(STATE_STORE.getLastExecutionInstance(oldEntity, cluster));
         EXECUTION_SERVICE.getEntityExecutor(oldEntity, cluster).update(newEntity);
-        StringBuilder result = new StringBuilder();
+
         result.append(newEntity.toShortString()).append("/Effective Time: ")
                 .append(getEffectiveTime(newEntity, cluster, instances));
         return result.toString();
