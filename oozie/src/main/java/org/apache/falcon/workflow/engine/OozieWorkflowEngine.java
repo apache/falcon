@@ -170,12 +170,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
                 prepareEntityBuildPath(entity, cluster);
                 Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
-                Properties properties = builder.build(cluster, buildPath, suppliedProps);
+                Properties properties = builder.build(cluster, buildPath);
                 if (properties == null) {
                     LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
                     continue;
                 }
-
                 //Do dryRun of coords before schedule as schedule is asynchronous
                 dryRunInternal(cluster, new Path(properties.getProperty(OozieEntityBuilder.ENTITY_PATH)), skipDryRun);
                 scheduleEntity(clusterName, properties, entity);
