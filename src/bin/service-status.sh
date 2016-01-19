@@ -35,9 +35,8 @@ APP_TYPE=$1
 if [ -f $FALCON_PID_FILE ]; then
   if kill -0 `cat $FALCON_PID_FILE` > /dev/null 2>&1; then
     RESULT=$(${BASEDIR}/bin/falcon admin -status)
-    echo -n $RESULT
-    if [[ $RESULT == "*is running*" ]]; then
-        echo "$APP_TYPE process: `cat $FALCON_PID_FILE`"
+    if [[ $RESULT == *"is running"* ]]; then
+        echo "$APP_TYPE process is running with PID: `cat $FALCON_PID_FILE`"
         exit `cat $FALCON_PID_FILE`
     else
         exit -2

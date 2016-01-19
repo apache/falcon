@@ -114,6 +114,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1538 Prism status gives wrong info(Praveen Adlakha via Ajay Yadava)
+
     FALCON-1715 IllegalStateException in MetadataMappingService when entity is scheduled via native scheduler (Pallavi Rao)
 
     FALCON-1732 Folders not getting deleted after testing (Praveen Adlakha via Pallavi Rao)
