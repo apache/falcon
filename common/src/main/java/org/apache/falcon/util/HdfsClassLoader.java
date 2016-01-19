@@ -144,8 +144,10 @@ public class HdfsClassLoader extends URLClassLoader {
                 }
             });
 
-            for (File jarFile : jarFiles) {
-                urls.add(jarFile.toURI().toURL());
+            if (jarFiles != null) {
+                for (File jarFile : jarFiles) {
+                    urls.add(jarFile.toURI().toURL());
+                }
             }
 
             if (!fileURL.toString().endsWith("/")) {

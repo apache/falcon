@@ -27,7 +27,6 @@ import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.resource.UnitTestContext;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
-import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
@@ -47,6 +46,10 @@ import java.util.Set;
  * Oozie Utility class for integration-tests.
  */
 public final class OozieTestUtils {
+
+    // todo refactor to reuse it from OozieWorkflowEngine
+    private static final List<WorkflowJob.Status> WF_RERUN_PRECOND =
+            Arrays.asList(WorkflowJob.Status.FAILED, WorkflowJob.Status.KILLED, WorkflowJob.Status.SUCCEEDED);
 
     private OozieTestUtils() {
     }
@@ -109,7 +112,7 @@ public final class OozieTestUtils {
         for (int i = 0; i < 50; i++) {
             WorkflowJob job = ozClient.getJobInfo(jobId);
             lastStatus = job.getStatus().name();
-            if (OozieWorkflowEngine.WF_RERUN_PRECOND.contains(job.getStatus())) {
+            if (WF_RERUN_PRECOND.contains(job.getStatus())) {
                 return;
             }
             System.out.println("Waiting for workflow to start");

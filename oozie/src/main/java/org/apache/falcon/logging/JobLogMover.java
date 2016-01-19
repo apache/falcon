@@ -55,7 +55,7 @@ public class JobLogMover {
     private static final String YARN = "yarn";
     private static final String MAPREDUCE_FRAMEWORK = "mapreduce.framework.name";
 
-    public static final Set<String> FALCON_ACTIONS =
+    private static final Set<String> FALCON_ACTIONS =
         new HashSet<String>(Arrays.asList(new String[]{"eviction", "replication", }));
 
     private Configuration getConf() {

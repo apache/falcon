@@ -127,9 +127,14 @@ public class HadoopStartupListener implements ServletContextListener {
         StringBuilder libActionDirectories = new StringBuilder();
         File f = new File(shareLibPath);
 
-        for(File libDir : f.listFiles()) {
-            if (libDir.isDirectory()) {
-                libActionDirectories.append(libDir.getName()).append("\t");
+        if (f != null) {
+            File[] files = f.listFiles();
+            if (files != null) {
+                for (File libDir : files) {
+                    if (libDir != null && libDir.isDirectory()) {
+                        libActionDirectories.append(libDir.getName()).append("\t");
+                    }
+                }
             }
         }
         String actionDirectories = libActionDirectories.toString();

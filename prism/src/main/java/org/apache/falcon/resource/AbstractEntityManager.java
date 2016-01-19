@@ -339,9 +339,6 @@ public abstract class AbstractEntityManager {
 
     private void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)
         throws FalconException {
-        if (tokenList == null) {
-            tokenList = new ArrayList<>();
-        }
         //first obtain lock for the entity for which update is issued.
         if (memoryLocks.acquireLock(entity, command)) {
             tokenList.add(entity);

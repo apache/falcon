@@ -84,7 +84,7 @@ public abstract class AbstractFalconAspect {
 
         Integer timeTakenArg = ResourcesReflectionUtil.getResourceTimeTakenName(methodName);
         return timeTakenArg == null ? new ResourceMessage(action, dimensions, status, executionTime)
-            : new ResourceMessage(action, dimensions, status, Long.valueOf(args[timeTakenArg].toString()));
+            : new ResourceMessage(action, dimensions, status, Long.parseLong(args[timeTakenArg].toString()));
     }
 
     public abstract void publishMessage(ResourceMessage message);

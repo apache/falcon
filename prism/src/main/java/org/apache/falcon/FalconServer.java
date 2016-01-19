@@ -105,7 +105,7 @@ public final class FalconServer {
     private static int getApplicationPort(CommandLine cmd, String enableTLSFlag) {
         final int appPort;
         if (cmd.hasOption(APP_PORT)) {
-            appPort = Integer.valueOf(cmd.getOptionValue(APP_PORT));
+            appPort = Integer.parseInt(cmd.getOptionValue(APP_PORT));
         } else {
             // default : falcon.enableTLS is true
             appPort = StringUtils.isEmpty(enableTLSFlag)
@@ -125,7 +125,7 @@ public final class FalconServer {
         boolean startActiveMq = Boolean.valueOf(System.getProperty("falcon.embeddedmq", "true"));
         if (startActiveMq) {
             String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
-            int mqport = Integer.valueOf(System.getProperty("falcon.embeddedmq.port", "61616"));
+            int mqport = Integer.parseInt(System.getProperty("falcon.embeddedmq.port", "61616"));
             LOG.info("Starting ActiveMQ at port {} with data dir {}", mqport, dataDir);
 
             broker = new BrokerService();

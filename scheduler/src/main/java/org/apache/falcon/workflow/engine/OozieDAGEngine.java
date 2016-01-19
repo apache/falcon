@@ -431,7 +431,7 @@ public class OozieDAGEngine implements DAGEngine {
         int retryCount;
         String retry = RuntimeProperties.get().getProperty(WORKFLOW_STATUS_RETRY_COUNT, "30");
         try {
-            retryCount = Integer.valueOf(retry);
+            retryCount = Integer.parseInt(retry);
         } catch (NumberFormatException nfe) {
             throw new DAGEngineException("Invalid value provided for runtime property \""
                     + WORKFLOW_STATUS_RETRY_COUNT + "\". Please provide an integer value.");
