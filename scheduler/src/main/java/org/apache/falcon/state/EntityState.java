@@ -81,7 +81,8 @@ public class EntityState implements StateMachine<EntityState.STATE, EntityState.
         SUBMIT,
         SCHEDULE,
         SUSPEND,
-        RESUME
+        RESUME,
+        KILL
     }
 
     /**
