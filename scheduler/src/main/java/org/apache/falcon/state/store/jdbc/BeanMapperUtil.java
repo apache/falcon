@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.state.store.jdbc;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
@@ -300,5 +302,23 @@ public final class BeanMapperUtil {
         } finally {
             IOUtils.closeQuietly(out);
         }
+    }
+
+    /**
+     * @param summary
+     * @return A map of state and count given the JQL result.
+     */
+    public static Map<InstanceState.STATE, Long> getInstanceStateSummary(Collection<Object[]> summary) {
+        Map<InstanceState.STATE, Long> stateSummary = new HashMap<>();
+        if (summary != null && !summary.isEmpty()) {
+            for (Object[] projection : summary) {
+                // Has to have 2 columns (state and count), else Array will be out of bounds.
+                if (projection.length == 2) {
+                    stateSummary.put(InstanceState.STATE.valueOf((String)projection[0]),
+                            Long.valueOf(((Number)projection[1]).longValue()));
+                }
+            }
+        }
+        return stateSummary;
     }
 }

@@ -324,6 +324,12 @@ public class FalconUnitClient extends AbstractFalconClient {
                                                         String colo, List<LifeCycle> lifeCycles, String filterBy,
                                                         String orderBy, String sortOrder, String doAsUser) throws
             FalconCLIException {
+        if (StringUtils.isBlank(orderBy)) {
+            orderBy = DEFAULT_ORDERBY;
+        }
+        if (StringUtils.isBlank(sortOrder)) {
+            sortOrder = DEFAULT_SORTED_ORDER;
+        }
         return localInstanceManager.getSummary(type, entity, start, end, colo, lifeCycles, filterBy, orderBy,
                 sortOrder);
     }

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.state.service.store;
 
+import java.util.Map;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
@@ -445,7 +446,41 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
         Assert.assertEquals(instances.size(), 0);
     }
 
+    @Test
+    public void testGetExecutionSummaryWithRange() throws Exception {
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.FEED, "clicksFeed");
+        storeEntity(EntityType.FEED, "clicksSummary");
 
+        long instance1Time = System.currentTimeMillis() - 180000;
+        long instance2Time = System.currentTimeMillis();
+        EntityState entityState = getEntityState(EntityType.PROCESS, "clicksProcess");
+        ExecutionInstance processExecutionInstance1 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance1Time, "cluster1", instance1Time);
+        InstanceState instanceState1 = new InstanceState(processExecutionInstance1);
+        instanceState1.setCurrentState(InstanceState.STATE.RUNNING);
+
+        ExecutionInstance processExecutionInstance2 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance2Time, "cluster1", instance2Time);
+        InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
+        instanceState2.setCurrentState(InstanceState.STATE.SUCCEEDED);
+
+        stateStore.putExecutionInstance(instanceState1);
+        stateStore.putExecutionInstance(instanceState2);
+
+
+        Map<InstanceState.STATE, Long> summary = stateStore.getExecutionInstanceSummary(entityState.getEntity(),
+                "cluster1", new DateTime(instance1Time), new DateTime(instance1Time + 60000));
+        Assert.assertEquals(summary.size(), 1);
+        Assert.assertEquals(summary.get(InstanceState.STATE.RUNNING).longValue(), 1L);
+
+        summary = stateStore.getExecutionInstanceSummary(entityState.getEntity(),
+                "cluster1", new DateTime(instance2Time), new DateTime(instance2Time + 60000));
+        Assert.assertEquals(summary.size(), 1);
+        Assert.assertEquals(summary.get(InstanceState.STATE.SUCCEEDED).longValue(), 1L);
+    }
 
     private void initInstanceState(InstanceState instanceState) {
         instanceState.setCurrentState(InstanceState.STATE.READY);
