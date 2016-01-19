@@ -116,6 +116,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1723 Rerun with skip fail actions won't work in few cases (Pavan Kolamuri via Pallavi Rao)
+
     FALCON-1538 Prism status gives wrong info(Praveen Adlakha via Ajay Yadava)
 
     FALCON-1715 IllegalStateException in MetadataMappingService when entity is scheduled via native scheduler (Pallavi Rao)
