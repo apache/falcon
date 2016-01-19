@@ -18,6 +18,7 @@
 
 package org.apache.falcon.workflow.engine;
 
+import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
@@ -398,7 +399,27 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
                                              List<LifeCycle> lifeCycles) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
+        List<InstancesSummaryResult.InstanceSummary> instanceSummaries = new ArrayList<>();
+
+        // Iterate over entity clusters
+        for (String cluster : clusters) {
+            LOG.debug("Retrieving summary of instances for cluster : {}", cluster);
+            Map<InstanceState.STATE, Long> summaries = STATE_STORE.getExecutionInstanceSummary(entity, cluster,
+                    new DateTime(start), new DateTime(end));
+            Map<String, Long> summaryMap = new HashMap<>();
+            // Iterate over the map and convert STATE to String
+            for (Map.Entry<InstanceState.STATE, Long> summary : summaries.entrySet()) {
+                summaryMap.put(summary.getKey().name(), summary.getValue());
+            }
+            instanceSummaries.add(new InstancesSummaryResult.InstanceSummary(cluster, summaryMap));
+        }
+
+        InstancesSummaryResult instancesSummaryResult =
+                new InstancesSummaryResult(APIResult.Status.SUCCEEDED, JobAction.SUMMARY.name());
+        instancesSummaryResult.setInstancesSummary(instanceSummaries.
+                toArray(new InstancesSummaryResult.InstanceSummary[instanceSummaries.size()]));
+        return instancesSummaryResult;
     }
 
     @Override

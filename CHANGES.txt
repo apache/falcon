@@ -23,6 +23,8 @@ Proposed Release Version: 0.9
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1742 Implement instance summary api for native scheduler (Pallavi Rao)
+
     FALCON-1677 Support re-tries for timed-out instances (Narayan Periwal via Pallavi Rao)
 
     FALCON-1643 Add CLI option to display captured replication metrics(Peeyush Bishnoi via Ajay Yadava)

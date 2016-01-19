@@ -218,6 +218,27 @@ public final class InMemoryStateStore extends AbstractStateStore {
     }
 
     @Override
+    public Map<InstanceState.STATE, Long> getExecutionInstanceSummary(Entity entity, String cluster,
+            DateTime start, DateTime end) throws StateStoreException {
+        Map<InstanceState.STATE, Long> summary = new HashMap<>();
+        for (InstanceState state : getAllExecutionInstances(entity, cluster)) {
+            ExecutionInstance instance = state.getInstance();
+            DateTime instanceTime = instance.getInstanceTime();
+            // Start date inclusive and end date exclusive.
+            // If start date and end date are equal no instances will be added.
+            if ((instanceTime.isEqual(start) || instanceTime.isAfter(start))
+                    && instanceTime.isBefore(end)) {
+                if (summary.containsKey(state.getCurrentState())) {
+                    summary.put(state.getCurrentState(), summary.get(state.getCurrentState()) + 1L);
+                } else {
+                    summary.put(state.getCurrentState(), 1L);
+                }
+            }
+        }
+        return summary;
+    }
+
+    @Override
     public InstanceState getLastExecutionInstance(Entity entity, String cluster) throws StateStoreException {
         EntityClusterID id = new EntityClusterID(entity, cluster);
         if (!entityStates.containsKey(id.getEntityID().getKey())) {

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.state.store.jdbc;
 
+import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
@@ -354,6 +355,22 @@ public final class JDBCStateStore extends AbstractStateStore {
         } catch (IOException e) {
             throw new StateStoreException(e);
         }
+    }
+
+    @Override
+    public Map<InstanceState.STATE, Long> getExecutionInstanceSummary(Entity entity, String cluster,
+            DateTime start, DateTime end) throws StateStoreException {
+        String entityKey = new EntityClusterID(entity, cluster).getEntityID().getKey();
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery("GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE");
+        q.setParameter("entityId", entityKey);
+        q.setParameter("cluster", cluster);
+        q.setParameter("startTime", new Timestamp(start.getMillis()));
+        q.setParameter("endTime", new Timestamp(end.getMillis()));
+        List result  = q.getResultList();
+        entityManager.close();
+
+        return BeanMapperUtil.getInstanceStateSummary(result);
     }
 
     @Override

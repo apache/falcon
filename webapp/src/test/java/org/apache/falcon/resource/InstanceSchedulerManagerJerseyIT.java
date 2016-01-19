@@ -144,4 +144,28 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         Assert.assertEquals(result.getInstances()[0].getInstance(), "2012-04-22T00:00Z");
         Assert.assertEquals(result.getInstances()[2].getInstance(), START_INSTANCE);
     }
+
+    @Test
+    public void testInstanceSummary() throws Exception {
+        UnitTestContext context = new UnitTestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+
+        setupProcessExecution(context, overlay, 3);
+
+        String processName = overlay.get(PROCESS_NAME);
+        String colo = overlay.get(COLO);
+
+        waitForStatus(EntityType.PROCESS.toString(), processName,
+                START_INSTANCE, InstancesResult.WorkflowStatus.RUNNING);
+
+        InstancesSummaryResult result = falconUnitClient.getSummaryOfInstances(EntityType.PROCESS.toString(),
+                processName, START_INSTANCE, "2012-04-23T00:00Z", colo, null, null, null, null, null);
+
+        Assert.assertEquals(result.getInstancesSummary().length, 1);
+        Assert.assertEquals(result.getInstancesSummary()[0].getCluster(), overlay.get(CLUSTER));
+        Assert.assertEquals(result.getInstancesSummary()[0].getSummaryMap().size(), 2);
+        // Parallelism is 2
+        Assert.assertEquals(result.getInstancesSummary()[0].getSummaryMap().get("RUNNING").longValue(), 2L);
+        Assert.assertEquals(result.getInstancesSummary()[0].getSummaryMap().get("READY").longValue(), 1L);
+    }
 }

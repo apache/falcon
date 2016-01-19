@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.state.store;
 
+import java.util.Map;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.state.EntityClusterID;
@@ -101,6 +102,18 @@ public interface InstanceStateStore {
      */
     Collection<InstanceState> getExecutionInstances(EntityClusterID entityClusterID,
                                                     Collection<InstanceState.STATE> states) throws StateStoreException;
+
+    /**
+     * @param entity
+     * @param cluster
+     * @param states
+     * @param start
+     * @param end
+     * @return - A map of state and the no. of instances in that state.
+     * @throws StateStoreException
+     */
+    Map<InstanceState.STATE, Long> getExecutionInstanceSummary(Entity entity, String cluster,
+                                                               DateTime start, DateTime end) throws StateStoreException;
     /**
      * @param entity
      * @param cluster
