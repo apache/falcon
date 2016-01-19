@@ -371,6 +371,9 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
                                           List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException {
+        if (isForced == null) {
+            isForced = false;
+        }
         return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles, isForced);
     }
 
