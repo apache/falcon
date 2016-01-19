@@ -120,31 +120,35 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         for(String srcPaths : src.split(",")) {
             File srcFile = new File(srcPaths);
             File[] srcFiles = new File[] { srcFile };
-            if (srcFile.isDirectory()) {
-                srcFiles = srcFile.listFiles();
+            if (srcFiles != null) {
+                if (srcFile.isDirectory()) {
+                    srcFiles = srcFile.listFiles();
+                }
             }
 
-            for (File file : srcFiles) {
-                Path path = new Path(file.getAbsolutePath());
-                String jarName = StringUtils.removeEnd(path.getName(), ".jar");
-                if (pathFilter != null) {
-                    if (!pathFilter.accept(path)) {
-                        continue;
+            if (srcFiles != null) {
+                for (File file : srcFiles) {
+                    Path path = new Path(file.getAbsolutePath());
+                    String jarName = StringUtils.removeEnd(path.getName(), ".jar");
+                    if (pathFilter != null) {
+                        if (!pathFilter.accept(path)) {
+                            continue;
+                        }
+                        jarName = pathFilter.getJarName(path);
                     }
-                    jarName = pathFilter.getJarName(path);
-                }
 
-                Path targetFile = new Path(target, jarName + ".jar");
-                if (fs.exists(targetFile)) {
-                    FileStatus fstat = fs.getFileStatus(targetFile);
-                    if (fstat.getLen() == file.length()) {
-                        continue;
+                    Path targetFile = new Path(target, jarName + ".jar");
+                    if (fs.exists(targetFile)) {
+                        FileStatus fstat = fs.getFileStatus(targetFile);
+                        if (fstat.getLen() == file.length()) {
+                            continue;
+                        }
                     }
+                    fs.copyFromLocalFile(false, true, new Path(file.getAbsolutePath()), targetFile);
+                    fs.setPermission(targetFile, HadoopClientFactory.READ_EXECUTE_PERMISSION);
+                    LOG.info("Copied {} to {} in {}",
+                            file.getAbsolutePath(), targetFile.toString(), fs.getUri());
                 }
-                fs.copyFromLocalFile(false, true, new Path(file.getAbsolutePath()), targetFile);
-                fs.setPermission(targetFile, HadoopClientFactory.READ_EXECUTE_PERMISSION);
-                LOG.info("Copied {} to {} in {}",
-                        file.getAbsolutePath(), targetFile.toString(), fs.getUri());
             }
         }
     }

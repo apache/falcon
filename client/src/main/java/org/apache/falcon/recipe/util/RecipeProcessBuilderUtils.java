@@ -232,7 +232,7 @@ public final class RecipeProcessBuilderUtils {
         List<Property> propertyList = new ArrayList<>();
 
         for (Map.Entry<Object, Object> recipeProperty : recipeProperties.entrySet()) {
-            if (RecipeToolOptions.OPTIONSMAP.get(recipeProperty.getKey().toString()) == null) {
+            if (RecipeToolOptions.getOptionsMap().get(recipeProperty.getKey().toString()) == null) {
                 addProperty(propertyList, (String) recipeProperty.getKey(), (String) recipeProperty.getValue());
             }
         }

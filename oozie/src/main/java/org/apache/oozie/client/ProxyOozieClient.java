@@ -80,11 +80,11 @@ public class ProxyOozieClient extends AuthOozieClient {
                 public HttpURLConnection run() throws Exception {
                     HttpURLConnection conn = ProxyOozieClient.super.createConnection(decoratedUrl, method);
 
-                    int connectTimeout = Integer.valueOf(
+                    int connectTimeout = Integer.parseInt(
                             RuntimeProperties.get().getProperty("oozie.connect.timeout", "1000"));
                     conn.setConnectTimeout(connectTimeout);
 
-                    int readTimeout = Integer.valueOf(
+                    int readTimeout = Integer.parseInt(
                             RuntimeProperties.get().getProperty("oozie.read.timeout", "45000"));
                     conn.setReadTimeout(readTimeout);
 

@@ -59,6 +59,8 @@ Proposed Release Version: 0.9
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
+    FALCON-1733 Support for building falcon with JDK 1.8 also(Narayan Periwal via Ajay Yadava)
+
     FALCON-1662 Ensure entity can be scheduled on multiple clusters on same colo (Pallavi Rao)
 
     FALCON-1545 Add documentation for Hive replication job counters(Peeyush Bishnoi via Ajay Yadava)

@@ -97,7 +97,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 WorkflowJob.Status.FAILED);
     private static final List<WorkflowJob.Status> WF_SUSPEND_PRECOND = Arrays.asList(WorkflowJob.Status.RUNNING);
     private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays.asList(WorkflowJob.Status.SUSPENDED);
-    public static final List<WorkflowJob.Status> WF_RERUN_PRECOND =
+    private static final List<WorkflowJob.Status> WF_RERUN_PRECOND =
         Arrays.asList(WorkflowJob.Status.FAILED, WorkflowJob.Status.KILLED, WorkflowJob.Status.SUCCEEDED);
     private static final List<CoordinatorAction.Status> COORD_RERUN_PRECOND =
         Arrays.asList(CoordinatorAction.Status.TIMEDOUT, CoordinatorAction.Status.FAILED);
@@ -1045,7 +1045,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 getApplicableCoords(client, start, end, bundles, lifeCycles);
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
             int maxRetentionInstancesCount =
-                Integer.valueOf(RuntimeProperties.get().getProperty("retention.instances.displaycount", "2"));
+                Integer.parseInt(RuntimeProperties.get().getProperty("retention.instances.displaycount", "2"));
             int retentionInstancesCount = 0;
 
             for (CoordinatorJob coord : applicableCoords) {
@@ -1061,7 +1061,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 Date iterEnd = ((nextMaterializedTime.before(end) || retentionCoord) ? nextMaterializedTime : end);
                 Calendar endCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                 endCal.setTime(EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, iterEnd));
-                endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+                endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.parseInt((coord.getFrequency()))));
 
                 while (start.compareTo(endCal.getTime()) <= 0) {
                     if (retentionCoord) {
@@ -1074,7 +1074,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, endCal.getTime());
                     String actionId = coord.getId() + "@" + sequence;
                     addCoordAction(client, actions, actionId);
-                    endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+                    endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.parseInt((coord.getFrequency()))));
                 }
             }
             actionsMap.put(cluster, actions);
@@ -1507,7 +1507,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         int retryCount;
         String retry = RuntimeProperties.get().getProperty(WORKFLOW_STATUS_RETRY_COUNT, "30");
         try {
-            retryCount = Integer.valueOf(retry);
+            retryCount = Integer.parseInt(retry);
         } catch (NumberFormatException nfe) {
             throw new FalconException("Invalid value provided for runtime property \""
                     + WORKFLOW_STATUS_RETRY_COUNT + "\". Please provide an integer value.");

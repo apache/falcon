@@ -85,7 +85,7 @@ public class Frequency {
     }
 
     public int getFrequencyAsInt() {
-        return Integer.valueOf(frequency);
+        return Integer.parseInt(frequency);
     }
 
     @Override

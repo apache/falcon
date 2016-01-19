@@ -84,7 +84,7 @@ public class AuthenticationInitializationService implements FalconService {
             long validateFrequency;
             try {
                 validateFrequency = (StringUtils.isNotEmpty(authTokenValidity))
-                        ? Long.valueOf(authTokenValidity) : 86400;
+                        ? Long.parseLong(authTokenValidity) : 86400;
             } catch (NumberFormatException nfe) {
                 throw new FalconException("Invalid value provided for startup property \""
                         + AUTH_TOKEN_VALIDITY_SECONDS + "\", please provide a valid long number", nfe);

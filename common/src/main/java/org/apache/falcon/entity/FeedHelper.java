@@ -454,7 +454,7 @@ public final class FeedHelper {
 
             int value;
             try {
-                value = Integer.valueOf(path.substring(pad.length(), pad.length() + pathVar.getValueSize()));
+                value = Integer.parseInt(path.substring(pad.length(), pad.length() + pathVar.getValueSize()));
             } catch (NumberFormatException e) {
                 //Not a valid number for variable
                 return null;

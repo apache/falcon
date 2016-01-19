@@ -5,7 +5,7 @@
 
 ---+++Prerequisites
 
-   * JDK 1.7
+   * JDK 1.7/1.8
    * Maven 3.2.x
 
 
@@ -30,7 +30,7 @@ It builds and installs the package into the local repository, for use as a depen
 *NOTE:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of Oozie. Oozie versions
 >= 4 are supported]
-NOTE: Falcon builds with JDK 1.7 using -noverify option
+NOTE: Falcon builds with JDK 1.7/1.8 using -noverify option
       To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this Hive >= 1.2.0
       and Oozie >= 4.2.0 should be available.
 

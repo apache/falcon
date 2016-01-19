@@ -51,11 +51,15 @@ public enum RecipeToolOptions {
     private final String description;
     private final boolean isRequired;
 
-    public static final Map<String, RecipeToolOptions> OPTIONSMAP = new HashMap<>();
+    private static Map<String, RecipeToolOptions> optionsMap = new HashMap<>();
     static {
         for (RecipeToolOptions c : RecipeToolOptions.values()) {
-            OPTIONSMAP.put(c.getName(), c);
+            optionsMap.put(c.getName(), c);
         }
+    }
+
+    public static Map<String, RecipeToolOptions> getOptionsMap() {
+        return optionsMap;
     }
 
     RecipeToolOptions(String name, String description) {

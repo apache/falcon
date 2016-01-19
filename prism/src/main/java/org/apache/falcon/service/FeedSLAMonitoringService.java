@@ -236,16 +236,16 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         fileSystem = initializeFileSystem();
 
         String freq = StartupProperties.get().getProperty("feed.sla.serialization.frequency.millis", ONE_HOUR);
-        serializationFrequencyMillis = Integer.valueOf(freq);
+        serializationFrequencyMillis = Integer.parseInt(freq);
 
         freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
-        statusCheckFrequencySeconds = Integer.valueOf(freq);
+        statusCheckFrequencySeconds = Integer.parseInt(freq);
 
         freq = StartupProperties.get().getProperty("feed.sla.lookAheadWindow.millis", "900000");
-        lookAheadWindowMillis = Integer.valueOf(freq);
+        lookAheadWindowMillis = Integer.parseInt(freq);
 
         String size = StartupProperties.get().getProperty("feed.sla.queue.size", "288");
-        queueSize = Integer.valueOf(size);
+        queueSize = Integer.parseInt(size);
 
         try {
             if (fileSystem.exists(filePath)) {
