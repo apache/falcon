@@ -56,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
-import java.util.TimeZone;
 
 /**
  * This class is responsible for managing execution instances of a process.
@@ -153,8 +152,7 @@ public class ProcessExecutor extends EntityExecutor {
                 suspend(instance);
             } catch (FalconException e) {
                 // Proceed with next
-                errMsg.append("Instance suspend failed for : " + instance.getId() + " due to " + e.getMessage());
-                LOG.error("Instance suspend failed for : " + instance.getId(), e);
+                errMsg.append(handleError(instance, e, EntityState.EVENT.SUSPEND));
             }
         }
         for (InstanceState instanceState : STATE_STORE.getExecutionInstances(process, cluster,
@@ -163,14 +161,31 @@ public class ProcessExecutor extends EntityExecutor {
             try {
                 suspend(instance);
             } catch (FalconException e) {
-                errMsg.append("Instance suspend failed for : " + instance.getId() + " due to " + e.getMessage());
-                LOG.error("Instance suspend failed for : " + instance.getId(), e);
+                errMsg.append(handleError(instance, e, EntityState.EVENT.SUSPEND));
             }
         }
         // Some errors
         if (errMsg.length() != 0) {
             throw new FalconException("Some instances failed to suspend : " + errMsg.toString());
         }
+    }
+
+    // Error handling for an operation.
+    private String handleError(ExecutionInstance instance, FalconException e, EntityState.EVENT action)
+        throws StateStoreException {
+        try {
+            // If the instance terminated while a kill/suspend operation was in progress, ignore the exception.
+            InstanceState.STATE currentState = STATE_STORE.getExecutionInstance(instance.getId()).getCurrentState();
+            if (InstanceState.getTerminalStates().contains(currentState)) {
+                return "";
+            }
+        } catch (StateStoreException sse) {
+            throw sse;
+        }
+
+        String errMsg = "Instance " + action.name() + " failed for: " + instance.getId() + " due to " + e.getMessage();
+        LOG.error(errMsg, e);
+        return errMsg;
     }
 
     //  Returns last materialized instance's time.
@@ -198,8 +213,8 @@ public class ProcessExecutor extends EntityExecutor {
             try {
                 resume(instance);
             } catch (FalconException e) {
-                errMsg.append("Instance suspend failed for : " + instance.getId() + " due to " + e.getMessage());
-                LOG.error("Instance suspend failed for : " + instance.getId(), e);
+                errMsg.append("Instance resume failed for : " + instance.getId() + " due to " + e.getMessage());
+                LOG.error("Instance resume failed for : " + instance.getId(), e);
             }
         }
         registerForNotifications(getLastInstanceTime());
@@ -219,8 +234,7 @@ public class ProcessExecutor extends EntityExecutor {
                 kill(instance);
             } catch (FalconException e) {
                 // Proceed with next
-                errMsg.append("Instance kill failed for : " + instance.getId() + " due to " + e.getMessage());
-                LOG.error("Instance kill failed for : " + instance.getId(), e);
+                errMsg.append(handleError(instance, e, EntityState.EVENT.KILL));
             }
         }
         for (InstanceState instanceState : STATE_STORE.getExecutionInstances(process, cluster,
@@ -229,8 +243,7 @@ public class ProcessExecutor extends EntityExecutor {
             try {
                 kill(instance);
             } catch (FalconException e) {
-                errMsg.append("Instance kill failed for : " + instance.getId() + " due to " + e.getMessage());
-                LOG.error("Instance kill failed for : " + instance.getId(), e);
+                errMsg.append(handleError(instance, e, EntityState.EVENT.KILL));
             }
         }
         // Some errors
@@ -248,12 +261,10 @@ public class ProcessExecutor extends EntityExecutor {
             LOG.error("Suspend failed for instance id : " + instance.getId(), e);
             throw new FalconException("Suspend failed for instance : " + instance.getId(), e);
         }
-
     }
 
     @Override
     public void resume(ExecutionInstance instance) throws FalconException {
-
         try {
             instance.resume();
             if (((ProcessExecutionInstance) instance).isScheduled()) {
@@ -452,7 +463,7 @@ public class ProcessExecutor extends EntityExecutor {
         requestBuilder.setFrequency(process.getFrequency())
                 .setStartTime(new DateTime(startTime))
                 .setEndTime(new DateTime(endTime))
-                .setTimeZone(TimeZone.getTimeZone("UTC"));
+                .setTimeZone(EntityUtil.getTimeZone(process));
         NotificationServicesRegistry.register(requestBuilder.build());
         LOG.info("Registered for a time based notification for process {}  with frequency: {}, "
                 + "start time: {}, end time: {}", process.getName(), process.getFrequency(), startTime, endTime);
