@@ -77,7 +77,7 @@ public class FalconCLIException extends Exception {
         return statusValue + ";" + message;
     }
 
-    public static FalconCLIException fromReponse(ClientResponse clientResponse, Class clazz) {
+    public static FalconCLIException fromReponse(ClientResponse clientResponse, Class<? extends APIResult> clazz) {
         return new FalconCLIException(getMessage(clientResponse, clazz));
     }
 
