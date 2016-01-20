@@ -771,9 +771,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             for (String colo : colos) {
                 try {
                     results.put(colo, doExecute(colo));
-                } catch (Throwable e) {
-                    results.put(colo, getResultInstance(APIResult.Status.FAILED, e.getClass().getName() + "::"
-                            + e.getMessage()));
+                } catch (FalconWebException e) {
+                    String message = ((APIResult) e.getResponse().getEntity()).getMessage();
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, message));
+                } catch (Throwable throwable) {
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, throwable.getClass().getName() + "::"
+                        + throwable.getMessage()));
                 }
             }
 

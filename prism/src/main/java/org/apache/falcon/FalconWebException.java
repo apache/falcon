@@ -63,7 +63,10 @@ public class FalconWebException extends WebApplicationException {
     }
 
     private static String getMessage(Throwable e) {
-        return e.getCause()==null? e.getMessage():e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
+        if (e instanceof FalconWebException) {
+            return ((APIResult)((FalconWebException) e).getResponse().getEntity()).getMessage();
+        }
+        return e.getCause() == null ? e.getMessage() : e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
     }
 
     public FalconWebException(Response response) {
