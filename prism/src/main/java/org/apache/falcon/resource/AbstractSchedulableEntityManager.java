@@ -96,13 +96,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             entityObj = EntityUtil.getEntity(type, entity);
             //first acquire lock on entity before scheduling
             if (!memoryLocks.acquireLock(entityObj, "schedule")) {
-                throw new FalconException("Looks like an schedule/update command is already running for "
-                        + entityObj.toShortString());
+                throw  FalconWebException.newAPIException("Looks like an schedule/update command is already"
+                        + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
             WorkflowEngineFactory.getWorkflowEngine(entityObj, properties).schedule(entityObj, skipDryRun, properties);
         } catch (Exception e) {
-            throw new FalconException("Entity schedule failed for " + type + ": " + entity, e);
+            LOG.error("Entity schedule failed for " + type + ": " + entity, e);
+            throw FalconWebException.newAPIException("Entity schedule failed for " + type + ": " + entity);
         } finally {
             if (entityObj != null) {
                 memoryLocks.releaseLock(entityObj);
@@ -223,7 +224,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             if (getWorkflowEngine(entityObj).isActive(entityObj)) {
                 getWorkflowEngine(entityObj).suspend(entityObj);
             } else {
-                throw new FalconException(entity + "(" + type + ") is not scheduled");
+                throw  FalconWebException.newAPIException(entity + "(" + type + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {
@@ -251,10 +252,10 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             if (getWorkflowEngine(entityObj).isActive(entityObj)) {
                 getWorkflowEngine(entityObj).resume(entityObj);
             } else {
-                throw new FalconException(entity + "(" + type + ") is not scheduled");
+                throw new IllegalStateException(entity + "(" + type + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOG.error("Unable to resume entity", e);
             throw FalconWebException.newAPIException(e);
         }
@@ -300,7 +301,9 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                             cluster, doAsUser),
                     orderBy, sortOrder, offset, resultsPerPage);
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
-        } catch (Exception e) {
+        } catch (FalconWebException e) {
+            throw e;
+        } catch(Exception e) {
             LOG.error("Failed to get entities", e);
             throw FalconWebException.newAPIException(e);
         }

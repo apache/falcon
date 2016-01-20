@@ -870,7 +870,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         Date endDate = getEndDate(endStr, clusterStartEndDates.second);
         Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency, numResults);
         if (startDate.after(endDate)) {
-            throw FalconWebException.newAPIException("Specified End date "
+            throw new IllegalArgumentException("Specified End date "
                     + SchemaHelper.getDateFormat().format(endDate)
                     + " is before the entity was scheduled "
                     + SchemaHelper.getDateFormat().format(startDate));

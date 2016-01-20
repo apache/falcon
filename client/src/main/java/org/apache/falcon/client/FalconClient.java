@@ -116,6 +116,7 @@ public class FalconClient extends AbstractFalconClient {
     private static final String TAG_KEYWORDS = "tagkeys";
     private static final String LIFECYCLE = "lifecycle";
     private static final String NUM_INSTANCES = "numInstances";
+    public static final String ALL_ATTEMPTS = "allAttempts";
 
 
 
@@ -529,7 +530,7 @@ public class FalconClient extends AbstractFalconClient {
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(FILTER_BY, filterBy)
             .addQueryParam(ORDER_BY, orderBy).addQueryParam(SORT_ORDER, sortOrder)
             .addQueryParam(OFFSET, offset).addQueryParam(NUM_RESULTS, numResults)
-            .addQueryParam(USER, doAsUser).call(Instances.STATUS);
+            .addQueryParam(ALL_ATTEMPTS, allAttempts).addQueryParam(USER, doAsUser).call(Instances.STATUS);
         return getResponse(InstancesResult.class, clientResponse);
     }
 
@@ -706,7 +707,7 @@ public class FalconClient extends AbstractFalconClient {
     private <T extends APIResult> T getResponse(Class<T> clazz,
                                                 ClientResponse clientResponse) throws FalconCLIException {
         printClientResponse(clientResponse);
-        checkIfSuccessful(clientResponse, clazz);
+        checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(clazz);
     }
 
@@ -1041,23 +1042,10 @@ public class FalconClient extends AbstractFalconClient {
         return getResponseAsString(clientResponse);
     }
 
-    /*
-     * Donot use this getMessage use the overloaded one
-    * with clazz as param for better error handling
-    * */
     private void checkIfSuccessful(ClientResponse clientResponse) throws FalconCLIException {
         Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
-        if (statusFamily != Response.Status.Family.SUCCESSFUL
-                && statusFamily != Response.Status.Family.INFORMATIONAL) {
-            throw FalconCLIException.fromReponse(clientResponse);
-        }
-    }
-
-    private void checkIfSuccessful(ClientResponse clientResponse,
-                                   Class<? extends APIResult> clazz) throws FalconCLIException {
-        Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
         if (statusFamily != Response.Status.Family.SUCCESSFUL && statusFamily != Response.Status.Family.INFORMATIONAL) {
-            throw FalconCLIException.fromReponse(clientResponse, clazz);
+            throw FalconCLIException.fromReponse(clientResponse);
         }
     }
 

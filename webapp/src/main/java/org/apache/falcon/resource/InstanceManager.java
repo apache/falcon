@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
@@ -56,9 +57,13 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage) {
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getRunningInstances(type, entity, colo, lifeCycles, filterBy,
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            return super.getRunningInstances(type, entity, colo, lifeCycles, filterBy,
                 orderBy, sortOrder, offset, resultsPerPage);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     /*
@@ -83,9 +88,13 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @Dimension("allAttempts") @QueryParam("allAttempts") Boolean allAttempts) {
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -106,9 +115,13 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @Dimension("allAttempts") @QueryParam("allAttempts") Boolean allAttempts) {
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -125,8 +138,12 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") String filterBy,
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder) {
-        return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles,
+        try {
+            return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, sortOrder);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -140,7 +157,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") String start,
             @Dimension("end-time") @QueryParam("end") String end,
             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.getListing(type, entity, start, end, colo);
+        try {
+            return super.getListing(type, entity, start, end, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -161,9 +182,13 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage) {
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles,
+        try {
+            resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+            return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles,
                 filterBy, orderBy, sortOrder, offset, resultsPerPage);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -177,7 +202,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") String start,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.getInstanceParams(type, entity, start, colo, lifeCycles);
+        try {
+            return super.getInstanceParams(type, entity, start, colo, lifeCycles);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -193,7 +222,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.killInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
+        try {
+            return super.killInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -209,7 +242,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.suspendInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
+        try {
+            return super.suspendInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -225,7 +262,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
-        return super.resumeInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
+        try {
+            return super.resumeInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @GET
@@ -238,7 +279,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("name") @PathParam("name") String entityName,
             @Dimension("instanceTime") @QueryParam("start") String instanceTime,
             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.triageInstance(entityType, entityName, instanceTime, colo);
+        try {
+            return super.triageInstance(entityType, entityName, instanceTime, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -255,7 +300,11 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles,
             @Dimension("force") @QueryParam("force") Boolean isForced) {
-        return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles, isForced);
+        try {
+            return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles, isForced);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
@@ -269,6 +318,10 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("entityName") @PathParam("entity") String entityName,
             @Dimension("instanceTime") @QueryParam("instanceTime") String instanceTimeStr,
             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.getInstanceDependencies(entityType, entityName, instanceTimeStr, colo);
+        try {
+            return super.getInstanceDependencies(entityType, entityName, instanceTimeStr, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 }

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
@@ -47,7 +48,11 @@ public class ConfigSyncService extends AbstractEntityManager {
     public APIResult submit(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.submit(request, type, colo);
+        try {
+            return super.submit(request, type, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @DELETE
@@ -59,7 +64,11 @@ public class ConfigSyncService extends AbstractEntityManager {
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entity,
                             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.delete(request, type, entity, colo);
+        try {
+            return super.delete(request, type, entity, colo);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 
     @POST
@@ -72,6 +81,10 @@ public class ConfigSyncService extends AbstractEntityManager {
                             @Dimension("entityName") @PathParam("entity") String entityName,
                             @Dimension("colo") @QueryParam("colo") String colo,
                             @QueryParam("skipDryRun") Boolean skipDryRun) {
-        return super.update(request, type, entityName, colo, skipDryRun);
+        try {
+            return super.update(request, type, entityName, colo, skipDryRun);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
     }
 }
