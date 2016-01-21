@@ -25,6 +25,7 @@ import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.RecipeMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -111,6 +112,10 @@ public class HdfsRecipeTest extends BaseTestClass {
             .getAllFilesRecursivelyHDFS(clusterFS2, new Path(targetDataLocation));
 
         AssertUtil.checkForListSizes(cluster1ReplicatedData, cluster2ReplicatedData);
+
+        //particular check for https://issues.apache.org/jira/browse/FALCON-1643
+        ExecResult execResult = cluster.getProcessHelper().getCLIMetrics(hdfsRecipe.getName());
+        AssertUtil.assertCLIMetrics(execResult, hdfsRecipe.getName(), 1, true);
     }
 
     @AfterMethod(alwaysRun = true)

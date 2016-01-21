@@ -26,6 +26,8 @@ import org.apache.falcon.regression.Entities.RecipeMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
+import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.supportClasses.NotifyingAssert;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HiveAssert;
@@ -164,6 +166,9 @@ public class HiveDRTest extends BaseTestClass {
         HiveAssert.assertTableEqual(cluster, clusterHC.getTable(DB_NAME, tblName),
             cluster2, clusterHC2.getTable(DB_NAME, tblName), new NotifyingAssert(true)
         ).assertAll();
+
+        ExecResult execResult = cluster.getProcessHelper().getCLIMetrics(recipeMerlin.getName());
+        AssertUtil.assertCLIMetrics(execResult, recipeMerlin.getName(), 1, true);
     }
 
     @Test
