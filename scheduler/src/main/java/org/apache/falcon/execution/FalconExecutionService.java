@@ -19,6 +19,7 @@
 package org.apache.falcon.execution;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.process.Process;
@@ -125,8 +126,9 @@ public final class FalconExecutionService implements FalconService, EntityStateC
         if (id != null) {
             EntityExecutor executor = executors.get(id);
             if (executor == null) {
-                // The executor has gone away, throw an exception so the notification service knows
-                throw new FalconException("Target executor for " + event.getTarget() + " does not exist.");
+                // The executor has gone away or entity was not scheduled on native scheduler,
+                // throw an exception so the notification service knows.
+                throw new EntityNotRegisteredException("Target executor for " + event.getTarget() + " does not exist.");
             }
             executor.onEvent(event);
         }
