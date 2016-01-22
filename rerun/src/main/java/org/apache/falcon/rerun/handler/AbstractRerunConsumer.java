@@ -20,6 +20,7 @@ package org.apache.falcon.rerun.handler;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
@@ -53,8 +54,8 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
         AbstractRerunPolicy policy = new ExpBackoffPolicy();
         Frequency frequency = new Frequency("minutes(1)");
         while (!Thread.currentThread().isInterrupted()) {
+            T message = null;
             try {
-                T message;
                 try {
                     message = handler.takeFromQueue();
                     attempt = 1;
@@ -83,6 +84,12 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                         message.getEntityType(), message.getEntityName());
 
             } catch (Throwable e) {
+                if (e instanceof EntityNotRegisteredException) {
+                    LOG.warn("Entity {} of type {} doesn't exist in config store. Rerun "
+                                    + "cannot be done for workflow ", message.getEntityName(),
+                            message.getEntityType(), message.getWfId());
+                    return;
+                }
                 LOG.error("Error in rerun consumer", e);
             }
         }

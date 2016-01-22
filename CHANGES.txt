@@ -120,6 +120,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1757 EntityNotRegisteredException when entity is deleted from falcon (Pavan Kolamuri via Pallavi Rao)
+
     FALCON-1748 Client throws FalconWebException irrespective of type of error(Praveen Adlakha via Ajay Yadava)
 
     FALCON-1727 Suspend fails with InvalidStateTransitionException if entity has 'KILLED' instances (Pallavi Rao)

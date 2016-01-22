@@ -18,6 +18,7 @@
 package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -58,7 +59,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
                     || jobStatus.equals("SUSPENDED")) {
                 LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
-                    + "job status is running: {}", message.getWfId());
+                        + "job status is running: {}", message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
@@ -81,6 +82,12 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
                     message.getWfId(), message.getClusterName());
         } catch (Exception e) {
+            if (e instanceof EntityNotRegisteredException) {
+                LOG.warn("Entity {} of type {} doesn't exist in config store. Late rerun "
+                                + "cannot be done for workflow ", message.getEntityName(),
+                        message.getEntityType(), message.getWfId());
+                return;
+            }
             LOG.warn("Late Re-run failed for instance {}:{} after {}",
                     message.getEntityName(), message.getInstance(), message.getDelayInMilliSec(), e);
             GenericAlert.alertLateRerunFailed(message.getEntityType(), message.getEntityName(),

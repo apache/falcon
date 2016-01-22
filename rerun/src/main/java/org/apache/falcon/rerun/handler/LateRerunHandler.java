@@ -20,6 +20,7 @@ package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
@@ -91,6 +92,12 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                     wait, entityType, entityName, nominalTime, intRunId, workflowUser);
             offerToQueue(event);
         } catch (Exception e) {
+            if (e instanceof EntityNotRegisteredException) {
+                LOG.warn("Entity {} of type {} doesn't exist in config store. So late rerun "
+                                + "cannot be done for workflow ", entityName,
+                        entityType, wfId);
+                return;
+            }
             LOG.error("Unable to schedule late rerun for entity instance: {} ({}): {} And WorkflowId: {}",
                     entityType, entityName, nominalTime, wfId, e);
             GenericAlert.alertLateRerunFailed(entityType, entityName,
