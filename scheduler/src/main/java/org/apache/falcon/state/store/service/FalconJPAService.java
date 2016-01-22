@@ -139,7 +139,7 @@ public final class FalconJPAService implements FalconService {
             String interval = "timeBetweenEvictionRunsMillis=" + evictionInterval;
             String num = "numTestsPerEvictionRun=" + evictionNum;
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true," + interval + "," + num;
-            connProps += ",ValidationQuery=select count(*) from ENTITIES";
+            connProps += ",ValidationQuery=select 1";
             connProps = MessageFormat.format(connProps, dbSchema);
         } else {
             connProps += ",TestOnBorrow=false,TestOnReturn=false,TestWhileIdle=false";
