@@ -18,6 +18,7 @@
 package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.rerun.event.RetryEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
@@ -43,17 +44,22 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
         try {
             if (!jobStatus.equals("KILLED")) {
                 LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as job status is running:"
-                    + " {}", message.getWfId());
+                        + " {}", message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
             }
             LOG.info("Retrying attempt: {} out of configured: {} attempt for instance: {}:{} And WorkflowId: {}"
-                    + " At time: {}",
+                            + " At time: {}",
                     (message.getRunId() + 1), message.getAttempts(), message.getEntityName(), message.getInstance(),
                     message.getWfId(), SchemaHelper.formatDateUTC(new Date(System.currentTimeMillis())));
             handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), message.getWfId(), null, false);
         } catch (Exception e) {
+            if (e instanceof EntityNotRegisteredException) {
+                LOG.warn("Entity {} of type {} doesn't exist in config store. So retry "
+                        + "cannot be done for workflow ", entityName, entityType, message.getWfId());
+                return;
+            }
             int maxFailRetryCount = Integer.parseInt(StartupProperties.get()
                     .getProperty("max.retry.failure.count", "1"));
             if (message.getFailRetryCount() < maxFailRetryCount) {
