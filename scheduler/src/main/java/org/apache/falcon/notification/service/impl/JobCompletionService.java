@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.exception.NotificationServiceException;
@@ -153,7 +154,13 @@ public class JobCompletionService implements FalconNotificationService, Workflow
             while(iterator.hasNext()) {
                 NotificationHandler handler = iterator.next();
                 LOG.debug("Notifying {} with event {}", handler, event.getTarget());
-                handler.onEvent(event);
+                try {
+                    handler.onEvent(event);
+                } catch (EntityNotRegisteredException ee) {
+                    // Do nothing if entity no longer exists.
+                } catch (FalconException e) {
+                    LOG.error("Handler threw an exception for target " + event.getTarget(), e);
+                }
             }
         }
     }
