@@ -1,26 +1,11 @@
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-Falcon Overview
+# Apache Falcon
 
 Falcon is a feed processing and feed management system aimed at making it
 easier for end consumers to onboard their feed processing and feed
 management on hadoop clusters.
 
-Why?
+## Why Apache Falcon?
 
 * Dependencies across various data processing pipelines are not easy to
   establish. Gaps here typically leads to either incorrect/partial
@@ -43,7 +28,7 @@ Why?
   groups (logical group of related feeds, which are likely to be used
   together)
 
-Usage
+## Usage
 
 a. Setup cluster definition
    $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml -url http://falcon-server:falcon-port
@@ -70,9 +55,9 @@ f. Once scheduled entities can be suspended, resumed or deleted (post submit)
 g. Once scheduled process instances can be managed through irovy CLI
    $FALCON_HOME/bin/falcon instance -processName <<name>> [-kill|-suspend|-resume|-re-run] -start "yyyy-MM-dd'T'HH:mm'Z'" -url http://falcon-server:falcon-port
 
-Example configurations
+## Example configurations
 
-Cluster:
+### Cluster:
 <?xml version="1.0" encoding="UTF-8"?>
 <cluster colo="local" description="" name="local" xmlns="uri:falcon:cluster:0.1">
     <interfaces>
@@ -94,7 +79,7 @@ Cluster:
     </locations>
 </cluster>
 
-Feed:
+### Feed:
 <?xml version="1.0" encoding="UTF-8"?>
 <feed description="in" name="in" xmlns="uri:ivory:feed:0.1">
     <partitions>
@@ -121,7 +106,7 @@ Feed:
     <schema location="/schema/in/in.format.csv" provider="csv"/>
 </feed>
 
-Process:
+### Process:
 <?xml version="1.0" encoding="UTF-8"?>
 <process name="wf-process" xmlns="uri:falcon:process:0.1">
     <clusters>
