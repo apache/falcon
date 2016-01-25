@@ -120,6 +120,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1758 APIs fail when oozie workflow entries are deleted (Pavan Kolamuri via Pallavi Rao)
+
     FALCON-1754 JobCompletionService throws FalconException (Pallavi Rao)
 
     FALCON-1716 API fails with CommunicationsException when mysql interaction time is longer than 53,434,939 milliseconds (Pavan Kolamuri via Pallavi Rao)

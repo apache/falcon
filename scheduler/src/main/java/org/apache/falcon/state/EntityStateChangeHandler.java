@@ -50,10 +50,17 @@ public interface EntityStateChangeHandler {
     void onSuspend(Entity entity) throws FalconException;
 
     /**
-     * Invoked when the an intity is resumed.
+     * Invoked when the an entity is resumed.
      *
      * @param entity
      * @throws FalconException
      */
     void onResume(Entity entity) throws FalconException;
+
+    /**
+     * Invoked when and entity is killed/deleted.
+     * @param entity
+     * @throws FalconException
+     */
+    void onKill(Entity entity) throws FalconException;
 }

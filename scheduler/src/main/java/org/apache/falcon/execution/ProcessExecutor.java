@@ -20,6 +20,8 @@ package org.apache.falcon.execution;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
@@ -173,14 +175,10 @@ public class ProcessExecutor extends EntityExecutor {
     // Error handling for an operation.
     private String handleError(ExecutionInstance instance, FalconException e, EntityState.EVENT action)
         throws StateStoreException {
-        try {
-            // If the instance terminated while a kill/suspend operation was in progress, ignore the exception.
-            InstanceState.STATE currentState = STATE_STORE.getExecutionInstance(instance.getId()).getCurrentState();
-            if (InstanceState.getTerminalStates().contains(currentState)) {
-                return "";
-            }
-        } catch (StateStoreException sse) {
-            throw sse;
+        // If the instance terminated while a kill/suspend operation was in progress, ignore the exception.
+        InstanceState.STATE currentState = STATE_STORE.getExecutionInstance(instance.getId()).getCurrentState();
+        if (InstanceState.getTerminalStates().contains(currentState)) {
+            return "";
         }
 
         String errMsg = "Instance " + action.name() + " failed for: " + instance.getId() + " due to " + e.getMessage();
@@ -226,17 +224,8 @@ public class ProcessExecutor extends EntityExecutor {
 
     @Override
     public void killAll() throws FalconException {
-        NotificationServicesRegistry.unregister(executionService, getId());
         StringBuffer errMsg = new StringBuffer();
-        // Only active instances are in memory. Kill them first.
-        for (ExecutionInstance instance : instances.asMap().values()) {
-            try {
-                kill(instance);
-            } catch (FalconException e) {
-                // Proceed with next
-                errMsg.append(handleError(instance, e, EntityState.EVENT.KILL));
-            }
-        }
+        // Kill workflows in oozie.
         for (InstanceState instanceState : STATE_STORE.getExecutionInstances(process, cluster,
                 InstanceState.getActiveStates())) {
             ExecutionInstance instance = instanceState.getInstance();
@@ -246,10 +235,21 @@ public class ProcessExecutor extends EntityExecutor {
                 errMsg.append(handleError(instance, e, EntityState.EVENT.KILL));
             }
         }
+        // Kill active instances in memory.
+        Collection<ProcessExecutionInstance> execInstances = instances.asMap().values();
+        for (ExecutionInstance instance : execInstances) {
+            try {
+                kill(instance);
+            } catch (FalconException e) {
+                // Proceed with next
+                errMsg.append(handleError(instance, e, EntityState.EVENT.KILL));
+            }
+        }
         // Some errors
         if (errMsg.length() != 0) {
             throw new FalconException("Some instances failed to kill : " + errMsg.toString());
         }
+        NotificationServicesRegistry.unregister(executionService, getId());
     }
 
     @Override

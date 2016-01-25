@@ -81,10 +81,12 @@ public final class StateService {
             EntityState entityState = stateStore.getEntity(id);
             EntityState.STATE newState = entityState.nextTransition(event);
             callbackHandler(entity, event, handler);
-            entityState.setCurrentState(newState);
-            stateStore.updateEntity(entityState);
-            LOG.debug("State of entity: {} changed to: {} as a result of event: {}.", id,
-                    entityState.getCurrentState(), event.name());
+            if (newState != entityState.getCurrentState()) {
+                entityState.setCurrentState(newState);
+                stateStore.updateEntity(entityState);
+                LOG.debug("State of entity: {} changed to: {} as a result of event: {}.", id,
+                        entityState.getCurrentState(), event.name());
+            }
         }
     }
 
@@ -106,6 +108,9 @@ public final class StateService {
             break;
         case RESUME:
             handler.onResume(entity);
+            break;
+        case KILL:
+            handler.onKill(entity);
             break;
         default: // Do nothing, only propagate events that originate from user
         }

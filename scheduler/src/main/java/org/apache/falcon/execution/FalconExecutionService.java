@@ -185,6 +185,20 @@ public final class FalconExecutionService implements FalconService, EntityStateC
         }
     }
 
+    @Override
+    public void onKill(Entity entity) throws FalconException {
+        for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+            EntityClusterID id = new EntityClusterID(entity, cluster);
+            if (!executors.containsKey(id)) {
+                LOG.info("Entity {} is already deleted on cluster {}.", id, cluster);
+                continue;
+            }
+            EntityExecutor executor = getEntityExecutor(entity, cluster);
+            executor.killAll();
+            executors.remove(executor.getId());
+        }
+    }
+
     /**
      * Schedules an entity.
      *
@@ -222,17 +236,9 @@ public final class FalconExecutionService implements FalconService, EntityStateC
      * @throws FalconException
      */
     public void delete(Entity entity) throws FalconException {
-        for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
-            EntityClusterID id = new EntityClusterID(entity, cluster);
-            if (!executors.containsKey(id)) {
-                LOG.info("Entity {} is already deleted on cluster {}.", id, cluster);
-                continue;
-            }
-            EntityExecutor executor = getEntityExecutor(entity, cluster);
-            executor.killAll();
-            executors.remove(executor.getId());
-        }
+        StateService.get().handleStateChange(entity, EntityState.EVENT.KILL, this);
     }
+
 
     /**
      * Returns the instance of {@link EntityExecutor} for a given entity and cluster.
