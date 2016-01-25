@@ -41,8 +41,10 @@ public class EntityState implements StateMachine<EntityState.STATE, EntityState.
                     return STATE.SCHEDULED;
                 case SUBMIT:
                     return this;
+                case KILL:
+                    return STATE.KILLED;
                 default:
-                    throw new InvalidStateTransitionException("Submitted entities can only be scheduled.");
+                    throw new InvalidStateTransitionException("Submitted entities can only be scheduled or killed.");
                 }
             }
         },
@@ -54,8 +56,10 @@ public class EntityState implements StateMachine<EntityState.STATE, EntityState.
                     return STATE.SUSPENDED;
                 case SCHEDULE:
                     return this;
+                case KILL:
+                    return STATE.KILLED;
                 default:
-                    throw new InvalidStateTransitionException("Scheduled entities can only be suspended.");
+                    throw new InvalidStateTransitionException("Scheduled entities can only be suspended or killed.");
                 }
             }
         },
@@ -67,8 +71,21 @@ public class EntityState implements StateMachine<EntityState.STATE, EntityState.
                     return STATE.SCHEDULED;
                 case SUSPEND:
                     return this;
+                case KILL:
+                    return STATE.KILLED;
                 default:
-                    throw new InvalidStateTransitionException("Suspended entities can only be resumed.");
+                    throw new InvalidStateTransitionException("Suspended entities can only be resumed or killed.");
+                }
+            }
+        },
+        KILLED {
+            @Override
+            public STATE nextTransition(EVENT event) throws InvalidStateTransitionException {
+                switch (event) {
+                case KILL:
+                    return STATE.KILLED;
+                default:
+                    throw new InvalidStateTransitionException("Partially killed entities can only be killed.");
                 }
             }
         }

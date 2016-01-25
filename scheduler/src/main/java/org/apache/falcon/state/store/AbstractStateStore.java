@@ -38,6 +38,10 @@ public abstract class AbstractStateStore implements StateStore, ConfigurationCha
     @Override
     public void onAdd(Entity entity) throws FalconException {
         if (entity.getEntityType() != EntityType.CLUSTER) {
+            EntityID entityID = new EntityID(entity);
+            if (entityExists(entityID)) {
+                deleteEntity(entityID);
+            }
             putEntity(new EntityState(entity));
         }
     }
