@@ -10,6 +10,8 @@ Trunk
 
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
   IMPROVEMENTS
+    FALCON-1756 Remove PID files on service stop(Deepak Barr via Ajay Yadava)
+
     FALCON-1771 Tool to merge pull requests (Ajay Yadava)
 
     FALCON-1770 Update README file (Ajay Yadava)
