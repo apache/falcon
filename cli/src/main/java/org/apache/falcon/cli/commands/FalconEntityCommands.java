@@ -114,7 +114,7 @@ public class FalconEntityCommands extends BaseFalconCommands {
     }
 
     @CliCommand(value = ENTITY_PREFIX_SPACE + UPDATE_OPT, help = UPDATE_OPT_DESCRIPTION)
-    public String lookup(
+    public String update(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final String entityType,
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION)
             final String entityName,

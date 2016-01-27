@@ -18,7 +18,7 @@
 
 package org.apache.falcon.cli.commands;
 
-import org.apache.falcon.cli.FalconCLIRuntimeException;
+import org.apache.falcon.client.FalconCLIException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 public class FalconConnectionCommandsTest extends FalconCLITest {
     @DataProvider(name = "params-commands", parallel = false)
     public Object[][] provideCommands() {
-        FalconCLIRuntimeException e = new FalconCLIRuntimeException(BaseFalconCommands.FALCON_URL_ABSENT);
+        FalconCLIException e = new FalconCLIException(BaseFalconCommands.FALCON_URL_ABSENT);
         return new Object[][]{
                 {"get", null, e},
                 {"set a=b", null, null},

@@ -18,7 +18,7 @@
 
 package org.apache.falcon.cli.commands;
 
-import org.apache.falcon.cli.FalconCLIRuntimeException;
+import org.apache.falcon.client.FalconCLIException;
 import org.springframework.shell.Bootstrap;
 import org.springframework.shell.core.CommandResult;
 import org.springframework.shell.core.JLineShellComponent;
@@ -46,7 +46,7 @@ public class FalconCLITest {
         if (commandResult.getException() != null) {
             throw commandResult.getException();
         }
-        throw new FalconCLIRuntimeException("Result is not success and exception is null");
+        throw new FalconCLIException("Result is not success and exception is null");
     }
 
     public <T> void execute(String command, T result) throws Throwable {

@@ -20,7 +20,6 @@ package org.apache.falcon.cli.commands;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.cli.FalconCLIRuntimeException;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.springframework.shell.core.ExecutionProcessor;
@@ -56,7 +55,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
                     try {
                         prop.load(inputStream);
                     } catch (IOException e) {
-                        throw new FalconCLIRuntimeException(e);
+                        throw new FalconCLIException(e);
                     }
                 }
             } finally {
@@ -67,7 +66,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
                 prop.setProperty(FALCON_URL_PROPERTY, urlOverride);
             }
             if (prop.getProperty(FALCON_URL_PROPERTY) == null) {
-                throw new FalconCLIRuntimeException(FALCON_URL_ABSENT);
+                throw new FalconCLIException(FALCON_URL_ABSENT);
             }
             String doAsOverride = System.getenv(DO_AS);
             if (doAsOverride != null) {
@@ -83,7 +82,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
         Properties props;
         try {
             props = getClientProperties();
-        } catch (FalconCLIRuntimeException e) {
+        } catch (FalconCLIException e) {
             props = backupProperties;
         }
         if (StringUtils.isBlank(value)) {
@@ -97,12 +96,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
 
     public static FalconClient getFalconClient() {
         if (client == null) {
-            try {
-                client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY),
-                        getClientProperties());
-            } catch (FalconCLIException e) {
-                throw new FalconCLIRuntimeException(e.getMessage(), e.getCause());
-            }
+            client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY), getClientProperties());
         }
         return client;
     }
