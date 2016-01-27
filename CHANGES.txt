@@ -10,7 +10,10 @@ Trunk
 
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
   IMPROVEMENTS
+    FALCON-1770 Update README file (Ajay Yadava)
+
   BUG FIXES
+    FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
 
 
 Proposed Release Version: 0.9

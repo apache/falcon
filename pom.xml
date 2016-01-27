@@ -287,6 +287,8 @@
                             <excludes>
                                 <exclude>*.txt</exclude>
                                 <exclude>**/*.txt</exclude>
+                                <exclude>*.md</exclude>
+                                <exclude>**/*.md</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>**/.idea/**</exclude>
                                 <exclude>**/*.twiki</exclude>
