@@ -52,7 +52,7 @@ public class FeedImportIT {
     @AfterClass
     public void tearDown() throws Exception {
         HsqldbTestUtils.tearDown();
-        FileUtils.deleteDirectory(new File("webapp/localhost/"));
+        FileUtils.deleteDirectory(new File("../localhost/"));
         FileUtils.deleteDirectory(new File("localhost"));
     }
 
