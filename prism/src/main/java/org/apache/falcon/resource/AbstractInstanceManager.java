@@ -920,6 +920,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             }
 
             start = new Date(startMillis);
+            if (start.after(end)) {
+                LOG.warn("Calculated start date : {} crossed end date : {} setting it to "
+                        + "entity start date", start, end);
+                start = clusterStartDate;
+            }
         } else {
             start = EntityUtil.parseDateUTC(startStr);
         }
