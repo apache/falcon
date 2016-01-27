@@ -17,9 +17,11 @@
  */
 package org.apache.falcon.rerun.handler;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
@@ -58,8 +60,13 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
                                      String wfId, String workflowUser, long msgReceivedTime);
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    public AbstractWorkflowEngine getWfEngine() {
-        return wfEngine;
+    public AbstractWorkflowEngine getWfEngine(String entityType, String entityName) throws FalconException {
+        if (StringUtils.isBlank(entityType) || StringUtils.isBlank(entityName)) {
+            return wfEngine;
+        }
+        Entity entity = EntityUtil.getEntity(EntityType.valueOf(entityType), entityName);
+        return WorkflowEngineFactory.getWorkflowEngine(entity);
+
     }
 
     public boolean offerToQueue(T event) throws FalconException {

@@ -25,6 +25,6 @@ public enum EventType {
         TIME_ELAPSED,
         DATA_AVAILABLE,
         JOB_COMPLETED,
-        JOB_SCHEDULED
-
+        JOB_SCHEDULED,
+        RE_RUN
 }

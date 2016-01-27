@@ -34,6 +34,14 @@ public interface InstanceStateChangeHandler {
     void onTrigger(ExecutionInstance instance) throws FalconException;
 
     /**
+     * Invoked when an instance is rerun or triggered externally.
+     *
+     * @param instance
+     * @throws FalconException
+     */
+    void onExternalTrigger(ExecutionInstance instance) throws FalconException;
+
+    /**
      * Invoked when all gating conditions are satisfied.
      *
      * @param instance

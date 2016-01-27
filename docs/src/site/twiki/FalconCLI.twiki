@@ -241,7 +241,7 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -continue
 
 Rerun option is used to rerun instances of a given process. On issuing a rerun, by default the execution resumes from the last failed node in the workflow. This option is valid only for process instances in terminal state, i.e. SUCCEEDED, KILLED or FAILED.
 If one wants to forcefully rerun the entire workflow, -force should be passed along with -rerun
-Additionally, you can also specify properties to override via a properties file.
+Additionally, you can also specify properties to override via a properties file and this will be prioritized over force option in case of contradiction.
 
 Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -rerun -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-force] [-file <<properties file>>]
@@ -269,6 +269,7 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -status
 Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" -colo <<colo>>
 -filterBy <<field1:value1,field2:value2>> -lifecycle <<lifecycles>>
 -orderBy field -sortOrder <<sortOrder>> -offset 0 -numResults 10
+-allAttempts To get all the attempts for corresponding instances
 
 <a href="./Restapi/InstanceStatus.html"> Optional params described here.</a>
 
@@ -287,6 +288,8 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -list
 Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
 -colo <<colo>> -lifecycle <<lifecycles>>
 -filterBy <<field1:value1,field2:value2>> -orderBy field -sortOrder <<sortOrder>> -offset 0 -numResults 10
+-allAttempts To get all the attempts for corresponding instances
+
 
 <a href="./Restapi/InstanceList.html">Optional params described here.</a>
 
@@ -468,13 +471,24 @@ $FALCON_HOME/bin/falcon metadata -edge -id Q9n-Q-5g
 
 Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
 Usage:
-$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|datasource_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
+$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|datasource_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines|replication_metrics]
 
 Optional Args : -cluster <<cluster name>>
 
 Example:
 $FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
 $FALCON_HOME/bin/falcon metadata -list -type tags
+
+
+To display replication metrics from recipe based replication process and from feed replication.
+Usage:
+$FALCON_HOME/bin/falcon metadata -list -type replication_metrics -process/-feed <entity name>
+Optional Args : -numResults <<value>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -list -type replication_metrics -process hdfs-replication
+$FALCON_HOME/bin/falcon metadata -list -type replication_metrics -feed fs-replication
+
 
 ---+++ Relations
 

@@ -164,7 +164,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
                 }
                 for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
                     try {
-                        InstancesResult.Instance[] instances = WorkflowEngineFactory.getWorkflowEngine()
+                        InstancesResult.Instance[] instances = WorkflowEngineFactory.getWorkflowEngine(entity)
                                 .getJobDetails(cluster, context.getWorkflowId()).getInstances();
                         if (instances != null && instances.length > 0) {
                             wfProps = getWFProps(instances[0].getWfParams());
@@ -203,7 +203,6 @@ public class WorkflowJobEndNotificationService implements FalconService {
         }
         return props;
     }
-
 
     // This method handles both success and failure notifications.
     private void notifyWorkflowEnd(WorkflowExecutionContext context) {

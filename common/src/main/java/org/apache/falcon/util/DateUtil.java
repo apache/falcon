@@ -78,4 +78,25 @@ public final class DateUtil {
             return null;
         }
     }
+
+    /**
+     * Returns the current time, with seconds and milliseconds reset to 0.
+     * @return
+     */
+    public static Date now() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
+    /**
+     * Adds the supplied number of seconds to the given date and returns the new Date.
+     * @param date
+     * @param seconds
+     * @return
+     */
+    public static Date offsetTime(Date date, int seconds) {
+        return new Date(1000L * seconds + date.getTime());
+    }
 }

@@ -22,7 +22,7 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.DataEvent;
@@ -34,6 +34,7 @@ import org.apache.falcon.notification.service.impl.AlarmService;
 import org.apache.falcon.notification.service.impl.DataAvailabilityService;
 import org.apache.falcon.notification.service.impl.JobCompletionService;
 import org.apache.falcon.notification.service.impl.SchedulerService;
+import org.apache.falcon.notification.service.request.AlarmRequest;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.state.AbstractSchedulerTestBase;
 import org.apache.falcon.state.EntityClusterID;
@@ -52,6 +53,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -63,6 +65,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -121,7 +124,6 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         mockSchedulerService = Mockito.mock(SchedulerService.class);
         Mockito.when(mockSchedulerService.getName()).thenReturn("JobSchedulerService");
         StartupProperties.get().setProperty("dag.engine.impl", MockDAGEngine.class.getName());
-        StartupProperties.get().setProperty("execution.service.impl", FalconExecutionService.class.getName());
         dagEngine = Mockito.spy(DAGEngineFactory.getDAGEngine("testCluster"));
         Mockito.when(mockSchedulerService.createRequestBuilder(Mockito.any(NotificationHandler.class),
                 Mockito.any(ID.class))).thenCallRealMethod();
@@ -329,7 +331,7 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         Mockito.verify(mockTimeService).unregister(FalconExecutionService.get(), executorID);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testTimeOut() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize3");
         Process process = getStore().get(EntityType.PROCESS, "summarize3");
@@ -558,6 +560,37 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         };
     }
 
+    @Test
+    public void testUpdate() throws Exception {
+        storeEntity(EntityType.PROCESS, "summarize10");
+        Process process = getStore().get(EntityType.PROCESS, "summarize10");
+        Assert.assertNotNull(process);
+        EntityID processKey = new EntityID(process);
+        String clusterName = dfsCluster.getCluster().getName();
+        Date now = new Date();
+        process.getClusters().getClusters().get(0).getValidity().setStart(now);
+
+        // Schedule a process
+        Assert.assertEquals(stateStore.getEntity(processKey).getCurrentState(), EntityState.STATE.SUBMITTED);
+        FalconExecutionService.get().schedule(process);
+        Assert.assertEquals(stateStore.getEntity(processKey).getCurrentState(), EntityState.STATE.SCHEDULED);
+        // Simulate a time notification
+        Event event = createEvent(NotificationServicesRegistry.SERVICE.TIME, process, clusterName);
+        FalconExecutionService.get().onEvent(event);
+
+        // Update the process with a new dummy input
+        Process newProcess = (Process) process.copy();
+        newProcess.getInputs().getInputs().add(new Input());
+        EntityExecutor executor = FalconExecutionService.get().getEntityExecutor(process, clusterName);
+        executor.update(newProcess);
+        EntityClusterID executorID = new EntityClusterID(process, clusterName);
+        Mockito.verify(mockTimeService).unregister(FalconExecutionService.get(), executorID);
+        ArgumentCaptor<AlarmRequest> argumentCaptor = ArgumentCaptor.forClass(AlarmRequest.class);
+        Mockito.verify(mockTimeService, Mockito.atLeast(2)).register(argumentCaptor.capture());
+        // The second time registration after update should be after now.
+        Assert.assertTrue(argumentCaptor.getValue().getStartTime().isAfter(now.getTime()));
+    }
+
     private Event createEvent(NotificationServicesRegistry.SERVICE type, Process process, String cluster) {
         EntityClusterID id = new EntityClusterID(process, cluster);
         switch (type) {
@@ -569,7 +602,8 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
                     new DateTime(process.getClusters().getClusters().get(0).getValidity().getEnd()),
                     new DateTime(start.getTime() + instanceOffset));
         case DATA:
-            DataEvent dataEvent = new DataEvent(id, new Path("/projects/falcon/clicks"), LocationType.DATA,
+            DataEvent dataEvent = new DataEvent(id,
+                    new ArrayList<Path>(Arrays.asList(new Path("/projects/falcon/clicks"))),
                     DataEvent.STATUS.AVAILABLE);
             return dataEvent;
         default:
@@ -581,7 +615,8 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         ID id = new InstanceID(instance);
         switch (type) {
         case DATA:
-            DataEvent dataEvent = new DataEvent(id, new Path("/projects/falcon/clicks"), LocationType.DATA,
+            DataEvent dataEvent = new DataEvent(id,
+                    new ArrayList<Path>(Arrays.asList(new Path("/projects/falcon/clicks"))),
                     DataEvent.STATUS.AVAILABLE);
             return dataEvent;
         case JOB_SCHEDULE:

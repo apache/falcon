@@ -18,6 +18,23 @@
 
 package org.apache.falcon.resource.proxy;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -33,25 +50,9 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A proxy implementation of the entity instance operations.
@@ -174,14 +175,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @QueryParam("numResults") Integer numResults) {
+            @QueryParam("numResults") Integer numResults,
+            @Dimension("allAttempts") @QueryParam("allAttempts") final Boolean allAttempts) {
         final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getInstances",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
             }
         }.execute(colo, type, entity);
     }
@@ -226,14 +228,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @QueryParam("numResults") final Integer numResults) {
+            @QueryParam("numResults") final Integer numResults,
+            @Dimension("allAttempts") @QueryParam("allAttempts") final Boolean allAttempts) {
         final Integer resultsPerPage = numResults == null ? getDefaultResultsPerPage() : numResults;
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage, allAttempts);
             }
         }.execute(colo, type, entity);
     }
@@ -619,6 +622,9 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 try {
                     T resultHolder = doExecute(colo);
                     results.put(colo, resultHolder);
+                } catch (FalconWebException e){
+                    APIResult result = (APIResult)e.getResponse().getEntity();
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, result.getMessage()));
                 } catch (Throwable e) {
                     LOG.error("Failed to fetch results for colo:{}", colo, e);
                     results.put(colo, getResultInstance(APIResult.Status.FAILED,
@@ -627,7 +633,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             }
             T finalResult = consolidateResult(results, clazz);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
-                throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(finalResult.getMessage());
             } else {
                 return finalResult;
             }

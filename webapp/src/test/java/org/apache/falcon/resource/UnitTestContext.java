@@ -20,7 +20,6 @@ package org.apache.falcon.resource;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.unit.FalconUnit;
 import org.apache.falcon.unit.FalconUnitClient;
@@ -28,7 +27,6 @@ import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.testng.Assert;
 
 import java.io.IOException;
 import java.util.Date;
@@ -36,13 +34,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Test Utility.
+ * Context used to run unit tests using Falcon Unit.
  */
-public class UnitTestContext {
+public class UnitTestContext extends AbstractTestContext {
 
-    public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
-    public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
-    public static final String PROCESS_TEMPLATE = "/process-template.xml";
+    public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     protected String colo;
     protected String clusterName;
@@ -54,7 +50,7 @@ public class UnitTestContext {
     private static FalconUnitClient client;
     private static FileSystem fs;
     protected static ConfigurationStore configStore;
-    private Map<String, String> overlay;
+    protected Map<String, String> overlay;
 
     public UnitTestContext() throws FalconException, IOException {
         client = FalconUnit.getClient();
@@ -63,23 +59,23 @@ public class UnitTestContext {
         overlay = getUniqueOverlay();
     }
 
+    public String getProcessName() {
+        return processName;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public String getInputFeedName() {
+        return inputFeedName;
+    }
+
     public static FalconUnitClient getClient() {
         return client;
     }
 
-    private static void mkdir(FileSystem fileSystem, Path path) throws Exception {
-        if (!fileSystem.exists(path) && !fileSystem.mkdirs(path)) {
-            throw new Exception("mkdir failed for " + path);
-        }
-    }
-
-    private static void mkdir(FileSystem fileSystem, Path path, FsPermission perm) throws Exception {
-        if (!fileSystem.exists(path) && !fileSystem.mkdirs(path, perm)) {
-            throw new Exception("mkdir failed for " + path);
-        }
-    }
-
-    private void prepare() throws Exception {
+    protected void prepare(String workflow) throws Exception {
         mkdir(fs, new Path("/falcon"), new FsPermission((short) 511));
 
         Path wfParent = new Path("/falcon/test");
@@ -88,7 +84,7 @@ public class UnitTestContext {
         mkdir(fs, wfPath);
         mkdir(fs, new Path("/falcon/test/workflow/lib"));
         fs.copyFromLocalFile(false, true,
-                new Path(TestContext.class.getResource("/sleepWorkflow.xml").getPath()),
+                new Path(TestContext.class.getResource("/" + workflow).getPath()),
                 new Path(wfPath, "workflow.xml"));
         mkdir(fs, new Path(wfParent, "input/2012/04/20/00"));
         mkdir(fs, new Path(wfParent, "input/2012/04/21/00"));
@@ -96,28 +92,8 @@ public class UnitTestContext {
         mkdir(fs, outPath, new FsPermission((short) 511));
     }
 
-    public void scheduleProcess() throws Exception {
-        scheduleProcess(PROCESS_TEMPLATE, overlay);
-    }
-
-    public void scheduleProcess(String processTemplate, Map<String, String> uniqueOverlay) throws
-            Exception {
-        prepare();
-
-        String tmpFile = TestContext.overlayParametersOverTemplate(FEED_TEMPLATE1, uniqueOverlay);
-        APIResult result = client.submit(EntityType.FEED.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-        tmpFile = TestContext.overlayParametersOverTemplate(FEED_TEMPLATE2, uniqueOverlay);
-        result = client.submit(EntityType.FEED.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-        tmpFile = TestContext.overlayParametersOverTemplate(processTemplate, uniqueOverlay);
-        result = client.submit(EntityType.PROCESS.name(), tmpFile, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-        result = client.schedule(EntityType.PROCESS, processName, clusterName, true, null, null);
-        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    protected void prepare() throws Exception {
+        prepare("sleepWorkflow.xml");
     }
 
     public Map<String, String> getUniqueOverlay() throws FalconException {
@@ -142,6 +118,7 @@ public class UnitTestContext {
         uniqueOverlay.put("user", System.getProperty("user.name"));
         uniqueOverlay.put("workflow.path", "/falcon/test/workflow");
         uniqueOverlay.put("workflow.lib.path", "/falcon/test/workflow/lib");
+        overlay = uniqueOverlay;
         return uniqueOverlay;
     }
 }

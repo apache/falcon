@@ -67,6 +67,8 @@ public class FalconCLI {
     public static final String END_OPT_DESCRIPTION = "End time is optional for summary";
     public static final String CLUSTER_OPT = "cluster";
     public static final String CLUSTER_OPT_DESCRIPTION = "Cluster name";
+    public static final String FEED_OPT = "feed";
+    public static final String PROCESS_OPT = "process";
     public static final String ENTITY_NAME_OPT = "name";
     public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, " +
             "recommended but not mandatory to be unique.";

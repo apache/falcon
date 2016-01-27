@@ -20,13 +20,16 @@ package org.apache.falcon.state.store.jdbc;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 //SUSPEND CHECKSTYLE CHECK  LineLengthCheck
 /**
  * Entity object which will be stored in Data Base.
@@ -65,6 +68,9 @@ public class EntityBean {
     @Column(name = "current_state")
     private String state;
 
+    @OneToMany(cascade= CascadeType.REMOVE, mappedBy="entityBean")
+    private List<InstanceBean> instanceBeans;
+
     public EntityBean() {
     }
 
@@ -100,5 +106,12 @@ public class EntityBean {
         this.state = state;
     }
 
+    public List<InstanceBean> getInstanceBeans() {
+        return instanceBeans;
+    }
+
+    public void setInstanceBeans(List<InstanceBean> instanceBeans) {
+        this.instanceBeans = instanceBeans;
+    }
 }
 

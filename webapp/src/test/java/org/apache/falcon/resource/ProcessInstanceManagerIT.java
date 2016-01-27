@@ -24,7 +24,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.falcon.unit.FalconUnitTestBase;
 import org.apache.falcon.util.OozieTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -38,13 +37,14 @@ import java.io.IOException;
 /**
  * Test class for Process Instance REST API.
  */
-public class ProcessInstanceManagerIT extends FalconUnitTestBase {
+public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
+    private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
 
     @BeforeClass
     @Override
-    public void setup() throws FalconException, IOException {
+    public void setup() throws Exception {
         String version = System.getProperty("project.version");
         String buildDir = System.getProperty("project.build.directory");
         System.setProperty("falcon.libext", buildDir + "/../../unit/target/falcon-unit-" + version + ".jar");
@@ -120,12 +120,11 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testGetInstanceStatus() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        schedule(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -135,13 +134,12 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testGetInstanceStatusPagination() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        schedule(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:02Z";
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
                 context.processName, START_INSTANCE, endTime, context.colo, null, "STATUS:RUNNING", "startTime",
-                "", 0, new Integer(1), null);
+                "", 0, new Integer(1), null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -151,8 +149,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testKillInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        schedule(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().killInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE, endTime,
@@ -160,14 +157,14 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.KILLED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(), context.processName,
-                START_INSTANCE, endTime, context.colo, null, "STATUS:KILLED", "startTime", "", 0, 1, null);
+                START_INSTANCE, endTime, context.colo, null, "STATUS:KILLED", "startTime", "", 0, 1, null, null);
 
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
@@ -178,8 +175,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testReRunInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        schedule(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().killInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE, endTime,
@@ -187,7 +183,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.KILLED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -198,7 +194,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -208,8 +204,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testSuspendInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        schedule(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().suspendInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
@@ -218,7 +213,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.SUSPENDED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -228,8 +223,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
     @Test
     public void testResumesInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
-        submitCluster(context.colo, context.clusterName, null);
-        context.scheduleProcess();
+        schedule(context);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
         String endTime = "2012-04-20T00:01Z";
         context.getClient().suspendInstances(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
@@ -238,7 +232,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.SUSPENDED);
 
         InstancesResult response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);
@@ -249,7 +243,7 @@ public class ProcessInstanceManagerIT extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),
-                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null);
+                context.processName, START_INSTANCE, endTime, context.colo, null, null, "", "", 0, 1, null, null);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(response.getInstances().length, 1);

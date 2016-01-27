@@ -44,7 +44,7 @@ public abstract class ApplicationProperties extends Properties {
 
     protected abstract String getPropertyFile();
 
-    private String domain;
+    protected String domain;
 
     protected ApplicationProperties() throws FalconException {
         init();
@@ -104,15 +104,21 @@ public abstract class ApplicationProperties extends Properties {
         InputStream resourceAsStream = null;
         if (confDir != null) {
             File fileToLoad = new File(confDir, propertyFileName);
-            if (fileToLoad.exists() && fileToLoad.isFile() && fileToLoad.canRead()) {
-                LOG.info("config.location is set, using: {}/{}", confDir, propertyFileName);
-                resourceAsStream = new FileInputStream(fileToLoad);
-            }
+            resourceAsStream = getResourceAsStream(fileToLoad);
         }
         return resourceAsStream;
     }
 
-    private InputStream checkClassPath(String propertyFileName) {
+    protected InputStream getResourceAsStream(File fileToLoad) throws FileNotFoundException {
+        InputStream resourceAsStream = null;
+        if (fileToLoad.exists() && fileToLoad.isFile() && fileToLoad.canRead()) {
+            LOG.info("config.location is set, using: {}", fileToLoad.getAbsolutePath());
+            resourceAsStream = new FileInputStream(fileToLoad);
+        }
+        return resourceAsStream;
+    }
+
+    protected InputStream checkClassPath(String propertyFileName) {
 
         InputStream resourceAsStream = null;
         Class clazz = ApplicationProperties.class;
@@ -154,7 +160,7 @@ public abstract class ApplicationProperties extends Properties {
         }
     }
 
-    private Set<String> getKeys(Set<Object> keySet) {
+    protected Set<String> getKeys(Set<Object> keySet) {
         Set<String> keys = new HashSet<String>();
         for (Object keyObj : keySet) {
             String key = (String) keyObj;

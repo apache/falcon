@@ -20,7 +20,6 @@ package org.apache.falcon.client;
 
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.InstancesResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,10 +44,6 @@ public class FalconCLIException extends RuntimeException{
     }
 
     public static FalconCLIException fromReponse(ClientResponse clientResponse) {
-        return new FalconCLIException(getMessage(clientResponse));
-    }
-
-    private static String getMessage(ClientResponse clientResponse) {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
         String statusValue = status.toString();
         String message = "";
@@ -57,13 +52,8 @@ public class FalconCLIException extends RuntimeException{
             InputStream in = clientResponse.getEntityInputStream();
             try {
                 in.mark(MB);
-                try {
-                    message = clientResponse.getEntity(APIResult.class).getMessage();
-                } catch (Throwable e) {
-                    in.reset();
-                    message = clientResponse.getEntity(InstancesResult.class).getMessage();
-                }
-            } catch (Throwable t) {
+                message = clientResponse.getEntity(APIResult.class).getMessage();
+            } catch (Throwable th) {
                 byte[] data = new byte[MB];
                 try {
                     in.reset();
@@ -74,6 +64,6 @@ public class FalconCLIException extends RuntimeException{
                 }
             }
         }
-        return statusValue + ";" + message;
+        return new FalconCLIException(statusValue + ";" + message);
     }
 }

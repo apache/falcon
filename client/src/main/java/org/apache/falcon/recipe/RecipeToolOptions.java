@@ -38,6 +38,7 @@ public enum RecipeToolOptions {
     RETRY_POLICY("falcon.recipe.retry.policy", "Retry policy", false),
     RETRY_DELAY("falcon.recipe.retry.delay", "Retry delay", false),
     RETRY_ATTEMPTS("falcon.recipe.retry.attempts", "Retry attempts", false),
+    RETRY_ON_TIMEOUT("falcon.recipe.retry.onTimeout", "Retry onTimeout", false),
     RECIPE_TAGS("falcon.recipe.tags", "Recipe tags", false),
     RECIPE_ACL_OWNER("falcon.recipe.acl.owner", "Recipe acl owner", false),
     RECIPE_ACL_GROUP("falcon.recipe.acl.group", "Recipe acl group", false),
@@ -50,11 +51,15 @@ public enum RecipeToolOptions {
     private final String description;
     private final boolean isRequired;
 
-    public static final Map<String, RecipeToolOptions> OPTIONSMAP = new HashMap<>();
+    private static Map<String, RecipeToolOptions> optionsMap = new HashMap<>();
     static {
         for (RecipeToolOptions c : RecipeToolOptions.values()) {
-            OPTIONSMAP.put(c.getName(), c);
+            optionsMap.put(c.getName(), c);
         }
+    }
+
+    public static Map<String, RecipeToolOptions> getOptionsMap() {
+        return optionsMap;
     }
 
     RecipeToolOptions(String name, String description) {

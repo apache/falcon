@@ -670,6 +670,7 @@ public final class EntityUtil {
                     "feed.retry.frequency", "minutes(5)")));
             retry.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
                     .getProperty("feed.retry.policy", "exp-backoff")));
+            retry.setOnTimeout(Boolean.valueOf(RuntimeProperties.get().getProperty("feed.retry.onTimeout", "false")));
             return retry;
         case PROCESS:
             Process process = (Process) entity;
@@ -1014,6 +1015,20 @@ public final class EntityUtil {
     public static DatasourceType getImportDatasourceType(
             Cluster cluster, Feed feed) throws FalconException {
         return FeedHelper.getImportDatasourceType(cluster, feed);
+    }
+
+    /**
+     * Returns Data Source Type given a feed with Export policy.
+     *
+     * @param cluster
+     * @param feed
+     * @return
+     * @throws FalconException
+     */
+
+    public static DatasourceType getExportDatasourceType(
+            Cluster cluster, Feed feed) throws FalconException {
+        return FeedHelper.getExportDatasourceType(cluster, feed);
     }
 
     public static EntityNotification getEntityNotification(Entity entity) {

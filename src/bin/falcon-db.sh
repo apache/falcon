@@ -46,4 +46,4 @@ done
 # set the client class path
 FALCONCPPATH="$FALCONCPPATH:${BASEDIR}/client/lib/*"
 
-${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.tools.FalconStateStoreDBCLI "${@}"
+${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} -Dfalcon.log.dir=$HOME org.apache.falcon.tools.FalconStateStoreDBCLI "${@}"

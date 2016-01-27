@@ -61,6 +61,7 @@ public class FeedImportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
 
     @Override
     public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
+        LOG.info("Generating Feed IMPORT coordinator.");
 
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster((Feed) entity, cluster.getName());
         if (!FeedHelper.isImportEnabled(feedCluster)) {

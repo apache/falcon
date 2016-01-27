@@ -58,9 +58,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -104,6 +105,11 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 validateFeedExtractionType(feed, cluster);
                 validateFeedImportArgs(cluster);
                 validateFeedImportFieldExcludes(cluster);
+            }
+            if (FeedHelper.isExportEnabled(cluster)) {
+                validateEntityExists(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
+                validateFeedExportArgs(cluster);
+                validateFeedExportFieldExcludes(cluster);
             }
         }
 
@@ -152,7 +158,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateRetentionFrequency(Feed feed, String clusterName) throws FalconException {
-        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, clusterName);
+        Frequency retentionFrequency = FeedHelper.getLifecycleRetentionFrequency(feed, clusterName);
         Frequency feedFrequency = feed.getFrequency();
         if (DateUtil.getFrequencyInMillis(retentionFrequency) < DateUtil.getFrequencyInMillis(feedFrequency)) {
             throw new ValidationException("Retention can not be more frequent than data availability.");
@@ -597,6 +603,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
      */
     private void validateFeedImportArgs(Cluster feedCluster) throws FalconException {
         Map<String, String> args = FeedHelper.getImportArguments(feedCluster);
+        validateSqoopArgs(args);
+    }
+
+    /**
+     * Validate sqoop arguments.
+     * @param args Map<String, String> arguments
+     */
+    private void validateSqoopArgs(Map<String, String> args) throws FalconException {
         int numMappers = 1;
         if (args.containsKey("--num-mappers")) {
             numMappers = Integer.parseInt(args.get("--num-mappers"));
@@ -608,7 +622,33 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateFeedImportFieldExcludes(Cluster feedCluster) throws FalconException {
-        if (FeedHelper.isFieldExcludes(feedCluster)) {
+        if (FeedHelper.isFieldExcludes(feedCluster.getImport().getSource())) {
+            throw new ValidationException(String.format("Field excludes are not supported "
+                    + "currently in Feed import policy"));
+        }
+    }
+
+    /**
+     * Validate export arguments.
+     * @param feedCluster Cluster referenced in the feed
+     */
+    private void validateFeedExportArgs(Cluster feedCluster) throws FalconException {
+        Map<String, String> args = FeedHelper.getExportArguments(feedCluster);
+        Map<String, String> validArgs = new HashMap<String, String>();
+        validArgs.put("--num-mappers", "");
+        validArgs.put("--update-key" , "");
+        validArgs.put("--input-null-string", "");
+        validArgs.put("--input-null-non-string", "");
+
+        for(Map.Entry<String, String> e : args.entrySet()) {
+            if (!validArgs.containsKey(e.getKey())) {
+                throw new ValidationException(String.format("Feed export argument %s is invalid.", e.getKey()));
+            }
+        }
+    }
+
+    private void validateFeedExportFieldExcludes(Cluster feedCluster) throws FalconException {
+        if (FeedHelper.isFieldExcludes(feedCluster.getExport().getTarget())) {
             throw new ValidationException(String.format("Field excludes are not supported "
                     + "currently in Feed import policy"));
         }

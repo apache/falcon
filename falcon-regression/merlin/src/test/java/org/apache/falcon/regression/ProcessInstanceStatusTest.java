@@ -339,6 +339,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             Status.RUNNING, EntityType.PROCESS, 5);
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(process));
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.SUSPENDED);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5, Status.SUSPENDED, EntityType.PROCESS, 3);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.assertSucceeded(prism.getProcessHelper().resume(process));
         TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,

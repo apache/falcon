@@ -39,7 +39,8 @@ public enum RelationshipType {
     COLO("data-center"),
     TAGS("classification"),
     GROUPS("group"),
-    PIPELINES("pipelines");
+    PIPELINES("pipelines"),
+    REPLICATION_METRICS("replication-metrics");
 
 
     private final String name;

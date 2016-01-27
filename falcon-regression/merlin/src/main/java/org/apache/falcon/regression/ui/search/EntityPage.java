@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
+import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.UIAssert;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.log4j.Logger;
@@ -401,9 +402,12 @@ public class EntityPage extends AbstractSearchPage {
             softAssert.assertAll();
         }
     }
+
     public void performActionOnSelectedInstances(InstanceAction instanceAction) {
         driver.findElement(By.xpath(String.format("//td/div[%d]", instanceAction.ordinal() + 1))).click();
         waitForAngularToFinish();
+        //timeout to refresh a view
+        TimeUtil.sleepSeconds(2);
     }
 
     public InstanceSummary getInstanceSummary() {

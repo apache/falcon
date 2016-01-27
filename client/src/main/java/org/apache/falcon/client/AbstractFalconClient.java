@@ -131,15 +131,13 @@ public abstract class AbstractFalconClient {
      * @param offset offset while displaying results
      * @param numResults num of Results to output
      * @param doAsUser proxy user
+     * @param allAttempts To get the instances corresponding to each run-id
      * @return
      * @throws FalconCLIException
      */
-    public abstract InstancesResult getStatusOfInstances(String type, String entity,
-                                                         String start, String end,
-                                                         String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                                         String orderBy, String sortOrder,
-                                                         Integer offset, Integer numResults,
-                                                         String doAsUser) throws FalconCLIException;
+    public abstract InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String
+            colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer
+            numResults, String doAsUser, Boolean allAttempts) throws FalconCLIException;
 
     /**
      * Suspend an entity.
@@ -171,11 +169,12 @@ public abstract class AbstractFalconClient {
      * @param entityName Name of the entity.
      * @param colo Colo on which the query should be run.
      * @param doAsUser proxy user
+     * @param showScheduler whether the call should return the scheduler on which the entity is scheduled.
      * @return Status of the entity.
      * @throws FalconCLIException
      */
-    public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException;
+    public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser,
+                                        boolean showScheduler) throws FalconCLIException;
 
     /**
      * Submits and schedules an entity.

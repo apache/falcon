@@ -22,7 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.state.store.jdbc.EntityBean;
 import org.apache.falcon.state.store.jdbc.InstanceBean;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.openjpa.persistence.OpenJPAEntityManagerFactorySPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,19 +105,19 @@ public final class FalconJPAService implements FalconService {
     }
 
     private Properties getPropsforStore() throws FalconException {
-        String dbSchema = StartupProperties.get().getProperty(DB_SCHEMA);
-        String url = StartupProperties.get().getProperty(URL);
-        String driver = StartupProperties.get().getProperty(DRIVER);
-        String user = StartupProperties.get().getProperty(USERNAME);
-        String password = StartupProperties.get().getProperty(PASSWORD).trim();
-        String maxConn = StartupProperties.get().getProperty(MAX_ACTIVE_CONN).trim();
-        String dataSource = StartupProperties.get().getProperty(CONN_DATA_SOURCE);
-        String connPropsConfig = StartupProperties.get().getProperty(CONN_PROPERTIES);
-        boolean autoSchemaCreation = Boolean.parseBoolean(StartupProperties.get().getProperty(CREATE_DB_SCHEMA,
+        String dbSchema = StateStoreProperties.get().getProperty(DB_SCHEMA);
+        String url = StateStoreProperties.get().getProperty(URL);
+        String driver = StateStoreProperties.get().getProperty(DRIVER);
+        String user = StateStoreProperties.get().getProperty(USERNAME);
+        String password = StateStoreProperties.get().getProperty(PASSWORD).trim();
+        String maxConn = StateStoreProperties.get().getProperty(MAX_ACTIVE_CONN).trim();
+        String dataSource = StateStoreProperties.get().getProperty(CONN_DATA_SOURCE);
+        String connPropsConfig = StateStoreProperties.get().getProperty(CONN_PROPERTIES);
+        boolean autoSchemaCreation = Boolean.parseBoolean(StateStoreProperties.get().getProperty(CREATE_DB_SCHEMA,
                 "false"));
-        boolean validateDbConn = Boolean.parseBoolean(StartupProperties.get().getProperty(VALIDATE_DB_CONN, "true"));
-        String evictionInterval = StartupProperties.get().getProperty(VALIDATE_DB_CONN_EVICTION_INTERVAL).trim();
-        String evictionNum = StartupProperties.get().getProperty(VALIDATE_DB_CONN_EVICTION_NUM).trim();
+        boolean validateDbConn = Boolean.parseBoolean(StateStoreProperties.get().getProperty(VALIDATE_DB_CONN, "true"));
+        String evictionInterval = StateStoreProperties.get().getProperty(VALIDATE_DB_CONN_EVICTION_INTERVAL).trim();
+        String evictionNum = StateStoreProperties.get().getProperty(VALIDATE_DB_CONN_EVICTION_NUM).trim();
 
         if (!url.startsWith("jdbc:")) {
             throw new FalconException("invalid JDBC URL, must start with 'jdbc:'" + url);
@@ -139,7 +139,7 @@ public final class FalconJPAService implements FalconService {
             String interval = "timeBetweenEvictionRunsMillis=" + evictionInterval;
             String num = "numTestsPerEvictionRun=" + evictionNum;
             connProps += ",TestOnBorrow=true,TestOnReturn=true,TestWhileIdle=true," + interval + "," + num;
-            connProps += ",ValidationQuery=select count(*) from ENTITIES";
+            connProps += ",ValidationQuery=select 1";
             connProps = MessageFormat.format(connProps, dbSchema);
         } else {
             connProps += ",TestOnBorrow=false,TestOnReturn=false,TestWhileIdle=false";

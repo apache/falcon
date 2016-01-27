@@ -191,8 +191,8 @@ public class FeedReplicator extends Configured implements Tool {
 
         DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(trgPath));
         distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
-        distcpOptions.setMapBandwidth(Integer.valueOf(cmd.getOptionValue("mapBandwidth")));
+        distcpOptions.setMaxMaps(Integer.parseInt(cmd.getOptionValue("maxMaps")));
+        distcpOptions.setMapBandwidth(Integer.parseInt(cmd.getOptionValue("mapBandwidth")));
 
         String overwrite = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName());
         if (StringUtils.isNotEmpty(overwrite) && overwrite.equalsIgnoreCase(Boolean.TRUE.toString())) {

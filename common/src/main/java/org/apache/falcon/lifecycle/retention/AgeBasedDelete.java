@@ -60,7 +60,7 @@ public class AgeBasedDelete extends RetentionPolicy {
 
     private void validateRetentionFrequencyForOozie(Feed feed, String clusterName) throws FalconException {
         // retention shouldn't be more frequent than hours(1) for Oozie Builders.
-        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, clusterName);
+        Frequency retentionFrequency = FeedHelper.getLifecycleRetentionFrequency(feed, clusterName);
         if (retentionFrequency.getTimeUnit() == Frequency.TimeUnit.minutes
                 && retentionFrequency.getFrequencyAsInt() < 60) {
             throw new ValidationException("Feed Retention can not be more frequent than hours(1)");

@@ -18,6 +18,7 @@
 package org.apache.falcon.state.store;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
@@ -141,6 +142,19 @@ public final class InMemoryStateStore extends AbstractStateStore {
     }
 
     @Override
+    public InstanceState getExecutionInstance(String externalID) throws StateStoreException {
+        if (StringUtils.isEmpty(externalID)) {
+            throw new StateStoreException("External ID for retrieving instance cannot be null");
+        }
+        for (InstanceState instanceState : instanceStates.values()) {
+            if (externalID.equals(instanceState.getInstance().getExternalID())) {
+                return instanceState;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void updateExecutionInstance(InstanceState instanceState) throws StateStoreException {
         String key = new InstanceID(instanceState.getInstance()).getKey();
         if (!instanceStates.containsKey(key)) {
@@ -201,6 +215,27 @@ public final class InMemoryStateStore extends AbstractStateStore {
             }
         }
         return instances;
+    }
+
+    @Override
+    public Map<InstanceState.STATE, Long> getExecutionInstanceSummary(Entity entity, String cluster,
+            DateTime start, DateTime end) throws StateStoreException {
+        Map<InstanceState.STATE, Long> summary = new HashMap<>();
+        for (InstanceState state : getAllExecutionInstances(entity, cluster)) {
+            ExecutionInstance instance = state.getInstance();
+            DateTime instanceTime = instance.getInstanceTime();
+            // Start date inclusive and end date exclusive.
+            // If start date and end date are equal no instances will be added.
+            if ((instanceTime.isEqual(start) || instanceTime.isAfter(start))
+                    && instanceTime.isBefore(end)) {
+                if (summary.containsKey(state.getCurrentState())) {
+                    summary.put(state.getCurrentState(), summary.get(state.getCurrentState()) + 1L);
+                } else {
+                    summary.put(state.getCurrentState(), 1L);
+                }
+            }
+        }
+        return summary;
     }
 
     @Override

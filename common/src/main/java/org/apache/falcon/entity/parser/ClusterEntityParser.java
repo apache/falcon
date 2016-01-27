@@ -268,53 +268,22 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         Configuration conf = ClusterHelper.getConfiguration(cluster);
         FileSystem fs;
         try {
-            fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
+            fs = HadoopClientFactory.get().createFalconFileSystem(conf);
         } catch (FalconException e) {
             throw new ValidationException("Unable to get file system handle for cluster " + cluster.getName(), e);
         }
 
         Location stagingLocation = ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING);
-
         if (stagingLocation == null) {
             throw new ValidationException(
                     "Unable to find the mandatory location of name: " + ClusterLocationType.STAGING.value()
                             + " for cluster " + cluster.getName());
         } else {
-
             checkPathOwnerAndPermission(cluster.getName(), stagingLocation.getPath(), fs,
                     HadoopClientFactory.ALL_PERMISSION);
-
             if (!ClusterHelper.checkWorkingLocationExists(cluster)) {
                 //Creating location type of working in the sub dir of staging dir with perms 755. FALCON-910
-
-                Path workingDirPath = new Path(stagingLocation.getPath(), ClusterHelper.WORKINGDIR);
-                try {
-                    if (!fs.exists(workingDirPath)) {  //Checking if the staging dir has the working dir to be created
-                        HadoopClientFactory.mkdirs(fs, workingDirPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
-                    } else {
-                        if (fs.isDirectory(workingDirPath)) {
-                            FsPermission workingPerms = fs.getFileStatus(workingDirPath).getPermission();
-                            if (!workingPerms.equals(HadoopClientFactory.READ_EXECUTE_PERMISSION)) { //perms check
-                                throw new ValidationException(
-                                        "Falcon needs subdir " + ClusterHelper.WORKINGDIR + " inside staging dir:"
-                                                + stagingLocation.getPath()
-                                                + " when staging location not specified with "
-                                                + HadoopClientFactory.READ_EXECUTE_PERMISSION.toString() + " got "
-                                                + workingPerms.toString());
-                            }
-                        } else {
-                            throw new ValidationException(
-                                    "Falcon needs subdir " + ClusterHelper.WORKINGDIR + " inside staging dir:"
-                                            + stagingLocation.getPath()
-                                            + " when staging location not specified. Got a file at " + workingDirPath
-                                            .toString());
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new ValidationException(
-                            "Unable to create path for " + workingDirPath.toString() + " with path: "
-                                    + workingDirPath.toString() + " for cluster " + cluster.getName(), e);
-                }
+                createWorkingDirUnderStaging(fs, cluster, stagingLocation);
             } else {
                 Location workingLocation = ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING);
                 if (stagingLocation.getPath().equals(workingLocation.getPath())) {
@@ -323,15 +292,60 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                                     .getName().value() + " cannot have same path: " + stagingLocation.getPath()
                                     + " for cluster :" + cluster.getName());
                 } else {
-
                     checkPathOwnerAndPermission(cluster.getName(), workingLocation.getPath(), fs,
                             HadoopClientFactory.READ_EXECUTE_PERMISSION);
-
                 }
             }
-
+            // Create staging subdirs falcon/workflows/feed and falcon/workflows/process : Falcon-1647
+            createStagingSubdirs(fs, cluster, stagingLocation,
+                    "falcon/workflows/feed", HadoopClientFactory.ALL_PERMISSION);
+            createStagingSubdirs(fs, cluster, stagingLocation,
+                    "falcon/workflows/process", HadoopClientFactory.ALL_PERMISSION);
         }
+    }
 
+    private void createWorkingDirUnderStaging(FileSystem fs, Cluster cluster,
+                                              Location stagingLocation) throws ValidationException {
+        Path workingDirPath = new Path(stagingLocation.getPath(), ClusterHelper.WORKINGDIR);
+        try {
+            if (!fs.exists(workingDirPath)) {  //Checking if the staging dir has the working dir to be created
+                HadoopClientFactory.mkdirs(fs, workingDirPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
+            } else {
+                if (fs.isDirectory(workingDirPath)) {
+                    FsPermission workingPerms = fs.getFileStatus(workingDirPath).getPermission();
+                    if (!workingPerms.equals(HadoopClientFactory.READ_EXECUTE_PERMISSION)) { //perms check
+                        throw new ValidationException(
+                                "Falcon needs subdir " + ClusterHelper.WORKINGDIR + " inside staging dir:"
+                                        + stagingLocation.getPath()
+                                        + " when staging location not specified with "
+                                        + HadoopClientFactory.READ_EXECUTE_PERMISSION.toString() + " got "
+                                        + workingPerms.toString());
+                    }
+                } else {
+                    throw new ValidationException(
+                            "Falcon needs subdir " + ClusterHelper.WORKINGDIR + " inside staging dir:"
+                                    + stagingLocation.getPath()
+                                    + " when staging location not specified. Got a file at " + workingDirPath
+                                    .toString());
+                }
+            }
+        } catch (IOException e) {
+            throw new ValidationException(
+                    "Unable to create path for " + workingDirPath.toString() + " with path: "
+                            + workingDirPath.toString() + " for cluster " + cluster.getName(), e);
+        }
+    }
+
+    private void createStagingSubdirs(FileSystem fs, Cluster cluster, Location stagingLocation,
+                                      String path, FsPermission permission) throws ValidationException {
+        Path subdirPath = new Path(stagingLocation.getPath(), path);
+        try {
+            HadoopClientFactory.mkdirs(fs, subdirPath, permission);
+        } catch (IOException e) {
+            throw new ValidationException(
+                    "Unable to create path "
+                            + subdirPath.toString() + " for cluster " + cluster.getName(), e);
+        }
     }
 
     protected void validateProperties(Cluster cluster) throws ValidationException {

@@ -18,6 +18,25 @@
 
 package org.apache.falcon.resource;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -44,27 +63,9 @@ import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Set;
 
 /**
  * A base class for managing Entity's Instance operations.
@@ -79,14 +80,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     protected EntityType checkType(String type) {
         if (StringUtils.isEmpty(type)) {
-            throw FalconWebException.newInstanceException("entity type is empty",
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("entity type is empty");
         } else {
             EntityType entityType = EntityType.getEnum(type);
             if (entityType == EntityType.CLUSTER) {
-                throw FalconWebException.newInstanceException(
-                        "Instance management functions don't apply to Cluster entities",
-                        Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException(
+                        "Instance management functions don't apply to Cluster entities");
             }
             return entityType;
         }
@@ -123,13 +122,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateNotEmpty("entityName", entity);
             validateInstanceFilterByClause(filterBy);
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
                     filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -143,11 +142,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     getEarliestDate(entry.getValue());
                 }
             } catch (IllegalArgumentException e) {
-                throw FalconWebException.newInstanceException(
-                        "Invalid filter key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Invalid filter key: " + entry.getKey());
             } catch (FalconException e) {
-                throw FalconWebException.newInstanceException(
-                        "Invalid date value for key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+                throw FalconWebException.newAPIException("Invalid date value for key: " + entry.getKey());
             }
         }
     }
@@ -156,15 +153,15 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     public InstancesResult getInstances(String type, String entity, String startStr, String endStr,
                                         String colo, List<LifeCycle> lifeCycles,
                                         String filterBy, String orderBy, String sortOrder,
-                                        Integer offset, Integer numResults) {
+                                        Integer offset, Integer numResults, Boolean allAttempts) {
         return getStatus(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, sortOrder, offset, numResults);
+                filterBy, orderBy, sortOrder, offset, numResults, allAttempts);
     }
 
     public InstancesResult getStatus(String type, String entity, String startStr, String endStr,
                                      String colo, List<LifeCycle> lifeCycles,
                                      String filterBy, String orderBy, String sortOrder,
-                                     Integer offset, Integer numResults) {
+                                     Integer offset, Integer numResults, Boolean allAttempts) {
         checkColo(colo);
         checkType(type);
         try {
@@ -175,14 +172,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr, numResults);
 
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceResultSubset(wfEngine.getStatus(entityObject,
-                            startAndEndDate.first, startAndEndDate.second, lifeCycles),
+                            startAndEndDate.first, startAndEndDate.second, lifeCycles, allAttempts),
                     filterBy, orderBy, sortOrder, offset, numResults);
-        } catch (Throwable e) {
+        } catch (FalconException e) {
             LOG.error("Failed to get instances status", e);
-            throw FalconWebException
-                    .newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e.getMessage());
         }
     }
 
@@ -229,14 +225,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     break;
 
                 default:
-                    throw FalconWebException.newInstanceDependencyResult("Instance dependency isn't supported for type:"
-                        + entityType, Response.Status.BAD_REQUEST);
+                    throw FalconWebException.newAPIException("Instance dependency isn't supported for type:"
+                        + entityType);
                 }
             }
 
         } catch (Throwable throwable) {
             LOG.error("Failed to get instance dependencies:", throwable);
-            throw FalconWebException.newInstanceDependencyResult(throwable, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(throwable);
         }
 
         InstanceDependencyResult res = new InstanceDependencyResult(APIResult.Status.SUCCEEDED, "Success!");
@@ -255,14 +251,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceSummaryResultSubset(wfEngine.getSummary(entityObject,
                     startAndEndDate.first, startAndEndDate.second, lifeCycles),
                     filterBy, orderBy, sortOrder);
 
         } catch (Throwable e) {
             LOG.error("Failed to get instance summary", e);
-            throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -274,7 +270,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             // getStatus does all validations and filters clusters
             InstancesResult result = getStatus(type, entity, startStr, endStr,
-                    colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults);
+                    colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, null);
             LogProvider logProvider = new LogProvider();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             for (Instance instance : result.getInstances()) {
@@ -283,8 +279,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return result;
         } catch (Exception e) {
             LOG.error("Failed to get logs for instances", e);
-            throw FalconWebException.newInstanceException(e,
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -313,7 +308,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         // Sort the ArrayList using orderBy
         instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
         result.setCollection(instanceSet.subList(
-                offset, (offset+pageCount)).toArray(new Instance[pageCount]));
+                offset, (offset + pageCount)).toArray(new Instance[pageCount]));
         return result;
     }
 
@@ -515,18 +510,20 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                          String endStr, String colo) {
         checkColo(colo);
         EntityType entityType = checkType(type);
+
+        if (entityType != EntityType.FEED) {
+            throw FalconWebException.newAPIException("getLocation is not applicable for " + entityType);
+        }
         try {
-            if (entityType != EntityType.FEED) {
-                throw new IllegalArgumentException("getLocation is not applicable for " + type);
-            }
+
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             return FeedHelper.getFeedInstanceListing(entityObject, startAndEndDate.first, startAndEndDate.second);
-        } catch (Throwable e) {
+        } catch (FalconException e) {
             LOG.error("Failed to get instances listing", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e.getMessage());
         }
     }
 
@@ -547,11 +544,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Date start = startAndEndDate.first;
             Date end = EntityUtil.getNextInstanceTime(start, EntityUtil.getFrequency(entityObject),
                     EntityUtil.getTimeZone(entityObject), 1);
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to display params of an instance", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -572,12 +569,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.killInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -598,12 +595,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.suspendInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -624,12 +621,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.resumeInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -665,20 +662,19 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return result;
         } catch (IllegalArgumentException e) { // bad entityType
             LOG.error("Bad Entity Type: {}", entityType);
-            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } catch (EntityNotRegisteredException e) { // bad entityName
             LOG.error("Bad Entity Name : {}", entityName);
-            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         } catch (Throwable e) {
             LOG.error("Failed to triage", e);
-            throw FalconWebException.newTriageResultException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
     private void checkName(String entityName) {
         if (StringUtils.isBlank(entityName)) {
-            throw FalconWebException.newInstanceException("Instance name is mandatory and shouldn't be blank",
-                    Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Instance name is mandatory and shouldn't be blank");
         }
     }
 
@@ -706,9 +702,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
                 // add vertex to the graph
                 vertices.add(currentInstance.toString());
-                instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
-                if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
-                    continue;
+                if (status == null) {
+                    instanceStatusMap.put(currentInstance.toString(), "[ Not Available ]");
+                } else {
+                    instanceStatusMap.put(currentInstance.toString(), "[" + status.name() + "]");
+                    if (status == FeedInstanceStatus.AvailabilityStatus.AVAILABLE) {
+                        continue;
+                    }
                 }
 
                 // find producer process instance and add it to the queue
@@ -782,16 +782,20 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         Date endRange = new Date(instanceTime.getTime() + 200);
         List<FeedInstanceStatus> feedListing = storage.getListing(feed, cluster.getName(), LocationType.DATA,
                 instanceTime, endRange);
-        return feedListing.get(0).getStatus();
+        if (feedListing.size() > 0) {
+            return feedListing.get(0).getStatus();
+        }
+        LOG.warn("No instances were found for the given feed: {} & instanceTime: {}", feed, instanceTime);
+        return null;
     }
 
     private InstancesResult.WorkflowStatus getProcessInstanceStatus(Process process, Date instanceTime)
         throws FalconException {
-        AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+        AbstractWorkflowEngine wfEngine = getWorkflowEngine(process);
         List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
         lifeCycles.add(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
         Date endRange = new Date(instanceTime.getTime() + 200);
-        Instance[] response = wfEngine.getStatus(process, instanceTime, endRange, lifeCycles).getInstances();
+        Instance[] response = wfEngine.getStatus(process, instanceTime, endRange, lifeCycles, null).getInstances();
         if (response.length > 0) {
             return response[0].getStatus();
         }
@@ -817,12 +821,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
                     entityObject, startStr, endStr);
 
-            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return wfEngine.reRunInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles, isForced);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
@@ -865,12 +869,13 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         Frequency frequency = EntityUtil.getFrequency(entityObject);
         Date endDate = getEndDate(endStr, clusterStartEndDates.second);
         Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency, numResults);
-
         if (startDate.after(endDate)) {
-            throw new FalconException("Specified End date " + SchemaHelper.getDateFormat().format(endDate)
-                    + " is before the entity was scheduled " + SchemaHelper.getDateFormat().format(startDate));
+            throw new IllegalArgumentException("Specified End date "
+                    + SchemaHelper.getDateFormat().format(endDate)
+                    + " is before the entity was scheduled "
+                    + SchemaHelper.getDateFormat().format(startDate));
         }
-        return new Pair<Date, Date>(startDate, endDate);
+        return new Pair<>(startDate, endDate);
     }
 
     private Date getEndDate(String endStr, Date clusterEndDate) throws FalconException {

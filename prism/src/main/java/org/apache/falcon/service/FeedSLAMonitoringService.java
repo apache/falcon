@@ -80,7 +80,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         return SERVICE;
     }
 
-    private int queueSize;
+    protected int queueSize;
 
     /**
      * Permissions for storePath.
@@ -90,14 +90,14 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     /**
      * Feeds to be monitored.
      */
-    private Set<String> monitoredFeeds;
+    protected Set<String> monitoredFeeds;
 
 
     /**
      * Map<Pair<feedName, clusterName>, Set<instanceTime> to store
      * each missing instance of a feed.
      */
-    private Map<Pair<String, String>, BlockingQueue<Date>> pendingInstances;
+    protected Map<Pair<String, String>, BlockingQueue<Date>> pendingInstances;
 
 
     /**
@@ -236,16 +236,16 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         fileSystem = initializeFileSystem();
 
         String freq = StartupProperties.get().getProperty("feed.sla.serialization.frequency.millis", ONE_HOUR);
-        serializationFrequencyMillis = Integer.valueOf(freq);
+        serializationFrequencyMillis = Integer.parseInt(freq);
 
         freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
-        statusCheckFrequencySeconds = Integer.valueOf(freq);
+        statusCheckFrequencySeconds = Integer.parseInt(freq);
 
         freq = StartupProperties.get().getProperty("feed.sla.lookAheadWindow.millis", "900000");
-        lookAheadWindowMillis = Integer.valueOf(freq);
+        lookAheadWindowMillis = Integer.parseInt(freq);
 
         String size = StartupProperties.get().getProperty("feed.sla.queue.size", "288");
-        queueSize = Integer.valueOf(size);
+        queueSize = Integer.parseInt(size);
 
         try {
             if (fileSystem.exists(filePath)) {
@@ -264,6 +264,13 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     @Override
     public void destroy() throws FalconException {
         serializeState(); // store the state of monitoring service to the disk.
+    }
+
+    public void makeFeedInstanceAvailable(String feedName, String clusterName, Date nominalTime) {
+        LOG.info("Removing {} feed's instance {} in cluster {} from pendingSLA", feedName,
+                clusterName, nominalTime);
+        Pair<String, String> feedCluster = new Pair<>(feedName, clusterName);
+        pendingInstances.get(feedCluster).remove(nominalTime);
     }
 
     private FileSystem initializeFileSystem() {
@@ -319,12 +326,22 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     BlockingQueue<Date> instances = pendingInstances.get(key);
                     if (instances == null) {
                         instances = new LinkedBlockingQueue<>(queueSize);
+                        Date feedStartTime = feedCluster.getValidity().getStart();
+                        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, feedCluster);
+                        ExpressionHelper evaluator = ExpressionHelper.get();
+                        ExpressionHelper.setReferenceDate(new Date());
+                        Date retention = new Date(evaluator.evaluate(retentionFrequency.toString(), Long.class));
+                        if (feedStartTime.before(retention)) {
+                            feedStartTime = retention;
+                        }
+                        nextInstanceTime = feedStartTime;
                     }
                     Set<Date> exists = new HashSet<>(instances);
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =
                             EntityUtil.getEntity(EntityType.CLUSTER, feedCluster.getName());
                     nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
-                    while (nextInstanceTime.before(to)) {
+                    Date endDate = FeedHelper.getClusterValidity(feed, currentCluster.getName()).getEnd();
+                    while (nextInstanceTime.before(to) && nextInstanceTime.before(endDate)) {
                         if (instances.size() >= queueSize) { // if no space, first make some space
                             LOG.debug("Removing instance={} for <feed,cluster>={}", instances.peek(), key);
                             exists.remove(instances.peek());
@@ -437,7 +454,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         }
     }
 
-    private void initializeService() {
+    protected void initializeService() {
         pendingInstances = new ConcurrentHashMap<>();
         lastCheckedAt = new Date();
         lastSerializedAt = new Date();

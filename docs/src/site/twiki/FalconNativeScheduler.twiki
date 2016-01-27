@@ -1,0 +1,213 @@
+---+ Falcon Native Scheduler
+
+---++ Overview
+Falcon has been using Oozie as its scheduling engine.  While the use of Oozie works reasonably well, there are scenarios where Oozie scheduling is proving to be a limiting factor. In its current form, Falcon relies on Oozie for both scheduling and for workflow execution, due to which the scheduling is limited to time based/cron based scheduling with additional gating conditions on data availability. Also, this imposes restrictions on datasets being periodic in nature. In order to offer better scheduling capabilities, Falcon comes with its own native scheduler. 
+
+---++ Capabilities
+The native scheduler will offer the capabilities offered by Oozie co-ordinator and more. The native scheduler will be built and released over the next few releases of Falcon giving users an opportunity to use it and provide feedback.
+
+Currently, the native scheduler offers the following capabilities:
+   1. Submit and schedule a Falcon process that runs periodically (without data dependency) - It could be a PIG script, oozie workflow, Hive (all the engine types currently supported).
+   1. Monitor/Query/Modify the scheduled process - All applicable entity APIs and instance APIs should work as it does now.  Falcon provides data management functions for feeds declaratively. It allows users to represent feed locations as time-based partition directories on HDFS containing files.
+
+*NOTE: Execution order is FIFO. LIFO and LAST_ONLY are not supported yet.*
+
+In the near future, Falcon scheduler will provide feature parity with Oozie scheduler and in subsequent releases will provide the following features:
+   * Periodic, cron-based, calendar-based scheduling.
+   * Data availability based scheduling.
+   * External trigger/notification based scheduling.
+   * Support for periodic/a-periodic datasets.
+   * Support for optional/mandatory datasets. Option to specify minumum/maximum/exactly-N instances of data to consume.
+   * Handle dependencies across entities during re-run.
+
+---++ Configuring Native Scheduler
+You can enable native scheduler by making changes to __$FALCON_HOME/conf/startup.properties__ as follows. You will need to restart Falcon Server for the changes to take effect.
+<verbatim>
+*.dag.engine.impl=org.apache.falcon.workflow.engine.OozieDAGEngine
+*.application.services=org.apache.falcon.security.AuthenticationInitializationService,\
+                        org.apache.falcon.workflow.WorkflowJobEndNotificationService, \
+                        org.apache.falcon.service.ProcessSubscriberService,\
+                        org.apache.falcon.service.FeedSLAMonitoringService,\
+                        org.apache.falcon.service.LifecyclePolicyMap,\
+                        org.apache.falcon.state.store.service.FalconJPAService,\
+                        org.apache.falcon.entity.store.ConfigurationStore,\
+                        org.apache.falcon.rerun.service.RetryService,\
+                        org.apache.falcon.rerun.service.LateRunService,\
+                        org.apache.falcon.metadata.MetadataMappingService,\
+                        org.apache.falcon.service.LogCleanupService,\
+                        org.apache.falcon.service.GroupsService,\
+                        org.apache.falcon.service.ProxyUserService,\
+                        org.apache.falcon.notification.service.impl.JobCompletionService,\
+                        org.apache.falcon.notification.service.impl.SchedulerService,\
+                        org.apache.falcon.notification.service.impl.AlarmService,\
+                        org.apache.falcon.notification.service.impl.DataAvailabilityService,\
+                        org.apache.falcon.execution.FalconExecutionService
+</verbatim>
+
+---+++ Making the Native Scheduler the default scheduler
+To ensure backward compatibility, even when the native scheduler is enabled, the default scheduler is still Oozie. This means users will be scheduling entities on Oozie scheduler, by default. They will need to explicitly specify the scheduler as native, if they wish to schedule entities using native scheduler. 
+
+<a href="#Scheduling_new_entities_on_Native_Scheduler">This section</a> has more details on how to schedule on either of the schedulers. 
+
+If you wish to make the Falcon Native Scheduler your default scheduler and remove Oozie as the scheduler, set the following property in __$FALCON_HOME/conf/startup.properties__
+<verbatim>
+## If you wish to use Falcon native scheduler as your default scheduler, set the workflow engine to FalconWorkflowEngine instead of OozieWorkflowEngine. ##
+*.workflow.engine.impl=org.apache.falcon.workflow.engine.FalconWorkflowEngine
+</verbatim>
+
+---+++ Configuring the state store for Native Scheduler
+You can configure statestore by making changes to __$FALCON_HOME/conf/statestore.properties__ as follows. You will need to restart Falcon Server for the changes to take effect.
+
+Falcon Server needs to maintain state of the entities and instances in a persistent store for the system to be recoverable. Since Prism only federates, it does not need to maintain any state information. Following properties need to be set in statestore.properties of Falcon Servers:
+<verbatim>
+######### StateStore Properties #####
+*.falcon.state.store.impl=org.apache.falcon.state.store.jdbc.JDBCStateStore
+*.falcon.statestore.jdbc.driver=org.apache.derby.jdbc.EmbeddedDriver
+*.falcon.statestore.jdbc.url=jdbc:derby:data/falcon.db
+# StateStore credentials file where username,password and other properties can be stored securely.
+# Set this credentials file permission 400 and make sure user who starts falcon should only have read permission.
+# Give Absolute path to credentials file along with file name or put in classpath with file name statestore.credentials.
+# Credentials file should be present either in given location or class path, otherwise falcon won't start.
+*.falcon.statestore.credentials.file=
+*.falcon.statestore.jdbc.username=sa
+*.falcon.statestore.jdbc.password=
+*.falcon.statestore.connection.data.source=org.apache.commons.dbcp.BasicDataSource
+# Maximum number of active connections that can be allocated from this pool at the same time.
+*.falcon.statestore.pool.max.active.conn=10
+*.falcon.statestore.connection.properties=
+# Indicates the interval (in milliseconds) between eviction runs.
+*.falcon.statestore.validate.db.connection.eviction.interval=300000
+## The number of objects to examine during each run of the idle object evictor thread.
+*.falcon.statestore.validate.db.connection.eviction.num=10
+## Creates Falcon DB.
+## If set to true, it creates the DB schema if it does not exist. If the DB schema exists is a NOP.
+## If set to false, it does not create the DB schema. If the DB schema does not exist it fails start up.
+*.falcon.statestore.create.db.schema=true
+</verbatim> 
+
+The _*.falcon.statestore.jdbc.url_ property in statestore.properties determines the DB and data location. All other properties are common across RDBMS.
+
+*NOTE : Although multiple Falcon Servers can share a DB (not applicable for Derby DB), it is recommended that you have different DBs for different Falcon Servers for better performance.*
+
+You will need to create the state DB and tables before starting the Falcon Server. To create tables, a tool comes bundled with the Falcon installation. You can use the _falcon-db.sh_ script to create tables in the DB. The script needs to be run only for Falcon Servers and can be run by any user that has execute permission on the script. The script picks up the DB connection details from __$FALCON_HOME/conf/statestore.properties__. Ensure that you have granted the right privileges to the user mentioned in statestore.properties_, so the tables can be created.
+
+You can use the help command to get details on the sub-commands supported:
+<verbatim>
+./bin/falcon-db.sh help
+Hadoop home is set, adding libraries from '/Users/pallavi.rao/falcon/hadoop-2.6.0/bin/hadoop classpath' into falcon classpath
+usage: 
+      Falcon DB initialization tool currently supports Derby DB/ Mysql
+
+      falcondb help : Display usage for all commands or specified command
+
+      falcondb version : Show Falcon DB version information
+
+      falcondb create <OPTIONS> : Create Falcon DB schema
+                      -run             Confirmation option regarding DB schema creation/upgrade
+                      -sqlfile <arg>   Generate SQL script instead of creating/upgrading the DB
+                                       schema
+
+      falcondb upgrade <OPTIONS> : Upgrade Falcon DB schema
+                       -run             Confirmation option regarding DB schema creation/upgrade
+                       -sqlfile <arg>   Generate SQL script instead of creating/upgrading the DB
+                                        schema
+
+</verbatim>
+Currently, MySQL and Derby are supported as state stores. We may extend support to other DBs in the future. Falcon has been tested against MySQL v5.5.
+
+---++++ Using Derby as the State Store
+Using Derby is ideal for QA and staging setup. Falcon comes bundled with a Derby connector and no explicit setup is required (although you can set it up) in terms creating the DB or tables.
+For example,
+ <verbatim> *.falcon.statestore.jdbc.url=jdbc:derby:data/falcon.db;create=true </verbatim>
+
+ tells Falcon to use the Derby JDBC connector, with data directory, $FALCON_HOME/data/ and DB name 'falcon'. If _create=true_ is specified, you will not need to create a DB up front; a database will be created if it does not exist.
+
+---++++ Using MySQL as the State Store
+The jdbc.url property in statestore.properties determines the DB and data location.
+For example,
+ <verbatim> *.falcon.statestore.jdbc.url=jdbc:mysql://localhost:3306/falcon </verbatim>
+
+ tells Falcon to use the MySQL JDBC connector, which is accessible @localhost:3306, with DB name 'falcon'.
+
+---++ Scheduling new entities on Native Scheduler
+To schedule an entity (currently only process is supported) using the native scheduler, you need to specify the scheduler in the schedule command as shown below:
+<verbatim>
+$FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule -properties falcon.scheduler:native
+</verbatim>
+
+If Oozie is configured as the default scheduler, you can skip the scheduler option or explicitly set it to _oozie_, as shown below:
+<verbatim>
+$FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule
+OR
+$FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule -properties falcon.scheduler:oozie
+</verbatim>
+
+If the native scheduler is configured as the default scheduler, then, you can omit the scheduler option, as shown below:
+<verbatim>
+$FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule 
+</verbatim>
+
+---++ Migrating entities from Oozie Scheduler to Native Scheduler
+Currently, user will have to delete and re-create entities in order to move across schedulers. Attempting to schedule an already scheduled entity on a different scheduler will result in an error. Note that the history of instances prior to scheduling on native scheduler will not be available via the instance APIs. However, user can retrieve that information using metadata APIs. Native scheduler must be enabled before migrating entities to native scheduler.
+
+<a href="#Configuring_Native_Scheduler">Configuring Native Scheduler</a> has more details on how to enable native scheduler.
+
+---+++ Migrating from Oozie to Native Scheduler
+   * Delete the entity (process). 
+<verbatim>$FALCON_HOME/bin/falcon entity -type process -name <process name> -delete </verbatim>
+   * Submit the entity (process) with start time from where the Oozie scheduler left off. 
+<verbatim>$FALCON_HOME/bin/falcon entity -type process -submit <path to process xml> </verbatim>
+   * Schedule the entity on native scheduler. 
+<verbatim> $FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule -properties falcon.scheduler:native </verbatim>
+
+---+++ Reverting to Oozie from Native Scheduler
+   * Delete the entity (process). 
+<verbatim>$FALCON_HOME/bin/falcon entity -type process -name <process name> -delete </verbatim>
+   * Submit the entity (process) with start time from where the Native scheduler left off. 
+<verbatim>$FALCON_HOME/bin/falcon entity -type process -submit <path to process xml> </verbatim>
+   * Schedule the entity on the default scheduler (Oozie).
+ <verbatim> $FALCON_HOME/bin/falcon entity -type process -name <process name> -schedule </verbatim>
+
+---+++ Differences in API responses between Oozie and Native Scheduler
+Most API responses are similar whether the entity is scheduled via Oozie or via Native scheduler. However, there are a few exceptions and those are listed below.
+---++++ Rerun API
+When a user performs a rerun using Oozie scheduler, Falcon directly reruns the workflow on Oozie and the instance will be moved to 'RUNNING'.
+
+Example response:
+<verbatim>
+$ falcon instance -rerun processMerlinOozie -start 2016-01-08T12:13Z -end 2016-01-08T12:15Z
+Consolidated Status: SUCCEEDED
+
+Instances:
+Instance		Cluster		SourceCluster		Status		Start		End		Details					Log
+-----------------------------------------------------------------------------------------------
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-9706f068	-	RUNNING	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://8RPCG32.corp.inmobi.com:11000/oozie?job=0001811-160104160825636-oozie-oozi-W
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-0b270a1d	-	RUNNING	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://lda01:11000/oozie?job=0002247-160104115615658-oozie-oozi-W
+
+Additional Information:
+Response: ua1/RERUN
+ua2/RERUN
+Request Id: ua1/871377866@qtp-630572412-35 - 7190c4c8-bacb-4639-8d48-c9e639f544da
+ua2/1554129706@qtp-536122141-13 - bc18127b-1bf8-4ea1-99e6-b1f10ba3a441
+</verbatim>
+
+However, when a user performs a rerun on native scheduler, the instance is scheduled again. This is done intentionally so as to not violate the number of instances running in parallel.  Hence, the user will see the status of the instance as 'READY'.
+
+Example response:
+<verbatim>
+$ falcon instance -rerun ProcessMultipleClustersTest-agregator-coord16-8f55f59b -start 2016-01-08T12:13Z -end 2016-01-08T12:15Z
+Consolidated Status: SUCCEEDED
+
+Instances:
+Instance		Cluster		SourceCluster		Status		Start		End		Details					Log
+-----------------------------------------------------------------------------------------------
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-9706f068	-	READY	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://8RPCG32.corp.inmobi.com:11000/oozie?job=0001812-160104160825636-oozie-oozi-W
+
+2016-01-08T12:13Z	ProcessMultipleClustersTest-corp-0b270a1d	-	READY	2016-01-08T13:03Z	2016-01-08T13:03Z	-	http://lda01:11000/oozie?job=0002248-160104115615658-oozie-oozi-W
+
+Additional Information:
+Response: ua1/RERUN
+ua2/RERUN
+Request Id: ua1/871377866@qtp-630572412-35 - 8d118d4d-c0ef-4335-a9af-10364498ec4f
+ua2/1554129706@qtp-536122141-13 - c2a3fc50-8b05-47ce-9c85-ca432b96d923
+</verbatim>

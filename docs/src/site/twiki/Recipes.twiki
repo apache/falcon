@@ -63,8 +63,8 @@ and replace it with the property value "hdfs-dr-workflow". Substituted template 
 </verbatim>
 
 ---++ Metrics
-HDFS DR recipes will capture the replication metrics like TIMETAKEN, COPY, BYTESCOPIED for an instance and populate to the
-GraphDB for display on UI.
+HDFS DR and Hive DR recipes will capture the replication metrics like TIMETAKEN, BYTESCOPIED, COPY (number of files copied) for an
+instance and populate to the GraphDB.
 
 ---++ Managing the scheduled recipe process
    * Scheduled recipe process is similar to regular process

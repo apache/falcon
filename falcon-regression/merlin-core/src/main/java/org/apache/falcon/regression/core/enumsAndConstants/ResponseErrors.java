@@ -27,7 +27,8 @@ public enum ResponseErrors {
     PROCESS_INVALID_RANGE("is not in validity range of process"),
     PROCESS_INSTANCE_FAULT("is not a valid instance time on cluster"),
     FEED_INVALID_RANGE("is not in validity range for Feed"),
-    FEED_INSTANCE_FAULT("is not a valid instance for the  feed");
+    FEED_INSTANCE_FAULT("is not a valid instance for the  feed"),
+    INVALID_INSTANCE_TIME("not a valid instance");
 
     private String error;
 

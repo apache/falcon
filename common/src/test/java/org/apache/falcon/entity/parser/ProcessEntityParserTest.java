@@ -271,6 +271,15 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         parser.parseAndValidate(process.toString());
     }
 
+    @Test()
+    public void testRetryTimeout() throws FalconException {
+        Process process = parser
+                .parseAndValidate(ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML));
+        process.getRetry().setOnTimeout(new Boolean("true"));
+        parser.parseAndValidate(process.toString());
+    }
+
     @Test(expectedExceptions = ValidationException.class)
     public void testInvalidLateInputs() throws Exception {
         Process process = parser

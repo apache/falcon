@@ -18,6 +18,19 @@
 
 package org.apache.falcon.resource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -33,22 +46,11 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.service.FeedSLAMonitoringService;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * REST resource of allowed actions on Schedulable Entities, Only Process and
@@ -60,10 +62,13 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
 
     /**
-     * Schedules an submitted entity immediately.
+     * Schedules a submitted entity immediately.
      *
      * @param type   entity type
      * @param entity entity name
+     * @param properties Specifying 'falcon.scheduler:native' as a property will schedule the entity on the
+     *                   native workflow engine, else it will default to the workflow engine
+     *                   as defined in startup.properties.
      * @return APIResult
      */
     public APIResult schedule(
@@ -78,12 +83,12 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
     protected synchronized void scheduleInternal(String type, String entity, Boolean skipDryRun,
-            Map<String, String> properties) throws FalconException, AuthorizationException {
+                                 Map<String, String> properties) throws FalconException, AuthorizationException {
 
         checkSchedulableEntity(type);
         Entity entityObj = null;
@@ -91,13 +96,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             entityObj = EntityUtil.getEntity(type, entity);
             //first acquire lock on entity before scheduling
             if (!memoryLocks.acquireLock(entityObj, "schedule")) {
-                throw new FalconException("Looks like an schedule/update command is already running for "
-                        + entityObj.toShortString());
+                throw  FalconWebException.newAPIException("Looks like an schedule/update command is already"
+                        + " running for " + entityObj.toShortString());
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
-            getWorkflowEngine().schedule(entityObj, skipDryRun, properties);
+            WorkflowEngineFactory.getWorkflowEngine(entityObj, properties).schedule(entityObj, skipDryRun, properties);
         } catch (Exception e) {
-            throw new FalconException("Entity schedule failed for " + type + ": " + entity, e);
+            LOG.error("Entity schedule failed for " + type + ": " + entity, e);
+            throw FalconWebException.newAPIException("Entity schedule failed for " + type + ": " + entity);
         } finally {
             if (entityObj != null) {
                 memoryLocks.releaseLock(entityObj);
@@ -107,7 +113,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     }
 
     public static void validateSlaParams(String entityType, String entityName, String start, String end,
-                                  String colo) throws FalconException {
+                                         String colo) throws FalconException {
         EntityType type = EntityType.getEnum(entityType);
         if (type != EntityType.FEED) {
             throw new ValidationException("SLA monitoring is not supported for: " + type);
@@ -165,7 +171,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                 }
             }
         } catch (FalconException e) {
-            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         SchedulableEntityInstanceResult result = new SchedulableEntityInstanceResult(APIResult.Status.SUCCEEDED,
                 "Success!");
@@ -177,6 +183,9 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
      * Submits a new entity and schedules it immediately.
      *
      * @param type   entity type
+     * @param properties Specifying 'falcon.scheduler:native' as a property will schedule the entity on the
+     *                   native workflow engine, else it will default to the workflow engine
+     *                   as defined in startup.properties.
      * @return APIResult
      */
     public APIResult submitAndSchedule(
@@ -193,7 +202,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                     entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -212,15 +221,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj)) {
-                getWorkflowEngine().suspend(entityObj);
+            if (getWorkflowEngine(entityObj).isActive(entityObj)) {
+                getWorkflowEngine(entityObj).suspend(entityObj);
             } else {
-                throw new FalconException(entity + "(" + type + ") is not scheduled");
+                throw  FalconWebException.newAPIException(entity + "(" + type + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -240,15 +249,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         try {
             checkSchedulableEntity(type);
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj)) {
-                getWorkflowEngine().resume(entityObj);
+            if (getWorkflowEngine(entityObj).isActive(entityObj)) {
+                getWorkflowEngine(entityObj).resume(entityObj);
             } else {
-                throw new FalconException(entity + "(" + type + ") is not scheduled");
+                throw new IllegalStateException(entity + "(" + type + ") is not scheduled");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOG.error("Unable to resume entity", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
     }
 
@@ -292,9 +301,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                             cluster, doAsUser),
                     orderBy, sortOrder, offset, resultsPerPage);
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
-        } catch (Exception e) {
+        } catch (FalconWebException e) {
+            throw e;
+        } catch(Exception e) {
             LOG.error("Failed to get entities", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
 
         List<EntitySummaryResult.EntitySummary> entitySummaries = new ArrayList<EntitySummaryResult.EntitySummary>();
@@ -302,7 +313,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             InstancesResult instancesResult = getInstances(entity.getEntityType().name(), entity.getName(),
                     SchemaHelper.getDateFormat().format(startAndEndDates.first),
                     SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    colo, null, "", "", "", 0, numInstances);
+                    colo, null, "", "", "", 0, numInstances, null);
 
             /* ToDo - Use oozie bulk API after FALCON-591 is implemented
              *       getBulkInstances(entity, cluster,
@@ -347,11 +358,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             decorateEntityWithACL(entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             for (String cluster : clusters) {
-                result.append(getWorkflowEngine().touch(entity, cluster, skipDryRun));
+                result.append(getWorkflowEngine(entity).touch(entity, cluster, skipDryRun));
             }
         } catch (Throwable e) {
             LOG.error("Touch failed", e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
     }
@@ -360,9 +371,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     private void validateTypeForEntitySummary(String type) {
         EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
-            throw FalconWebException.newException("Invalid entity type " + type
-                + " for EntitySummary API. Valid options are feed or process",
-                Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException("Invalid entity type " + type
+                            + " for EntitySummary API. Valid options are feed or process");
         }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck

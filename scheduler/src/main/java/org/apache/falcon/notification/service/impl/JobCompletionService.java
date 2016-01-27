@@ -17,8 +17,11 @@
  */
 package org.apache.falcon.notification.service.impl;
 
+import java.util.Comparator;
+import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.exception.NotificationServiceException;
@@ -41,12 +44,12 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * This notification service notifies {@link NotificationHandler} when an external job
@@ -57,7 +60,13 @@ public class JobCompletionService implements FalconNotificationService, Workflow
     private static final Logger LOG = LoggerFactory.getLogger(JobCompletionService.class);
     private static final DateTimeZone UTC = DateTimeZone.UTC;
 
-    private List<NotificationHandler> listeners = Collections.synchronizedList(new ArrayList<NotificationHandler>());
+    private Set<NotificationHandler> listeners = Collections.synchronizedSet(new TreeSet<>(
+            new Comparator<NotificationHandler>() {
+                @Override
+                public int compare(NotificationHandler o1, NotificationHandler o2) {
+                    return Integer.compare(o1.getPriority().getPriority(), o2.getPriority().getPriority());
+                }
+            }));
 
     @Override
     public void register(NotificationRequest notifRequest) throws NotificationServiceException {
@@ -140,9 +149,19 @@ public class JobCompletionService implements FalconNotificationService, Workflow
 
     private void onEnd(WorkflowExecutionContext context, WorkflowJob.Status status) throws FalconException {
         JobCompletedEvent event = new JobCompletedEvent(constructCallbackID(context), status, getEndTime(context));
-        for (NotificationHandler handler : listeners) {
-            LOG.debug("Notifying {} with event {}", handler, event.getTarget());
-            handler.onEvent(event);
+        synchronized (listeners) {
+            Iterator<NotificationHandler> iterator = listeners.iterator();
+            while(iterator.hasNext()) {
+                NotificationHandler handler = iterator.next();
+                LOG.debug("Notifying {} with event {}", handler, event.getTarget());
+                try {
+                    handler.onEvent(event);
+                } catch (EntityNotRegisteredException ee) {
+                    // Do nothing if entity no longer exists.
+                } catch (FalconException e) {
+                    LOG.error("Handler threw an exception for target " + event.getTarget(), e);
+                }
+            }
         }
     }
 

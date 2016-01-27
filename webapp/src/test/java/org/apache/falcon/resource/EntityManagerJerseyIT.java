@@ -18,11 +18,11 @@
 package org.apache.falcon.resource;
 
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import org.apache.falcon.cli.FalconCLI;
+import org.apache.commons.io.FileUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
@@ -32,13 +32,14 @@ import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.unit.FalconUnit;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
@@ -46,22 +47,13 @@ import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -81,32 +73,44 @@ import java.util.regex.Pattern;
  * Tests should be enabled only in local environments as they need running instance of the web server.
  */
 @Test(groups = {"exhaustive"})
-public class EntityManagerJerseyIT {
+public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
+
+    private static final String START_INSTANCE = "2012-04-20T00:00Z";
+    private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
 
     @BeforeClass
-    public void prepare() throws Exception {
-        TestContext.prepare();
+    @Override
+    public void setup() throws Exception {
+        String version = System.getProperty("project.version");
+        String buildDir = System.getProperty("project.build.directory");
+        System.setProperty("falcon.libext", buildDir + "/../../unit/target/falcon-unit-" + version + ".jar");
+        super.setup();
     }
 
-    @AfterClass
-    public void tearDown() throws Exception {
-        TestContext.deleteEntitiesFromStore();
+    @AfterMethod
+    @Override
+    public void cleanUpActionXml() throws IOException, FalconException {
+        //Needed since oozie writes action xml to current directory.
+        FileUtils.deleteQuietly(new File("action.xml"));
+        FileUtils.deleteQuietly(new File(".action.xml.crc"));
+        contexts.remove();
+    }
+
+    private ThreadLocal<UnitTestContext> contexts = new ThreadLocal<UnitTestContext>();
+
+    private UnitTestContext newContext() throws FalconException, IOException {
+        contexts.set(new UnitTestContext());
+        return contexts.get();
     }
 
     static void assertLibs(FileSystem fs, Path path) throws IOException {
         FileStatus[] libs = fs.listStatus(path);
         Assert.assertNotNull(libs);
-        Assert.assertEquals(libs.length, 1);
-        Assert.assertTrue(libs[0].getPath().getName().startsWith("falcon-hadoop-dependencies"));
     }
 
-    private Entity getDefinition(TestContext context, EntityType type, String name) throws Exception {
-        ClientResponse response =
-                context.service.path("api/entities/definition/" + type.name().toLowerCase() + "/" + name)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        return (Entity) type.getUnmarshaller().unmarshal(new StringReader(response.getEntity(String.class)));
+    private Entity getDefinition(EntityType type, String name) throws Exception {
+        Entity entity = falconUnitClient.getDefinition(type.name(), name, null);
+        return entity;
     }
 
     private void updateEndtime(Process process) {
@@ -116,15 +120,13 @@ public class EntityManagerJerseyIT {
 
     @Test
     public void testLibExtensions() throws Exception {
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-        ClientResponse response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
-        FileSystem fs = context.getCluster().getFileSystem();
+        UnitTestContext context = newContext();
+        submitCluster(context);
+        FileSystem fs = FalconUnit.getFileSystem();
         assertLibs(fs, new Path("/projects/falcon/working/libext/FEED/retention"));
         assertLibs(fs, new Path("/projects/falcon/working/libext/PROCESS"));
 
-        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
+        String tmpFileName = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE1, context.overlay);
         Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(new File(tmpFileName));
         Location location = new Location();
         location.setPath("fsext://global:00/falcon/test/input/${YEAR}/${MONTH}/${DAY}/${HOUR}");
@@ -133,63 +135,44 @@ public class EntityManagerJerseyIT {
         cluster.setLocations(new Locations());
         feed.getClusters().getClusters().get(0).getLocations().getLocations().add(location);
 
-        File tmpFile = TestContext.getTempFile();
+        File tmpFile = UnitTestContext.getTempFile();
         EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
-        response = context.submitAndSchedule(tmpFileName, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
-    }
 
-    private ClientResponse update(TestContext context, Entity entity,
-                                  Date endTime, Boolean skipDryRun) throws Exception {
-        File tmpFile = TestContext.getTempFile();
-        entity.getEntityType().getMarshaller().marshal(entity, tmpFile);
-        WebResource resource = context.service.path("api/entities/update/"
-                + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
-        if (endTime != null) {
-            resource = resource.queryParam("effective", SchemaHelper.formatDateUTC(endTime));
-        }
-        if (null != skipDryRun) {
-            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
-        }
-        return resource.header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-    }
-
-    private ClientResponse touch(TestContext context, Entity entity, Boolean skipDryRun) {
-        WebResource resource = context.service.path("api/entities/touch/"
-                + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
-        if (null != skipDryRun) {
-            resource = resource.queryParam("skipDryRun", String.valueOf(skipDryRun));
-        }
-        return resource
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
+        APIResult result = falconUnitClient.submitAndSchedule(EntityType.FEED.name(), tmpFile.getAbsolutePath(), true,
+                null, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     @Test
     public void testUpdateCheckUser() throws Exception {
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        UnitTestContext context = newContext();
+        String tmpFileName = TestContext.overlayParametersOverTemplate(UnitTestContext.PROCESS_TEMPLATE,
+                context.overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         updateEndtime(process);
-        File tmpFile = TestContext.getTempFile();
+        File tmpFile = UnitTestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
-        OozieTestUtils.waitForBundleStart(context, Status.RUNNING);
+        submitCluster(context);
+        context.prepare();
+        submitFeeds(context.overlay);
+        submitProcess(tmpFile.getAbsolutePath(), context.overlay);
+        scheduleProcess(context.getProcessName(), context.getClusterName(), getAbsolutePath(SLEEP_WORKFLOW));
+        waitForStatus(EntityType.PROCESS.name(), context.getProcessName(), START_INSTANCE,
+                InstancesResult.WorkflowStatus.RUNNING);
 
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
         Assert.assertEquals(bundles.get(0).getUser(), TestContext.REMOTE_USER);
 
-        Feed feed = (Feed) getDefinition(context, EntityType.FEED, context.outputFeedName);
+        Feed feed = (Feed) getDefinition(EntityType.FEED, context.outputFeedName);
 
         //change output feed path and update feed as another user
         feed.getLocations().getLocations().get(0).setPath("/falcon/test/output2/${YEAR}/${MONTH}/${DAY}");
-        ClientResponse response = update(context, feed, null, false);
-        context.assertSuccessful(response);
+        tmpFile = TestContext.getTempFile();
+        feed.getEntityType().getMarshaller().marshal(feed, tmpFile);
+        APIResult result = falconUnitClient.update(EntityType.FEED.name(), feed.getName(),
+                tmpFile.getAbsolutePath(), true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 2);
@@ -197,27 +180,9 @@ public class EntityManagerJerseyIT {
         Assert.assertEquals(bundles.get(1).getUser(), TestContext.REMOTE_USER);
     }
 
-    private ThreadLocal<TestContext> contexts = new ThreadLocal<TestContext>();
-
-    private TestContext newContext() {
-        contexts.set(new TestContext());
-        return contexts.get();
-    }
-
-    @AfterMethod
-    public void cleanup() throws Exception {
-        TestContext testContext = contexts.get();
-        if (testContext != null) {
-            OozieTestUtils.killOozieJobs(testContext);
-        }
-
-        contexts.remove();
-    }
-
     public void testOptionalInput() throws Exception {
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        UnitTestContext context = newContext();
+        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, context.overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
 
         Input in1 = process.getInputs().getInputs().get(0);
@@ -232,14 +197,14 @@ public class EntityManagerJerseyIT {
 
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        schedule(context);
     }
 
     public void testDryRun() throws Exception {
         //Schedule of invalid process should fail because of dryRun, and should pass when dryrun is skipped
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        UnitTestContext context = newContext();
+        String tmpFileName = TestContext.overlayParametersOverTemplate(UnitTestContext.PROCESS_TEMPLATE,
+                context.overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         Property prop = new Property();
         prop.setName("newProp");
@@ -248,10 +213,14 @@ public class EntityManagerJerseyIT {
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
 
-        ClientResponse response = context.validate(tmpFile.getAbsolutePath(), overlay, EntityType.PROCESS);
-        context.assertFailure(response);
-
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, false);
+        try {
+            falconUnitClient.validate(EntityType.PROCESS.name(), tmpFile.getAbsolutePath(),
+                    true, null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
+        schedule(context);
 
         //Fix the process and then submitAndSchedule should succeed
         Iterator<Property> itr = process.getProperties().getProperties().iterator();
@@ -264,37 +233,43 @@ public class EntityManagerJerseyIT {
         tmpFile = TestContext.getTempFile();
         process.setName("process" + System.currentTimeMillis());
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = context.submitAndSchedule(tmpFile.getAbsolutePath(), overlay, EntityType.PROCESS);
-        context.assertSuccessful(response);
-
-        //Update with invalid property should fail again
-        process.getProperties().getProperties().add(prop);
-        updateEndtime(process);
-        response = update(context, process, null, null);
-        context.assertFailure(response);
+        APIResult result = falconUnitClient.submitAndSchedule(EntityType.PROCESS.name(),
+                tmpFile.getAbsolutePath(), true, null, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         // update where dryrun is disabled should succeed.
-        response = update(context, process, null, true);
-        context.assertSuccessful(response);
-
+        tmpFile = TestContext.getTempFile();
+        process.getEntityType().getMarshaller().marshal(process, tmpFile);
+        result = falconUnitClient.update(EntityType.PROCESS.name(), process.getName(),
+                tmpFile.getAbsolutePath(), true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     @Test
     public void testUpdateSuspendedEntity() throws Exception {
-        TestContext context = newContext();
-        context.scheduleProcess();
-        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
+        UnitTestContext context = newContext();
+        schedule(context);
+        waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
+                InstancesResult.WorkflowStatus.RUNNING);
 
         //Suspend entity
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
-        ClientResponse response = suspend(context, process);
-        context.assertSuccessful(response);
+        Process process = (Process) getDefinition(EntityType.PROCESS, context.processName);
+        APIResult result = falconUnitClient.suspend(EntityType.PROCESS, process.getName(), context.colo,
+                null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        result = falconUnitClient.getStatus(EntityType.PROCESS, context.processName, context.clusterName,
+                null, false);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertEquals(result.getMessage(), "SUSPENDED");
 
         process.getProperties().getProperties().get(0).setName("newprop");
         Date endTime = getEndTime();
         process.getClusters().getClusters().get(0).getValidity().setEnd(endTime);
-        response = update(context, process, endTime, null);
-        context.assertSuccessful(response);
+        File tmpFile = TestContext.getTempFile();
+        process.getEntityType().getMarshaller().marshal(process, tmpFile);
+        result = falconUnitClient.update(EntityType.PROCESS.name(), context.getProcessName(),
+                tmpFile.getAbsolutePath(), true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         //Since the process endtime = update effective time, it shouldn't create new bundle
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
@@ -306,24 +281,26 @@ public class EntityManagerJerseyIT {
 
     @Test
     public void testProcessInputUpdate() throws Exception {
-        TestContext context = newContext();
-        context.scheduleProcess();
-        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
+        UnitTestContext context = newContext();
+
+        schedule(context);
+        waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
+                InstancesResult.WorkflowStatus.RUNNING);
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
-        OozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
+        OozieClient ozClient = OozieTestUtils.getOozieClient(context);
         String bundle = bundles.get(0).getId();
         String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
 
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        Process process = (Process) getDefinition(EntityType.PROCESS, context.processName);
 
         String feed3 = "f3" + System.currentTimeMillis();
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("inputFeedName", feed3);
         overlay.put("cluster", context.clusterName);
         overlay.put("user", System.getProperty("user.name"));
-        ClientResponse response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        submitFeed(UnitTestContext.FEED_TEMPLATE1, overlay);
+
 
         Input input = new Input();
         input.setFeed(feed3);
@@ -334,8 +311,11 @@ public class EntityManagerJerseyIT {
 
         updateEndtime(process);
         Date endTime = getEndTime();
-        response = update(context, process, endTime, null);
-        context.assertSuccessful(response);
+        File tmpFile = TestContext.getTempFile();
+        process.getEntityType().getMarshaller().marshal(process, tmpFile);
+        APIResult result = falconUnitClient.update(EntityType.PROCESS.name(), context.getProcessName(),
+                tmpFile.getAbsolutePath(), true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         //Assert that update creates new bundle and old coord is running
         bundles = OozieTestUtils.getBundles(context);
@@ -360,16 +340,20 @@ public class EntityManagerJerseyIT {
         Assert.assertEquals(coord.getStartTime(), endTime);
     }
 
+    @Test
     public void testProcessEndtimeUpdate() throws Exception {
-        TestContext context = newContext();
-        context.scheduleProcess();
+        UnitTestContext context = newContext();
+        schedule(context);
         OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
 
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        Process process = (Process) getDefinition(EntityType.PROCESS, context.processName);
 
         updateEndtime(process);
-        ClientResponse response = update(context, process, null, null);
-        context.assertSuccessful(response);
+        File tmpFile = TestContext.getTempFile();
+        process.getEntityType().getMarshaller().marshal(process, tmpFile);
+        APIResult result = falconUnitClient.update(EntityType.PROCESS.name(), context.getProcessName(),
+                tmpFile.getAbsolutePath(), true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         //Assert that update does not create new bundle
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
@@ -378,26 +362,28 @@ public class EntityManagerJerseyIT {
 
     @Test
     public void testTouchEntity() throws Exception {
-        TestContext context = newContext();
-        context.scheduleProcess();
+        UnitTestContext context = newContext();
+        schedule(context);
         OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
-        OozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
+        OozieClient ozClient = OozieTestUtils.getOozieClient(context);
         String bundle = bundles.get(0).getId();
         String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
 
         //Update end time of process required for touch
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        Process process = (Process) getDefinition(EntityType.PROCESS, context.processName);
         updateEndtime(process);
-        ClientResponse response = update(context, process, null, null);
-        context.assertSuccessful(response);
+        File tmpFile = TestContext.getTempFile();
+        process.getEntityType().getMarshaller().marshal(process, tmpFile);
+        APIResult result = falconUnitClient.update(EntityType.PROCESS.name(), context.getProcessName(),
+                tmpFile.getAbsolutePath(), true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
 
-        //Calling force update
-        response = touch(context, process, true);
-        context.assertSuccessful(response);
+        result = falconUnitClient.touch(EntityType.PROCESS.name(), context.getProcessName(), context.colo, true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
         OozieTestUtils.waitForBundleStart(context, Status.PREP, Status.RUNNING);
 
         //Assert that touch creates new bundle and old coord is running
@@ -421,101 +407,72 @@ public class EntityManagerJerseyIT {
     }
 
     public void testStatus() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        context.prepare();
+        submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
 
-        response = context.service
-                .path("api/entities/status/feed/" + overlay.get("inputFeedName"))
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-
-        APIResult result = (APIResult) context.unmarshaller.
-                unmarshal(new StringReader(response.getEntity(String.class)));
-        Assert.assertTrue(result.getMessage().contains("SUBMITTED"));
-
+        APIResult result = falconUnitClient.getStatus(EntityType.FEED, context.overlay.get("inputFeedName"),
+                context.colo, null, false);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertEquals(result.getMessage(), "SUBMITTED");
     }
 
     public void testIdempotentSubmit() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
     }
 
-    public void testNotFoundStatus() {
-        TestContext context = newContext();
-        ClientResponse response;
+    public void testNotFoundStatus() throws FalconException, IOException, FalconCLIException {
         String feed1 = "f1" + System.currentTimeMillis();
-        response = context.service
-                .path("api/entities/status/feed/" + feed1)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_PLAIN)
-                .get(ClientResponse.class);
-
-        Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+        try {
+            falconUnitClient.getStatus(EntityType.FEED, feed1, null, null, false);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
     }
 
-    public void testVersion() {
-        TestContext context = newContext();
-        ClientResponse response;
-        response = context.service
-                .path("api/admin/version")
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-        String json = response.getEntity(String.class);
+    public void testVersion() throws FalconException, IOException, FalconCLIException {
+        String json = falconUnitClient.getVersion(null);
         String buildVersion = BuildProperties.get().getProperty("build.version");
         String deployMode = DeploymentProperties.get().getProperty("deploy.mode");
         Assert.assertTrue(Pattern.matches(
-                ".*\\{\\s*\"key\"\\s*:\\s*\"Version\"\\s*,\\s*\"value\"\\s*:\\s*\""
-                        + buildVersion + "\"\\s*}.*", json),
+                        ".*\\{\\s*\"key\"\\s*:\\s*\"Version\"\\s*,\\s*\"value\"\\s*:\\s*\""
+                                + buildVersion + "\"\\s*}.*", json),
                 "No build.version found in /api/admin/version");
         Assert.assertTrue(Pattern.matches(
-                ".*\\{\\s*\"key\"\\s*:\\s*\"Mode\"\\s*,\\s*\"value\"\\s*:\\s*\""
-                        + deployMode + "\"\\s*}.*", json),
+                        ".*\\{\\s*\"key\"\\s*:\\s*\"Mode\"\\s*,\\s*\"value\"\\s*:\\s*\""
+                                + deployMode + "\"\\s*}.*", json),
                 "No deploy.mode found in /api/admin/version");
     }
 
-    public void testValidate() {
-        TestContext context = newContext();
-        ServletInputStream stream = context.getServletInputStream(getClass().
-                getResourceAsStream(TestContext.SAMPLE_PROCESS_XML));
-
-        ClientResponse clientResponse = context.service
-                .path("api/entities/validate/process")
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class, stream);
-
-        context.assertFailure(clientResponse);
+    public void testValidate() throws FalconException, IOException {
+        UnitTestContext context = newContext();
+        try {
+            falconUnitClient.validate(EntityType.PROCESS.name(),
+                    UnitTestContext.class.getResource(UnitTestContext.SAMPLE_PROCESS_XML).getPath(), true, null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
     }
 
     public void testClusterValidate() throws Exception {
-        TestContext context = newContext();
-        ClientResponse clientResponse;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        InputStream stream = context.getServletInputStream(
-                TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay));
-
-        clientResponse = context.service.path("api/entities/validate/cluster")
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class, stream);
-        context.assertSuccessful(clientResponse);
+        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, context.overlay);
+        File tmpFile = new File(tmpFileName);
+        fs.mkdirs(new Path(STAGING_PATH), HadoopClientFactory.ALL_PERMISSION);
+        fs.mkdirs(new Path(WORKING_PATH), HadoopClientFactory.READ_EXECUTE_PERMISSION);
+        APIResult result = falconUnitClient.validate(EntityType.CLUSTER.name(), tmpFile.getAbsolutePath(),
+                true, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     ClientResponse suspend(TestContext context, Entity entity) {
@@ -531,105 +488,91 @@ public class EntityManagerJerseyIT {
     }
 
     public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
-        TestContext context = newContext();
-        ClientResponse clientResponse;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        clientResponse = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay,
-                EntityType.CLUSTER);
-        context.assertSuccessful(clientResponse);
+        submitCluster(context);
 
-        clientResponse = context.service
-                .path("api/entities/schedule/cluster/" + context.clusterName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        context.assertFailure(clientResponse);
+        try {
+            falconUnitClient.schedule(EntityType.CLUSTER, context.clusterName, null, true, null, null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
 
-        clientResponse = suspend(context, EntityType.CLUSTER, context.clusterName);
-        context.assertFailure(clientResponse);
+        try {
+            falconUnitClient.suspend(EntityType.CLUSTER, context.clusterName, context.colo, null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
 
-        clientResponse = context.service
-                .path("api/entities/resume/cluster/" + context.clusterName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        context.assertFailure(clientResponse);
+        try {
+            falconUnitClient.resume(EntityType.CLUSTER, context.clusterName, context.colo, null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
 
-        clientResponse = context.service
-                .path("api/entities/delete/cluster/" + context.clusterName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
+        APIResult result = falconUnitClient.delete(EntityType.CLUSTER, context.getClusterName(), null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     public void testSubmit() throws Exception {
-        TestContext context = newContext();
+        UnitTestContext context = newContext();
         ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE2, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        submitFeed(UnitTestContext.FEED_TEMPLATE2, context.overlay);
 
-        response = context.submitToFalcon(TestContext.PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        context.assertSuccessful(response);
+        submitProcess(UnitTestContext.PROCESS_TEMPLATE, context.overlay);
     }
 
     @Test
     public void testDuplicateSubmitCommands() throws Exception {
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        submitCluster(context);
 
         ExecutorService service = Executors.newSingleThreadExecutor();
         ExecutorService duplicateService = Executors.newSingleThreadExecutor();
 
-        Future<ClientResponse> future = service.submit(new SubmitCommand(context, overlay));
-        Future<ClientResponse> duplicateFuture = duplicateService.submit(new SubmitCommand(context, overlay));
-
-        ClientResponse response = future.get();
-        ClientResponse duplicateSubmitThreadResponse = duplicateFuture.get();
+        Future<APIResult> future = service.submit(new SubmitCommand(context, context.overlay));
+        Future<APIResult> duplicateFuture = duplicateService.submit(new SubmitCommand(context, context.overlay));
 
         // since there are duplicate threads for submits, there is no guarantee which request will succeed.
-        testDuplicateCommandsResponse(context, response, duplicateSubmitThreadResponse);
+        try {
+            APIResult response = future.get();
+            APIResult duplicateSubmitThreadResponse = duplicateFuture.get();
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
     }
 
     @Test
     public void testDuplicateDeleteCommands() throws Exception {
-        TestContext context = newContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-        context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        UnitTestContext context = newContext();
+        Map<String, String> overlay = context.overlay;
+        submitCluster(context);
+        submitFeed(UnitTestContext.FEED_TEMPLATE1, overlay);
 
-        ExecutorService service = Executors.newSingleThreadExecutor();
-        ExecutorService duplicateService = Executors.newSingleThreadExecutor();
+        ExecutorService service = Executors.newFixedThreadPool(2);
 
-        Future<ClientResponse> future = service.submit(new DeleteCommand(context, overlay.get("cluster"), "cluster"));
-        Future<ClientResponse> duplicateFuture = duplicateService.submit(new DeleteCommand(context,
-                overlay.get("cluster"), "cluster"));
+        Future<APIResult> future = service.submit(new DeleteCommand(context, overlay.get("inputFeedName"),
+                "feed"));
+        Future<APIResult> duplicateFuture = service.submit(new DeleteCommand(context,
+                overlay.get("inputFeedName"), "feed"));
 
-        ClientResponse response = future.get();
-        ClientResponse duplicateSubmitThreadResponse = duplicateFuture.get();
-
-        // since there are duplicate threads for deletion, there is no guarantee which request will succeed.
-        testDuplicateCommandsResponse(context, response, duplicateSubmitThreadResponse);
-    }
-
-    private void testDuplicateCommandsResponse(TestContext context, ClientResponse response,
-                                               ClientResponse duplicateSubmitThreadResponse) {
-        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-            context.assertSuccessful(response);
-            context.assertFailure(duplicateSubmitThreadResponse);
-        } else {
-            context.assertFailure(response);
-            context.assertSuccessful(duplicateSubmitThreadResponse);
+        // since there are duplicate threads for submits, there is no guarantee which request will succeed.
+        try {
+            APIResult response = future.get();
+            APIResult duplicateSubmitThreadResponse = duplicateFuture.get();
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
         }
     }
 
@@ -642,287 +585,179 @@ public class EntityManagerJerseyIT {
     }
 
     private void scheduleAndDeleteProcess(boolean withDoAs) throws Exception {
-        TestContext context = newContext();
+        UnitTestContext context = newContext();
+        submitCluster(context);
+        context.prepare();
+        submitFeeds(context.overlay);
         ClientResponse clientResponse;
-        Map<String, String> overlay = context.getUniqueOverlay();
-        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, context.overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         updateEndtime(process);
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        submitProcess(tmpFile.getAbsolutePath(), context.overlay);
         if (withDoAs) {
-            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, FalconTestUtil.TEST_USER_2, null);
+            falconUnitClient.schedule(EntityType.PROCESS, context.getProcessName(), context.getClusterName(), false,
+                    FalconTestUtil.TEST_USER_2, null);
         } else {
-            context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, null, "", "key1:value1");
+            falconUnitClient.schedule(EntityType.PROCESS, context.getProcessName(), context.getClusterName(), false, "",
+                    "key1:value1");
         }
         OozieTestUtils.waitForBundleStart(context, Status.RUNNING);
 
-        WebResource resource = context.service.path("api/entities/delete/process/" + context.processName);
-
+        APIResult result;
         if (withDoAs) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, FalconTestUtil.TEST_USER_2);
+            result = falconUnitClient.delete(EntityType.PROCESS, context.getProcessName(), FalconTestUtil.TEST_USER_2);
+        } else {
+            result = falconUnitClient.delete(EntityType.PROCESS, context.getProcessName(), null);
         }
-
-        //Delete a scheduled process
-        clientResponse = resource
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
+        assertStatus(result);
     }
 
     public void testGetEntityDefinition() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        context.prepare();
+        APIResult result = submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        response = context.service
-                .path("api/entities/definition/feed/" + overlay.get("inputFeedName"))
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
+        Feed feed = (Feed) falconUnitClient.getDefinition(EntityType.FEED.name(),
+                context.overlay.get("inputFeedName"), null);
+        Assert.assertEquals(feed.getName(), context.overlay.get("inputFeedName"));
+    }
 
-        String feedXML = response.getEntity(String.class);
+    public void testInvalidGetEntityDefinition() throws FalconException, IOException, FalconCLIException {
         try {
-            Feed result = (Feed) context.unmarshaller.
-                    unmarshal(new StringReader(feedXML));
-            Assert.assertEquals(result.getName(), overlay.get("inputFeedName"));
-        } catch (JAXBException e) {
-            Assert.fail("Reponse " + feedXML + " is not valid", e);
+            falconUnitClient.getDefinition(EntityType.PROCESS.name(), "sample1", null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
         }
     }
 
-    public void testInvalidGetEntityDefinition() {
-        TestContext context = newContext();
-        ClientResponse clientResponse = context.service
-                .path("api/entities/definition/process/sample1")
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        context.assertFailure(clientResponse);
-    }
-
     public void testScheduleSuspendResume() throws Exception {
-        TestContext context = newContext();
-        context.scheduleProcess();
+        UnitTestContext context = newContext();
 
-        ClientResponse clientResponse = suspend(context, EntityType.PROCESS, context.processName);
-        context.assertSuccessful(clientResponse);
+        schedule(context);
+        waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE,
+                InstancesResult.WorkflowStatus.RUNNING);
 
-        clientResponse = context.service
-                .path("api/entities/resume/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
+        APIResult result = falconUnitClient.suspend(EntityType.PROCESS, context.getProcessName(),
+                context.colo, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        result = falconUnitClient.getStatus(EntityType.PROCESS, context.processName, context.clusterName,
+                null, false);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertEquals(result.getMessage(), "SUSPENDED");
+
+        result = falconUnitClient.resume(EntityType.PROCESS, context.getProcessName(),
+                context.colo, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        result = falconUnitClient.getStatus(EntityType.PROCESS, context.processName, context.clusterName,
+                null, false);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        Assert.assertEquals(result.getMessage(), "RUNNING");
     }
 
     public void testFeedSchedule() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        context.prepare();
+        APIResult result = submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        createTestData(context);
-        ClientResponse clientResponse = context.service
-                .path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
-    }
-
-    static List<Path> createTestData(TestContext context) throws Exception {
-        List<Path> list = new ArrayList<Path>();
-        FileSystem fs = context.cluster.getFileSystem();
-        fs.mkdirs(new Path("/user/guest"));
-        fs.setOwner(new Path("/user/guest"), TestContext.REMOTE_USER, "users");
-
-        DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date date = new Date(System.currentTimeMillis() + 3 * 3600000);
-        Path path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 3600000);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        new FsShell(context.cluster.getConf()).
-                run(new String[]{"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
-        return list;
+        createTestData();
+        result = falconUnitClient.schedule(EntityType.FEED, context.overlay.get("inputFeedName"), null, true, null,
+                null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     public void testDeleteDataSet() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        context.prepare();
+        APIResult result = submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        response = context.service
-                .path("api/entities/delete/feed/" + overlay.get("inputFeedName"))
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(response);
+        result = falconUnitClient.delete(EntityType.FEED, context.overlay.get("inputFeedName"), null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     public void testDelete() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        Map<String, String> overlay = context.getUniqueOverlay();
+        UnitTestContext context = newContext();
 
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
+        submitCluster(context);
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        context.prepare();
+        APIResult result = submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        response = context.service
-                .path("api/entities/delete/cluster/" + context.clusterName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertFailure(response);
+        try {
+            falconUnitClient.delete(EntityType.CLUSTER, context.getClusterName(), null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
 
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE2, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        result = submitFeed(UnitTestContext.FEED_TEMPLATE2, context.overlay);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        response = context.submitToFalcon(TestContext.PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        context.assertSuccessful(response);
+        submitProcess(UnitTestContext.PROCESS_TEMPLATE, context.overlay);
 
         //Delete a referred feed
-        response = context.service
-                .path("api/entities/delete/feed/" + overlay.get("inputFeedName"))
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertFailure(response);
+        try {
+            falconUnitClient.delete(EntityType.FEED, context.overlay.get("inputFeedName"), null);
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
 
         //Delete a submitted process
-        response = context.service
-                .path("api/entities/delete/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(response);
+        result = falconUnitClient.delete(EntityType.PROCESS, context.getProcessName(), null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-        response = context.submitToFalcon(TestContext.PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        context.assertSuccessful(response);
+        submitProcess(UnitTestContext.PROCESS_TEMPLATE, context.overlay);
 
-        ClientResponse clientResponse = context.service
-                .path("api/entities/schedule/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
+        result = falconUnitClient.schedule(EntityType.PROCESS, context.getProcessName(), null, true, null,
+                null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         //Delete a scheduled process
-        response = context.service
-                .path("api/entities/delete/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(response);
+        result = falconUnitClient.delete(EntityType.PROCESS, context.getProcessName(), null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
     @Test
     public void testGetEntityList() throws Exception {
-        TestContext context = newContext();
-        ClientResponse response;
-        response = context.service
-                .path("api/entities/list/process/")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-
-        EntityList result = response.getEntity(EntityList.class);
+        EntityList result = falconUnitClient.getEntityList(EntityType.PROCESS.name(), "", "", null, null,
+                null, null, null, new Integer(0), new Integer(1), null);
         Assert.assertNotNull(result);
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null
         }
 
-        response = context.service
-                .path("api/entities/list/cluster/")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        result = response.getEntity(EntityList.class);
+        result = falconUnitClient.getEntityList(EntityType.CLUSTER.name(), "", "", null, null,
+                null, null, null, new Integer(0), new Integer(1), null);
         Assert.assertNotNull(result);
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null
         }
 
-        response = context.service
-                .path("api/entities/list/feed,process/")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        result = response.getEntity(EntityList.class);
+        result = falconUnitClient.getEntityList(EntityType.FEED.name() + "," + EntityType.PROCESS.name(),
+                "", "", null, null, null, null, null, new Integer(0), new Integer(1), null);
         Assert.assertNotNull(result);
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null
         }
 
-        response = context.service
-                .path("api/entities/list/")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        result = response.getEntity(EntityList.class);
+        result = falconUnitClient.getEntityList(null, "", "", null, null, null, null, null, new Integer(0),
+                new Integer(1), null);
         Assert.assertNotNull(result);
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null
@@ -931,21 +766,21 @@ public class EntityManagerJerseyIT {
 
     @Test
     public void testDuplicateUpdateCommands() throws Exception {
-        TestContext context = newContext();
-        context.scheduleProcess();
+        UnitTestContext context = newContext();
+        schedule(context);
         OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
 
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        Process process = (Process) getDefinition(EntityType.PROCESS, context.processName);
 
         String feed3 = "f3" + System.currentTimeMillis();
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("inputFeedName", feed3);
         overlay.put("cluster", context.clusterName);
         overlay.put("user", System.getProperty("user.name"));
-        ClientResponse response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
-        context.assertSuccessful(response);
+        APIResult result = submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
         Input input = new Input();
         input.setFeed(feed3);
@@ -957,13 +792,19 @@ public class EntityManagerJerseyIT {
         updateEndtime(process);
         Date endTime = getEndTime();
         ExecutorService service =  Executors.newSingleThreadExecutor();
-        Future<ClientResponse> future = service.submit(new UpdateCommand(context, process, endTime));
-        response = update(context, process, endTime, false);
-        ClientResponse duplicateUpdateThreadResponse = future.get();
+        ExecutorService duplicateService = Executors.newSingleThreadExecutor();
+
+        Future<APIResult> future = service.submit(new UpdateCommand(context, process, endTime));
+        Future<APIResult> duplicateFuture = duplicateService.submit(new UpdateCommand(context, process, endTime));
 
         // since there are duplicate threads for updates, there is no guarantee which request will succeed
-        testDuplicateCommandsResponse(context, response, duplicateUpdateThreadResponse);
-
+        try {
+            future.get();
+            duplicateFuture.get();
+            Assert.fail("Exception should be Thrown");
+        } catch (Exception e) {
+            //ignore
+        }
     }
 
     public Date getEndTime() {
@@ -976,38 +817,38 @@ public class EntityManagerJerseyIT {
         return cal.getTime();
     }
 
-    class UpdateCommand implements Callable<ClientResponse> {
-        private TestContext context;
+    class UpdateCommand implements Callable<APIResult> {
+        private UnitTestContext context;
         private Process process;
         private Date endTime;
 
-        public TestContext getContext() {
+        public UnitTestContext getContext() {
             return context;
         }
         public Process getProcess() {
             return process;
         }
-        public Date getEndTime() {
-            return endTime;
-        }
 
-        public UpdateCommand(TestContext context, Process process, Date endTime) {
+        public UpdateCommand(UnitTestContext context, Process process, Date endTime) {
             this.context = context;
             this.process = process;
             this.endTime = endTime;
         }
 
         @Override
-        public ClientResponse call() throws Exception {
-            return update(context, process, endTime, false);
+        public APIResult call() throws Exception {
+            File tmpFile = TestContext.getTempFile();
+            process.getEntityType().getMarshaller().marshal(process, tmpFile);
+            return falconUnitClient.update(EntityType.PROCESS.name(), context.getProcessName(),
+                    tmpFile.getAbsolutePath(), true, null);
         }
     }
 
-    class SubmitCommand implements Callable<ClientResponse> {
+    class SubmitCommand implements Callable<APIResult> {
         private Map<String, String> overlay;
-        private TestContext context;
+        private UnitTestContext context;
 
-        public TestContext getContext() {
+        public UnitTestContext getContext() {
             return context;
         }
 
@@ -1015,36 +856,35 @@ public class EntityManagerJerseyIT {
             return overlay;
         }
 
-        public SubmitCommand(TestContext context, Map<String, String> overlay) {
+        public SubmitCommand(UnitTestContext context, Map<String, String> overlay) {
             this.context = context;
             this.overlay = overlay;
         }
 
         @Override
-        public ClientResponse call() throws Exception {
-            return context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
+        public APIResult call() throws Exception {
+            return submitFeed(UnitTestContext.FEED_TEMPLATE1, context.overlay);
         }
     }
 
-    class DeleteCommand implements Callable<ClientResponse> {
-        private TestContext context;
+    class DeleteCommand implements Callable<APIResult> {
+        private UnitTestContext context;
         private String entityName;
         private String entityType;
 
-        public TestContext getContext() {
+        public UnitTestContext getContext() {
             return context;
         }
 
-        public DeleteCommand(TestContext context, String entityName, String entityType) {
+        public DeleteCommand(UnitTestContext context, String entityName, String entityType) {
             this.context = context;
             this.entityName = entityName;
             this.entityType = entityType;
         }
 
         @Override
-        public ClientResponse call() throws Exception {
-            return context.deleteFromFalcon(entityName, entityType);
+        public APIResult call() throws Exception {
+            return falconUnitClient.delete(EntityType.valueOf(entityType), entityName, null);
         }
     }
-
 }

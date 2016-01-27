@@ -58,7 +58,6 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String SLA_MISS_ALERT_OPT = "slaAlert";
     public static final String SLA_MISS_ALERT_OPT_DESCRIPTION = "Get missing feed instances which missed SLA";
 
-
     public static final String LOOKUP_OPT = "lookup";
     public static final String LOOKUP_OPT_DESCRIPTION = "Lookup a feed given its instance's path";
     public static final String PATH_OPT = "path";
@@ -80,6 +79,9 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String TAGKEYS_OPT_DESCRIPTION = "Keywords in tags";
     public static final String COLO_OPT_DESCRIPTION = "Colo name";
     public static final String OFFSET_OPT_DESCRIPTION = "Start returning entities from this offset";
+    public static final String SHOWSCHEDULER_OPT = "showScheduler";
+    public static final String SHOWSCHEDULER_OPT_DESCRIPTION = "To return the scheduler "
+            + "on which the entity is scheduled.";
 
     public FalconEntityCLI() throws Exception {
         super();
@@ -133,6 +135,7 @@ public class FalconEntityCLI extends FalconCLI {
         Option colo = new Option(COLO_OPT, true, COLO_OPT_DESCRIPTION);
         Option cluster = new Option(CLUSTER_OPT, true, CLUSTER_OPT_DESCRIPTION);
         colo.setRequired(false);
+
         Option fields = new Option(FIELDS_OPT, true, FIELDS_OPT_DESCRIPTION);
         Option filterBy = new Option(FILTER_BY_OPT, true, FILTER_BY_OPT_DESCRIPTION);
         Option filterTags = new Option(TAGS_OPT, true, TAGS_OPT_DESCRIPTION);
@@ -147,6 +150,7 @@ public class FalconEntityCLI extends FalconCLI {
         Option skipDryRun = new Option(SKIPDRYRUN_OPT, false, SKIPDRYRUN_OPT_DESCRIPTION);
         Option doAs = new Option(DO_AS_OPT, true, DO_AS_OPT_DESCRIPTION);
         Option userProps = new Option(PROPS_OPT, true, PROPS_OPT_DESCRIPTION);
+        Option showScheduler = new Option(SHOWSCHEDULER_OPT, false, SHOWSCHEDULER_OPT_DESCRIPTION);
         Option debug = new Option(DEBUG_OPTION, false, DEBUG_OPTION_DESCRIPTION);
 
         entityOptions.addOption(url);
@@ -173,6 +177,7 @@ public class FalconEntityCLI extends FalconCLI {
         entityOptions.addOption(doAs);
         entityOptions.addOption(userProps);
         entityOptions.addOption(debug);
+        entityOptions.addOption(showScheduler);
 
         return entityOptions;
     }
@@ -212,6 +217,10 @@ public class FalconEntityCLI extends FalconCLI {
         }
 
         String userProps = commandLine.getOptionValue(PROPS_OPT);
+        boolean showScheduler = false;
+        if (optionsList.contains(SHOWSCHEDULER_OPT)) {
+            showScheduler = true;
+        }
 
         EntityType entityTypeEnum = null;
         if (optionsList.contains(LIST_OPT)) {
@@ -279,7 +288,7 @@ public class FalconEntityCLI extends FalconCLI {
         } else if (optionsList.contains(STATUS_OPT)) {
             validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
-            result = client.getStatus(entityTypeEnum, entityName, colo, doAsUser).getMessage();
+            result = client.getStatus(entityTypeEnum, entityName, colo, doAsUser, showScheduler).getMessage();
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, ENTITY_NAME_OPT);

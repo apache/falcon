@@ -262,7 +262,14 @@ public class HCatRetentionTest extends BaseTestClass {
             //Each HCat partition maps to a directory, not to a file
             HCatAddPartitionDesc addPtn = HCatAddPartitionDesc.create(dbName,
                 tableName, dataFolder, ptn).build();
-            client.addPartition(addPtn);
+            try {
+                client.addPartition(addPtn);
+            } catch (HCatException e) {
+                //occurrence of specific hive metastore bug
+                if (!e.getMessage().contains("AlreadyExistsException")) {
+                    throw e;
+                }
+            }
             ptn.clear();
         }
     }

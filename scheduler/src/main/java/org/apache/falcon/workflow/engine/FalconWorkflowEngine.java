@@ -18,14 +18,17 @@
 
 package org.apache.falcon.workflow.engine;
 
+import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.EntityExecutor;
 import org.apache.falcon.execution.ExecutionInstance;
 import org.apache.falcon.execution.FalconExecutionService;
@@ -37,12 +40,16 @@ import org.apache.falcon.state.EntityState;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
+import org.apache.falcon.update.UpdateHelper;
+import org.apache.falcon.util.DateUtil;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +66,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     private static final StateStore STATE_STORE = AbstractStateStore.get();
     private static final ConfigurationStore CONFIG_STORE = ConfigurationStore.get();
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
+    public static final String FALCON_FORCE_RERUN = "falcon.system.force.rerun";
+    public static final String FALCON_RERUN = "falcon.system.rerun";
 
     private enum JobAction {
         KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
@@ -86,7 +95,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public boolean isActive(Entity entity) throws FalconException {
-        return STATE_STORE.getEntity(new EntityID(entity)).getCurrentState() != EntityState.STATE.SUBMITTED;
+        EntityID id = new EntityID(entity);
+        // Ideally state store should have all entities, but, check anyway.
+        if (STATE_STORE.entityExists(id)) {
+            return STATE_STORE.getEntity(id).getCurrentState() != EntityState.STATE.SUBMITTED;
+        }
+        return false;
     }
 
     @Override
@@ -151,6 +165,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(action, entity, start, end, props, lifeCycles, false);
+    }
+
+    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
+                                        Properties props, List<LifeCycle> lifeCycles,
+                                        boolean isForced) throws FalconException {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
         APIResult.Status overallStatus = APIResult.Status.SUCCEEDED;
@@ -166,12 +186,20 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             states = new ArrayList<>();
             states.add(InstanceState.STATE.SUSPENDED);
             break;
-        case STATUS:
         case PARAMS:
             // Applicable only for running and finished jobs.
             states = InstanceState.getRunningStates();
             states.addAll(InstanceState.getTerminalStates());
             states.add(InstanceState.STATE.SUSPENDED);
+            break;
+        case STATUS:
+            states = InstanceState.getActiveStates();
+            states.addAll(InstanceState.getTerminalStates());
+            states.add(InstanceState.STATE.SUSPENDED);
+            break;
+        case RERUN:
+            // Applicable only for terminated States
+            states = InstanceState.getTerminalStates();
             break;
         default:
             throw new IllegalArgumentException("Unhandled action " + action);
@@ -190,6 +218,10 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             }
         }
 
+        // To ensure compatibility with OozieWorkflowEngine.
+        // Also because users would like to see the most recent instances first.
+        sortInstancesDescBySequence(instancesToActOn);
+
         List<InstancesResult.Instance> instances = new ArrayList<>();
         for (ExecutionInstance ins : instancesToActOn) {
             instanceCount++;
@@ -197,7 +229,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
             InstancesResult.Instance instance = null;
             try {
-                instance = performAction(ins.getCluster(), entity, action, ins);
+                instance = performAction(ins.getCluster(), entity, action, ins, props, isForced);
                 instance.instance = instanceTimeStr;
             } catch (FalconException e) {
                 LOG.warn("Unable to perform action {} on cluster", action, e);
@@ -216,6 +248,16 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
         return instancesResult;
     }
 
+    // Sort the instances in descending order of their sequence, so the latest is on top.
+    private void sortInstancesDescBySequence(List<ExecutionInstance> instancesToActOn) {
+        Collections.sort(instancesToActOn, new Comparator<ExecutionInstance>() {
+            @Override
+            public int compare(ExecutionInstance o1, ExecutionInstance o2) {
+                return o2.getInstanceSequence() - o1.getInstanceSequence();
+            }
+        });
+    }
+
     private List<String> getIncludedClusters(Properties props, String clustersType) {
         String clusters = props == null ? "" : props.getProperty(clustersType, "");
         List<String> clusterList = new ArrayList<>();
@@ -228,7 +270,8 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private InstancesResult.Instance performAction(String cluster, Entity entity, JobAction action,
-                                                   ExecutionInstance instance) throws FalconException {
+                                                   ExecutionInstance instance, Properties userProps,
+                                                   boolean isForced) throws FalconException {
         EntityExecutor executor = EXECUTION_SERVICE.getEntityExecutor(entity, cluster);
         InstancesResult.Instance instanceInfo = null;
         LOG.debug("Retrieving information for {} for action {}", instance.getId(), action);
@@ -240,29 +283,33 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
         switch(action) {
         case KILL:
             executor.kill(instance);
-            instanceInfo.status = InstancesResult.WorkflowStatus.KILLED;
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case SUSPEND:
             executor.suspend(instance);
-            instanceInfo.status = InstancesResult.WorkflowStatus.SUSPENDED;
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case RESUME:
             executor.resume(instance);
-            instanceInfo.status =
-                    InstancesResult.WorkflowStatus.valueOf(STATE_STORE
-                            .getExecutionInstance(instance.getId()).getCurrentState().name());
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case RERUN:
+            executor.rerun(instance, userProps, isForced);
+            populateInstanceInfo(instanceInfo, instance);
             break;
         case STATUS:
+            // Mask wfParams
+            instanceInfo.wfParams = null;
             if (StringUtils.isNotEmpty(instance.getExternalID())) {
                 List<InstancesResult.InstanceAction> instanceActions =
                         DAGEngineFactory.getDAGEngine(cluster).getJobDetails(instance.getExternalID());
                 instanceInfo.actions = instanceActions
                         .toArray(new InstancesResult.InstanceAction[instanceActions.size()]);
+            // If not scheduled externally yet, get details from state
+            } else {
+                populateInstanceInfo(instanceInfo, instance);
             }
             break;
-
         case PARAMS:
             // Mask details, log
             instanceInfo.details = null;
@@ -273,11 +320,47 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             for (String name : props.stringPropertyNames()) {
                 keyValuePairs[i++] = new InstancesResult.KeyValuePair(name, props.getProperty(name));
             }
+            instanceInfo.wfParams = keyValuePairs;
             break;
         default:
             throw new IllegalArgumentException("Unhandled action " + action);
         }
         return instanceInfo;
+    }
+
+    // Populates the InstancesResult.Instance instance using ExecutionInstance
+    private void populateInstanceInfo(InstancesResult.Instance instanceInfo, ExecutionInstance instance)
+        throws StateStoreException {
+        instanceInfo.cluster = instance.getCluster();
+        InstanceState.STATE state = STATE_STORE.getExecutionInstance(instance.getId()).getCurrentState();
+        switch (state) {
+        case SUCCEEDED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.SUCCEEDED;
+            break;
+        case FAILED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.FAILED;
+            break;
+        case KILLED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.KILLED;
+            break;
+        case READY:
+            instanceInfo.status = InstancesResult.WorkflowStatus.READY;
+            break;
+        case WAITING:
+            instanceInfo.status = InstancesResult.WorkflowStatus.WAITING;
+            break;
+        case SUSPENDED:
+            instanceInfo.status = InstancesResult.WorkflowStatus.SUSPENDED;
+            break;
+        case RUNNING:
+            instanceInfo.status = InstancesResult.WorkflowStatus.RUNNING;
+            break;
+        default:
+            instanceInfo.status = InstancesResult.WorkflowStatus.UNDEFINED;
+            break;
+        }
+        // Mask wfParams by default
+        instanceInfo.wfParams = null;
     }
 
     @Override
@@ -289,7 +372,10 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
                                           List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        if (isForced == null) {
+            isForced = false;
+        }
+        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles, isForced);
     }
 
     @Override
@@ -305,15 +391,35 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public InstancesResult getStatus(Entity entity, Date start, Date end,
-                                     List<LifeCycle> lifeCycles) throws FalconException {
+    public InstancesResult getStatus(Entity entity, Date start, Date end, List<LifeCycle> lifeCycles,
+                                     Boolean allAttempts) throws FalconException {
         return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
     }
 
     @Override
     public InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
                                              List<LifeCycle> lifeCycles) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
+        List<InstancesSummaryResult.InstanceSummary> instanceSummaries = new ArrayList<>();
+
+        // Iterate over entity clusters
+        for (String cluster : clusters) {
+            LOG.debug("Retrieving summary of instances for cluster : {}", cluster);
+            Map<InstanceState.STATE, Long> summaries = STATE_STORE.getExecutionInstanceSummary(entity, cluster,
+                    new DateTime(start), new DateTime(end));
+            Map<String, Long> summaryMap = new HashMap<>();
+            // Iterate over the map and convert STATE to String
+            for (Map.Entry<InstanceState.STATE, Long> summary : summaries.entrySet()) {
+                summaryMap.put(summary.getKey().name(), summary.getValue());
+            }
+            instanceSummaries.add(new InstancesSummaryResult.InstanceSummary(cluster, summaryMap));
+        }
+
+        InstancesSummaryResult instancesSummaryResult =
+                new InstancesSummaryResult(APIResult.Status.SUCCEEDED, JobAction.SUMMARY.name());
+        instancesSummaryResult.setInstancesSummary(instanceSummaries.
+                toArray(new InstancesSummaryResult.InstanceSummary[instanceSummaries.size()]));
+        return instancesSummaryResult;
     }
 
     @Override
@@ -330,17 +436,91 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public String update(Entity oldEntity, Entity newEntity, String cluster, Boolean skipDryRun)
         throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        boolean entityUpdated =
+                UpdateHelper.isEntityUpdated(oldEntity, newEntity, cluster,
+                        EntityUtil.getLatestStagingPath(clusterEntity, oldEntity));
+        StringBuilder result = new StringBuilder();
+        if (!entityUpdated) {
+            // Ideally should throw an exception, but, keeping it backward-compatible.
+            LOG.warn("No relevant updates detected in the new entity definition for entity {}!", newEntity.getName());
+            return result.toString();
+        }
+
+        Date oldEndTime = EntityUtil.getEndTime(oldEntity, cluster);
+        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
+        if (newEndTime.before(DateUtil.now()) || newEndTime.before(oldEndTime)) {
+            throw new FalconException("New Entity's end time " + SchemaHelper.formatDateUTC(newEndTime)
+                    + " is before current time or before old end time. Entity can't be updated.");
+        }
+
+        // The steps required are the same as touch.
+        DAGEngineFactory.getDAGEngine(cluster).touch(newEntity, (skipDryRun == null) ? Boolean.FALSE : skipDryRun);
+        // Additionally, update the executor.
+        // The update will kick in for new instances created and not for READY/WAITING instances, as with Oozie.
+        Collection<InstanceState> instances = new ArrayList<>();
+        instances.add(STATE_STORE.getLastExecutionInstance(oldEntity, cluster));
+        EXECUTION_SERVICE.getEntityExecutor(oldEntity, cluster).update(newEntity);
+
+        result.append(newEntity.toShortString()).append("/Effective Time: ")
+                .append(getEffectiveTime(newEntity, cluster, instances));
+        return result.toString();
     }
 
     @Override
     public String touch(Entity entity, String cluster, Boolean skipDryRun) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        EntityID id = new EntityID(entity);
+        // Ideally state store should have all entities, but, check anyway.
+        if (STATE_STORE.entityExists(id)) {
+            Date endTime = EntityUtil.getEndTime(entity, cluster);
+            if (endTime.before(DateUtil.now())) {
+                throw new FalconException("Entity's end time " + SchemaHelper.formatDateUTC(endTime)
+                        + " is before current time. Entity can't be touch-ed as it has completed.");
+            }
+            Collection<InstanceState> instances =
+                    STATE_STORE.getExecutionInstances(entity, cluster, InstanceState.getRunningStates());
+            // touch should happen irrespective of the state the entity is in.
+            DAGEngineFactory.getDAGEngine(cluster).touch(entity, (skipDryRun == null)? Boolean.FALSE : skipDryRun);
+            StringBuilder builder = new StringBuilder();
+            builder.append(entity.toShortString()).append("/Effective Time: ")
+                    .append(getEffectiveTime(entity, cluster, instances));
+            return builder.toString();
+        }
+        throw new FalconException("Could not find entity " + id + " in state store.");
+    }
+
+    // Effective time will be right after the last running instance.
+    private String getEffectiveTime(Entity entity, String cluster, Collection<InstanceState> instances)
+        throws FalconException {
+        if (instances == null || instances.isEmpty()) {
+            return SchemaHelper.formatDateUTC(DateUtil.now());
+        } else {
+            List<InstanceState> instanceList = new ArrayList(instances);
+            Collections.sort(instanceList, new Comparator<InstanceState>() {
+                @Override
+                public int compare(InstanceState x, InstanceState y) {
+                    return (x.getInstance().getInstanceSequence() < y.getInstance().getInstanceSequence()) ? -1
+                            : (x.getInstance().getInstanceSequence() == y.getInstance().getInstanceSequence() ? 0 : 1);
+                }
+            });
+            // Get the last element as the list is sorted in ascending order
+            Date lastRunningInstanceTime = instanceList.get(instanceList.size() - 1)
+                    .getInstance().getInstanceTime().toDate();
+            Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+            // Offset the time by a few seconds, else nextStartTime will be same as the reference time.
+            Date effectiveTime = EntityUtil
+                    .getNextStartTime(entity, clusterEntity, DateUtil.offsetTime(lastRunningInstanceTime, 10));
+            return SchemaHelper.formatDateUTC(effectiveTime);
+        }
     }
 
     @Override
     public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
-        throw new FalconException("Not yet Implemented");
+        InstanceState instanceState = STATE_STORE.getExecutionInstance(jobId);
+        ExecutionInstance instance = instanceState.getInstance();
+        EntityExecutor executor = EXECUTION_SERVICE.getEntityExecutor(instance.getEntity(), cluster);
+        executor.rerun(instance, props, isForced);
     }
 
     @Override
@@ -366,6 +546,11 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException {
         throw new UnsupportedOperationException("Not yet Implemented");
+    }
+
+    @Override
+    public String getName() {
+        return "native";
     }
 }
 

@@ -18,6 +18,7 @@
 package org.apache.falcon.oozie.feed;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
@@ -51,6 +52,7 @@ import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -91,7 +93,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private Feed tableFeed;
     private Feed fsReplFeed;
     private Feed lifecycleRetentionFeed;
-    private Feed retentionFeed;
+    private Feed lifecycleLocalRetentionFeed;
     private Feed fsReplFeedCounter;
 
     private static final String SRC_CLUSTER_PATH = "/feed/src-cluster.xml";
@@ -100,7 +102,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private static final String TABLE_FEED = "/feed/table-replication-feed.xml";
     private static final String FS_REPLICATION_FEED = "/feed/fs-replication-feed.xml";
     private static final String FS_RETENTION_LIFECYCLE_FEED = "/feed/fs-retention-lifecycle-feed.xml";
-    private static final String FS_RETENTION_ORIG_FEED = "/feed/fs-retention-feed.xml";
+    private static final String FS_LOCAL_RETENTION_LIFECYCLE_FEED = "/feed/fs-local-retention-lifecycle-feed.xml";
     private static final String FS_REPLICATION_FEED_COUNTER = "/feed/fs-replication-feed-counters.xml";
 
     @BeforeClass
@@ -135,7 +137,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         fsReplFeedCounter = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED_COUNTER);
         tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED);
         lifecycleRetentionFeed = (Feed) storeEntity(EntityType.FEED, FS_RETENTION_LIFECYCLE_FEED);
-        retentionFeed = (Feed) storeEntity(EntityType.FEED, FS_RETENTION_ORIG_FEED);
+        lifecycleLocalRetentionFeed = (Feed) storeEntity(EntityType.FEED, FS_LOCAL_RETENTION_LIFECYCLE_FEED);
     }
 
     private Entity storeEntity(EntityType type, String resource) throws Exception {
@@ -161,21 +163,30 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         trgMiniDFS.shutdown();
     }
 
-    @Test
-    public void testRetentionWithLifecycle() throws Exception {
+    @DataProvider(name = "keepInstancesPostValidity")
+    private Object[][] keepInstancesPostValidity() {
+        return new Object[][] {
+            {"false", "2099-01-01T02:00Z"},
+            {"true", "2099-01-01T00:00Z"},
+        };
+    }
+
+    @Test(dataProvider = "keepInstancesPostValidity")
+    public void testRetentionWithLifecycle(String keepInstancesPostValidity, String endTime) throws Exception {
+        RuntimeProperties.get().setProperty("falcon.retention.keep.instances.beyond.validity",
+                keepInstancesPostValidity);
         OozieEntityBuilder builder = OozieEntityBuilder.get(lifecycleRetentionFeed);
         Path bundlePath = new Path("/projects/falcon/");
         builder.build(trgCluster, bundlePath);
 
         BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
         List<COORDINATOR> coords = bundle.getCoordinator();
-
         COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
         assertLibExtensions(coord, "retention");
         HashMap<String, String> props = getCoordProperties(coord);
         Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(17)}");
-        Assert.assertEquals(coord.getEnd(), "2099-01-01T00:00Z");
+        Assert.assertEquals(coord.getEnd(), endTime);
         Assert.assertEquals(coord.getTimezone(), "UTC");
 
         HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
@@ -185,6 +196,30 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("queueName"), "retention");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
+    }
+
+    @Test
+    public void testLocalOnlyRetentionLifecycle() throws Exception {
+        OozieEntityBuilder builder = OozieEntityBuilder.get(lifecycleLocalRetentionFeed);
+        Path bundlePath = new Path("/projects/falcon/");
+        builder.build(trgCluster, bundlePath);
+
+        BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
+        List<COORDINATOR> coords = bundle.getCoordinator();
+        COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
+        assertLibExtensions(coord, "retention");
+        HashMap<String, String> props = getCoordProperties(coord);
+        Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
+        Assert.assertEquals(coord.getFrequency(), "${coord:hours(12)}");
+        Assert.assertEquals(coord.getTimezone(), "UTC");
+
+        HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
+        Assert.assertEquals(wfProps.get("feedNames"), lifecycleLocalRetentionFeed.getName());
+        Assert.assertTrue(StringUtils.equals(wfProps.get("entityType"), EntityType.FEED.name()));
+        Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
+        Assert.assertEquals(wfProps.get("queueName"), "local");
+        Assert.assertEquals(wfProps.get("limit"), "hours(4)");
+        Assert.assertEquals(wfProps.get("jobPriority"), "HIGH");
     }
 
     @Test
@@ -675,9 +710,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed,
                 srcCluster.getName());
-        final Calendar instance = Calendar.getInstance();
-        instance.roll(Calendar.YEAR, 1);
-        cluster.getValidity().setEnd(instance.getTime());
+        Calendar startCal = Calendar.getInstance();
+        Calendar endCal = Calendar.getInstance();
+        endCal.roll(Calendar.DATE, 1);
+        cluster.getValidity().setEnd(endCal.getTime());
+        RuntimeProperties.get().setProperty("falcon.retention.keep.instances.beyond.validity", "false");
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(feed, Tag.RETENTION);
         List<Properties> coords = builder.buildCoords(
@@ -688,6 +725,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 "${nameNode}/projects/falcon/" + umask + "/RETENTION");
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + feed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
+
+        Assert.assertEquals(coord.getStart(), DateUtil.getDateFormatFromTime(startCal.getTimeInMillis()));
+        Date endDate = DateUtils.addSeconds(endCal.getTime(),
+                FeedHelper.getRetentionLimitInSeconds(feed, srcCluster.getName()));
+        Assert.assertEquals(coord.getEnd(), DateUtil.getDateFormatFromTime(endDate.getTime()));
 
         HashMap<String, String> props = getCoordProperties(coord);
 

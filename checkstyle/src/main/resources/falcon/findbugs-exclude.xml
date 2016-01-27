@@ -46,4 +46,8 @@
         <Class name="org.apache.falcon.state.store.jdbc.InstanceBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL" />
     </Match>
+
+    <Match>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
+    </Match>
 </FindBugsFilter>

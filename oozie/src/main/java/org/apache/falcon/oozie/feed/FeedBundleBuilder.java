@@ -18,21 +18,20 @@
 
 package org.apache.falcon.oozie.feed;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.Lifecycle;
 import org.apache.falcon.lifecycle.LifecyclePolicy;
 import org.apache.falcon.oozie.OozieBundleBuilder;
 import org.apache.falcon.oozie.OozieCoordinatorBuilder;
 import org.apache.falcon.service.LifecyclePolicyMap;
 import org.apache.hadoop.fs.Path;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 
 /**
  * Builds oozie bundle for the feed.
@@ -46,8 +45,8 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
     protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         // if feed has lifecycle defined - then use it to create coordinator and wf else fall back
         List<Properties> props = new ArrayList<>();
-        Lifecycle lifecycle = this.entity.getLifecycle();
-        if (lifecycle != null) {
+        boolean isLifeCycleEnabled = FeedHelper.isLifecycleEnabled(this.entity, cluster.getName());
+        if (isLifeCycleEnabled) {
             for (String name : FeedHelper.getPolicies(this.entity, cluster.getName())) {
                 LifecyclePolicy policy = LifecyclePolicyMap.get().get(name);
                 if (policy == null) {
@@ -75,6 +74,11 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
         List<Properties> importProps = OozieCoordinatorBuilder.get(entity, Tag.IMPORT).buildCoords(cluster, buildPath);
         if (importProps != null) {
             props.addAll(importProps);
+        }
+
+        List<Properties> exportProps = OozieCoordinatorBuilder.get(entity, Tag.EXPORT).buildCoords(cluster, buildPath);
+        if (exportProps != null) {
+            props.addAll(exportProps);
         }
 
         if (!props.isEmpty()) {

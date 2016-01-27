@@ -19,9 +19,11 @@
 package org.apache.falcon.regression.lineage;
 
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
@@ -78,11 +80,14 @@ public class ListProcessInstancesTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(baseTestHDFSDir + "/output/" + suffix + MINUTE_DATE_PATTERN);
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].setProcessConcurrency(3);
+        bundles[0].setInputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].submitAndScheduleProcess();
         processName = bundles[0].getProcessName();
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, bundles[0].getProcessData(), 0);
         //create data for processes to run and wait some time for instances to make progress
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 1);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 2);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
     }
@@ -90,6 +95,7 @@ public class ListProcessInstancesTest extends BaseTestClass {
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
         removeTestClassEntities();
+        HadoopUtil.deleteDirIfExists(sourcePath, serverFS.get(0));
     }
 
     /**
@@ -97,9 +103,6 @@ public class ListProcessInstancesTest extends BaseTestClass {
      */
     @Test
     public void testProcessOrderBy() throws Exception {
-        //provide data for 4th and 5th instances (fyi: indexing starts from 0th instance)
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
         SoftAssert softAssert = new SoftAssert();
         //orderBy startTime descending order
         InstancesResult r = prism.getProcessHelper().listInstances(processName,
@@ -122,14 +125,23 @@ public class ListProcessInstancesTest extends BaseTestClass {
         r = prism.getProcessHelper().getProcessInstanceKill(processName,
             "?start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 3));
         InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
-        //wait till instances status be stable
+        //wait till another instances succeed
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+
+        //provide data for 4th, 5th and 6th instances (indexing starts from 0th instance)
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 5);
+
+        //wait for new 3 instances to run
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
-            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
         //orderBy status ascending order
         r = prism.getProcessHelper().listInstances(processName,
             "start=" + startTime + "&numResults=12&orderBy=status&sortOrder=desc", null);
-        InstanceUtil.validateResponse(r, 12, 3, 1, 7, 1);
+        InstanceUtil.validateResponse(r, 12, 3, 1, 6, 1);
         instances = r.getInstances();
         InstancesResult.WorkflowStatus previousStatus = InstancesResult.WorkflowStatus.WAITING;
         for (InstancesResult.Instance instance : instances) {
@@ -221,10 +233,6 @@ public class ListProcessInstancesTest extends BaseTestClass {
      */
     @Test
     public void testProcessFilterBy() throws Exception {
-        //provide data for 4th and 5th instances (fyi: indexing starts from 0th instance)
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 3);
-        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 4);
-
         //test with simple filters
         InstancesResult r = prism.getProcessHelper().listInstances(processName,
             "filterBy=STATUS:RUNNING", null);
@@ -247,14 +255,14 @@ public class ListProcessInstancesTest extends BaseTestClass {
             "?start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 3));
         InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
 
-        //wait till new instances be RUNNING and total status count be stable
-        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
+        //check that running instance is still running
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 3);
 
         //get all instances
         r = prism.getProcessHelper().listInstances(processName,
             "start=" + startTime + "&numResults=12", null);
-        InstanceUtil.validateResponse(r, 12, 3, 1, 7, 1);
+        InstanceUtil.validateResponse(r, 12, 1, 1, 9, 1);
 
         //use different statuses, filterBy among all instances
         r = prism.getProcessHelper().listInstances(processName,
@@ -265,10 +273,10 @@ public class ListProcessInstancesTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 1, 0, 1, 0, 0);
         r = prism.getProcessHelper().listInstances(processName,
             "start=" + startTime + "&filterBy=STATUS:RUNNING", null);
-        InstanceUtil.validateResponse(r, 3, 3, 0, 0, 0);
+        InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
         r = prism.getProcessHelper().listInstances(processName,
             "start=" + startTime + "&filterBy=STATUS:WAITING", null);
-        InstanceUtil.validateResponse(r, 7, 0, 0, 7, 0);
+        InstanceUtil.validateResponse(r, 9, 0, 0, 9, 0);
     }
 
     /**

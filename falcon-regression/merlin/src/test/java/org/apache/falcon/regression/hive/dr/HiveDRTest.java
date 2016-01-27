@@ -702,13 +702,18 @@ public class HiveDRTest extends BaseTestClass {
         CoordinatorJob.Timeunit timeUnit = job.getTimeUnit();
         String freq = job.getFrequency();
         LOGGER.info("Frequency of running job: " + timeUnit + " " + freq);
-        Assert.assertTrue(frequency.contains(timeUnit.name().toLowerCase().replace("_", ""))
+        String unit = timeUnit.name().toLowerCase().replace("_", "");
+        if (frequency.contains("hours")) {
+            unit = "hours";
+            freq = String.valueOf(Integer.parseInt(freq) / 60);
+        }
+        Assert.assertTrue(frequency.contains(unit)
             && frequency.contains(freq), "Running job has different frequency.");
     }
 
     @DataProvider(name = "frequencyGenerator")
     public Object[][] frequencyGenerator() {
-        return new Object[][]{{"minutes(10)"}, {"minutes(10000)"},
+        return new Object[][]{{"minutes(10)"}, {"minutes(10000)"}, {"hours(5)"}, {"hours(5000)"},
             {"days(3)"}, {"days(3000)"}, {"months(1)"}, {"months(1000)"}, };
     }
 

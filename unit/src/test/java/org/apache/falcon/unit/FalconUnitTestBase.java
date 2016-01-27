@@ -92,9 +92,9 @@ public class FalconUnitTestBase {
 
     private static final String DEFAULT_CLUSTER = "local";
     private static final String DEFAULT_COLO = "local";
-    private static final String CLUSTER = "cluster";
-    private static final String COLO = "colo";
-    private static final String CLUSTER_TEMPLATE = "/local-cluster-template.xml";
+    protected static final String CLUSTER = "cluster";
+    protected static final String COLO = "colo";
+    protected static final String CLUSTER_TEMPLATE = "/local-cluster-template.xml";
     protected static final String STAGING_PATH = "/projects/falcon/staging";
     protected static final String WORKING_PATH = "/projects/falcon/working";
 
@@ -105,7 +105,7 @@ public class FalconUnitTestBase {
     protected static ConfigurationStore configStore;
 
     @BeforeClass
-    public void setup() throws FalconException, IOException {
+    public void setup() throws Exception {
         FalconUnit.start(true);
         falconUnitClient = FalconUnit.getClient();
         fs = (JailedFileSystem) FalconUnit.getFileSystem();
@@ -372,9 +372,8 @@ public class FalconUnitTestBase {
         String startTime = DateUtil.getDateFormatFromTime(startTimeInMillis);
         List<LifeCycle> lifecycles = new ArrayList<>();
         lifecycles.add(LifeCycle.EVICTION);
-        InstancesResult result = falconUnitClient.getStatusOfInstances("feed",
-                feedName, startTime, endTime, cluster,
-                lifecycles, null, "status", "asc", 0, 1, null);
+        InstancesResult result = falconUnitClient.getStatusOfInstances("feed", feedName, startTime, endTime, cluster,
+                lifecycles, null, "status", "asc", 0, 1, null, null);
         if (result.getInstances() != null && result.getInstances().length > 0) {
             return result.getInstances()[0].getStatus();
         }

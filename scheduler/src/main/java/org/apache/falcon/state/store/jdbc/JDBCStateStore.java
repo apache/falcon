@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.state.store.jdbc;
 
+import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
@@ -29,7 +31,7 @@ import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
 import org.apache.falcon.state.store.service.FalconJPAService;
-import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.joda.time.DateTime;
 
 import javax.persistence.EntityManager;
@@ -88,6 +90,14 @@ public final class JDBCStateStore extends AbstractStateStore {
     }
 
     private EntityState getEntityByKey(EntityID id) throws StateStoreException {
+        EntityBean entityBean = getEntityBean(id);
+        if (entityBean == null) {
+            return null;
+        }
+        return BeanMapperUtil.convertToEntityState(entityBean);
+    }
+
+    private EntityBean getEntityBean(EntityID id) {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery("GET_ENTITY");
         q.setParameter("id", id.getKey());
@@ -96,7 +106,7 @@ public final class JDBCStateStore extends AbstractStateStore {
             return null;
         }
         entityManager.close();
-        return BeanMapperUtil.convertToEntityState((EntityBean) result.get(0));
+        return ((EntityBean)result.get(0));
     }
 
     @Override
@@ -181,6 +191,8 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         try {
             InstanceBean instanceBean = BeanMapperUtil.convertToInstanceBean(instanceState);
+            EntityBean entityBean = getEntityBean(new InstanceID(instanceState.getInstance()).getEntityID());
+            instanceBean.setEntityBean(entityBean);
             EntityManager entityManager = getEntityManager();
             beginTransaction(entityManager);
             entityManager.persist(instanceBean);
@@ -217,6 +229,29 @@ public final class JDBCStateStore extends AbstractStateStore {
     }
 
     @Override
+    public InstanceState getExecutionInstance(String externalID) throws StateStoreException {
+        if (StringUtils.isEmpty(externalID)) {
+            throw new StateStoreException("External ID for retrieving instance cannot be null or empty");
+        }
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery("GET_INSTANCE_FOR_EXTERNAL_ID");
+        q.setParameter("externalID", externalID);
+        List result = q.getResultList();
+        entityManager.close();
+        if (result.isEmpty()) {
+            return null;
+        }
+        try {
+            InstanceBean instanceBean = (InstanceBean)(result.get(0));
+            return BeanMapperUtil.convertToInstanceState(instanceBean);
+        } catch (IOException e) {
+            throw new StateStoreException(e);
+        }
+
+    }
+
+
+    @Override
     public void updateExecutionInstance(InstanceState instanceState) throws StateStoreException {
         InstanceID id = new InstanceID(instanceState.getInstance());
         String key = id.toString();
@@ -244,6 +279,13 @@ public final class JDBCStateStore extends AbstractStateStore {
                 && !instanceState.getInstance().getAwaitingPredicates().isEmpty()) {
             try {
                 q.setParameter("awaitedPredicates", BeanMapperUtil.getAwaitedPredicates(instanceState));
+            } catch (IOException e) {
+                throw new StateStoreException(e);
+            }
+        }
+        if (instance.getProperties() != null && !instance.getProperties().isEmpty()) {
+            try {
+                q.setParameter("properties", BeanMapperUtil.getProperties(instanceState));
             } catch (IOException e) {
                 throw new StateStoreException(e);
             }
@@ -316,12 +358,28 @@ public final class JDBCStateStore extends AbstractStateStore {
     }
 
     @Override
+    public Map<InstanceState.STATE, Long> getExecutionInstanceSummary(Entity entity, String cluster,
+            DateTime start, DateTime end) throws StateStoreException {
+        String entityKey = new EntityClusterID(entity, cluster).getEntityID().getKey();
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery("GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE");
+        q.setParameter("entityId", entityKey);
+        q.setParameter("cluster", cluster);
+        q.setParameter("startTime", new Timestamp(start.getMillis()));
+        q.setParameter("endTime", new Timestamp(end.getMillis()));
+        List result  = q.getResultList();
+        entityManager.close();
+
+        return BeanMapperUtil.getInstanceStateSummary(result);
+    }
+
+    @Override
     public Collection<InstanceState> getExecutionInstances(Entity entity, String cluster,
                                                            Collection<InstanceState.STATE> states, DateTime start,
                                                            DateTime end) throws StateStoreException {
         String entityKey = new EntityClusterID(entity, cluster).getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_FOR_STATES_WITH_RANGE");
+        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_CLUSTER_FOR_STATES_WITH_RANGE");
         q.setParameter("entityId", entityKey);
         List<String> instanceStates = new ArrayList<>();
         for (InstanceState.STATE state : states) {
@@ -330,6 +388,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         q.setParameter("currentState", instanceStates);
         q.setParameter("startTime", new Timestamp(start.getMillis()));
         q.setParameter("endTime", new Timestamp(end.getMillis()));
+        q.setParameter("cluster", cluster);
         List result  = q.getResultList();
         entityManager.close();
         try {
@@ -403,7 +462,7 @@ public final class JDBCStateStore extends AbstractStateStore {
 
     // Debug enabled for test cases
     private boolean isModeDebug() {
-        return DEBUG.equals(StartupProperties.get().getProperty("domain")) ? true : false;
+        return DEBUG.equals(StateStoreProperties.get().getProperty("domain")) ? true : false;
     }
 
     private void commitAndCloseTransaction(EntityManager entityManager) {

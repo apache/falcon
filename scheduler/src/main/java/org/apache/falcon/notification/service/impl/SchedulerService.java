@@ -23,6 +23,9 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import java.util.Collections;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
@@ -49,16 +52,16 @@ import org.apache.falcon.state.store.StateStore;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -85,7 +88,7 @@ public class SchedulerService implements FalconNotificationService, Notification
 
     private Cache<InstanceID, Object> instancesToIgnore;
     // TODO : limit the no. of awaiting instances per entity
-    private LoadingCache<EntityClusterID, List<ExecutionInstance>> executorAwaitedInstances;
+    private LoadingCache<EntityClusterID, SortedMap<Integer, ExecutionInstance>> executorAwaitedInstances;
 
     @Override
     public void register(NotificationRequest notifRequest) throws NotificationServiceException {
@@ -98,6 +101,8 @@ public class SchedulerService implements FalconNotificationService, Notification
         if (obj != null) {
             instancesToIgnore.invalidate(request.getInstance().getId());
         }
+        LOG.debug("Received request to schedule instance {} with sequence {}.", request.getInstance().getId(),
+                request.getInstance().getInstanceSequence());
         runQueue.execute(new InstanceRunner(request));
     }
 
@@ -108,7 +113,6 @@ public class SchedulerService implements FalconNotificationService, Notification
             // Not efficient to iterate over elements to remove this. Add to ignore list.
             instancesToIgnore.put((InstanceID) listenerID, new Object());
         }
-
     }
 
     @Override
@@ -130,15 +134,16 @@ public class SchedulerService implements FalconNotificationService, Notification
         PriorityBlockingQueue<Runnable> pq = new PriorityBlockingQueue<Runnable>(20, new PriorityComparator());
         runQueue = new ThreadPoolExecutor(1, numThreads, 0L, TimeUnit.MILLISECONDS, pq);
 
-        CacheLoader instanceCacheLoader = new CacheLoader<EntityClusterID, Collection<ExecutionInstance>>() {
+        CacheLoader instanceCacheLoader = new CacheLoader<EntityClusterID, SortedMap<Integer, ExecutionInstance>>() {
             @Override
-            public Collection<ExecutionInstance> load(EntityClusterID id) throws Exception {
+            public SortedMap<Integer, ExecutionInstance> load(EntityClusterID id) throws Exception {
                 List<InstanceState.STATE> states = new ArrayList<InstanceState.STATE>();
                 states.add(InstanceState.STATE.READY);
-                List<ExecutionInstance> readyInstances = new ArrayList<>();
+                SortedMap<Integer, ExecutionInstance> readyInstances = Collections.synchronizedSortedMap(
+                        new TreeMap<Integer, ExecutionInstance>());
                 // TODO : Limit it to no. of instances that can be run in parallel.
                 for (InstanceState state : STATE_STORE.getExecutionInstances(id, states)) {
-                    readyInstances.add(state.getInstance());
+                    readyInstances.put(state.getInstance().getInstanceSequence(), state.getInstance());
                 }
                 return readyInstances;
             }
@@ -164,7 +169,7 @@ public class SchedulerService implements FalconNotificationService, Notification
     @Override
     public void onRemoval(RemovalNotification<ID, List<ExecutionInstance>> removalNotification) {
         // When instances are removed due to size...
-        // Ensure instances are persisted in state store and add to another list of awaited entities.
+        // Ensure instances are persisted in state store.
         if (removalNotification.wasEvicted()) {
             for (ExecutionInstance instance : removalNotification.getValue()) {
                 InstanceState state = new InstanceState(instance);
@@ -184,7 +189,7 @@ public class SchedulerService implements FalconNotificationService, Notification
         if (event.getType() == EventType.JOB_COMPLETED) {
             try {
                 ID targetID = event.getTarget();
-                List<ExecutionInstance> instances = null;
+                SortedMap<Integer, ExecutionInstance> instances = null;
                 // Check if the instance is awaited.
                 if (targetID instanceof EntityClusterID) {
                     EntityClusterID id = (EntityClusterID) event.getTarget();
@@ -197,27 +202,42 @@ public class SchedulerService implements FalconNotificationService, Notification
                     instances = executorAwaitedInstances.get(id.getEntityClusterID());
                 }
                 if (instances != null && !instances.isEmpty()) {
-                    ExecutionInstance instance = instances.get(0);
-                    if (instance != null && instance.getAwaitingPredicates() != null) {
-                        for (Predicate predicate : instance.getAwaitingPredicates()) {
-                            if (predicate.getType() == Predicate.TYPE.JOB_COMPLETION) {
-                                // Construct a request object
-                                NotificationHandler handler = ReflectionUtils
-                                        .getInstanceByClassName(predicate.getClauseValue("handler").toString());
-                                JobScheduleRequestBuilder requestBuilder = new JobScheduleRequestBuilder(
-                                        handler, instance.getId());
-                                requestBuilder.setInstance(instance);
-                                InstanceRunner runner = new InstanceRunner(requestBuilder.build());
-                                runQueue.execute(runner);
-                                instances.remove(instance);
+                    synchronized (instances) {
+                        // Order is FIFO..
+                        ExecutionInstance instance = instances.get(instances.firstKey());
+                        if (instance != null && instance.getAwaitingPredicates() != null) {
+                            for (Predicate predicate : instance.getAwaitingPredicates()) {
+                                if (predicate.getType() == Predicate.TYPE.JOB_COMPLETION) {
+                                    // Construct a request object
+                                    NotificationHandler handler = ReflectionUtils
+                                            .getInstanceByClassName(predicate.getClauseValue("handler").toString());
+                                    JobScheduleRequestBuilder requestBuilder = new JobScheduleRequestBuilder(
+                                            handler, instance.getId());
+                                    requestBuilder.setInstance(instance);
+                                    //The update kicks in for new instances, but, when old waiting instances are
+                                    // scheduled and it retrieves the parallelism for entity definition,
+                                    // it will use the "new" parallelism (if the user has updated it).
+                                    // Since there is no versioning of entities yet,
+                                    // need to retrieve what was the parallelism when that instance was created.
+                                    Integer runParallel = (Integer)predicate.getClauseValue("parallelInstances");
+                                    InstanceRunner runner = new InstanceRunner(requestBuilder.build(), runParallel);
+                                    runQueue.execute(runner);
+                                    instances.remove(instance.getInstanceSequence());
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (ExecutionException e) {
                 throw new FalconException(e);
             }
         }
+    }
+
+    @Override
+    public PRIORITY getPriority() {
+        return PRIORITY.MEDIUM;
     }
 
     @Override
@@ -238,14 +258,19 @@ public class SchedulerService implements FalconNotificationService, Notification
         private int allowedParallelInstances = 1;
 
         public InstanceRunner(JobScheduleNotificationRequest request) {
+            this(request, EntityUtil.getParallel(request.getInstance().getEntity()));
+        }
+
+        /**
+         * @param request
+         * @param runParallel - concurrency at the time the Instance was run,
+         *                    coz., runParallel can be updated later by user.
+         */
+        public InstanceRunner(JobScheduleNotificationRequest request, Integer runParallel) {
             this.request = request;
             this.instance = request.getInstance();
             this.priority = getPriority(instance.getEntity()).getPriority();
-            allowedParallelInstances = EntityUtil.getParallel(instance.getEntity());
-        }
-
-        public int incrementAllowedInstances() {
-            return ++allowedParallelInstances;
+            allowedParallelInstances = runParallel;
         }
 
         private EntityUtil.JOBPRIORITY getPriority(Entity entity) {
@@ -256,6 +281,10 @@ public class SchedulerService implements FalconNotificationService, Notification
                 throw new UnsupportedOperationException("Scheduling of entities other "
                         + "than process is not supported yet.");
             }
+        }
+
+        public ExecutionInstance getInstance() {
+            return instance;
         }
 
         @Override
@@ -269,12 +298,20 @@ public class SchedulerService implements FalconNotificationService, Notification
                 }
                 LOG.debug("Received request to run instance {}", instance.getId());
                 if (checkConditions()) {
-                    // If instance not already scheduled.
                     String externalId = instance.getExternalID();
-                    if (externalId == null) {
+                    if (externalId != null) {
+                        Properties props = instance.getProperties();
+                        boolean isForced = false;
+                        if (props != null) {
+                            isForced = Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_FORCE_RERUN));
+                        }
+                        if (isReRun(props)) {
+                            DAGEngineFactory.getDAGEngine(instance.getCluster()).reRun(instance, props, isForced);
+                        }
+                    } else {
                         externalId = DAGEngineFactory.getDAGEngine(instance.getCluster()).run(instance);
-                        LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     }
+                    LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     JobScheduledEvent event = new JobScheduledEvent(instance.getId(),
                             JobScheduledEvent.STATUS.SUCCESSFUL);
                     event.setExternalID(externalId);
@@ -287,9 +324,16 @@ public class SchedulerService implements FalconNotificationService, Notification
                 try {
                     notifyFailureEvent(request);
                 } catch (FalconException fe) {
-                    throw new RuntimeException("Unable to onEvent : " + request.getCallbackId(), fe);
+                    throw new RuntimeException("Unable to invoke onEvent : " + request.getCallbackId(), fe);
                 }
             }
+        }
+
+        private boolean isReRun(Properties props) {
+            if (props != null && !props.isEmpty()) {
+                return Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_RERUN));
+            }
+            return false;
         }
 
         public short getPriority() {
@@ -306,7 +350,7 @@ public class SchedulerService implements FalconNotificationService, Notification
                     EntityClusterID entityID = instance.getId().getEntityClusterID();
                     // Instance is awaiting scheduling conditions to be met. Add predicate to that effect.
                     instance.getAwaitingPredicates().add(Predicate.createJobCompletionPredicate(request.getHandler(),
-                            entityID));
+                            entityID, EntityUtil.getParallel(instance.getEntity())));
                     updateExecutorAwaitedInstances(entityID);
                     LOG.debug("Schedule conditions not met for instance {}. Awaiting on {}",
                             instance.getId(), entityID);
@@ -319,15 +363,9 @@ public class SchedulerService implements FalconNotificationService, Notification
         }
 
         private void updateExecutorAwaitedInstances(EntityClusterID id) throws ExecutionException {
-            synchronized (id) {
-                List<ExecutionInstance> instances = executorAwaitedInstances.get(id);
-                if (instances == null) {
-                    // Order is FIFO.
-                    instances = new LinkedList<>();
-                    executorAwaitedInstances.put(id, instances);
-                }
-                instances.add(instance);
-            }
+            SortedMap<Integer, ExecutionInstance> instances = executorAwaitedInstances.get(id);
+            // instances will never be null as it is initialized in the loading cache.
+            instances.put(instance.getInstanceSequence(), instance);
         }
 
         private boolean dependencyCheck() throws FalconException, ExecutionException {
@@ -338,7 +376,7 @@ public class SchedulerService implements FalconNotificationService, Notification
             for (ExecutionInstance execInstance : request.getDependencies()) {
                 // Dependants should wait for this instance to complete. Add predicate to that effect.
                 instance.getAwaitingPredicates().add(Predicate.createJobCompletionPredicate(
-                        request.getHandler(), execInstance.getId()));
+                        request.getHandler(), execInstance.getId(), EntityUtil.getParallel(instance.getEntity())));
                 updateExecutorAwaitedInstances(execInstance.getId().getEntityClusterID());
             }
             return false;
@@ -355,6 +393,10 @@ public class SchedulerService implements FalconNotificationService, Notification
     private static class PriorityComparator<T extends InstanceRunner> implements Comparator<T>, Serializable {
         @Override
         public int compare(T o1, T o2) {
+            // If both instances have same priority, go by instance sequence.
+            if (o1.getPriority() == o2.getPriority()) {
+                return o1.getInstance().getInstanceSequence() - o2.getInstance().getInstanceSequence();
+            }
             return o1.getPriority() - o2.getPriority();
         }
     }

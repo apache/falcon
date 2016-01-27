@@ -226,6 +226,26 @@ public class ClusterSetupTest extends BaseUITestClass{
     }
 
     /**
+     * Check that interface version with different length and parts is allowed.
+     */
+    @Test
+    public void testDifferentInterfaceVersions() {
+        sourceCluster.addInterface(Interfacetype.REGISTRY, "http://colo-1.example.com:15000", "1.1.1");
+        clusterSetup.checkRegistry(true);
+        clusterSetup.fillForm(sourceCluster);
+        StringBuilder partialVersion = new StringBuilder("");
+        for (String c : new String[]{"3", ".", "2", ".", "0"}) {
+            partialVersion.append(c);
+            for (Interface inface : sourceCluster.getInterfaces().getInterfaces()) {
+                inface.setVersion(partialVersion.toString());
+                clusterSetup.setInterfaceVersion(inface);
+            }
+            clusterSetup.clickNext();
+            clusterSetup.clickPrevious();
+        }
+    }
+
+    /**
      * Populate working location with value pointing to directory with wider permissions then 755.
      * Check that user is not allowed to create a cluster and is notified with an alert.
      */
@@ -266,6 +286,65 @@ public class ClusterSetupTest extends BaseUITestClass{
     }
 
     /**
+     * Specify the same directory locations for staging and working location.
+     * Check that user is not allowed to create a cluster with same directory for both with proper error message.
+     */
+    @Test
+    public void testSameLocations() throws IOException {
+
+        //get the staging directory location
+        String staging = sourceCluster.getLocation(ClusterLocationType.STAGING).getPath();
+
+        //set the working directory to staging directory
+        sourceCluster.getLocation(ClusterLocationType.WORKING).setPath(staging);
+
+        clusterSetup.fillForm(sourceCluster);
+        clusterSetup.clickJustNext();
+        clusterSetup.assertLocationsEqualError();
+    }
+
+    /**
+     * Default cluster creation scenario with Optional fields set with Empty values. Click next. Return back and click.
+     * next again. Check that all values are present on Summary page. Save cluster.
+     * Check the cluster definition trough /definition API.
+     */
+    @Test
+    public void testOptionalfields()
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+
+        // Set the Description value to empty
+        sourceCluster.setDescription("");
+        // Set the temp location value to empty
+        sourceCluster.getLocation(ClusterLocationType.TEMP).setPath("");
+        // Now fill the form with the above values for optional fields
+        clusterSetup.fillForm(sourceCluster);
+
+        clusterSetup.clickNext();
+        clusterSetup.clickPrevious();
+        clusterSetup.clickNext();
+
+        ClusterMerlin summaryBlock = clusterSetup.getSummary(sourceCluster.getEmptyCluster());
+        //summary block should contain the same info as source
+        sourceCluster.assertEquals(summaryBlock);
+        clusterSetup.clickSave();
+
+        String alertText = clusterSetup.getActiveAlertText();
+        Assert.assertEquals(alertText, "falcon/default/Submit successful (cluster) " + sourceCluster.getName());
+
+        //check the same via notifications bar
+        clusterSetup.getPageHeader().validateNotificationCountAndCheckLast(1,
+                "falcon/default/Submit successful (cluster) " + sourceCluster.getName());
+
+        ClusterMerlin definition = new ClusterMerlin(cluster.getClusterHelper().
+                getEntityDefinition(bundles[0].getClusterElement().toString()).getMessage());
+
+        //definition should be the same that the source
+        sourceCluster.assertEquals(definition);
+    }
+
+
+
+    /**
      * Validate alert lifetime.
      */
     @Test
@@ -287,9 +366,9 @@ public class ClusterSetupTest extends BaseUITestClass{
     public void testEditXml() {
         clusterSetup.fillForm(sourceCluster);
         //check that registry is empty
-        String registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
+        String registryEndpoint = clusterSetup.getInterfaceEndpointValue(Interfacetype.REGISTRY);
         Assert.assertTrue(StringUtils.isEmpty(registryEndpoint), "Registry endpoint should be empty");
-        String registryVersion = clusterSetup.getInterfaceVersion(Interfacetype.REGISTRY);
+        String registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
         Assert.assertTrue(StringUtils.isEmpty(registryVersion), "Registry version should be empty");
         Assert.assertFalse(clusterSetup.isRegistryEnabled(), "Registry should be disabled.");
 
@@ -306,10 +385,10 @@ public class ClusterSetupTest extends BaseUITestClass{
         clusterSetup.setXmlPreview(sourceCluster.toString());
 
         //check values on wizard
-        registryEndpoint = clusterSetup.getInterfaceEndpoint(Interfacetype.REGISTRY);
+        registryEndpoint = clusterSetup.getInterfaceEndpointValue(Interfacetype.REGISTRY);
         Assert.assertEquals(registryEndpoint, sourceCluster.getInterfaces().getInterfaces().get(5).getEndpoint(),
             "Registry endpoint on wizard should match to endpoint on preview xml.");
-        registryVersion = clusterSetup.getInterfaceVersion(Interfacetype.REGISTRY);
+        registryVersion = clusterSetup.getInterfaceVersionValue(Interfacetype.REGISTRY);
         Assert.assertEquals(registryVersion, sourceCluster.getInterfaces().getInterfaces().get(5).getVersion(),
             "Registry version on wizard should match to endpoint on preview xml.");
         Assert.assertTrue(clusterSetup.isRegistryEnabled(), "Registry should be enabled.");

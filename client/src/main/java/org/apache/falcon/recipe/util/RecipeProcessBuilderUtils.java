@@ -175,6 +175,11 @@ public final class RecipeProcessBuilderUtils {
         if (StringUtils.isNotEmpty(retryDelay)) {
             processRetry.setDelay(Frequency.fromString(retryDelay));
         }
+
+        String retryOnTimeout = recipeProperties.getProperty(RecipeToolOptions.RETRY_ON_TIMEOUT.getName());
+        if (StringUtils.isNotEmpty(retryOnTimeout)) {
+            processRetry.setOnTimeout(Boolean.valueOf(retryOnTimeout));
+        }
     }
 
     private static void bindNotificationProperties(final Notification processNotification,
@@ -227,7 +232,7 @@ public final class RecipeProcessBuilderUtils {
         List<Property> propertyList = new ArrayList<>();
 
         for (Map.Entry<Object, Object> recipeProperty : recipeProperties.entrySet()) {
-            if (RecipeToolOptions.OPTIONSMAP.get(recipeProperty.getKey().toString()) == null) {
+            if (RecipeToolOptions.getOptionsMap().get(recipeProperty.getKey().toString()) == null) {
                 addProperty(propertyList, (String) recipeProperty.getKey(), (String) recipeProperty.getValue());
             }
         }

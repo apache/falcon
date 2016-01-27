@@ -32,6 +32,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -98,17 +99,21 @@ public class OozieDAGEngine implements DAGEngine {
         try {
             Properties properties = getRunProperties(instance);
             Path buildPath = EntityUtil.getLatestStagingPath(cluster, instance.getEntity());
-            switchUser();
-            properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+            switchUserTo(instance.getEntity().getACL().getOwner());
+            properties.setProperty(OozieClient.USER_NAME, instance.getEntity().getACL().getOwner());
             properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
             return client.run(properties);
         } catch (OozieClientException e) {
-            LOG.error("Ozie client exception:", e);
+            LOG.error("Oozie client exception:", e);
             throw new DAGEngineException(e);
         } catch (FalconException e1) {
             LOG.error("Falcon Exception : ", e1);
             throw new DAGEngineException(e1);
         }
+    }
+
+    private void switchUserTo(String user) {
+        CurrentUser.authenticate(user);
     }
 
     private void prepareEntityBuildPath(Entity entity) throws FalconException {
@@ -125,14 +130,25 @@ public class OozieDAGEngine implements DAGEngine {
         }
     }
 
-    private void dryRunInternal(Properties props) throws OozieClientException {
-        LOG.info("Dry run with properties {}", props);
-        client.dryrun(props);
+    private void dryRunInternal(Properties properties, Path buildPath, Entity entity)
+        throws OozieClientException, DAGEngineException {
+        if (properties == null) {
+            LOG.info("Entity {} is not scheduled on cluster {} with user {}", entity.getName(), cluster,
+                    entity.getACL().getOwner());
+            throw new DAGEngineException("Properties for entity " + entity.getName() + " is empty");
+        }
+
+        switchUserTo(entity.getACL().getOwner());
+        properties.setProperty(OozieClient.USER_NAME, entity.getACL().getOwner());
+        properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
+        properties.putAll(getDryRunProperties(entity));
+        //Do dryrun before run as run is asynchronous
+        LOG.info("Dry run with properties {}", properties);
+        client.dryrun(properties);
     }
 
     private void switchUser() {
-        String user = System.getProperty("user.name");
-        CurrentUser.authenticate(user);
+        switchUserTo(System.getProperty("user.name"));
     }
 
     @Override
@@ -159,6 +175,7 @@ public class OozieDAGEngine implements DAGEngine {
         props.put("feedNames", "NONE");
         props.put("feedInstancePaths", "NONE");
         props.put("userJMSNotificationEnabled", "true");
+        props.put("systemJMSNotificationEnabled", "false");
         return props;
     }
 
@@ -176,6 +193,7 @@ public class OozieDAGEngine implements DAGEngine {
         props.put("feedNames", "NONE");
         props.put("feedInstancePaths", "NONE");
         props.put("userJMSNotificationEnabled", "true");
+        props.put("systemJMSNotificationEnabled", "false");
         return props;
     }
 
@@ -185,7 +203,8 @@ public class OozieDAGEngine implements DAGEngine {
             client.suspend(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED, Job.Status.SUCCEEDED,
                     Job.Status.FAILED, Job.Status.KILLED);
-            LOG.info("Suspended job {} on cluster {}", instance.getExternalID(), instance.getCluster());
+            LOG.info("Suspended job {} of entity {} of time {} on cluster {}", instance.getExternalID(),
+                    instance.getEntity().getName(), instance.getInstanceTime(), instance.getCluster());
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
@@ -197,7 +216,8 @@ public class OozieDAGEngine implements DAGEngine {
             client.resume(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUCCEEDED,
                     Job.Status.FAILED, Job.Status.KILLED);
-            LOG.info("Resumed job {} on cluster {}", instance.getExternalID(), instance.getCluster());
+            LOG.info("Resumed job {} of entity {} of time {} on cluster {}", instance.getExternalID(),
+                    instance.getEntity().getName(), instance.getInstanceTime(), instance.getCluster());
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
@@ -208,15 +228,49 @@ public class OozieDAGEngine implements DAGEngine {
         try {
             client.kill(instance.getExternalID());
             assertStatus(instance.getExternalID(), Job.Status.KILLED, Job.Status.SUCCEEDED, Job.Status.FAILED);
-            LOG.info("Killed job {} on cluster {}", instance.getExternalID(), instance.getCluster());
+            LOG.info("Killed job {} of entity {} of time {} on cluster {}", instance.getExternalID(),
+                    instance.getEntity().getName(), instance.getInstanceTime(), instance.getCluster());
         } catch (OozieClientException e) {
             throw new DAGEngineException(e);
         }
     }
 
     @Override
-    public void reRun(ExecutionInstance instance) throws DAGEngineException {
-        // TODO : Implement this
+    public void reRun(ExecutionInstance instance, Properties props, boolean isForced) throws DAGEngineException {
+        String jobId = instance.getExternalID();
+        try {
+            WorkflowJob jobInfo = client.getJobInfo(jobId);
+            if (props == null) {
+                props = new Properties();
+            }
+            //if user has set any of these oozie rerun properties then force rerun flag is ignored
+            if (!props.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && !props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+            }
+
+            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
+            jobprops.putAll(props);
+
+            jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
+            jobprops.remove(OozieClient.BUNDLE_APP_PATH);
+            // In case if both props exists one should be removed otherwise it will fail.
+            // This case will occur when user runs workflow with skip-nodes property and
+            // try to do force rerun or rerun with fail-nodes property.
+            if (jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                LOG.warn("Both " + OozieClient.RERUN_SKIP_NODES + " and " +  OozieClient.RERUN_FAIL_NODES
+                        + " are present in workflow params removing" + OozieClient.RERUN_SKIP_NODES);
+                jobprops.remove(OozieClient.RERUN_SKIP_NODES);
+            }
+            client.reRun(jobId, jobprops);
+            assertStatus(instance.getExternalID(), Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUCCEEDED);
+            LOG.info("Rerun job {} of entity {} of time {} on cluster {}", jobId, instance.getEntity().getName(),
+                    instance.getInstanceTime(), instance.getCluster());
+        } catch (Exception e) {
+            LOG.error("Unable to rerun workflows", e);
+            throw new DAGEngineException(e);
+        }
     }
 
     @Override
@@ -228,18 +282,7 @@ public class OozieDAGEngine implements DAGEngine {
             prepareEntityBuildPath(entity);
             Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
             Properties properties = builder.build(cluster, buildPath);
-            if (properties == null) {
-                LOG.info("Entity {} is not scheduled on cluster {}", entity.getName(), cluster);
-                throw new DAGEngineException("Properties for entity " + entity.getName() + " is empty");
-            }
-
-            switchUser();
-            LOG.debug("Logged in user is " + CurrentUser.getUser());
-            properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
-            properties.setProperty(OozieClient.APP_PATH, buildPath.toString());
-            properties.putAll(getDryRunProperties(entity));
-            //Do submit before run as run is asynchronous
-            dryRunInternal(properties);
+            dryRunInternal(properties, buildPath, entity);
         } catch (OozieClientException e) {
             LOG.error("Oozie client exception:", e);
             throw new DAGEngineException(e);
@@ -344,6 +387,7 @@ public class OozieDAGEngine implements DAGEngine {
     public Properties getConfiguration(String externalID) throws DAGEngineException {
         Properties props = new Properties();
         try {
+            switchUser();
             WorkflowJob jobInfo = client.getJobInfo(externalID);
             Configuration conf = new Configuration(false);
             conf.addResource(new ByteArrayInputStream(jobInfo.getConf().getBytes()));
@@ -358,13 +402,36 @@ public class OozieDAGEngine implements DAGEngine {
         return props;
     }
 
+    @Override
+    public void touch(Entity entity, Boolean skipDryRun) throws DAGEngineException {
+        // TODO : remove hardcoded Tag value when feed support is added.
+        try {
+            OozieOrchestrationWorkflowBuilder builder =
+                    OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT);
+            if (!skipDryRun) {
+                Path buildPath = new Path("/tmp", "falcon" + entity.getName() + System.currentTimeMillis());
+                Properties props = builder.build(cluster, buildPath);
+                dryRunInternal(props, buildPath, entity);
+            }
+            Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
+            // build it and forget it. The next run will always pick up from the latest staging path.
+            builder.build(cluster, buildPath);
+        } catch (FalconException fe) {
+            LOG.error("Falcon Exception : ", fe);
+            throw new DAGEngineException(fe);
+        } catch (OozieClientException e) {
+            LOG.error("Oozie client exception:", e);
+            throw new DAGEngineException(e);
+        }
+    }
+
     // Get status of a workflow (with retry) and ensure it is one of statuses requested.
     private void assertStatus(String jobID, Job.Status... statuses) throws DAGEngineException {
         String actualStatus = null;
         int retryCount;
         String retry = RuntimeProperties.get().getProperty(WORKFLOW_STATUS_RETRY_COUNT, "30");
         try {
-            retryCount = Integer.valueOf(retry);
+            retryCount = Integer.parseInt(retry);
         } catch (NumberFormatException nfe) {
             throw new DAGEngineException("Invalid value provided for runtime property \""
                     + WORKFLOW_STATUS_RETRY_COUNT + "\". Please provide an integer value.");

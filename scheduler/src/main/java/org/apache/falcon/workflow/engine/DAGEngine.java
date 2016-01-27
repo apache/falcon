@@ -75,9 +75,11 @@ public interface DAGEngine {
      * Re-run a terminated instance.
      *
      * @param instance
+     * @param props
+     * @param isForced
      * @throws DAGEngineException
      */
-    void reRun(ExecutionInstance instance) throws DAGEngineException;
+    void reRun(ExecutionInstance instance, Properties props, boolean isForced) throws DAGEngineException;
 
     /**
      * Perform dryrun of an instance.
@@ -112,4 +114,12 @@ public interface DAGEngine {
      * @throws DAGEngineException
      */
     Properties getConfiguration(String externalID) throws DAGEngineException;
+
+    /**
+     * Re-builds the workflow.
+     * @param entity
+     * @param skipDryRun
+     * @return
+     */
+    void touch(Entity entity, Boolean skipDryRun) throws DAGEngineException;
 }

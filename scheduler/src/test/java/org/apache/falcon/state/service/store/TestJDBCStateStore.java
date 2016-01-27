@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.state.service.store;
 
+import java.util.Map;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
@@ -346,24 +347,140 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
         InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
         instanceState2.setCurrentState(InstanceState.STATE.RUNNING);
 
+        ExecutionInstance processExecutionInstance3 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance2Time, "cluster2", instance2Time);
+        InstanceState instanceState3 = new InstanceState(processExecutionInstance3);
+        instanceState3.setCurrentState(InstanceState.STATE.RUNNING);
+
         stateStore.putExecutionInstance(instanceState1);
         stateStore.putExecutionInstance(instanceState2);
+        stateStore.putExecutionInstance(instanceState3);
 
         List<InstanceState.STATE> states = new ArrayList<>();
         states.add(InstanceState.STATE.RUNNING);
 
         Collection<InstanceState> actualInstances = stateStore.getExecutionInstances(entityState.getEntity(),
                 "cluster1", states, new DateTime(instance1Time), new DateTime(instance1Time + 60000));
-        Assert.assertEquals(1, actualInstances.size());
-        Assert.assertEquals(instanceState1, actualInstances.toArray()[0]);
+        Assert.assertEquals(actualInstances.size(), 1);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState1);
 
         actualInstances = stateStore.getExecutionInstances(entityState.getEntity(),
                 "cluster1", states, new DateTime(instance2Time), new DateTime(instance2Time + 60000));
-        Assert.assertEquals(1, actualInstances.size());
-        Assert.assertEquals(instanceState2, actualInstances.toArray()[0]);
+        Assert.assertEquals(actualInstances.size(), 1);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState2);
+
+        // Ensure we can get instances for a different cluster
+        actualInstances = stateStore.getExecutionInstances(entityState.getEntity(),
+                "cluster2", states, new DateTime(instance2Time), new DateTime(instance2Time + 60000));
+        Assert.assertEquals(actualInstances.size(), 1);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState3);
 
     }
 
+    @Test
+    public void testGetInstanceFromExternalID() throws Exception {
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.FEED, "clicksFeed");
+        storeEntity(EntityType.FEED, "clicksSummary");
+
+        long instance1Time = System.currentTimeMillis() - 180000;
+        long instance2Time = System.currentTimeMillis();
+        EntityState entityState = getEntityState(EntityType.PROCESS, "processext");
+        ExecutionInstance processExecutionInstance1 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance1Time, "cluster1", instance1Time);
+        processExecutionInstance1.setExternalID("external_id_1");
+        InstanceState instanceState1 = new InstanceState(processExecutionInstance1);
+        instanceState1.setCurrentState(InstanceState.STATE.RUNNING);
+
+        ExecutionInstance processExecutionInstance2 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance2Time, "cluster1", instance2Time);
+        processExecutionInstance2.setExternalID("external_id_2");
+        InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
+        instanceState2.setCurrentState(InstanceState.STATE.RUNNING);
+
+        stateStore.putExecutionInstance(instanceState1);
+        stateStore.putExecutionInstance(instanceState2);
+
+        InstanceState actualInstanceState = stateStore.getExecutionInstance("external_id_1");
+        Assert.assertEquals(actualInstanceState.getInstance(), processExecutionInstance1);
+
+        actualInstanceState = stateStore.getExecutionInstance("external_id_2");
+        Assert.assertEquals(actualInstanceState.getInstance(), processExecutionInstance2);
+
+    }
+
+    @Test
+    public void testCascadingDelete() throws Exception {
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.FEED, "clicksFeed");
+        storeEntity(EntityType.FEED, "clicksSummary");
+        EntityState entityState = getEntityState(EntityType.PROCESS, "process1");
+        stateStore.putEntity(entityState);
+        ExecutionInstance processExecutionInstance1 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                System.currentTimeMillis() - 60000, "cluster1", System.currentTimeMillis() - 60000);
+        InstanceState instanceState1 = new InstanceState(processExecutionInstance1);
+        instanceState1.setCurrentState(InstanceState.STATE.READY);
+
+        ExecutionInstance processExecutionInstance2 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                System.currentTimeMillis(), "cluster1", System.currentTimeMillis());
+        InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
+        instanceState2.setCurrentState(InstanceState.STATE.RUNNING);
+
+        stateStore.putExecutionInstance(instanceState1);
+        stateStore.putExecutionInstance(instanceState2);
+
+        Collection<InstanceState> instances = stateStore.getAllExecutionInstances(entityState.getEntity(), "cluster1");
+        Assert.assertEquals(instances.size(), 2);
+
+
+        stateStore.deleteEntity(new EntityID(entityState.getEntity()));
+        deleteEntity(EntityType.PROCESS, "process1");
+
+
+        instances = stateStore.getAllExecutionInstances(entityState.getEntity(), "cluster1");
+        Assert.assertEquals(instances.size(), 0);
+    }
+
+    @Test
+    public void testGetExecutionSummaryWithRange() throws Exception {
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.FEED, "clicksFeed");
+        storeEntity(EntityType.FEED, "clicksSummary");
+
+        long instance1Time = System.currentTimeMillis() - 180000;
+        long instance2Time = System.currentTimeMillis();
+        EntityState entityState = getEntityState(EntityType.PROCESS, "clicksProcess");
+        ExecutionInstance processExecutionInstance1 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance1Time, "cluster1", instance1Time);
+        InstanceState instanceState1 = new InstanceState(processExecutionInstance1);
+        instanceState1.setCurrentState(InstanceState.STATE.RUNNING);
+
+        ExecutionInstance processExecutionInstance2 = BeanMapperUtil.getExecutionInstance(
+                entityState.getEntity().getEntityType(), entityState.getEntity(),
+                instance2Time, "cluster1", instance2Time);
+        InstanceState instanceState2 = new InstanceState(processExecutionInstance2);
+        instanceState2.setCurrentState(InstanceState.STATE.SUCCEEDED);
+
+        stateStore.putExecutionInstance(instanceState1);
+        stateStore.putExecutionInstance(instanceState2);
+
+
+        Map<InstanceState.STATE, Long> summary = stateStore.getExecutionInstanceSummary(entityState.getEntity(),
+                "cluster1", new DateTime(instance1Time), new DateTime(instance1Time + 60000));
+        Assert.assertEquals(summary.size(), 1);
+        Assert.assertEquals(summary.get(InstanceState.STATE.RUNNING).longValue(), 1L);
+
+        summary = stateStore.getExecutionInstanceSummary(entityState.getEntity(),
+                "cluster1", new DateTime(instance2Time), new DateTime(instance2Time + 60000));
+        Assert.assertEquals(summary.size(), 1);
+        Assert.assertEquals(summary.get(InstanceState.STATE.SUCCEEDED).longValue(), 1L);
+    }
 
     private void initInstanceState(InstanceState instanceState) {
         instanceState.setCurrentState(InstanceState.STATE.READY);
@@ -386,8 +503,11 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
 
     @AfterTest
     public void cleanUpTables() throws StateStoreException {
-        stateStore.deleteEntities();
-        stateStore.deleteExecutionInstances();
+        try {
+            stateStore.deleteEntities();
+        } catch (Exception e) {
+            // ignore
+        }
     }
 
     @AfterClass

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.execution;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
@@ -119,29 +120,36 @@ public class ProcessExecutionInstance extends ExecutionInstance {
                 continue;
             }
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+            List<Path> paths = new ArrayList<>();
             for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
                 List<Location> locations = FeedHelper.getLocations(cluster, feed);
                 for (Location loc : locations) {
                     if (loc.getType() != LocationType.DATA) {
                         continue;
                     }
-
-                    Predicate predicate = Predicate.createDataPredicate(loc);
-                    // To ensure we evaluate only predicates not evaluated before when an instance is resumed.
-                    if (isResume && !awaitedPredicates.contains(predicate)) {
-                        continue;
-                    }
-                    // TODO : Revisit this once the Data Availability Service has been built
-                    DataAvailabilityService.DataRequestBuilder requestBuilder =
-                            (DataAvailabilityService.DataRequestBuilder)
-                            NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
-                                    .createRequestBuilder(executionService, getId());
-                    requestBuilder.setDataLocation(new Path(loc.getPath()));
-                    NotificationServicesRegistry.register(requestBuilder.build());
-                    LOG.info("Registered for a data notification for process {} for data location {}",
-                            process.getName(), loc.getPath());
-                    awaitedPredicates.add(predicate);
+                    paths.add(new Path(loc.getPath()));
                 }
+
+                Predicate predicate = Predicate.createDataPredicate(paths);
+                // To ensure we evaluate only predicates not evaluated before when an instance is resumed.
+                if (isResume && !awaitedPredicates.contains(predicate)) {
+                    continue;
+                }
+                // TODO : Revisit this once the Data Notification Service has been built
+                // TODO Very IMP :  Need to change the polling frequency
+                DataAvailabilityService.DataRequestBuilder requestBuilder =
+                        (DataAvailabilityService.DataRequestBuilder)
+                                NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
+                                        .createRequestBuilder(executionService, getId());
+                requestBuilder.setLocations(paths)
+                        .setCluster(cluster.getName())
+                        .setPollingFrequencyInMillis(100)
+                        .setTimeoutInMillis(getTimeOutInMillis())
+                        .setLocations(paths);
+                NotificationServicesRegistry.register(requestBuilder.build());
+                LOG.info("Registered for a data notification for process {} for data location {}",
+                        process.getName(), StringUtils.join(paths, ","));
+                awaitedPredicates.add(predicate);
             }
         }
     }
@@ -187,9 +195,6 @@ public class ProcessExecutionInstance extends ExecutionInstance {
      * @return true when it is not already scheduled or is gated on some conditions.
      */
     public boolean isReady() {
-        if (getExternalID() != null) {
-            return false;
-        }
         if (awaitedPredicates.isEmpty()) {
             return true;
         } else {
@@ -320,6 +325,12 @@ public class ProcessExecutionInstance extends ExecutionInstance {
 
     @Override
     public void destroy() throws FalconException {
-        NotificationServicesRegistry.unregister(executionService, getId());
+        // Only Registration to Data service happens via process execution instance. So, handle just that.
+        NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
+                .unregister(executionService, getId());
+    }
+
+    public void rerun() throws FalconException {
+        registerForNotifications(false);
     }
 }

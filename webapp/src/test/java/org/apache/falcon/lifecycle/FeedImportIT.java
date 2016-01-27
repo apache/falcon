@@ -19,6 +19,7 @@
 package org.apache.falcon.lifecycle;
 
 import junit.framework.Assert;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.falcon.resource.TestContext;
@@ -26,6 +27,8 @@ import org.apache.falcon.util.HsqldbTestUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -49,6 +52,8 @@ public class FeedImportIT {
     @AfterClass
     public void tearDown() throws Exception {
         HsqldbTestUtils.tearDown();
+        FileUtils.deleteDirectory(new File("webapp/localhost/"));
+        FileUtils.deleteDirectory(new File("localhost"));
     }
 
     @Test

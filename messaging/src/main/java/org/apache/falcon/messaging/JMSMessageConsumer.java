@@ -21,6 +21,7 @@ package org.apache.falcon.messaging;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
+import org.apache.falcon.Tag;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.WorkflowNameBuilder;
 import org.apache.falcon.entity.v0.EntityType;
@@ -146,17 +147,37 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
                 wfProperties.put(WorkflowExecutionArgs.NOMINAL_TIME,
                         getNominalTimeString(Long.parseLong(json.getString("nominalTime"))));
             }
-            Pair<String, EntityType> entityTypePair = WorkflowNameBuilder.WorkflowName.getEntityNameAndType(
-                    message.getStringProperty("appName"));
+            String appName = message.getStringProperty("appName");
+            Pair<String, EntityType> entityTypePair = WorkflowNameBuilder.WorkflowName.getEntityNameAndType(appName);
             wfProperties.put(WorkflowExecutionArgs.ENTITY_NAME, entityTypePair.first);
             wfProperties.put(WorkflowExecutionArgs.ENTITY_TYPE, entityTypePair.second.name());
             wfProperties.put(WorkflowExecutionArgs.WORKFLOW_USER, message.getStringProperty("user"));
+            wfProperties.put(WorkflowExecutionArgs.OPERATION, getOperation(appName).name());
 
             String appType = message.getStringProperty("appType");
             return WorkflowExecutionContext.create(wfProperties, WorkflowExecutionContext.Type.valueOf(appType));
 
         } catch (JSONException e) {
             throw new FalconException("Unable to build a context from the JMS message.", e);
+        }
+    }
+
+    // Retrieves EntityOperation from the workflow name
+    private WorkflowExecutionContext.EntityOperations getOperation(String appName) {
+        Tag tag = WorkflowNameBuilder.WorkflowName.getTagAndSuffixes(appName).first;
+        switch(tag) {
+        case REPLICATION:
+            return WorkflowExecutionContext.EntityOperations.REPLICATE;
+        case RETENTION:
+            return WorkflowExecutionContext.EntityOperations.DELETE;
+        case IMPORT:
+            return WorkflowExecutionContext.EntityOperations.IMPORT;
+        case EXPORT:
+            return WorkflowExecutionContext.EntityOperations.EXPORT;
+        case DEFAULT:
+            return WorkflowExecutionContext.EntityOperations.GENERATE;
+        default:
+            throw new IllegalArgumentException("Invalid tag - " + tag);
         }
     }
 

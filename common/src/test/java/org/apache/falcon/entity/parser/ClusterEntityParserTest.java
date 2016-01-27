@@ -36,6 +36,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -354,6 +355,19 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         FileStatus workingDirStatus = this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(workingDirPath));
         Assert.assertTrue(workingDirStatus.isDirectory());
         Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
+        Assert.assertEquals(workingDirStatus.getOwner(), UserGroupInformation.getLoginUser().getShortUserName());
+
+        String stagingSubdirFeed = cluster.getLocations().getLocations().get(0).getPath() + "/falcon/workflows/feed";
+        String stagingSubdirProcess =
+                cluster.getLocations().getLocations().get(0).getPath() + "/falcon/workflows/process";
+        FileStatus stagingSubdirFeedStatus =
+                this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(stagingSubdirFeed));
+        FileStatus stagingSubdirProcessStatus =
+                this.dfsCluster.getFileSystem().getFileLinkStatus(new Path(stagingSubdirProcess));
+        Assert.assertTrue(stagingSubdirFeedStatus.isDirectory());
+        Assert.assertEquals(stagingSubdirFeedStatus.getPermission(), HadoopClientFactory.ALL_PERMISSION);
+        Assert.assertTrue(stagingSubdirProcessStatus.isDirectory());
+        Assert.assertEquals(stagingSubdirProcessStatus.getPermission(), HadoopClientFactory.ALL_PERMISSION);
     }
 
     /**

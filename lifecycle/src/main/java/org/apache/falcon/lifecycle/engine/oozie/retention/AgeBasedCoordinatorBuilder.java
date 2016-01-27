@@ -18,6 +18,7 @@
 
 package org.apache.falcon.lifecycle.engine.oozie.retention;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.EntityUtil;
@@ -33,6 +34,7 @@ import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.oozie.coordinator.CONTROLS;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -73,11 +75,17 @@ public final class AgeBasedCoordinatorBuilder {
         COORDINATORAPP coord = new COORDINATORAPP();
         String coordName = EntityUtil.getWorkflowName(LifeCycle.EVICTION.getTag(), feed).toString();
         coord.setName(coordName);
-        coord.setEnd(SchemaHelper.formatDateUTC(feedCluster.getValidity().getEnd()));
+        Date endDate = feedCluster.getValidity().getEnd();
+        if (RuntimeProperties.get().getProperty(
+                "falcon.retention.keep.instances.beyond.validity", "true").equalsIgnoreCase("false")) {
+            int retentionLimitinSecs = FeedHelper.getRetentionLimitInSeconds(feed, cluster.getName());
+            endDate = DateUtils.addSeconds(endDate, retentionLimitinSecs);
+        }
+        coord.setEnd(SchemaHelper.formatDateUTC(endDate));
         coord.setStart(SchemaHelper.formatDateUTC(new Date()));
         coord.setTimezone(feed.getTimezone().getID());
 
-        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, cluster.getName());
+        Frequency retentionFrequency = FeedHelper.getLifecycleRetentionFrequency(feed, cluster.getName());
         // set controls
         long frequencyInMillis = ExpressionHelper.get().evaluate(retentionFrequency.toString(), Long.class);
         CONTROLS controls = new CONTROLS();

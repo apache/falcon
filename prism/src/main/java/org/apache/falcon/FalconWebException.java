@@ -18,18 +18,14 @@
 
 package org.apache.falcon;
 
-import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.InstanceDependencyResult;
-import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.falcon.resource.TriageResult;
-import org.apache.hadoop.security.authorize.AuthorizationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.apache.falcon.resource.APIResult;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Exception for REST APIs.
@@ -38,61 +34,6 @@ public class FalconWebException extends WebApplicationException {
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconWebException.class);
 
-    public static FalconWebException newException(Throwable e,
-                                                  Response.Status status) {
-        if (e instanceof AuthorizationException) {
-            status = Response.Status.FORBIDDEN;
-        }
-
-        return newException(e.getMessage(), status);
-    }
-
-    public static FalconWebException newTriageResultException(Throwable e, Response.Status status) {
-        String message = getMessage(e);
-        LOG.error("Triage failed: {}\nError: {}", status, message);
-        APIResult result = new TriageResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(e, Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
-    }
-
-    public static FalconWebException newInstanceSummaryException(Throwable e, Response.Status status) {
-        String message = getMessage(e);
-        LOG.error("Action failed: {}\nError: {}", status, message);
-        APIResult result = new InstancesSummaryResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(e, Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
-    }
-
-    public static FalconWebException newInstanceDependencyResult(Throwable e, Response.Status status) {
-        return newInstanceDependencyResult(getMessage(e), status);
-    }
-
-    public static FalconWebException newInstanceDependencyResult(String message, Response.Status status) {
-        LOG.error("Action failed: {}\nError: {}", status, message);
-        APIResult result = new InstanceDependencyResult(APIResult.Status.FAILED, message);
-        return new FalconWebException(new Exception(message),
-                Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
-    }
-
-    public static FalconWebException newException(String message, Response.Status status) {
-        APIResult result = new APIResult(APIResult.Status.FAILED, message);
-        return newException(result, status);
-    }
-
-    public static FalconWebException newException(APIResult result, Response.Status status) {
-        LOG.error("Action failed: {}\nError: {}", status, result.getMessage());
-        return new FalconWebException(new FalconException(result.getMessage()),
-                Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
-    }
-
-    public static FalconWebException newInstanceException(String message, Response.Status status) {
-        return newInstanceException(new FalconException(message), status);
-    }
-
-    public static FalconWebException newInstanceException(Throwable e, Response.Status status) {
-        LOG.error("Action failed: {}\nError: {}", status, e.getMessage());
-        APIResult result = new InstancesResult(APIResult.Status.FAILED, e.getMessage());
-        return new FalconWebException(e, Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
-    }
-
     public static FalconWebException newMetadataResourceException(String message, Response.Status status) {
         LOG.error("Action failed: {}\nError: {}", status, message);
         // Using MediaType.TEXT_PLAIN for newMetadataResourceException to ensure backward compatibility.
@@ -100,8 +41,36 @@ public class FalconWebException extends WebApplicationException {
                 Response.status(status).entity(message).type(MediaType.TEXT_PLAIN).build());
     }
 
+    public static FalconWebException newAPIException(Throwable throwable) {
+        return newAPIException(throwable, Response.Status.BAD_REQUEST);
+    }
+
+    public static FalconWebException newAPIException(Throwable throwable, Response.Status status) {
+        String message = getMessage(throwable);
+        return newAPIException(message, status);
+    }
+
+    public static FalconWebException newAPIException(String message) {
+        return newAPIException(message, Response.Status.BAD_REQUEST);
+    }
+
+    public static FalconWebException newAPIException(String message, Response.Status status) {
+        Response response = Response.status(status)
+                .entity(new APIResult(APIResult.Status.FAILED, message))
+                .type(MediaType.TEXT_XML_TYPE)
+                .build();
+        return new FalconWebException(response);
+    }
+
     private static String getMessage(Throwable e) {
-        return e.getCause()==null? e.getMessage():e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
+        if (e instanceof FalconWebException) {
+            return ((APIResult)((FalconWebException) e).getResponse().getEntity()).getMessage();
+        }
+        return e.getCause() == null ? e.getMessage() : e.getMessage() + "\nCausedBy: " + e.getCause().getMessage();
+    }
+
+    public FalconWebException(Response response) {
+        super(response);
     }
 
     public FalconWebException(Throwable e, Response response) {

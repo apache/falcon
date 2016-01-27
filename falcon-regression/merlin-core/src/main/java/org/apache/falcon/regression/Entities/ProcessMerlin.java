@@ -575,6 +575,9 @@ public class ProcessMerlin extends Process {
             softAssert.assertEquals(newProcess.getInputs().getInputs().get(i).getEnd(),
                 getInputs().getInputs().get(i).getEnd(),
                 "Process Input End is different");
+            softAssert.assertEquals(newProcess.getInputs().getInputs().get(i).isOptional(),
+                getInputs().getInputs().get(i).isOptional(),
+                "Process Input optional param is different");
         }
         softAssert.assertAll();
     }

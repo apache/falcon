@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.state.store.jdbc;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
@@ -41,6 +43,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Mapping util for Persistent Store.
@@ -165,6 +168,10 @@ public final class BeanMapperUtil {
                 IOUtils.closeQuietly(out);
             }
         }
+        if (instance.getProperties() != null && !instance.getProperties().isEmpty()) {
+            byte[] props = getProperties(instanceState);
+            instanceBean.setProperties(props);
+        }
         return instanceBean;
     }
 
@@ -207,6 +214,22 @@ public final class BeanMapperUtil {
             }
         }
         executionInstance.setAwaitingPredicates(predicates);
+
+        result = instanceBean.getProperties();
+        if (result != null && result.length != 0) {
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(result);
+            ObjectInputStream in = null;
+            Properties properties = null;
+            try {
+                in = new ObjectInputStream(byteArrayInputStream);
+                properties = (Properties) in.readObject();
+            } catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            } finally {
+                IOUtils.closeQuietly(in);
+            }
+            executionInstance.setProperties(properties);
+        }
         InstanceState instanceState = new InstanceState(executionInstance);
         instanceState.setCurrentState(InstanceState.STATE.valueOf(instanceBean.getCurrentState()));
         return instanceState;
@@ -267,5 +290,35 @@ public final class BeanMapperUtil {
         } finally {
             IOUtils.closeQuietly(out);
         }
+    }
+
+    public static byte [] getProperties(InstanceState instanceState) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(byteArrayOutputStream);
+            out.writeObject(instanceState.getInstance().getProperties());
+            return byteArrayOutputStream.toByteArray();
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+    }
+
+    /**
+     * @param summary
+     * @return A map of state and count given the JQL result.
+     */
+    public static Map<InstanceState.STATE, Long> getInstanceStateSummary(Collection<Object[]> summary) {
+        Map<InstanceState.STATE, Long> stateSummary = new HashMap<>();
+        if (summary != null && !summary.isEmpty()) {
+            for (Object[] projection : summary) {
+                // Has to have 2 columns (state and count), else Array will be out of bounds.
+                if (projection.length == 2) {
+                    stateSummary.put(InstanceState.STATE.valueOf((String)projection[0]),
+                            Long.valueOf(((Number)projection[1]).longValue()));
+                }
+            }
+        }
+        return stateSummary;
     }
 }

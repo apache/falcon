@@ -27,19 +27,22 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.ExtractMethod;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
 import org.apache.falcon.entity.v0.feed.Lifecycle;
+import org.apache.falcon.entity.v0.feed.Load;
 import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.MergeType;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -451,7 +454,7 @@ public final class FeedHelper {
 
             int value;
             try {
-                value = Integer.valueOf(path.substring(pad.length(), pad.length() + pathVar.getValueSize()));
+                value = Integer.parseInt(path.substring(pad.length(), pad.length() + pathVar.getValueSize()));
             } catch (NumberFormatException e) {
                 //Not a valid number for variable
                 return null;
@@ -816,7 +819,11 @@ public final class FeedHelper {
             org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
             Feed feed) throws FalconException {
         Cluster feedCluster = getCluster(feed, clusterEntity.getName());
-        return DatasourceHelper.getImportSourceType(feedCluster);
+        if (isImportEnabled(feedCluster)) {
+            return DatasourceHelper.getDatasourceType(getImportDatasourceName(feedCluster));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -833,6 +840,8 @@ public final class FeedHelper {
         return false;
     }
 
+
+
     /**
      * Returns the data source name associated with the Feed's import policy.
      *
@@ -846,6 +855,8 @@ public final class FeedHelper {
             return null;
         }
     }
+
+
 
     /**
      * Returns Datasource table name.
@@ -862,6 +873,8 @@ public final class FeedHelper {
         }
     }
 
+
+
     /**
      * Returns the extract method type.
      *
@@ -876,6 +889,8 @@ public final class FeedHelper {
             return null;
         }
     }
+
+
 
     /**
      * Returns the merge type of the Feed import policy.
@@ -892,21 +907,15 @@ public final class FeedHelper {
     }
 
     /**
-     * Returns the initial instance date for the import data set or coorinator.
-     *
-     * For snapshot merge type, a latest time will be used since the source data is dumped in whole.
-     * For incremental merge type, start date specified in the cluster validity will be used.
+     * Returns the initial instance date for the import data set for coorinator.
      *
      * @param feedCluster
      * @return Feed cluster validity start date or recent time
      */
     public static Date getImportInitalInstance(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
-        Date initialInstance = new Date();
-        if (!FeedHelper.isSnapshotMergeType(feedCluster)) {
-            initialInstance = feedCluster.getValidity().getStart();
-        }
-        return initialInstance;
+        return feedCluster.getValidity().getStart();
     }
+
 
     /**
      * Helper method to check if the merge type is snapshot.
@@ -940,6 +949,9 @@ public final class FeedHelper {
         return argsMap;
     }
 
+
+
+
     /**
      * Returns Fields list specified in the Import Policy.
      *
@@ -947,7 +959,7 @@ public final class FeedHelper {
      * @return List of String
      * @throws FalconException
      */
-    public static List<String> getFieldList(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+    public static List<String> getImportFieldList(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
         throws FalconException {
         if (feedCluster.getImport().getSource().getFields() == null) {
             return null;
@@ -964,15 +976,15 @@ public final class FeedHelper {
     /**
      * Returns true if exclude field lists are used. This is a TBD feature.
      *
-     * @param feedCluster
+     * @param ds Feed Datasource
      * @return true of exclude field list is used or false.
      * @throws FalconException
      */
 
-    public static boolean isFieldExcludes(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+    public static boolean isFieldExcludes(org.apache.falcon.entity.v0.feed.Datasource ds)
         throws FalconException {
-        if (feedCluster.getImport().getSource().getFields() != null) {
-            org.apache.falcon.entity.v0.feed.FieldsType fieldType = feedCluster.getImport().getSource().getFields();
+        if (ds.getFields() != null) {
+            org.apache.falcon.entity.v0.feed.FieldsType fieldType = ds.getFields();
             FieldIncludeExclude excludeFileds = fieldType.getExcludes();
             if ((excludeFileds != null) && (excludeFileds.getFields().size() > 0)) {
                 return true;
@@ -993,20 +1005,171 @@ public final class FeedHelper {
         return cluster != null && (feed.getLifecycle() != null || cluster.getLifecycle() != null);
     }
 
-    public static Frequency getRetentionFrequency(Feed feed, String clusterName) throws FalconException {
-        Frequency retentionFrequency;
+    public static Frequency getLifecycleRetentionFrequency(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionFrequency = null;
         RetentionStage retentionStage = getRetentionStage(feed, clusterName);
-        if (retentionStage != null && retentionStage.getFrequency() != null) {
-            retentionFrequency = retentionStage.getFrequency();
-        } else {
-            Frequency feedFrequency = feed.getFrequency();
-            Frequency defaultFrequency = new Frequency("hours(6)");
-            if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
-                retentionFrequency = defaultFrequency;
+        if (retentionStage != null) {
+            if (retentionStage.getFrequency() != null) {
+                retentionFrequency = retentionStage.getFrequency();
             } else {
-                retentionFrequency = new Frequency(feedFrequency.toString());
+                Frequency feedFrequency = feed.getFrequency();
+                Frequency defaultFrequency = new Frequency("hours(6)");
+                if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
+                    retentionFrequency = defaultFrequency;
+                } else {
+                    retentionFrequency = new Frequency(feedFrequency.toString());
+                }
             }
         }
         return  retentionFrequency;
+    }
+
+    /**
+     * Returns the data source type associated with the Feed's export policy.
+     *
+     * @param clusterEntity
+     * @param feed
+     * @return {@link org.apache.falcon.entity.v0.datasource.DatasourceType}
+     * @throws FalconException
+     */
+    public static DatasourceType getExportDatasourceType(
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+            Feed feed) throws FalconException {
+        Cluster feedCluster = getCluster(feed, clusterEntity.getName());
+        if (isExportEnabled(feedCluster)) {
+            return DatasourceHelper.getDatasourceType(getExportDatasourceName(feedCluster));
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Return if Export policy is enabled in the Feed definition.
+     *
+     * @param feedCluster
+     * @return true if export policy is enabled else false
+     */
+
+    public static boolean isExportEnabled(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        return (feedCluster.getExport() != null);
+    }
+
+    /**
+     * Returns the data source name associated with the Feed's export policy.
+     *
+     * @param feedCluster
+     * @return DataSource name defined in the Datasource Entity
+     */
+    public static String getExportDatasourceName(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        if (isExportEnabled(feedCluster)) {
+            return feedCluster.getExport().getTarget().getName();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns Datasource table name.
+     *
+     * @param feedCluster
+     * @return Table or Topic name of the Datasource
+     */
+
+    public static String getExportDataSourceTableName(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        if (isExportEnabled(feedCluster)) {
+            return feedCluster.getExport().getTarget().getTableName();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the export load type.
+     *
+     * @param feedCluster
+     * @return {@link org.apache.falcon.entity.v0.feed.Load}
+     */
+
+    public static Load getExportLoadMethod(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        if (isExportEnabled(feedCluster)) {
+            return feedCluster.getExport().getTarget().getLoad();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the initial instance date for the export data set for coorinator.
+     *
+     * @param feedCluster
+     * @return Feed cluster validity start date or recent time
+     */
+    public static Date getExportInitalInstance(org.apache.falcon.entity.v0.feed.Cluster feedCluster) {
+        return feedCluster.getValidity().getStart();
+    }
+
+    /**
+     * Returns extra arguments specified in the Feed export policy.
+     *
+     * @param feedCluster
+     * @return
+     * @throws FalconException
+     */
+    public static Map<String, String> getExportArguments(org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+        throws FalconException {
+
+        Map<String, String> argsMap = new HashMap<String, String>();
+        if (feedCluster.getExport().getArguments() == null) {
+            return argsMap;
+        }
+
+        for(org.apache.falcon.entity.v0.feed.Argument p : feedCluster.getExport().getArguments().getArguments()) {
+            argsMap.put(p.getName().toLowerCase(), p.getValue());
+        }
+        return argsMap;
+    }
+
+    public static Validity getClusterValidity(Feed feed, String clusterName) throws FalconException {
+        Cluster cluster = getCluster(feed, clusterName);
+        if (cluster == null) {
+            throw new FalconException("Invalid cluster: " + clusterName + " for feed: " + feed.getName());
+        }
+        return cluster.getValidity();
+    }
+
+    public static Frequency getOldRetentionFrequency(Feed feed) {
+        Frequency feedFrequency = feed.getFrequency();
+        Frequency defaultFrequency = new Frequency("hours(24)");
+        if (DateUtil.getFrequencyInMillis(feedFrequency) < DateUtil.getFrequencyInMillis(defaultFrequency)) {
+            return new Frequency("hours(6)");
+        } else {
+            return defaultFrequency;
+        }
+    }
+
+    public static Frequency getRetentionFrequency(Feed feed, Cluster feedCluster) throws FalconException {
+        Frequency retentionFrequency;
+        retentionFrequency = getLifecycleRetentionFrequency(feed, feedCluster.getName());
+        if (retentionFrequency == null) {
+            retentionFrequency = getOldRetentionFrequency(feed);
+        }
+        return retentionFrequency;
+    }
+
+    public static int getRetentionLimitInSeconds(Feed feed, String clusterName) throws FalconException {
+        Frequency retentionLimit = new Frequency("minutes(0)");
+        RetentionStage retentionStage = getRetentionStage(feed, clusterName);
+        if (retentionStage != null) {
+            for (Property property : retentionStage.getProperties().getProperties()) {
+                if (property.getName().equalsIgnoreCase("retention.policy.agebaseddelete.limit")) {
+                    retentionLimit = new Frequency(property.getValue());
+                    break;
+                }
+            }
+        } else {
+            retentionLimit = getCluster(feed, clusterName).getRetention().getLimit();
+        }
+        Long freqInMillis = DateUtil.getFrequencyInMillis(retentionLimit);
+        return (int) (freqInMillis/1000);
     }
 }

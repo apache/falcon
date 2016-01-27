@@ -87,17 +87,10 @@ import java.util.regex.Pattern;
 /**
  * Base test class for CLI, Entity and Process Instances.
  */
-public class TestContext {
-    public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
-    public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
-    public static final String FEED_TEMPLATE3 = "/feed-template3.xml";
+public class TestContext extends AbstractTestContext {
 
     public static final String DATASOURCE_TEMPLATE = "/datasource-template.xml";
-
     public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
-
-    public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
-    public static final String PROCESS_TEMPLATE = "/process-template.xml";
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "https://localhost:41443/falcon-webapp";
@@ -477,14 +470,6 @@ public class TestContext {
         return tmpFile.getAbsolutePath();
     }
 
-    public static File getTempFile() throws IOException {
-        return getTempFile("test", ".xml");
-    }
-
-    public static File getTempFile(String prefix, String suffix) throws IOException {
-        return getTempFile("target", prefix, suffix);
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static File getTempFile(String path, String prefix, String suffix) throws IOException {
         File f = new File(path);
@@ -521,18 +506,6 @@ public class TestContext {
 
     public static void prepare() throws Exception {
         prepare(TestContext.CLUSTER_TEMPLATE, true);
-    }
-
-    private static void mkdir(FileSystem fs, Path path) throws Exception {
-        if (!fs.exists(path) && !fs.mkdirs(path)) {
-            throw new Exception("mkdir failed for " + path);
-        }
-    }
-
-    private static void mkdir(FileSystem fs, Path path, FsPermission perm) throws Exception {
-        if (!fs.exists(path) && !fs.mkdirs(path, perm)) {
-            throw new Exception("mkdir failed for " + path);
-        }
     }
 
     public static void prepare(String clusterTemplate, boolean disableLineage) throws Exception {

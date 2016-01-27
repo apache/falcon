@@ -42,6 +42,7 @@ import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
 import org.apache.oozie.client.WorkflowJob;
@@ -79,7 +80,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
-        StartupProperties.get().setProperty("falcon.state.store.impl",
+        StateStoreProperties.get().setProperty("falcon.state.store.impl",
                 "org.apache.falcon.state.store.InMemoryStateStore");
         stateStore = AbstractStateStore.get();
         scheduler = Mockito.spy(new SchedulerService());
@@ -287,6 +288,11 @@ public class SchedulerServiceTest extends AbstractTestBase {
                     failed = true;
                 }
             }
+
+            @Override
+            public PRIORITY getPriority() {
+                return PRIORITY.MEDIUM;
+            }
         };
         SchedulerService.JobScheduleRequestBuilder request = (SchedulerService.JobScheduleRequestBuilder)
                 scheduler.createRequestBuilder(failureHandler, instance1.getId());
@@ -316,6 +322,11 @@ public class SchedulerServiceTest extends AbstractTestBase {
             } else {
                 stateStore.updateExecutionInstance(state);
             }
+        }
+
+        @Override
+        public PRIORITY getPriority() {
+            return PRIORITY.MEDIUM;
         }
     }
 }

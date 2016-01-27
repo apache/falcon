@@ -85,6 +85,7 @@ public class EntityPageTest extends BaseUITestClass {
         bundles[0].setProcessPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setOutputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
+        bundles[0].setInputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
 
         openBrowser();
         final LoginPage loginPage = LoginPage.open(getDriver());
@@ -295,14 +296,15 @@ public class EntityPageTest extends BaseUITestClass {
 
         InstanceUtil.waitTillInstanceReachState(clusterOC, process.getName(), 1,
             CoordinatorAction.Status.WAITING, EntityType.PROCESS, 1);
-        final List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startTime,
-            TimeUtil.addMinsToTime(endTime, -5), 5);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
 
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, process.getName(), 0, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, process.getName(), 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 5);
+
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, process.getName(), 0, 1);
         InstanceUtil.waitTillInstanceReachState(clusterOC, process.getName(), 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
+
         //suspend the second instance
         prism.getProcessHelper().getProcessInstanceSuspend(process.getName(),
             "?start=" + TimeUtil.addMinsToTime(startTime, 5)

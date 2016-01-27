@@ -118,12 +118,12 @@ public class TestFalconUnit extends FalconUnitTestBase {
         waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
         result = getClient().suspend(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
         assertStatus(result);
-        result = getClient().getStatus(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
+        result = getClient().getStatus(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null, false);
         assertStatus(result);
         Assert.assertEquals(result.getMessage(), "SUSPENDED");
         result = getClient().resume(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
         assertStatus(result);
-        result = getClient().getStatus(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null);
+        result = getClient().getStatus(EntityType.PROCESS, PROCESS_NAME, CLUSTER_NAME, null, false);
         assertStatus(result);
         Assert.assertEquals(result.getMessage(), "RUNNING");
     }

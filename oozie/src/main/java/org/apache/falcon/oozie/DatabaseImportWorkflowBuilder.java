@@ -99,7 +99,7 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
 
     private StringBuilder buildDriverArgs(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        Datasource db = DatasourceHelper.getDatasource(feedCluster);
+        Datasource db = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
         if ((db.getDriver() != null) && (db.getDriver().getClazz() != null)) {
             builder.append("--driver").append(ARG_SEPARATOR).append(db.getDriver().getClazz());
         }
@@ -109,7 +109,8 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
     private StringBuilder buildConnectArg(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         return builder.append("--connect").append(ARG_SEPARATOR)
-                .append(DatasourceHelper.getReadOnlyEndpoint(DatasourceHelper.getDatasource(feedCluster)));
+                .append(DatasourceHelper.getReadOnlyEndpoint(
+                        DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster))));
     }
 
     private StringBuilder buildTableArg(StringBuilder builder, Cluster cluster) throws FalconException {
@@ -120,7 +121,7 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
 
     private StringBuilder buildUserPasswordArg(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        Datasource db = DatasourceHelper.getDatasource(feedCluster);
+        Datasource db = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
         Pair<String, String> userPasswdInfo = DatasourceHelper.getReadPasswordInfo(db);
         builder.append("--username").append(ARG_SEPARATOR)
                 .append(userPasswdInfo.first)

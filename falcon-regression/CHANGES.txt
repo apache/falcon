@@ -5,6 +5,16 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1699 Test fixes for RetentionTest, LineageApiTest, TouchAPIPrismAndServerTest, FeedReplicationTest and few fortifications(Paul Isaychuk via Pragya Mittal)
+
+   FALCON-1698 New tests for ProcessSetupTest, ClusterSetupTest, UI test fixes(Paul Isaychuk via Ajay Yadava)
+
+   FALCON-1700 Add new test cases to HiveDRTest(Paul Isaychuk & Murali Ramasami via Ajay Yadava)
+
+   FALCON-1689 NoOutputProcessTest fails due to scheme missing in workflow.xml(Pragya Mittal)
+
+   FALCON-1377 Add tests in Falcon for the Triage API(Karishma Gulati via Pragya Mittal)
+
    FALCON-1546 Add ProcessUpdateTest, PipelineInstanceDependencyTest and other tests and test fixes
     (Raghav Gautam and Paul Isaychuk via Paul Isaychuk)
 
@@ -105,6 +115,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1697 Stabilization of scenarios which are based on instances lifecycle(Paul Isaychuk via Ajay Yadava)
+
    FALCON-1543 Upgrade Falcon regression to use Active MQ 5.12(Pragya Mittal via Pallavi Rao)
 
    FALCON-1502 Checkstyle failures in Falcon Regression(Pragya Mittal via Ajay Yadava)
@@ -375,6 +387,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1701 HiveDr, ClusterSetupTest, MirrorSummaryTest fixes(Murali Ramasami via Ajay Yadava)
+
    FALCON-1489 Partial status http response code returns 200(Pragya Mittal via Ajay Yadava)
 
    FALCON-1388 Fix merge conflicts produced by FALCON-1002 (Paul Isaychuk)
