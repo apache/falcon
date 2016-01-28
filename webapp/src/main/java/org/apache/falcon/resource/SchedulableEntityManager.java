@@ -27,8 +27,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconWebException;
@@ -55,6 +57,91 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         } catch (Throwable throwable) {
             throw FalconWebException.newAPIException(throwable);
         }
+    }
+
+    /**
+     * Delete the specified entity.
+     * @param request Servlet Request
+     * @param type Valid options are cluster, feed or process.
+     * @param entity Name of the entity.
+     * @param ignore colo is ignored
+     * @return Results of the delete operation.
+     */
+    @DELETE
+    @Path("delete/{type}/{entity}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "delete")
+    @Override
+    public APIResult delete(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("colo") @QueryParam("colo") String ignore) {
+        throw FalconWebException.newAPIException("delete on server is not" +
+                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+    }
+    /**
+     * Updates the submitted entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param entityName Name of the entity.
+     * @param ignore colo is ignored
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
+    @POST
+    @Path("update/{type}/{entity}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "update")
+    @Override
+    public APIResult update(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entityName,
+            @Dimension("colo") @QueryParam("colo") String ignore,
+            @QueryParam("skipDryRun") final Boolean skipDryRun) {
+        throw FalconWebException.newAPIException("update on server is not" +
+                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+    }
+
+    /**
+     * Submits and schedules an entity.
+     * @param request Servlet Request
+     * @param type Valid options are feed or process.
+     * @param coloExpr Colo on which the query should be run.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the submit and schedule command.
+     */
+    @POST
+    @Path("submitAndSchedule/{type}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "submitAndSchedule")
+    @Override
+    public APIResult submitAndSchedule(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("colo") @QueryParam("colo") String coloExpr,
+            @QueryParam("skipDryRun") Boolean skipDryRun,
+            @QueryParam("properties") String properties) {
+        throw FalconWebException.newAPIException("submitAndSchedule on server is not" +
+                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+    }
+    /**
+     * Submit the given entity.
+     * @param request Servlet Request
+     * @param type Valid options are cluster, feed or process.
+     * @param ignore colo is ignored
+     * @return Result of the submission.
+     */
+    @POST
+    @Path("submit/{type}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "submit")
+    @Override
+    public APIResult submit(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("colo") @QueryParam("colo") final String ignore) {
+        throw FalconWebException.newAPIException("submit on server is not" +
+                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
     }
 
     @GET
