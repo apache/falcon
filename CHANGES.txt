@@ -9,7 +9,10 @@ Trunk
     FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
 
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
+
   IMPROVEMENTS
+    FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
+
     FALCON-1764 Remove temporary folder "localhost" created during tests(Praveen Adlakha via Ajay Yadava)
 
     FALCON-1756 Remove PID files on service stop(Deepak Barr via Ajay Yadava)

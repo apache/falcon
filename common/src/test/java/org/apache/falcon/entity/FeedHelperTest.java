@@ -53,6 +53,7 @@ import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.service.LifecyclePolicyMap;
+import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -196,6 +197,17 @@ public class FeedHelperTest extends AbstractTestBase {
                 cluster);
         Assert.assertTrue(result.isEmpty());
     }
+
+    @Test
+    public void testGetFeedValidityStartAndNextInstance() throws Exception {
+        Cluster cluster = publishCluster();
+        Feed feed = publishFeed(cluster, "minutes(5)", "2011-02-28 10:00 UTC", "2016-02-28 10:00 UTC");
+        Date date = FeedHelper.getFeedValidityStart(feed, cluster.getName());
+        Assert.assertEquals(DateUtil.getDateFormatFromTime(date.getTime()), "2011-02-28T10:00Z");
+        Date nextDate = FeedHelper.getNextFeedInstanceDate(date, feed);
+        Assert.assertEquals(DateUtil.getDateFormatFromTime(nextDate.getTime()), "2011-02-28T10:05Z");
+    }
+
 
     @Test
     public void testGetConsumersFirstInstance() throws Exception {

@@ -34,6 +34,7 @@ public class CatalogPartition {
     private String outputFormat;
     private String location;
     private String serdeInfo;
+    private long size = -1;
 
     protected CatalogPartition() {
     }
@@ -73,6 +74,8 @@ public class CatalogPartition {
     protected void setSerdeInfo(String serdeInfo) {
         this.serdeInfo = serdeInfo;
     }
+
+    public void setSize(long size) { this.size = size; }
 
     /**
      * Gets the database name.
@@ -156,14 +159,21 @@ public class CatalogPartition {
         return this.values;
     }
 
+    /**
+     * Gets the size.
+     *
+     * @return the size
+     */
+    public long getSize() { return size; }
+
     @Override
     public String toString() {
         return "CatalogPartition ["
-            + (tableName != null ? "tableName=" + tableName + ", " : "tableName=null")
-            + (databaseName != null ? "dbName=" + databaseName + ", " : "dbName=null")
-            + (values != null ? "values=" + values + ", " : "values=null")
-            + "createTime=" + createTime + ", lastAccessTime="
-            + lastAccessTime + ", " + "]";
+            + (tableName != null ? "tableName=" + tableName + ", " : "tableName=null, ")
+            + (databaseName != null ? "dbName=" + databaseName + ", " : "dbName=null, ")
+            + (values != null ? "values=" + values + ", " : "values=null, ")
+            + "size=" + size + ", " + "createTime=" + createTime + ", lastAccessTime="
+            + lastAccessTime + "]";
     }
 
 }
