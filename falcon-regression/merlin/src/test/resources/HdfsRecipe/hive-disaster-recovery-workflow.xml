@@ -47,6 +47,10 @@
                     <name>oozie.launcher.oozie.libpath</name>
                     <value>${wf:conf("falcon.libpath")}</value>
                 </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${drSourceClusterFS},${drTargetClusterFS}</value>
+                </property>
             </configuration>
             <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
@@ -56,7 +60,7 @@
             <arg>-mapBandwidth</arg>
             <arg>${distcpMapBandwidth}</arg>
             <arg>-sourcePaths</arg>
-            <arg>${drSourceClusterFS}${drSourceDir}</arg>
+            <arg>${drSourceDir}</arg>
             <arg>-targetPath</arg>
             <arg>${drTargetClusterFS}${drTargetDir}</arg>
             <arg>-falconFeedStorageType</arg>
@@ -64,7 +68,7 @@
             <arg>-availabilityFlag</arg>
             <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
             <arg>-counterLogDir</arg>
-            <arg>${logDir}/job-${nominalTime}</arg>
+            <arg>${logDir}/job-${nominalTime}/${srcClusterName == 'NA' ? '' : srcClusterName}</arg>
         </java>
         <ok to="end"/>
         <error to="fail"/>
