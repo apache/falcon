@@ -181,7 +181,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
                                 Integer.toString(instances[0].getRunId()));
                     }
                 } catch (FalconException e) {
-                    // Do Nothing. The workflow may not have been deployed on this cluster.
+                    // Do Nothing. Move on to the next cluster.
                     continue;
                 }
                 contextMap.put(context.getWorkflowId(), wfProps);
