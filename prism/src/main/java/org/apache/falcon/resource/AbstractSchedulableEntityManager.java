@@ -101,9 +101,9 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             }
             LOG.info("Memory lock obtained for {} by {}", entityObj.toShortString(), Thread.currentThread().getName());
             WorkflowEngineFactory.getWorkflowEngine(entityObj, properties).schedule(entityObj, skipDryRun, properties);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Entity schedule failed for " + type + ": " + entity, e);
-            throw FalconWebException.newAPIException("Entity schedule failed for " + type + ": " + entity);
+            throw FalconWebException.newAPIException(e);
         } finally {
             if (entityObj != null) {
                 memoryLocks.releaseLock(entityObj);
