@@ -67,6 +67,24 @@ public class EntitySummaryResult extends APIResult {
         this.entitySummaries = entitySummaries;
     }
 
+    @Override
+    public Object[] getCollection() {
+        return entitySummaries;
+    }
+
+    @Override
+    public void setCollection(Object[] items) {
+        if (items == null) {
+            setEntitySummaries(new EntitySummary[0]);
+        } else {
+            EntitySummary[] summaries = new EntitySummary[items.length];
+            for (int index = 0; index < items.length; index++) {
+                summaries[index] = (EntitySummary)items[index];
+            }
+            setEntitySummaries(summaries);
+        }
+    }
+
     /**
      * A single entity object inside entity summary result.
      */
