@@ -47,10 +47,11 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String UPDATE_OPT = "update";
     public static final String UPDATE_OPT_DESCRIPTION = "Updates an existing entity";
     public static final String DELETE_OPT = "delete";
-    public static final String DELETE_OPT_DESCRIPTION = "Deletes an entity in Falcon, and kills its instance from workflow engine";
+    public static final String DELETE_OPT_DESCRIPTION = "Deletes an entity in Falcon, and kills its instance from "
+            + "workflow engine";
     public static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
-    public static final String SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION
-            = "Submits an entity to Falcon and schedules it immediately";
+    public static final String SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION = "Submits an entity to Falcon and "
+            + "schedules it immediately";
     public static final String VALIDATE_OPT = "validate";
     public static final String VALIDATE_OPT_DESCRIPTION = "Validates an entity based on the entity type";
     public static final String DEFINITION_OPT = "definition";
@@ -63,8 +64,8 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String PATH_OPT = "path";
     public static final String PATH_OPT_DESCRIPTION = "Path for a feed's instance";
     public static final String TOUCH_OPT = "touch";
-    public static final String TOUCH_OPT_DESCRIPTION
-            = "Force update the entity in workflow engine(even without any changes to entity)";
+    public static final String TOUCH_OPT_DESCRIPTION = "Force update the entity in workflow engine"
+            + "(even without any changes to entity)";
     public static final String PROPS_OPT = "properties";
     public static final String PROPS_OPT_DESCRIPTION = "User supplied comma separated key value properties";
     public static final String FIELDS_OPT = "fields";
@@ -72,12 +73,12 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String TAGS_OPT = "tags";
     public static final String TAGS_OPT_DESCRIPTION = "Filter returned entities by the specified tags";
     public static final String NUM_INSTANCES_OPT = "numInstances";
-    public static final String NUM_INSTANCES_OPT_DESCRIPTION = "Number of instances to return per entity summary request";
+    public static final String NUM_INSTANCES_OPT_DESCRIPTION = "Number of instances to return per entity "
+            + "summary request";
     public static final String NAMESEQ_OPT = "nameseq";
     public static final String NAMESEQ_OPT_DESCRIPTION = "Subsequence of entity name";
     public static final String TAGKEYS_OPT = "tagkeys";
     public static final String TAGKEYS_OPT_DESCRIPTION = "Keywords in tags";
-    public static final String COLO_OPT_DESCRIPTION = "Colo name";
     public static final String OFFSET_OPT_DESCRIPTION = "Start returning entities from this offset";
     public static final String SHOWSCHEDULER_OPT = "showScheduler";
     public static final String SHOWSCHEDULER_OPT_DESCRIPTION = "To return the scheduler "
@@ -182,7 +183,7 @@ public class FalconEntityCLI extends FalconCLI {
         return entityOptions;
     }
 
-    public void entityCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException, IOException {
+    public void entityCommand(CommandLine commandLine, FalconClient client) throws IOException {
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -326,13 +327,13 @@ public class FalconEntityCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private void validateColo(Set<String> optionsList) throws FalconCLIException {
+    private void validateColo(Set<String> optionsList) {
         if (optionsList.contains(COLO_OPT)) {
             throw new FalconCLIException("Invalid argument : " + COLO_OPT);
         }
     }
 
-    public static void validateEntityFields(String fields) throws FalconCLIException {
+    public static void validateEntityFields(String fields) {
         if (StringUtils.isEmpty(fields)) {
             return;
         }
@@ -346,7 +347,7 @@ public class FalconEntityCLI extends FalconCLI {
         }
     }
 
-    private Date parseDateString(String time) throws FalconCLIException {
+    private Date parseDateString(String time) {
         if (time != null && !time.isEmpty()) {
             try {
                 return SchemaHelper.parseDateUTC(time);

@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
-import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class FalconAdminCLI extends FalconCLI {
     }
 
     public int adminCommand(CommandLine commandLine, FalconClient client,
-                             String falconUrl) throws FalconCLIException, IOException {
+                             String falconUrl) throws IOException {
         String result;
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {

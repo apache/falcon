@@ -68,7 +68,7 @@ public class FalconRecipeCLI extends FalconCLI {
         return recipeOptions;
     }
 
-    public void recipeCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
+    public void recipeCommand(CommandLine commandLine, FalconClient client) {
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -94,7 +94,7 @@ public class FalconRecipeCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private static void validateRecipeOperations(String recipeOperation) throws FalconCLIException {
+    private static void validateRecipeOperations(String recipeOperation) {
         for(RecipeOperation operation : RecipeOperation.values()) {
             if (operation.toString().equalsIgnoreCase(recipeOperation)) {
                 return;
@@ -104,8 +104,7 @@ public class FalconRecipeCLI extends FalconCLI {
                 + java.util.Arrays.asList((RecipeOperation.values())));
     }
 
-    private static void validateRecipePropertiesFile(String recipePropertiesFile, String recipeName)
-        throws FalconCLIException {
+    private static void validateRecipePropertiesFile(String recipePropertiesFile, String recipeName) {
         if (StringUtils.isBlank(recipePropertiesFile)) {
             return;
         }

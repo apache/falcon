@@ -29,7 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static org.apache.falcon.cli.FalconCLI.*;
+import static org.apache.falcon.cli.FalconCLI.CURRENT_COLO;
+import static org.apache.falcon.cli.FalconCLI.FALCON_URL;
 
 /**
  * Common code for all falcon command classes.
@@ -42,7 +43,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
     protected static final String FALCON_URL_ABSENT = "Failed to get falcon url from environment or client properties";
     private static Properties clientProperties;
     private static Properties backupProperties = new Properties();
-    protected static FalconClient client;
+    private static FalconClient client;
 
     protected static Properties getClientProperties() {
         if (clientProperties == null) {
@@ -108,6 +109,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
         }
         return colo;
     }
+
     protected String getDoAs() {
         return getClientProperties().getProperty(DO_AS_PROPERTY);
     }

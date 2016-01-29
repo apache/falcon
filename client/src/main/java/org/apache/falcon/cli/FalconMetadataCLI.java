@@ -128,7 +128,7 @@ public class FalconMetadataCLI extends FalconCLI {
         return metadataOptions;
     }
 
-    public void metadataCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
+    public void metadataCommand(CommandLine commandLine, FalconClient client) {
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -194,13 +194,13 @@ public class FalconMetadataCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private void validatePipelineName(String pipeline) throws FalconCLIException {
+    private void validatePipelineName(String pipeline) {
         if (StringUtils.isEmpty(pipeline)) {
             throw new FalconCLIException("Invalid value for pipeline");
         }
     }
 
-    private void validateDimensionType(String dimensionType) throws FalconCLIException {
+    private void validateDimensionType(String dimensionType) {
         if (StringUtils.isEmpty(dimensionType)
                 ||  dimensionType.contains("INSTANCE")) {
             throw new FalconCLIException("Invalid value provided for queryParam \"type\" " + dimensionType);
@@ -212,13 +212,13 @@ public class FalconMetadataCLI extends FalconCLI {
         }
     }
 
-    private void validateDimensionName(String dimensionName, String action) throws FalconCLIException {
+    private void validateDimensionName(String dimensionName, String action) {
         if (StringUtils.isEmpty(dimensionName)) {
             throw new FalconCLIException("Dimension ID cannot be empty or null for action " + action);
         }
     }
 
-    private void validateScheduleEntity(String schedEntityType, String schedEntityName) throws FalconCLIException {
+    private void validateScheduleEntity(String schedEntityType, String schedEntityName) {
         if (StringUtils.isBlank(schedEntityType)) {
             throw new FalconCLIException("Entity must be schedulable type : -feed/process");
         }
@@ -228,13 +228,13 @@ public class FalconMetadataCLI extends FalconCLI {
         }
     }
 
-    private void validateId(String id) throws FalconCLIException {
+    private void validateId(String id) {
         if (id == null || id.length() == 0) {
             throw new FalconCLIException("Missing argument: id");
         }
     }
 
-    private void validateVerticesCommand(String key, String value) throws FalconCLIException {
+    private void validateVerticesCommand(String key, String value) {
         if (key == null || key.length() == 0) {
             throw new FalconCLIException("Missing argument: key");
         }
@@ -244,7 +244,7 @@ public class FalconMetadataCLI extends FalconCLI {
         }
     }
 
-    private void validateVertexEdgesCommand(String id, String direction) throws FalconCLIException {
+    private void validateVertexEdgesCommand(String id, String direction) {
         if (id == null || id.length() == 0) {
             throw new FalconCLIException("Missing argument: id");
         }

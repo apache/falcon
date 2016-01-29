@@ -30,13 +30,13 @@ public class FalconConnectionCommandsTest extends FalconCLITest {
     public Object[][] provideCommands() {
         FalconCLIException e = new FalconCLIException(BaseFalconCommands.FALCON_URL_ABSENT);
         return new Object[][]{
-                {"get", null, e},
-                {"set a=b", null, null},
-                {"get", null, e},
-                {"get a", null, e},
-                {"set falcon.url=DUMMY", null, null},
-                {"get", "{a=b, falcon.url=DUMMY}", null},
-                {"get a", "b", null}
+            {"get", null, e},
+            {"set a=b", null, null},
+            {"get", null, e},
+            {"get a", null, e},
+            {"set falcon.url=DUMMY", null, null},
+            {"get", "{a=b, falcon.url=DUMMY}", null},
+            {"get a", "b", null},
         };
     }
 

@@ -155,7 +155,7 @@ public class FalconClient extends AbstractFalconClient {
      * @param falconUrl of the server to which client interacts
      * @throws FalconCLIException - If unable to initialize SSL Props
      */
-    public FalconClient(String falconUrl) throws FalconCLIException {
+    public FalconClient(String falconUrl) {
         this(falconUrl, new Properties());
     }
 
@@ -166,7 +166,7 @@ public class FalconClient extends AbstractFalconClient {
      * @param properties client properties
      * @throws FalconCLIException - If unable to initialize SSL Props
      */
-    public FalconClient(String falconUrl, Properties properties) throws FalconCLIException {
+    public FalconClient(String falconUrl, Properties properties)  {
         try {
             String baseUrl = notEmpty(falconUrl, "FalconUrl");
             if (!baseUrl.endsWith("/")) {
@@ -215,7 +215,7 @@ public class FalconClient extends AbstractFalconClient {
         this.debugMode = debugMode;
     }
 
-    public static AuthenticatedURL.Token getToken(String baseUrl) throws FalconCLIException {
+    public static AuthenticatedURL.Token getToken(String baseUrl)  {
         AuthenticatedURL.Token currentToken = new AuthenticatedURL.Token();
         try {
             URL url = new URL(baseUrl + AUTH_URL);
@@ -343,7 +343,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult schedule(EntityType entityType, String entityName, String colo,
-                              Boolean skipDryRun, String doAsUser, String properties) throws FalconCLIException {
+                              Boolean skipDryRun, String doAsUser, String properties) {
         String type = entityType.toString().toLowerCase();
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SCHEDULE.path, type, entityName)
             .addQueryParam(COLO, colo).addQueryParam(SKIP_DRYRUN, skipDryRun)
@@ -351,31 +351,28 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser)
-        throws FalconCLIException {
+    public APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser) {
         String type = entityType.toString().toLowerCase();
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SUSPEND.path, type, entityName)
             .addQueryParam(COLO, colo).addQueryParam(DO_AS_OPT, doAsUser).call(Entities.SUSPEND);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser)
-        throws FalconCLIException {
+    public APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser) {
         String type = entityType.toString().toLowerCase();
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.RESUME.path, type, entityName)
             .addQueryParam(COLO, colo).addQueryParam(DO_AS_OPT, doAsUser).call(Entities.RESUME);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult delete(EntityType entityType, String entityName, String doAsUser) throws FalconCLIException {
+    public APIResult delete(EntityType entityType, String entityName, String doAsUser) {
         String type = entityType.toString().toLowerCase();
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.DELETE.path, type, entityName)
             .addQueryParam(DO_AS_OPT, doAsUser).call(Entities.DELETE);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult validate(String entityType, String filePath, Boolean skipDryRun, String doAsUser)
-        throws FalconCLIException {
+    public APIResult validate(String entityType, String filePath, Boolean skipDryRun, String doAsUser) {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.VALIDATE.path, entityType)
             .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
@@ -383,8 +380,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult submit(String entityType, String filePath, String doAsUser)
-        throws FalconCLIException {
+    public APIResult submit(String entityType, String filePath, String doAsUser) {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SUBMIT.path, entityType)
             .addQueryParam(DO_AS_OPT, doAsUser).call(Entities.SUBMIT, entityStream);
@@ -392,7 +388,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult update(String entityType, String entityName, String filePath,
-                            Boolean skipDryRun, String doAsUser) throws FalconCLIException {
+                            Boolean skipDryRun, String doAsUser) {
         InputStream entityStream = getServletInputStream(filePath);
         Entities operation = Entities.UPDATE;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityType, entityName)
@@ -403,7 +399,7 @@ public class FalconClient extends AbstractFalconClient {
 
     @Override
     public APIResult submitAndSchedule(String entityType, String filePath, Boolean skipDryRun,
-                                       String doAsUser, String properties) throws FalconCLIException {
+                                       String doAsUser, String properties) {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SUBMITANDSCHEDULE.path, entityType)
             .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
@@ -412,7 +408,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult getStatus(EntityType entityType, String entityName, String colo,
-                               String doAsUser, boolean showScheduler) throws FalconCLIException {
+                               String doAsUser, boolean showScheduler) {
         String type = entityType.toString().toLowerCase();
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.STATUS.path, type, entityName)
             .addQueryParam(COLO, colo).addQueryParam(DO_AS_OPT, doAsUser)
@@ -421,15 +417,14 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public Entity getDefinition(String entityType, String entityName, String doAsUser) throws FalconCLIException {
+    public Entity getDefinition(String entityType, String entityName, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.DEFINITION.path, entityType, entityName)
             .call(Entities.DEFINITION);
         String entity = getResponseAsString(clientResponse);
         return Entity.fromString(EntityType.getEnum(entityType), entity);
     }
 
-    public EntityList getDependency(String entityType, String entityName, String doAsUser)
-        throws FalconCLIException {
+    public EntityList getDependency(String entityType, String entityName, String doAsUser) {
 
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.DEPENDENCY.path, entityType, entityName)
             .addQueryParam(DO_AS_OPT, doAsUser).call(Entities.DEPENDENCY);
@@ -447,7 +442,7 @@ public class FalconClient extends AbstractFalconClient {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 
     public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
-                                           String startTime, String endTime, String colo) throws FalconCLIException {
+                                           String startTime, String endTime, String colo) {
         ClientResponse clientResponse  = new ResourceBuilder().path(Entities.SLA.path, entityType)
             .addQueryParam(START, startTime).addQueryParam(COLO, colo).addQueryParam(END, endTime)
             .addQueryParam(ENTITY_NAME, entityName).call(Entities.SLA);
@@ -455,7 +450,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public TriageResult triage(String entityType, String entityName, String instanceTime,
-                               String colo) throws FalconCLIException {
+                               String colo) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.TRIAGE.path, entityType, entityName)
             .addQueryParam(START, instanceTime).addQueryParam(COLO, colo).call(Instances.TRIAGE);
         return getResponse(TriageResult.class, clientResponse);
@@ -464,7 +459,7 @@ public class FalconClient extends AbstractFalconClient {
     @Override
     public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
-                                    Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
+                                    Integer offset, Integer numResults, String doAsUser) {
         Entities operation = Entities.LIST;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityType)
             .addQueryParam(DO_AS_OPT, doAsUser).addQueryParam(NUM_RESULTS, numResults)
@@ -488,7 +483,7 @@ public class FalconClient extends AbstractFalconClient {
     public EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
                                    String fields, String filterBy, String filterTags,
                                    String orderBy, String sortOrder, Integer offset, Integer numResults,
-                                   Integer numInstances, String doAsUser) throws FalconCLIException {
+                                   Integer numInstances, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.SUMMARY.path, entityType)
             .addQueryParam(CLUSTER, cluster).addQueryParam(START, start).addQueryParam(END, end)
             .addQueryParam(SORT_ORDER, sortOrder).addQueryParam(ORDER_BY, orderBy)
@@ -501,7 +496,7 @@ public class FalconClient extends AbstractFalconClient {
 
     @Override
     public APIResult touch(String entityType, String entityName, String colo,
-                           Boolean skipDryRun, String doAsUser) throws FalconCLIException {
+                           Boolean skipDryRun, String doAsUser) {
         Entities operation = Entities.TOUCH;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityType, entityName)
             .addQueryParam(COLO, colo).addQueryParam(SKIP_DRYRUN, skipDryRun)
@@ -511,7 +506,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
                                       String filterBy, String orderBy, String sortOrder,
-                                      Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
+                                      Integer offset, Integer numResults, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.RUNNING.path, type, entity)
             .addQueryParam(FILTER_BY, filterBy).addQueryParam(ORDER_BY, orderBy)
             .addQueryParam(SORT_ORDER, sortOrder).addQueryParam(OFFSET, offset)
@@ -524,7 +519,7 @@ public class FalconClient extends AbstractFalconClient {
     public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
                                                 List<LifeCycle> lifeCycles, String filterBy, String orderBy,
                                                 String sortOrder, Integer offset, Integer numResults,
-                                                String doAsUser, Boolean allAttempts) throws FalconCLIException {
+                                                String doAsUser, Boolean allAttempts) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.STATUS.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(FILTER_BY, filterBy)
@@ -538,7 +533,7 @@ public class FalconClient extends AbstractFalconClient {
                                         String start, String end,
                                         String colo, List<LifeCycle> lifeCycles,
                                         String filterBy, String orderBy, String sortOrder,
-                                        String doAsUser) throws FalconCLIException {
+                                        String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.SUMMARY.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(USER, doAsUser).call(Instances.SUMMARY);
@@ -546,7 +541,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public FeedInstanceResult getFeedListing(String type, String entity, String start,
-                                     String end, String colo, String doAsUser) throws FalconCLIException {
+                                     String end, String colo, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.KILL.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(USER, doAsUser).call(Instances.LISTING);
@@ -556,7 +551,7 @@ public class FalconClient extends AbstractFalconClient {
     public InstancesResult killInstances(String type, String entity, String start,
                                 String end, String colo, String clusters,
                                 String sourceClusters, List<LifeCycle> lifeCycles,
-                                String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+                                String doAsUser) throws UnsupportedEncodingException {
         InputStream props = getServletInputStream(clusters, sourceClusters, null);
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.KILL.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
@@ -566,7 +561,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public InstancesResult suspendInstances(String type, String entity, String start, String end, String colo,
                                             String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                            String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+                                            String doAsUser) throws UnsupportedEncodingException {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.SUSPEND.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(USER, doAsUser).call(Instances.SUSPEND);
@@ -575,7 +570,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public InstancesResult resumeInstances(String type, String entity, String start, String end, String colo,
                                            String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                           String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+                                           String doAsUser) throws UnsupportedEncodingException {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.RESUME.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(USER, doAsUser).call(Instances.RESUME);
@@ -585,8 +580,7 @@ public class FalconClient extends AbstractFalconClient {
     public InstancesResult rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
                                  String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                 Boolean isForced, String doAsUser)
-        throws FalconCLIException, IOException {
+                                 Boolean isForced, String doAsUser) throws IOException {
 
         StringBuilder buffer = new StringBuilder();
         if (filePath != null) {
@@ -615,7 +609,7 @@ public class FalconClient extends AbstractFalconClient {
                                               String end, String colo, String runId,
                                               List<LifeCycle> lifeCycles, String filterBy,
                                               String orderBy, String sortOrder, Integer offset,
-                                              Integer numResults, String doAsUser) throws FalconCLIException {
+                                              Integer numResults, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.LOG.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(RUN_ID, runId).addQueryParam(LIFECYCLE, lifeCycles, type)
@@ -629,7 +623,7 @@ public class FalconClient extends AbstractFalconClient {
                                       String start, String colo,
                                       List<LifeCycle> lifeCycles,
                                       String doAsUser)
-        throws FalconCLIException, UnsupportedEncodingException {
+        throws UnsupportedEncodingException {
         if (!DateValidator.validate(start)) {
             throw new FalconCLIException("Start date is mandatory and should be"
                     + " a valid date in  YYYY-MM-DDTHH:MMZ format.");
@@ -641,16 +635,16 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(InstancesResult.class, clientResponse);
     }
 
-    public String getThreadDump(String doAsUser) throws FalconCLIException {
+    public String getThreadDump(String doAsUser) {
         return sendAdminRequest(AdminOperations.STACK, doAsUser);
     }
 
     @Override
-    public String getVersion(String doAsUser) throws FalconCLIException {
+    public String getVersion(String doAsUser) {
         return sendAdminRequest(AdminOperations.VERSION, doAsUser);
     }
 
-    public int getStatus(String doAsUser) throws FalconCLIException {
+    public int getStatus(String doAsUser) {
         AdminOperations job =  AdminOperations.VERSION;
         ClientResponse clientResponse = new ResourceBuilder().path(job.path).addQueryParam(DO_AS_OPT, doAsUser)
             .call(job);
@@ -658,17 +652,17 @@ public class FalconClient extends AbstractFalconClient {
         return clientResponse.getStatus();
     }
 
-    public String getDimensionList(String dimensionType, String cluster, String doAsUser) throws FalconCLIException {
+    public String getDimensionList(String dimensionType, String cluster, String doAsUser) {
         return sendMetadataDiscoveryRequest(MetadataOperations.LIST, dimensionType, null, cluster, doAsUser);
     }
 
     public String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName,
-                                                     Integer numResults, String doAsUser) throws FalconCLIException {
+                                                     Integer numResults, String doAsUser) {
         return sendRequestForReplicationMetrics(MetadataOperations.LIST,
                 schedEntityType, schedEntityName, numResults, doAsUser);
     }
 
-    public LineageGraphResult getEntityLineageGraph(String pipelineName, String doAsUser) throws FalconCLIException {
+    public LineageGraphResult getEntityLineageGraph(String pipelineName, String doAsUser) {
         MetadataOperations operation = MetadataOperations.LINEAGE;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path).addQueryParam(DO_AS_OPT, doAsUser)
             .addQueryParam(FalconMetadataCLI.PIPELINE_OPT, pipelineName).call(operation);
@@ -678,7 +672,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public String getDimensionRelations(String dimensionType, String dimensionName,
-                                        String doAsUser) throws FalconCLIException {
+                                        String doAsUser) {
         return sendMetadataDiscoveryRequest(MetadataOperations.RELATIONS, dimensionType, dimensionName, null, doAsUser);
     }
 
@@ -687,10 +681,8 @@ public class FalconClient extends AbstractFalconClient {
      *
      * @param filePath - Path of file to stream
      * @return ServletInputStream
-     * @throws FalconCLIException
      */
-    private InputStream getServletInputStream(String filePath)
-        throws FalconCLIException {
+    private InputStream getServletInputStream(String filePath) {
 
         if (filePath == null) {
             return null;
@@ -705,13 +697,13 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private <T extends APIResult> T getResponse(Class<T> clazz,
-                                                ClientResponse clientResponse) throws FalconCLIException {
+                                                ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(clazz);
     }
 
-    private String getResponseAsString(ClientResponse clientResponse) throws FalconCLIException {
+    private String getResponseAsString(ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(String.class);
@@ -753,7 +745,7 @@ public class FalconClient extends AbstractFalconClient {
         }
 
         public ResourceBuilder addQueryParam(String paramName, List<LifeCycle> lifeCycles,
-                                             String type) throws FalconCLIException {
+                                             String type) {
             if (lifeCycles != null) {
                 checkLifeCycleOption(lifeCycles, type);
                 for (LifeCycle lifeCycle : lifeCycles) {
@@ -800,7 +792,7 @@ public class FalconClient extends AbstractFalconClient {
         }
     }
 
-    public FeedLookupResult reverseLookUp(String type, String path, String doAsUser) throws FalconCLIException {
+    public FeedLookupResult reverseLookUp(String type, String path, String doAsUser) {
         Entities api = Entities.LOOKUP;
         ClientResponse response = new ResourceBuilder().path(api.path, type).addQueryParam(DO_AS_OPT, doAsUser)
             .addQueryParam(PATH, path).call(api);
@@ -808,7 +800,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end, String colo
-            , String doAsUser) throws FalconCLIException {
+            , String doAsUser) {
 
         checkType(type);
         Instances api = Instances.LISTING;
@@ -820,7 +812,7 @@ public class FalconClient extends AbstractFalconClient {
 
 
     public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName, String instanceTime,
-                                                            String colo) throws FalconCLIException {
+                                                            String colo) {
         checkType(entityType);
         Instances api = Instances.DEPENDENCY;
         ClientResponse clientResponse = new ResourceBuilder().path(api.path, entityType, entityName)
@@ -830,7 +822,7 @@ public class FalconClient extends AbstractFalconClient {
 
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
-    private void checkLifeCycleOption(List<LifeCycle> lifeCycles, String type) throws FalconCLIException {
+    private void checkLifeCycleOption(List<LifeCycle> lifeCycles, String type) {
         if (lifeCycles != null && !lifeCycles.isEmpty()) {
             EntityType entityType = EntityType.getEnum(type);
             for (LifeCycle lifeCycle : lifeCycles) {
@@ -841,7 +833,7 @@ public class FalconClient extends AbstractFalconClient {
         }
     }
 
-    protected void checkType(String type) throws FalconCLIException {
+    protected void checkType(String type) {
         if (type == null || type.isEmpty()) {
             throw new FalconCLIException("entity type is empty");
         } else {
@@ -853,7 +845,7 @@ public class FalconClient extends AbstractFalconClient {
         }
     }
 
-    private String sendAdminRequest(AdminOperations job, String doAsUser) throws FalconCLIException {
+    private String sendAdminRequest(AdminOperations job, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(job.path).addQueryParam(DO_AS_OPT, doAsUser)
             .call(job);
         return getResponseAsString(clientResponse);
@@ -861,7 +853,7 @@ public class FalconClient extends AbstractFalconClient {
 
     private String sendRequestForReplicationMetrics(final MetadataOperations operation, final String schedEntityType,
                                                     final String schedEntityName, Integer numResults,
-                                                    final String doAsUser) throws FalconCLIException {
+                                                    final String doAsUser) {
         WebResource resource = service.path(operation.path)
                 .path(schedEntityName)
                 .path(RelationshipType.REPLICATION_METRICS.getName())
@@ -895,7 +887,7 @@ public class FalconClient extends AbstractFalconClient {
                                                 final String dimensionType,
                                                 final String dimensionName,
                                                 final String cluster,
-                                                final String doAsUser) throws FalconCLIException {
+                                                final String doAsUser) {
         WebResource resource;
         switch (operation) {
         case LIST:
@@ -935,23 +927,23 @@ public class FalconClient extends AbstractFalconClient {
     }
 
 
-    public String getVertex(String id, String doAsUser) throws FalconCLIException {
+    public String getVertex(String id, String doAsUser) {
         return sendMetadataLineageRequest(MetadataOperations.VERTICES, id, doAsUser);
     }
 
-    public String getVertices(String key, String value, String doAsUser) throws FalconCLIException {
+    public String getVertices(String key, String value, String doAsUser) {
         return sendMetadataLineageRequest(MetadataOperations.VERTICES, key, value, doAsUser);
     }
 
-    public String getVertexEdges(String id, String direction, String doAsUser) throws FalconCLIException {
+    public String getVertexEdges(String id, String direction, String doAsUser) {
         return sendMetadataLineageRequestForEdges(MetadataOperations.VERTICES, id, direction, doAsUser);
     }
 
-    public String getEdge(String id, String doAsUser) throws FalconCLIException {
+    public String getEdge(String id, String doAsUser) {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    private String getRecipePath(String recipePropertiesFile) throws FalconCLIException {
+    private String getRecipePath(String recipePropertiesFile) {
         String recipePath = null;
         if (StringUtils.isNotBlank(recipePropertiesFile)) {
             File file = new File(recipePropertiesFile);
@@ -967,7 +959,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public APIResult submitRecipe(String recipeName, String recipeToolClassName,
                                   final String recipeOperation, String recipePropertiesFile, Boolean skipDryRun,
-                                  final String doAsUser) throws FalconCLIException {
+                                  final String doAsUser) {
         String recipePath = getRecipePath(recipePropertiesFile);
 
         if (StringUtils.isEmpty(recipePath)) {
@@ -1022,27 +1014,27 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private String sendMetadataLineageRequest(MetadataOperations job, String id,
-                                              String doAsUser) throws FalconCLIException {
+                                              String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(job.path, id).addQueryParam(DO_AS_OPT, doAsUser)
             .call(job);
         return getResponseAsString(clientResponse);
     }
 
     private String sendMetadataLineageRequest(MetadataOperations job, String key,
-                                              String value, String doAsUser) throws FalconCLIException {
+                                              String value, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(job.path).addQueryParam(DO_AS_OPT, doAsUser)
             .addQueryParam(KEY, key).addQueryParam(VALUE, value).call(job);
         return getResponseAsString(clientResponse);
     }
 
     private String sendMetadataLineageRequestForEdges(MetadataOperations job, String id,
-                                                      String direction, String doAsUser) throws FalconCLIException {
+                                                      String direction, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(job.path, id, direction)
             .addQueryParam(DO_AS_OPT, doAsUser).call(job);
         return getResponseAsString(clientResponse);
     }
 
-    private void checkIfSuccessful(ClientResponse clientResponse) throws FalconCLIException {
+    private void checkIfSuccessful(ClientResponse clientResponse) {
         Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
         if (statusFamily != Response.Status.Family.SUCCESSFUL && statusFamily != Response.Status.Family.INFORMATIONAL) {
             throw FalconCLIException.fromReponse(clientResponse);

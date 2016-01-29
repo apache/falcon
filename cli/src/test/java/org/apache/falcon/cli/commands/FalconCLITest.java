@@ -60,7 +60,8 @@ public class FalconCLITest {
             Assert.assertEquals(commandResult.getResult(), result);
         } else {
             Assert.assertNull(result);
-            Assert.assertEquals(commandResult.getException(), throwable);
+            Assert.assertEquals(commandResult.getException().getClass(), throwable.getClass());
+            Assert.assertEquals(commandResult.getException().getMessage(), throwable.getMessage());
         }
     }
 }

@@ -61,17 +61,18 @@ public class FalconCLI {
     public static final String RECIPE_CMD = "recipe";
 
     public static final String TYPE_OPT = "type";
-    public static final String TYPE_OPT_DESCRIPTION = "Type of the entity. " +
-            "Valid entity types are: cluster, feed, process and datasource.";
+    public static final String TYPE_OPT_DESCRIPTION = "Type of the entity. "
+            + "Valid entity types are: cluster, feed, process and datasource.";
     public static final String COLO_OPT = "colo";
+    public static final String COLO_OPT_DESCRIPTION = "Colo name";
     public static final String END_OPT_DESCRIPTION = "End time is optional for summary";
     public static final String CLUSTER_OPT = "cluster";
     public static final String CLUSTER_OPT_DESCRIPTION = "Cluster name";
     public static final String FEED_OPT = "feed";
     public static final String PROCESS_OPT = "process";
     public static final String ENTITY_NAME_OPT = "name";
-    public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, " +
-            "recommended but not mandatory to be unique.";
+    public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, "
+            + "recommended but not mandatory to be unique.";
     public static final String FILE_PATH_OPT = "file";
     public static final String FILE_PATH_OPT_DESCRIPTION = "Path to entity xml file";
     public static final String VERSION_OPT = "version";
@@ -219,8 +220,7 @@ public class FalconCLI {
         }
     }
 
-    protected Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName)
-        throws FalconCLIException {
+    protected Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName) {
         Integer integer = defaultVal;
         if (optionValue != null) {
             try {
@@ -233,7 +233,7 @@ public class FalconCLI {
         return integer;
     }
 
-    public static void validateEntityTypeForSummary(String type) throws FalconCLIException {
+    public static void validateEntityTypeForSummary(String type) {
         EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
             throw new FalconCLIException("Invalid entity type " + entityType
@@ -241,13 +241,13 @@ public class FalconCLI {
         }
     }
 
-    protected void validateNotEmpty(String paramVal, String paramName) throws FalconCLIException {
+    protected void validateNotEmpty(String paramVal, String paramName) {
         if (StringUtils.isBlank(paramVal)) {
             throw new FalconCLIException("Missing argument : " + paramName);
         }
     }
 
-    protected void validateSortOrder(String sortOrder) throws FalconCLIException {
+    protected void validateSortOrder(String sortOrder) {
         if (!StringUtils.isBlank(sortOrder)) {
             if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
                 throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
@@ -256,7 +256,7 @@ public class FalconCLI {
         }
     }
 
-    protected String getColo(String colo) throws FalconCLIException, IOException {
+    protected String getColo(String colo) throws IOException {
         if (colo == null) {
             Properties prop = getClientProperties();
             colo = prop.getProperty(CURRENT_COLO, "*");
@@ -264,7 +264,7 @@ public class FalconCLI {
         return colo;
     }
 
-    public static void validateFilterBy(String filterBy, String filterType) throws FalconCLIException {
+    public static void validateFilterBy(String filterBy, String filterType) {
         if (StringUtils.isEmpty(filterBy)) {
             return;
         }
@@ -287,7 +287,7 @@ public class FalconCLI {
         }
     }
 
-    public static void validateOrderBy(String orderBy, String action) throws FalconCLIException {
+    public static void validateOrderBy(String orderBy, String action) {
         if (StringUtils.isBlank(orderBy)) {
             return;
         }
@@ -309,7 +309,7 @@ public class FalconCLI {
         throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
     }
 
-    protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {
+    protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(URL_OPTION);
         if (url == null) {
             url = System.getenv(FALCON_URL);
