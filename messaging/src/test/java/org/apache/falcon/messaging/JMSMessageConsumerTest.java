@@ -22,6 +22,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -73,6 +76,9 @@ public class JMSMessageConsumerTest {
                 BROKER_URL, TOPIC_NAME + "," + SECONDARY_TOPIC_NAME, jobEndService);
 
         subscriber.startSubscriber();
+        Process mockProcess = new Process();
+        mockProcess.setName("process1");
+        ConfigurationStore.get().publish(EntityType.PROCESS, mockProcess);
     }
 
     public void sendMessages(String topic, WorkflowExecutionContext.Type type)
@@ -278,6 +284,7 @@ public class JMSMessageConsumerTest {
 
     @AfterMethod
     public void tearDown() throws Exception{
+        ConfigurationStore.get().remove(EntityType.PROCESS, "process1");
         broker.stop();
         subscriber.closeSubscriber();
     }
