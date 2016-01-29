@@ -127,11 +127,11 @@ public class WorkflowJobEndNotificationServiceTest implements WorkflowExecutionL
 
     }
 
-    private void notifyFailure(WorkflowExecutionContext context) {
+    private void notifyFailure(WorkflowExecutionContext context) throws FalconException {
         service.notifyFailure(context);
     }
 
-    private void notifySuccess(WorkflowExecutionContext context) {
+    private void notifySuccess(WorkflowExecutionContext context) throws FalconException {
         service.notifySuccess(context);
     }
 
