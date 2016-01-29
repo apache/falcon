@@ -27,7 +27,7 @@
     <baseDirectory>falcon-${project.version}</baseDirectory>
     <fileSets>
         <fileSet>
-            <directory>src/conf/</directory>
+            <directory>../src/conf/</directory>
             <outputDirectory>conf</outputDirectory>
             <excludes>
                 <exclude>prism-client.properties</exclude>
@@ -35,32 +35,38 @@
         </fileSet>
 
         <fileSet>
-            <directory>client/target/dependency</directory>
+            <directory>../client/target/dependency</directory>
             <outputDirectory>client/lib</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>scheduler/target/dependency</directory>
+            <directory>../scheduler/target/dependency</directory>
             <outputDirectory>client/lib</outputDirectory>
+            <fileMode>0644</fileMode>
         </fileSet>
 
         <fileSet>
-            <directory>oozie-el-extensions/target/dependency</directory>
+            <directory>../oozie-el-extensions/target/dependency</directory>
             <outputDirectory>oozie/libext</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>docs/target/site</directory>
+            <directory>../docs/target/site</directory>
             <outputDirectory>docs</outputDirectory>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>webapp/target/apidocs</directory>
+            <directory>../webapp/target/apidocs</directory>
             <outputDirectory>apidocs</outputDirectory>
         </fileSet>
 
         <fileSet>
-            <directory>src/bin</directory>
+            <directory>../src/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
@@ -71,7 +77,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>logs</directory>
+            <directory>../logs</directory>
             <outputDirectory>logs</outputDirectory>
             <directoryMode>0777</directoryMode>
             <excludes>
@@ -81,64 +87,83 @@
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>.././</directory>
             <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
             <includes>
                 <include>DISCLAIMER.txt</include>
                 <include>NOTICE.txt</include>
                 <include>LICENSE.txt</include>
-                <include>CHANGES.txt</include>
                 <include>README</include>
+            </includes>
+        </fileSet>
+        
+        <fileSet>
+            <directory>../</directory>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <includes>
+                <include>CHANGES.txt</include>
             </includes>
         </fileSet>
 
         <fileSet>
-            <directory>hadoop-dependencies/target/dependency</directory>
+            <directory>../hadoop-dependencies/target/dependency</directory>
             <outputDirectory>hadooplibs</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>src/main/examples</directory>
+            <directory>../src/main/examples</directory>
             <outputDirectory>examples</outputDirectory>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>addons/recipes/hdfs-replication/src/main/resources</directory>
+            <directory>../addons/recipes/hdfs-replication/src/main/resources</directory>
             <outputDirectory>data-mirroring/hdfs-replication</outputDirectory>
+            <fileMode>0644</fileMode>
         </fileSet>
 
         <fileSet>
-            <directory>addons/recipes/hive-disaster-recovery/src/main/resources</directory>
+            <directory>../addons/recipes/hive-disaster-recovery/src/main/resources</directory>
             <outputDirectory>data-mirroring/hive-disaster-recovery</outputDirectory>
+            <fileMode>0644</fileMode>
         </fileSet>
     </fileSets>
 
     <files>
         <file>
-            <source>client/target/falcon-client-${project.version}.jar</source>
+            <source>../client/target/falcon-client-${project.version}.jar</source>
             <outputDirectory>client/lib</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
 
         <file>
-            <source>prism/target/prism.keystore</source>
+            <source>../prism/target/prism.keystore</source>
             <outputDirectory>conf</outputDirectory>
             <destName>prism.keystore</destName>
+            <fileMode>0644</fileMode>
         </file>
 
         <file>
-            <source>oozie-el-extensions/target/falcon-oozie-el-extension-${project.version}.jar</source>
+            <source>../oozie-el-extensions/target/falcon-oozie-el-extension-${project.version}.jar</source>
             <outputDirectory>oozie/libext</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
 
         <file>
-            <source>oozie-el-extensions/src/main/conf/oozie-site.xml</source>
+            <source>../oozie-el-extensions/src/main/conf/oozie-site.xml</source>
             <outputDirectory>oozie/conf</outputDirectory>
+            <fileMode>0644</fileMode>
         </file>
 
         <file>
-            <source>webapp/target/falcon-webapp-${project.version}.war</source>
+            <source>../webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>
+            <fileMode>0644</fileMode>
         </file>
     </files>
 </assembly>

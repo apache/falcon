@@ -11,6 +11,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
+
     FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
 
     FALCON-1764 Remove temporary folder "localhost" created during tests(Praveen Adlakha via Ajay Yadava)
@@ -137,6 +139,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1782 Client returns FalconWebException instead of the expected error message(Praveed Adlakha via Ajay Yadava)
+
     FALCON-1747 Falcon instance status listing is throwing error message (Peeyush Bishnoi)    
 
     FALCON-1758 APIs fail when oozie workflow entries are deleted (Pavan Kolamuri via Pallavi Rao)
