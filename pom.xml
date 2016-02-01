@@ -309,13 +309,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.falcon</groupId>
-                                <artifactId>checkstyle</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                        </dependencies>
                         <executions>
                             <execution>
                                 <id>checkstyle-check</id>
@@ -326,9 +319,9 @@
                                 <configuration>
                                     <consoleOutput>true</consoleOutput>
                                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                                    <configLocation>checkstyle/src/main/resources/falcon/checkstyle.xml</configLocation>
-                                    <headerLocation>checkstyle/src/main/resources/falcon/checkstyle-java-header.txt</headerLocation>
-                                    <suppressionsLocation>checkstyle/src/main/resources/falcon/checkstyle-suppressions.xml</suppressionsLocation>
+                                    <configLocation>src/build/checkstyle.xml</configLocation>
+                                    <headerLocation>src/build/checkstyle-java-header.txt</headerLocation>
+                                    <suppressionsLocation>src/build/checkstyle-suppressions.xml</suppressionsLocation>
                                     <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>
@@ -341,7 +334,7 @@
                         <configuration>
                             <!--debug>true</debug -->
                             <xmlOutput>true</xmlOutput>
-                            <excludeFilterFile>checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                            <excludeFilterFile>src/build/findbugs-exclude.xml</excludeFilterFile>
                             <failOnError>true</failOnError>
                         </configuration>
                         <executions>
@@ -405,7 +398,6 @@
 
     <modules>
         <module>falcon-ui</module>
-        <module>checkstyle</module>
         <module>build-tools</module>
         <module>client</module>
         <module>cli</module>
