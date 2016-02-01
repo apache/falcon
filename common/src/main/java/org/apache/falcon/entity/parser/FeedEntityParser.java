@@ -28,6 +28,7 @@ import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.FileSystemStorage;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
@@ -99,7 +100,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);
-            validateFeedCutOffPeriod(feed, cluster);
+            validateFeedRetention(feed, cluster);
             if (FeedHelper.isImportEnabled(cluster)) {
                 validateEntityExists(EntityType.DATASOURCE, FeedHelper.getImportDatasourceName(cluster));
                 validateFeedExtractionType(feed, cluster);
@@ -306,7 +307,11 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateFeedCutOffPeriod(Feed feed, Cluster cluster) throws FalconException {
+    private void validateFeedRetention(Feed feed, Cluster cluster) throws FalconException {
+        if (!cluster.getRetention().getAction().equals(ActionType.DELETE)) {
+          throw new ValidationException(cluster.getRetention().getAction() +" action type is not supported"
+                  + " for retention");
+        }
         ExpressionHelper evaluator = ExpressionHelper.get();
 
         String feedRetention = cluster.getRetention().getLimit().toString();
