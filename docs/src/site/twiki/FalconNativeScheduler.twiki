@@ -113,7 +113,7 @@ usage:
                                         schema
 
 </verbatim>
-Currently, MySQL and Derby are supported as state stores. We may extend support to other DBs in the future. Falcon has been tested against MySQL v5.5.
+Currently, MySQL, postgreSQL and Derby are supported as state stores. We may extend support to other DBs in the future. Falcon has been tested against MySQL v5.5 and PostgreSQL v9.5. If you are using MySQL ensure you also copy mysql-connector-java-<version>.jar under __$FALCON_HOME/server/webapp/falcon/WEB-INF/lib__ and __$FALCON_HOME/client/lib__
 
 ---++++ Using Derby as the State Store
 Using Derby is ideal for QA and staging setup. Falcon comes bundled with a Derby connector and no explicit setup is required (although you can set it up) in terms creating the DB or tables.

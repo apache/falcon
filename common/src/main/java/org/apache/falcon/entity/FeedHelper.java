@@ -408,6 +408,24 @@ public final class FeedHelper {
         return null;
     }
 
+    public static Date getFeedValidityStart(Feed feed, String clusterName) throws FalconException {
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+        if (feedCluster != null) {
+            return feedCluster.getValidity().getStart();
+        } else {
+            throw new FalconException("No matching cluster " + clusterName
+                    + "found for feed " + feed.getName());
+        }
+    }
+
+    public static Date getNextFeedInstanceDate(Date alignedDate, Feed feed) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(alignedDate);
+        calendar.add(feed.getFrequency().getTimeUnit().getCalendarUnit(),
+                feed.getFrequency().getFrequencyAsInt());
+        return calendar.getTime();
+    }
+
     /**
      * Returns various policies applicable for a feed.
      *

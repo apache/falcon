@@ -21,10 +21,9 @@ package org.apache.falcon.workflow;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.service.FalconService;
@@ -53,8 +52,6 @@ public class WorkflowJobEndNotificationService implements FalconService {
 
     // Maintain a cache of context built, so we don't have to query Oozie for every state change.
     private Map<String, Properties> contextMap = new ConcurrentHashMap<>();
-
-    private static final ConfigurationStore CONFIG_STORE = ConfigurationStore.get();
 
     @Override
     public String getName() {
@@ -97,17 +94,19 @@ public class WorkflowJobEndNotificationService implements FalconService {
         listeners.remove(listener);
     }
 
-    public void notifyFailure(WorkflowExecutionContext context) {
+    public void notifyFailure(WorkflowExecutionContext context) throws FalconException {
         notifyWorkflowEnd(context);
     }
 
-    public void notifySuccess(WorkflowExecutionContext context) {
+    public void notifySuccess(WorkflowExecutionContext context) throws FalconException {
         notifyWorkflowEnd(context);
     }
 
-    public void notifyStart(WorkflowExecutionContext context) {
+    public void notifyStart(WorkflowExecutionContext context) throws FalconException {
         // Start notifications can only be from Oozie JMS notifications
-        updateContextFromWFConf(context);
+        if (!updateContextFromWFConf(context)) {
+            return;
+        }
         LOG.debug("Sending workflow start notification to listeners with context : {} ", context);
         for (WorkflowExecutionListener listener : listeners) {
             try {
@@ -119,9 +118,11 @@ public class WorkflowJobEndNotificationService implements FalconService {
         }
     }
 
-    public void notifySuspend(WorkflowExecutionContext context) {
+    public void notifySuspend(WorkflowExecutionContext context) throws FalconException {
         // Suspend notifications can only be from Oozie JMS notifications
-        updateContextFromWFConf(context);
+        if (!updateContextFromWFConf(context)) {
+            return;
+        }
         LOG.debug("Sending workflow suspend notification to listeners with context : {} ", context);
         for (WorkflowExecutionListener listener : listeners) {
             try {
@@ -136,9 +137,13 @@ public class WorkflowJobEndNotificationService implements FalconService {
         contextMap.remove(context.getWorkflowId());
     }
 
-    public void notifyWait(WorkflowExecutionContext context) {
+    public void notifyWait(WorkflowExecutionContext context) throws FalconException {
         // Wait notifications can only be from Oozie JMS notifications
-        updateContextFromWFConf(context);
+
+        if (!updateContextFromWFConf(context)) {
+            return;
+        }
+
         LOG.debug("Sending workflow wait notification to listeners with context : {} ", context);
         for (WorkflowExecutionListener listener : listeners) {
             try {
@@ -152,48 +157,48 @@ public class WorkflowJobEndNotificationService implements FalconService {
 
     // The method retrieves the conf from the cache if it is in cache.
     // Else, queries WF Engine to retrieve the conf of the workflow
-    private void updateContextFromWFConf(WorkflowExecutionContext context) {
-        try {
-            Properties wfProps = contextMap.get(context.getWorkflowId());
-            if (wfProps == null) {
-                Entity entity = CONFIG_STORE.get(EntityType.valueOf(context.getEntityType()), context.getEntityName());
-                // Entity can be null in case of delete. Engine will generate notifications for instance kills.
-                // But, the entity would no longer be in the config store.
-                if (entity == null) {
-                    return;
-                }
-                for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
-                    try {
-                        InstancesResult.Instance[] instances = WorkflowEngineFactory.getWorkflowEngine(entity)
-                                .getJobDetails(cluster, context.getWorkflowId()).getInstances();
-                        if (instances != null && instances.length > 0) {
-                            wfProps = getWFProps(instances[0].getWfParams());
-                            // Required by RetryService. But, is not part of conf.
-                            wfProps.setProperty(WorkflowExecutionArgs.RUN_ID.getName(),
-                                    Integer.toString(instances[0].getRunId()));
-                        }
-                    } catch (FalconException e) {
-                        // Do Nothing. The workflow may not have been deployed on this cluster.
-                        continue;
+    private boolean updateContextFromWFConf(WorkflowExecutionContext context) throws FalconException {
+        Properties wfProps = contextMap.get(context.getWorkflowId());
+        if (wfProps == null) {
+            Entity entity = null;
+            try {
+                entity = EntityUtil.getEntity(context.getEntityType(), context.getEntityName());
+            } catch (EntityNotRegisteredException e) {
+                // Entity no longer exists. No need to notify.
+                LOG.debug("Entity {} of type {} doesn't exist in config store. Notification Ignored.",
+                        context.getEntityName(), context.getEntityType());
+                contextMap.remove(context.getWorkflowId());
+                return false;
+            }
+            for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+                try {
+                    InstancesResult.Instance[] instances = WorkflowEngineFactory.getWorkflowEngine(entity)
+                            .getJobDetails(cluster, context.getWorkflowId()).getInstances();
+                    if (instances != null && instances.length > 0) {
+                        wfProps = getWFProps(instances[0].getWfParams());
+                        // Required by RetryService. But, is not part of conf.
+                        wfProps.setProperty(WorkflowExecutionArgs.RUN_ID.getName(),
+                                Integer.toString(instances[0].getRunId()));
                     }
-                    contextMap.put(context.getWorkflowId(), wfProps);
+                } catch (FalconException e) {
+                    // Do Nothing. Move on to the next cluster.
+                    continue;
                 }
+                contextMap.put(context.getWorkflowId(), wfProps);
             }
-
-            // No extra props to enhance the context with.
-            if (wfProps == null || wfProps.isEmpty()) {
-                return;
-            }
-
-            for (WorkflowExecutionArgs arg : WorkflowExecutionArgs.values()) {
-                if (wfProps.containsKey(arg.getName())) {
-                    context.setValue(arg, wfProps.getProperty(arg.getName()));
-                }
-            }
-
-        } catch (FalconException e) {
-            LOG.error("Unable to retrieve entity {} of type {} from config store.", e);
         }
+
+        // No extra props to enhance the context with.
+        if (wfProps == null || wfProps.isEmpty()) {
+            return true;
+        }
+
+        for (WorkflowExecutionArgs arg : WorkflowExecutionArgs.values()) {
+            if (wfProps.containsKey(arg.getName())) {
+                context.setValue(arg, wfProps.getProperty(arg.getName()));
+            }
+        }
+        return true;
     }
 
     private Properties getWFProps(InstancesResult.KeyValuePair[] wfParams) {
@@ -205,7 +210,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
     }
 
     // This method handles both success and failure notifications.
-    private void notifyWorkflowEnd(WorkflowExecutionContext context) {
+    private void notifyWorkflowEnd(WorkflowExecutionContext context) throws FalconException {
         // Need to distinguish notification from post processing for backward compatibility
         if (context.getContextType() == WorkflowExecutionContext.Type.POST_PROCESSING) {
             boolean engineNotifEnabled = false;
@@ -224,7 +229,9 @@ public class WorkflowJobEndNotificationService implements FalconService {
                 updateContextWithTime(context);
             }
         } else {
-            updateContextFromWFConf(context);
+            if (!updateContextFromWFConf(context)) {
+                return;
+            }
         }
 
         LOG.debug("Sending workflow end notification to listeners with context : {} ", context);

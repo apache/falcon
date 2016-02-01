@@ -131,27 +131,35 @@ public final class RecipeMerlin {
 
     public RecipeMerlin withSourceCluster(ClusterMerlin sourceCluster) {
         this.srcCluster = sourceCluster;
-        properties.setProperty("sourceCluster", sourceCluster.getName());
-        properties.setProperty("sourceMetastoreUri", sourceCluster.getProperty("hive.metastore.uris"));
-        properties.setProperty("sourceHiveServer2Uri", sourceCluster.getProperty("hive.server2.uri"));
-        //properties.setProperty("sourceServicePrincipal",
-        //    sourceCluster.getProperty("hive.metastore.kerberos.principal"));
-        properties.setProperty("sourceStagingPath", sourceCluster.getLocation("staging"));
-        properties.setProperty("sourceNN", sourceCluster.getInterfaceEndpoint(Interfacetype.WRITE));
-        properties.setProperty("sourceRM", sourceCluster.getInterfaceEndpoint(Interfacetype.EXECUTE));
+        if (recipeOperation == FalconCLI.RecipeOperation.HDFS_REPLICATION) {
+            properties.setProperty("drSourceClusterFS", sourceCluster.getInterfaceEndpoint(Interfacetype.WRITE));
+        } else {
+            properties.setProperty("sourceCluster", sourceCluster.getName());
+            properties.setProperty("sourceMetastoreUri", sourceCluster.getProperty("hive.metastore.uris"));
+            properties.setProperty("sourceHiveServer2Uri", sourceCluster.getProperty("hive.server2.uri"));
+            //properties.setProperty("sourceServicePrincipal",
+            //    sourceCluster.getProperty("hive.metastore.kerberos.principal"));
+            properties.setProperty("sourceStagingPath", sourceCluster.getLocation("staging"));
+            properties.setProperty("sourceNN", sourceCluster.getInterfaceEndpoint(Interfacetype.WRITE));
+            properties.setProperty("sourceRM", sourceCluster.getInterfaceEndpoint(Interfacetype.EXECUTE));
+        }
         return this;
     }
 
     public RecipeMerlin withTargetCluster(ClusterMerlin targetCluster) {
         this.tgtCluster = targetCluster;
-        properties.setProperty("targetCluster", targetCluster.getName());
-        properties.setProperty("targetMetastoreUri", targetCluster.getProperty("hive.metastore.uris"));
-        properties.setProperty("targetHiveServer2Uri", targetCluster.getProperty("hive.server2.uri"));
-        //properties.setProperty("targetServicePrincipal",
-        //    targetCluster.getProperty("hive.metastore.kerberos.principal"));
-        properties.setProperty("targetStagingPath", targetCluster.getLocation("staging"));
-        properties.setProperty("targetNN", targetCluster.getInterfaceEndpoint(Interfacetype.WRITE));
-        properties.setProperty("targetRM", targetCluster.getInterfaceEndpoint(Interfacetype.EXECUTE));
+        if (recipeOperation == FalconCLI.RecipeOperation.HDFS_REPLICATION) {
+            properties.setProperty("drTargetClusterFS", targetCluster.getInterfaceEndpoint(Interfacetype.WRITE));
+        } else {
+            properties.setProperty("targetCluster", targetCluster.getName());
+            properties.setProperty("targetMetastoreUri", targetCluster.getProperty("hive.metastore.uris"));
+            properties.setProperty("targetHiveServer2Uri", targetCluster.getProperty("hive.server2.uri"));
+            //properties.setProperty("targetServicePrincipal",
+            //    targetCluster.getProperty("hive.metastore.kerberos.principal"));
+            properties.setProperty("targetStagingPath", targetCluster.getLocation("staging"));
+            properties.setProperty("targetNN", targetCluster.getInterfaceEndpoint(Interfacetype.WRITE));
+            properties.setProperty("targetRM", targetCluster.getInterfaceEndpoint(Interfacetype.EXECUTE));
+        }
         return this;
     }
 

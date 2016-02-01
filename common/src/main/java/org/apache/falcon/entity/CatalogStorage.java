@@ -23,6 +23,7 @@ import org.apache.falcon.Pair;
 import org.apache.falcon.catalog.AbstractCatalogService;
 import org.apache.falcon.catalog.CatalogPartition;
 import org.apache.falcon.catalog.CatalogServiceFactory;
+import org.apache.falcon.catalog.HiveCatalogService;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -381,15 +382,79 @@ public class CatalogStorage extends Configured implements Storage {
     }
 
     @Override
-    public List<FeedInstanceStatus> getListing(Feed feed, String cluster, LocationType locationType,
+    public List<FeedInstanceStatus> getListing(Feed feed, String clusterName, LocationType locationType,
                                                Date start, Date end) throws FalconException {
-        throw new UnsupportedOperationException("getListing");
+        try {
+            List<FeedInstanceStatus> instances = new ArrayList<FeedInstanceStatus>();
+            Date feedStart = FeedHelper.getFeedValidityStart(feed, clusterName);
+            Date alignedDate = EntityUtil.getNextStartTime(feedStart, feed.getFrequency(),
+                    feed.getTimezone(), start);
+
+            while (!end.before(alignedDate)) {
+                List<String> partitionValues = getCatalogPartitionValues(alignedDate);
+                try {
+                    CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
+                            getConf(), getCatalogUrl(), getDatabase(), getTable(), partitionValues);
+                    instances.add(getFeedInstanceFromCatalogPartition(partition));
+                } catch (FalconException e) {
+                    if (e.getMessage().startsWith(HiveCatalogService.PARTITION_DOES_NOT_EXIST)) {
+                        // Partition missing
+                        FeedInstanceStatus instanceStatus = new FeedInstanceStatus(null);
+                        instanceStatus.setInstance(partitionValues.toString());
+                        instances.add(instanceStatus);
+                    } else {
+                        throw e;
+                    }
+                }
+                alignedDate = FeedHelper.getNextFeedInstanceDate(alignedDate, feed);
+            }
+            return instances;
+        } catch (Exception e) {
+            LOG.error("Unable to retrieve listing for {}:{} -- {}", locationType, catalogUrl, e.getMessage());
+            throw new FalconException("Unable to retrieve listing for (URI " + catalogUrl + ")", e);
+        }
+    }
+
+    private List<String> getCatalogPartitionValues(Date alignedDate) throws FalconException {
+        List<String> partitionValues  = new ArrayList<String>();
+        for (Map.Entry<String, String> entry : getPartitions().entrySet()) {
+            if (FeedDataPath.PATTERN.matcher(entry.getValue()).find()) {
+                ExpressionHelper.setReferenceDate(alignedDate);
+                ExpressionHelper expressionHelper = ExpressionHelper.get();
+                String instanceValue = expressionHelper.evaluateFullExpression(entry.getValue(), String.class);
+                partitionValues.add(instanceValue);
+            } else {
+                partitionValues.add(entry.getValue());
+            }
+        }
+        return partitionValues;
+    }
+
+    private FeedInstanceStatus getFeedInstanceFromCatalogPartition(CatalogPartition partition) {
+        FeedInstanceStatus feedInstanceStatus = new FeedInstanceStatus(partition.getLocation());
+        feedInstanceStatus.setCreationTime(partition.getCreateTime());
+        feedInstanceStatus.setInstance(partition.getValues().toString());
+        FeedInstanceStatus.AvailabilityStatus availabilityStatus = FeedInstanceStatus.AvailabilityStatus.MISSING;
+        long size = partition.getSize();
+        if (size == 0) {
+            availabilityStatus = FeedInstanceStatus.AvailabilityStatus.EMPTY;
+        } else if (size > 0) {
+            availabilityStatus = FeedInstanceStatus.AvailabilityStatus.AVAILABLE;
+        }
+        feedInstanceStatus.setSize(size);
+        feedInstanceStatus.setStatus(availabilityStatus);
+        return feedInstanceStatus;
     }
 
     @Override
     public FeedInstanceStatus.AvailabilityStatus getInstanceAvailabilityStatus(Feed feed, String clusterName,
-                                         LocationType locationType, Date instancetime) throws FalconException {
-        throw new UnsupportedOperationException("getInstanceAvailabilityStatus"); //TODO to be implemented later
+                                         LocationType locationType, Date instanceTime) throws FalconException {
+        List<FeedInstanceStatus> result = getListing(feed, clusterName, locationType, instanceTime, instanceTime);
+        if (result.isEmpty()) {
+            return FeedInstanceStatus.AvailabilityStatus.MISSING;
+        } else {
+            return result.get(0).getStatus();
+        }
     }
 
     @Override

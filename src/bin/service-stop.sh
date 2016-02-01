@@ -32,9 +32,24 @@ BASEDIR=`cd ${BASEDIR}/..;pwd`
 APP_TYPE=$1
 . ${BASEDIR}/bin/falcon-config.sh 'server' "$APP_TYPE"
 
+STOP_TIMEOUT=10
 if [ -f $FALCON_PID_FILE ]
 then
-   kill -15 `cat $FALCON_PID_FILE`
+   PID=`cat $FALCON_PID_FILE`
+   echo "Stopping $APP_TYPE running as $PID"
+   kill -15 $PID
+   WAIT=0
+   while [ $(ps -p$PID -o pid=) > /dev/null ] && [ $WAIT -lt $STOP_TIMEOUT ]; do
+             echo -n "."
+             sleep 1
+             (( WAIT++ ))
+   done
+   if [ $(ps -p$PID -o pid=) > /dev/null ]; then
+     echo -e "\nWARN: $APP_TYPE did not stop after $STOP_TIMEOUT seconds : Killing with kill -9"
+     kill -9 $PID
+   fi
+   rm -f $FALCON_PID_FILE
+   echo "Stopped $APP_TYPE !"
 else
    echo "pid file $FALCON_PID_FILE not present"
 fi

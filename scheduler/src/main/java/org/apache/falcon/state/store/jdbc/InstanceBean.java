@@ -114,11 +114,11 @@ public class InstanceBean {
     private EntityBean entityBean;
 
 
-    @Column(name = "awaited_predicates", columnDefinition = "BLOB")
+    @Column(name = "awaited_predicates")
     @Lob
     private byte[] awaitedPredicates;
 
-    @Column(name = "properties", columnDefinition = "BLOB")
+    @Column(name = "properties")
     @Lob
     private byte[] properties;
 

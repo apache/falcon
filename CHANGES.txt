@@ -3,11 +3,31 @@ Trunk
   TASKS:
   INCOMPATIBLE CHANGES
   NEW FEATURES
+   
+    FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
+
     FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
 
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
+
   IMPROVEMENTS
+    FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
+
+    FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
+
+    FALCON-1764 Remove temporary folder "localhost" created during tests(Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1756 Remove PID files on service stop(Deepak Barr via Ajay Yadava)
+
+    FALCON-1771 Tool to merge pull requests (Ajay Yadava)
+
+    FALCON-1770 Update README file (Ajay Yadava)
+
   BUG FIXES
+    FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
+
+    FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
+
   NEW FEATURES
     FALCON-1596 Spring shell based CLI for Falcon
         FALCON-1609 Add entity commands to falcon shell
@@ -15,6 +35,8 @@ Trunk
 
 Proposed Release Version: 0.9
   TASKS:
+    FALCON-1778 Check licenses and copyright information (Pallavi Rao)
+
     FALCON-1718 Change versions in pom.xml of master and 0.9 branch(Pallavi Rao via Ajay Yadava)
 
     FALCON-1594 Update changes.txt to reflect 0.8 as released version(Sowmya Ramesh via Ajay Yadava)
@@ -123,6 +145,10 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1782 Client returns FalconWebException instead of the expected error message(Praveed Adlakha via Ajay Yadava)
+
+    FALCON-1747 Falcon instance status listing is throwing error message (Peeyush Bishnoi)    
+
     FALCON-1758 APIs fail when oozie workflow entries are deleted (Pavan Kolamuri via Pallavi Rao)
 
     FALCON-1754 JobCompletionService throws FalconException (Pallavi Rao)
@@ -309,6 +335,8 @@ Release version: 0.8
     FALCON-1403 Revisit IT cleanup and teardown(Narayan Periwal via Pallavi Rao)
 
   BUG FIXES
+    FALCON-1579 post-processing action fails with javax.servlet.jsp.el.ELException (Sowmya Ramesh via Pallavi Rao)
+
     FALCON-1563 Old feed instances get deleted from SLA monitoring on feed update (Ajay Yadava).
 
     FALCON-1560 Lifecycle does not allow feed with frequency greater than days(1) (Ajay Yadava).

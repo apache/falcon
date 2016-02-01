@@ -189,7 +189,7 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
         return dateFormat.format(time);
     }
 
-    private void invokeListener(WorkflowExecutionContext context) {
+    private void invokeListener(WorkflowExecutionContext context) throws FalconException {
         // Login the user so listeners can access FS and WfEngine as this user
         CurrentUser.authenticate(context.getWorkflowUser());
 

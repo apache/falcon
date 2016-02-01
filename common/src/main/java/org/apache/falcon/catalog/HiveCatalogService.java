@@ -18,6 +18,7 @@
 
 package org.apache.falcon.catalog;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
@@ -47,6 +48,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An implementation of CatalogService that uses Hive Meta Store (HCatalog)
@@ -57,6 +59,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     private static final Logger LOG = LoggerFactory.getLogger(HiveCatalogService.class);
     public static final String CREATE_TIME = "falcon.create_time";
     public static final String UPDATE_TIME = "falcon.update_time";
+    public static final String PARTITION_DOES_NOT_EXIST = "Partition does not exist";
 
 
     public static HiveConf createHiveConf(Configuration conf,
@@ -291,6 +294,13 @@ public class HiveCatalogService extends AbstractCatalogService {
         catalogPartition.setSerdeInfo(hCatPartition.getSd().getSerdeInfo().getSerializationLib());
         catalogPartition.setCreateTime(hCatPartition.getCreateTime());
         catalogPartition.setLastAccessTime(hCatPartition.getLastAccessTime());
+        Map<String, String> params = hCatPartition.getParameters();
+        if (params != null) {
+            String size = hCatPartition.getParameters().get("totalSize");
+            if (StringUtils.isNotBlank(size)) {
+                catalogPartition.setSize(Long.parseLong(size));
+            }
+        }
         return catalogPartition;
     }
 
@@ -337,6 +347,8 @@ public class HiveCatalogService extends AbstractCatalogService {
             HiveMetaStoreClient client = createClient(conf, catalogUrl);
             Partition hCatPartition = client.getPartition(database, tableName, partitionValues);
             return createCatalogPartition(hCatPartition);
+        } catch (NoSuchObjectException nsoe) {
+            throw new FalconException(PARTITION_DOES_NOT_EXIST + ":" + nsoe.getMessage(), nsoe);
         } catch (Exception e) {
             throw new FalconException("Exception fetching partition:" + e.getMessage(), e);
         }

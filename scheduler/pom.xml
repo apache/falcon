@@ -142,6 +142,13 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgres.version}</version>
         </dependency>
 
         <dependency>
@@ -204,8 +211,8 @@
                                 <artifactId>commons-dbcp</artifactId>
                             </artifactItem>
                             <artifactItem>
-                                <groupId>mysql</groupId>
-                                <artifactId>mysql-connector-java</artifactId>
+                                <groupId>postgresql</groupId>
+                                <artifactId>postgresql</artifactId>
                             </artifactItem>
                         </artifactItems>
                         <outputDirectory>${project.build.directory}/dependency</outputDirectory>
