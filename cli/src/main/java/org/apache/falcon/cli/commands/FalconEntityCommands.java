@@ -109,7 +109,6 @@ import static org.apache.falcon.cli.FalconEntityCLI.validateEntityFields;
 /**
  * Entity Commands.
  */
-// SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 @Component
 public class FalconEntityCommands extends BaseFalconCommands {
     public static final String ENTITY_PREFIX = "entity";
@@ -263,7 +262,7 @@ public class FalconEntityCommands extends BaseFalconCommands {
 
         return getFalconClient().getDependency(entityType.name().toLowerCase(), entityName, getDoAs()).toString();
     }
-
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @CliCommand(value = ENTITY_COMMAND_PREFIX + LIST_OPT, help = LIST_OPT_DESCRIPTION)
     public String list(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
@@ -317,4 +316,5 @@ public class FalconEntityCommands extends BaseFalconCommands {
                 entityType.name().toLowerCase(), cluster, start, end, fields, filterBy, filterTags,
                 orderBy, sortOrder, offset, numResults, numInstances, getDoAs()));
     }
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
 }

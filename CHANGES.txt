@@ -8,6 +8,9 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
   IMPROVEMENTS
   BUG FIXES
+  NEW FEATURES
+    FALCON-1596 Spring shell based CLI for Falcon
+        FALCON-1609 Add entity commands to falcon shell
 
 
 Proposed Release Version: 0.9
