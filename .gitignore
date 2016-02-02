@@ -32,7 +32,7 @@ maven-eclipse.xml
 
 #ActiveMQ
 activemq-data
-build
+#build
 
 #log files
 logs
