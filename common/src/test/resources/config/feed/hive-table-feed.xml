@@ -30,7 +30,7 @@
         </cluster>
         <cluster name="backupCluster" type="target">
             <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
-            <retention limit="hours(6)" action="archive"/>
+            <retention limit="hours(6)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>
