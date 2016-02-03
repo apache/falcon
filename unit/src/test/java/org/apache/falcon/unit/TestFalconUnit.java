@@ -234,6 +234,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     public void testKillWaitingInstances() throws Exception {
         submitClusterAndFeeds();
         InstancesResult.WorkflowStatus currentStatus;
+        deleteData(INPUT_FEED_NAME, CLUSTER_NAME);
         submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
 

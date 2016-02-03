@@ -286,7 +286,8 @@ public class ProxyOozieClient extends AuthOozieClient {
     }
 
     @Override
-    public List<CoordinatorAction> kill(final String jobId, final String rangeType, final String scope) throws OozieClientException {
+    public List<CoordinatorAction> kill(final String jobId, final String rangeType, final String scope)
+        throws OozieClientException {
         try {
             doAs(CurrentUser.getUser(), new Callable<Object>() {
 

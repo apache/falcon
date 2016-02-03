@@ -25,6 +25,7 @@ import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -283,6 +284,26 @@ public class FalconUnitTestBase {
         String feedPath = getFeedPathForTS(cluster, feedName, time);
         fs.mkdirs(new Path(feedPath));
         fs.copyFromLocalFile(new Path(getAbsolutePath(inputFile)), new Path(feedPath));
+    }
+
+    public void deleteData(String feedName, String cluster) throws FalconException, ParseException, IOException {
+        Entity existingEntity = configStore.get(EntityType.FEED, feedName);
+        if (existingEntity == null) {
+            throw new FalconException("Feed Not Found  " + feedName);
+        }
+        Feed feed = (Feed) existingEntity;
+        Storage rawStorage = FeedHelper.createStorage(cluster, feed);
+        String feedPathTemplate = rawStorage.getUriTemplate(LocationType.DATA);
+
+        Properties vars = new Properties();
+        vars.put(FeedDataPath.VARS.YEAR.name(), "*");
+        vars.put(FeedDataPath.VARS.MONTH.name(), "*");
+        vars.put(FeedDataPath.VARS.DAY.name(), "*");
+        vars.put(FeedDataPath.VARS.HOUR.name(), "*");
+        vars.put(FeedDataPath.VARS.MINUTE.name(), "*");
+
+        String feedPath = ExpressionHelper.substitute(feedPathTemplate, vars);
+        fs.delete(new Path(feedPath), true);
     }
 
     protected String getFeedPathForTS(String cluster, String feedName,

@@ -33,6 +33,8 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.testng.Assert;
 
 import javax.xml.bind.JAXBException;
@@ -50,6 +52,38 @@ public final class AssertUtil {
     }
 
     private static final Logger LOGGER = Logger.getLogger(AssertUtil.class);
+
+    /**
+     * Asserts correctness of CLI metrics for recipe based process or feed replication.
+     * @param execResult CLI metrics exec result to be checked
+     * @param entityName name of recipe process or replication feed
+     * @param instanceNum expected number of process/feed instances in metrics output
+     * @param withData is data expected to be replicated
+     * @throws Exception
+     */
+    public static void assertCLIMetrics(ExecResult execResult, String entityName, int instanceNum, boolean withData)
+        throws Exception {
+        String output = execResult.getOutput();
+        Assert.assertTrue(StringUtils.isNotBlank(output), "Exec result output is blank.");
+        JSONObject jsonObject = new JSONObject(output);
+        int totalSize = jsonObject.getInt("totalSize");
+        Assert.assertEquals(totalSize, instanceNum);
+        JSONArray array = jsonObject.getJSONArray("results");
+        for (int i = 0; i < array.length(); i++) {
+            String name = array.getJSONObject(i).getString("name");
+            Assert.assertTrue(name.contains(entityName));
+            int timeTaken = array.getJSONObject(i).getInt("TIMETAKEN");
+            Assert.assertTrue(timeTaken > 0, "TIMETAKEN metric should be greater then zero.");
+            int bytescopied = array.getJSONObject(i).getInt("BYTESCOPIED");
+            Assert.assertTrue(bytescopied >= 0, "BYTESCOPIED metric should be greater or equal to zero.");
+            int copy = array.getJSONObject(i).getInt("COPY");
+            if (withData) {
+                Assert.assertTrue(copy > 0, "COPY metric should be greater then zero.");
+            } else {
+                Assert.assertEquals(copy, 0, "COPY metric should be equal to zero as data was absent.");
+            }
+        }
+    }
 
     /**
      * Checks that any path in list doesn't contains a string.
@@ -96,7 +130,7 @@ public final class AssertUtil {
             LOGGER.info("elements = " + elements);
         }
         Assert.assertEquals(elements.size(), expectedSize,
-                "Size of expected and actual list don't match.");
+            "Size of expected and actual list don't match.");
     }
 
     /**
@@ -218,7 +252,7 @@ public final class AssertUtil {
         Assert.assertFalse(execResult.hasSuceeded(),
             "Unexpectedly succeeded execResult: " + execResult);
         Assert.assertTrue((execResult.getError() + execResult.getOutput()).contains(expectedMessage),
-                "Expected error: " + expectedMessage + " in execResult: " + execResult);
+            "Expected error: " + expectedMessage + " in execResult: " + execResult);
     }
 
     /**
@@ -258,7 +292,7 @@ public final class AssertUtil {
      */
     public static void assertFailed(ServiceResponse response) throws JAXBException {
         Assert.assertNotEquals(response.getMessage(), "null",
-                "response message should not be null");
+            "response message should not be null");
 
         Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.FAILED);
         Assert.assertEquals(response.getCode(), 400);
@@ -271,7 +305,7 @@ public final class AssertUtil {
      */
     public static void assertFailed(APIResult response) {
         Assert.assertNotEquals(response.getMessage(), "null",
-                "response message should not be null");
+            "response message should not be null");
         Assert.assertEquals(response.getStatus(), APIResult.Status.FAILED,
                 "Status should be FAILED. Message: " + response.getMessage());
     }

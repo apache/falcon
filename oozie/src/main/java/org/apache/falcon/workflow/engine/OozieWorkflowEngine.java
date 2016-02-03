@@ -1640,7 +1640,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private void kill(String cluster, String jobId, String rangeType, String scope) throws FalconException {
         try {
             OozieClientFactory.get(cluster).kill(jobId, rangeType, scope);
-            assertStatus(cluster, jobId, Status.KILLED, Status.SUCCEEDED, Status.FAILED);
             LOG.info("Killed job {} for instances {} on cluster {}", jobId, scope, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);

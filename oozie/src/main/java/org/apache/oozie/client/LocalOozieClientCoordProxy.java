@@ -79,7 +79,8 @@ public class LocalOozieClientCoordProxy extends LocalOozieClientCoord {
     }
 
     /**
-     * Kill coordinator actions
+     * Kill coordinator actions.
+     *
      * @param jobId coordinator Job Id
      * @param rangeType type 'date' if -date is used, 'action-num' if -action is used
      * @param scope kill scope for date or action nums
