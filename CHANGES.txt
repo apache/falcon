@@ -143,6 +143,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1793 feed element action="archive" is submittable via command line tool falcon (Deepak Barr)
+
     FALCON-1782 Client returns FalconWebException instead of the expected error message(Praveed Adlakha via Ajay Yadava)
 
     FALCON-1747 Falcon instance status listing is throwing error message (Peeyush Bishnoi)    

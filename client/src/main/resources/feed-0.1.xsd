@@ -346,15 +346,10 @@
                 <xs:documentation>
                     action type specifies the action that should be taken on a feed
                     when the retention period of a feed expires on a cluster,
-                    the valid
-                    actions are
-                    archive, delete, chown and chmod.
+                    the only valid action is delete.
                 </xs:documentation>
             </xs:annotation>
-            <xs:enumeration value="archive"/>
             <xs:enumeration value="delete"/>
-            <xs:enumeration value="chown"/>
-            <xs:enumeration value="chmod"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="lifecycle">
