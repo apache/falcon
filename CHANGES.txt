@@ -13,6 +13,8 @@ Release Version: 0.9
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-1812 Data Import and Export documentation (Venkatesan Ramachandran via Pallavi Rao)
+
     FALCON-1742 Implement instance summary api for native scheduler (Pallavi Rao)
 
     FALCON-1677 Support re-tries for timed-out instances (Narayan Periwal via Pallavi Rao)
