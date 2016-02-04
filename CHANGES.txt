@@ -11,6 +11,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1794 Behaviour mismatch in running Api when scheduled on native instead of oozie(Deepak Barr)
+
     FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
 
     FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)

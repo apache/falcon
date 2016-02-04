@@ -295,8 +295,8 @@ public class TestJDBCStateStore extends AbstractSchedulerTestBase {
         states.add(InstanceState.STATE.RUNNING);
         actualInstances = stateStore.getExecutionInstances(entityState.getEntity(), "cluster1", states);
         Assert.assertEquals(actualInstances.size(), 2);
-        Assert.assertEquals(actualInstances.toArray()[0], instanceState1);
-        Assert.assertEquals(actualInstances.toArray()[1], instanceState2);
+        Assert.assertEquals(actualInstances.toArray()[0], instanceState2);
+        Assert.assertEquals(actualInstances.toArray()[1], instanceState1);
 
         InstanceState lastInstanceState = stateStore.getLastExecutionInstance(entityState.getEntity(), "cluster1");
         Assert.assertEquals(lastInstanceState, instanceState2);

@@ -151,7 +151,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
             Collection<InstanceState> instances =
                     STATE_STORE.getExecutionInstances(entity, cluster, InstanceState.getRunningStates());
             for (InstanceState state : instances) {
-                String instanceTimeStr = state.getInstance().getInstanceTime().toString();
+                String instanceTimeStr = state.getInstance().getInstanceTime().toString("yyyy-MM-dd'T'HH:mm'Z'");
                 InstancesResult.Instance instance = new InstancesResult.Instance(cluster, instanceTimeStr,
                         InstancesResult.WorkflowStatus.RUNNING);
                 instance.startTime = state.getInstance().getActualStart().toDate();
