@@ -24,6 +24,8 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-1787 Ooozie pig-action.xml requires hive sharelib for HCatalog use(Sowmya Ramesh via Ajay Yadava)
+
     FALCON-1792 Upgrade hadoop.version to 2.6.2 (Venkatesan Ramachandran via Peeyush Bishnoi)
 
     FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
