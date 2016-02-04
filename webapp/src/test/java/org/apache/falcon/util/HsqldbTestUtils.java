@@ -18,6 +18,8 @@
 
 package org.apache.falcon.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -27,16 +29,17 @@ import java.sql.SQLException;
 
 import java.util.ArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.FileUtils;
 import org.hsqldb.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Create a simple hsqldb server and schema to use for testing.
  */
 public final class HsqldbTestUtils {
 
-    public static final Log LOG = LogFactory.getLog(HsqldbTestUtils.class.getName());
+    public static final Logger LOG = LoggerFactory.getLogger(HsqldbTestUtils.class);
 
     // singleton server instance.
     private static Server server;
@@ -44,6 +47,10 @@ public final class HsqldbTestUtils {
     private static final String IN_MEM = "mem:/";
 
     private static boolean inMemoryDB = IN_MEM.equals(getServerHost());
+
+    private static String dbLocation;
+
+    private static String dbBaseDir;
 
     private HsqldbTestUtils() {}
 
@@ -57,7 +64,7 @@ public final class HsqldbTestUtils {
     // Database name can be altered too
     private static final String DATABASE_NAME = System.getProperty("hsql.database.name",  "db1");
     private static final String CUSTOMER_TABLE_NAME = "CUSTOMER";
-    private static final String DB_URL = "jdbc:hsqldb:" + getServerHost() + DATABASE_NAME;
+    private static final String DB_URL = "jdbc:hsqldb:hsql://" + getServerHost() + DATABASE_NAME;
     private static final String DRIVER_CLASS = "org.hsqldb.jdbcDriver";
 
     public static String getUrl() {
@@ -75,12 +82,12 @@ public final class HsqldbTestUtils {
         if (null == server) {
             LOG.info("Starting new hsqldb server; database=" + DATABASE_NAME);
             String tmpDir = System.getProperty("test.build.data", "/tmp/");
-            String dbLocation = tmpDir + "/falcon/testdb.file";
-            if (inMemoryDB) {dbLocation = IN_MEM; }
+            dbBaseDir = tmpDir + "/falcon";
+            dbLocation =  dbBaseDir + "/testdb.file";
+            deleteHSQLDir();
             server = new Server();
             server.setDatabaseName(0, DATABASE_NAME);
-            server.putPropertiesFromString("database.0=" + dbLocation
-                    + ";no_system_exit=true;");
+            server.putPropertiesFromString("database.0=" + dbLocation + ";no_system_exit=true;");
             server.start();
             LOG.info("Started server with url=" + DB_URL);
         }
@@ -90,11 +97,44 @@ public final class HsqldbTestUtils {
         if (null != server) {
             server.stop();
         }
+        deleteHSQLDir();
+    }
+
+    private static void deleteHSQLDir() {
+        try {
+            FileUtils.deleteDirectory(new File(dbBaseDir));
+            LOG.info("Ok, Deleted HSQL temp dir at {}", dbBaseDir);
+        } catch(IOException ioe) {
+            LOG.info("Error deleting HSQL temp dir at {}", dbBaseDir);
+        }
     }
 
     public static void tearDown() throws SQLException {
         dropExistingSchema();
         stop();
+    }
+
+    public static void createSqoopUser(String user, String password) throws Exception {
+        Connection connection = null;
+        Statement st = null;
+
+        LOG.info("Creating user {} with password {}", user, password);
+
+        try {
+            connection = getConnectionSystem();
+            st = connection.createStatement();
+            boolean result = st.execute("CREATE USER " + user + " PASSWORD " + password + " ADMIN");
+            LOG.info("CREATE USER returned {}", result);
+            connection.commit();
+        } finally {
+            if (null != st) {
+                st.close();
+            }
+
+            if (null != connection) {
+                connection.close();
+            }
+        }
     }
 
     public static void changeSAPassword(String passwd) throws Exception {
@@ -106,7 +146,8 @@ public final class HsqldbTestUtils {
             connection = getConnectionSystem();
 
             st = connection.createStatement();
-            st.executeUpdate("SET PASSWORD \"" + passwd + "\"");
+            boolean result = st.execute("SET PASSWORD \"" + passwd + "\"");
+            LOG.info("Change PASSWORD for SA returned {}", result);
             connection.commit();
         } finally {
             if (null != st) {
@@ -123,7 +164,7 @@ public final class HsqldbTestUtils {
     }
 
     private static Connection getConnection() throws SQLException {
-        return getConnection("SA", "sqoop");
+        return getConnection("sqoop_user", "sqoop");
     }
     private static Connection getConnection(String user, String password) throws SQLException {
         try {
@@ -135,6 +176,7 @@ public final class HsqldbTestUtils {
         }
         Connection connection = DriverManager.getConnection(DB_URL, user, password);
         connection.setAutoCommit(false);
+        LOG.info("Connection for user {} password {} is open {}", user, password, !connection.isClosed());
         return connection;
     }
 
@@ -179,13 +221,18 @@ public final class HsqldbTestUtils {
             connection = getConnection();
 
             st = connection.createStatement();
-            st.executeUpdate("DROP TABLE " + CUSTOMER_TABLE_NAME + " IF EXISTS");
-            st.executeUpdate("CREATE TABLE " + CUSTOMER_TABLE_NAME + "(id INT NOT NULL PRIMARY KEY, name VARCHAR(64))");
+            boolean r = st.execute("DROP TABLE " + CUSTOMER_TABLE_NAME + " IF EXISTS");
+            r = st.execute("CREATE TABLE " + CUSTOMER_TABLE_NAME + "(id INT NOT NULL PRIMARY KEY, name VARCHAR(64))");
+            LOG.info("CREATE TABLE returned {}", r);
 
-            st.executeUpdate("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(1, 'Apple')");
-            st.executeUpdate("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(2, 'Blackberry')");
-            st.executeUpdate("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(3, 'Caterpillar')");
-            st.executeUpdate("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(4, 'DuPont')");
+            r=st.execute("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(1, 'Apple')");
+            LOG.info("INSERT INTO returned {}", r);
+            r=st.execute("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(2, 'Blackberry')");
+            LOG.info("INSERT INTO returned {}", r);
+            r=st.execute("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(3, 'Caterpillar')");
+            LOG.info("INSERT INTO returned {}", r);
+            r=st.execute("INSERT INTO " + CUSTOMER_TABLE_NAME + " VALUES(4, 'DuPont')");
+            LOG.info("INSERT INTO returned {}", r);
 
             connection.commit();
         } finally {

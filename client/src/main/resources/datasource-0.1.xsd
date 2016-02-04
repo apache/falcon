@@ -176,11 +176,17 @@
                         </xs:documentation>
                     </xs:annotation>
                 </xs:element>
-
                 <xs:element name="passwordText" type="xs:string">
-                <xs:annotation>
+                    <xs:annotation>
                         <xs:documentation>
                             Plain text password.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="passwordAlias" type="passwordAliasType">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Password alias using hadoop credential store.
                         </xs:documentation>
                     </xs:annotation>
                 </xs:element>
@@ -188,7 +194,20 @@
         </xs:sequence>
         <xs:attribute name="type" type="credentialtype" use="required"/>
     </xs:complexType>
-
+    <xs:complexType name="passwordAliasType">
+        <xs:sequence minOccurs="1" maxOccurs="1">
+            <xs:element name="alias" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation> Provide password alias. </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="providerPath" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>jceks provider HDFS file path </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
     <xs:simpleType name="credentialtype">
         <xs:annotation>
             <xs:documentation>
@@ -198,6 +217,7 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="password-file" />
             <xs:enumeration value="password-text" />
+            <xs:enumeration value="password-alias" />
         </xs:restriction>
     </xs:simpleType>
 

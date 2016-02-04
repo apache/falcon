@@ -49,29 +49,31 @@ public class DatasourceEntityParser extends EntityParser<Datasource> {
 
     @Override
     public void validate(Datasource db) throws FalconException {
-        ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             ClassLoader hdfsClassLoader = HdfsClassLoader.load(db.getName(), db.getDriver().getJars());
-            Thread.currentThread().setContextClassLoader(hdfsClassLoader);
             validateInterface(db, Interfacetype.READONLY, hdfsClassLoader);
             validateInterface(db, Interfacetype.WRITE, hdfsClassLoader);
             validateACL(db);
         } catch(IOException io) {
             throw new ValidationException("Unable to copy driver jars to local dir: "
                     + Arrays.toString(db.getDriver().getJars().toArray()));
-        } finally {
-            Thread.currentThread().setContextClassLoader(previousClassLoader);
         }
     }
 
     private static void validateInterface(Datasource db, Interfacetype interfacetype, ClassLoader hdfsClassLoader)
         throws ValidationException {
         String endpoint = null;
+        Properties userPasswdInfo = null;
         try {
-            endpoint = DatasourceHelper.getReadOnlyEndpoint(db);
+            if (interfacetype == Interfacetype.READONLY) {
+                endpoint = DatasourceHelper.getReadOnlyEndpoint(db);
+                userPasswdInfo = DatasourceHelper.fetchReadPasswordInfo(db);
+            } else if (interfacetype == Interfacetype.WRITE) {
+                endpoint = DatasourceHelper.getWriteEndpoint(db);
+                userPasswdInfo = DatasourceHelper.fetchWritePasswordInfo(db);
+            }
             if (StringUtils.isNotBlank(endpoint)) {
-                LOG.info("Validating {0} endpoint {1} connection.", interfacetype.value(), endpoint);
-                Properties userPasswdInfo = DatasourceHelper.fetchReadPasswordInfo(db);
+                LOG.info("Validating {} endpoint {} connection.", interfacetype.value(), endpoint);
                 validateConnection(hdfsClassLoader, db.getDriver().getClazz(), endpoint, userPasswdInfo);
             }
         } catch(FalconException fe) {
@@ -85,9 +87,13 @@ public class DatasourceEntityParser extends EntityParser<Datasource> {
     private static void validateConnection(ClassLoader hdfsClassLoader, String driverClass,
                                     String connectUrl, Properties userPasswdInfo)
         throws FalconException {
+        ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+        LOG.info("Preserving current classloader: {}", previousClassLoader.toString());
         try {
+            Thread.currentThread().setContextClassLoader(hdfsClassLoader);
+            LOG.info("Setting context classloader to : {}", hdfsClassLoader.toString());
             java.sql.Driver driver = (java.sql.Driver) hdfsClassLoader.loadClass(driverClass).newInstance();
-            LOG.info("Validating connection URL: {0} using driver: {1}", connectUrl, driver.getClass().toString());
+            LOG.info("Validating connection URL: {} using driver: {}", connectUrl, driver.getClass().toString());
             Connection con = driver.connect(connectUrl, userPasswdInfo);
             if (con == null) {
                 throw new FalconException("DriverManager.getConnection() return "
@@ -96,6 +102,9 @@ public class DatasourceEntityParser extends EntityParser<Datasource> {
         } catch (Exception ex) {
             LOG.error("Exception while validating connection : ", ex);
             throw new FalconException(ex);
+        } finally {
+            Thread.currentThread().setContextClassLoader(previousClassLoader);
+            LOG.info("Restoring original classloader {}", previousClassLoader.toString());
         }
     }
 

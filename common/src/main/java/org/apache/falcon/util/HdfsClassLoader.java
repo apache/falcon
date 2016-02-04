@@ -54,11 +54,9 @@ public class HdfsClassLoader extends URLClassLoader {
         }
 
         synchronized (LOCK) {
-            LOG.info("Copying jar files from HDFS to local dir");
             final URL[] urls = copyHdfsJarFilesToTempDir(name, jarHdfsPath);
+            LOG.info("Copied jar files from HDFS to local dir");
             final ClassLoader parentClassLoader = HdfsClassLoader.class.getClassLoader();
-            LOG.info("Creating a new HdfsClassLoader for name = {0} with parent = {1} using classpath = {2}",
-                    name, parentClassLoader.toString(),  Arrays.toString(jarHdfsPath.toArray()));
             HdfsClassLoader hdfsClassLoader = java.security.AccessController.doPrivileged(
                     new java.security.PrivilegedAction<HdfsClassLoader>() {
                         @Override
@@ -67,6 +65,8 @@ public class HdfsClassLoader extends URLClassLoader {
                         }
                     }
             );
+            LOG.info("Created a new HdfsClassLoader for name = {} with parent = {} using classpath = {}",
+                    name, parentClassLoader.toString(),  Arrays.toString(jarHdfsPath.toArray()));
             classLoaderCache.put(name, hdfsClassLoader);
             return hdfsClassLoader;
         }
