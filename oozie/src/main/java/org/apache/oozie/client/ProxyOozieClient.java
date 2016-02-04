@@ -286,25 +286,6 @@ public class ProxyOozieClient extends AuthOozieClient {
     }
 
     @Override
-    public List<CoordinatorAction> kill(final String jobId, final String rangeType, final String scope)
-        throws OozieClientException {
-        try {
-            doAs(CurrentUser.getUser(), new Callable<Object>() {
-
-                public Object call() throws Exception {
-                    return ProxyOozieClient.super.kill(jobId, rangeType, scope);
-                }
-            });
-        } catch (OozieClientException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new OozieClientException(e.toString(), e);
-        }
-        return null;
-    }
-
-
-    @Override
     public void change(final String jobId, final String changeValue) throws OozieClientException {
         try {
             doAs(CurrentUser.getUser(), new Callable<Object>() {
