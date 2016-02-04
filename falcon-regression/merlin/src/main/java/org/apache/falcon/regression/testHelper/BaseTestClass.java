@@ -108,16 +108,30 @@ public class BaseTestClass {
         }
     }
 
+    /**
+     * Method removes test class entities which belong to default test user.
+     */
     public final void removeTestClassEntities() {
-        for (Bundle bundle : this.bundles) {
-            if (bundle != null) {
-                bundle.deleteBundle(prism);
+        removeTestClassEntities(new String[]{null});
+    }
+
+    /**
+     * This method removes all entities which name starts with prefix derived from test class name. As entities can
+     * belong to different users, that users need to be listed as parameters. Note that null is a default test user.
+     * @param users users whose entities should be removed.
+     */
+    public final void removeTestClassEntities(String...users) {
+        for (String user : users) {
+            for (Bundle bundle : this.bundles) {
+                if (bundle != null) {
+                    bundle.deleteBundle(prism);
+                }
             }
+            String className = this.getClass().getSimpleName();
+            CleanupUtil.cleanEntitiesWithPrefix(prism, className, user);
+            String deprecatedPrefix = 'A' + Integer.toHexString(className.hashCode());
+            CleanupUtil.cleanEntitiesWithPrefix(prism, deprecatedPrefix, user);
         }
-        String className = this.getClass().getSimpleName();
-        CleanupUtil.cleanEntitiesWithPrefix(prism, className);
-        String deprecatedPrefix = 'A' + Integer.toHexString(className.hashCode());
-        CleanupUtil.cleanEntitiesWithPrefix(prism, deprecatedPrefix);
     }
 
 
