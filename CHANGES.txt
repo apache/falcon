@@ -11,6 +11,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
+
     FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
 
     FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
@@ -84,8 +86,6 @@ Proposed Release Version: 0.9
     FALCON-1213 Base framework of the native scheduler(Pallavi Rao)
 
   IMPROVEMENTS
-    FALCON-1707 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
-
     FALCON-1707 Code Refactoring for Falcon Client(Ajay Yadava)
 
     FALCON-1733 Support for building falcon with JDK 1.8 also(Narayan Periwal via Ajay Yadava)
