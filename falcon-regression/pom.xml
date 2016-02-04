@@ -42,7 +42,7 @@
         <oozie.version>4.1.0</oozie.version>
         <hive.version>1.2.1</hive.version>
         <hcatalog.version>1.2.1</hcatalog.version>
-        <hadoop.version>2.6.2</hadoop.version>
+        <hadoop.version>2.7.1</hadoop.version>
         <testng.exclude.pattern>nothing</testng.exclude.pattern>
         <testng.include.pattern>**/Test*.java,**/*Test.java,**/*TestCase.java</testng.include.pattern>
     </properties>
@@ -467,7 +467,7 @@
                     <!--debug>true</debug -->
                     <xmlOutput>true</xmlOutput>
                     <excludeFilterFile>
-                        ${project.basedir}/../../checkstyle/src/main/resources/falcon/findbugs-exclude.xml
+                        ${project.basedir}/../../src/build/findbugs-exclude.xml
                     </excludeFilterFile>
                     <failOnError>true</failOnError>
                     <skip>${skipCheck}</skip>
