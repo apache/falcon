@@ -62,7 +62,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             int intRunId = Integer.parseInt(runId);
-            Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
+            Date msgInsertTime = new Date(msgReceivedTime);
             Long wait = getEventDelay(entity, nominalTime);
             if (wait == -1) {
                 LOG.info("Late rerun expired for entity: {} ({})", entityType, entityName);
