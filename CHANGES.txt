@@ -11,6 +11,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
+
     FALCON-1729 Database ingest to support password alias via keystore file (Venkatesan Ramachandran via Balu Vellanki)
 
     FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
