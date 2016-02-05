@@ -11,6 +11,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1721 Checkstyle doesn't extend parent.
+    
     FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
 
     FALCON-1729 Database ingest to support password alias via keystore file (Venkatesan Ramachandran via Balu Vellanki)
@@ -28,6 +30,8 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-1804 Non-SLA feed throws NullPointerException.
+    
     FALCON-1806 Update documentation for Import and Export. (Venkatesan Ramachandran via Balu Vellanki)
 
     FALCON-1787 Ooozie pig-action.xml requires hive sharelib for HCatalog use(Sowmya Ramesh via Ajay Yadava)
