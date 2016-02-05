@@ -30,7 +30,7 @@
             </property>
             <property>
                 <name>oozie.action.sharelib.for.pig</name>
-                <value>pig,hcatalog</value>
+                <value>pig,hcatalog,hive</value>
             </property>
         </configuration>
         <script>#USER_WF_PATH#</script>

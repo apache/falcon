@@ -249,11 +249,12 @@
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
                     </dependency>
+
                     <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-aws</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
+                    	<groupId>org.apache.hadoop</groupId>
+                    	<artifactId>hadoop-aws</artifactId>
+                    	<version>${hadoop.version}</version>
+                    	<scope>provided</scope>
                     </dependency>
                 </dependencies>
           </dependencyManagement>
@@ -299,6 +300,7 @@
                                 <exclude>**/db1.log</exclude>
                                 <exclude>**/db1.properties</exclude>
                                 <exclude>**/db1.script</exclude>
+                                <exclude>**/credential_provider.jceks</exclude>
                             </excludes>
                         </configuration>
                         <executions>

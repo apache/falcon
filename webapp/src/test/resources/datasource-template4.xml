@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -16,26 +16,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<datasource colo="west-coast" description="HSQL database on west coast" type="hsql" name="test-hsql-db" xmlns="uri:falcon:datasource:0.1">
-    <tags>owner=foobar@ambari.apache.org, consumer=phoe@ambari.apache.org</tags>
+
+<datasource colo="##colo##" description="" type="hsql" name="##datasourcename##" xmlns="uri:falcon:datasource:0.1">
     <interfaces>
-        <interface type="readonly" endpoint="jdbc:hsqldb:localhost/db1">
-            <credential type="password-file">
-                <userName>SA</userName>
-                <passwordFile>/falcon/passwordfile</passwordFile>
-            </credential>
-        </interface>
+        <interface type="readonly" endpoint="jdbc:hsqldb:hsql://localhost/db1"/>
 
-        <interface type="write" endpoint="jdbc:hsqldb:localhost/db1">
-            <credential type="password-file">
-                <userName>SA</userName>
-                <passwordFile>/falcon/passwordfile</passwordFile>
-            </credential>
-        </interface>
+        <interface type="write" endpoint="jdbc:hsqldb:hsql://localhost/db1"/>
 
-        <credential type="password-file">
+        <credential type="password-text">
             <userName>SA</userName>
-            <passwordFile>/falcon/passwordfile</passwordFile>
+            <passwordText>sqoop</passwordText>
         </credential>
     </interfaces>
 
@@ -43,6 +33,4 @@
        <clazz>org.hsqldb.jdbcDriver</clazz>
        <jar>/user/oozie/share/lib/lib_20150721010816/sqoop/hsqldb-1.8.0.7.jar</jar>
     </driver>
-
-    <ACL owner="testuser" group="group" permission="0x755"/>
 </datasource>
