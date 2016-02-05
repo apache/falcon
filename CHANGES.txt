@@ -110,6 +110,8 @@ Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1804 Non-SLA feed throws NullPointerException (Sandeep Samudrala via Pallavi Rao)
+
     FALCON-1782 Client returns FalconWebException instead of the expected error message(Praveen Adlakha via Ajay Yadava)
 
     FALCON-1747 Falcon instance status listing is throwing error message (Peeyush Bishnoi)
