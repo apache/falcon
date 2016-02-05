@@ -467,7 +467,7 @@
                     <!--debug>true</debug -->
                     <xmlOutput>true</xmlOutput>
                     <excludeFilterFile>
-                        ${project.basedir}/../../checkstyle/src/main/resources/falcon/findbugs-exclude.xml
+                        ${project.basedir}/../../src/build/findbugs-exclude.xml
                     </excludeFilterFile>
                     <failOnError>true</failOnError>
                     <skip>${skipCheck}</skip>

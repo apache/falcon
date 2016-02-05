@@ -593,6 +593,18 @@ public abstract class AbstractEntityHelper {
     }
 
     /**
+     * Get CLI metrics for recipe based process or feed replication.
+     * @param entityName
+     * @return
+     */
+    public ExecResult getCLIMetrics(String entityName) {
+        LOGGER.info("Getting CLI metrics for " + getEntityType()+ " " + entityName);
+        final CommandLine commandLine = FalconClientBuilder.getBuilder()
+            .getMetricsCommand(getEntityType(), entityName).build();
+        return ExecUtil.executeCommand(commandLine);
+    }
+
+    /**
      * Delete an entity through falcon client.
      * @param entityStr string of the entity to be submitted
      * @throws IOException

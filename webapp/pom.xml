@@ -606,6 +606,7 @@
                   <exclude>**/db1.log</exclude>
                   <exclude>**/db1.properties</exclude>
                   <exclude>**/db1.script</exclude>
+                  <exclude>**/credential_provider.jceks</exclude>
                 </excludes>
               </configuration>
       	    </plugin>	

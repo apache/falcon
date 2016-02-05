@@ -19,12 +19,10 @@
 package org.apache.falcon.oozie;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.datasource.Credentialtype;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LoadMethod;
@@ -42,8 +40,6 @@ import java.util.Properties;
 public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
     protected static final String EXPORT_SQOOP_ACTION_TEMPLATE = "/action/feed/export-sqoop-database-action.xml";
     protected static final String EXPORT_ACTION_NAME="db-export-sqoop";
-
-    private static final String ARG_SEPARATOR = " ";
 
     public DatabaseExportWorkflowBuilder(Feed entity) { super(entity); }
 
@@ -85,61 +81,50 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
 
     private String buildSqoopCommand(Cluster cluster, Feed feed) throws FalconException {
         Map<String, String> extraArgs = getArguments(cluster);
-        StringBuilder sqoopCmd = new StringBuilder();
-        sqoopCmd.append("export").append(ARG_SEPARATOR);
-        //buildDriverArgs(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildConnectArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildTableArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildUserPasswordArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildNumMappers(sqoopCmd, extraArgs).append(ARG_SEPARATOR);
-        buildArguments(sqoopCmd, extraArgs).append(ARG_SEPARATOR);
-        buildLoadType(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        buildExportDirArg(sqoopCmd, cluster).append(ARG_SEPARATOR);
-        return sqoopCmd.toString();
+        StringBuilder sqoopArgs = new StringBuilder();
+        StringBuilder sqoopOptions = new StringBuilder();
+
+        buildConnectArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        buildTableArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions, cluster, entity)
+                .append(ImportExportCommon.ARG_SEPARATOR);
+        buildNumMappers(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
+        buildArguments(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
+        buildLoadType(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        buildExportDirArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+
+        StringBuffer sqoopCmd = new StringBuffer();
+        return sqoopCmd.append("export").append(ImportExportCommon.ARG_SEPARATOR)
+                .append(sqoopOptions).append(ImportExportCommon.ARG_SEPARATOR)
+                .append(sqoopArgs).toString();
     }
 
     private StringBuilder buildDriverArgs(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         Datasource db = DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(feedCluster));
         if ((db.getDriver() != null) && (db.getDriver().getClazz() != null)) {
-            builder.append("--driver").append(ARG_SEPARATOR).append(db.getDriver().getClazz());
+            builder.append("--driver").append(ImportExportCommon.ARG_SEPARATOR).append(db.getDriver().getClazz());
         }
         return builder;
     }
 
     private StringBuilder buildConnectArg(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--connect").append(ARG_SEPARATOR)
+        return builder.append("--connect").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(DatasourceHelper.getReadOnlyEndpoint(
                         DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(feedCluster))));
     }
 
     private StringBuilder buildTableArg(StringBuilder builder, Cluster cluster) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--table").append(ARG_SEPARATOR)
+        return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(FeedHelper.getExportDataSourceTableName(feedCluster));
-    }
-
-    private StringBuilder buildUserPasswordArg(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        Datasource db = DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(feedCluster));
-        Pair<String, String> userPasswdInfo = DatasourceHelper.getReadPasswordInfo(db);
-        builder.append("--username").append(ARG_SEPARATOR)
-                .append(userPasswdInfo.first)
-                .append(ARG_SEPARATOR);
-        if (DatasourceHelper.getReadPasswordType(db) == Credentialtype.PASSWORD_FILE) {
-            builder.append("--password-file");
-        } else {
-            builder.append("--password");
-        }
-        builder.append(ARG_SEPARATOR).append(userPasswdInfo.second);
-        return builder;
     }
 
     private StringBuilder buildLoadType(StringBuilder builder, Cluster cluster)
         throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        builder.append("--update-mode").append(ARG_SEPARATOR);
+        builder.append("--update-mode").append(ImportExportCommon.ARG_SEPARATOR);
         String modeType = LoadMethod.UPDATEONLY.value();
         if (FeedHelper.getExportLoadMethod(feedCluster).getType() != null) {
             modeType = FeedHelper.getExportLoadMethod(feedCluster).getType().value();
@@ -149,7 +134,7 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
 
     private StringBuilder buildExportDirArg(StringBuilder builder, Cluster cluster)
         throws FalconException {
-        return builder.append("--export-dir").append(ARG_SEPARATOR)
+        return builder.append("--export-dir").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(String.format("${coord:dataIn('%s')}",
                         FeedExportCoordinatorBuilder.EXPORT_DATAIN_NAME));
     }
@@ -157,7 +142,8 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
     private StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
         throws FalconException {
         for(Map.Entry<String, String> e : extraArgs.entrySet()) {
-            builder.append(e.getKey()).append(ARG_SEPARATOR).append(e.getValue()).append(ARG_SEPARATOR);
+            builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
+                    .append(ImportExportCommon.ARG_SEPARATOR);
         }
         return builder;
     }
@@ -174,7 +160,7 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
 
     private StringBuilder buildNumMappers(StringBuilder builder, Map<String, String> extraArgs) {
         if (!extraArgs.containsKey("--num-mappers")) {
-            builder.append("--num-mappers").append(ARG_SEPARATOR).append(1);
+            builder.append("--num-mappers").append(ImportExportCommon.ARG_SEPARATOR).append(1);
         }
         return builder;
     }

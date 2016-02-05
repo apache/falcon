@@ -12,6 +12,10 @@ Trunk
 
   IMPROVEMENTS
     FALCON-1721 Checkstyle doesn't extend parent.
+    
+    FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
+
+    FALCON-1729 Database ingest to support password alias via keystore file (Venkatesan Ramachandran via Balu Vellanki)
 
     FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
 
@@ -27,6 +31,12 @@ Trunk
 
   BUG FIXES
     FALCON-1804 Non-SLA feed throws NullPointerException.
+    
+    FALCON-1806 Update documentation for Import and Export. (Venkatesan Ramachandran via Balu Vellanki)
+
+    FALCON-1787 Ooozie pig-action.xml requires hive sharelib for HCatalog use(Sowmya Ramesh via Ajay Yadava)
+
+    FALCON-1792 Upgrade hadoop.version to 2.6.2 (Venkatesan Ramachandran via Peeyush Bishnoi)
 
     FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
 
@@ -145,6 +155,8 @@ Proposed Release Version: 0.9
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-1793 feed element action="archive" is submittable via command line tool falcon (Deepak Barr)
+
     FALCON-1782 Client returns FalconWebException instead of the expected error message(Praveed Adlakha via Ajay Yadava)
 
     FALCON-1747 Falcon instance status listing is throwing error message (Peeyush Bishnoi)    

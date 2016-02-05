@@ -122,7 +122,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.5.0</hadoop.version>
+                <hadoop.version>2.6.2</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
@@ -249,6 +249,13 @@
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
                     </dependency>
+
+                    <dependency>
+                    	<groupId>org.apache.hadoop</groupId>
+                    	<artifactId>hadoop-aws</artifactId>
+                    	<version>${hadoop.version}</version>
+                    	<scope>provided</scope>
+                    </dependency>
                 </dependencies>
           </dependencyManagement>
         </profile>
@@ -293,6 +300,7 @@
                                 <exclude>**/db1.log</exclude>
                                 <exclude>**/db1.properties</exclude>
                                 <exclude>**/db1.script</exclude>
+                                <exclude>**/credential_provider.jceks</exclude>
                             </excludes>
                         </configuration>
                         <executions>
@@ -555,7 +563,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.2</version>
+                <version>2.4</version>
             </dependency>
 
             <dependency>

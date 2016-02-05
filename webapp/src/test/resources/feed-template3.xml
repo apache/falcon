@@ -29,7 +29,7 @@
             <retention limit="hours(24)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
             <import>
-                <source name="datasource-test" tableName="simple">
+                <source name="##datasourcename##" tableName="simple">
                     <extract type="full">
                         <mergepolicy>snapshot</mergepolicy>
                     </extract>

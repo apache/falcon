@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1766 Add CLI metrics check for HiveDR, HDFS and feed replication (Paul Isaychuk)
+
    FALCON-1777 Add regression for HDFS replication (recipe) (Paul Isaychuk)
 
    FALCON-1699 Test fixes for RetentionTest, LineageApiTest, TouchAPIPrismAndServerTest, FeedReplicationTest and few fortifications(Paul Isaychuk via Pragya Mittal)
@@ -389,6 +391,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1816 Fix findbugs-exclude.xml path and hadoop version in falcon-regression pom (Paul Isaychuk via Ajay Yadava)
+
    FALCON-1701 HiveDr, ClusterSetupTest, MirrorSummaryTest fixes(Murali Ramasami via Ajay Yadava)
 
    FALCON-1489 Partial status http response code returns 200(Pragya Mittal via Ajay Yadava)

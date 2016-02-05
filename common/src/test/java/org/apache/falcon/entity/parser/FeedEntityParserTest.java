@@ -150,7 +150,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(1).getValidity()
                 .getEnd()), "2011-12-31T00:00Z");
         assertEquals(feed.getClusters().getClusters().get(1).getRetention()
-                .getAction(), ActionType.ARCHIVE);
+                .getAction(), ActionType.DELETE);
         assertEquals(feed.getClusters().getClusters().get(1).getRetention()
                 .getLimit().toString(), "hours(6)");
 
