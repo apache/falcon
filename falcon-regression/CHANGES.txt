@@ -391,6 +391,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-1816 Fix findbugs-exclude.xml path and hadoop version in falcon-regression pom (Paul Isaychuk via Ajay Yadava)
+
    FALCON-1701 HiveDr, ClusterSetupTest, MirrorSummaryTest fixes(Murali Ramasami via Ajay Yadava)
 
    FALCON-1489 Partial status http response code returns 200(Pragya Mittal via Ajay Yadava)

@@ -13,7 +13,7 @@ $mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2
 
 
 <verbatim>
-$ls {project dir}/target/
+$ls {project dir}/distro/target/
 </verbatim>
 
 It should give an output like below :

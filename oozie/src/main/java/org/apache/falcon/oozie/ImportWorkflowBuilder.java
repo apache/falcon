@@ -39,6 +39,7 @@ import java.util.Properties;
 public abstract class ImportWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Feed> {
 
     public ImportWorkflowBuilder(Feed feed) {
+
         super(feed, LifeCycle.IMPORT);
     }
 
