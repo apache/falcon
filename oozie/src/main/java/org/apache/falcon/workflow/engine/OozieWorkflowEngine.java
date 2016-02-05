@@ -901,9 +901,18 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         switch (action) {
         case KILL:
-            if (jobInfo == null || !WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
+            if (jobInfo == null) {
+                StringBuilder scope = new StringBuilder();
+                scope.append(SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime())).append("::")
+                        .append(SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime()));
+                kill(cluster, coordinatorAction.getJobId(), "date", scope.toString());
+                status = Status.KILLED.name();
                 break;
             }
+            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
+                break;
+            }
+
 
             kill(cluster, jobInfo.getId());
             status = Status.KILLED.name();
@@ -1623,6 +1632,15 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             OozieClientFactory.get(cluster).resume(jobId);
             assertStatus(cluster, jobId, Status.PREP, Status.RUNNING, Status.SUCCEEDED, Status.FAILED, Status.KILLED);
             LOG.info("Resumed job {} on cluster {}", jobId, cluster);
+        } catch (OozieClientException e) {
+            throw new FalconException(e);
+        }
+    }
+
+    private void kill(String cluster, String jobId, String rangeType, String scope) throws FalconException {
+        try {
+            OozieClientFactory.get(cluster).kill(jobId, rangeType, scope);
+            LOG.info("Killed job {} for instances {} on cluster {}", jobId, scope, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }

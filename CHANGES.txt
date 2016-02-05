@@ -30,6 +30,8 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-1795 Kill api not killing waiting/ready instances
+   
     FALCON-1804 Non-SLA feed throws NullPointerException.
     
     FALCON-1806 Update documentation for Import and Export. (Venkatesan Ramachandran via Balu Vellanki)

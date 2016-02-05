@@ -231,6 +231,22 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
+    public void testKillWaitingInstances() throws Exception {
+        submitClusterAndFeeds();
+        InstancesResult.WorkflowStatus currentStatus;
+        deleteData(INPUT_FEED_NAME, CLUSTER_NAME);
+        submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
+        scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
+
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.WAITING);
+        getClient().killInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null,
+                CLUSTER_NAME, null, null, null);
+        waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.KILLED);
+        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
+        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.KILLED);
+    }
+
+    @Test
     public void testProcessInstanceManagementAPI1() throws Exception {
         submitClusterAndFeeds();
         // submitting and scheduling process

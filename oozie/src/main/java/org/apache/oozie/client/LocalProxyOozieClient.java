@@ -193,6 +193,11 @@ public class LocalProxyOozieClient extends OozieClient {
     }
 
     @Override
+    public List<CoordinatorAction> kill(String jobId, String rangeType, String scope) throws OozieClientException {
+        return getClient(jobId).kill(jobId, rangeType, scope);
+    }
+
+    @Override
     public void change(final String jobId, final String changeValue) throws OozieClientException {
         getClient(jobId).change(jobId, changeValue);
     }
