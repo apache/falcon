@@ -76,8 +76,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("entityName") @PathParam("entity") final String entity,
             @Dimension("colo") @QueryParam("colo") String ignore) {
-        throw FalconWebException.newAPIException("delete on server is not" +
-                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+        throw FalconWebException.newAPIException("delete on server is not"
+                + " supported.Please run your operation on Prism.", Response.Status.FORBIDDEN);
     }
     /**
      * Updates the submitted entity.
@@ -98,8 +98,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @Dimension("entityName") @PathParam("entity") final String entityName,
             @Dimension("colo") @QueryParam("colo") String ignore,
             @QueryParam("skipDryRun") final Boolean skipDryRun) {
-        throw FalconWebException.newAPIException("update on server is not" +
-                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+        throw FalconWebException.newAPIException("update on server is not"
+                + " supported.Please run your operation on Prism.", Response.Status.FORBIDDEN);
     }
 
     /**
@@ -121,8 +121,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @Dimension("colo") @QueryParam("colo") String coloExpr,
             @QueryParam("skipDryRun") Boolean skipDryRun,
             @QueryParam("properties") String properties) {
-        throw FalconWebException.newAPIException("submitAndSchedule on server is not" +
-                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+        throw FalconWebException.newAPIException("submitAndSchedule on server is not"
+                + " supported.Please run your operation on Prism.", Response.Status.FORBIDDEN);
     }
     /**
      * Submit the given entity.
@@ -140,8 +140,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     public APIResult submit(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("colo") @QueryParam("colo") final String ignore) {
-        throw FalconWebException.newAPIException("submit on server is not" +
-                " supported.Please run your operation on Prism.",Response.Status.FORBIDDEN);
+        throw FalconWebException.newAPIException("submit on server is not"
+                + " supported.Please run your operation on Prism.", Response.Status.FORBIDDEN);
     }
 
     @GET
