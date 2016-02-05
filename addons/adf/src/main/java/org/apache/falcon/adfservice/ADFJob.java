@@ -60,13 +60,6 @@ public abstract class ADFJob {
             + Path.SEPARATOR + "generatedscripts";
     private static final String DEFAULT_FREQUENCY = "days(1)";
 
-    // Constants for process properties
-    private static final String PROPERTY_START = "<property ";
-    private static final String PROPERTY_NAME = "name=";
-    private static final String PROPERTY_VALUE = "value=";
-    private static final String PROPERTY_END = "/>";
-    private static final String PROPERTY_DOUBLE_QUOTES = "\"";
-
     public static boolean isADFJobEntity(String entityName) {
         return entityName.startsWith(ADF_JOB_ENTITY_NAME_PREFIX);
     }
@@ -120,7 +113,7 @@ public abstract class ADFJob {
                 throw new FalconException("Unrecognized ADF job type: " + type);
             }
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing ADF JSON message: " + msg, e);
+            throw new FalconException("Error while parsing ADF JSON message: " + msg, e);
         }
     }
 
@@ -202,7 +195,7 @@ public abstract class ADFJob {
             // log in the user
             CurrentUser.authenticate(proxyUser);
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing ADF JSON message: " + msg, e);
+            throw new FalconException("Error while parsing ADF JSON message: " + msg, e);
         }
     }
 
@@ -225,7 +218,7 @@ public abstract class ADFJob {
                     .getJSONObject(ADFJsonConstants.ADF_REQUEST_EXTENDED_PROPERTIES)
                     .getString(ADFJsonConstants.ADF_REQUEST_CLUSTER_NAME);
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing linked service " + linkedServiceName + " in ADF request.");
+            throw new FalconException("Error while parsing linked service " + linkedServiceName + " in ADF request.");
         }
     }
 
@@ -272,7 +265,7 @@ public abstract class ADFJob {
                 tables.add(inputs.getJSONObject(i).getString(ADFJsonConstants.ADF_REQUEST_NAME));
             }
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing input tables in ADF request.");
+            throw new FalconException("Error while parsing input tables in ADF request.");
         }
         return tables;
     }
@@ -286,7 +279,7 @@ public abstract class ADFJob {
                 tables.add(outputs.getJSONObject(i).getString(ADFJsonConstants.ADF_REQUEST_NAME));
             }
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing output tables in ADF request.");
+            throw new FalconException("Error while parsing output tables in ADF request.");
         }
         return tables;
     }
@@ -330,7 +323,7 @@ public abstract class ADFJob {
             return location.getJSONObject(ADFJsonConstants.ADF_REQUEST_EXTENDED_PROPERTIES)
                     .getString(ADFJsonConstants.ADF_REQUEST_FOLDER_PATH);
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing ADF JSON message: " + tableName, e);
+            throw new FalconException("Error while parsing ADF JSON message: " + tableName, e);
         }
     }
 
@@ -346,7 +339,7 @@ public abstract class ADFJob {
                     .getString(ADFJsonConstants.ADF_REQUEST_LINKED_SERVICE_NAME);
             return getClusterName(linkedServiceName);
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing table cluster " + tableName + " in ADF request.");
+            throw new FalconException("Error while parsing table cluster " + tableName + " in ADF request.");
         }
     }
 
@@ -373,7 +366,7 @@ public abstract class ADFJob {
             }
             return scriptPath;
         } catch (JSONException jsonException) {
-            throw new FalconException("Error when parsing ADF JSON object: "
+            throw new FalconException("Error while parsing ADF JSON object: "
                     + activityExtendedProperties, jsonException);
         }
     }
@@ -390,7 +383,7 @@ public abstract class ADFJob {
             }
             return script;
         } catch (JSONException jsonException) {
-            throw new FalconException("Error when parsing ADF JSON object: "
+            throw new FalconException("Error while parsing ADF JSON object: "
                     + activityExtendedProperties, jsonException);
         }
     }
@@ -410,7 +403,7 @@ public abstract class ADFJob {
         try {
             hadoopLinkedService = activity.getString(ADFJsonConstants.ADF_REQUEST_LINKED_SERVICE_NAME);
         } catch (JSONException jsonException) {
-            throw new FalconException("Error when parsing ADF JSON object: "
+            throw new FalconException("Error while parsing ADF JSON object: "
                     + activity, jsonException);
         }
 
@@ -424,10 +417,10 @@ public abstract class ADFJob {
     protected void startProcess(Feed inputFeed, Feed outputFeed,
                                 String engineType, String scriptPath) throws FalconException {
         // submit input/output feeds
-        LOG.info("submitting input feed: {}", inputFeed.getName());
+        LOG.info("submitting input feed {} for {} process", inputFeed.getName(), engineType);
         jobManager.submitJob(EntityType.FEED.name(), inputFeed.getEntityxml());
 
-        LOG.info("submitting output feed: {}", outputFeed.getName());
+        LOG.info("submitting output feed {} for {} process", outputFeed.getName(), engineType);
         jobManager.submitJob(EntityType.FEED.name(), outputFeed.getEntityxml());
 
         // submit and schedule process
@@ -437,9 +430,9 @@ public abstract class ADFJob {
                 .withEngineType(engineType).withWFPath(scriptPath).withAclOwner(proxyUser)
                 .build().getEntityxml();
 
-        LOG.info("submitting/scheduling process: {}", processRequest);
+        LOG.info("submitting/scheduling {} process: {}", engineType, processRequest);
         submitAndScheduleJob(EntityType.PROCESS.name(), processRequest);
-        LOG.info("submitted and scheduled process: {}", jobEntityName());
+        LOG.info("submitted and scheduled {} process: {}", engineType, jobEntityName());
     }
 
     protected void cleanupProcess(Feed inputFeed, Feed outputFeed) throws FalconException {

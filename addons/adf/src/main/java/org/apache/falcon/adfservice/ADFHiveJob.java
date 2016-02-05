@@ -24,14 +24,10 @@ import org.apache.falcon.FalconException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Azure ADF Hive Job.
  */
 public class ADFHiveJob extends ADFJob {
-    private static final Logger LOG = LoggerFactory.getLogger(ADFHiveJob.class);
     private static final String HIVE_SCRIPT_EXTENSION = ".hql";
     private static final String ENGINE_TYPE = "hive";
     private static final String INPUT_FEED_SUFFIX = "-hive-input-feed";
@@ -87,7 +83,7 @@ public class ADFHiveJob extends ADFJob {
                         + " be empty in ADF request.");
             }
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing ADF JSON message: " + tableExtendedProperties, e);
+            throw new FalconException("Error while parsing ADF JSON message: " + tableExtendedProperties, e);
         }
 
         return new TableFeed.Builder().withFeedName(feedName).withFrequency(frequency)
@@ -121,7 +117,7 @@ public class ADFHiveJob extends ADFJob {
             }
             return tableExtendedProperties;
         } catch (JSONException e) {
-            throw new FalconException("Error when parsing ADF JSON message: " + table, e);
+            throw new FalconException("Error while parsing ADF JSON message: " + table, e);
         }
     }
 }

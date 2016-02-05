@@ -20,14 +20,10 @@ package org.apache.falcon.adfservice;
 
 import org.apache.falcon.FalconException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Azure ADF Pig Job.
  */
 public class ADFPigJob extends ADFJob {
-    private static final Logger LOG = LoggerFactory.getLogger(ADFPigJob.class);
     private static final String PIG_SCRIPT_EXTENSION = ".pig";
     private static final String ENGINE_TYPE = "pig";
     private static final String INPUT_FEED_SUFFIX = "-pig-input-feed";
