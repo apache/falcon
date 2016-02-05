@@ -270,7 +270,10 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         LOG.info("Removing {} feed's instance {} in cluster {} from pendingSLA", feedName,
                 clusterName, nominalTime);
         Pair<String, String> feedCluster = new Pair<>(feedName, clusterName);
-        pendingInstances.get(feedCluster).remove(nominalTime);
+        // Slas for feeds not having sla tag are not stored.
+        if (pendingInstances.get(feedCluster) != null) {
+            pendingInstances.get(feedCluster).remove(nominalTime);
+        }
     }
 
     private FileSystem initializeFileSystem() {
