@@ -49,6 +49,7 @@ import org.apache.falcon.oozie.coordinator.INPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.fs.Path;
 
@@ -135,9 +136,15 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         }
         controls.setTimeout(String.valueOf(timeoutInMillis / (1000 * 60)));
 
-        if (timeoutInMillis / frequencyInMillis * 2 > 0) {
-            controls.setThrottle(String.valueOf(timeoutInMillis / frequencyInMillis * 2));
-        }
+        int minCoordinatorThrottle = Integer
+				.parseInt(RuntimeProperties.get().getProperty("falcon.oozie.coordinator.throttle.min", "12"));
+		long derivedCoordinatorThrottle = (timeoutInMillis / frequencyInMillis * 2);
+
+		if (minCoordinatorThrottle > derivedCoordinatorThrottle) {
+			controls.setThrottle(String.valueOf(minCoordinatorThrottle));
+		} else {
+			controls.setThrottle(String.valueOf(derivedCoordinatorThrottle));
+		}
 
         return controls;
     }

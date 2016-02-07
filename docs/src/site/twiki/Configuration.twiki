@@ -99,6 +99,9 @@ Some Falcon features such as late data handling, retries, metadata service, depe
    * In Falcon runtime.properties, set *.falcon.jms.notification.enabled to false. This will turn off JMS notification in post-processing.
    * Copy notification related properties in oozie/conf/oozie-site.xml to oozie-site.xml of the Oozie installation.  Restart Oozie so changes get reflected.  
 
+---+++Oozie Coordinator Throttle Minimum
+When creating an Oozie Coordinator Definition falcon will derive the <throttle> property by selecting the maximum of two values i) the falcon.oozie.coordinator.throttle.min declared in runtime.properties or ii) (${entity_timeout} / ${entity_freq} * 2) . By default falcon.oozie.coordinator.throttle.min=12, and if falcon.oozie.coordinator.throttle.min is not found in runtime.properties the default value is 12.
+
 *NOTE : If you disable Falcon post-processing JMS notification and not enable Oozie JMS notification, features such as failure retry, late data handling and metadata service will be disabled for all entities on the server.*
 
 ---+++Enabling Falcon Native Scheudler

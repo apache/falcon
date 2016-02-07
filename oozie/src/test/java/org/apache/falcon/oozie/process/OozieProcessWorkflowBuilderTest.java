@@ -203,6 +203,37 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     }
 
     @Test
+	public void testCoordinatorThrottleMin() throws Exception {
+		Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
+		
+		process.setFrequency(Frequency.fromString("hours(24)"));
+		process.setTimeout(Frequency.fromString("hours(20)"));
+		
+		OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+		Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+		builder.build(cluster, bundlePath);
+		assertTrue(fs.exists(bundlePath));
+
+		BUNDLEAPP bundle = getBundle(fs, bundlePath);
+		assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+		assertEquals(1, bundle.getCoordinator().size());
+		assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+				bundle.getCoordinator().get(0).getName());
+		String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+		List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
+		for (CONFIGURATION.Property prop : props) {
+			if (prop.getName().equals("oozie.libpath")) {
+				Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), process.getWorkflow().getLib());
+			}
+		}
+
+		COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+		testDefCoordMap(process, coord);
+		
+		assertEquals(coord.getControls().getThrottle(), "12");
+	}
+    
+    @Test
     public void testBundle() throws Exception {
         String path = StartupProperties.get().getProperty("system.lib.location");
         if (!new File(path).exists()) {
