@@ -337,22 +337,45 @@ def resolve_jira_issues(title, merge_branches, comment):
     for jira_id in jira_ids:
         resolve_jira_issue(merge_branches, comment, jira_id)
 
+# Given a list of jiras (space separated), generates a list with JIRA type suffixed
+# Example FALCON-1563 will return FALCON-1563 [Bug]
+def get_jira_types(jira_prefix):
+    jira_ids = jira_prefix.split()
+    jiras_with_type = []
+    asf_jira = jira.client.JIRA({'server': JIRA_API_BASE})
+    for jira_id in jira_ids:
+        try:
+            issue = asf_jira.issue(jira_id)
+        except Exception as e:
+            fail("ASF JIRA could not find %s\n%s" % (jira_id, e))
+
+        # Based on JIRA Type
+        type = issue.fields.issuetype.name
+        if "backward-incompatible" in issue.fields.labels:
+            type = "Incompatible Change"
+        jira_type = raw_input("Enter the classification for JIRA %s [%s]: " % (jira_id, type))
+        if jira_type.strip() == "":
+            jira_type = type
+        jiras_with_type.append(jira_id + " [" + jira_type + "]")
+
+    new_prefix = ", ".join(jiras_with_type)
+    return new_prefix
 
 def standardize_jira_ref(text):
-    """
-    Standardize the jira reference commit message prefix to "PROJECT_NAME-XXX Issue"
-
-    >>> standardize_jira_ref("%s-1563 Old feed instances get deleted from SLA monitoring on feed update" % CAPITALIZED_PROJECT_NAME)
-    'FALCON-1563 Old feed instances get deleted from SLA monitoring on feed update'
-    >>> standardize_jira_ref("%s-1032. Test message with dot after id and ellipsis, ..." % PROJECT_NAME)
-    'FALCON-1032 Test message with dot after id and ellipsis, ...'
-    >>> standardize_jira_ref("%s-6250 %s-6146 %s-5911: Test multiple commit messages." % (PROJECT_NAME, PROJECT_NAME, CAPITALIZED_PROJECT_NAME))
-    'FALCON-6250 FALCON-6146 FALCON-5911 Test multiple commit messages.'
-    >>> standardize_jira_ref("Message without JIRA id")
-    'Message without JIRA id'
-    >>> standardize_jira_ref("[FALCON-1009] id in brackets")
-    'FALCON-1009 id in brackets'
-    """
+    # """
+    # Standardize the jira reference commit message prefix to "PROJECT_NAME-XXX Issue"
+    #
+    # >>> standardize_jira_ref("%s-1563 Old feed instances get deleted from SLA monitoring on feed update" % CAPITALIZED_PROJECT_NAME)
+    # 'FALCON-1563 [Bug] Old feed instances get deleted from SLA monitoring on feed update'
+    # >>> standardize_jira_ref("%s-1032. Test message with dot after id and ellipsis, ..." % PROJECT_NAME)
+    # 'FALCON-1032 [Test] Test message with dot after id and ellipsis, ...'
+    # >>> standardize_jira_ref("%s-6250 %s-6146 %s-5911: Test multiple commit messages." % (PROJECT_NAME, PROJECT_NAME, CAPITALIZED_PROJECT_NAME))
+    # 'FALCON-250 [Bug], FALCON-6146 [Bug], FALCON-911 [Test] Test multiple commit messages.'
+    # >>> standardize_jira_ref("Message without JIRA id")
+    # 'Message without JIRA id'
+    # >>> standardize_jira_ref("[FALCON-1009] id in brackets")
+    # 'FALCON-1009 [Bug] id in brackets'
+    # """
     jira_refs = []
     components = []
 
@@ -377,6 +400,7 @@ def standardize_jira_ref(text):
 
     # Assemble full text (JIRA ref(s), module(s), remaining text)
     jira_prefix = ' '.join(jira_refs).strip()
+    jira_prefix = get_jira_types(jira_prefix)
     if jira_prefix:
         jira_prefix = jira_prefix + " "
     clean_text = jira_prefix + ' '.join(components).strip() + " " + text.strip()
