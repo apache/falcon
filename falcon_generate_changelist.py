@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 # Creates CHANGES.txt from git history.
-# "Inspired by" https://github.com/apache/FALCON/blob/master/dev/create-release/generate-changelist.py
+# "Inspired by" https://github.com/apache/spark/blob/master/dev/create-release/generate-changelist.py
 #
 # Usage:
 #   First set the new release version and previous release Git tag against which the changelog needs to be generated.
