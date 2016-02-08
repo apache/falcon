@@ -68,7 +68,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         super(entity, LifeCycle.EXECUTION);
     }
 
-    @Override public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
+    @Override
+    public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         String coordName = getEntityName();
         Path coordPath = getBuildPath(buildPath);
         copySharedLibs(cluster, new Path(coordPath, "lib"));
@@ -84,11 +85,11 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         Properties props = createCoordDefaultConfiguration(coordName);
 
         initializeInputPaths(cluster, coord, props); // inputs
-        initializeOutputPaths(cluster, coord, props);  // outputs
+        initializeOutputPaths(cluster, coord, props); // outputs
 
         // create parent wf
         Properties wfProps = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT).build(cluster,
-            coordPath);
+                coordPath);
 
         WORKFLOW wf = new WORKFLOW();
         wf.setAppPath(getStoragePath(wfProps.getProperty(OozieEntityBuilder.ENTITY_PATH)));
@@ -109,15 +110,14 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
     private void initializeCoordAttributes(Cluster cluster, COORDINATORAPP coord, String coordName) {
         coord.setName(coordName);
         org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(entity,
-            cluster.getName());
+                cluster.getName());
         coord.setStart(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()));
         coord.setEnd(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()));
         coord.setTimezone(entity.getTimezone().getID());
         coord.setFrequency("${coord:" + entity.getFrequency().toString() + "}");
     }
 
-    private CONTROLS initializeControls()
-        throws FalconException {
+    private CONTROLS initializeControls() throws FalconException {
         CONTROLS controls = new CONTROLS();
         controls.setConcurrency(String.valueOf(entity.getParallel()));
         controls.setExecution(entity.getOrder().name());
@@ -126,8 +126,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         long frequencyInMillis = ExpressionHelper.get().evaluate(entity.getFrequency().toString(), Long.class);
         long timeoutInMillis;
         if (timeout != null) {
-            timeoutInMillis = ExpressionHelper.get().
-                evaluate(entity.getTimeout().toString(), Long.class);
+            timeoutInMillis = ExpressionHelper.get().evaluate(entity.getTimeout().toString(), Long.class);
         } else {
             timeoutInMillis = frequencyInMillis * 6;
             if (timeoutInMillis < THIRTY_MINUTES) {
@@ -137,14 +136,14 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         controls.setTimeout(String.valueOf(timeoutInMillis / (1000 * 60)));
 
         int minCoordinatorThrottle = Integer
-				.parseInt(RuntimeProperties.get().getProperty("falcon.oozie.coordinator.throttle.min", "12"));
-		long derivedCoordinatorThrottle = (timeoutInMillis / frequencyInMillis * 2);
+                .parseInt(RuntimeProperties.get().getProperty("falcon.oozie.coordinator.throttle.min", "12"));
+        long derivedCoordinatorThrottle = (timeoutInMillis / frequencyInMillis * 2);
 
-		if (minCoordinatorThrottle > derivedCoordinatorThrottle) {
-			controls.setThrottle(String.valueOf(minCoordinatorThrottle));
-		} else {
-			controls.setThrottle(String.valueOf(derivedCoordinatorThrottle));
-		}
+        if (minCoordinatorThrottle > derivedCoordinatorThrottle) {
+            controls.setThrottle(String.valueOf(minCoordinatorThrottle));
+        } else {
+            controls.setThrottle(String.valueOf(derivedCoordinatorThrottle));
+        }
 
         return controls;
     }
@@ -202,7 +201,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
     }
 
     private void propagateLateDataProperties(List<String> inputFeeds, List<String> inputNames, List<String> inputPaths,
-        List<String> inputFeedStorageTypes, Properties props) {
+            List<String> inputFeedStorageTypes, Properties props) {
         // populate late data handler - should-record action
         props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), StringUtils.join(inputFeeds, '#'));
         props.put(WorkflowExecutionArgs.INPUT_NAMES.getName(), StringUtils.join(inputNames, '#'));
@@ -213,8 +212,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         props.put(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName(), StringUtils.join(inputFeedStorageTypes, '#'));
     }
 
-    private SYNCDATASET createDataSet(Feed feed, Cluster cluster, Storage storage,
-        String datasetName, LocationType locationType) throws FalconException {
+    private SYNCDATASET createDataSet(Feed feed, Cluster cluster, Storage storage, String datasetName,
+            LocationType locationType) throws FalconException {
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
@@ -314,16 +313,16 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
     }
 
     private void propagateFileSystemProperties(Output output, Feed feed, Cluster cluster, COORDINATORAPP coord,
-        Storage storage, Properties props) throws FalconException {
+            Storage storage, Properties props) throws FalconException {
         // stats and meta paths
         createOutputEvent(output, feed, cluster, LocationType.STATS, coord, props, storage);
         createOutputEvent(output, feed, cluster, LocationType.META, coord, props, storage);
         createOutputEvent(output, feed, cluster, LocationType.TMP, coord, props, storage);
     }
 
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     private void createOutputEvent(Output output, Feed feed, Cluster cluster, LocationType locType,
-        COORDINATORAPP coord, Properties props, Storage storage) throws FalconException {
+            COORDINATORAPP coord, Properties props, Storage storage) throws FalconException {
         String name = output.getName();
         String type = locType.name().toLowerCase();
 
@@ -348,20 +347,17 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         String outputExpr = "${coord:dataOut('" + name + type + "')}";
         props.put(name + "." + type, outputExpr);
     }
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
-
-
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     protected void propagateCatalogTableProperties(Input input, CatalogStorage tableStorage, Properties props) {
         String prefix = "falcon_" + input.getName();
 
         propagateCommonCatalogTableProperties(tableStorage, props, prefix);
 
-        props.put(prefix + "_partition_filter_pig",
-            "${coord:dataInPartitionFilter('" + input.getName() + "', 'pig')}");
+        props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('" + input.getName() + "', 'pig')}");
         props.put(prefix + "_partition_filter_hive",
-            "${coord:dataInPartitionFilter('" + input.getName() + "', 'hive')}");
+                "${coord:dataInPartitionFilter('" + input.getName() + "', 'hive')}");
         props.put(prefix + "_partition_filter_java",
-            "${coord:dataInPartitionFilter('" + input.getName() + "', 'java')}");
+                "${coord:dataInPartitionFilter('" + input.getName() + "', 'java')}");
     }
 }

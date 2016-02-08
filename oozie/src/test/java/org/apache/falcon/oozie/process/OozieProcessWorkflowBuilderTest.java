@@ -116,8 +116,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
         ConfigurationStore store = ConfigurationStore.get();
         cluster = store.get(EntityType.CLUSTER, "corp");
-        org.apache.falcon.entity.v0.cluster.Property property =
-                new org.apache.falcon.entity.v0.cluster.Property();
+        org.apache.falcon.entity.v0.cluster.Property property = new org.apache.falcon.entity.v0.cluster.Property();
         property.setName(SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
         property.setValue("hive/_HOST");
         cluster.getProperties().getProperties().add(property);
@@ -192,47 +191,46 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
         assertEquals(wfProps.get("mapred.job.priority"), "LOW");
         List<Input> inputs = process.getInputs().getInputs();
-        assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()), inputs.get(0).getName() + "#" + inputs
-            .get(1).getName());
+        assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()),
+                inputs.get(0).getName() + "#" + inputs.get(1).getName());
 
-        verifyEntityProperties(process, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(process, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         assertLibExtensions(fs, coord, EntityType.PROCESS, null);
     }
 
     @Test
-	public void testCoordinatorThrottleMin() throws Exception {
-		Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
-		
-		process.setFrequency(Frequency.fromString("hours(24)"));
-		process.setTimeout(Frequency.fromString("hours(20)"));
-		
-		OozieEntityBuilder builder = OozieEntityBuilder.get(process);
-		Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
-		builder.build(cluster, bundlePath);
-		assertTrue(fs.exists(bundlePath));
+    public void testCoordinatorThrottleMin() throws Exception {
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
 
-		BUNDLEAPP bundle = getBundle(fs, bundlePath);
-		assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
-		assertEquals(1, bundle.getCoordinator().size());
-		assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
-				bundle.getCoordinator().get(0).getName());
-		String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
-		List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
-		for (CONFIGURATION.Property prop : props) {
-			if (prop.getName().equals("oozie.libpath")) {
-				Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), process.getWorkflow().getLib());
-			}
-		}
+        process.setFrequency(Frequency.fromString("hours(24)"));
+        process.setTimeout(Frequency.fromString("hours(20)"));
 
-		COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-		testDefCoordMap(process, coord);
-		
-		assertEquals(coord.getControls().getThrottle(), "12");
-	}
-    
+        OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+        builder.build(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+        List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
+        for (CONFIGURATION.Property prop : props) {
+            if (prop.getName().equals("oozie.libpath")) {
+                Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), process.getWorkflow().getLib());
+            }
+        }
+
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+        testDefCoordMap(process, coord);
+
+        assertEquals(coord.getControls().getThrottle(), "12");
+    }
+
     @Test
     public void testBundle() throws Exception {
         String path = StartupProperties.get().getProperty("system.lib.location");
@@ -281,13 +279,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     @DataProvider(name = "secureOptions")
     private Object[][] createOptions() {
-        return new Object[][] {
-            {"simple"},
-            {"kerberos"},
-        };
+        return new Object[][] { { "simple" }, { "kerberos" }, };
     }
 
-    @Test (dataProvider = "secureOptions")
+    @Test(dataProvider = "secureOptions")
     public void testHiveProcessMapper(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
@@ -320,8 +315,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         HashMap<String, String> props = getCoordProperties(coord);
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
 
-        verifyEntityProperties(process, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(process, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         // verify table and hive props
@@ -355,7 +349,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         ConfigurationStore.get().remove(EntityType.PROCESS, process.getName());
     }
 
-    @Test (dataProvider = "secureOptions")
+    @Test(dataProvider = "secureOptions")
     public void testHiveProcessMapperWithFSInputFeedAndTableOutputFeed(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
@@ -383,8 +377,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
 
-        verifyEntityProperties(process, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(process, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
@@ -409,7 +402,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         ConfigurationStore.get().remove(EntityType.PROCESS, process.getName());
     }
 
-    @Test (dataProvider = "secureOptions")
+    @Test(dataProvider = "secureOptions")
     public void testHiveProcessMapperWithTableInputFeedAndFSOutputFeed(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
@@ -437,8 +430,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
 
-        verifyEntityProperties(process, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(process, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
@@ -463,7 +455,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         ConfigurationStore.get().remove(EntityType.PROCESS, process.getName());
     }
 
-    @Test (dataProvider = "secureOptions")
+    @Test(dataProvider = "secureOptions")
     public void testHiveProcessWithNoInputsAndOutputs(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
@@ -486,8 +478,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
-        verifyEntityProperties(process, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(process, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
@@ -496,8 +487,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
         ACTION hiveNode = getAction(parentWorkflow, "user-action");
 
-        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(
-                hiveNode);
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
         Assert.assertEquals(hiveAction.getScript(), "${nameNode}/apps/hive/script.hql");
@@ -546,7 +536,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         fs.create(wf).close();
     }
 
-    @Test (dataProvider = "secureOptions")
+    @Test(dataProvider = "secureOptions")
     public void testProcessMapperForTableStorage(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
@@ -586,8 +576,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         }
 
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
-        verifyEntityProperties(process, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(process, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         // verify the late data params
@@ -595,7 +584,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()),
-            process.getInputs().getInputs().get(0).getName());
+                process.getInputs().getInputs().get(0).getName());
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getFeed());
@@ -608,8 +597,8 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertHCatCredentials(parentWorkflow, wfPath);
     }
 
-    private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed,
-                                                      Process process) throws FalconException {
+    private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed, Process process)
+            throws FalconException {
         Map<String, String> expected = new HashMap<String, String>();
         if (process.getInputs() != null) {
             for (Input input : process.getInputs().getInputs()) {
@@ -628,8 +617,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         return expected;
     }
 
-    private void propagateStorageProperties(String feedName, CatalogStorage tableStorage,
-                                            Map<String, String> props) {
+    private void propagateStorageProperties(String feedName, CatalogStorage tableStorage, Map<String, String> props) {
         String prefix = "falcon_" + feedName;
         props.put(prefix + "_storage_type", tableStorage.getType().name());
         props.put(prefix + "_catalog_url", tableStorage.getCatalogUrl());
@@ -653,8 +641,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals("1.0.0", processWorkflow.getVersion());
     }
 
-    private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)
-        throws Exception {
+    private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout) throws Exception {
         OozieEntityBuilder builder = OozieEntityBuilder.get(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
         builder.build(cluster, bundlePath);
@@ -664,7 +651,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
         assertEquals(1, bundle.getCoordinator().size());
         assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
-            bundle.getCoordinator().get(0).getName());
+                bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
         for (CONFIGURATION.Property prop : props) {
@@ -721,17 +708,12 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         HashMap<String, String> props = getCoordProperties(coord);
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
-        verifyEntityProperties(processEntity, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(processEntity, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
-        String[] expected = {
-            WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(),
-            WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
-            WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(),
-            WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(),
-            WorkflowExecutionArgs.INPUT_NAMES.getName(),
-        };
+        String[] expected = { WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(),
+                WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(),
+                WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), WorkflowExecutionArgs.INPUT_NAMES.getName(), };
 
         for (String property : expected) {
             Assert.assertTrue(props.containsKey(property), "expected property missing: " + property);
@@ -761,8 +743,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         HashMap<String, String> props = getCoordProperties(coord);
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
-        verifyEntityProperties(processEntity, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(processEntity, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName()), "clicks");
@@ -792,8 +773,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         HashMap<String, String> props = getCoordProperties(coord);
         HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
-        verifyEntityProperties(processEntity, cluster,
-                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyEntityProperties(processEntity, cluster, WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
         verifyBrokerProperties(cluster, wfProps);
 
         Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "impressions");
