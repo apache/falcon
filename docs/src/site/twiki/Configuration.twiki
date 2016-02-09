@@ -96,16 +96,24 @@ option in environment variable FALCON_OPTS:
 
 ---+++Falcon System Notifications
 Some Falcon features such as late data handling, retries, metadata service, depend on JMS notifications sent when the Oozie workflow completes. These system notifications are sent as part of Falcon Post Processing action. Given that the post processing action is also a job, it is prone to failures and in case of failures, Falcon is blind to the status of the workflow. To alleviate this problem and make the notifications more reliable, you can enable Oozie's JMS notification feature and disable Falcon post-processing notification by making the following changes:
+
    * In Falcon runtime.properties, set *.falcon.jms.notification.enabled to false. This will turn off JMS notification in post-processing.
    * Copy notification related properties in oozie/conf/oozie-site.xml to oozie-site.xml of the Oozie installation.  Restart Oozie so changes get reflected.  
-
----+++Oozie Coordinator Throttle Minimum
-When creating an Oozie Coordinator Definition falcon will derive the <throttle> property by selecting the maximum of two values i) the falcon.oozie.coordinator.throttle.min declared in runtime.properties or ii) (${entity_timeout} / ${entity_freq} * 2) . By default falcon.oozie.coordinator.throttle.min=12, and if falcon.oozie.coordinator.throttle.min is not found in runtime.properties the default value is 12.
 
 *NOTE : If you disable Falcon post-processing JMS notification and not enable Oozie JMS notification, features such as failure retry, late data handling and metadata service will be disabled for all entities on the server.*
 
 ---+++Enabling Falcon Native Scheudler
 You can either choose to schedule entities using Oozie's coordinator or using Falcon's native scheduler. To be able to schedule entities natively on Falcon, you will need to add some additional properties to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the Falcon Server. For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
+
+---+++Oozie Coordinator Throttle Minimum
+*NOTE: This setting only applies if Falcon is configured to use Oozie as it's scheduler. If Falcon is configured to use the Falcon Native Scheduler then this setting has no effect.*
+
+When creating an Oozie Coordinator Definition Falcon will derive the <throttle> property by selecting the maximum of two values 
+i) the falcon.oozie.coordinator.throttle.min declared in runtime.properties 
+or 
+ii) (${entity_timeout} / ${entity_freq} * 2) . 
+
+By default falcon.oozie.coordinator.throttle.min=12, and if falcon.oozie.coordinator.throttle.min is not found in runtime.properties the default value is 12.
 
 ---+++Adding Extension Libraries
 
