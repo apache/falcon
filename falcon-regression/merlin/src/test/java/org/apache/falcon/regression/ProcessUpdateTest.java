@@ -24,7 +24,6 @@ import org.apache.falcon.entity.v0.process.LateProcess;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
-import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
@@ -47,7 +46,6 @@ import org.testng.annotations.Test;
 @Test(groups = "embedded")
 public class ProcessUpdateTest extends BaseTestClass {
 
-    private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
@@ -83,7 +81,7 @@ public class ProcessUpdateTest extends BaseTestClass {
         ProcessMerlin process = bundles[0].getProcessObject();
         process.setValidity(start, end);
         process.setLateProcess(null);
-        cluster.getProcessHelper().submitAndSchedule(process.toString());
+        prism.getProcessHelper().submitAndSchedule(process.toString());
         InstanceUtil.waitTillInstancesAreCreated(clusterOC, process.toString(), 0);
         String bundleId = OozieUtil.getLatestBundleID(clusterOC, process.getName(), EntityType.PROCESS);
 
@@ -97,7 +95,7 @@ public class ProcessUpdateTest extends BaseTestClass {
         lateProcess.getLateInputs().add(lateInput);
         process.setLateProcess(lateProcess);
         LOGGER.info("Updated process xml: " + Util.prettyPrintXml(process.toString()));
-        AssertUtil.assertSucceeded(cluster.getProcessHelper().update(process.toString(), process.toString()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().update(process.toString(), process.toString()));
 
         //check that new coordinator was created
         String newBundleId = OozieUtil.getLatestBundleID(clusterOC, process.getName(), EntityType.PROCESS);
