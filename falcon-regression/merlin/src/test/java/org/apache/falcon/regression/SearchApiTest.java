@@ -101,15 +101,15 @@ public class SearchApiTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0] = new Bundle(bundles[0], servers.get(0));
         bundles[0].generateUniqueBundle(this);
-        bundles[0].submitClusters(cluster);
+        bundles[0].submitClusters(prism);
         String prefix = base + "-bundle";
 
         FeedMerlin basicFeed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         basicFeed.setName(prefix + "0-input-feed");
-        AssertUtil.assertSucceeded(cluster.getFeedHelper().submitAndSchedule(basicFeed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(basicFeed.toString()));
         basicFeed = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
         basicFeed.setName(prefix + "0-output-feed");
-        AssertUtil.assertSucceeded(cluster.getFeedHelper().submitAndSchedule(basicFeed.toString()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(basicFeed.toString()));
 
         /* Submit 3 bundles of feeds */
         FeedMerlin feed = new FeedMerlin(bundles[0].getInputFeedFromBundle());
@@ -121,7 +121,7 @@ public class SearchApiTest extends BaseTestClass {
                 tags += ",partial=b1b2";
             }
             feed.setTags(tags);
-            AssertUtil.assertSucceeded(cluster.getFeedHelper().submitEntity(feed.toString()));
+            AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
         }
 
         /* Submit 3 bundles of processes */
@@ -140,7 +140,7 @@ public class SearchApiTest extends BaseTestClass {
                 tags += ",partial=b1b2";
             }
             process.setTags(tags);
-            AssertUtil.assertSucceeded(cluster.getProcessHelper().submitEntity(process.toString()));
+            AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(process.toString()));
 
             //submit a mirroring process
             if (i % 2 == 1) {
@@ -150,7 +150,7 @@ public class SearchApiTest extends BaseTestClass {
             }
             process.setName(prefix + i + "-mirror-process");
             process.setTags(tags);
-            AssertUtil.assertSucceeded(cluster.getProcessHelper().submitEntity(process.toString()));
+            AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(process.toString()));
         }
     }
 
