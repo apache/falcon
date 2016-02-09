@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Azure ADF base job.
+ * Base class for Azure ADF jobs.
  */
 public abstract class ADFJob {
     private static final Logger LOG = LoggerFactory.getLogger(ADFJob.class);

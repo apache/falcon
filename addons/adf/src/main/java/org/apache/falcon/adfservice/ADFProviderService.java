@@ -77,6 +77,7 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
     // Number of threads to handle ADF requests
     private static final int AZURE_SERVICEBUS_REQUEST_HANDLING_THREADS = 5;
 
+    private static final String AZURE_SERVICEBUS_CONF_PREFIX = "microsoft.windowsazure.services.servicebus.";
     private static final String AZURE_SERVICEBUS_CONF_SASKEYNAME = "sasKeyName";
     private static final String AZURE_SERVICEBUS_CONF_SASKEY = "sasKey";
     private static final String AZURE_SERVICEBUS_CONF_SERVICEBUSROOTURI = "serviceBusRootUri";
@@ -84,10 +85,10 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
     private static final String AZURE_SERVICEBUS_CONF_POLLING_FREQUENCY = "polling.frequency";
     private static final String AZURE_SERVICEBUS_CONF_REQUEST_QUEUE_NAME = "requestqueuename";
     private static final String AZURE_SERVICEBUS_CONF_STATUS_QUEUE_NAME = "statusqueuename";
-    private static final String AZURE_SERVICEBUS_CONF_PREFIX = "microsoft.windowsazure.services.servicebus.";
+    private static final String AZURE_SERVICEBUS_CONF_SUPER_USER = "superuser";
 
     private static final ConfigurationStore STORE = ConfigurationStore.get();
-    private static final String SUPER_USER = "ambari-qa";
+    private static final String DEFAULT_SUPER_USER = "ambari-qa";
 
     private ServiceBusContract service;
     private ScheduledExecutorService adfScheduledExecutorService;
@@ -95,6 +96,7 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
     private ADFInstanceManager instanceManager = new ADFInstanceManager();
     private String requestQueueName;
     private String statusQueueName;
+    private String superUser;
 
     @Override
     public String getName() {
@@ -108,13 +110,13 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
 
         requestQueueName = StartupProperties.get().getProperty(AZURE_SERVICEBUS_CONF_PREFIX
                 + AZURE_SERVICEBUS_CONF_REQUEST_QUEUE_NAME);
-        if (requestQueueName == null) {
+        if (StringUtils.isBlank(requestQueueName)) {
             throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_REQUEST_QUEUE_NAME
                     + " property not set in startup properties. Please add it.");
         }
         statusQueueName = StartupProperties.get().getProperty(AZURE_SERVICEBUS_CONF_PREFIX
                 + AZURE_SERVICEBUS_CONF_STATUS_QUEUE_NAME);
-        if (statusQueueName == null) {
+        if (StringUtils.isBlank(statusQueueName)) {
             throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_STATUS_QUEUE_NAME
                     + " property not set in startup properties. Please add it.");
         }
@@ -124,7 +126,12 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
         opts.setTimeout(AZURE_SERVICEBUS_RECEIVEMESSGAEOPT_TIMEOUT);
 
         // restart handling
-        CurrentUser.authenticate(SUPER_USER);
+        superUser = StartupProperties.get().getProperty(
+                AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_SUPER_USER);
+        if (StringUtils.isBlank(superUser)) {
+            superUser = DEFAULT_SUPER_USER;
+        }
+        CurrentUser.authenticate(superUser);
         for (EntityType entityType : EntityType.values()) {
             Collection<String> entities = STORE.getEntities(entityType);
             for (String entityName : entities) {
@@ -164,22 +171,8 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
 
                     service.deleteMessage(message);
 
-                    ADFJob.JobType jobType = ADFJob.getJobType(msg);
-                    switch (jobType) {
-                    case REPLICATION:
-                        ADFReplicationJob job = new ADFReplicationJob(msg, sessionID);
-                        job.startJob();
-                        break;
-                    case HIVE:
-                        ADFHiveJob hiveJob = new ADFHiveJob(msg, sessionID);
-                        hiveJob.startJob();
-                        break;
-                    case PIG:
-                        ADFPigJob pigJob = new ADFPigJob(msg, sessionID);
-                        pigJob.startJob();
-                        break;
-                    default:
-                    }
+                    ADFJob job = ADFJobFactory.buildADFJob(msg, sessionID);
+                    job.startJob();
                 } else {
                     LOG.info("No message from adf");
                 }
@@ -197,33 +190,34 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
     private static Configuration getServiceBusConfig() throws FalconException {
         String namespace = StartupProperties.get().getProperty(AZURE_SERVICEBUS_CONF_PREFIX
                 + AZURE_SERVICEBUS_CONF_NAMESPACE);
-        if (namespace == null) {
+        if (StringUtils.isBlank(namespace)) {
             throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_NAMESPACE
                     + " property not set in startup properties. Please add it.");
         }
 
         String sasKeyName = StartupProperties.get().getProperty(AZURE_SERVICEBUS_CONF_PREFIX
                 + AZURE_SERVICEBUS_CONF_SASKEYNAME);
-        if (sasKeyName == null) {
+        if (StringUtils.isBlank(sasKeyName)) {
             throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_SASKEYNAME
                     + " property not set in startup properties. Please add it.");
         }
+
         String sasKey = StartupProperties.get().getProperty(AZURE_SERVICEBUS_CONF_PREFIX
                 + AZURE_SERVICEBUS_CONF_SASKEY);
-        if (sasKey == null) {
+        if (StringUtils.isBlank(sasKey)) {
             throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_SASKEY
                     + " property not set in startup properties. Please add it.");
         }
 
         String serviceBusRootUri = StartupProperties.get().getProperty(AZURE_SERVICEBUS_CONF_PREFIX
                 + AZURE_SERVICEBUS_CONF_SERVICEBUSROOTURI);
-        if (serviceBusRootUri == null) {
+        if (StringUtils.isBlank(serviceBusRootUri)) {
             throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_SERVICEBUSROOTURI
                     + " property not set in startup properties. Please add it.");
         }
 
-        LOG.info("namespace: " + namespace + ", sas key name: " + sasKeyName
-                + ", sas key: " + sasKey + ", root uri: " + serviceBusRootUri);
+        LOG.info("namespace: {}, sas key name: {}, sas key: {}, root uri: {}",
+                        namespace, sasKeyName, sasKey, serviceBusRootUri);
         return ServiceBusConfiguration.configureWithSASAuthentication(namespace, sasKeyName, sasKey,
                 serviceBusRootUri);
     }

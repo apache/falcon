@@ -94,7 +94,7 @@ public class ADFHiveJob extends ADFJob {
     private JSONObject getTableExtendedProperties(final String tableName) throws FalconException {
         JSONObject table = tablesMap.get(tableName);
         if (table == null) {
-            throw new FalconException("JSON object tables  not found in ADF request.");
+            throw new FalconException("JSON object table " + tableName + " not found in ADF request.");
         }
 
         try {
