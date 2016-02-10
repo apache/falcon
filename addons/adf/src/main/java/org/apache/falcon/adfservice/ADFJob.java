@@ -265,7 +265,7 @@ public abstract class ADFJob {
                 tables.add(inputs.getJSONObject(i).getString(ADFJsonConstants.ADF_REQUEST_NAME));
             }
         } catch (JSONException e) {
-            throw new FalconException("Error while parsing input tables in ADF request.");
+            throw new FalconException("Error while reading input table names in ADF request.");
         }
         return tables;
     }
@@ -279,7 +279,7 @@ public abstract class ADFJob {
                 tables.add(outputs.getJSONObject(i).getString(ADFJsonConstants.ADF_REQUEST_NAME));
             }
         } catch (JSONException e) {
-            throw new FalconException("Error while parsing output tables in ADF request.");
+            throw new FalconException("Error while reading output table names in ADF request.");
         }
         return tables;
     }
