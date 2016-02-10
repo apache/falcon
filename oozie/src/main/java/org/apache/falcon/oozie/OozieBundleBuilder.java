@@ -18,6 +18,7 @@
 
 package org.apache.falcon.oozie;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -54,6 +55,7 @@ import java.util.Properties;
  */
 public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     public static final Logger LOG = LoggerFactory.getLogger(OozieBundleBuilder.class);
+    private static final String WF_LIB_SEPARATOR = ",";
 
     public OozieBundleBuilder(T entity) {
         super(entity);
@@ -106,11 +108,24 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
 
         //Add libpath
-        String libPath = getLibPath(buildPath);
-        if (libPath != null) {
-            properties.put(OozieClient.LIBPATH, getStoragePath(libPath));
+        String path = getLibPath(buildPath);
+        if (StringUtils.isNotBlank(path)) {
+            String storageLibPaths = null;
+            String[] libPaths = path.split(WF_LIB_SEPARATOR);
+            for (String libPath : libPaths) {
+                if (StringUtils.isNotBlank(storageLibPaths)) {
+                    storageLibPaths += WF_LIB_SEPARATOR;
+                }
+                String tempPath = getStoragePath(libPath);
+                if (StringUtils.isNotBlank(tempPath)) {
+                    storageLibPaths = StringUtils.isNotBlank(storageLibPaths) ? storageLibPaths.concat(tempPath) :
+                            tempPath;
+                }
+            }
+            if (StringUtils.isNotBlank(storageLibPaths)) {
+                properties.put(OozieClient.LIBPATH, storageLibPaths);
+            }
         }
-
         return properties;
     }
 
