@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1829 Add regression for submit and schedule process on native scheduler (time based) (Pragya Mittal)
+
    FALCON-1766 Add CLI metrics check for HiveDR, HDFS and feed replication (Paul Isaychuk)
 
    FALCON-1777 Add regression for HDFS replication (recipe) (Paul Isaychuk)

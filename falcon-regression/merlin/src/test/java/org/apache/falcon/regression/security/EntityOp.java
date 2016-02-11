@@ -163,7 +163,7 @@ enum EntityOp {
         public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
-                response = helper.schedule(data, user);
+                response = helper.schedule(data, user, "");
             } catch (IOException e) {
                 logger.error("Caught exception: " + e);
                 return false;
@@ -207,7 +207,7 @@ enum EntityOp {
         public boolean executeAs(String user, AbstractEntityHelper helper, String data) {
             final ServiceResponse response;
             try {
-                response = helper.submitAndSchedule(data, user);
+                response = helper.submitAndSchedule(data, user, "");
             } catch (IOException e) {
                 logger.error("Caught exception: " + e);
                 return false;
