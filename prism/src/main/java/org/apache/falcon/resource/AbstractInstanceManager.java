@@ -465,7 +465,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                             : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
-        } else if (orderBy.equals("starttime")){
+        } else if (orderBy.equals("starttime") || orderBy.isEmpty()){
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
@@ -486,16 +486,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                 }
             });
         }
-        Collections.sort(instanceSet, new Comparator<Instance>() {
-            @Override
-            public int compare(Instance i1, Instance i2) {
-                Date start1 = (i1.getStartTime() == null) ? new Date(0) : i1.getStartTime();
-                Date start2 = (i2.getStartTime() == null) ? new Date(0) : i2.getStartTime();
-                return (order.equalsIgnoreCase("asc")) ? start1.compareTo(start2)
-                        : start2.compareTo(start1);
-            }
-        });
-        //Default : startTime
+        //Default : no sort
         return instanceSet;
     }
 
