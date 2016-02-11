@@ -118,8 +118,8 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
                 }
                 String tempPath = getStoragePath(libPath);
                 if (StringUtils.isNotBlank(tempPath)) {
-                    storageLibPaths = StringUtils.isNotBlank(storageLibPaths) ? storageLibPaths.concat(tempPath) :
-                            tempPath;
+                    storageLibPaths = StringUtils.isNotBlank(storageLibPaths) ? storageLibPaths.concat(tempPath)
+                            : tempPath;
                 }
             }
             if (StringUtils.isNotBlank(storageLibPaths)) {
