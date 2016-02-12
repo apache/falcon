@@ -217,6 +217,9 @@ public class FalconPostProcessingTest {
     }
 
     private void verifyMesssage(MessageConsumer consumer) throws JMSException {
+
+        String[] actualFeedNames = new String[outputFeedPaths.length];
+        String[] actualFeedPaths = new String[outputFeedPaths.length];
         for (int index = 0; index < outputFeedPaths.length; ++index) {
             // receive call is blocking
             MapMessage m = (MapMessage) consumer.receive();
@@ -224,11 +227,11 @@ public class FalconPostProcessingTest {
             System.out.println("Received JMS message {}" + m.toString());
             System.out.println("Consumed: " + m.toString());
             assertMessage(m);
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
-                    outputFeedNames[index]);
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                    outputFeedPaths[index]);
+            actualFeedNames[index] = m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName());
+            actualFeedPaths[index] = m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName());
         }
+        Assert.assertEqualsNoOrder(actualFeedNames, outputFeedNames);
+        Assert.assertEqualsNoOrder(actualFeedPaths, outputFeedPaths);
     }
 
     private void assertMessage(MapMessage m) throws JMSException {
