@@ -121,6 +121,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1819 Improve test class entity cleanup logic (Paul Isaychuk)
+
    FALCON-1697 Stabilization of scenarios which are based on instances lifecycle(Paul Isaychuk via Ajay Yadava)
 
    FALCON-1543 Upgrade Falcon regression to use Active MQ 5.12(Pragya Mittal via Pallavi Rao)
