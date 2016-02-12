@@ -299,6 +299,18 @@ public final class AssertUtil {
     }
 
     /**
+     * Checks that ServiceResponse status is status FAILED with expectedMessage.
+     *
+     * @param response ServiceResponse
+     * @param expectedMessage expected message
+     * @throws JAXBException
+     */
+    public static void assertFailedWithMessage(ServiceResponse response, String expectedMessage) throws JAXBException {
+        assertFailed(response);
+        Assert.assertTrue(response.getMessage().contains(expectedMessage), "Incorrect message in response");
+    }
+
+    /**
      * Checks that Instance/Triage result status is FAILED.
      *
      * @param response APIResult response

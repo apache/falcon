@@ -30,6 +30,7 @@ import org.apache.oozie.client.Job;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.WorkflowAction;
+import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTimeZone;
@@ -754,8 +755,8 @@ public final class OozieUtil {
      * Returns configuration object of a given bundleID for a given instanceTime.
      *
      * @param oozieClient  oozie client of cluster job is running on
-     * @param bundleID     name of process which job is being analyzed
-     * @param time         job status we are waiting for
+     * @param bundleID     bundleID of given cluster
+     * @param time         instanceTime
      * @throws org.apache.oozie.client.OozieClientException
      * @throws org.json.JSONException
      */
@@ -821,5 +822,34 @@ public final class OozieUtil {
             }
         }
         return counter == propMap.size();
+    }
+
+    /**
+     * Returns configuration object of a given bundleID for a given retentionFeed.
+     *
+     * @param oozieClient  oozie client of cluster job is running on
+     * @param bundleID     bundleID of given cluster
+     * @throws OozieClientException
+     */
+    public static Configuration getRetentionConfiguration(OozieClient oozieClient, String bundleID)
+        throws OozieClientException {
+        waitForCoordinatorJobCreation(oozieClient, bundleID);
+        CoordinatorJob coord = null;
+        List<CoordinatorJob> coordJobs = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
+        for (CoordinatorJob coordinatorJob : coordJobs) {
+            if (coordinatorJob.getAppName().startsWith("FALCON_FEED_RETENTION")) {
+                coord = oozieClient.getCoordJobInfo(coordinatorJob.getId());
+            }
+        }
+
+        Configuration configuration = new Configuration();
+        if (coord != null) {
+            WorkflowJob wid = oozieClient.getJobInfo(coord.getActions().get(0).getExternalId());
+            configuration.addResource(new ByteArrayInputStream(wid.getConf().getBytes()));
+        } else {
+            configuration = null;
+        }
+
+        return configuration;
     }
 }
