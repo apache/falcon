@@ -181,7 +181,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             if (StringUtils.isNotEmpty(startStr) && StringUtils.isEmpty(sortOrder)){
                 ArrayUtils.reverse(instancesResult.getInstances());
             }
-            instancesResult.setCollection(ArrayUtils.subarray(instancesResult.getInstances(),offset,
+            instancesResult.setCollection(ArrayUtils.subarray(instancesResult.getInstances(), offset,
                     (offset + numResults)));
             return instancesResult;
         } catch (FalconException e) {
