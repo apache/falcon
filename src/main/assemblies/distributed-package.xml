@@ -30,7 +30,7 @@
             <directory>../src/conf/</directory>
             <outputDirectory>conf</outputDirectory>
             <fileMode>0644</fileMode>
-            <directoryMode>0644</directoryMode>
+            <directoryMode>0755</directoryMode>
             <excludes>
                 <exclude>client.properties</exclude>
                 <exclude>prism-client.properties</exclude>
@@ -113,7 +113,7 @@
             <directory>../hadoop-dependencies/target/dependency</directory>
             <outputDirectory>hadooplibs</outputDirectory>
             <fileMode>0644</fileMode>
-            <directoryMode>0644</directoryMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
