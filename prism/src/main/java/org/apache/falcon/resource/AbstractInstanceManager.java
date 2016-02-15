@@ -37,6 +37,7 @@ import java.util.Set;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -173,9 +174,16 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
-            return getInstanceResultSubset(wfEngine.getStatus(entityObject,
-                            startAndEndDate.first, startAndEndDate.second, lifeCycles, allAttempts),
+            InstancesResult instancesResult = getInstanceResultSubset(wfEngine.getStatus(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, lifeCycles, allAttempts),
                     filterBy, orderBy, sortOrder, offset, numResults);
+
+            if (StringUtils.isNotEmpty(startStr) && StringUtils.isEmpty(sortOrder)){
+                ArrayUtils.reverse(instancesResult.getInstances());
+            }
+            instancesResult.setCollection(ArrayUtils.subarray(instancesResult.getInstances(),offset,
+                    (offset + numResults)));
+            return instancesResult;
         } catch (FalconException e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException.newAPIException(e.getMessage());
@@ -307,8 +315,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
         // Sort the ArrayList using orderBy
         instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
-        result.setCollection(instanceSet.subList(
-                offset, (offset + pageCount)).toArray(new Instance[pageCount]));
+        result.setCollection(instanceSet.toArray());
         return result;
     }
 
@@ -465,7 +472,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                             : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
-        } else if (orderBy.equals("starttime") || orderBy.isEmpty()){
+        } else if (orderBy.equals("starttime")){
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
