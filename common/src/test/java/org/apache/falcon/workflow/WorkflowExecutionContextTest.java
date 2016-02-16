@@ -300,6 +300,7 @@ public class WorkflowExecutionContextTest {
     }
 
     private static String[] getTestMessageArgs() {
+        long now = new Date().getTime();
         return new String[]{
             "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), CLUSTER_NAME,
             "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), "process",
@@ -333,8 +334,8 @@ public class WorkflowExecutionContextTest {
 
             "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
             "-" + WorkflowExecutionArgs.LOG_FILE.getName(), LOGS_DIR + "/log.txt",
-            "-" + WorkflowExecutionArgs.WF_START_TIME.getName(), Long.toString(new Date().getTime()),
-            "-" + WorkflowExecutionArgs.WF_END_TIME.getName(), Long.toString(new Date().getTime() + 1000000),
+            "-" + WorkflowExecutionArgs.WF_START_TIME.getName(), Long.toString(now),
+            "-" + WorkflowExecutionArgs.WF_END_TIME.getName(), Long.toString(now + 1000000),
         };
     }
 }
