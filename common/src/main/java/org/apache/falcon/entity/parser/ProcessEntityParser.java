@@ -60,8 +60,6 @@ import java.util.TimeZone;
  */
 public class ProcessEntityParser extends EntityParser<Process> {
 
-    private static final String WF_LIB_SEPARATOR = ",";
-
     public ProcessEntityParser() {
         super(EntityType.PROCESS);
     }
@@ -176,7 +174,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
             }
 
             if (StringUtils.isNotBlank(libPath)) {
-                String[] libPaths = libPath.split(WF_LIB_SEPARATOR);
+                String[] libPaths = libPath.split(EntityUtil.WF_LIB_SEPARATOR);
                 for (String path : libPaths) {
                     if (!fs.exists(new Path(path))) {
                         throw new ValidationException("Lib path: " + path + " does not exists in HDFS: " + nameNode);

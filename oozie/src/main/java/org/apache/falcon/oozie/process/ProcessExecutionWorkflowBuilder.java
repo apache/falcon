@@ -65,8 +65,6 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
     private static final Set<String> FALCON_PROCESS_HIVE_ACTIONS = new HashSet<String>(
         Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, USER_ACTION_NAME, }));
 
-    private static final String WF_LIB_SEPARATOR = ",";
-
     protected ProcessExecutionWorkflowBuilder(Process entity) {
         super(entity, LifeCycle.EXECUTION);
     }
@@ -244,7 +242,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
             return;
         }
 
-        String[] libPaths = lib.split(WF_LIB_SEPARATOR);
+        String[] libPaths = lib.split(EntityUtil.WF_LIB_SEPARATOR);
         for (String path : libPaths) {
             Path libPath = new Path(path);
             try {

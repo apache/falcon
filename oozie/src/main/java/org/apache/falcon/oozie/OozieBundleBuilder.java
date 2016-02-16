@@ -55,7 +55,6 @@ import java.util.Properties;
  */
 public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     public static final Logger LOG = LoggerFactory.getLogger(OozieBundleBuilder.class);
-    private static final String WF_LIB_SEPARATOR = ",";
 
     public OozieBundleBuilder(T entity) {
         super(entity);
@@ -110,20 +109,19 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         //Add libpath
         String path = getLibPath(buildPath);
         if (StringUtils.isNotBlank(path)) {
-            String storageLibPaths = null;
-            String[] libPaths = path.split(WF_LIB_SEPARATOR);
+            StringBuilder storageLibPaths = new StringBuilder();
+            String[] libPaths = path.split(EntityUtil.WF_LIB_SEPARATOR);
             for (String libPath : libPaths) {
-                if (StringUtils.isNotBlank(storageLibPaths)) {
-                    storageLibPaths += WF_LIB_SEPARATOR;
-                }
                 String tempPath = getStoragePath(libPath);
                 if (StringUtils.isNotBlank(tempPath)) {
-                    storageLibPaths = StringUtils.isNotBlank(storageLibPaths) ? storageLibPaths.concat(tempPath)
-                            : tempPath;
+                    if (StringUtils.isNotBlank(storageLibPaths)) {
+                        storageLibPaths.append(EntityUtil.WF_LIB_SEPARATOR);
+                    }
+                    storageLibPaths.append(tempPath);
                 }
             }
             if (StringUtils.isNotBlank(storageLibPaths)) {
-                properties.put(OozieClient.LIBPATH, storageLibPaths);
+                properties.put(OozieClient.LIBPATH, storageLibPaths.toString());
             }
         }
         return properties;
