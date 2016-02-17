@@ -107,24 +107,31 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
 
         //Add libpath
+        String libPath = getOozieLibPath(buildPath);
+        if (StringUtils.isNotBlank(libPath)) {
+            properties.put(OozieClient.LIBPATH, libPath);
+        }
+
+        return properties;
+    }
+
+    private String getOozieLibPath(final Path buildPath) {
         String path = getLibPath(buildPath);
-        if (StringUtils.isNotBlank(path)) {
-            StringBuilder storageLibPaths = new StringBuilder();
-            String[] libPaths = path.split(EntityUtil.WF_LIB_SEPARATOR);
-            for (String libPath : libPaths) {
-                String tempPath = getStoragePath(libPath);
-                if (StringUtils.isNotBlank(tempPath)) {
-                    if (StringUtils.isNotBlank(storageLibPaths)) {
-                        storageLibPaths.append(EntityUtil.WF_LIB_SEPARATOR);
-                    }
-                    storageLibPaths.append(tempPath);
+        if (StringUtils.isBlank(path)) {
+            return null;
+        }
+        StringBuilder storageLibPaths = new StringBuilder();
+        String[] libPaths = path.split(EntityUtil.WF_LIB_SEPARATOR);
+        for (String libPath : libPaths) {
+            String tempPath = getStoragePath(libPath);
+            if (StringUtils.isNotBlank(tempPath)) {
+                if (StringUtils.isNotBlank(storageLibPaths)) {
+                    storageLibPaths.append(EntityUtil.WF_LIB_SEPARATOR);
                 }
-            }
-            if (StringUtils.isNotBlank(storageLibPaths)) {
-                properties.put(OozieClient.LIBPATH, storageLibPaths.toString());
+                storageLibPaths.append(tempPath);
             }
         }
-        return properties;
+        return StringUtils.isBlank(storageLibPaths) ? null : storageLibPaths.toString();
     }
 
     protected CONFIGURATION getConfig(Properties props) {
