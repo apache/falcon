@@ -56,7 +56,7 @@ import java.util.Collections;
  *      *.feed.sla.statusCheck.frequency.seconds=60
  *      *.feed.sla.lookAheadWindow.millis=60000
  */
-@Test(groups = "distributed")
+@Test(groups = { "distributed", "embedded" })
 public class FeedSLAMonitoringTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
@@ -79,27 +79,7 @@ public class FeedSLAMonitoringTest extends BaseTestClass {
             new Comparator<SchedulableEntityInstance>() {
                 @Override
                 public int compare(SchedulableEntityInstance o1, SchedulableEntityInstance o2) {
-                    int tagDiff = o1.getTags().compareTo(o2.getTags());
-                    if (tagDiff != 0) {
-                        return tagDiff;
-                    }
-                    int clusterDiff = o1.getCluster().compareTo(o2.getCluster());
-                    if (clusterDiff != 0) {
-                        return clusterDiff;
-                    }
-                    int typeDiff = o1.getEntityType().compareTo(o2.getEntityType());
-                    if (typeDiff != 0) {
-                        return typeDiff;
-                    }
-                    int nameDiff = o1.getEntityName().compareTo(o2.getEntityName());
-                    if (nameDiff != 0) {
-                        return nameDiff;
-                    }
-                    int dateDiff = o1.getInstanceTime().compareTo(o2.getInstanceTime());
-                    if (dateDiff != 0) {
-                        return dateDiff;
-                    }
-                    return 0;
+                    return o1.compareTo(o2);
                 }
             };
 
@@ -166,7 +146,7 @@ public class FeedSLAMonitoringTest extends BaseTestClass {
         /**TEST : Check sla response for a given time range
          */
 
-        statusCheckFrequency=1*60; // 60 seconds
+        statusCheckFrequency=60; // 60 seconds
 
         // Map of instanceDate and corresponding list of SchedulableEntityInstance
         Map<String, List<SchedulableEntityInstance>> instanceEntityMap = new HashMap<>();
@@ -211,7 +191,7 @@ public class FeedSLAMonitoringTest extends BaseTestClass {
          */
 
         String dateEntry = (String) instanceEntityMap.keySet().toArray()[1];
-        System.out.println(dateEntry + "/" + instanceEntityMap.get(dateEntry));
+        LOGGER.info(dateEntry + "/" + instanceEntityMap.get(dateEntry));
         List<String> dataDates = InstanceUtil.getMinuteDatesToPath(dateEntry, dateEntry, 0);
 
         HadoopUtil.createFolders(clusterFS, baseTestHDFSDir + "/input/", dataDates);
@@ -242,7 +222,7 @@ public class FeedSLAMonitoringTest extends BaseTestClass {
 
         for (Map.Entry<String, List<SchedulableEntityInstance>> entry : instanceEntityMap.entrySet())
         {
-            System.out.println(entry.getKey() + "/" + entry.getValue());
+            LOGGER.info(entry.getKey() + "/" + entry.getValue());
             for (SchedulableEntityInstance instance : entry.getValue()) {
                 if (instance.getEntityName().equals(deletedFeed)) {
                     expectedInstances.remove(instance);
