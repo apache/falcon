@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1567 Test case for Lifecycle feature  (Pragya Mittal)
+
    FALCON-1784 Add regression test for for FALCON-1647 (Paul Isaychuk)
 
    FALCON-1829 Add regression for submit and schedule process on native scheduler (time based) (Pragya Mittal)
