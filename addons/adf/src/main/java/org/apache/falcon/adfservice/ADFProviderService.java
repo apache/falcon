@@ -88,7 +88,6 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
     private static final String AZURE_SERVICEBUS_CONF_SUPER_USER = "superuser";
 
     private static final ConfigurationStore STORE = ConfigurationStore.get();
-    private static final String DEFAULT_SUPER_USER = "ambari-qa";
 
     private ServiceBusContract service;
     private ScheduledExecutorService adfScheduledExecutorService;
@@ -129,7 +128,8 @@ public class ADFProviderService implements FalconService, WorkflowExecutionListe
         superUser = StartupProperties.get().getProperty(
                 AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_SUPER_USER);
         if (StringUtils.isBlank(superUser)) {
-            superUser = DEFAULT_SUPER_USER;
+            throw new FalconException(AZURE_SERVICEBUS_CONF_PREFIX + AZURE_SERVICEBUS_CONF_SUPER_USER
+                    + " property not set in startup properties. Please add it.");
         }
         CurrentUser.authenticate(superUser);
         for (EntityType entityType : EntityType.values()) {
