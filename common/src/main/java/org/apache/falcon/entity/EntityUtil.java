@@ -81,6 +81,8 @@ import java.util.TimeZone;
 public final class EntityUtil {
     public static final Logger LOG = LoggerFactory.getLogger(EntityUtil.class);
 
+    public static final String MR_QUEUE_NAME = "queueName";
+
     private static final long MINUTE_IN_MS = 60 * 1000L;
     private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
     private static final long DAY_IN_MS = 24 * HOUR_IN_MS;

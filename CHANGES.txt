@@ -11,6 +11,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
+
     FALCON-1774 Falcon to honour PRISM_URL env var (Praveen Adlakha) 
 
     FALCON-1721 Checkstyle doesn't extend parent.

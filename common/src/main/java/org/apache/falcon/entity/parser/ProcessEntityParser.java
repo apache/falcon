@@ -41,10 +41,13 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.DateUtil;
+import org.apache.falcon.util.HadoopQueueUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
@@ -59,6 +62,8 @@ import java.util.TimeZone;
  * Concrete Parser which has XML parsing and validation logic for Process XML.
  */
 public class ProcessEntityParser extends EntityParser<Process> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessEntityParser.class);
 
     public ProcessEntityParser() {
         super(EntityType.PROCESS);
@@ -114,6 +119,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         validateDatasetName(process.getInputs(), process.getOutputs());
         validateLateInputs(process);
         validateProcessSLA(process);
+        validateHadoopQueue(process);
     }
 
 
@@ -318,6 +324,44 @@ public class ProcessEntityParser extends EntityParser<Process> {
             if (!propertyKeys.add(prop.getName())) {
                 throw new ValidationException("Multiple properties with same name found for Process : "
                         + process.getName());
+            }
+        }
+    }
+
+    private void validateHadoopQueue(Process process) throws FalconException {
+        // get queue name specified in the process entity
+        String processQueueName = null;
+        java.util.Properties props = EntityUtil.getEntityProperties(process);
+        if ((props != null) && (props.containsKey(EntityUtil.MR_QUEUE_NAME))) {
+            processQueueName = props.getProperty(EntityUtil.MR_QUEUE_NAME);
+        } else {
+            return;
+        }
+
+        // iterate through each cluster in process entity to check if the cluster has the process entity queue
+        for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
+            String clusterName = cluster.getName();
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
+
+            String rmURL = ClusterHelper.getPropertyValue(clusterEntity, "yarn.resourcemanager.webapp.https.address");
+            if (rmURL == null) {
+                rmURL = ClusterHelper.getPropertyValue(clusterEntity, "yarn.resourcemanager.webapp.address");
+            }
+
+            if (rmURL != null) {
+                LOG.info("Fetching hadoop queue names from cluster {} RM URL {}", cluster.getName(), rmURL);
+                Set<String> queueNames = HadoopQueueUtil.getHadoopClusterQueueNames(rmURL);
+
+                if (queueNames.contains(processQueueName)) {
+                    LOG.info("Validated presence of queue {} specified in process "
+                            + "entity for cluster {}", processQueueName, clusterName);
+                } else {
+                    String strMsg = String.format("The hadoop queue name %s specified in process "
+                            + "entity for cluster %s is invalid.", processQueueName, cluster.getName());
+                    LOG.info(strMsg);
+                    throw new FalconException(strMsg);
+                }
             }
         }
     }
