@@ -701,7 +701,7 @@ public abstract class AbstractEntityHelper {
         if (StringUtils.isNotEmpty(params)){
             url += colo.isEmpty() ? "?" + params : "&" + params;
         }
-        return Util.sendRequestLineage(createUrl(url), "get", null, null);
+        return Util.sendJSONRequest(createUrl(url), "get", null, null);
     }
 
     /**
@@ -713,6 +713,21 @@ public abstract class AbstractEntityHelper {
         String url = createUrl(this.hostname + URLS.INSTANCE_DEPENDENCIES.getValue(), getEntityType(), entityName, "");
         return (InstanceDependencyResult) InstanceUtil
                 .createAndSendRequestProcessInstance(url, params, allColo, user);
+    }
+
+    /**
+     * Retrieves sla alerts.
+     * @param params list of optional parameters
+     * @return instances with sla missed.
+     */
+    public ServiceResponse getSlaAlert(String params)
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException {
+        String url = createUrl(this.hostname + URLS.SLA.getValue(),
+                getEntityType());
+        if (StringUtils.isNotEmpty(params)) {
+            url +=  params;
+        }
+        return Util.sendJSONRequest(createUrl(url), "get", null, null);
     }
 
 }

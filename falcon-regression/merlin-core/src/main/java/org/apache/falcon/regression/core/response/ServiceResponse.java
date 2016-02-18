@@ -25,6 +25,7 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 
@@ -121,4 +122,13 @@ public class ServiceResponse {
         return lineageGraphResult;
     }
 
+    /**
+     * Retrieves SchedulableEntityInstanceResult from a message if possible.
+     * @return SchedulableEntityInstanceResult
+     */
+    public SchedulableEntityInstanceResult getSlaResult() {
+        SchedulableEntityInstanceResult schedulableEntityInstanceResult = new GsonBuilder().create().fromJson(message,
+                SchedulableEntityInstanceResult.class);
+        return schedulableEntityInstanceResult;
+    }
 }
