@@ -238,36 +238,39 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
 
     protected void addArchiveForCustomJars(Cluster cluster, List<String> archiveList, String lib)
         throws FalconException {
-        if (StringUtils.isEmpty(lib)) {
+        if (StringUtils.isBlank(lib)) {
             return;
         }
 
-        Path libPath = new Path(lib);
-        try {
-            final FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
-            if (fs.isFile(libPath)) {  // File, not a Dir
-                archiveList.add(libPath.toString());
-                return;
-            }
-
-            // lib path is a directory, add each file under the lib dir to archive
-            final FileStatus[] fileStatuses = fs.listStatus(libPath, new PathFilter() {
-                @Override
-                public boolean accept(Path path) {
-                    try {
-                        return fs.isFile(path) && path.getName().endsWith(".jar");
-                    } catch (IOException ignore) {
-                        return false;
-                    }
+        String[] libPaths = lib.split(EntityUtil.WF_LIB_SEPARATOR);
+        for (String path : libPaths) {
+            Path libPath = new Path(path);
+            try {
+                final FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                        ClusterHelper.getConfiguration(cluster));
+                if (fs.isFile(libPath)) {  // File, not a Dir
+                    archiveList.add(libPath.toString());
+                    return;
                 }
-            });
 
-            for (FileStatus fileStatus : fileStatuses) {
-                archiveList.add(fileStatus.getPath().toString());
+                // lib path is a directory, add each file under the lib dir to archive
+                final FileStatus[] fileStatuses = fs.listStatus(libPath, new PathFilter() {
+                    @Override
+                    public boolean accept(Path path) {
+                        try {
+                            return fs.isFile(path) && path.getName().endsWith(".jar");
+                        } catch (IOException ignore) {
+                            return false;
+                        }
+                    }
+                });
+
+                for (FileStatus fileStatus : fileStatuses) {
+                    archiveList.add(fileStatus.getPath().toString());
+                }
+            } catch (IOException e) {
+                throw new FalconException("Error adding archive for custom jars under: " + libPath, e);
             }
-        } catch (IOException e) {
-            throw new FalconException("Error adding archive for custom jars under: " + libPath, e);
         }
     }
 

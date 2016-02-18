@@ -89,6 +89,7 @@ public final class EntityUtil {
     public static final String MR_JOB_PRIORITY = "jobPriority";
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
+    public static final String WF_LIB_SEPARATOR = ",";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
 
     /** Priority with which the DAG will be scheduled.

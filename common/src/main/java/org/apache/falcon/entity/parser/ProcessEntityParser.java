@@ -173,8 +173,13 @@ public class ProcessEntityParser extends EntityParser<Process> {
                         "Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);
             }
 
-            if (StringUtils.isNotEmpty(libPath) && !fs.exists(new Path(libPath))) {
-                throw new ValidationException("Lib path: " + libPath + " does not exists in HDFS: " + nameNode);
+            if (StringUtils.isNotBlank(libPath)) {
+                String[] libPaths = libPath.split(EntityUtil.WF_LIB_SEPARATOR);
+                for (String path : libPaths) {
+                    if (!fs.exists(new Path(path))) {
+                        throw new ValidationException("Lib path: " + path + " does not exists in HDFS: " + nameNode);
+                    }
+                }
             }
         } catch (IOException e) {
             throw new FalconException("Error validating workflow path " + workflowPath, e);

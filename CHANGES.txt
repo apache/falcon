@@ -32,6 +32,8 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)
+
     FALCON-1795 Kill api not killing waiting/ready instances
    
     FALCON-1804 Non-SLA feed throws NullPointerException.
