@@ -35,6 +35,11 @@ public class FalconCLITest {
     public static void startUp() throws InterruptedException {
         Bootstrap bootstrap = new Bootstrap();
         shell = bootstrap.getJLineShellComponent();
+        for(CommandMarker command: shell.getSimpleParser().getCommandMarkers()) {
+            if(command instanceof BaseFalconCommands) {
+                command.
+            }
+        }
     }
 
 

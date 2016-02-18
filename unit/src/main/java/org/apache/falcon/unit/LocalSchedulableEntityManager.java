@@ -68,7 +68,7 @@ public class LocalSchedulableEntityManager extends AbstractSchedulableEntityMana
         return super.update(inputStream, entityType, entityName, colo, skipDryRun);
     }
 
-    public APIResult submit(String entityType, String filePath, String doAsUser) throws FalconException, IOException {
+    public APIResult submit(String entityType, String filePath, String doAsUser) throws FalconException {
         InputStream inputStream = FalconUnitHelper.getFileInputStream(filePath);
         Entity entity = super.submitInternal(inputStream, entityType, doAsUser);
         return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + entityType + ") " + entity.getName());

@@ -20,6 +20,7 @@ package org.apache.falcon.cli.commands;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.client.AbstractFalconClient;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.springframework.shell.core.ExecutionProcessor;
@@ -43,7 +44,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
     protected static final String FALCON_URL_ABSENT = "Failed to get falcon url from environment or client properties";
     private static Properties clientProperties;
     private static Properties backupProperties = new Properties();
-    private static FalconClient client;
+    private static AbstractFalconClient client;
 
     protected static Properties getClientProperties() {
         if (clientProperties == null) {
@@ -95,11 +96,15 @@ public class BaseFalconCommands implements ExecutionProcessor {
         client = null;
     }
 
-    public static FalconClient getFalconClient() {
+    public static AbstractFalconClient getFalconClient() {
         if (client == null) {
             client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY), getClientProperties());
         }
         return client;
+    }
+
+    public static void setFalconClient(AbstractFalconClient abstractFalconClient) {
+        client = abstractFalconClient;
     }
 
     protected String getColo(String colo) {

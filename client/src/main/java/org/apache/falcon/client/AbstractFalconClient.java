@@ -24,9 +24,12 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.hadoop.io.Stringifier;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -54,7 +57,7 @@ public abstract class AbstractFalconClient {
      * @return
      * @throws IOException
      */
-    public abstract APIResult submit(String entityType, String filePath, String doAsUser) throws IOException;
+    public abstract APIResult submit(String entityType, String filePath, String doAsUser);
 
     /**
      * Schedules an submitted process entity immediately.
@@ -64,7 +67,7 @@ public abstract class AbstractFalconClient {
      * @return
      */
     public abstract APIResult schedule(EntityType entityType, String entityName, String colo, Boolean skipDryRun,
-                                        String doAsuser, String properties);
+                                       String doAsuser, String properties);
 
     /**
      * Delete the specified entity.
@@ -83,7 +86,7 @@ public abstract class AbstractFalconClient {
      * @param skipDryRun Dry run.
      * @param doAsUser Proxy User.
      * @return
-\     */
+    \     */
     public abstract APIResult validate(String entityType, String filePath, Boolean skipDryRun,
                                        String doAsUser);
 
@@ -97,7 +100,7 @@ public abstract class AbstractFalconClient {
      * @return
      */
     public abstract APIResult update(String entityType, String entityName, String filePath,
-                                                       Boolean skipDryRun, String doAsUser);
+                                     Boolean skipDryRun, String doAsUser);
 
     /**
      * Get definition of the entity.
@@ -108,7 +111,6 @@ public abstract class AbstractFalconClient {
      */
     public abstract Entity getDefinition(String entityType, String entityName,
                                          String doAsUser);
-
 
 
     /**
@@ -129,8 +131,8 @@ public abstract class AbstractFalconClient {
      * @return
      */
     public abstract InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String
-            colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer
-            numResults, String doAsUser, Boolean allAttempts);
+        colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer
+                                                             numResults, String doAsUser, Boolean allAttempts);
 
     /**
      * Suspend an entity.
@@ -173,7 +175,7 @@ public abstract class AbstractFalconClient {
      * @return Result of the submit and schedule command.
      */
     public abstract APIResult submitAndSchedule(String entityType, String filePath, Boolean skipDryRun, String doAsUser,
-                                       String properties);
+                                                String properties);
 
     /**
      *
@@ -209,8 +211,8 @@ public abstract class AbstractFalconClient {
      * @return Total number of results and a list of entities.
      */
     public abstract EntityList getEntityList(String entityType, String fields, String nameSubsequence, String
-            tagKeywords, String filterBy, String filterTags, String orderBy, String sortOrder, Integer offset, Integer
-            numResults, String doAsUser);
+        tagKeywords, String filterBy, String filterTags, String orderBy, String sortOrder, Integer offset, Integer
+                                                 numResults, String doAsUser);
 
     /**
      * Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity.
@@ -242,8 +244,8 @@ public abstract class AbstractFalconClient {
      */
     public abstract EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
                                                          String fields, String filterBy, String filterTags, String
-                                                         orderBy, String sortOrder, Integer offset, Integer
-                                                         numResults, Integer numInstances, String doAsUser);
+                                                             orderBy, String sortOrder, Integer offset, Integer
+                                                             numResults, Integer numInstances, String doAsUser);
 
     /**
      * Force updates the entity.
@@ -288,8 +290,8 @@ public abstract class AbstractFalconClient {
      * @throws UnsupportedEncodingException
      */
     public abstract InstancesResult suspendInstances(String type, String entity, String start, String end, String colo,
-                                            String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                            String doAsUser) throws UnsupportedEncodingException;
+                                                     String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                                     String doAsUser) throws UnsupportedEncodingException;
 
     /**
      * Resume suspended instances of an entity.
@@ -305,8 +307,8 @@ public abstract class AbstractFalconClient {
      * @throws UnsupportedEncodingException
      */
     public abstract InstancesResult resumeInstances(String type, String entity, String start, String end, String colo,
-                                           String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                           String doAsUser) throws UnsupportedEncodingException;
+                                                    String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                                    String doAsUser) throws UnsupportedEncodingException;
 
     /**
      * Rerun instances of an entity. On issuing a rerun, by default the execution resumes from the last failed node in
@@ -416,7 +418,7 @@ public abstract class AbstractFalconClient {
      */
     public abstract InstancesResult getParamsOfInstance(String type, String entity, String start, String colo,
                                                         List<LifeCycle> lifeCycles, String doAsUser) throws
-            UnsupportedEncodingException;
+        UnsupportedEncodingException;
 
     /**
      * Get dependent instances for a particular instance.
@@ -436,7 +438,7 @@ public abstract class AbstractFalconClient {
     public abstract String getVersion(String doAsUser);
 
     protected InputStream getServletInputStream(String clusters, String sourceClusters, String properties) throws
-            UnsupportedEncodingException {
+        UnsupportedEncodingException {
 
         InputStream stream;
         StringBuilder buffer = new StringBuilder();
@@ -452,4 +454,11 @@ public abstract class AbstractFalconClient {
         stream = new ByteArrayInputStream(buffer.toString().getBytes());
         return (buffer.length() == 0) ? null : stream;
     }
+
+    public abstract SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
+                                                                                String start, String end, String colo);
+
+    public abstract FeedLookupResult reverseLookUp(String entityType, String path, String doAs);
+
+    public abstract Stringifier getDependency(String entityType, String entityName, String doAs);
 }

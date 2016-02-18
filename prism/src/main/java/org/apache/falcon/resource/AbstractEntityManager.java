@@ -414,7 +414,7 @@ public abstract class AbstractEntityManager {
     }
 
     protected Entity submitInternal(InputStream inputStream, String type, String doAsUser)
-        throws IOException, FalconException {
+        throws FalconException {
 
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(inputStream, entityType);
@@ -491,7 +491,7 @@ public abstract class AbstractEntityManager {
     }
 
     protected Entity deserializeEntity(InputStream xmlStream, EntityType entityType)
-        throws IOException, FalconException {
+        throws FalconException {
 
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         if (xmlStream.markSupported()) {

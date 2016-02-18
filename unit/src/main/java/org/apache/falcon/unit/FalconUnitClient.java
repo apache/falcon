@@ -35,13 +35,16 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.admin.AdminResource;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+import org.apache.hadoop.io.Stringifier;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.json.simple.JSONValue;
 import org.slf4j.Logger;
@@ -96,7 +99,7 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @return boolean
      */
     @Override
-    public APIResult submit(String type, String filePath, String doAsUser) throws IOException {
+    public APIResult submit(String type, String filePath, String doAsUser) {
 
         try {
             return localSchedulableEntityManager.submit(type, filePath, doAsUser);
@@ -365,6 +368,21 @@ public class FalconUnitClient extends AbstractFalconClient {
         }
         version.put("properties", list.toString());
         return version.toString();
+    }
+
+    @Override
+    public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName, String start, String end, String colo) {
+        return null;
+    }
+
+    @Override
+    public FeedLookupResult reverseLookUp(String entityType, String path, String doAs) {
+        return null;
+    }
+
+    @Override
+    public Stringifier getDependency(String entityType, String entityName, String doAs) {
+        return null;
     }
 
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {
