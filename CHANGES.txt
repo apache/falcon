@@ -3,14 +3,13 @@ Trunk
   TASKS:
   INCOMPATIBLE CHANGES
   NEW FEATURES
+    FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
    
     FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
 
     FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
 
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
-
-    FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
 
   IMPROVEMENTS
     FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
