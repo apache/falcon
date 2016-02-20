@@ -37,7 +37,6 @@ import java.util.Set;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -126,7 +125,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
             return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
-                    filterBy, orderBy, sortOrder, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults, "");
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw FalconWebException.newAPIException(e);
@@ -174,16 +173,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
-            InstancesResult instancesResult = getInstanceResultSubset(wfEngine.getStatus(entityObject,
+            return getInstanceResultSubset(wfEngine.getStatus(entityObject,
                     startAndEndDate.first, startAndEndDate.second, lifeCycles, allAttempts),
-                    filterBy, orderBy, sortOrder, offset, numResults);
-
-            if (StringUtils.isNotEmpty(startStr) && StringUtils.isEmpty(sortOrder)){
-                ArrayUtils.reverse(instancesResult.getInstances());
-            }
-            instancesResult.setCollection(ArrayUtils.subarray(instancesResult.getInstances(), offset,
-                    (offset + numResults)));
-            return instancesResult;
+                    filterBy, orderBy, sortOrder, offset, numResults, startStr);
         } catch (FalconException e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException.newAPIException(e.getMessage());
@@ -292,10 +284,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
-
     private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy,
                                                     String orderBy, String sortOrder, Integer offset,
-                                                    Integer numResults) throws FalconException {
+                                                    Integer numResults, String startStr) throws FalconException {
         if (resultSet.getInstances() == null) {
             // return the empty resultSet
             resultSet.setInstances(new Instance[0]);
@@ -313,9 +304,15 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             result.setInstances(new Instance[0]);
             return result;
         }
-        // Sort the ArrayList using orderBy
-        instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
-        result.setCollection(instanceSet.toArray());
+        if (StringUtils.isNotEmpty(startStr) && StringUtils.isEmpty(sortOrder)) {
+            Collections.reverse(instanceSet);
+        }
+        if (StringUtils.isNoneEmpty(sortOrder)) {
+            // Sort the ArrayList using orderBy
+            instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
+        }
+        result.setCollection(instanceSet.subList(
+                offset, (offset + pageCount)).toArray(new Instance[pageCount]));
         return result;
     }
 
