@@ -83,7 +83,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
  */
 public class FalconClient extends AbstractFalconClient {
 
-    public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
+    public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
@@ -134,7 +134,6 @@ public class FalconClient extends AbstractFalconClient {
 
     private static final String PROPERTIES_SUFFIX = ".properties";
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
-        @Override
         public boolean verify(String hostname, SSLSession sslSession) {
             return true;
         }
