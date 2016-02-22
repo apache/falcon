@@ -18,6 +18,7 @@
    * <a href="#Email_Notification">Email Notification</a>
    * <a href="#Backwards_Compatibility">Backwards Compatibility Instructions</a>
    * <a href="#Proxyuser_support">Proxyuser support</a>
+   * <a href="#ImportExport">Data Import and Export</a>
 
 ---++ Architecture
 
@@ -767,6 +768,10 @@ If these configurations are not present, impersonation will not be allowed and c
 the wildcard value * may be used to allow impersonation from any host or of any user, although this is recommended only for testing/development.
 
 -doAs option via  CLI or doAs query parameter can be appended if using API to enable impersonation.
+
+---++ ImportExport
+
+Data Import and Export is detailed in [[ImportExport][Data Import and Export]].
 
 
 

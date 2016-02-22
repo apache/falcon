@@ -385,6 +385,7 @@ public final class Util {
         STATUS_URL("/api/entities/status"),
         ENTITY_SUMMARY("/api/entities/summary"),
         SUBMIT_AND_SCHEDULE_URL("/api/entities/submitAndSchedule"),
+        SLA("/api/entities/sla-alert"),
         ENTITY_LINEAGE("/api/metadata/lineage/entities"),
         INSTANCE_RUNNING("/api/instance/running"),
         INSTANCE_STATUS("/api/instance/status"),
@@ -595,7 +596,7 @@ public final class Util {
      * @throws URISyntaxException
      * @throws AuthenticationException
      */
-    public static ServiceResponse sendRequestLineage(String url, String method, String data, String user)
+    public static ServiceResponse sendJSONRequest(String url, String method, String data, String user)
         throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         BaseRequest request = new BaseRequest(url, method, user, data);
         request.addHeader(RequestKeys.CONTENT_TYPE_HEADER, RequestKeys.JSON_CONTENT_TYPE);

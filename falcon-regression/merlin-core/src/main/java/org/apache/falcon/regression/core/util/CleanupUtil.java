@@ -80,28 +80,26 @@ public final class CleanupUtil {
             new StringReader(clusterResponse.getMessage()));
     }
 
-
-
-    public static void cleanEntitiesWithPrefix(ColoHelper prism, String namePrefix) {
-        final List<String> processes = getEntitiesWithPrefix(prism.getProcessHelper(), null, namePrefix);
-        final List<String> feeds = getEntitiesWithPrefix(prism.getFeedHelper(), null, namePrefix);
-        final List<String> clusters = getEntitiesWithPrefix(prism.getClusterHelper(), null, namePrefix);
+    public static void cleanEntitiesWithPrefix(ColoHelper prism, String namePrefix, String user) {
+        final List<String> processes = getEntitiesWithPrefix(prism.getProcessHelper(), user, namePrefix);
+        final List<String> feeds = getEntitiesWithPrefix(prism.getFeedHelper(), user, namePrefix);
+        final List<String> clusters = getEntitiesWithPrefix(prism.getClusterHelper(), user, namePrefix);
 
         for (String process : processes) {
-            deleteQuietlyByName(prism.getProcessHelper(), process);
+            deleteQuietlyByName(prism.getProcessHelper(), process, user);
         }
         for (String feed : feeds) {
-            deleteQuietlyByName(prism.getFeedHelper(), feed);
+            deleteQuietlyByName(prism.getFeedHelper(), feed, user);
         }
 
         for (String cluster : clusters) {
-            deleteQuietlyByName(prism.getClusterHelper(), cluster);
+            deleteQuietlyByName(prism.getClusterHelper(), cluster, user);
         }
     }
 
-    private static void deleteQuietlyByName(AbstractEntityHelper helper, String entityName) {
+    private static void deleteQuietlyByName(AbstractEntityHelper helper, String entityName, String user) {
         try {
-            helper.deleteByName(entityName, null);
+            helper.deleteByName(entityName, user);
         } catch (Exception e) {
             LOGGER.info("Caught exception: " + ExceptionUtils.getStackTrace(e));
         }

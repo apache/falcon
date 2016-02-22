@@ -18,12 +18,16 @@
 
 package org.apache.falcon.entity.parser;
 
+import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -34,10 +38,24 @@ import java.io.InputStream;
  */
 public class DatasourceEntityParserTest extends AbstractTestBase {
 
+    private EmbeddedCluster cluster;
+    private String hdfsUrl;
+
     private final DatasourceEntityParser datasourceEntityParser =
             (DatasourceEntityParser) EntityParserFactory.getParser(EntityType.DATASOURCE);
     private final FeedEntityParser feedEntityParser =
             (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
+
+    @BeforeClass
+    public void start() throws Exception {
+        cluster = EmbeddedCluster.newCluster("test");
+        hdfsUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
+    }
+
+    @AfterClass
+    public void close() throws Exception {
+        cluster.shutdown();
+    }
 
     @BeforeMethod
     public void setup() throws Exception {

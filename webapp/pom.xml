@@ -71,6 +71,10 @@
                     <artifactId>hadoop-client</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </dependency>
             </dependencies>
         </profile>
         <profile>
@@ -79,6 +83,16 @@
                 <dependency>
                     <groupId>org.apache.falcon</groupId>
                     <artifactId>falcon-hive-replication</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>adf</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.falcon</groupId>
+                    <artifactId>falcon-adf</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>
@@ -606,6 +620,7 @@
                   <exclude>**/db1.log</exclude>
                   <exclude>**/db1.properties</exclude>
                   <exclude>**/db1.script</exclude>
+                  <exclude>**/credential_provider.jceks</exclude>
                 </excludes>
               </configuration>
       	    </plugin>	

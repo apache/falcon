@@ -23,6 +23,8 @@ import org.apache.oozie.CoordinatorEngine;
 import org.apache.oozie.CoordinatorEngineException;
 import org.apache.oozie.LocalOozieClientCoord;
 
+import java.util.List;
+
 /**
  * Client API to submit and manage Oozie Coord jobs against an Oozie
  * intance.
@@ -74,5 +76,24 @@ public class LocalOozieClientCoordProxy extends LocalOozieClientCoord {
         } catch (CoordinatorEngineException e) {
             throw new OozieClientException(e.getErrorCode().toString(), e);
         }
+    }
+
+    /**
+     * Kill coordinator actions.
+     *
+     * @param jobId coordinator Job Id
+     * @param rangeType type 'date' if -date is used, 'action-num' if -action is used
+     * @param scope kill scope for date or action nums
+     * @return list of coordinator actions that underwent kill
+     * @throws OozieClientException thrown if some actions could not be killed.
+     */
+    @Override
+    public List<CoordinatorAction> kill(String jobId, String rangeType, String scope) throws OozieClientException {
+        try {
+            coordEngine.killActions(jobId, rangeType, scope).getCoordActions();
+        } catch (CoordinatorEngineException e) {
+            throw new OozieClientException(e.getErrorCode().toString(), e);
+        }
+        return null;
     }
 }

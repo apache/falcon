@@ -19,8 +19,8 @@
 package org.apache.falcon.entity;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Pair;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.datasource.Credential;
@@ -30,21 +30,30 @@ import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.datasource.Interface;
 import org.apache.falcon.entity.v0.datasource.Interfaces;
 import org.apache.falcon.entity.v0.datasource.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.PasswordAliasType;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CredentialProviderHelper;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * DataSource entity helper methods.
  */
 
 public final class DatasourceHelper {
+
+    public static final String HADOOP_CREDENTIAL_PROVIDER_FILEPATH = "hadoop.security.credential.provider.path";
 
     private static final Logger LOG = LoggerFactory.getLogger(DatasourceHelper.class);
 
@@ -64,18 +73,32 @@ public final class DatasourceHelper {
         return getInterface(datasource, Interfacetype.READONLY);
     }
 
+    public static String getWriteEndpoint(Datasource datasource) {
+        return getInterface(datasource, Interfacetype.WRITE);
+    }
+
     /**
      * Returns user name and password pair as it is specified in the XML. If the credential type is
      * password-file, the path name is returned.
      *
      * @param db
-     * @return user name and password pair
+     * @return Credential
      * @throws FalconException
      */
-    public static Pair<String, String> getReadPasswordInfo(Datasource db) throws FalconException {
+
+    public static Credential getReadPasswordInfo(Datasource db) throws FalconException {
         for (Interface ifs : db.getInterfaces().getInterfaces()) {
             if ((ifs.getType() == Interfacetype.READONLY) && (ifs.getCredential() != null)) {
-                return getPasswordInfo(ifs.getCredential());
+                return ifs.getCredential();
+            }
+        }
+        return getDefaultPasswordInfo(db.getInterfaces());
+    }
+
+    public static Credential getWritePasswordInfo(Datasource db) throws FalconException {
+        for (Interface ifs : db.getInterfaces().getInterfaces()) {
+            if ((ifs.getType() == Interfacetype.WRITE) && (ifs.getCredential() != null)) {
+                return ifs.getCredential();
             }
         }
         return getDefaultPasswordInfo(db.getInterfaces());
@@ -91,32 +114,37 @@ public final class DatasourceHelper {
      * @throws FalconException
      */
     public static java.util.Properties fetchReadPasswordInfo(Datasource db) throws FalconException {
-        Pair<String, String> passwdInfo = getReadPasswordInfo(db);
+        Credential cred = getReadPasswordInfo(db);
+        return fetchPasswordInfo(cred);
+    }
+
+    public static java.util.Properties fetchWritePasswordInfo(Datasource db) throws FalconException {
+        Credential cred = getWritePasswordInfo(db);
+        return fetchPasswordInfo(cred);
+    }
+
+    public static java.util.Properties fetchPasswordInfo(Credential cred) throws FalconException {
         java.util.Properties p = new java.util.Properties();
-        p.put("user", passwdInfo.first);
-        p.put("password", passwdInfo.second);
-        if (getReadPasswordType(db) == Credentialtype.PASSWORD_FILE) {
-            String actualPasswd = readPasswordInfoFromFile(passwdInfo.second);
+        p.put("user", cred.getUserName());
+        if (cred.getType() == Credentialtype.PASSWORD_TEXT) {
+            p.put("password", cred.getPasswordText());
+        } else if (cred.getType() == Credentialtype.PASSWORD_FILE) {
+            String actualPasswd = fetchPasswordInfoFromFile(cred.getPasswordFile());
+            p.put("password", actualPasswd);
+        } else if (cred.getType() == Credentialtype.PASSWORD_ALIAS) {
+            String actualPasswd = fetchPasswordInfoFromCredentialStore(cred.getPasswordAlias());
             p.put("password", actualPasswd);
         }
         return p;
     }
 
-    /**
-     * Given Datasource, return the read-only credential type. If read-only credential is missing,
-     * use interface's default credential.
-     *
-     * @param db
-     * @return Credentialtype
-     * @throws FalconException
-     */
-    public static Credentialtype getReadPasswordType(Datasource db) throws FalconException {
-        for (Interface ifs : db.getInterfaces().getInterfaces()) {
-            if ((ifs.getType() == Interfacetype.READONLY) && (ifs.getCredential() != null)) {
-                return getPasswordType(ifs.getCredential());
-            }
-        }
-        return getDefaultPasswordType(db.getInterfaces());
+    public static String buildJceksProviderPath(URI credURI) {
+        StringBuilder sb = new StringBuilder();
+        final String credProviderPath = sb.append("jceks:").append("//")
+                .append(credURI.getScheme()).append("@")
+                .append(credURI.getHost())
+                .append(credURI.getPath()).toString();
+        return credProviderPath;
     }
 
     /**
@@ -134,39 +162,61 @@ public final class DatasourceHelper {
         }
         return null;
     }
-    private static Credentialtype getPasswordType(Credential c) {
-        return c.getType();
-    }
 
-    private static Credentialtype getDefaultPasswordType(Interfaces ifs) throws FalconException {
+    private static Credential getDefaultPasswordInfo(Interfaces ifs) throws FalconException {
 
         if (ifs.getCredential() != null) {
-            return ifs.getCredential().getType();
+            return ifs.getCredential();
         } else {
             throw new FalconException("Missing Interfaces default credential");
         }
     }
 
-    private static Pair<String, String> getDefaultPasswordInfo(Interfaces ifs) throws FalconException {
+    private static String fetchPasswordInfoFromCredentialStore(final PasswordAliasType c) throws FalconException {
+        try {
+            final String credPath = c.getProviderPath();
+            final URI credURI = new URI(credPath);
+            if (StringUtils.isBlank(credURI.getScheme())
+                || StringUtils.isBlank(credURI.getHost())
+                || StringUtils.isBlank(credURI.getPath())) {
+                throw new FalconException("Password alias jceks provider HDFS path is incorrect.");
+            }
+            final String alias = c.getAlias();
+            if (StringUtils.isBlank(alias)) {
+                throw new FalconException("Password alias is empty.");
+            }
 
-        if (ifs.getCredential() != null) {
-            return getPasswordInfo(ifs.getCredential());
-        } else {
-            throw new FalconException("Missing Interfaces default credential");
+            final String credProviderPath = buildJceksProviderPath(credURI);
+            LOG.info("Credential provider HDFS path : " + credProviderPath);
+
+            if (CredentialProviderHelper.isProviderAvailable()) {
+                UserGroupInformation ugi = CurrentUser.getProxyUGI();
+                String password = ugi.doAs(new PrivilegedExceptionAction<String>() {
+                    public String run() throws Exception {
+                        final Configuration conf = new Configuration();
+                        conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, credPath);
+                        conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, credProviderPath);
+                        FileSystem fs = FileSystem.get(credURI, conf);
+                        if (!fs.exists(new Path(credPath))) {
+                            String msg = String.format("Credential provider hdfs path [%s] does not "
+                                   + "exist or access denied!", credPath);
+                            LOG.error(msg);
+                            throw new FalconException(msg);
+                        }
+                        return CredentialProviderHelper.resolveAlias(conf, alias);
+                    }
+                });
+                return password;
+            } else {
+                throw new FalconException("Credential Provider is not initialized");
+            }
+        } catch (Exception ioe) {
+            String msg = "Exception while trying to fetch credential alias";
+            LOG.error(msg, ioe);
+            throw new FalconException(msg, ioe);
         }
     }
-
-    private static Pair<String, String> getPasswordInfo(Credential c) throws FalconException {
-        String passwd = null;
-        if (c.getType() == Credentialtype.PASSWORD_FILE) {
-            passwd = c.getPasswordFile();
-        } else {
-            passwd = c.getPasswordText();
-        }
-        return new Pair<String, String>(c.getUserName(), passwd);
-    }
-
-    private static String readPasswordInfoFromFile(String passwordFilePath) throws FalconException {
+    private static String fetchPasswordInfoFromFile(String passwordFilePath) throws FalconException {
         try {
             Path path = new Path(passwordFilePath);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri());

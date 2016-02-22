@@ -20,15 +20,23 @@ package org.apache.falcon.lifecycle;
 
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.HsqldbTestUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -37,11 +45,14 @@ import java.util.Map;
 
 @Test
 public class FeedImportIT {
-    public static final Log LOG = LogFactory.getLog(HsqldbTestUtils.class.getName());
+    public static final Logger LOG =  LoggerFactory.getLogger(FeedImportIT.class);
+
+    private static final String DATASOURCE_NAME_KEY = "datasourcename";
 
     @BeforeClass
     public void setUp() throws Exception {
         HsqldbTestUtils.start();
+        HsqldbTestUtils.createSqoopUser("sqoop_user", "sqoop");
         HsqldbTestUtils.changeSAPassword("sqoop");
         HsqldbTestUtils.createAndPopulateCustomerTable();
 
@@ -70,14 +81,17 @@ public class FeedImportIT {
         LOG.info("entity -submit -type cluster -file " + filePath);
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
 
-        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE, overlay);
-        LOG.info("entity -submit -type datasource -file " + filePath);
+        // Make a new datasource name into the overlay so that DATASOURCE_TEMPLATE1 and FEED_TEMPLATE3
+        // are populated  with the same datasource name
+        String dsName = "datasource-test-1";
+        overlay.put(DATASOURCE_NAME_KEY, dsName);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE1, overlay);
+        LOG.info("Submit datatsource entity {} via entity -submit -type datasource -file {}", dsName, filePath);
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("entity -submitAndSchedule -type feed -file " + filePath);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file "
-                + filePath));
+        LOG.info("Submit feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName, filePath);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
 
     @Test
@@ -89,16 +103,127 @@ public class FeedImportIT {
         LOG.info("entity -submit -type cluster -file " + filePath);
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
 
-        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE, overlay);
+        // Make a new datasource name into the overlay so that DATASOURCE_TEMPLATE1 and FEED_TEMPLATE3
+        // are populated  with the same datasource name
+        String dsName = "datasource-test-delete";
+        overlay.put(DATASOURCE_NAME_KEY, dsName);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE1, overlay);
         LOG.info("entity -submit -type datasource -file " + filePath);
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("entity -submit -type feed -file " + filePath);
-        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file "
-                + filePath));
+        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
 
-        LOG.info("entity -delete -type datasource -name datasource-test");
-        Assert.assertEquals(-1, TestContext.executeWithURL("entity -delete -type datasource -name datasource-test"));
+        LOG.info("Delete datasource in-use via entity -delete -type datasource -name {}", dsName);
+        Assert.assertEquals(-1, TestContext.executeWithURL("entity -delete -type datasource -name " + dsName));
     }
+
+    @Test
+    public void testSqoopImport2() throws Exception {
+        // create a TestContext and a test embedded cluster
+        TestContext context = new TestContext();
+        context.setCluster("test");
+        EmbeddedCluster cluster = context.getCluster();
+        Configuration conf = cluster.getConf();
+        FileSystem fs = FileSystem.get(conf);
+        Map<String, String> overlay = context.getUniqueOverlay();
+
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        context.setCluster(filePath);
+        LOG.info("entity -submit -type cluster -file " + filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
+
+        // Make a new datasource name into the overlay for use in DATASOURCE_TEMPLATE1 and FEED_TEMPLATE3
+        String dsName = "datasource-test-2";
+        overlay.put(DATASOURCE_NAME_KEY, dsName);
+
+        // create a password file on hdfs in the following location
+        String hdfsPasswordFile = "/falcon/passwordfile";
+        FSDataOutputStream fos = fs.create(new Path(hdfsPasswordFile));
+        IOUtils.write("sqoop", fos);
+        IOUtils.closeQuietly(fos);
+
+        // put the fully qualified HDFS password file path into overlay for substitution
+        String qualifiedHdfsPath = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY) + hdfsPasswordFile;
+        LOG.info("Qualifed HDFS filepath set in the overlay {}", qualifiedHdfsPath);
+        overlay.put("passwordfile", qualifiedHdfsPath);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE2, overlay);
+        LOG.info("Submit datasource entity {} via entity -submit -type datasource -file {}", dsName, filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
+        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
+    }
+
+    @Test
+    public void testSqoopImport3() throws Exception {
+        // create a TestContext and a test embedded cluster
+        TestContext context = new TestContext();
+        context.setCluster("test");
+        EmbeddedCluster cluster = context.getCluster();
+        Configuration conf = cluster.getConf();
+        FileSystem fs = FileSystem.get(conf);
+        Map<String, String> overlay = context.getUniqueOverlay();
+
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        context.setCluster(filePath);
+        LOG.info("entity -submit -type cluster -file " + filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
+
+        // Make a new datasource name into the overlay for use in DATASOURCE_TEMPLATE1 and FEED_TEMPLATE3
+        String dsName = "datasource-test-3";
+        overlay.put(DATASOURCE_NAME_KEY, dsName);
+
+        // read the jceks provider file from resources and copy to hdfs provider path
+        InputStream is = this.getClass().getResourceAsStream("/credential_provider.jceks");
+        LOG.info("Opened credential_provider.jceks file from resource {}", (is == null) ? false : true);
+
+        // create a jceks provider path on hdfs in the following location
+        String hdfsProviderPath = "/falcon/providerpath";
+        FSDataOutputStream fos = fs.create(new Path(hdfsProviderPath));
+        LOG.info("Opened embedded cluster hdfs file for writing jceks {}", (fos == null) ? false : true);
+        int numBytes = IOUtils.copy(is, fos);
+        LOG.info("Copied {} bytes to hdfs provider file from resource.", numBytes);
+        IOUtils.closeQuietly(is);
+        IOUtils.closeQuietly(fos);
+
+        // put the fully qualified HDFS password file path into overlay for substitution
+        String qualifiedHdfsPath = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY) + hdfsProviderPath;
+        LOG.info("Qualifed HDFS provider path set in the overlay {}", qualifiedHdfsPath);
+        overlay.put("providerpath", qualifiedHdfsPath);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE3, overlay);
+        LOG.info("Submit datasource entity {} via entity -submit -type datasource -file {}", dsName, filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
+        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
+    }
+
+    @Test
+    public void testSqoopImportUsingDefaultCredential() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        context.setCluster(filePath);
+        LOG.info("entity -submit -type cluster -file " + filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
+
+        // Make a new datasource name into the overlay so that DATASOURCE_TEMPLATE4 and FEED_TEMPLATE3
+        // are populated  with the same datasource name
+        String dsName = "datasource-test-4";
+        overlay.put(DATASOURCE_NAME_KEY, dsName);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE4, overlay);
+        LOG.info("Submit datatsource entity {} via entity -submit -type datasource -file {}", dsName, filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
+        LOG.info("Submit feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName, filePath);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+    }
+
 }

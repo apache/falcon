@@ -122,7 +122,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.5.0</hadoop.version>
+                <hadoop.version>2.6.2</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
@@ -249,6 +249,13 @@
                         <version>${hadoop.version}</version>
                         <scope>provided</scope>
                     </dependency>
+
+                    <dependency>
+                    	<groupId>org.apache.hadoop</groupId>
+                    	<artifactId>hadoop-aws</artifactId>
+                    	<version>${hadoop.version}</version>
+                    	<scope>provided</scope>
+                    </dependency>
                 </dependencies>
           </dependencyManagement>
         </profile>
@@ -293,6 +300,7 @@
                                 <exclude>**/db1.log</exclude>
                                 <exclude>**/db1.properties</exclude>
                                 <exclude>**/db1.script</exclude>
+                                <exclude>**/credential_provider.jceks</exclude>
                             </excludes>
                         </configuration>
                         <executions>
@@ -309,13 +317,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.falcon</groupId>
-                                <artifactId>checkstyle</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                        </dependencies>
                         <executions>
                             <execution>
                                 <id>checkstyle-check</id>
@@ -326,9 +327,9 @@
                                 <configuration>
                                     <consoleOutput>true</consoleOutput>
                                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                                    <configLocation>checkstyle/src/main/resources/falcon/checkstyle.xml</configLocation>
-                                    <headerLocation>checkstyle/src/main/resources/falcon/checkstyle-java-header.txt</headerLocation>
-                                    <suppressionsLocation>checkstyle/src/main/resources/falcon/checkstyle-suppressions.xml</suppressionsLocation>
+                                    <configLocation>src/build/checkstyle.xml</configLocation>
+                                    <headerLocation>src/build/checkstyle-java-header.txt</headerLocation>
+                                    <suppressionsLocation>src/build/checkstyle-suppressions.xml</suppressionsLocation>
                                     <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>
@@ -341,7 +342,7 @@
                         <configuration>
                             <!--debug>true</debug -->
                             <xmlOutput>true</xmlOutput>
-                            <excludeFilterFile>checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                            <excludeFilterFile>src/build/findbugs-exclude.xml</excludeFilterFile>
                             <failOnError>true</failOnError>
                         </configuration>
                         <executions>
@@ -401,11 +402,16 @@
                 <module>addons/hivedr</module>
             </modules>
         </profile>
+        <profile>
+            <id>adf</id>
+            <modules>
+                <module>addons/adf</module>
+            </modules>
+        </profile>
     </profiles>
 
     <modules>
         <module>falcon-ui</module>
-        <module>checkstyle</module>
         <module>build-tools</module>
         <module>client</module>
         <module>cli</module>
@@ -539,13 +545,13 @@
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
-                <version>1.5.2</version>
+                <version>1.9.2</version>
             </dependency>
 
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.5.2</version>
+                <version>1.9.2</version>
             </dependency>
 
             <dependency>
@@ -563,7 +569,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.2</version>
+                <version>2.4</version>
             </dependency>
 
             <dependency>
@@ -965,6 +971,10 @@
                         <groupId>org.apache.derby</groupId>
                         <artifactId>derby</artifactId>
                     </exclusion>
+                    <exclusion> <!-- conflict with hadoop-auth -->
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
@@ -976,6 +986,10 @@
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>
                         <artifactId>hadoop-client</artifactId>
+                    </exclusion>
+                    <exclusion> <!-- conflict with hadoop-auth -->
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1031,6 +1045,18 @@
                 <groupId>xerces</groupId>
                 <artifactId>xercesImpl</artifactId>
                 <version>2.10.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.3.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.3.2</version>
             </dependency>
 
             <dependency>

@@ -22,20 +22,20 @@
         <interface type="readonly" endpoint="jdbc:hsqldb:localhost/db1">
             <credential type="password-file">
                 <userName>SA</userName>
-                <passwordFile>"jail://global:00/falcon/passwordfile"/></passwordFile>
+                <passwordFile>/falcon/passwordfile</passwordFile>
             </credential>
         </interface>
 
         <interface type="write" endpoint="jdbc:hsqldb:localhost/db1">
             <credential type="password-file">
                 <userName>SA</userName>
-                <passwordFile>"jail://global:00/falcon/passwordfile"/></passwordFile>
+                <passwordFile>/falcon/passwordfile</passwordFile>
             </credential>
         </interface>
 
         <credential type="password-file">
             <userName>SA</userName>
-            <passwordFile>"jail://global:00/falcon/passwordfile"/></passwordFile>
+            <passwordFile>/falcon/passwordfile</passwordFile>
         </credential>
     </interfaces>
 

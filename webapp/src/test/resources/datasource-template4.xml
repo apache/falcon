@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -17,18 +17,20 @@
   limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-     <parent>
-        <groupId>org.apache.falcon</groupId>
-        <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
-    </parent>
-    <artifactId>checkstyle</artifactId>
-    <name>Checkstyle</name>
-    <properties>
-        <skipTests>true</skipTests>
-    </properties>
-</project>
+<datasource colo="##colo##" description="" type="hsql" name="##datasourcename##" xmlns="uri:falcon:datasource:0.1">
+    <interfaces>
+        <interface type="readonly" endpoint="jdbc:hsqldb:hsql://localhost/db1"/>
+
+        <interface type="write" endpoint="jdbc:hsqldb:hsql://localhost/db1"/>
+
+        <credential type="password-text">
+            <userName>SA</userName>
+            <passwordText>sqoop</passwordText>
+        </credential>
+    </interfaces>
+
+    <driver>
+       <clazz>org.hsqldb.jdbcDriver</clazz>
+       <jar>/user/oozie/share/lib/lib_20150721010816/sqoop/hsqldb-1.8.0.7.jar</jar>
+    </driver>
+</datasource>

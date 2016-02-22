@@ -581,7 +581,7 @@ public class AuthorizationTest extends BaseTestClass {
 
         //by U2 schedule process dependant on scheduled feed by U1
         ServiceResponse serviceResponse = prism.getProcessHelper()
-            .submitAndSchedule(bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
+            .submitAndSchedule(bundles[0].getProcessData(), MerlinConstants.USER2_NAME, "");
         AssertUtil.assertSucceeded(serviceResponse);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 
@@ -631,7 +631,7 @@ public class AuthorizationTest extends BaseTestClass {
 
         //by U2 schedule process dependent on scheduled feed by U1
         ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(bundles[0].getProcessData(),
-                MerlinConstants.USER2_NAME);
+                MerlinConstants.USER2_NAME, "");
         AssertUtil.assertSucceeded(serviceResponse);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(), Job.Status.RUNNING);
 

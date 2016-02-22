@@ -285,6 +285,19 @@ public class FalconUnitTestBase {
         fs.copyFromLocalFile(new Path(getAbsolutePath(inputFile)), new Path(feedPath));
     }
 
+    public void deleteData(String feedName, String cluster) throws FalconException, ParseException, IOException {
+        Entity existingEntity = configStore.get(EntityType.FEED, feedName);
+        if (existingEntity == null) {
+            throw new FalconException("Feed Not Found  " + feedName);
+        }
+        Feed feed = (Feed) existingEntity;
+        Storage rawStorage = FeedHelper.createStorage(cluster, feed);
+        String feedPathTemplate = rawStorage.getUriTemplate(LocationType.DATA);
+
+        Path feedBasePath = FeedHelper.getFeedBasePath(feedPathTemplate);
+        fs.delete(feedBasePath, true);
+    }
+
     protected String getFeedPathForTS(String cluster, String feedName,
                                       String timeStamp) throws FalconException, ParseException {
         Entity existingEntity = configStore.get(EntityType.FEED, feedName);

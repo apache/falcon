@@ -139,6 +139,19 @@ public final class FalconClientBuilder implements Builder<CommandLine> {
     }
 
     /**
+     * Create get metrics command.
+     * @param entityType type of the entity
+     * @param entityName name of the entity to be deleted
+     * @return this
+     */
+    public FalconClientBuilder getMetricsCommand(String entityType, String entityName) {
+        addArg("metadata").addArg("-list");
+        addArg("-type").addArg("replication_metrics");
+        addArg("-" + entityType).addArg(entityName);
+        return this;
+    }
+
+    /**
      * Create submit command.
      * @param entityType type of the entity
      * @param fileName file containing the entity to be submitted

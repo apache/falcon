@@ -52,6 +52,7 @@ import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
 import org.apache.falcon.service.LifecyclePolicyMap;
 import org.apache.falcon.util.DateUtil;
+import org.apache.falcon.util.HadoopQueueUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -119,6 +120,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedGroups(feed);
         validateFeedSLA(feed);
         validateProperties(feed);
+        validateHadoopQueue(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -527,6 +529,66 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
+    /**
+     * Validate Hadoop cluster queue names specified in the Feed entity defintion.
+     *
+     * First tries to look for queue name specified in the Lifecycle, next queueName property
+     * and checks its validity against the Hadoop cluster scheduler info.
+     *
+     * Hadoop cluster queue is validated only if YARN RM webaddress is specified in the
+     * cluster entity properties.
+     *
+     * Throws exception if the specified queue name is not a valid hadoop cluster queue.
+     *
+     * @param feed
+     * @throws FalconException
+     */
+
+    protected void validateHadoopQueue(Feed feed) throws FalconException {
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            Set<String> feedQueue = getQueueNamesUsedInFeed(feed, cluster);
+
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
+
+            String rmURL = ClusterHelper.getPropertyValue(clusterEntity, "yarn.resourcemanager.webapp.https.address");
+            if (StringUtils.isBlank(rmURL)) {
+                rmURL = ClusterHelper.getPropertyValue(clusterEntity, "yarn.resourcemanager.webapp.address");
+            }
+
+            if (StringUtils.isNotBlank(rmURL)) {
+                LOG.info("Fetching hadoop queue names from cluster {} RM URL {}", cluster.getName(), rmURL);
+                Set<String> queueNames = HadoopQueueUtil.getHadoopClusterQueueNames(rmURL);
+
+                for (String q: feedQueue) {
+                    if (queueNames.contains(q)) {
+                        LOG.info("Validated presence of retention queue specified in feed - {}", q);
+                    } else {
+                        String strMsg = String.format("The hadoop queue name %s specified "
+                                + "for cluster %s is invalid.", q, cluster.getName());
+                        LOG.info(strMsg);
+                        throw new FalconException(strMsg);
+                    }
+                }
+            }
+        }
+    }
+
+    protected Set<String> getQueueNamesUsedInFeed(Feed feed, Cluster cluster) throws FalconException {
+        Set<String> queueList = new HashSet<>();
+        addToQueueList(FeedHelper.getRetentionQueue(feed, cluster), queueList);
+        if (cluster.getType() == ClusterType.TARGET) {
+            addToQueueList(FeedHelper.getReplicationQueue(feed, cluster), queueList);
+        }
+        return queueList;
+    }
+
+    private void addToQueueList(String queueName, Set<String> queueList) {
+        if (StringUtils.isBlank(queueName)) {
+            queueList.add(queueName);
+        }
+    }
+
     protected void validateProperties(Feed feed) throws ValidationException {
         Properties properties = feed.getProperties();
         if (properties == null) {
@@ -634,7 +696,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
      */
     private void validateFeedExportArgs(Cluster feedCluster) throws FalconException {
         Map<String, String> args = FeedHelper.getExportArguments(feedCluster);
-        Map<String, String> validArgs = new HashMap<String, String>();
+        Map<String, String> validArgs = new HashMap<>();
         validArgs.put("--num-mappers", "");
         validArgs.put("--update-key" , "");
         validArgs.put("--input-null-string", "");
@@ -653,4 +715,5 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     + "currently in Feed import policy"));
         }
     }
+
 }
