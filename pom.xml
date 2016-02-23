@@ -95,7 +95,7 @@
         <include.prism>true</include.prism>
 
         <slf4j.version>1.7.5</slf4j.version>
-        <oozie.version>4.1.0</oozie.version>
+        <oozie.version>4.2.0</oozie.version>
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.12.0</activemq.version>

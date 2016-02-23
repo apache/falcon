@@ -295,6 +295,10 @@ public class WorkflowExecutionContext {
         return getValue(WorkflowExecutionArgs.WORKFLOW_ID);
     }
 
+    public String getWorkflowParentId() {
+        return getValue(WorkflowExecutionArgs.PARENT_ID);
+    }
+
     public String getUserSubflowId() {
         return getValue(WorkflowExecutionArgs.USER_SUBFLOW_ID);
     }

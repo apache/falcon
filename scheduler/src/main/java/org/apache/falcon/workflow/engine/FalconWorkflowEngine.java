@@ -516,11 +516,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
+    public String reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
         InstanceState instanceState = STATE_STORE.getExecutionInstance(jobId);
         ExecutionInstance instance = instanceState.getInstance();
         EntityExecutor executor = EXECUTION_SERVICE.getEntityExecutor(instance.getEntity(), cluster);
         executor.rerun(instance, props, isForced);
+        return DAGEngineFactory.getDAGEngine(cluster).info(jobId).getStatus().name();
     }
 
     @Override
