@@ -919,6 +919,8 @@ Examples:
 </verbatim>
 The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential backoff, the workflow will be re-tried after 10 mins, 20 mins and 40 mins.
 
+*NOTE :* If user does a manual rerun with -force option (using the instance rerun API), then the runId will get reset and user might see more Falcon system retries than configured in the process definition.
+
 To enable retries for instances for feeds, user will have to set the following properties in runtime.properties
 <verbatim>
 falcon.recipe.retry.policy=periodic

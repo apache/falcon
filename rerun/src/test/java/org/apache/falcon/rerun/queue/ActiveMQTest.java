@@ -50,7 +50,7 @@ public class ActiveMQTest {
                 BROKER_URL, DESTINATION);
         activeMQueue.init();
 
-        RerunEvent event = new LaterunEvent("clusterName", "wfId",
+        RerunEvent event = new LaterunEvent("clusterName", "wfId", "parentId",
                 System.currentTimeMillis(), 60 * 1000, "entityType",
                 "entityName", "instance", 0, FalconTestUtil.TEST_USER_1);
 
