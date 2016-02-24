@@ -985,7 +985,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 if (props.containsKey(OozieClient.RERUN_FAIL_NODES)
                         && props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
                     String msg = "Both " + OozieClient.RERUN_SKIP_NODES + " and " + OozieClient.RERUN_FAIL_NODES
-                            + " are present in workflow params for " + coordinatorAction.getExternalId() ;
+                            + " are present in workflow params for " + coordinatorAction.getExternalId();
                     LOG.error(msg);
                     throw new FalconException(msg);
                 }
