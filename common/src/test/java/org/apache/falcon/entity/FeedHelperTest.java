@@ -941,7 +941,6 @@ public class FeedHelperTest extends AbstractTestBase {
         Assert.assertEquals(startInstResult, feed.getClusters().getClusters().get(0).getValidity().getStart());
     }
 
-    @Test
     public void testGetFeedClusterValidity() throws  Exception {
         Cluster cluster = publishCluster();
         Feed feed = publishFeed(cluster, "hours(1)",  "2012-02-07 00:00 UTC", "2020-02-25 00:00 UTC");

@@ -821,6 +821,7 @@ The following are some special properties, which when present are used by the Fa
 ---+++ Workflow
 
 The workflow defines the workflow engine that should be used and the path to the workflow on hdfs.
+Libraries required can be specified using lib attribute in the workflow element and will be comma separated HDFS paths.
 The workflow definition on hdfs contains the actual job that should run and it should confirm to
 the workflow specification of the engine specified. The libraries required by the workflow should
 be in lib folder inside the workflow path.
@@ -840,7 +841,7 @@ Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-    <workflow engine=[workflow engine] path=[workflow path]/>
+    <workflow engine=[workflow engine] path=[workflow path] lib=[comma separated lib paths]/>
 ...
 </process>
 </verbatim>
@@ -856,6 +857,7 @@ Example:
 
 This defines the workflow engine to be oozie and the workflow xml is defined at
 /projects/bootcamp/workflow/workflow.xml. The libraries are at /projects/bootcamp/workflow/lib.
+Libraries path can be overridden using lib attribute. e.g.: lib="/projects/bootcamp/wf/libs,/projects/bootcamp/oozie/libs" in the workflow element.
 
 ---++++ Pig
 
@@ -865,7 +867,7 @@ Example:
 <verbatim>
 <process name="sample-process">
 ...
-    <workflow engine="pig" path="/projects/bootcamp/pig.script"/>
+    <workflow engine="pig" path="/projects/bootcamp/pig.script" lib="/projects/bootcamp/wf/libs,/projects/bootcamp/pig/libs"/>
 ...
 </process>
 </verbatim>

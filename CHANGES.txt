@@ -3,6 +3,7 @@ Trunk
   TASKS:
   INCOMPATIBLE CHANGES
   NEW FEATURES
+    FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
    
     FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
 
@@ -11,6 +12,8 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
+
     FALCON-1774 Falcon to honour PRISM_URL env var (Praveen Adlakha) 
 
     FALCON-1721 Checkstyle doesn't extend parent.
@@ -32,6 +35,8 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)
+
     FALCON-1795 Kill api not killing waiting/ready instances
    
     FALCON-1804 Non-SLA feed throws NullPointerException.
