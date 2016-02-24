@@ -972,21 +972,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             if (props == null) {
                 props = new Properties();
             }
-            // In case if both props exists one should be removed otherwise it will fail.
-            // This case will occur when user runs workflow with skip-nodes property and
-            // try to do force rerun or rerun with fail-nodes property.
-            if (props.containsKey(OozieClient.RERUN_FAIL_NODES)
-                    && props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
-                LOG.warn("Both " + OozieClient.RERUN_SKIP_NODES + " and " + OozieClient.RERUN_FAIL_NODES
-                        + " are present in workflow params removing" + OozieClient.RERUN_SKIP_NODES);
-                props.remove(OozieClient.RERUN_SKIP_NODES);
-            }
-
-            //if user has set any of these oozie rerun properties then force rerun flag is ignored
-            if (props.containsKey(OozieClient.RERUN_FAIL_NODES)) {
-                isForced = false;
-            }
-
             Properties jobprops;
             // Get conf when workflow is launched.
             if (coordinatorAction.getExternalId() != null) {
@@ -994,6 +979,20 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
                 jobprops = OozieUtils.toProperties(jobInfo.getConf());
                 jobprops.putAll(props);
+                // In case if both props exists one should be removed otherwise it will fail.
+                // This case will occur when user runs workflow with skip-nodes property and
+                // try to do force rerun or rerun with fail-nodes property.
+                if (props.containsKey(OozieClient.RERUN_FAIL_NODES)
+                        && props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                    LOG.warn("Both " + OozieClient.RERUN_SKIP_NODES + " and " + OozieClient.RERUN_FAIL_NODES
+                            + " are present in workflow params removing" + OozieClient.RERUN_SKIP_NODES);
+                    props.remove(OozieClient.RERUN_SKIP_NODES);
+                }
+
+                //if user has set any of these oozie rerun properties then force rerun flag is ignored
+                if (props.containsKey(OozieClient.RERUN_FAIL_NODES)) {
+                    isForced = false;
+                }
                 jobprops.remove(OozieClient.BUNDLE_APP_PATH);
             } else {
                 jobprops = props;
