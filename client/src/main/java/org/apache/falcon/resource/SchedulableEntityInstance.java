@@ -170,11 +170,6 @@ public class SchedulableEntityInstance implements Comparable<SchedulableEntityIn
             return result;
         }
 
-        result = this.tags.compareTo(o.tags);
-        if (result != 0) {
-            return result;
-        }
-
         return this.instanceTime.compareTo(o.instanceTime);
     }
 }
