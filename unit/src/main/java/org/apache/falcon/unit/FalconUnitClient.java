@@ -44,7 +44,6 @@ import org.apache.falcon.resource.admin.AdminResource;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
-import org.apache.hadoop.io.Stringifier;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.json.simple.JSONValue;
 import org.slf4j.Logger;
@@ -103,7 +102,7 @@ public class FalconUnitClient extends AbstractFalconClient {
 
         try {
             return localSchedulableEntityManager.submit(type, filePath, doAsUser);
-        } catch (FalconException e) {
+        } catch (FalconException | IOException e) {
             throw new FalconCLIException("FAILED", e);
         }
     }
@@ -381,7 +380,7 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public Stringifier getDependency(String entityType, String entityName, String doAs) {
+    public EntityList getDependency(String entityType, String entityName, String doAs) {
         return null;
     }
 

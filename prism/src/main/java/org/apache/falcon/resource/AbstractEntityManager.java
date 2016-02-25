@@ -414,7 +414,7 @@ public abstract class AbstractEntityManager {
     }
 
     protected Entity submitInternal(InputStream inputStream, String type, String doAsUser)
-        throws FalconException {
+      throws FalconException, IOException {
 
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(inputStream, entityType);
