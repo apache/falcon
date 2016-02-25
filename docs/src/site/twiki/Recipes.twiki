@@ -23,7 +23,7 @@ replacing the parameters in the workflow definition.
 ---++ Falcon CLI recipe support
 
 Falcon CLI functionality to support recipes has been added.
-<a href="./FalconCLI.html">Recipe command usage is defined here.</a>
+[[falconcli/FalconCLI][Falcon CLI]] Recipe command usage is defined here.
 
 CLI accepts recipe option with a recipe name and optional tool and does the following:
    * Validates the options; name option is mandatory and tool is optional and should be provided if user wants to override the base recipe tool
