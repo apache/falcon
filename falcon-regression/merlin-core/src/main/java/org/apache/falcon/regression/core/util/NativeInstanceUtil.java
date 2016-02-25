@@ -55,7 +55,7 @@ public final class NativeInstanceUtil {
     public static void waitTillInstancesAreCreated(ColoHelper cluster, Entity entity, String startTime, String endTime)
         throws InterruptedException, IOException, AuthenticationException,
             URISyntaxException {
-        int sleep = INSTANCES_CREATED_TIMEOUT * 60 / 5;
+        int sleep = INSTANCES_CREATED_TIMEOUT;
         waitTillInstancesAreCreated(cluster, entity, startTime, endTime, sleep);
     }
 
@@ -84,7 +84,7 @@ public final class NativeInstanceUtil {
                 break;
             }
             LOGGER.info(type + " " + entityName + " still doesn't have instance created");
-            TimeUtil.sleepSeconds(5);
+            TimeUtil.sleepSeconds(60);
         }
     }
 
@@ -136,7 +136,7 @@ public final class NativeInstanceUtil {
                 }
             }
             LOGGER.info(type + " " + entityName + " still doesn't have expected status");
-            TimeUtil.sleepSeconds(5);
+            TimeUtil.sleepSeconds(sleepTime);
         }
         Assert.fail("expected state of instance was never reached");
     }

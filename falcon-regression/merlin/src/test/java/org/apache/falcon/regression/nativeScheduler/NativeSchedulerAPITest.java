@@ -52,7 +52,7 @@ public class NativeSchedulerAPITest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private String baseTestHDFSDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    private static final Logger LOGGER = Logger.getLogger(NativeScheduleTest.class);
+    private static final Logger LOGGER = Logger.getLogger(NativeSchedulerAPITest.class);
     private ProcessMerlin processMerlin;
     private String startTime;
     private String endTime;
