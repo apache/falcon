@@ -33,8 +33,8 @@ import re
 import glob
 
 ## Set the below variables before generating the CHANGES
-NEW_RELEASE_VERSION = "0.9"
-PREV_RELEASE_GIT_TAG = "release-0.8-rc0"
+NEW_RELEASE_VERSION = "0.10-SNAPSHOT"
+PREV_RELEASE_GIT_TAG = "release-0.9-rc0"
 CAPITALIZED_PROJECT_NAME = "falcon".upper()
 
 CHANGELIST = "CHANGES.txt"
@@ -99,40 +99,24 @@ for h in hashes:
     category = "BUG"
     if match:
         category = match.group(1).upper()
-        print "Subject : %s, Category : %s " % (subject, category)
         subject = re.sub("\[(\w+)\]", "", subject)
     file_name = TMP_CHANGELIST + "_" + category
     if not (os.path.isfile(file_name)):
         append_to_changelist(file_name, category+"S")
         append_to_changelist(file_name, "=======================================")
-    if "Merge pull" in subject:
-        # Parse old format commit message
-        append_to_changelist(file_name, "  %s" % subject)
-        append_to_changelist(file_name, "  [%s]" % body_lines[0])
-        append_to_changelist(file_name, "")
 
-    elif "maven-release" not in subject:
-        # Parse new format commit message
-        # Get authors from commit message, committer otherwise
-        authors = [committer]
-        if "Author:" in body:
-            authors = [line.split(":")[1].strip() for line in body_lines if "Author:" in line]
+    # Generate GitHub PR URL for easy access if possible
+    github_url = ""
+    if "Closes #" in body:
+        pr_num = [line.split()[1].lstrip("#") for line in body_lines if "Closes #" in line][0]
+        github_url = "github.com/apache/falcon/pull/%s" % pr_num
 
-        # Generate GitHub PR URL for easy access if possible
-        github_url = ""
-        if "Closes #" in body:
-            pr_num = [line.split()[1].lstrip("#") for line in body_lines if "Closes #" in line][0]
-            github_url = "github.com/apache/falcon/pull/%s" % pr_num
-
-        append_to_changelist(file_name, "  %s" % subject)
-        append_to_changelist(file_name, "  %s" % ', '.join(authors))
-        # for author in authors:
-        #     append_to_changelist("  %s" % author)
-        if len(github_url) > 0:
-            append_to_changelist(file_name, "  Commit: %s, %s" % (h, github_url))
-        else:
-            append_to_changelist(file_name, "  Commit: %s" % h)
-        append_to_changelist(file_name, "")
+    append_to_changelist(file_name, "  %s" % subject)
+    if len(github_url) > 0:
+        append_to_changelist(file_name, "  Commit: %s, %s" % (h, github_url))
+    else:
+        append_to_changelist(file_name, "  Commit: %s" % h)
+    append_to_changelist(file_name, "")
 
 append_to_changelist(TMP_CHANGELIST, "FALCON Change Log")
 append_to_changelist(TMP_CHANGELIST, "----------------")
