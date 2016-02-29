@@ -29,6 +29,7 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -460,4 +461,6 @@ public abstract class AbstractFalconClient {
     public abstract FeedLookupResult reverseLookUp(String entityType, String path, String doAs);
 
     public abstract EntityList getDependency(String entityType, String entityName, String doAs);
+
+    public abstract TriageResult triage(String name, String entityName, String start, String colo);
 }

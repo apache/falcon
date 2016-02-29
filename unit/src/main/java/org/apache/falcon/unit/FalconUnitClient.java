@@ -40,6 +40,7 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.admin.AdminResource;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
@@ -381,6 +382,11 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public EntityList getDependency(String entityType, String entityName, String doAs) {
+        return null;
+    }
+
+    @Override
+    public TriageResult triage(String name, String entityName, String start, String colo) {
         return null;
     }
 
