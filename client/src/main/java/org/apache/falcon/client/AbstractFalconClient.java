@@ -28,6 +28,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.TriageResult;
 
@@ -473,7 +474,7 @@ public abstract class AbstractFalconClient {
 
     public abstract String getThreadDump(String doAs);
 
-    public abstract String getEntityLineageGraph(String pipeline, String doAs);
+    public abstract LineageGraphResult getEntityLineageGraph(String pipeline, String doAs);
 
     public abstract String getDimensionList(String dimensionType, String cluster, String doAs);
 

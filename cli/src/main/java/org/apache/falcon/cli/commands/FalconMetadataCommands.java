@@ -81,7 +81,7 @@ public class FalconMetadataCommands extends BaseFalconCommands {
     public String lineage(
             @CliOption(key = {PIPELINE_OPT}, mandatory = true, help = PIPELINE_OPT_DESCRIPTION) final String pipeline
     ) {
-        return getFalconClient().getEntityLineageGraph(pipeline, getDoAs());
+        return getFalconClient().getEntityLineageGraph(pipeline, getDoAs()).getDotNotation();
     }
 
     @CliCommand(value = {METADATA_COMMAND_PREFIX + LIST_OPT}, help = LIST_OPT_DESCRIPTION)
