@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,6 @@
  */
 
 package org.apache.falcon.cli.commands;
-
-import static org.apache.falcon.cli.FalconCLI.*;
-import static org.apache.falcon.cli.FalconInstanceCLI.*;
 
 import org.apache.falcon.ResponseHelper;
 import org.apache.falcon.entity.v0.EntityType;
@@ -30,6 +27,69 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
+import static org.apache.falcon.cli.FalconCLI.validateFilterBy;
+import static org.apache.falcon.cli.FalconCLI.validateOrderBy;
+import static org.apache.falcon.cli.FalconInstanceCLI.ALL_ATTEMPTS;
+import static org.apache.falcon.cli.FalconInstanceCLI.ALL_ATTEMPTS_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.CLUSTERS_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.CLUSTERS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.COLO_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.COLO_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.DEPENDENCY_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.DEPENDENCY_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.END_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.END_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.ENTITY_NAME_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.ENTITY_NAME_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.FILE_PATH_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.FILE_PATH_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.FILTER_BY_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.FILTER_BY_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.FORCE_RERUN_FLAG;
+import static org.apache.falcon.cli.FalconInstanceCLI.FORCE_RERUN_FLAG_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.KILL_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.KILL_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.LIFECYCLE_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.LIFECYCLE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.LIST_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.LISTING_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.LISTING_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.LOG_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.LOG_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.NUM_RESULTS_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.NUM_RESULTS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.OFFSET_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.OFFSET_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.ORDER_BY_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.ORDER_BY_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.PARARMS_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.PARARMS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.RERUN_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.RERUN_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.RESUME_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.RESUME_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.RUNID_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.RUNID_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.RUNNING_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.RUNNING_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.SORT_ORDER_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.SORT_ORDER_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.SOURCECLUSTER_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.SOURCECLUSTER_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.START_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.START_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.STATUS_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.STATUS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.SUMMARY_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.SUMMARY_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.SUSPEND_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.SUSPEND_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.TRIAGE_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.TRIAGE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.TYPE_OPT;
+import static org.apache.falcon.cli.FalconInstanceCLI.TYPE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconInstanceCLI.getLifeCycle;
 
 /**
  * Instance commands.
