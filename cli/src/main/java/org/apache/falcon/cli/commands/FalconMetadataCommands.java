@@ -32,7 +32,7 @@ import static org.apache.falcon.cli.FalconAdminCLI.VERSION_OPT_DESCRIPTION;
  * Instance commands.
  */
 @Component
-public class FalconAdminCommands extends BaseFalconCommands {
+public class FalconMetadataCommands extends BaseFalconCommands {
     public static final String ADMIN_PREFIX = "admin";
     public static final String ADMIN_COMMAND_PREFIX = ADMIN_PREFIX + " ";
 
