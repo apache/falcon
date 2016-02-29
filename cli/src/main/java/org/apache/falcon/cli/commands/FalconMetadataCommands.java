@@ -26,7 +26,48 @@ import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 
-import static org.apache.falcon.cli.FalconMetadataCLI.*;
+import static org.apache.falcon.cli.FalconMetadataCLI.CLUSTER_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.CLUSTER_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.DIRECTION_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.DIRECTION_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.EDGE_CMD;
+import static org.apache.falcon.cli.FalconMetadataCLI.EDGE_CMD_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.FEED_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.FEED_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.ID_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.ID_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.KEY_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.KEY_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.LINEAGE_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.LINEAGE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.LIST_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.LIST_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.NAME_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.NAME_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.NUM_RESULTS_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.NUM_RESULTS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.PIPELINE_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.PIPELINE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.PROCESS_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.PROCESS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.RELATIONS_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.RELATIONS_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.TYPE_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.TYPE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.VALUE_OPT;
+import static org.apache.falcon.cli.FalconMetadataCLI.VALUE_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.VERTEX_CMD;
+import static org.apache.falcon.cli.FalconMetadataCLI.VERTEX_CMD_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.VERTEX_EDGES_CMD;
+import static org.apache.falcon.cli.FalconMetadataCLI.VERTEX_EDGES_CMD_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.VERTICES_CMD;
+import static org.apache.falcon.cli.FalconMetadataCLI.VERTICES_CMD_DESCRIPTION;
+import static org.apache.falcon.cli.FalconMetadataCLI.validateDimensionName;
+import static org.apache.falcon.cli.FalconMetadataCLI.validateDimensionType;
+import static org.apache.falcon.cli.FalconMetadataCLI.validateId;
+import static org.apache.falcon.cli.FalconMetadataCLI.validateScheduleEntity;
+import static org.apache.falcon.cli.FalconMetadataCLI.validateVertexEdgesCommand;
+import static org.apache.falcon.cli.FalconMetadataCLI.validateVerticesCommand;
 
 /**
  * Instance commands.
