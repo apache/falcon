@@ -106,7 +106,7 @@ public class NativeSchedulerAPITest extends BaseTestClass {
 
     /*Suspend and resume entity and check that it is successful.
      */
-    @Test(enabled = true)
+    @Test
     public void entitySuspendResumeTest() throws Exception {
         //Suspend entity via prism
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(processMerlin.toString()));
@@ -139,7 +139,7 @@ public class NativeSchedulerAPITest extends BaseTestClass {
 
     /*Test for entity definition, list, dependency, update and summary API and check that it is successful.
      */
-    @Test(enabled = true)
+    @Test
     public void entityDefinitionListDependencyUpdateSummaryTest() throws Exception {
         // Entity Definition
         String processDef = prism.getProcessHelper().getEntityDefinition(processMerlin.toString()).getMessage();
@@ -178,7 +178,7 @@ public class NativeSchedulerAPITest extends BaseTestClass {
 
     /*Test for instance dependency, list, params, logs, running and triage API and check that it is successful.
      */
-    @Test(enabled = true)
+    @Test
     public void instanceAPITest() throws Exception {
         // Instance dependency
         NativeInstanceUtil.waitTillInstanceReachState(prism, processMerlin, startTime, CoordinatorAction.Status.RUNNING,

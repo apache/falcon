@@ -32,7 +32,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 /**
- * util functions related to instanceTest.
+ * Util functions related to native instance test.
+ * In case of entity scheduled using native scheduler, we cannot use oozie coordinator to retrieve relevant information
+ * This util retrieves instance related information using falcon APIs
  */
 public final class NativeInstanceUtil {
 
@@ -46,6 +48,7 @@ public final class NativeInstanceUtil {
     /**
      * Waits till instance of specific entity will be created during timeout.
      * Timeout is common for most of usual test cases.
+     * Using status API to retrieve instance information.
      *
      * @param cluster     ColoHelper - colo on which API to be executed
      * @param entity      definition of entity which describes job
@@ -55,14 +58,14 @@ public final class NativeInstanceUtil {
     public static void waitTillInstancesAreCreated(ColoHelper cluster, Entity entity, String startTime, String endTime)
         throws InterruptedException, IOException, AuthenticationException,
             URISyntaxException {
-        int sleep = INSTANCES_CREATED_TIMEOUT;
-        waitTillInstancesAreCreated(cluster, entity, startTime, endTime, sleep);
+        waitTillInstancesAreCreated(cluster, entity, startTime, endTime, INSTANCES_CREATED_TIMEOUT);
     }
 
     /**
      * Waits till instances of specific job will be created during specific time.
      * Use this method directly in unusual test cases where timeouts are different from trivial.
      * In other cases use waitTillInstancesAreCreated(ColoHelper,Entity,String,String)
+     * Using status API to retrieve instance information.
      *
      * @param cluster     ColoHelper - colo on which API to be executed
      * @param entity      definition of entity which describes job
@@ -84,12 +87,13 @@ public final class NativeInstanceUtil {
                 break;
             }
             LOGGER.info(type + " " + entityName + " still doesn't have instance created");
-            TimeUtil.sleepSeconds(60);
+            TimeUtil.sleepSeconds(10);
         }
     }
 
     /**
      * Waits till given instance of process/feed reach expected state during specific time.
+     * Using status API to retrieve instance information.
      *
      * @param cluster           ColoHelper - colo on which API to be executed
      * @param entity            definition of entity which describes job
@@ -105,8 +109,8 @@ public final class NativeInstanceUtil {
     }
 
     /**
-     * Waits till given instance of process/feed reach expected state during
-     * specific time.
+     * Waits till given instance of process/feed reach expected state during specific time.
+     * Using status API to retrieve instance information.
      *
      * @param cluster           ColoHelper - colo on which API to be executed
      * @param entity            definition of entity which describes job
@@ -131,7 +135,7 @@ public final class NativeInstanceUtil {
         for (int i = 0; i < maxTries; i++) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
-                if (statusResult.getInstances()[0].getStatus().name().equals(expectedStatus.toString())) {
+                if (statusResult.getInstances()[0].getStatus().name() == expectedStatus.name()) {
                     return;
                 }
             }
