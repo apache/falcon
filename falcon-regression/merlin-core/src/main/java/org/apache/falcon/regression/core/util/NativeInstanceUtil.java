@@ -80,6 +80,7 @@ public final class NativeInstanceUtil {
         EntityType type = entity.getEntityType();
         String params = "?start=" + startTime;
         params += (endTime.isEmpty() ? "" : "&end=" + endTime);
+        totalMinutesToWait = (totalMinutesToWait*60)/10;
 
         for (int sleepCount = 0; sleepCount < totalMinutesToWait; sleepCount++) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
