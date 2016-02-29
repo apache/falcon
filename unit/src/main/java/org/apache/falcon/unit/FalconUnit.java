@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.oozie.action.hadoop.LauncherMapper;
 import org.apache.oozie.local.LocalOozie;
 import org.apache.oozie.service.Services;
 import org.apache.oozie.util.XConfiguration;
@@ -162,6 +163,8 @@ public final class FalconUnit {
     private static void cleanUpOozie() throws IOException, FalconException {
         LocalOozie.stop();
         FileUtils.deleteDirectory(new File(OOZIE_HOME_DIR));
+        // Need to explicitly clean this as Oozie Launcher leaves this behind.
+        FileUtils.deleteQuietly(new File(LauncherMapper.PROPAGATION_CONF_XML));
         resetSystemProperties();
         System.setSecurityManager(null);
     }

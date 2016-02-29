@@ -55,6 +55,7 @@ public enum WorkflowExecutionArgs {
     STATUS("status", "status of the user workflow isnstance"),
     WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie", false),
     USER_SUBFLOW_ID("subflowId", "external id of user workflow", false),
+    PARENT_ID("parentId", "The parent of the current workflow, typically coord action", false),
 
     WF_START_TIME("workflowStartTime", "workflow start time", false),
     WF_END_TIME("workflowEndTime", "workflow end time", false),
@@ -88,7 +89,6 @@ public enum WorkflowExecutionArgs {
     CONTEXT_FILE("contextFile", "wf execution context file path where wf properties are recorded", false),
     CONTEXT_TYPE("contextType", "wf execution context type, pre or post processing", false),
     COUNTERS("counters", "store job counters", false);
-
 
     private final String name;
     private final String description;
