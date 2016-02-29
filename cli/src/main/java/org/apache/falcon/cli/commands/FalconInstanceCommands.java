@@ -123,7 +123,7 @@ public class FalconInstanceCommands extends BaseFalconCommands {
         return getFalconClient().getInstanceDependencies(entityType.name(), entityName, start, getColo(colo))
                 .toString();
     }
-
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @CliCommand(value = INSTANCE_COMMAND_PREFIX + RUNNING_OPT, help = RUNNING_OPT_DESCRIPTION)
     public String running(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
@@ -318,7 +318,7 @@ public class FalconInstanceCommands extends BaseFalconCommands {
                 end, getColo(colo), runId, getLifeCycle(lifeCycle), filterBy, orderBy, sortOrder, offset, numResults,
                 getDoAs()));
     }
-
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
     @CliCommand(value = {INSTANCE_COMMAND_PREFIX + PARARMS_OPT},
             help = PARARMS_OPT_DESCRIPTION)
     public String params(
