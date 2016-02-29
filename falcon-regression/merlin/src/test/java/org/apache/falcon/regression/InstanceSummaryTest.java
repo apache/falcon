@@ -174,7 +174,7 @@ public class InstanceSummaryTest extends BaseTestClass {
      * Adjust multi-cluster process. Submit and schedule it. Get its instances summary.
      */
     @Test(enabled = true, timeOut = 1200000)
-    public void                                                                                                                                                                                                 testSummaryMultiClusterProcess() throws JAXBException,
+    public void testSummaryMultiClusterProcess() throws JAXBException,
             ParseException, IOException, URISyntaxException, AuthenticationException,
             InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
