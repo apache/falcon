@@ -147,6 +147,9 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
                 wfProperties.put(WorkflowExecutionArgs.NOMINAL_TIME,
                         getNominalTimeString(Long.parseLong(json.getString("nominalTime"))));
             }
+            if (!json.isNull("parentId")) {
+                wfProperties.put(WorkflowExecutionArgs.PARENT_ID, json.getString("parentId"));
+            }
             String appName = message.getStringProperty("appName");
             Pair<String, EntityType> entityTypePair = WorkflowNameBuilder.WorkflowName.getEntityNameAndType(appName);
             wfProperties.put(WorkflowExecutionArgs.ENTITY_NAME, entityTypePair.first);
