@@ -469,4 +469,7 @@ public abstract class AbstractFalconClient {
                                                         Integer offset, Integer numResults, String doAsUser);
     public abstract FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
                                                               String colo, String doAsUser);
+    public abstract int getStatus(String doAsUser);
+
+    public abstract String getThreadDump(String doAs);
 }

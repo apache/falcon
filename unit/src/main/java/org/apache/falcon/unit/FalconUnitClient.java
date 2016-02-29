@@ -400,6 +400,16 @@ public class FalconUnitClient extends AbstractFalconClient {
         return null;
     }
 
+    @Override
+    public int getStatus(String doAsUser) {
+        return 200;
+    }
+
+    @Override
+    public String getThreadDump(String doAs) {
+        return "";
+    }
+
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {
         if (entityType == EntityType.FEED) {
             return checkAndUpdateFeedClusters(entity, cluster);

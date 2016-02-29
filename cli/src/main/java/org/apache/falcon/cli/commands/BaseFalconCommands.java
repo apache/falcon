@@ -37,7 +37,7 @@ import static org.apache.falcon.cli.FalconCLI.FALCON_URL;
  * Common code for all falcon command classes.
  */
 public class BaseFalconCommands implements ExecutionProcessor {
-    private static final String FALCON_URL_PROPERTY = "falcon.url";
+    protected static final String FALCON_URL_PROPERTY = "falcon.url";
     private static final String DO_AS = "DO_AS";
     private static final String DO_AS_PROPERTY = "do.as";
     private static final String CLIENT_PROPERTIES = "/client.properties";
