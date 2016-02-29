@@ -472,4 +472,21 @@ public abstract class AbstractFalconClient {
     public abstract int getStatus(String doAsUser);
 
     public abstract String getThreadDump(String doAs);
+
+    public abstract String getEntityLineageGraph(String pipeline, String doAs);
+
+    public abstract String getDimensionList(String dimensionType, String cluster, String doAs);
+
+    public abstract String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName,
+                                                              Integer numResults, String doAs);
+
+    public abstract String getDimensionRelations(String dimensionType, String dimensionName, String doAs);
+
+    public abstract String getVertex(String id, String doAs);
+
+    public abstract String getVertices(String key, String value, String doAs);
+
+    public abstract String getVertexEdges(String id, String direction, String doAs);
+
+    public abstract String getEdge(String id, String doAs);
 }

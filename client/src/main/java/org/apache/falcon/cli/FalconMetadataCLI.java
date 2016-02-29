@@ -59,6 +59,29 @@ public class FalconMetadataCLI extends FalconCLI {
     public static final String VALUE_OPT = "value";
     public static final String DIRECTION_OPT = "direction";
 
+    public static final String DISCOVERY_OPT_DESCRIPTION = "Discover falcon metadata relations";
+    public static final String LINEAGE_OPT_DESCRIPTION = "Get falcon metadata lineage information";
+    public static final String PIPELINE_OPT_DESCRIPTION = "Get lineage graph for the entities in a pipeline";
+    public static final String LIST_OPT_DESCRIPTION = "List all dimensions";
+    public static final String RELATIONS_OPT_DESCRIPTION = "List all relations for a dimension";
+    public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
+    public static final String TYPE_OPT_DESCRIPTION = "Dimension type";
+    public static final String NAME_OPT_DESCRIPTION = "Dimension name";
+    public static final String CLUSTER_OPT_DESCRIPTION = "Cluster name";
+    public static final String FEED_OPT_DESCRIPTION = "Feed Entity name";
+    public static final String PROCESS_OPT_DESCRIPTION = "Process Entity name";
+    public static final String NUM_RESULTS_OPT_DESCRIPTION = "Number of results to return per request";
+    public static final String VERTEX_CMD_DESCRIPTION = "show the vertices";
+    public static final String VERTICES_CMD_DESCRIPTION = "show the vertices";
+    public static final String VERTEX_EDGES_CMD_DESCRIPTION = "show the edges for a given vertex";
+    public static final String EDGE_CMD_DESCRIPTION = "show the edges";
+    public static final String ID_OPT_DESCRIPTION = "vertex or edge id";
+    public static final String KEY_OPT_DESCRIPTION = "key property";
+    public static final String VALUE_OPT_DESCRIPTION = "value property";
+    public static final String DIRECTION_OPT_DESCRIPTION = "edge direction property";
+    public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
+    public static final String FalconCLI_DESCRIPTION = "doAs user";
+
     public FalconMetadataCLI() throws Exception {
         super();
     }
@@ -67,29 +90,27 @@ public class FalconMetadataCLI extends FalconCLI {
         Options metadataOptions = new Options();
 
         OptionGroup group = new OptionGroup();
-        Option discovery = new Option(DISCOVERY_OPT, false, "Discover falcon metadata relations");
-        Option lineage = new Option(LINEAGE_OPT, false, "Get falcon metadata lineage information");
+        Option discovery = new Option(DISCOVERY_OPT, false, DISCOVERY_OPT_DESCRIPTION);
+        Option lineage = new Option(LINEAGE_OPT, false, LINEAGE_OPT_DESCRIPTION);
         group.addOption(discovery);
         group.addOption(lineage);
-        Option pipeline = new Option(PIPELINE_OPT, true,
-                "Get lineage graph for the entities in a pipeline");
+        Option pipeline = new Option(PIPELINE_OPT, true, PIPELINE_OPT_DESCRIPTION);
         metadataOptions.addOptionGroup(group);
 
         // Add discovery options
 
-        Option list = new Option(LIST_OPT, false, "List all dimensions");
-        Option relations = new Option(RELATIONS_OPT, false, "List all relations for a dimension");
+        Option list = new Option(LIST_OPT, false, LIST_OPT_DESCRIPTION);
+        Option relations = new Option(RELATIONS_OPT, false, RELATIONS_OPT_DESCRIPTION);
         metadataOptions.addOption(list);
         metadataOptions.addOption(relations);
 
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
-        Option type = new Option(TYPE_OPT, true, "Dimension type");
-        Option name = new Option(NAME_OPT, true, "Dimension name");
-        Option cluster = new Option(CLUSTER_OPT, true, "Cluster name");
-        Option feed = new Option(FEED_OPT, true, "Feed Entity name");
-        Option process = new Option(PROCESS_OPT, true, "Process Entity name");
-        Option numResults = new Option(NUM_RESULTS_OPT, true,
-                "Number of results to return per request");
+        Option url = new Option(URL_OPTION, true, URL_OPTION_DESCRIPTION);
+        Option type = new Option(TYPE_OPT, true, TYPE_OPT_DESCRIPTION);
+        Option name = new Option(NAME_OPT, true, NAME_OPT_DESCRIPTION);
+        Option cluster = new Option(CLUSTER_OPT, true, CLUSTER_OPT_DESCRIPTION);
+        Option feed = new Option(FEED_OPT, true, FEED_OPT_DESCRIPTION);
+        Option process = new Option(PROCESS_OPT, true, PROCESS_OPT_DESCRIPTION);
+        Option numResults = new Option(NUM_RESULTS_OPT, true, NUM_RESULTS_OPT_DESCRIPTION);
 
         // Add lineage options
         metadataOptions.addOption(pipeline);
@@ -102,15 +123,15 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(process);
         metadataOptions.addOption(numResults);
 
-        Option vertex = new Option(VERTEX_CMD, false, "show the vertices");
-        Option vertices = new Option(VERTICES_CMD, false, "show the vertices");
-        Option vertexEdges = new Option(VERTEX_EDGES_CMD, false, "show the edges for a given vertex");
-        Option edges = new Option(EDGE_CMD, false, "show the edges");
-        Option id = new Option(ID_OPT, true, "vertex or edge id");
-        Option key = new Option(KEY_OPT, true, "key property");
-        Option value = new Option(VALUE_OPT, true, "value property");
-        Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
-        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
+        Option vertex = new Option(VERTEX_CMD, false, VERTEX_CMD_DESCRIPTION);
+        Option vertices = new Option(VERTICES_CMD, false, VERTICES_CMD_DESCRIPTION);
+        Option vertexEdges = new Option(VERTEX_EDGES_CMD, false, VERTEX_EDGES_CMD_DESCRIPTION);
+        Option edges = new Option(EDGE_CMD, false, EDGE_CMD_DESCRIPTION);
+        Option id = new Option(ID_OPT, true, ID_OPT_DESCRIPTION);
+        Option key = new Option(KEY_OPT, true, KEY_OPT_DESCRIPTION);
+        Option value = new Option(VALUE_OPT, true, VALUE_OPT_DESCRIPTION);
+        Option direction = new Option(DIRECTION_OPT, true, DIRECTION_OPT_DESCRIPTION);
+        Option debug = new Option(DEBUG_OPTION, false, DEBUG_OPTION_DESCRIPTION);
 
         metadataOptions.addOption(vertex);
         metadataOptions.addOption(vertices);
@@ -122,7 +143,7 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(direction);
         metadataOptions.addOption(debug);
 
-        Option doAs = new Option(FalconCLI.DO_AS_OPT, true, "doAs user");
+        Option doAs = new Option(FalconCLI.DO_AS_OPT, true, FalconCLI_DESCRIPTION);
         metadataOptions.addOption(doAs);
 
         return metadataOptions;
@@ -194,13 +215,13 @@ public class FalconMetadataCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private void validatePipelineName(String pipeline) {
+    public static void validatePipelineName(String pipeline) {
         if (StringUtils.isEmpty(pipeline)) {
             throw new FalconCLIException("Invalid value for pipeline");
         }
     }
 
-    private void validateDimensionType(String dimensionType) {
+    public static void validateDimensionType(String dimensionType) {
         if (StringUtils.isEmpty(dimensionType)
                 ||  dimensionType.contains("INSTANCE")) {
             throw new FalconCLIException("Invalid value provided for queryParam \"type\" " + dimensionType);
@@ -212,13 +233,13 @@ public class FalconMetadataCLI extends FalconCLI {
         }
     }
 
-    private void validateDimensionName(String dimensionName, String action) {
+    public static void validateDimensionName(String dimensionName, String action) {
         if (StringUtils.isEmpty(dimensionName)) {
             throw new FalconCLIException("Dimension ID cannot be empty or null for action " + action);
         }
     }
 
-    private void validateScheduleEntity(String schedEntityType, String schedEntityName) {
+    public static void validateScheduleEntity(String schedEntityType, String schedEntityName) {
         if (StringUtils.isBlank(schedEntityType)) {
             throw new FalconCLIException("Entity must be schedulable type : -feed/process");
         }
@@ -228,13 +249,13 @@ public class FalconMetadataCLI extends FalconCLI {
         }
     }
 
-    private void validateId(String id) {
+    public static void validateId(String id) {
         if (id == null || id.length() == 0) {
             throw new FalconCLIException("Missing argument: id");
         }
     }
 
-    private void validateVerticesCommand(String key, String value) {
+    public static void validateVerticesCommand(String key, String value) {
         if (key == null || key.length() == 0) {
             throw new FalconCLIException("Missing argument: key");
         }
@@ -244,7 +265,7 @@ public class FalconMetadataCLI extends FalconCLI {
         }
     }
 
-    private void validateVertexEdgesCommand(String id, String direction) {
+    public static void validateVertexEdgesCommand(String id, String direction) {
         if (id == null || id.length() == 0) {
             throw new FalconCLIException("Missing argument: id");
         }

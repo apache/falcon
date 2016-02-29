@@ -410,6 +410,46 @@ public class FalconUnitClient extends AbstractFalconClient {
         return "";
     }
 
+    @Override
+    public String getEntityLineageGraph(String pipeline, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getDimensionList(String dimensionType, String cluster, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName, Integer numResults, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getDimensionRelations(String dimensionType, String dimensionName, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertex(String id, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertices(String key, String value, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertexEdges(String id, String direction, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getEdge(String id, String doAs) {
+        return null;
+    }
+
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {
         if (entityType == EntityType.FEED) {
             return checkAndUpdateFeedClusters(entity, cluster);
