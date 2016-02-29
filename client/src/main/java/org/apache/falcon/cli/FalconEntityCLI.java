@@ -83,6 +83,30 @@ public class FalconEntityCLI extends FalconCLI {
     public static final String SHOWSCHEDULER_OPT = "showScheduler";
     public static final String SHOWSCHEDULER_OPT_DESCRIPTION = "To return the scheduler "
             + "on which the entity is scheduled.";
+    public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
+    public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
+    public static final String TYPE_OPT_DESCRIPTION = "Type of the entity. Valid entity types are: cluster, feed, " +
+      "process and datasource.";
+    public static final String COLO_OPT_DESCRIPTION = "Colo name";
+    public static final String END_OPT_DESCRIPTION = "End time is optional for summary";
+    public static final String CLUSTER_OPT_DESCRIPTION = "Cluster name";
+    public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, recommended but not mandatory " +
+      "to be unique.";
+    public static final String FILE_PATH_OPT_DESCRIPTION = "Path to entity xml file";
+    public static final String SCHEDULE_OPT_DESCRIPTION = "Schedules a submited entity in Falcon";
+    public static final String SUSPEND_OPT_DESCRIPTION = "Suspends a running entity in Falcon";
+    public static final String RESUME_OPT_DESCRIPTION = "Resumes a suspended entity in Falcon";
+    public static final String STATUS_OPT_DESCRIPTION = "Gets the status of entity";
+    public static final String SUMMARY_OPT_DESCRIPTION = "Get summary of instances for list of entities";
+    public static final String DEPENDENCY_OPT_DESCRIPTION = "Gets the dependencies of entity";
+    public static final String LIST_OPT_DESCRIPTION = "List entities registered for a type";
+    public static final String SKIPDRYRUN_OPT_DESCRIPTION = "skip dry run in workflow engine";
+    public static final String FILTER_BY_OPT_DESCRIPTION = "Filter returned entities by the specified status";
+    public static final String ORDER_BY_OPT_DESCRIPTION = "Order returned entities by this field";
+    public static final String SORT_ORDER_OPT_DESCRIPTION = "asc or desc order for results";
+    public static final String NUM_RESULTS_OPT_DESCRIPTION = "Number of results to return per request";
+    public static final String START_OPT_DESCRIPTION = "Start time is optional for summary";
+    public static final String DO_AS_OPT_DESCRIPTION = "doAs user";
 
     public FalconEntityCLI() throws Exception {
         super();

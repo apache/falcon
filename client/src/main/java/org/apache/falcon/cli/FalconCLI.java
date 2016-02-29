@@ -48,9 +48,7 @@ public class FalconCLI {
 
     public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
     public static final String DEBUG_OPTION = "debug";
-    public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
     public static final String URL_OPTION = "url";
-    public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
     public static final String FALCON_URL = "FALCON_URL";
 
     public static final String ADMIN_CMD = "admin";
@@ -61,53 +59,31 @@ public class FalconCLI {
     public static final String RECIPE_CMD = "recipe";
 
     public static final String TYPE_OPT = "type";
-    public static final String TYPE_OPT_DESCRIPTION = "Type of the entity. "
-            + "Valid entity types are: cluster, feed, process and datasource.";
     public static final String COLO_OPT = "colo";
-    public static final String COLO_OPT_DESCRIPTION = "Colo name";
-    public static final String END_OPT_DESCRIPTION = "End time is optional for summary";
     public static final String CLUSTER_OPT = "cluster";
-    public static final String CLUSTER_OPT_DESCRIPTION = "Cluster name";
     public static final String FEED_OPT = "feed";
     public static final String PROCESS_OPT = "process";
     public static final String ENTITY_NAME_OPT = "name";
-    public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, "
-            + "recommended but not mandatory to be unique.";
     public static final String FILE_PATH_OPT = "file";
-    public static final String FILE_PATH_OPT_DESCRIPTION = "Path to entity xml file";
     public static final String VERSION_OPT = "version";
     public static final String SCHEDULE_OPT = "schedule";
-    public static final String SCHEDULE_OPT_DESCRIPTION = "Schedules a submited entity in Falcon";
     public static final String SUSPEND_OPT = "suspend";
-    public static final String SUSPEND_OPT_DESCRIPTION = "Suspends a running entity in Falcon";
     public static final String RESUME_OPT = "resume";
-    public static final String RESUME_OPT_DESCRIPTION = "Resumes a suspended entity in Falcon";
     public static final String STATUS_OPT = "status";
-    public static final String STATUS_OPT_DESCRIPTION = "Gets the status of entity";
     public static final String SUMMARY_OPT = "summary";
-    public static final String SUMMARY_OPT_DESCRIPTION = "Get summary of instances for list of entities";
     public static final String DEPENDENCY_OPT = "dependency";
-    public static final String DEPENDENCY_OPT_DESCRIPTION = "Gets the dependencies of entity";
     public static final String LIST_OPT = "list";
-    public static final String LIST_OPT_DESCRIPTION = "List entities registered for a type";
     public static final String SKIPDRYRUN_OPT = "skipDryRun";
-    public static final String SKIPDRYRUN_OPT_DESCRIPTION = "skip dry run in workflow engine";
     public static final String FILTER_BY_OPT = "filterBy";
-    public static final String FILTER_BY_OPT_DESCRIPTION = "Filter returned entities by the specified status";
     public static final String ORDER_BY_OPT = "orderBy";
-    public static final String ORDER_BY_OPT_DESCRIPTION = "Order returned entities by this field";
     public static final String SORT_ORDER_OPT = "sortOrder";
-    public static final String SORT_ORDER_OPT_DESCRIPTION = "asc or desc order for results";
     public static final String OFFSET_OPT = "offset";
     public static final String NUM_RESULTS_OPT = "numResults";
-    public static final String NUM_RESULTS_OPT_DESCRIPTION = "Number of results to return per request";
     public static final String START_OPT = "start";
-    public static final String START_OPT_DESCRIPTION = "Start time is optional for summary";
     public static final String END_OPT = "end";
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
     public static final String DO_AS_OPT = "doAs";
-    public static final String DO_AS_OPT_DESCRIPTION = "doAs user";
 
     private final Properties clientProperties;
 
