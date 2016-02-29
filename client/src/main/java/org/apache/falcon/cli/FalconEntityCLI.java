@@ -85,13 +85,13 @@ public class FalconEntityCLI extends FalconCLI {
             + "on which the entity is scheduled.";
     public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
     public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
-    public static final String TYPE_OPT_DESCRIPTION = "Type of the entity. Valid entity types are: cluster, feed, " +
-      "process and datasource.";
+    public static final String TYPE_OPT_DESCRIPTION = "Type of the entity. Valid entity types are: cluster, feed, "
+        + "process and datasource.";
     public static final String COLO_OPT_DESCRIPTION = "Colo name";
     public static final String END_OPT_DESCRIPTION = "End time is optional for summary";
     public static final String CLUSTER_OPT_DESCRIPTION = "Cluster name";
-    public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, recommended but not mandatory " +
-      "to be unique.";
+    public static final String ENTITY_NAME_OPT_DESCRIPTION = "Name of the entity, recommended but not mandatory "
+        + "to be unique.";
     public static final String FILE_PATH_OPT_DESCRIPTION = "Path to entity xml file";
     public static final String SCHEDULE_OPT_DESCRIPTION = "Schedules a submited entity in Falcon";
     public static final String SUSPEND_OPT_DESCRIPTION = "Suspends a running entity in Falcon";
