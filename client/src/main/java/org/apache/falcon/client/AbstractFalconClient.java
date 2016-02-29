@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.client;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -28,6 +29,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.TriageResult;
 
@@ -473,7 +475,7 @@ public abstract class AbstractFalconClient {
 
     public abstract String getThreadDump(String doAs);
 
-    public abstract String getEntityLineageGraph(String pipeline, String doAs);
+    public abstract LineageGraphResult getEntityLineageGraph(String pipeline, String doAs);
 
     public abstract String getDimensionList(String dimensionType, String cluster, String doAs);
 
@@ -489,4 +491,8 @@ public abstract class AbstractFalconClient {
     public abstract String getVertexEdges(String id, String direction, String doAs);
 
     public abstract String getEdge(String id, String doAs);
+
+    public abstract APIResult submitRecipe(String recipeName, String recipeToolClass, String recipeOperation,
+                                           String recipePropertiesFile, Boolean skipDryRun, String doAs);
+
 }

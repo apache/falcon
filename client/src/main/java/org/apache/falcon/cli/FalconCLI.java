@@ -217,7 +217,7 @@ public class FalconCLI {
         }
     }
 
-    protected void validateNotEmpty(String paramVal, String paramName) {
+    public static void validateNotEmpty(String paramVal, String paramName) {
         if (StringUtils.isBlank(paramVal)) {
             throw new FalconCLIException("Missing argument : " + paramName);
         }

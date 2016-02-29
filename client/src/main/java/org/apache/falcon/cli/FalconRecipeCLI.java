@@ -37,32 +37,39 @@ public class FalconRecipeCLI extends FalconCLI {
         super();
     }
 
-    private static final String RECIPE_NAME = "name";
-    private static final String RECIPE_OPERATION= "operation";
-    private static final String RECIPE_TOOL_CLASS_NAME = "tool";
-    private static final String RECIPE_PROPERTIES_FILE = "properties";
+    public static final String RECIPE_NAME = "name";
+    public static final String RECIPE_OPERATION= "operation";
+    public static final String RECIPE_TOOL_CLASS_NAME = "tool";
+    public static final String RECIPE_PROPERTIES_FILE = "properties";
+    public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
+    public static final String RECIPE_NAME_DESCRIPTION = "recipe name";
+    public static final String RECIPE_TOOL_CLASS_NAME_DESCRIPTION = "recipe class";
+    public static final String RECIPE_OPERATION_DESCRIPTION = "recipe operation";
+    public static final String RECIPE_PROPERTIES_FILE_DESCRIPTION = "recipe properties file path";
+    public static final String SKIPDRYRUN_OPT_DESCRIPTION = "skip dryrun operation";
+    public static final String DO_AS_OPT_DESCRIPTION = "doAs user";
 
     public Options createRecipeOptions() {
         Options recipeOptions = new Options();
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
+        Option url = new Option(URL_OPTION, true, URL_OPTION_DESCRIPTION);
         recipeOptions.addOption(url);
 
-        Option recipeFileOpt = new Option(RECIPE_NAME, true, "recipe name");
+        Option recipeFileOpt = new Option(RECIPE_NAME, true, RECIPE_NAME_DESCRIPTION);
         recipeOptions.addOption(recipeFileOpt);
 
-        Option recipeToolClassName = new Option(RECIPE_TOOL_CLASS_NAME, true, "recipe class");
+        Option recipeToolClassName = new Option(RECIPE_TOOL_CLASS_NAME, true, RECIPE_TOOL_CLASS_NAME_DESCRIPTION);
         recipeOptions.addOption(recipeToolClassName);
 
-        Option recipeOperation = new Option(RECIPE_OPERATION, true, "recipe operation");
+        Option recipeOperation = new Option(RECIPE_OPERATION, true, RECIPE_OPERATION_DESCRIPTION);
         recipeOptions.addOption(recipeOperation);
 
-        Option recipeProperties = new Option(RECIPE_PROPERTIES_FILE, true, "recipe properties file path");
+        Option recipeProperties = new Option(RECIPE_PROPERTIES_FILE, true, RECIPE_PROPERTIES_FILE_DESCRIPTION);
         recipeOptions.addOption(recipeProperties);
 
-        Option skipDryRunOperation = new Option(SKIPDRYRUN_OPT, false, "skip dryrun operation");
+        Option skipDryRunOperation = new Option(SKIPDRYRUN_OPT, false, SKIPDRYRUN_OPT_DESCRIPTION);
         recipeOptions.addOption(skipDryRunOperation);
 
-        Option doAs = new Option(DO_AS_OPT, true, "doAs user");
+        Option doAs = new Option(DO_AS_OPT, true, DO_AS_OPT_DESCRIPTION);
         recipeOptions.addOption(doAs);
 
         return recipeOptions;
@@ -94,7 +101,7 @@ public class FalconRecipeCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private static void validateRecipeOperations(String recipeOperation) {
+    public static void validateRecipeOperations(String recipeOperation) {
         for(RecipeOperation operation : RecipeOperation.values()) {
             if (operation.toString().equalsIgnoreCase(recipeOperation)) {
                 return;
@@ -104,7 +111,7 @@ public class FalconRecipeCLI extends FalconCLI {
                 + java.util.Arrays.asList((RecipeOperation.values())));
     }
 
-    private static void validateRecipePropertiesFile(String recipePropertiesFile, String recipeName) {
+    public static void validateRecipePropertiesFile(String recipePropertiesFile, String recipeName) {
         if (StringUtils.isBlank(recipePropertiesFile)) {
             return;
         }
