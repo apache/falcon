@@ -331,7 +331,7 @@ public class FalconInstanceCLI extends FalconCLI {
         }
     }
 
-    private List<LifeCycle> getLifeCycle(String lifeCycleValue) {
+    public static List<LifeCycle> getLifeCycle(String lifeCycleValue) {
 
         if (lifeCycleValue != null) {
             String[] lifeCycleValues = lifeCycleValue.split(",");

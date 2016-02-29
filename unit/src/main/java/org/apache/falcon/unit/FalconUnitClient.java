@@ -390,6 +390,16 @@ public class FalconUnitClient extends AbstractFalconClient {
         return null;
     }
 
+    @Override
+    public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer numResults, String doAsUser) {
+        return null;
+    }
+
+    @Override
+    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end, String colo, String doAsUser) {
+        return null;
+    }
+
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {
         if (entityType == EntityType.FEED) {
             return checkAndUpdateFeedClusters(entity, cluster);
