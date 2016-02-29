@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * Tests with optional input.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class OptionalInputTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

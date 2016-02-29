@@ -44,7 +44,7 @@ import org.testng.annotations.Test;
 /**
  * Test Suite for process InstanceDependency corresponding to FALCON-1039.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ProcessInstanceDependencyTest extends BaseTestClass {
 
     private String baseTestDir = cleanAndGetTestDir();

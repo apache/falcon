@@ -46,7 +46,7 @@ import org.testng.annotations.Test;
 /**
  * Test process with different frequency combinations.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessFrequencyTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ProcessFrequencyTest.class);
     private ColoHelper cluster = servers.get(0);
