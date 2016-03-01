@@ -89,12 +89,12 @@ public final class NativeInstanceUtil {
         for (int sleepSeconds = 0; sleepSeconds < totalSecondsToWait; sleepSeconds = sleepSeconds+10) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
-                break;
+                return;
             }
             LOGGER.info(type + " " + entityName + " still doesn't have instance created");
             TimeUtil.sleepSeconds(10);
         }
-
+        Assert.fail("Instances not created");
     }
 
     /**
