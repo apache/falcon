@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.client;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;

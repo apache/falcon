@@ -18,14 +18,24 @@
 
 package org.apache.falcon.cli.commands;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.metadata.RelationshipType;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import static org.apache.falcon.cli.FalconRecipeCLI.*;
+import static org.apache.falcon.cli.FalconCLI.validateNotEmpty;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_NAME;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_NAME_DESCRIPTION;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_OPERATION;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_OPERATION_DESCRIPTION;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_PROPERTIES_FILE;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_PROPERTIES_FILE_DESCRIPTION;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_TOOL_CLASS_NAME;
+import static org.apache.falcon.cli.FalconRecipeCLI.RECIPE_TOOL_CLASS_NAME_DESCRIPTION;
+import static org.apache.falcon.cli.FalconRecipeCLI.SKIPDRYRUN_OPT;
+import static org.apache.falcon.cli.FalconRecipeCLI.SKIPDRYRUN_OPT_DESCRIPTION;
+import static org.apache.falcon.cli.FalconRecipeCLI.validateRecipeOperations;
+import static org.apache.falcon.cli.FalconRecipeCLI.validateRecipePropertiesFile;
+
 
 /**
  * Instance commands.
