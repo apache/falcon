@@ -132,7 +132,7 @@ public class FalconMetadataCommands extends BaseFalconCommands {
     @CliCommand(value = {METADATA_COMMAND_PREFIX + VERTEX_CMD}, help = VERTEX_CMD_DESCRIPTION)
     public String vertex(
             @CliOption(key = {ID_OPT}, mandatory = true, help = ID_OPT_DESCRIPTION) final String id
-            ) {
+    ) {
         validateId(id);
         return getFalconClient().getVertex(id, getDoAs());
     }
@@ -147,7 +147,7 @@ public class FalconMetadataCommands extends BaseFalconCommands {
     public String vertices(
             @CliOption(key = {KEY_OPT}, mandatory = true, help = KEY_OPT_DESCRIPTION) final String key,
             @CliOption(key = {VALUE_OPT}, mandatory = true, help = VALUE_OPT_DESCRIPTION) final String value
-            ) {
+    ) {
         validateVerticesCommand(key, value);
         return getFalconClient().getVertices(key, value, getDoAs());
     }

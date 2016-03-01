@@ -39,6 +39,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.admin.AdminResource;
@@ -411,7 +412,7 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public String getEntityLineageGraph(String pipeline, String doAs) {
+    public LineageGraphResult getEntityLineageGraph(String pipeline, String doAs) {
         return null;
     }
 

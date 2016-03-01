@@ -55,54 +55,54 @@ public class FalconInstanceCLI extends FalconCLI {
     public static final String TRIAGE_OPT = "triage";
     public static final String RUNNING_OPT_DESCRIPTION = "Gets running process instances for a given process";
     public static final String LIST_OPT_DESCRIPTION = "Gets all instances for a given process in the range start "
-      + "time and optional end time";
+          + "time and optional end time";
     public static final String STATUS_OPT_DESCRIPTION = "Gets status of process instances for a given process in"
-      + " the range start time and optional end time";
+          + " the range start time and optional end time";
     public static final String SUMMARY_OPT_DESCRIPTION = "Gets summary of instances for a given process in the"
-      + " range start time and optional end time";
+          + " range start time and optional end time";
     public static final String KILL_OPT_DESCRIPTION = "Kills active process instances for a given process in the"
-      + " range start time and optional end time";
+          + " range start time and optional end time";
     public static final String SUSPEND_OPT_DESCRIPTION = "Suspends active process instances for a given process in"
-      + " the range start time and optional end time";
+          + " the range start time and optional end time";
     public static final String RESUME_OPT_DESCRIPTION = "Resumes suspended process instances for a given"
-      + " process in the range start time and optional end time";
+          + " process in the range start time and optional end time";
     public static final String RERUN_OPT_DESCRIPTION = "Reruns process instances for a given process in the"
-      + " range start time and optional end time and overrides properties present in job.properties file";
+          + " range start time and optional end time and overrides properties present in job.properties file";
     public static final String LOG_OPT_DESCRIPTION = "Logs print the logs for process instances for a given"
-      + " process in the range start time and optional end time";
+          + " process in the range start time and optional end time";
     public static final String PARARMS_OPT_DESCRIPTION = "Displays the workflow parameters for a given instance"
-      + " of specified nominal time start time represents nominal time and end time is not considered";
+          + " of specified nominal time start time represents nominal time and end time is not considered";
     public static final String LISTING_OPT_DESCRIPTION = "Displays feed listing and their status between a"
-      + " start and end time range.";
+          + " start and end time range.";
     public static final String DEPENDENCY_OPT_DESCRIPTION = "Displays dependent instances for a specified"
-      + " instance.";
+          + " instance.";
     public static final String TRIAGE_OPT_DESCRIPTION = "Triage a feed or process instance and find the failures"
-      + " in it's lineage.";
+          + " in it's lineage.";
     public static final String URL_OPTION_DESCRIPTION = "Falcon URL";
     public static final String START_OPT_DESCRIPTION = "Start time is required for commands, status, kill, "
-      + "suspend, resume and re-runand it is nominal time while displaying workflow params";
+          + "suspend, resume and re-runand it is nominal time while displaying workflow params";
     public static final String END_OPT_DESCRIPTION = "End time is optional for commands, status, kill, suspend, "
-      + "resume and re-run; if not specified then current time is considered as end time";
+          + "resume and re-run; if not specified then current time is considered as end time";
     public static final String RUNID_OPT_DESCRIPTION = "Instance runid  is optional and user can specify the "
-      + "runid, defaults to 0";
+          + "runid, defaults to 0";
     public static final String CLUSTERS_OPT_DESCRIPTION = "clusters is optional for commands kill, suspend and "
-      + "resume, should not be specified for other commands";
+          + "resume, should not be specified for other commands";
     public static final String SOURCECLUSTER_OPT_DESCRIPTION = " source cluster is optional for commands kill, "
-      + "suspend and resume, should not be specified for other commands (required for only feed)";
+          + "suspend and resume, should not be specified for other commands (required for only feed)";
     public static final String FILE_PATH_OPT_DESCRIPTION = "Path to job.properties file is required for rerun "
-      + "command, it should contain name=value pair for properties to override for rerun";
+          + "command, it should contain name=value pair for properties to override for rerun";
     public static final String TYPE_OPT_DESCRIPTION = "Entity type, can be feed or process xml";
     public static final String ENTITY_NAME_OPT_DESCRIPTION = "Entity name, can be feed or process name";
     public static final String COLO_OPT_DESCRIPTION = "Colo on which the cmd has to be executed";
     public static final String LIFECYCLE_OPT_DESCRIPTION = "describes life cycle of entity , for feed it can be "
-      + "replication/retention and for process it can be execution";
+          + "replication/retention and for process it can be execution";
     public static final String FILTER_BY_OPT_DESCRIPTION = "Filter returned instances by the specified fields";
     public static final String ORDER_BY_OPT_DESCRIPTION = "Order returned instances by this field";
     public static final String SORT_ORDER_OPT_DESCRIPTION = "asc or desc order for results";
     public static final String OFFSET_OPT_DESCRIPTION = "Start returning instances from this offset";
     public static final String NUM_RESULTS_OPT_DESCRIPTION = "Number of results to return per request";
     public static final String FORCE_RERUN_FLAG_DESCRIPTION = "Flag to forcefully rerun entire workflow "
-      + "of an instance";
+          + "of an instance";
     public static final String DO_AS_OPT_DESCRIPTION = "doAs user";
     public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
     public static final String INSTANCE_TIME_OPT_DESCRIPTION = "Time for an instance";
