@@ -464,10 +464,12 @@ public abstract class AbstractFalconClient {
     public abstract EntityList getDependency(String entityType, String entityName, String doAs);
 
     public abstract TriageResult triage(String name, String entityName, String start, String colo);
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public abstract InstancesResult getRunningInstances(String type, String entity, String colo,
                                                         List<LifeCycle> lifeCycles,
                                                         String filterBy, String orderBy, String sortOrder,
                                                         Integer offset, Integer numResults, String doAsUser);
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
     public abstract FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
                                                               String colo, String doAsUser);
     public abstract int getStatus(String doAsUser);
