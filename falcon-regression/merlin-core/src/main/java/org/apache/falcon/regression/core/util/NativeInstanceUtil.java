@@ -81,7 +81,11 @@ public final class NativeInstanceUtil {
         String params = "?start=" + startTime;
         params += (endTime.isEmpty() ? "" : "&end=" + endTime);
 
+        // totalSecondsToWait (totalMinutesToWait in seconds)
         int totalSecondsToWait = totalMinutesToWait * 60;
+
+        //Incrementing sleepSeconds by 10 so that looping happens (totalMinutesToWait*60)/10 times
+        //since TimeUtil.sleepSeconds is 10
         for (int sleepSeconds = 0; sleepSeconds < totalSecondsToWait; sleepSeconds = sleepSeconds+10) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
