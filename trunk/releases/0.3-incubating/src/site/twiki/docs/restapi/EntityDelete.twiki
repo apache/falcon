@@ -1,0 +1,31 @@
+---++  DELETE /api/entities/delete/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Delete the specified entity.
+
+---++ Parameters
+   * :entity-type can be feed or process.
+   * :entity-name is name of the feed or process.
+
+---++ Results
+Results of the delete operation.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+DELETE http://localhost:15000/api/entities/delete/cluster/SampleProcess
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "falcon\/17ff6ca6-1c8a-459f-9ba8-8fec480e384a\n",
+    "message": "falcon\/SampleProcess(cluster) removed successfully\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+

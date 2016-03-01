@@ -1,0 +1,30 @@
+---++  GET /api/entities/status/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get status of the entity.
+
+---++ Parameters
+   * :entity-type can be cluster, feed or process.
+   * :entity-name is name of the entity.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+
+---++ Results
+Status of the entity.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/status/process/SampleProcess?doAs=joe
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "default\/4d35b382-852a-4bc7-9972-b9db3493322a\n",
+    "message": "default\/SUBMITTED\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>

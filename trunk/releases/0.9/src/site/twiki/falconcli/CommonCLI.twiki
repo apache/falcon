@@ -1,0 +1,21 @@
+---++ Common CLI Options
+
+---+++Falcon URL
+
+Optional -url option indicating the URL of the Falcon system to run the command against can be provided.  If not mentioned it will be picked from the system environment variable FALCON_URL. If FALCON_URL is not set then it will be picked from client.properties file. If the option is not
+provided and also not set in client.properties, Falcon CLI will fail.
+
+---+++Proxy user support
+
+The -doAs option allows the current user to impersonate other users when interacting with the Falcon system. The current user must be configured as a proxyuser in the Falcon system. The proxyuser configuration may restrict from
+which hosts a user may impersonate users, as well as users of which groups can be impersonated.
+
+<a href="../FalconDocumentation.html#Proxyuser_support">Proxyuser support described here.</a>
+
+---+++Debug Mode
+
+If you export FALCON_DEBUG=true then the Falcon CLI will output the Web Services API details used by any commands you execute. This is useful for debugging purposes to or see how the Falcon CLI works with the WS API.
+Alternately, you can specify '-debug' through the CLI arguments to get the debug statements.
+
+Example:
+$FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml -debug

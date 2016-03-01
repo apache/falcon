@@ -1,0 +1,193 @@
+---+ Securing Falcon
+
+---++ Overview
+
+Apache Falcon enforces authentication on protected resources. Once authentication has been established it sets a
+signed HTTP Cookie that contains an authentication token with the user name, user principal,
+authentication type and expiration time.
+
+It does so by using [[http://hadoop.apache .org/docs/current/hadoop-auth/index.html][Hadoop Auth]].
+Hadoop Auth is a Java library consisting of a client and a server components to enable Kerberos SPNEGO authentication
+for HTTP. Hadoop Auth also supports additional authentication mechanisms on the client and the server side via 2
+simple interfaces.
+
+
+---++ Authentication Methods
+
+It supports 2 authentication methods, simple and kerberos out of the box.
+
+---+++ Pseudo/Simple Authentication
+
+Falcon authenticates the user by simply trusting the value of the query string parameter 'user.name'. This is the
+default mode Falcon is configured with.
+
+---+++ Kerberos Authentication
+
+Falcon uses HTTP Kerberos SPNEGO to authenticate the user.
+
+---++ Server Side Configuration Setup
+
+---+++ Common Configuration Parameters
+
+<verbatim>
+# Authentication type must be specified: simple|kerberos
+*.falcon.authentication.type=kerberos
+</verbatim>
+
+---+++ Kerberos Configuration
+
+<verbatim>
+##### Service Configuration
+
+# Indicates the Kerberos principal to be used in Falcon Service.
+*.falcon.service.authentication.kerberos.principal=falcon/_HOST@EXAMPLE.COM
+
+# Location of the keytab file with the credentials for the Service principal.
+*.falcon.service.authentication.kerberos.keytab=/etc/security/keytabs/falcon.service.keytab
+
+# name node principal to talk to config store
+*.dfs.namenode.kerberos.principal=nn/_HOST@EXAMPLE.COM
+
+##### SPNEGO Configuration
+
+# Authentication type must be specified: simple|kerberos|<class>
+# org.apache.falcon.security.RemoteUserInHeaderBasedAuthenticationHandler can be used for backwards compatibility
+*.falcon.http.authentication.type=kerberos
+
+# Indicates how long (in seconds) an authentication token is valid before it has to be renewed.
+*.falcon.http.authentication.token.validity=36000
+
+# The signature secret for signing the authentication tokens.
+*.falcon.http.authentication.signature.secret=falcon
+
+# The domain to use for the HTTP cookie that stores the authentication token.
+*.falcon.http.authentication.cookie.domain=
+
+# Indicates if anonymous requests are allowed when using 'simple' authentication.
+*.falcon.http.authentication.simple.anonymous.allowed=true
+
+# Indicates the Kerberos principal to be used for HTTP endpoint.
+# The principal MUST start with 'HTTP/' as per Kerberos HTTP SPNEGO specification.
+*.falcon.http.authentication.kerberos.principal=HTTP/_HOST@EXAMPLE.COM
+
+# Location of the keytab file with the credentials for the HTTP principal.
+*.falcon.http.authentication.kerberos.keytab=/etc/security/keytabs/spnego.service.keytab
+
+# The kerberos names rules is to resolve kerberos principal names, refer to Hadoop's KerberosName for more details.
+*.falcon.http.authentication.kerberos.name.rules=DEFAULT
+
+# Comma separated list of black listed users
+*.falcon.http.authentication.blacklisted.users=
+</verbatim>
+
+---+++ Pseudo/Simple Configuration
+
+<verbatim>
+##### SPNEGO Configuration
+
+# Authentication type must be specified: simple|kerberos|<class>
+# org.apache.falcon.security.RemoteUserInHeaderBasedAuthenticationHandler can be used for backwards compatibility
+*.falcon.http.authentication.type=simple
+
+# Indicates how long (in seconds) an authentication token is valid before it has to be renewed.
+*.falcon.http.authentication.token.validity=36000
+
+# The signature secret for signing the authentication tokens.
+*.falcon.http.authentication.signature.secret=falcon
+
+# The domain to use for the HTTP cookie that stores the authentication token.
+*.falcon.http.authentication.cookie.domain=
+
+# Indicates if anonymous requests are allowed when using 'simple' authentication.
+*.falcon.http.authentication.simple.anonymous.allowed=true
+
+# Comma separated list of black listed users
+*.falcon.http.authentication.blacklisted.users=
+</verbatim>
+
+---+++ SSL Configuration
+
+<verbatim>
+*.falcon.enableTLS=true
+*.keystore.file=/path/to/keystore/file
+*.keystore.password=password
+</verbatim>
+
+---+++ Distributed Falcon Setup
+
+Falcon should be configured to communicate with Prism over TLS in secure mode. Its not enabled by default.
+
+
+---++ Changes to ownership and permissions of directories managed by Falcon
+
+| *Directory*             | *Location*                                                        | *Owner* | *Permissions* |
+| Configuration Store     | ${config.store.uri}                                               | falcon  | 750           |
+| Oozie coord/bundle XMLs | ${cluster.staging-location}/workflows/{entity}/{entity-name}      | falcon  | 644           |
+| Shared libs             | {cluster.working}/{lib,libext}                                    | falcon  | 755           |
+| App logs                | ${cluster.staging-location}/workflows/{entity}/{entity-name}/logs | falcon  | 777           |
+
+
+---++ Backwards compatibility
+
+---+++ Scheduled Entities
+
+Entities already scheduled with an earlier version of Falcon are not compatible with this version
+
+---+++ Falcon Clients
+
+Older Falcon clients are backwards compatible wrt Authentication and user information sent as part of the HTTP
+header, Remote-User is still honoured when the authentication type is configured as below:
+
+<verbatim>
+*.falcon.http.authentication.type=org.apache.falcon.security.RemoteUserInHeaderBasedAuthenticationHandler
+</verbatim>
+
+---+++ Blacklisted super users for authentication
+
+The blacklist users used to have the following super users: hdfs, mapreduce, oozie, and falcon.
+The list is externalized from code into Startup.properties file and is empty now and needs to be
+configured specifically in the file.
+
+
+---+++ Falcon Dashboard
+
+The dashboard assumes an anonymous user in Pseudo/Simple method and hence anonymous users must be enabled for it to
+work.
+<verbatim>
+# Indicates if anonymous requests are allowed when using 'simple' authentication.
+*.falcon.http.authentication.simple.anonymous.allowed=true
+</verbatim>
+
+In Kerberos method, the browser must support HTTP Kerberos SPNEGO.
+
+
+---++ Known Limitations
+
+   * ActiveMQ topics are not secure but will be in the near future
+   * Entities already scheduled with an earlier version of Falcon are not compatible with this version as new
+   workflow parameters are being passed back into Falcon such as the user are required
+   * Use of hftp as the scheme for read only interface in cluster entity [[https://issues.apache.org/jira/browse/HADOOP-10215][will not work in Oozie]]
+   The alternative is to use webhdfs scheme instead and its been tested with DistCp.
+
+
+---++ Examples
+
+---+++ Accessing the server using Falcon CLI (Java client)
+
+There is no change in the way the CLI is used. The CLI has been changed to work with the configured authentication
+method.
+
+---+++ Accessing the server using curl
+
+Try accessing protected resources using curl. The protected resources are:
+
+<verbatim>
+$ kinit
+Please enter the password for venkatesh@LOCALHOST:
+
+$ curl http://localhost:15000/api/admin/version
+
+$ curl http://localhost:15000/api/admin/version?user.name=venkatesh
+
+$ curl --negotiate -u foo -b ~/cookiejar.txt -c ~/cookiejar.txt curl http://localhost:15000/api/admin/version
+</verbatim>

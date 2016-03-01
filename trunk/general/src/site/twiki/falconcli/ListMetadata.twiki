@@ -1,0 +1,13 @@
+---+++ List
+
+[[CommonCLI][Common CLI Options]]
+
+Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
+Usage:
+$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|datasource_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
+
+Optional Args : -cluster <<cluster name>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
+$FALCON_HOME/bin/falcon metadata -list -type tags

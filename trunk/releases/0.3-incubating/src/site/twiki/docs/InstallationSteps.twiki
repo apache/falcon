@@ -1,0 +1,86 @@
+---++ Building & Installing Falcon
+
+
+---+++ Building Falcon
+
+Download sources from http://www.apache.org/dist/incubator/falcon/0.3-incubating/falcon-0.3-incubating-sources.tar.gz
+<verbatim>
+
+tar -xzvf falcon-0.3-incubating-sources.tar.gz
+
+cd falcon-0.3-incubating-sources
+
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean assembly:assembly -DskipTests -DskipCheck=true
+
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+[Falcon has currently not been tested with secure Hadoop / Hadoop 2.0]
+
+Tar can be found in target/falcon-0.3-incubating-bin.tar.gz
+
+Tar is structured as follows
+
+<verbatim>
+
+|- bin
+   |- falcon
+   |- falcon-start
+   |- falcon-stop
+|- conf
+   |- startup.properties
+   |- runtime.properties
+   |- client.properties
+   |- log4j.xml
+|- src
+|- docs
+|- client
+   |- lib (client support libs)
+|- server
+   |- webapp
+      |- classes (serer support classes)
+      |- lib (server support libs)
+   |- falcon.war
+|- logs (application log files & temp data files)
+   |- falcon.pid
+
+</verbatim>
+
+PS: By default the falcon is built for embedded mode.
+
+---+++ Installing & running Falcon
+
+*Installing falcon*
+<verbatim>
+tar -xzvf falcon-0.3-incubating-bin.tar.gz
+cd falcon-0.3-incubating-bin
+</verbatim>
+
+*Starting Falcon Server*
+<verbatim>
+bin/falcon-start
+</verbatim>
+
+*Using Falcon*
+<verbatim>
+bin/falcon admin -version
+Falcon server build version: {Version:"0.3-incubating-r4380d446a912252a8c173c43a858ab1a38443c47",Mode:"embedded"}
+
+----
+
+bin/falcon help
+(for more details about falcon cli usage)
+</verbatim>
+
+*Stopping Falcon Server*
+<verbatim>
+bin/falcon-stop
+</verbatim>
+
+---+++ Preparing oozie bundle for use with Falcon
+<verbatim>
+cd <<project home>>
+mkdir target/package
+src/bin/pacakge.sh <<hadoop-version>>
+
+>> ex. src/bin/pacakge.sh 1.1.2 or src/bin/pacakge.sh 0.20.2-cdh3u5
+>> oozie bundle available in target/package/oozie-3.2.0-incubating/distro/target/oozie-3.2.2-distro.tar.gz
+</verbatim>

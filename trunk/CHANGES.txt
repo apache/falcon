@@ -1,0 +1,33 @@
+Apache Falcon Website (incubating) Change log
+
+Trunk (Unreleased)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+    FALCON-1 Update installation steps to reflect packaging changes (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-43 Update Ivory references in images to Falcon on Architecture page (Srikanth Sundarrajan)
+
+    FALCON-45 Architecture diagram in Site / Docs still refer to Ivory (Srikanth Sundarrajan)
+
+    FALCON-44 Update link to Wiki from placeholder to real wiki (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-40 Fix broken link in Getting Started (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-34 Update the git url in falcon site (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-4 Incorporated the new logo (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-23 Wiki Documentation changes (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-8 First-cut
+
+    FALCON-343 Post entity XSDs in a public place and added new committers. (Venkatesh Seetharam)
+
+  OPTIMIZATIONS
+
+  BUG FIXES

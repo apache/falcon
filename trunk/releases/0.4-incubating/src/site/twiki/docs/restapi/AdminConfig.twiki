@@ -1,0 +1,36 @@
+---++  GET /api/admin/config/:config-type
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get configuration information of the falcon server.
+
+---++ Parameters
+   * :config-type can be build, deploy, startup or runtime
+
+---++ Results
+Configuration information of the server.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/admin/config/deploy
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "properties": [
+        {
+            "value": "embedded",
+            "key": "deploy.mode"
+        },
+        {
+            "value": "all",
+            "key": "domain"
+        }
+    ]
+}
+</verbatim>

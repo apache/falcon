@@ -1,0 +1,102 @@
+---+ Operationalizing Falcon
+
+---++ Overview
+
+Apache Falcon provides various tools to operationalize Falcon consisting of Alerts for
+unrecoverable errors, Audits of user actions, Metrics, and Notifications. They are detailed below.
+
+
+---++ Monitoring
+
+Falcon provides monitoring of various events by capturing metrics of those events.
+The metric numbers can then be used to monitor performance and health of the Falcon system and
+the entire processing pipelines.
+
+Users can view the logs of these events in the metric.log file, by default this file is created
+under ${user.dir}/logs/ directory. Users may also extend the Falcon monitoring framework to send
+events to systems like Mondemand/lwes by implementingorg.apache.falcon.plugin.MonitoringPlugin
+interface.
+
+The following events are captured by Falcon for logging the metrics:
+   1. New cluster definitions posted to Falcon (success & failures)
+   1. New feed definition posted to Falcon (success & failures)
+   1. New process definition posted to Falcon (success & failures)
+   1. Process update events (success & failures)
+   1. Feed update events (success & failures)
+   1. Cluster update events (success & failures)
+   1. Process suspend events (success & failures)
+   1. Feed suspend events (success & failures)
+   1. Process resume events (success & failures)
+   1. Feed resume events (success & failures)
+   1. Process remove events (success & failures)
+   1. Feed remove events (success & failures)
+   1. Cluster remove events (success & failures)
+   1. Process instance kill events (success & failures)
+   1. Process instance re-run events (success & failures)
+   1. Process instance generation events
+   1. Process instance failure events
+   1. Process instance auto-retry events
+   1. Process instance retry exhaust events
+   1. Feed instance deletion event
+   1. Feed instance deletion failure event (no retries)
+   1. Feed instance replication event
+   1. Feed instance replication failure event
+   1. Feed instance replication auto-retry event
+   1. Feed instance replication retry exhaust event
+   1. Feed instance late arrival event
+   1. Feed instance post cut-off arrival event
+   1. Process re-run due to late feed event
+   1. Transaction rollback failed event
+
+The metric logged for an event has the following properties:
+   1. Action - Name of the event.
+   2. Dimensions - A list of name/value pairs of various attributes for a given action.
+   3. Status- Status of an action FAILED/SUCCEEDED.
+   4. Time-taken - Time taken in nanoseconds for a given action.
+
+An example for an event logged for a submit of a new process definition:
+
+   2012-05-04 12:23:34,026 {Action:submit, Dimensions:{entityType=process}, Status: SUCCEEDED, Time-taken:97087000 ns}
+
+Users may parse the metric.log or capture these events from custom monitoring frameworks and can plot various graphs
+or send alerts according to their requirements.
+
+
+---++ Notifications
+
+Falcon creates a JMS topic for every process/feed that is scheduled in Falcon.
+The implementation class and the broker url of the JMS engine are read from the dependent cluster's definition.
+Users may register consumers on the required topic to check the availability or status of feed instances.
+
+For a given process that is scheduled, the name of the topic is same as the process name.
+Falcon sends a Map message for every feed produced by the instance of a process to the JMS topic.
+The JMS !MapMessage sent to a topic has the following properties:
+entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
+
+For a given feed that is scheduled, the name of the topic is same as the feed name.
+Falcon sends a map message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
+The JMS !MapMessage sent to a topic has the following properties:
+entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
+
+The JMS messages are automatically purged after a certain period (default 3 days) by the Falcon JMS house-keeping service.TTL (Time-to-live) for JMS message
+can be configured in the Falcon's startup.properties file.
+
+
+---++ Alerts
+
+Falcon generates alerts for unrecoverable errors into a log file by default.
+Users can view these alerts in the alerts.log file, by default this file is created
+under ${user.dir}/logs/ directory.
+
+Users may also extend the Falcon Alerting plugin to send events to systems like Nagios, etc. by
+extending org.apache.falcon.plugin.AlertingPlugin interface.
+
+
+---++ Audits
+
+Falcon audits all user activity and captures them into a log file by default.
+Users can view these audits in the audit.log file, by default this file is created
+under ${user.dir}/logs/ directory.
+
+Users may also extend the Falcon Audit plugin to send audits to systems like Apache Argus, etc. by
+extending org.apache.falcon.plugin.AuditingPlugin interface.

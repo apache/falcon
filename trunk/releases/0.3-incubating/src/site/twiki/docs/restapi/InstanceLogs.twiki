@@ -1,0 +1,49 @@
+---++ GET /api/instance/logs/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get log of a specific instance of an entity.
+
+---++ Parameters
+   * :entity-type can either be a feed or a process.
+   * :entity-name is name of the entity.
+   * start is the start time of the instace that you want to refer to
+
+---++ Results
+Log of specified instance.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/logs/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "actions": [
+                {
+                    "logFile": "http:\/\/localhost:50070\/data\/apps\/falcon\/staging\/falcon\/workflows\/process\/SampleProcess\/logs\/job-2012-04-03-07-00\/000\/pig_SUCCEEDED.log",
+                    "status": "SUCCEEDED",
+                    "action": "pig"
+                }
+            ],
+            "details": "",
+            "endTime": "2013-10-21T14:40:26-07:00",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:50070\/data\/apps\/falcon\/staging\/falcon\/workflows\/process\/SampleProcess\/logs\/job-2012-04-03-07-00\/000\/oozie.log",
+            "status": "SUCCEEDED",
+            "instance": "2012-04-03T07:00Z"
+        }
+    ],
+    "requestId": "default\/3527038e-8334-4e50-8173-76c4fa430d0b\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>

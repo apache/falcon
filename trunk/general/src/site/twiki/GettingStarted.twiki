@@ -1,0 +1,31 @@
+---+ Apache Falcon - Data management and processing platform
+
+Apache Falcon is a feed processing and feed management system aimed at making it
+easier for end consumers to onboard their feed processing and feed
+management on hadoop clusters.
+
+---++ Why?
+
+   * Establishes relationship between various data and processing elements on a Hadoop environment
+
+   * Feed management services such as feed retention, replications across clusters, archival etc 
+
+   * Easy to onboard new workflows/pipelines, with support for late data handling, retry policies
+
+   * Integration with metastore/catalog
+
+   * Provide notification to end customer based on availability of feed groups
+     (logical group of related feeds, which are likely to be used together)
+
+   * Enables use cases for local processing in colo and global aggregations
+
+---+ Getting Started
+
+Start with these simple steps to install an falcon instance [[InstallationSteps][Simple setup]]. Also refer
+to Falcon architecture and documentation in [[FalconDocumentation][Documentation]].
+
+[[OnBoarding][On boarding]] describes steps to on-board a pipeline to Falcon. It also gives a sample pipeline
+for reference. [[EntitySpecification][Entity Specification]] gives complete details of all Falcon entities.
+
+[[FalconCLI][Falcon CLI]] describes the various options for the command line utility provided by Falcon.
+

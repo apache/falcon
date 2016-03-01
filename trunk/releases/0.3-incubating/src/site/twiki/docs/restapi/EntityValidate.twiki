@@ -1,0 +1,172 @@
+---++ POST  api/entities/validate/entity-type
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Validates the submitted entity.
+
+---++ Parameters
+:entity-type can be cluster, feed or process.
+
+---++ Results
+Result of the validation.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/validate/cluster
+Remote-User: rgautam
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cluster xmlns="uri:falcon:cluster:0.1" name="primary-cluster" description="Primary Cluster" colo="west-coast">
+    <interfaces>
+        <interface type="readonly" endpoint="hftp://localhost:50070" version="1.1.1"/>
+        <interface type="write" endpoint="hdfs://localhost:9000" version="1.1.1"/>
+        <interface type="execute" endpoint="localhost:9001" version="1.1.1"/>
+        <interface type="workflow" endpoint="http://localhost:11000/oozie/" version="3.3.0"/>
+        <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.3"/>
+    </interfaces>
+    <locations>
+        <location name="staging" path="/apps/falcon/staging"/>
+        <location name="temp" path="/tmp"/>
+        <location name="working" path="/apps/falcon/working"/>
+    </locations>
+</cluster>
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "dd3f6c3a-a6f1-4c50-97fb-3f9a3f698e10",
+    "message": "Validated successfully (CLUSTER) primary-cluster",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/validate/feed
+Remote-User: rgautam
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Hourly sample input data -->
+
+<feed description="sample input data"
+      name="SampleInput" xmlns="uri:falcon:feed:0.1"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <groups>group</groups>
+    <frequency>hours(1)</frequency>
+    <late-arrival cut-off="hours(6)" />
+    <clusters>
+        <cluster name="primary-cluster" type="source">
+            <!--validity start="2009-01-01T00:00Z" end="2099-12-31T00:00Z" timezone="UTC" /-->
+            <validity start="2009-01-01T00:00Z" end="2099-12-31T00:00Z" />
+            <retention limit="months(24)" action="delete" />
+        </cluster>
+    </clusters>
+
+    <locations>
+        <location type="data" path="/projects/bootcamp/data/${YEAR}-${MONTH}-${DAY}-${HOUR}/SampleInput" />
+        <location type="stats" path="/projects/bootcamp/stats/SampleInput" />
+        <location type="meta" path="/projects/bootcamp/meta/SampleInput" />
+    </locations>
+
+    <ACL owner="suser" group="users" permission="0755" />
+
+    <schema location="/none" provider="none" />
+</feed>
+</verbatim>
+
+---+++ Result
+<verbatim>
+{
+    "requestId": "c85b190e-e653-493a-a863-d62de9c2e3b0",
+    "message": "Validated successfully (FEED) SampleInput",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/validate/feed
+Remote-User: rgautam
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Daily sample output data -->
+
+<feed description="sample output data" name="SampleOutput" xmlns="uri:falcon:feed:0.1"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <groups>group</groups>
+    <frequency>hours(1)</frequency>
+    <late-arrival cut-off="hours(6)" />
+    <clusters>
+        <cluster name="primary-cluster" type="source">
+            <!--validity start="2009-01-01T00:00Z" end="2099-12-31T00:00Z" timezone="UTC" /-->
+            <validity start="2009-01-01T00:00Z" end="2099-12-31T00:00Z" />
+            <retention limit="months(24)" action="delete" />
+        </cluster>
+    </clusters>
+    <locations>
+        <location type="data" path="/projects/bootcamp/output/${YEAR}-${MONTH}-${DAY}-${HOUR}/SampleOutput" />
+        <location type="stats" path="/projects/bootcamp/stats/SampleOutput" />
+        <location type="meta" path="/projects/bootcamp/meta/SampleOutput" />
+    </locations>
+    <ACL owner="suser" group="users" permission="0755" />
+    <schema location="/none" provider="none" />
+</feed>
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "60781732-460e-4c6c-ba86-a75fae574b05",
+    "message": "Validated successfully (FEED) SampleOutput",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/validate/process
+Remote-User: rgautam
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
+<process xmlns="uri:falcon:process:0.1" name="SampleProcess" >
+    <clusters>
+      <cluster name="primary-cluster">
+	<validity start="2012-04-03T06:00Z" end="2022-12-30T00:00Z" />
+      </cluster>
+    </clusters>
+
+    <parallel>1</parallel>
+    <order>FIFO</order>
+    <frequency>hours(1)</frequency>
+
+    <inputs>
+        <input name="input" feed="SampleInput" start="yesterday(0,0)" end="today(-1,0)" />
+    </inputs>
+
+    <outputs>
+        <output name="output" feed="SampleOutput" instance="yesterday(0,0)" />
+    </outputs>
+
+    <properties>
+        <property name="queueName" value="default" />
+        <property name="ssh.host" value="localhost" />
+        <property name="fileTimestamp" value="${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd')}" />
+    </properties>
+
+    <workflow engine="oozie" path="/examples/apps/aggregator" />
+    <retry policy="exp-backoff" delay="minutes(5)" attempts="3" />
+    
+    <late-process policy="exp-backoff" delay="hours(1)">
+        <late-input input="input" workflow-path="/projects/bootcamp/workflow/lateinput" />
+    </late-process>
+</process>
+</verbatim>
+
+---+++ Result
+<verbatim>
+{
+    "requestId": "e4a965c6-c7a2-41d9-ba08-2e77f1c43f57",
+    "message": "Validated successfully (PROCESS) SampleProcess",
+    "status": "SUCCEEDED"
+}
+</verbatim>

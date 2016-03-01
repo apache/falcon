@@ -1,0 +1,29 @@
+---++Falcon Email Notification
+
+Falcon Email notification allows sending email notifications when scheduled feed/process instances complete.
+Email notification in feed/process entity can be defined as follows:
+<verbatim>
+<process name="[process name]">
+    ...
+    <notification type="email" to="bob@xyz.com,tom@xyz.com"/>
+    ...
+</process>
+</verbatim>
+
+   *  *type*    - specifies about the type of notification. *Note:* Currently "email" notification type is supported.
+   *  *to*  - specifies the address to send notifications to; multiple recipients may be provided as a comma-separated list.
+
+
+Falcon email notification requires some SMTP server configuration to be defined in startup.properties. Following are the values
+it looks for:
+   * *falcon.email.smtp.host*   - The host where the email action may find the SMTP server (localhost by default).
+   * *falcon.email.smtp.port*   - The port to connect to for the SMTP server (25 by default).
+   * *falcon.email.from.address*    - The from address to be used for mailing all emails (falcon@localhost by default).
+   * *falcon.email.smtp.auth*   - Boolean property that specifies if authentication is to be done or not. (false by default).
+   * *falcon.email.smtp.user*   - If authentication is enabled, the username to login as (empty by default).
+   * *falcon.email.smtp.password*   - If authentication is enabled, the username's password (empty by default).
+
+
+
+Also ensure that email notification plugin is enabled in startup.properties to send email notifications:
+   * *monitoring.plugins*   - org.apache.falcon.plugin.EmailNotificationPlugin,org.apache.falcon.plugin.DefaultMonitoringPlugin

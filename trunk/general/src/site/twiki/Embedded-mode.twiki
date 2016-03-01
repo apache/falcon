@@ -1,0 +1,198 @@
+---+Embedded Mode
+
+Following are the steps needed to package and deploy Falcon in Embedded Mode. You need to complete Steps 1-3 mentioned
+ [[InstallationSteps][here]] before proceeding further.
+
+---++Package Falcon
+Ensure that you are in the base directory (where you cloned Falcon). Let’s call it {project dir}
+
+<verbatim>
+$mvn clean assembly:assembly -DskipTests -DskipCheck=true
+</verbatim>
+
+<verbatim>
+$ls {project dir}/target/
+</verbatim>
+It should give an output like below :
+<verbatim>
+apache-falcon-${project.version}-bin.tar.gz
+apache-falcon-${project.version}-sources.tar.gz
+archive-tmp
+maven-shared-archive-resources
+</verbatim>
+
+* apache-falcon-${project.version}-sources.tar.gz contains source files of Falcon repo.
+
+* apache-falcon-${project.version}-bin.tar.gz package contains project artifacts along with it's dependencies,
+configuration files and scripts required to deploy Falcon.
+
+Tar can be found in {project dir}/target/apache-falcon-${project.version}-bin.tar.gz
+
+Tar is structured as follows :
+
+<verbatim>
+
+|- bin
+   |- falcon
+   |- falcon-start
+   |- falcon-stop
+   |- falcon-status
+   |- falcon-config.sh
+   |- service-start.sh
+   |- service-stop.sh
+   |- service-status.sh
+|- conf
+   |- startup.properties
+   |- runtime.properties
+   |- prism.keystore
+   |- client.properties
+   |- log4j.xml
+   |- falcon-env.sh
+|- docs
+|- client
+   |- lib (client support libs)
+|- server
+   |- webapp
+      |- falcon.war
+|- data
+   |- falcon-store
+   |- graphdb
+   |- localhost
+|- examples
+   |- app
+      |- hive
+      |- oozie-mr
+      |- pig
+   |- data
+   |- entity
+      |- filesystem
+      |- hcat
+|- oozie
+   |- conf
+   |- libext
+|- logs
+|- hadooplibs
+|- README
+|- NOTICE.txt
+|- LICENSE.txt
+|- DISCLAIMER.txt
+|- CHANGES.txt
+</verbatim>
+
+
+---++Installing & running Falcon
+
+Running Falcon in embedded mode requires bringing up server.
+
+<verbatim>
+$tar -xzvf {falcon package}
+$cd falcon-${project.version}
+</verbatim>
+
+
+---+++Starting Falcon Server
+<verbatim>
+$cd falcon-${project.version}
+$bin/falcon-start [-port <port>]
+</verbatim>
+
+By default,
+* If falcon.enableTLS is set to true explicitly or not set at all, Falcon starts at port 15443 on https:// by default.
+
+* If falcon.enableTLS is set to false explicitly, Falcon starts at port 15000 on http://.
+
+* To change the port, use -port option.
+
+* If falcon.enableTLS is not set explicitly, port that ends with 443 will automatically put Falcon on https://. Any
+other port will put Falcon on http://.
+
+* Server starts with conf from {falcon-server-dir}/falcon-distributed-${project.version}/conf. To override this (to use
+the same conf with multiple server upgrades), set environment variable FALCON_CONF to the path of conf dir. You can find
+ the instructions for configuring Falcon [[Configuration][here]].
+
+
+---+++Enabling server-client
+If server is not started using default-port 15443 then edit the following property in
+{falcon-server-dir}/falcon-${project.version}/conf/client.properties
+
+falcon.url=http://{machine-ip}:{server-port}/
+
+
+---+++Using Falcon
+<verbatim>
+$cd falcon-${project.version}
+$bin/falcon admin -version
+Falcon server build version: {Version:"${project.version}-SNAPSHOT-rd7e2be9afa2a5dc96acd1ec9e325f39c6b2f17f7",Mode:
+"embedded",Hadoop:"${hadoop.version}"}
+
+$bin/falcon help
+(for more details about Falcon cli usage)
+</verbatim>
+
+*Note* : https is the secure version of HTTP, the protocol over which data is sent between your browser and the website
+that you are connected to. By default Falcon runs in https mode. But user can configure it to http.
+
+
+---+++Dashboard
+
+Once Falcon server is started, you can view the status of Falcon entities using the Web-based dashboard. You can open
+your browser at the corresponding port to use the web UI.
+
+Falcon dashboard makes the REST api calls as user "falcon-dashboard". If this user does not exist on your Falcon and
+Oozie servers, please create the user.
+
+<verbatim>
+## create user.
+[root@falconhost ~] useradd -U -m falcon-dashboard -G users
+
+## verify user is created with membership in correct groups.
+[root@falconhost ~] groups falcon-dashboard
+falcon-dashboard : falcon-dashboard users
+[root@falconhost ~]
+</verbatim>
+
+
+---++Running Examples using embedded package
+<verbatim>
+$cd falcon-${project.version}
+$bin/falcon-start
+</verbatim>
+Make sure the Hadoop and Oozie endpoints are according to your setup in
+examples/entity/filesystem/standalone-cluster.xml
+The cluster locations,staging and working dirs, MUST be created prior to submitting a cluster entity to Falcon.
+*staging* must have 777 permissions and the parent dirs must have execute permissions
+*working* must have 755 permissions and the parent dirs must have execute permissions
+<verbatim>
+$bin/falcon entity -submit -type cluster -file examples/entity/filesystem/standalone-cluster.xml
+</verbatim>
+Submit input and output feeds:
+<verbatim>
+$bin/falcon entity -submit -type feed -file examples/entity/filesystem/in-feed.xml
+$bin/falcon entity -submit -type feed -file examples/entity/filesystem/out-feed.xml
+</verbatim>
+Set-up workflow for the process:
+<verbatim>
+$hadoop fs -put examples/app /
+</verbatim>
+Submit and schedule the process:
+<verbatim>
+$bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/oozie-mr-process.xml
+$bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/pig-process.xml
+</verbatim>
+Generate input data:
+<verbatim>
+$examples/data/generate.sh <<hdfs endpoint>>
+</verbatim>
+Get status of instances:
+<verbatim>
+$bin/falcon instance -status -type process -name oozie-mr-process -start 2013-11-15T00:05Z -end 2013-11-15T01:00Z
+</verbatim>
+
+HCat based example entities are in examples/entity/hcat.
+
+
+---+++Stopping Falcon Server
+<verbatim>
+$cd falcon-${project.version}
+$bin/falcon-stop
+</verbatim>

@@ -1,0 +1,69 @@
+
+<div class="hero-unit">
+    <h3>Welcome to Apache Falcon!</h3>
+<p>
+    <span style="font-weight: bold">Apache Falcon</span>
+    is a data processing and management solution for Hadoop designed for data motion,
+    coordination of data pipelines, lifecycle management, and data discovery. Falcon enables end consumers
+    to quickly onboard their data and its associated processing and management tasks on Hadoop clusters.
+</p>
+</div>
+
+<div id="components" class="carousel slide">
+<!--  Carousel items  -->
+<div class="carousel-inner">
+    <div class="active item">
+        <div class="hero-unit">
+            <h1>Data Motion</h1>
+            <p>Data Import & Export from DBs, Filers into HDFS.</p>
+            <p>
+                <a class="btn btn-primary pull-right" href="././docs/GettingStarted.html">Learn more</a>
+            </p>
+        </div>
+    </div>
+    <div class="item">
+        <div class="hero-unit">
+            <h1>Process orchestration</h1>
+            <p>Late Data Handling, Retries, etc.</p>
+            <p>Multi-cluster management to support Local/Global Aggregations, Rollups, etc.</p>
+            <!--
+            <p>
+                <a href="http://oozie.apache.org/">Scheduler</a> integration.
+            </p>
+            -->
+            <p>
+                <a class="btn btn-primary pull-right" href="././docs/GettingStarted.html">Learn more</a>
+            </p>
+        </div>
+    </div>
+    <div class="item">
+        <div class="hero-unit">
+            <h1>Data Lifecycle Management</h1>
+            <p>Retention, Replication/BCP/DR, Anonymization of PII Data, Archival, etc.</p>
+            <p>
+                <a class="btn btn-primary pull-right" href="././docs/GettingStarted.html">Learn more</a>
+            </p>
+        </div>
+    </div>
+    <div class="item">
+        <div class="hero-unit">
+            <h1>Data Discovery</h1>
+            <p>Data Classification, Audit, Lineage.</p>
+            <p>
+                <a class="btn btn-primary pull-right" href="././docs/GettingStarted.html">Learn more</a>
+            </p>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="hero-unit">
+    <h3>Getting Involved</h3>
+<p>
+    Developers interested in getting involved with Falcon may join the [[./mail-lists.html][mailing lists]],
+    [[https://issues.apache.org/jira/browse/FALCON][report bugs]], retrieve code from the
+    [[./source-repository.html][version control system]], and make
+    [[https://cwiki.apache.org/confluence/display/FALCON/How+To+Contribute][contributions]].
+</p>
+</div>
+

@@ -1,0 +1,45 @@
+---++ GET /api/instance/listing/feed/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get falcon feed instance availability.
+
+---++ Parameters
+   * :entity-name Name of the entity.
+   * start <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * By default, it is set to (end - (10 * entityFrequency)).
+   * end <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * Default is set to now.
+   * colo <optional param> Colo on which the query should be run.
+
+---++ Results
+Feed instance availability status
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/listing/feed/SampleFeed?colo=*&start=2012-04-03T07:00Z
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "size": "450231212222",
+            "creationTime": "1236679827365",
+            "cluster": "primary-cluster",
+            "uri": "/data/SampleFeed/2012-04-03",
+            "status": "AVAILABLE",
+            "instance": "2012-04-03T07:00Z"
+        }
+    ],
+    "requestId": "default\/3527038e-8334-4e50-8173-76c4fa430d0b\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+

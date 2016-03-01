@@ -1,0 +1,42 @@
+---++  GET /api/instance/status/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get status of a specific instance of an entity.
+
+---++ Parameters
+   * :entity-type can either be a feed or a process.
+   * :entity-name is name of the entity.
+   * start is the start time of the instance that you want to refer to
+
+---++ Results
+Status of the specified instance.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/status/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "details": "",
+            "endTime": "2013-10-21T14:40:26-07:00",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "status": "SUCCEEDED",
+            "instance": "2012-04-03T07:00Z"
+        }
+    ],
+    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>

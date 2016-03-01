@@ -1,0 +1,112 @@
+---+FalconCLI
+
+FalconCLI is a interface between user and Falcon. It is a command line utility provided by Falcon. FalconCLI supports Entity Management, Instance Management and Admin operations.There is a set of web services that are used by FalconCLI to interact with Falcon.
+
+---+++Types of CLI Options
+
+CLI options are classified into :
+
+   * <a href="#Common_CLI_Options">Common CLI Options</a>
+   * <a href="#Entity_Management_Commands">Entity Management Commands</a>
+   * <a href="#Instance_Management_Commands">Instance Management Commands</a>
+   * <a href="#Metadata_Commands">Metadata Commands</a>
+   * <a href="#Admin_Commands">Admin commands</a>
+   * <a href="#Recipe_Commands">Recipe commands</a>
+
+
+
+-----------
+
+---++Common CLI Options
+
+---+++Falcon URL
+
+Optional -url option indicating the URL of the Falcon system to run the command against can be provided.  If not mentioned it will be picked from the system environment variable FALCON_URL. If FALCON_URL is not set then it will be picked from client.properties file. If the option is not
+provided and also not set in client.properties, Falcon CLI will fail.
+
+---+++Proxy user support
+
+The -doAs option allows the current user to impersonate other users when interacting with the Falcon system. The current user must be configured as a proxyuser in the Falcon system. The proxyuser configuration may restrict from
+which hosts a user may impersonate users, as well as users of which groups can be impersonated.
+
+<a href="../FalconDocumentation.html#Proxyuser_support">Proxyuser support described here.</a>
+
+---+++Debug Mode
+
+If you export FALCON_DEBUG=true then the Falcon CLI will output the Web Services API details used by any commands you execute. This is useful for debugging purposes to or see how the Falcon CLI works with the WS API.
+Alternately, you can specify '-debug' through the CLI arguments to get the debug statements.
+Example:
+$FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml -debug
+
+-----------
+
+---++Entity Management Commands
+
+| *Command*                                      | *Description*                                   |
+| [[Submit]]                                     | Submit the entity definition.                   |
+| [[Schedule]]                                   | Scheduled the entity                            |
+| [[SuspendEntity][Suspend]]                     | Suspends the scheduled entity                   |
+| [[ResumeEntity][Resume]]                       | Puts a suspended entity back in action          |
+| [[DeleteEntity][Delete]]                       | Remove the submitted entity                     |
+| [[ListEntity][List]]                           | Lists the particular type of entity             |
+| [[SummaryEntity][Summary]]                     | Shows summary of the type of entity             |
+| [[UpdateEntity][Update]]                       | Update already submitted entity                 |
+| [[Touch]]                                      | Force update already submitted entity           |
+| [[StatusEntity][Status]]                       | Return's the status of the entity               |
+| [[DependencyEntity][Dependency]]               | List all the entities on which the specified entity is dependent|
+| [[Definition]]                                 | Return's the definition of the entity           |
+| [[Lookup]]                                     | Return's the feed name for a path               |
+| [[SLAAlert]]                                   | Return's the feed instance which have missed sla|
+
+
+-----------
+---++Instance Management Commands
+
+| *Command*                                      | *Description*                                   |
+| [[KillInstance][Kill]]                         | Kills all the instances of specified process    |
+| [[SuspendInstance][Suspend]]                   | Suspends instances of a specified process       |
+| [[ContinueInstance][Continue]]                 | Continue the failed workflow instances          |
+| [[RerunInstance][Rerun]]                       | Rerun instances of specified process            |
+| [[ResumeInstance][Resume]]                     | Resume instance of specified process from suspended state   |
+| [[StatusInstance][Status]]                     | Gets the status of entity                       |
+| [[ListInstance][List]]                         | Gets single or multiple instances               |
+| [[SummaryInstance][Summary]]                   | Gets consolidated status of the instances between the specified time period    |
+| [[RunningInstance][Running]]                   | Gets running instances of the mentioned process |
+| [[FeedInstanceListing]]                        | Gets falcon feed instance availability          |
+| [[LogsInstance][Logs]]                         | Gets logs for instance                          |
+| [[LifeCycleInstance][LifeCycle]]               | Describes list of life cycles of a entity       |
+| [[TriageInstance][Triage]]                     | Traces entities ancestors for failure           |
+| [[ParamsInstance][Params]]                     | Displays workflow params                        |
+| [[DependencyInstance][Dependency]]             | Displays the dependent instances    |
+
+-----------
+
+---++Metadata Commands
+
+| *Command*                                      | *Description*                                    |
+|[[LineageMetadata][Lineage]]                    | Returns the relationship between processes and feeds |
+|[[VertexMetadata][Vertex]]                      | Gets the vertex with the specified id            |
+|[[VerticesMetadata][Vertices]]                  | Gets all vertices for a key                      |
+|[[VertexEdgesMetadata][Vertex Edges]]           | Gets the adjacent vertices or edges of the vertex|
+|[[EdgeMetadata][Edge]]                          | Gets the edge with the specified id              |
+|[[ListMetadata][List]]                          | Return list of all dimension of given type       |
+|[[RelationMetadata][Relations]]                | Return all dimensions related to specified Dimension |
+
+-----------
+
+---++Admin Commands
+
+| *Command*                                      | *Description*                                   |
+|[[HelpAdmin][Help]]                             | Return help options                             |
+|[[VersionAdmin][Version]]                       | Return current falcon version                   |
+|[[StatusAdmin][Status]]                         | Return the status of falcon                     |
+
+-----------
+
+---++Recipe Commands
+
+| *Command*                                      | *Description*                                   |
+|[[SubmitRecipe][Submit]]                        | Submit the specified Recipe                     |
+
+
+

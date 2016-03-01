@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.apache.falcon</groupId>
+    <artifactId>falcon-website</artifactId>
+    <version>0.9-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Apache Falcon</name>
+    <description>Apache Falcon is a data management platform for Hadoop.</description>
+    <url>http://falcon.apache.org</url>
+
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://www.apache.org</url>
+    </organization>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/FALCON</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://builds.apache.org/job/falcon</url>
+    </ciManagement>
+
+    <inceptionYear>2013</inceptionYear>
+
+    <mailingLists>
+        <mailingList>
+            <name>falcon-dev</name>
+            <subscribe>dev-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>dev@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>falcon-commits</name>
+            <subscribe>commits-subscribe@falcon.incubator.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>commits@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <scm>
+        <connection>scm:https://git-wip-us.apache.org/repos/asf/falcon.git</connection>
+        <developerConnection>scm:https://git-wip-us.apache.org/repos/asf/falcon.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://git-wip-us.apache.org/repos/asf/falcon.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>sriksun</id>
+            <name>Srikanth Sundarrajan</name>
+            <email>sriksun@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+            <!--<organizationUrl>http://www.inmobi.com</organizationUrl>-->
+        </developer>
+        <developer>
+            <id>venkatesh</id>
+            <name>Venkatesh Seetharam</name>
+            <email>venkatesh@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Hortonworks Inc.</organization>
+            <!--<organizationUrl>http://www.hortonworks.com</organizationUrl>-->
+        </developer>
+        <developer>
+            <id>shwethags</id>
+            <name>Shwetha GS</name>
+            <email>shwethags@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Hortonworks Inc.</organization>
+        </developer>
+        <developer>
+            <id>shaikidris</id>
+            <name>Shaik Idris</name>
+            <email>shaikidris@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+        </developer>
+        <developer>
+            <id>sanjay</id>
+            <name>Sanjay Radia</name>
+            <email>sanjay@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Hortonworks Inc.</organization>
+        </developer>
+        <developer>
+            <id>sharad</id>
+            <name>Sharad Agarwal</name>
+            <email>sharad@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+        </developer>
+        <developer>
+            <id>amareshwari</id>
+            <name>Amareshwari Sriramadasu</name>
+            <email>amareshwari@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+        </developer>
+        <developer>
+            <id>samarthg</id>
+            <name>Samarth Gupta</name>
+            <email>samarthg@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+        </developer>
+        <developer>
+            <id>rishumehrothra</id>
+            <name>Rishu Mehrothra</name>
+            <email>rishumehrothra@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+        </developer>
+        <developer>
+            <id>arpit</id>
+            <name>Arpit Gupta</name>
+            <email>arpit@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Hortonworks Inc.</organization>
+        </developer>
+        <developer>
+            <id>suhasv</id>
+            <name>Suhas Vasu</name>
+            <email>suhasv@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>InMobi</organization>
+        </developer>
+        <developer>
+            <id>jbonofre</id>
+            <name>Jean-Baptiste Onofre</name>
+            <email>jbonofre@apache.org</email>
+            <timezone>+01:00</timezone>
+            <roles>
+                <role>committer</role>
+                <role>IPMC</role>
+            </roles>
+            <organization>Talend</organization>
+        </developer>
+        <developer>
+            <id>rostafiychuk</id>
+            <name>Ruslan Ostafiychuk</name>
+            <email>rostafiychuk@apache.org</email>
+            <timezone>+03:00</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Hortonworks</organization>
+        </developer>
+        <developer>
+            <id>raghav</id>
+            <name>Raghav Kumar Gautam</name>
+            <email>raghav@apache.org</email>
+            <timezone>-08:00</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Hortonworks</organization>
+        </developer>
+	<developer>
+            <id>ajayyadava</id>
+            <name>Ajay Yadava</name>
+            <email>ajayyadava@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+                <role>PPMC</role>
+            </roles>
+            <organization>Inmobi</organization>
+        </developer>
+	<developer>
+            <id>sowmya_kr</id>
+            <name>Sowmya Ramesh</name>
+            <email>sowmya_kr@apache.org</email>
+            <timezone>-08:00</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Hortonworks</organization>
+        </developer>
+	<developer>
+            <id>pisaychuk</id>
+            <name>Paul Isaychuk</name>
+            <email>pisaychuk@apache.org</email>
+            <timezone>-08:00</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Hortonworks</organization>
+        </developer>
+
+        <developer>
+            <id>pallavi</id>
+            <name>Pallavi Rao</name>
+            <email>pallavi@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Inmobi</organization>
+        </developer>
+        <developer>
+            <id>pragyam</id>
+            <name>Pragya Mittal</name>
+            <email>pragyam@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Inmobi</organization>
+        </developer>
+        <developer>
+            <id>balu</id>
+            <name>Balu Vellanki</name>
+            <email>balu@apache.org</email>
+            <timezone>-08:00</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Hortonworks</organization>
+        </developer>
+        <developer>
+            <id>pavankumar</id>
+            <name>Pavan Kumar Kolamuri</name>
+            <email>pavankumar@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Inmobi</organization>
+        </developer>
+        <developer>
+            <id>peeyushb</id>
+            <name>Peeyush Bishnoi</name>
+            <email>peeyushb@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Hortonworks</organization>
+        </developer>
+
+    </developers>
+
+
+    <modules>
+        <module>general</module>
+        <module>releases</module>
+    </modules>
+
+    <distributionManagement>
+        <site>
+            <id>apache-falcon-website</id>
+            <name>Apache Falcon Website</name>
+            <url>scpexe://people.apache.org/www/falcon.apache.org</url>
+        </site>
+    </distributionManagement>
+</project>

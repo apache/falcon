@@ -1,0 +1,48 @@
+---++  GET /api/instance/summary/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get summary of instance/instances of an entity.
+
+---++ Parameters
+   * :entity-type Valid options are cluster, feed or process.
+   * :entity-name Name of the entity.
+   * start <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * By default, it is set to (end - (10 * entityFrequency)).
+   * end <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * Default is set to now.
+   * colo <optional param> Colo on which the query should be run.
+   * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
+
+---++ Results
+Summary of the instances over the specified time range
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/summary/process/WordCount?colo=*&start=2014-01-21T13:00Z&end=2014-01-21T16:00Z
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "status":"SUCCEEDED",
+    "message":"default/SUMMARY\n",
+    "requestId":"default/c344567b-da73-44d5-bcd4-bf456524934c\n",
+    "instancesSummary":
+        {
+            "cluster":"local",
+            "map":
+                {
+                    "entry":
+                        {
+                            "key":"SUCCEEDED",
+                            "key2":"value"
+                         }
+                }
+            }
+        }
+}
+</verbatim>

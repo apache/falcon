@@ -1,0 +1,49 @@
+---++ GET /api/instance/dependency/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get dependent instances for a particular instance.
+
+---++ Parameters
+   * :entity-type Valid options are feed or process.
+   * :entity-name Name of the entity
+   * instanceTime <mandatory param> time of the given instance
+   * colo <optional param> name of the colo
+
+
+---++ Results
+Dependent instances for the specified instance
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/dependency/feed/myFeed?colo=*&instanceTime=2012-04-03T07:00Z
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    'status': 'SUCCEEDED',
+    'message': 'default/Success!\n',
+    'dependencies': [
+        {
+            'cluster': 'local',
+            'entityName': 'consumer-process',
+            'entityType': 'PROCESS',
+            'instanceTime': '2014-12-18T00:00Z',
+            'tags': 'Input'
+        },
+        {
+            'cluster': 'local',
+            'entityName': 'producer-process',
+            'entityType': 'PROCESS',
+            'instanceTime': '2014-12-18T00:00Z',
+            'tags': 'Output'
+        }
+    ],
+    'requestId': 'default/1405883107@qtp-1501726962-6-0c2e690f-546b-47b0-a5ee-0365d4522a31\n'
+}
+</verbatim>
+

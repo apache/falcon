@@ -1,0 +1,9 @@
+---+++Triage
+
+[[CommonCLI][Common CLI Options]]
+
+Given a feed/process instance this command traces it's ancestors to find what all ancestors have failed. It's useful if
+lot of instances are failing in a pipeline as it then finds out the root cause of the pipeline being stuck.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -triage -type <<feed/process>> -name <<name>> -start "yyyy-MM-dd'T'HH:mm'Z'"

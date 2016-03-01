@@ -1,0 +1,29 @@
+---++ POST  api/entities/touch/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Force updates the entity.
+
+---++ Parameters
+   * :entity-type can be feed or process.
+   * :entity-name is name of the feed or process.
+
+---++ Results
+Result of the validation.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/touch/process/SampleProcess
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "touch\/default\/d6aaa328-6836-4818-a212-515bb43d8b86\n\n",
+    "message": "touch\/default\/SampleProcess updated successfully\n\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>

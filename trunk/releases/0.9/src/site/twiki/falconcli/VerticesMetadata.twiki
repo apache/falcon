@@ -1,0 +1,11 @@
+---+++ Vertices
+
+[[CommonCLI][Common CLI Options]]
+
+Get all vertices for a key index given the specified value.
+
+Usage:
+$FALCON_HOME/bin/falcon metadata -vertices -key <<key>> -value <<value>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -vertices -key type -value feed-instance

@@ -1,0 +1,90 @@
+---+ RESTful Resources
+
+---++ Resource List
+   * <a href="#REST_Call_on_Entity_Resource">REST Call on Entity Resource</a>
+   * <a href="#REST_Call_on_Feed_and_Process_Instances">REST Call on Feed/Process Instances</a>
+   * <a href="#REST_Call_on_Admin_Resource">REST Call on Admin Resource</a>
+   * <a href="#REST_Call_on_Lineage_Graph">REST Call on Lineage Graph Resource</a>
+   * <a href="#REST_Call_on_Metadata_Resource">REST Call on Metadata Resource</a>
+
+---++ Authentication
+
+When security is off (Pseudo/Simple), the authenticated user is the username specified in the user.name query
+parameter. If the user.name parameter is not set, the server may either set the authenticated user to a default web
+user, if there is any, or return an error response.
+
+When security is on (kerberos), authentication is performed by Kerberos SPNEGO.
+
+Below are examples using the curl command tool.
+
+Authentication when security is off (Pseudo/Simple):
+<verbatim>
+curl -i "http://<HOST>:<PORT>/<PATH>?[user.name=<USER>&]<PARAM>=..."
+</verbatim>
+
+Authentication using Kerberos SPNEGO when security is on:
+<verbatim>
+curl -i --negotiate -u : "http://<HOST>:<PORT>/<PATH>?<PARAM>=..."
+</verbatim>
+
+See also: [[../Security.twiki][Security in Falcon]]
+
+---++ REST Call on Admin Resource
+
+| *Call Type* | *Resource*                                     | *Description*                               |
+| GET         | [[AdminStack][api/admin/stack]]                | Get stack of the server                     |
+| GET         | [[AdminVersion][api/admin/version]]            | Get version of the server                   |
+| GET         | [[AdminConfig][api/admin/config/:config-type]] | Get configuration information of the server |
+
+---++ REST Call on Entity Resource
+
+| *Call Type* | *Resource*                                                                  | *Description*                      |
+| POST        | [[EntityValidate][api/entities/validate/:entity-type]]                      | Validate the entity                |
+| POST        | [[EntitySubmit][api/entities/submit/:entity-type]]                          | Submit the entity                  |
+| POST        | [[EntityUpdate][api/entities/update/:entity-type/:entity-name]]             | Update the entity                  |
+| POST        | [[EntitySubmitAndSchedule][api/entities/submitAndSchedule/:entity-type]]    | Submit & Schedule the entity       |
+| POST        | [[EntitySchedule][api/entities/schedule/:entity-type/:entity-name]]         | Schedule the entity                |
+| POST        | [[EntitySuspend][api/entities/suspend/:entity-type/:entity-name]]           | Suspend the entity                 |
+| POST        | [[EntityResume][api/entities/resume/:entity-type/:entity-name]]             | Resume the entity                  |
+| DELETE      | [[EntityDelete][api/entities/delete/:entity-type/:entity-name]]             | Delete the entity                  |
+| GET         | [[EntityStatus][api/entities/status/:entity-type/:entity-name]]             | Get the status of the entity       |
+| GET         | [[EntityDefinition][api/entities/definition/:entity-type/:entity-name]]     | Get the definition of the entity   |
+| GET         | [[EntityList][api/entities/list/:entity-type]]                              | Get the list of entities           |
+| GET         | [[EntitySummary][api/entities/summary/:entity-type/:cluster]]               | Get instance summary of all entities |
+| GET         | [[EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity |
+| GET         | [[FeedLookup][api/entities/lookup/feed/]]                                   | Get feed for given path            |
+
+---++ REST Call on Feed and Process Instances
+
+| *Call Type* | *Resource*                                                                  | *Description*                |
+| GET         | [[InstanceRunning][api/instance/running/:entity-type/:entity-name]]         | List of running instances.   |
+| GET         | [[InstanceParams][api/instance/params/:entity-type/:entity-name]]           | List of entity instances along with their workflow params.   |
+| GET         | [[InstanceList][api/instance/list/:entity-type/:entity-name]]               | List of instances   |
+| GET         | [[InstanceStatus][api/instance/status/:entity-type/:entity-name]]           | Status of a given instance   |
+| POST        | [[InstanceKill][api/instance/kill/:entity-type/:entity-name]]               | Kill a given instance        |
+| POST        | [[InstanceSuspend][api/instance/suspend/:entity-type/:entity-name]]         | Suspend a running instance   |
+| POST        | [[InstanceResume][api/instance/resume/:entity-type/:entity-name]]           | Resume a given instance      |
+| POST        | [[InstanceRerun][api/instance/rerun/:entity-type/:entity-name]]             | Rerun a given instance       |
+| GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance |
+| GET         | [[Triage][api/instance/triage/:entity-type/:entity-name]]                   | Triage an instance to see it's stuck lineage |
+| GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name]]         | Return summary of instances for an entity |
+| GET         | [[InstanceDependency][api/instance/dependency/:entity-type/:entity-name]]   | Return dependent instances for a given instance |
+
+---++ REST Call on Metadata Lineage Resource
+
+| *Call Type* | *Resource*                                                                             | *Description*                                                                 |
+| GET         | [[Graph][api/metadata/lineage/serialize]]                                              | dump the graph                                                                |
+| GET         | [[AllVertices][api/metadata/lineage/vertices/all]]                                     | get all vertices                                                              |
+| GET         | [[Vertices][api/metadata/lineage/vertices?key=:key&value=:value]]                      | get all vertices for a key index                                              |
+| GET         | [[Vertex][api/metadata/lineage/vertices/:id]]                                          | get the vertex with the specified id                                          |
+| GET         | [[VertexProperties][api/metadata/lineage/vertices/properties/:id?relationships=:true]] | get the properties of the vertex with the specified id                        |
+| GET         | [[AdjacentVertices][api/metadata/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges of the vertex with the specified direction |
+| GET         | [[AllEdges][api/metadata/lineage/edges/all]]                                           | get all edges                                                                 |
+| GET         | [[Edge][api/metadata/lineage/edges/:id]]                                               | get the edge with the specified id                                            |
+| GET         | [[EntityLineage][api/metadata/lineage/entities?pipeline=:name]]                        | Get lineage graph for processes and feeds in the specified pipeline           |
+
+---++ REST Call on Metadata Discovery Resource
+
+| *Call Type* | *Resource*                                                                                     | *Description*                                                                 |
+| GET         | [[MetadataList][api/metadata/discovery/:dimension-type/list]]                                  | list of dimensions  |
+| GET         | [MetadataRelations][api/metadata/discovery/:dimension-type/:dimension-name/relations]]         | Return all relations of a dimension |

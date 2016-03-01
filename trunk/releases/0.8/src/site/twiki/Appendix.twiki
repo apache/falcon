@@ -1,0 +1,55 @@
+---+ Compatibility
+
+---++ 0.6-incubating Version Compatibility Matrix
+
+   * Hadoop 2.5.0 and above
+   * Oozie  4.0.0 and above
+   * Hive 0.11.0 and above
+   * HCatalog 0.11.0 and above
+   * Active MQ 5.4.3 and above
+   * Titan 0.4.2 and above but below 0.5
+
+
+---++ 0.6-incubating Tested Compatibility
+
+   * Hadoop 2.6.0
+   * Oozie  4.1.0
+   * Hive 0.14.0
+   * HCatalog 0.14.0
+   * Active MQ 5.4.3
+   * Titan 0.4.2
+   * Java 1.6, Java 1.7
+
+   Note : Oozie versions below 4.1.0 are not compatible with Java 1.7
+
+---++ 0.6-incubating Release Notes
+
+Major additions are listed below. Refer to CHANGES.txt for detailed issues addressed in this release.
+
+   * Security - Authorization, SSL
+   * Lineage - More complete with better API
+   * Recipes
+   * Usability improvements - Dry run, entity summary, Pagination, etc.
+   * Operability - Alerts, Audits, etc.
+   * Refactoring - Messaging, Orchestration of workflows, etc.
+   * Extension points for developers
+   * Many bug fixes
+
+
+---++ 0.6-incubating Upgrade Instructions
+
+Please follow these instructions when upgrading from an older release.
+
+---+++ Upgrading from 0.5-incubating
+
+0.6-incubating is backwards *incompatible* with 0.5-incubating. It is recommended that user do not
+migrate from 0.5 to 0.6. However if the user must migrate from 0.5-incubating to 0.6-incubating,
+user should [[https://cwiki.apache.org/confluence/display/FALCON/Index][follow these instructions]
+
+---+++ Upgrading from 0.4-incubating
+
+It is not possible to upgrade to 0.6-incubating from 0.4-incubating.
+
+---+++ Upgrading from 0.3-incubating
+
+It is not possible to upgrade to 0.6-incubating from 0.3-incubating.

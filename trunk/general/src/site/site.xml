@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project name="Falcon" xmlns="http://maven.apache.org/DECORATION/1.3.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
+
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>1.3.0</version>
+    </skin>
+
+    <bannerLeft>
+        <name>Falcon</name>
+        <src>./images/falcon-logo.png</src>
+        <href>http://falcon.apache.org/index.html</href>
+        <width>200px</width>
+        <height>45px</height>
+    </bannerLeft>
+
+    <bannerRight>
+        <name>Falcon</name>
+        <src>./images/apache-feather-tm.gif</src>
+        <href>http://www.apache.org</href>
+        <height>45px</height>
+    </bannerRight>
+
+    <publishDate position="right"/>
+    <version position="none"/>
+
+    <body>
+        <head>
+            <script type="text/javascript">
+                $( document ).ready( function() { $( '.carousel' ).carousel( { interval: 3500 } ) } );
+            </script>
+        </head>
+
+        <breadcrumbs>
+            <item name="Apache" href="http://www.apache.org"/>
+            <item name="Falcon" title="Apache Falcon" href="index.html"/>
+        </breadcrumbs>
+
+        <menu name="Falcon">
+            <item name="About" href="index.html"/>
+            <item name="Overview" href="./slides/falcon-overview.html"/>
+            <item name="User Guide" href="./slides/falcon-user-guide.html"/>
+            <item name="Getting Started" href="./GettingStarted.html"/>
+            <item name="Architecture" href="./FalconDocumentation.html"/>
+            <item name="Installation" href="./InstallationSteps.html"/>
+            <item name="On Boarding" href="./OnBoarding.html"/>
+            <item name="Operability" href="./Operability.html"/>
+            <item name="Entity Specification" href="./EntitySpecification.html"/>
+            <item name="Client (Falcon CLI)" href="./falconcli/FalconCLI.html"/>
+            <item name="Rest API" href="./restapi/ResourceList.html" collapse="true">
+                <item name="Entity Resource" href="./restapi/ResourceList.html" collapse="true">
+                    <item href="./restapi/EntityValidate.html" name="Validate the entity" />
+                    <item href="./restapi/EntitySubmit.html" name="Submit the entity" />
+                    <item href="./restapi/EntityUpdate.html" name="Update the entity" />
+                    <item href="./restapi/EntitySubmitAndSchedule.html" name="Submit &amp; Schedule the entity" />
+                    <item href="./restapi/EntitySchedule.html" name="Schedule the entity" />
+                    <item href="./restapi/EntitySuspend.html" name="Suspend the entity" />
+                    <item href="./restapi/EntityResume.html" name="Resume the entity" />
+                    <item href="./restapi/EntityDelete.html" name="Delete the entity" />
+                    <item href="./restapi/EntityStatus.html" name="Get the status of the entity" />
+                    <item href="./restapi/EntityDefinition.html" name="Get the definition of the entity" />
+                    <item href="./restapi/EntityList.html" name="Get the list of entities" />
+                    <item href="./restapi/EntitySummary.html" name="Get instance summary of all entities" />
+                    <item href="./restapi/EntityDependencies.html" name="Get the dependencies of the entity" />
+                    <item href="./restapi/FeedLookup.html" name="Get feed for given path" />
+                </item>
+                <item name="Feed/Process Instances" href="./restapi/ResourceList.html" collapse="true">
+                    <item  href="./restapi/InstanceRunning.html" name="List of running instances. " />
+                    <item  href="./restapi/InstanceParams.html" name="List of entity instances along with their workflow params. " />
+                    <item  href="./restapi/InstanceList.html" name="List of instances " />
+                    <item  href="./restapi/InstanceStatus.html" name="Status of a given instance " />
+                    <item  href="./restapi/InstanceKill.html" name="Kill a given instance " />
+                    <item  href="./restapi/InstanceSuspend.html" name="Suspend a running instance " />
+                    <item  href="./restapi/InstanceResume.html" name="Resume a given instance " />
+                    <item  href="./restapi/InstanceRerun.html" name="Rerun a given instance " />
+                    <item  href="./restapi/InstanceLogs.html" name="Get logs of a given instance " />
+                    <item  href="./restapi/InstanceSummary.html" name="Return summary of instances for an entity " />
+                </item>
+                <item name="Admin Resource" href="./restapi/ResourceList.html" collapse="true">
+                    <item name="Stack Trace" href="./restapi/AdminStack.html" />
+                    <item name="Version" href="./restapi/AdminVersion.html" />
+                    <item name="Configuration" href="./restapi/AdminConfig.html" />
+                </item>
+                <item name="Lineage Graph Resource" href="./restapi/ResourceList.html" collapse="true">
+                    <item href="./restapi/Graph.html" name="Dump graph" />
+                    <item href="./restapi/AllVertices.html" name="All vertices" />
+                    <item href="./restapi/Vertices.html" name="Vertices for a key index" />
+                    <item href="./restapi/Vertex.html" name="Vertex by id" />
+                    <item href="./restapi/VertexProperties.html" name="Vertex Properties" />
+                    <item href="./restapi/AdjacentVertices.html" name="Adjacent Vertices" />
+                    <item href="./restapi/AllEdges.html" name="All edges" />
+                    <item href="./restapi/Edge.html" name="Edge by id" />
+                    <item href="./restapi/EntityLineage.html" name="Get lineage graph " />
+                </item>
+                <item name="Metadata Resource" href="./restapi/ResourceList.html" collapse="true">
+                    <item href="./restapi/MetadataList.html" name="List of dimensions" />
+                </item>
+            </item>
+            <item name="Hive Integration" href="./HiveIntegration.html"/>
+            <item name="Security" href="./Security.html"/>
+        </menu>
+
+        <menu name="Project Information">
+            <item name="Summary" href="project-info.html" />
+            <item name="Mailing Lists" href="mail-lists.html" />
+            <item name="IRC" href="http://webchat.freenode.net?channels=apachefalcon&amp;uio=d4" />
+            <item name="Team" href="team-list.html" />
+            <item name="Issue Tracking" href="issue-tracking.html" />
+            <item name="Source Repository" href="source-repository.html" />
+            <item name="Wiki" href="https://cwiki.apache.org/confluence/display/FALCON/Index"/>
+            <item name="License" href="license.html" />
+            <item name="News" href="https://cwiki.apache.org/confluence/display/FALCON/News"/>
+            <item name="Powered by" href="https://cwiki.apache.org/confluence/display/FALCON/PoweredBy" />
+            <item name="Acknowledgements" href="https://cwiki.apache.org/confluence/display/FALCON/Acknowledgements" />
+            <item name="Blog" href="http://blogs.apache.org/falcon/" />
+        </menu>
+
+        <menu name="Releases">
+            <item name="0.9" href="http://www.apache.org/dyn/closer.lua/falcon/0.9"/>
+            <item name="0.8" href="http://www.apache.org/dyn/closer.lua/falcon/0.8"/>
+            <item name="0.7" href="http://www.apache.org/dyn/closer.lua/falcon/0.7"/>
+            <item name="0.6.1" href="http://archive.apache.org/dist/falcon/0.6.1"/>
+            <item name="0.6-incubating" href="http://archive.apache.org/dist/incubator/falcon/0.6-incubating"/>
+            <item name="0.5-incubating" href="http://archive.apache.org/dist/incubator/falcon/0.5-incubating"/>
+            <item name="0.4-incubating" href="http://archive.apache.org/dist/incubator/falcon/0.4-incubating"/>
+            <item name="0.3-incubating" href="http://archive.apache.org/dist/incubator/falcon/0.3-incubating"/>
+            <item name="Coming soon" href="https://cwiki.apache.org/confluence/display/FALCON/Roadmap"/>
+        </menu>
+
+        <menu name="Documentation">
+            <!-- current points to latest release -->
+            <item name="0.9 (Current)" href="./0.9/index.html"/>
+            <item name="0.8" href="./0.8/index.html"/>
+            <item name="0.7" href="./0.7/index.html"/>
+            <item name="0.6.1" href="./0.6.1/index.html"/>
+            <item name="0.6-incubating" href="./0.6-incubating/index.html"/>
+            <item name="0.5-incubating" href="./0.5-incubating/index.html"/>
+            <item name="0.4-incubating" href="./0.4-incubating/index.html"/>
+            <item name="0.3-incubating" href="./0.3-incubating/index.html"/>
+        </menu>
+
+        <menu name="ASF">
+            <item name="How Apache Works" href="http://www.apache.org/foundation/how-it-works.html"/>
+            <item name="Foundation" href="http://www.apache.org/foundation/"/>
+            <item name="Sponsoring Apache" href="http://www.apache.org/foundation/sponsorship.html"/>
+            <item name="Thanks" href="http://www.apache.org/foundation/thanks.html"/>
+        </menu>
+
+        <footer>
+            Â© 2011-2014 The Apache Software Foundation. Apache Falcon, Falcon, Apache, the Apache feather logo,
+            and the Apache Falcon project logo are trademarks of The Apache Software Foundation.
+        </footer>
+    </body>
+</project>

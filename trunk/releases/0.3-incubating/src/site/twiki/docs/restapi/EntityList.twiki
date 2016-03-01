@@ -1,0 +1,37 @@
+---++  GET /api/entities/list/:entity-type
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get list of the entities.
+
+---++ Parameters
+   * :entity-type can be cluster, feed or process.
+
+---++ Results
+List of the entities.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/list/feed
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "entity": [
+        {
+            "name": "SampleOutput",
+            "type": "feed"
+        },
+        {
+            "name": "SampleInput",
+            "type": "feed"
+        }
+    ]
+}
+</verbatim>
+

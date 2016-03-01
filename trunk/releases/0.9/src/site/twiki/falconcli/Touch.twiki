@@ -1,0 +1,10 @@
+---+++Touch
+
+[[CommonCLI][Common CLI Options]]
+
+Force Update operation allows an already submitted/scheduled entity to be updated.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -touch
+
+Optional Arg : -skipDryRun. When this argument is specified, Falcon skips oozie dryrun.

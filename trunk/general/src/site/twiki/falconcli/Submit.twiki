@@ -1,0 +1,13 @@
+---+++Submit
+
+[[CommonCLI][Common CLI Options]]
+
+Submit option is used to set up entity definition.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -submit -type [cluster|datasource|feed|process] -file <entity-definition.xml>
+
+Example:
+$FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
+
+Note: The url option in the above and all subsequent commands is optional. If not mentioned it will be picked from client.properties file. If the option is not provided and also not set in client.properties, Falcon CLI will fail.
