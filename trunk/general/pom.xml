@@ -106,10 +106,6 @@
                             <directory>src/site/resources</directory>
                             <targetPath>pages</targetPath>
                         </resource>
-                        <resource>
-                            <directory>target/site</directory>
-                            <targetPath>pages</targetPath>
-                        </resource>
                     </webResources>
                 </configuration>
             </plugin>

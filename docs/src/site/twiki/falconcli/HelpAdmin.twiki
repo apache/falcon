@@ -1,6 +1,0 @@
----+++Help
-
-[[CommonCLI][Common CLI Options]]
-
-Usage:
-$FALCON_HOME/bin/falcon admin -help
