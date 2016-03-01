@@ -80,7 +80,7 @@ public class FalconMetadataCLI extends FalconCLI {
     public static final String VALUE_OPT_DESCRIPTION = "value property";
     public static final String DIRECTION_OPT_DESCRIPTION = "edge direction property";
     public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
-    public static final String FalconCLI_DESCRIPTION = "doAs user";
+    public static final String DO_AS_DESCRIPTION = "doAs user";
 
     public FalconMetadataCLI() throws Exception {
         super();
@@ -143,7 +143,7 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(direction);
         metadataOptions.addOption(debug);
 
-        Option doAs = new Option(FalconCLI.DO_AS_OPT, true, FalconCLI_DESCRIPTION);
+        Option doAs = new Option(FalconCLI.DO_AS_OPT, true, DO_AS_DESCRIPTION);
         metadataOptions.addOption(doAs);
 
         return metadataOptions;
