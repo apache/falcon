@@ -38,7 +38,7 @@ import org.testng.annotations.Test;
 /**
  * Feed resume tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedResumeTest extends BaseTestClass {
 
     private final AbstractEntityHelper feedHelper = prism.getFeedHelper();

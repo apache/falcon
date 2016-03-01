@@ -50,7 +50,7 @@ import java.util.List;
 /**
  * Test for https://issues.apache.org/jira/browse/FALCON-761.
  */
-@Test(groups = "embedded", timeOut = 900000)
+@Test(groups = { "distributed", "embedded" }, timeOut = 900000)
 public class FeedInstanceListingTest extends BaseTestClass{
     private String baseTestDir = cleanAndGetTestDir();
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";

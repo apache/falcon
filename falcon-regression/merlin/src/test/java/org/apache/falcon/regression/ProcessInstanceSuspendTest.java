@@ -44,7 +44,7 @@ import java.io.IOException;
 /**
  * Process instance suspend tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceSuspendTest extends BaseTestClass {
 
     private String baseTestHDFSDir = cleanAndGetTestDir();
