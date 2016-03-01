@@ -40,7 +40,7 @@ public class MockDAGEngine implements DAGEngine {
     }
 
     @Override
-    public String run(ExecutionInstance instance) throws DAGEngineException {
+    public String run(ExecutionInstance instance, Properties props) throws DAGEngineException {
         if (failInstances.contains(instance)) {
             throw new DAGEngineException("Mock failure.");
         }
@@ -86,7 +86,7 @@ public class MockDAGEngine implements DAGEngine {
     }
 
     @Override
-    public void submit(Entity entity) throws DAGEngineException {
+    public void submit(Entity entity, Properties props) throws DAGEngineException {
 
     }
 

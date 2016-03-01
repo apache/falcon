@@ -21,6 +21,7 @@ package org.apache.falcon.expression;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ import javax.servlet.jsp.el.ExpressionEvaluator;
 import javax.servlet.jsp.el.FunctionMapper;
 import javax.servlet.jsp.el.VariableResolver;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -52,6 +54,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
     private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
+
 
     public static final ThreadLocal<SimpleDateFormat> FORMATTER = new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -255,6 +258,27 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
             }
         }
         return originalValue;
+    }
+
+    public static String formatTime(String dateTimeStr, String format) throws ParseException {
+        Date dateTime = DateUtil.parseDateOozieTZ(dateTimeStr);
+        return DateUtil.formatDateCustom(dateTime, format);
+    }
+
+    public static String instanceTime() {
+        return DateUtil.formatDateOozieTZ(referenceDate.get());
+    }
+
+    public static String dateOffset(String strBaseDate, int offset, String unit) throws Exception {
+        Calendar baseCalDate = DateUtil.getCalendar(strBaseDate);
+        StringBuilder buffer = new StringBuilder();
+        baseCalDate.add(org.apache.falcon.util.TimeUnit.valueOf(unit).getCalendarUnit(), offset);
+        buffer.append(DateUtil.formatDateOozieTZ(baseCalDate));
+        return buffer.toString();
+    }
+
+    public static String user() {
+        return "${user.name}";
     }
 
 }

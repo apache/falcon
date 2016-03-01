@@ -87,7 +87,7 @@ public class AlarmService implements FalconNotificationService {
         DateTime nextStartTime = request.getStartTime();
         DateTime endTime;
         if (request.getEndTime().isBefore(currentTime)) {
-            endTime = request.getEndTime();
+            endTime = request.getEndTime().minusMinutes(1);
         } else {
             endTime = currentTime;
         }
@@ -109,7 +109,7 @@ public class AlarmService implements FalconNotificationService {
             }
         }
         // All past events have been scheduled. Nothing to schedule in the future.
-        if (request.getEndTime().isBefore(nextStartTime)) {
+        if (endTime.isBefore(nextStartTime)) {
             return;
         }
         LOG.debug("Scheduling to trigger events from {} to {} with frequency {}", nextStartTime, request.getEndTime(),
