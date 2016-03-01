@@ -242,7 +242,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
     public void testDeRegistration() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize4");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize4");
-        mockProcess.setParallel(3);
+        mockProcess.setParallel(2);
         Date startTime = EntityUtil.getStartTime(mockProcess, cluster);
         ExecutionInstance instance1 = new ProcessExecutionInstance(mockProcess, new DateTime(startTime), cluster);
         // Schedule 3 instances.
@@ -263,14 +263,15 @@ public class SchedulerServiceTest extends AbstractTestBase {
         request3.setInstance(instance3);
         scheduler.register(request3.build());
 
-        // Abort second instance
-        scheduler.unregister(handler, instance2.getId());
+        // Abort third instance
+        stateStore.putExecutionInstance(new InstanceState(instance3));
+        scheduler.unregister(handler, instance3.getId());
 
         Thread.sleep(100);
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance1), new Integer(1));
-        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), new Integer(1));
+        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
         // Second instance should not run.
-        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), null);
+        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), null);
     }
 
     @Test
