@@ -80,9 +80,9 @@ public final class NativeInstanceUtil {
         EntityType type = entity.getEntityType();
         String params = "?start=" + startTime;
         params += (endTime.isEmpty() ? "" : "&end=" + endTime);
-        totalMinutesToWait = (totalMinutesToWait*60)/10;
 
-        for (int sleepCount = 0; sleepCount < totalMinutesToWait; sleepCount++) {
+        int totalSecondsToWait = totalMinutesToWait * 60;
+        for (int sleepSeconds = 0; sleepSeconds < totalSecondsToWait; sleepSeconds = sleepSeconds+10) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
                 break;
@@ -90,6 +90,7 @@ public final class NativeInstanceUtil {
             LOGGER.info(type + " " + entityName + " still doesn't have instance created");
             TimeUtil.sleepSeconds(10);
         }
+
     }
 
     /**
