@@ -76,7 +76,7 @@ import java.util.Set;
  * @param <T>
  */
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
-    protected static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+    public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
 
     protected static final String USER_ACTION_NAME = "user-action";
     protected static final String PREPROCESS_ACTION_NAME = "pre-processing";

@@ -33,6 +33,8 @@ public abstract class AbstractTestContext {
     public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
     public static final String FEED_TEMPLATE3 = "/feed-template3.xml";
+    public static final String FEED_TEMPLATE4 = "/feed-template4.xml";
+    public static final String FEED_TEMPLATE5 = "/feed-template5.xml";
 
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
 

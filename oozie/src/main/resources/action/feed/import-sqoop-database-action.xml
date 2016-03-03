@@ -39,6 +39,18 @@
                 <name>oozie.use.system.libpath</name>
                 <value>true</value>
             </property>
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${hcatMetastoreURI == 'NA' ? 'IGNORE' : hcatMetastoreURI}</value>
+            </property>
+            <property>
+                <name>hive.metastore.uris</name>
+                <value>${hiveMetastoreURI == 'NA' ? 'IGNORE' : hiveMetastoreURI}</value>
+            </property>
+            <property>
+                <name>hive.metastore.execute.setugi</name>
+                <value>${hiveMetastoreExecuteSetUGI == 'NA' ? 'IGNORE' : hiveMetastoreExecuteSetUGI}</value>
+            </property>
         </configuration>
         <command>${sqoopCommand}</command>
     </sqoop>

@@ -19,16 +19,25 @@
 package org.apache.falcon.oozie;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.datasource.Credential;
 import org.apache.falcon.entity.v0.datasource.Credentialtype;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.security.SecurityUtil;
+import org.apache.hadoop.fs.Path;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Helper class that implements common functions across Import and Export.
@@ -37,6 +46,10 @@ import java.net.URISyntaxException;
 public final class ImportExportCommon {
 
     static final String ARG_SEPARATOR = " ";
+
+    private static final Set<String> FALCON_IMPORT_SQOOP_ACTIONS = new HashSet<String>(
+            Arrays.asList(new String[]{ OozieOrchestrationWorkflowBuilder.PREPROCESS_ACTION_NAME,
+                                        OozieOrchestrationWorkflowBuilder.USER_ACTION_NAME, }));
 
     private ImportExportCommon() {
     }
@@ -70,4 +83,38 @@ public final class ImportExportCommon {
         }
         return builder;
     }
+
+    public static void addHCatalogProperties(Properties props, Feed entity, Cluster cluster,
+        Path buildPath, WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder)
+        throws FalconException {
+        if (FeedHelper.getStorageType(entity, cluster) == Storage.TYPE.TABLE) {
+            addHCatalogShareLibs(props);
+            addMetastoreURI(props, cluster);
+            if (SecurityUtil.isSecurityEnabled()) {
+                // add hcatalog credentials for secure mode and add a reference to each action
+                wBuilder.addHCatalogCredentials(workflow, cluster,
+                        OozieOrchestrationWorkflowBuilder.HIVE_CREDENTIAL_NAME, FALCON_IMPORT_SQOOP_ACTIONS);
+            }
+        } else {
+            ignoreMetastoreURI(props);
+        }
+    }
+
+    private static void ignoreMetastoreURI(Properties props) {
+        props.put("hcatMetastoreURI", "NA");
+        props.put("hiveMetastoreURI", "NA");
+        props.put("hiveMetastoreExecuteSetUGI", "NA");
+    }
+    private static void addHCatalogShareLibs(Properties props) throws FalconException {
+        props.put("oozie.action.sharelib.for.sqoop", "sqoop,hive,hcatalog");
+        //props.put("oozie.action.sharelib.for.sqoop:sqoop", "sqoop,hive,hcatalog");
+    }
+
+    private static void addMetastoreURI(Properties props, Cluster cluster) throws FalconException {
+        props.put("hcatMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
+        props.put("hiveMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
+        props.put("hiveMetastoreExecuteSetUGI", "true");
+    }
+
+
 }
