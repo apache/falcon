@@ -107,9 +107,11 @@ public class SchedulerService implements FalconNotificationService, Notification
                 InstanceID instanceID = (InstanceID) listenerID;
                 SortedMap<Integer, ExecutionInstance> instances = executorAwaitedInstances.get(instanceID
                             .getEntityClusterID());
-                synchronized (instances) {
-                    instances.remove(STATE_STORE.getExecutionInstance(instanceID)
-                            .getInstance().getInstanceSequence());
+                if (instances != null && !instances.isEmpty()) {
+                    synchronized (instances) {
+                        instances.remove(STATE_STORE.getExecutionInstance(instanceID)
+                                .getInstance().getInstanceSequence());
+                    }
                 }
             } catch (Exception e) {
                 throw new NotificationServiceException(e);
