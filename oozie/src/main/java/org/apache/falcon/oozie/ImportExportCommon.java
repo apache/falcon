@@ -107,7 +107,6 @@ public final class ImportExportCommon {
     }
     private static void addHCatalogShareLibs(Properties props) throws FalconException {
         props.put("oozie.action.sharelib.for.sqoop", "sqoop,hive,hcatalog");
-        //props.put("oozie.action.sharelib.for.sqoop:sqoop", "sqoop,hive,hcatalog");
     }
 
     private static void addMetastoreURI(Properties props, Cluster cluster) throws FalconException {
