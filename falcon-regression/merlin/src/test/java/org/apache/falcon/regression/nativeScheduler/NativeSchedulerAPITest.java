@@ -271,7 +271,8 @@ public class NativeSchedulerAPITest extends BaseTestClass {
                 processMerlin.getFrequency());
 
         //Instance Kill
-        InstancesResult instancesResult = prism.getProcessHelper().getProcessInstanceKill(processMerlin.getName(), range);
+        InstancesResult instancesResult = prism.getProcessHelper().getProcessInstanceKill(processMerlin.getName(),
+                range);
         InstanceUtil.validateResponse(instancesResult, 5, 0, 0, 0, 5);
 
         // Instance rerun
@@ -281,7 +282,7 @@ public class NativeSchedulerAPITest extends BaseTestClass {
                 processMerlin.getFrequency());
 
         instancesResult = prism.getProcessHelper().getProcessInstanceStatus(processMerlin.getName(), range);
-        InstanceUtil.validateResponse(instancesResult, 5, 2, 0, 0, 2);
+        InstanceUtil.validateResponse(instancesResult, 5, 2, 0, 0, 3);
 
     }
 

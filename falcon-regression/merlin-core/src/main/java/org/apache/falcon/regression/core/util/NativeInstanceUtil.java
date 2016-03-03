@@ -134,11 +134,9 @@ public final class NativeInstanceUtil {
         String endTime=getNextInstanceTime(instanceTime, frequency);
         String params = "?start=" + instanceTime + "&end=" + endTime;
 
-        int maxTries = 50;
         int totalSleepTime = totalMinutesToWait * 60;
-        int sleepTime = totalSleepTime / maxTries;
-        LOGGER.info(String.format("Sleep for %d seconds", sleepTime));
-        for (int i = 0; i < maxTries; i++) {
+        int sleepTime = 10;
+        for (int i = 0; i < totalSleepTime; i = i+10) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
                 if (statusResult.getInstances()[0].getStatus().name() == expectedStatus.name()) {
