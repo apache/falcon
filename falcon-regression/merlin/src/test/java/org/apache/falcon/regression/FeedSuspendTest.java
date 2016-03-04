@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 /**
  * Feed suspend tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedSuspendTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

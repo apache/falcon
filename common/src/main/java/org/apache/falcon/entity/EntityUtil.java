@@ -81,6 +81,8 @@ import java.util.TimeZone;
 public final class EntityUtil {
     public static final Logger LOG = LoggerFactory.getLogger(EntityUtil.class);
 
+    public static final String MR_QUEUE_NAME = "queueName";
+
     private static final long MINUTE_IN_MS = 60 * 1000L;
     private static final long HOUR_IN_MS = 60 * MINUTE_IN_MS;
     private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
@@ -89,6 +91,7 @@ public final class EntityUtil {
     public static final String MR_JOB_PRIORITY = "jobPriority";
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
+    public static final String WF_LIB_SEPARATOR = ",";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
 
     /** Priority with which the DAG will be scheduled.

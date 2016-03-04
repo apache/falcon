@@ -57,7 +57,7 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public abstract void handleRerun(String clusterName, String entityType,
                                      String entityName, String nominalTime, String runId,
-                                     String wfId, String workflowUser, long msgReceivedTime);
+                                     String wfId, String parentId, String workflowUser, long msgReceivedTime);
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public AbstractWorkflowEngine getWfEngine(String entityType, String entityName) throws FalconException {

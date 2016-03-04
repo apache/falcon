@@ -19,7 +19,9 @@
 package org.apache.falcon.regression;
 
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
@@ -41,7 +43,7 @@ import java.net.URISyntaxException;
 /**
  * Feed submit and schedule tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedSubmitAndScheduleTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
@@ -58,7 +60,8 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        removeTestClassEntities();
+        //remove entities which belong to both default and different user
+        removeTestClassEntities(null, MerlinConstants.DIFFERENT_USER_NAME);
     }
 
     @Test(groups = {"singleCluster"})
@@ -150,5 +153,23 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
+    }
+
+    /**
+     * Test for https://issues.apache.org/jira/browse/FALCON-1647.
+     * Create cluster entity as user1. Submit and schedule feed entity feed1 in this cluster as user1.
+     * Now try to submit and schedule a feed entity feed2 in this cluster as user2.
+     */
+    @Test
+    public void snsDiffFeedDiffUserSameCluster()
+        throws URISyntaxException, AuthenticationException, InterruptedException, IOException, JAXBException {
+        bundles[0].submitClusters(prism);
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
+        FeedMerlin feedMerlin = FeedMerlin.fromString(feed);
+        feedMerlin.setName(feedMerlin.getName() + "-2");
+        feedMerlin.setACL(MerlinConstants.DIFFERENT_USER_NAME, MerlinConstants.DIFFERENT_USER_GROUP, "*");
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(
+            feedMerlin.toString(), MerlinConstants.DIFFERENT_USER_NAME, null);
+        AssertUtil.assertSucceeded(response);
     }
 }

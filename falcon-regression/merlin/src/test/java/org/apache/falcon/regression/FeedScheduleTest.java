@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 /**
  * Feed schedule tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedScheduleTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

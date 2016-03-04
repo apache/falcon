@@ -52,7 +52,7 @@ import java.util.List;
 /**
  * Tests with rescheduling process in final states.
  */
-@Test(groups = "embedded", enabled = true)
+@Test(groups = { "distributed", "embedded" })
 public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

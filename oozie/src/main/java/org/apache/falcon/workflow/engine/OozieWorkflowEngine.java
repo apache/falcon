@@ -97,11 +97,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 WorkflowJob.Status.FAILED);
     private static final List<WorkflowJob.Status> WF_SUSPEND_PRECOND = Arrays.asList(WorkflowJob.Status.RUNNING);
     private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays.asList(WorkflowJob.Status.SUSPENDED);
-    private static final List<WorkflowJob.Status> WF_RERUN_PRECOND =
-        Arrays.asList(WorkflowJob.Status.FAILED, WorkflowJob.Status.KILLED, WorkflowJob.Status.SUCCEEDED);
     private static final List<CoordinatorAction.Status> COORD_RERUN_PRECOND =
-        Arrays.asList(CoordinatorAction.Status.TIMEDOUT, CoordinatorAction.Status.FAILED);
-
+        Arrays.asList(CoordinatorAction.Status.TIMEDOUT, CoordinatorAction.Status.FAILED,
+                CoordinatorAction.Status.KILLED, CoordinatorAction.Status.SUCCEEDED);
     private static final List<Job.Status> BUNDLE_ACTIVE_STATUS =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED,
             Job.Status.RUNNINGWITHERROR, Job.Status.PAUSED, Status.PREPPAUSED, Status.PAUSEDWITHERROR);
@@ -937,17 +935,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             break;
 
         case RERUN:
-            if (jobInfo == null && COORD_RERUN_PRECOND.contains(coordinatorAction.getStatus())) {
-                //Coord action re-run
-                reRunCoordAction(cluster, coordinatorAction);
-                status = Status.RUNNING.name();
-            } else if (jobInfo != null && WF_RERUN_PRECOND.contains(jobInfo.getStatus())) {
-                //wf re-run
-                reRun(cluster, jobInfo.getId(), props, isForced);
-                status = Status.RUNNING.name();
+            if (COORD_RERUN_PRECOND.contains(coordinatorAction.getStatus())) {
+                status = reRunCoordAction(cluster, coordinatorAction, props, isForced).name();
             }
             break;
-
 
         case STATUS:
             if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
@@ -974,30 +965,64 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
+    public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
+                                                      Properties props, boolean isForced) throws FalconException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
+            if (props == null) {
+                props = new Properties();
+            }
+            // In case if both props exists, throw an exception.
+            // This case will occur when user runs workflow with skip-nodes property and
+            // try to do force rerun or rerun with fail-nodes property.
+            if (props.containsKey(OozieClient.RERUN_FAIL_NODES)
+                    && props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
+                String msg = "Both " + OozieClient.RERUN_SKIP_NODES + " and " + OozieClient.RERUN_FAIL_NODES
+                        + " are present in workflow params for " + coordinatorAction.getExternalId();
+                LOG.error(msg);
+                throw new FalconException(msg);
+            }
+
+            //if user has set any of these oozie rerun properties then force rerun flag is ignored
+            if (props.containsKey(OozieClient.RERUN_FAIL_NODES)) {
+                isForced = false;
+            }
+            Properties jobprops;
+            // Get conf when workflow is launched.
+            if (coordinatorAction.getExternalId() != null) {
+                WorkflowJob jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
+
+                jobprops = OozieUtils.toProperties(jobInfo.getConf());
+                // Clear the rerun properties from existing configuration
+                jobprops.remove(OozieClient.RERUN_FAIL_NODES);
+                jobprops.remove(OozieClient.RERUN_SKIP_NODES);
+                jobprops.putAll(props);
+                jobprops.remove(OozieClient.BUNDLE_APP_PATH);
+            } else {
+                jobprops = props;
+            }
+
             client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
-                Integer.toString(coordinatorAction.getActionNumber()), true, true);
-            assertCoordActionStatus(cluster, coordinatorAction.getId(),
-                org.apache.oozie.client.CoordinatorAction.Status.RUNNING,
-                org.apache.oozie.client.CoordinatorAction.Status.WAITING,
-                org.apache.oozie.client.CoordinatorAction.Status.READY);
+                    Integer.toString(coordinatorAction.getActionNumber()), true, true, !isForced, jobprops);
             LOG.info("Rerun job {} on cluster {}", coordinatorAction.getId(), cluster);
+            return assertCoordActionStatus(cluster, coordinatorAction.getId(),
+                    org.apache.oozie.client.CoordinatorAction.Status.RUNNING,
+                    org.apache.oozie.client.CoordinatorAction.Status.WAITING,
+                    org.apache.oozie.client.CoordinatorAction.Status.READY);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
             throw new FalconException(e);
         }
     }
 
-    private void assertCoordActionStatus(String cluster, String coordActionId,
+    private CoordinatorAction.Status assertCoordActionStatus(String cluster, String coordActionId,
         org.apache.oozie.client.CoordinatorAction.Status... statuses) throws FalconException, OozieClientException {
         OozieClient client = OozieClientFactory.get(cluster);
         CoordinatorAction actualStatus = client.getCoordActionInfo(coordActionId);
         for (int counter = 0; counter < 3; counter++) {
             for (org.apache.oozie.client.CoordinatorAction.Status status : statuses) {
                 if (status.equals(actualStatus.getStatus())) {
-                    return;
+                    return status;
                 }
             }
             try {
@@ -1494,48 +1519,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void reRun(String cluster, String jobId, Properties props, boolean isForced) throws FalconException {
-
+    public String reRun(String cluster, String id, Properties props, boolean isForced) throws FalconException {
         OozieClient client = OozieClientFactory.get(cluster);
+        String actionId = id;
         try {
-            WorkflowJob jobInfo = client.getJobInfo(jobId);
-            if (props == null) {
-                props = new Properties();
+            // If a workflow job is supplied, get its parent coord action
+            if (id.endsWith("-W")) {
+                actionId = client.getJobInfo(id).getParentId();
             }
-
-            //if user has set any of these oozie rerun properties then force rerun flag is ignored
-            if (!props.containsKey(OozieClient.RERUN_FAIL_NODES)
-                    && !props.containsKey(OozieClient.RERUN_SKIP_NODES)) {
-                props.put(OozieClient.RERUN_FAIL_NODES, String.valueOf(!isForced));
+            if (StringUtils.isBlank(actionId) || !actionId.contains("-C@")) {
+                throw new FalconException("coord action id supplied for rerun, " + actionId + ", is not valid.");
             }
-
-            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
-            jobprops.putAll(props);
-
-            jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
-            jobprops.remove(OozieClient.BUNDLE_APP_PATH);
-
-            // In case if both props exists one should be removed otherwise it will fail.
-            // This case will occur when user runs workflow with skip-nodes property and
-            // try to do force rerun or rerun with fail-nodes property.
-            if (jobprops.containsKey(OozieClient.RERUN_FAIL_NODES)
-                    && jobprops.containsKey(OozieClient.RERUN_SKIP_NODES)) {
-                LOG.warn("Both " + OozieClient.RERUN_SKIP_NODES + " and " + OozieClient.RERUN_FAIL_NODES
-                        + " are present in workflow params removing" + OozieClient.RERUN_SKIP_NODES);
-                jobprops.remove(OozieClient.RERUN_SKIP_NODES);
-            }
-            client.reRun(jobId, jobprops);
-            assertStatus(cluster, jobId, Job.Status.RUNNING);
-            LOG.info("Rerun job {} on cluster {}", jobId, cluster);
+            return reRunCoordAction(cluster, client.getCoordActionInfo(actionId), props, isForced).name();
         } catch (Exception e) {
-            LOG.error("Unable to rerun workflows", e);
+            LOG.error("Unable to rerun action " + actionId, e);
             throw new FalconException(e);
         }
     }
 
 
-    private void assertStatus(String cluster, String jobId, Status... statuses) throws FalconException {
-
+    private String assertStatus(String cluster, String jobId, Status... statuses) throws FalconException {
         String actualStatus = null;
         int retryCount;
         String retry = RuntimeProperties.get().getProperty(WORKFLOW_STATUS_RETRY_COUNT, "30");
@@ -1554,7 +1557,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     //ignore
                 }
             } else {
-                return;
+                return actualStatus;
             }
         }
         throw new FalconException("For Job" + jobId + ", actual statuses: " + actualStatus + ", expected statuses: "

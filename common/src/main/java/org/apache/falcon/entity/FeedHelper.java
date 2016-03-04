@@ -1043,6 +1043,40 @@ public final class FeedHelper {
     }
 
     /**
+     * Returns the hadoop cluster queue name specified for the replication jobs to run in the Lifecycle
+     * section of the target cluster section of the feed entity.
+     *
+     * NOTE: Lifecycle for replication is not implemented. This will return the queueName property value.
+     *
+     * @param feed
+     * @param clusterName
+     * @return hadoop cluster queue name specified in the feed entity
+     * @throws FalconException
+     */
+
+    public static String getLifecycleReplicationQueue(Feed feed, String clusterName) throws FalconException {
+        return null;
+    }
+
+    /**
+     * Returns the hadoop cluster queue name specified for the retention jobs to run in the Lifecycle
+     * section of feed entity.
+     *
+     * @param feed
+     * @param clusterName
+     * @return hadoop cluster queue name specified in the feed entity
+     * @throws FalconException
+     */
+    public static String getLifecycleRetentionQueue(Feed feed, String clusterName) throws FalconException {
+        RetentionStage retentionStage = getRetentionStage(feed, clusterName);
+        if (retentionStage != null) {
+            return retentionStage.getQueue();
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Returns the data source type associated with the Feed's export policy.
      *
      * @param clusterEntity
@@ -1189,5 +1223,70 @@ public final class FeedHelper {
         }
         Long freqInMillis = DateUtil.getFrequencyInMillis(retentionLimit);
         return (int) (freqInMillis/1000);
+    }
+
+    /**
+     * Returns the replication job's queue name specified in the feed entity definition.
+     * First looks into the Lifecycle stage if exists. If null, looks into the queueName property specified
+     * in the Feed definition.
+     *
+     * @param feed
+     * @param feedCluster
+     * @return
+     * @throws FalconException
+     */
+    public static String getReplicationQueue(Feed feed, Cluster feedCluster) throws FalconException {
+        String queueName;
+        queueName = getLifecycleReplicationQueue(feed, feedCluster.getName());
+        if (StringUtils.isBlank(queueName)) {
+            queueName = getQueueFromProperties(feed);
+        }
+        return queueName;
+    }
+
+    /**
+     * Returns the retention job's queue name specified in the feed entity definition.
+     * First looks into the Lifecycle stage. If null, looks into the queueName property specified
+     * in the Feed definition.
+     *
+     * @param feed
+     * @param feedCluster
+     * @return
+     * @throws FalconException
+     */
+    public static String getRetentionQueue(Feed feed, Cluster feedCluster) throws FalconException {
+        String queueName = getLifecycleRetentionQueue(feed, feedCluster.getName());
+        if (StringUtils.isBlank(queueName)) {
+            queueName = getQueueFromProperties(feed);
+        }
+        return queueName;
+    }
+
+    /**
+     * Returns the queue name specified in the Feed entity definition from queueName property.
+     *
+     * @param feed
+     * @return queueName property value
+     */
+    public static String getQueueFromProperties(Feed feed) {
+        return getPropertyValue(feed, EntityUtil.MR_QUEUE_NAME);
+    }
+
+    /**
+     * Returns value of a feed property given property name.
+     * @param feed
+     * @param propName
+     * @return property value
+     */
+
+    public static String getPropertyValue(Feed feed, String propName) {
+        if (feed.getProperties() != null) {
+            for (Property prop : feed.getProperties().getProperties()) {
+                if ((prop != null) && (prop.getName().equals(propName))) {
+                    return prop.getValue();
+                }
+            }
+        }
+        return null;
     }
 }

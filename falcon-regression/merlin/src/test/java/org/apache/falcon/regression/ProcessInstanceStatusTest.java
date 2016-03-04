@@ -56,7 +56,7 @@ import java.util.List;
 /**
  * Process instance status tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceStatusTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * Submitting and listing processes with different pipeline names.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessPipelineTest extends BaseTestClass{
     private static final Logger LOGGER = Logger.getLogger(ProcessPipelineTest.class);
     private ColoHelper cluster = servers.get(0);

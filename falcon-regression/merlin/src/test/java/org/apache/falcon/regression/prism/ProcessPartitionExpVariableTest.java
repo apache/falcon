@@ -46,7 +46,7 @@ import java.util.List;
 /**
  * Tests with partitions as expression language variables.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ProcessPartitionExpVariableTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ProcessPartitionExpVariableTest.class);
 

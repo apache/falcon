@@ -58,7 +58,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
     @Override
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public void handleRerun(String cluster, String entityType, String entityName, String nominalTime,
-                            String runId, String wfId, String workflowUser, long msgReceivedTime) {
+                            String runId, String wfId, String parentId, String workflowUser, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             int intRunId = Integer.parseInt(runId);
@@ -88,7 +88,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 
             LOG.debug("Scheduling the late rerun for entity instance: {} ({}): {} And WorkflowId: {}",
                     entityType, entityName, nominalTime, wfId);
-            LaterunEvent event = new LaterunEvent(cluster, wfId, msgInsertTime.getTime(),
+            LaterunEvent event = new LaterunEvent(cluster, wfId, parentId, msgInsertTime.getTime(),
                     wait, entityType, entityName, nominalTime, intRunId, workflowUser);
             offerToQueue(event);
         } catch (Exception e) {
@@ -232,7 +232,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                 && EntityUtil.getLateProcess(entity) != null) {
             handleRerun(context.getClusterName(), context.getEntityType(),
                     context.getEntityName(), context.getNominalTimeAsISO8601(),
-                    context.getWorkflowRunIdString(), context.getWorkflowId(),
+                    context.getWorkflowRunIdString(), context.getWorkflowId(), context.getWorkflowParentId(),
                     context.getWorkflowUser(), context.getExecutionCompletionTime());
         } else {
             LOG.info("Late date handling not applicable for entityType: " + context.getEntityType()

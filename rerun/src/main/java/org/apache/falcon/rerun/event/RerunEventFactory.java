@@ -42,7 +42,7 @@ public class RerunEventFactory<T extends RerunEvent> {
     @SuppressWarnings("unchecked")
     private T lateEventFromString(String line) {
         Map<String, String> map = getMap(line);
-        return (T) new LaterunEvent(map.get("clusterName"), map.get("wfId"),
+        return (T) new LaterunEvent(map.get("clusterName"), map.get("wfId"), map.get("parentId"),
                 Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map.get("delayInMilliSec")),
                 map.get("entityType"), map.get("entityName"), map.get("instance"),
                 Integer.parseInt(map.get("runId")), map.get("workflowUser"));
@@ -51,7 +51,7 @@ public class RerunEventFactory<T extends RerunEvent> {
     @SuppressWarnings("unchecked")
     public T retryEventFromString(String line) {
         Map<String, String> map = getMap(line);
-        return (T) new RetryEvent(map.get("clusterName"), map.get("wfId"),
+        return (T) new RetryEvent(map.get("clusterName"), map.get("wfId"), map.get("parentId"),
                 Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map.get("delayInMilliSec")),
                 map.get("entityType"), map.get("entityName"), map.get("instance"),
                 Integer.parseInt(map.get("runId")), Integer.parseInt(map.get("attempts")),
