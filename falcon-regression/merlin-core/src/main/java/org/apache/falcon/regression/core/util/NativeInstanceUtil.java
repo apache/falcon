@@ -136,7 +136,7 @@ public final class NativeInstanceUtil {
 
         int totalSleepTime = totalMinutesToWait * 60;
         int sleepTime = 10;
-        for (int i = 0; i < totalSleepTime; i = i+10) {
+        for (int i = 0; i < totalSleepTime; i = i+sleepTime) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
                 if (statusResult.getInstances()[0].getStatus().name() == expectedStatus.name()) {
