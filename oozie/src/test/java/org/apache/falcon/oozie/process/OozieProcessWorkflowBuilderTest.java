@@ -629,7 +629,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     }
 
     private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed, Process process)
-            throws FalconException {
+        throws FalconException {
         Map<String, String> expected = new HashMap<String, String>();
         if (process.getInputs() != null) {
             for (Input input : process.getInputs().getInputs()) {
