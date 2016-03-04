@@ -80,9 +80,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                 RelationshipType.PROCESS_INSTANCE, context.getTimeStampAsLong());
         addWorkflowInstanceProperties(processInstance, context);
 
-        Map<RelationshipProperty, String> properties = new HashMap<RelationshipProperty, String>();
-        properties.put(RelationshipProperty.NOMINAL_TIME, context.getNominalTimeAsISO8601());
-        properties.put(RelationshipProperty.STATUS, context.getValue(WorkflowExecutionArgs.STATUS));
+        Map<RelationshipProperty, String> properties = edgePropertiesForIndexing(context);
         addInstanceToEntity(processInstance, context.getEntityName(),
                 RelationshipType.PROCESS_ENTITY, RelationshipLabel.INSTANCE_ENTITY_EDGE, properties);
         addInstanceToEntity(processInstance, context.getClusterName(),
@@ -222,9 +220,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex feedInstanceVertex = addFeedInstance(
                 feedInstanceName, context, feedName, context.getSrcClusterName());
 
-        Map<RelationshipProperty, String> properties = new HashMap<RelationshipProperty, String>();
-        properties.put(RelationshipProperty.NOMINAL_TIME, context.getNominalTimeAsISO8601());
-        properties.put(RelationshipProperty.STATUS, context.getValue(WorkflowExecutionArgs.STATUS));
+        Map<RelationshipProperty, String> properties = edgePropertiesForIndexing(context);
         properties.put(RelationshipProperty.TIMESTAMP, context.getTimeStampAsISO8601());
         addInstanceToEntity(feedInstanceVertex, targetClusterName, RelationshipType.CLUSTER_ENTITY,
                 RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE, properties);
@@ -253,9 +249,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             Vertex feedInstanceVertex = addFeedInstance(
                     feedInstanceName, context, feedName, clusterName);
 
-            Map<RelationshipProperty, String> properties = new HashMap<RelationshipProperty, String>();
-            properties.put(RelationshipProperty.NOMINAL_TIME, context.getNominalTimeAsISO8601());
-            properties.put(RelationshipProperty.STATUS, context.getValue(WorkflowExecutionArgs.STATUS));
+            Map<RelationshipProperty, String> properties = edgePropertiesForIndexing(context);
             properties.put(RelationshipProperty.TIMESTAMP, context.getTimeStampAsISO8601());
             addInstanceToEntity(feedInstanceVertex, clusterName, RelationshipType.CLUSTER_ENTITY,
                     RelationshipLabel.FEED_CLUSTER_EVICTED_EDGE, properties);
@@ -278,9 +272,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex feedInstanceVertex = addFeedInstance(
                 feedInstanceName, context, feedName, context.getSrcClusterName());
 
-        Map<RelationshipProperty, String> properties = new HashMap<RelationshipProperty, String>();
-        properties.put(RelationshipProperty.NOMINAL_TIME, context.getNominalTimeAsISO8601());
-        properties.put(RelationshipProperty.STATUS, context.getValue(WorkflowExecutionArgs.STATUS));
+        Map<RelationshipProperty, String> properties = edgePropertiesForIndexing(context);
         properties.put(RelationshipProperty.TIMESTAMP, context.getTimeStampAsISO8601());
         addInstanceToEntity(feedInstanceVertex, datasourceName, RelationshipType.DATASOURCE_ENTITY,
                 RelationshipLabel.DATASOURCE_IMPORT_EDGE, properties);
@@ -317,9 +309,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         feedInstance.setProperty(RelationshipProperty.STATUS.getName(), context.getValue(WorkflowExecutionArgs.STATUS));
 
         if (hasEdgeProperties) {
-            Map<RelationshipProperty, String> properties = new HashMap<RelationshipProperty, String>();
-            properties.put(RelationshipProperty.NOMINAL_TIME, context.getNominalTimeAsISO8601());
-            properties.put(RelationshipProperty.STATUS, context.getValue(WorkflowExecutionArgs.STATUS));
+            Map<RelationshipProperty, String> properties = edgePropertiesForIndexing(context);
             addInstanceToEntity(feedInstance, feedName,
                     RelationshipType.FEED_ENTITY, RelationshipLabel.INSTANCE_ENTITY_EDGE, properties);
         } else {
@@ -338,6 +328,13 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
 
         return feedInstance;
+    }
+
+    private Map<RelationshipProperty, String> edgePropertiesForIndexing(WorkflowExecutionContext context) {
+        Map<RelationshipProperty, String> properties = new HashMap<RelationshipProperty, String>();
+        properties.put(RelationshipProperty.NOMINAL_TIME, context.getNominalTimeAsISO8601());
+        properties.put(RelationshipProperty.STATUS, context.getValue(WorkflowExecutionArgs.STATUS));
+        return properties;
     }
 
     public static String getFeedInstanceName(String feedName, String clusterName,
