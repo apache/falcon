@@ -88,7 +88,6 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                     LOG.warn("Entity {} of type {} doesn't exist in config store. Rerun "
                                     + "cannot be done for workflow ", message.getEntityName(),
                             message.getEntityType(), message.getWfId());
-                    return;
                 }
                 LOG.error("Error in rerun consumer", e);
             }

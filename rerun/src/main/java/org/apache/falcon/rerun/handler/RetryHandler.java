@@ -112,6 +112,8 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
     public void onFailure(WorkflowExecutionContext context) throws FalconException {
         // Re-run does not make sense when killed by user.
         if (context.isWorkflowKilledManually()) {
+            LOG.debug("User workflow: {} killed manually of instance: {} belongs to entity: {}, so retry won't happen ",
+                    context.getWorkflowId(), context.getNominalTimeAsISO8601(), context.getEntityName());
             return;
         } else if (context.hasWorkflowTimedOut()) {
             Entity entity = EntityUtil.getEntity(context.getEntityType(), context.getEntityName());
