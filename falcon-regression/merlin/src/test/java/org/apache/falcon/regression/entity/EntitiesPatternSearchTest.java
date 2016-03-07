@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 /**
  * Testing the pattern search of entities. Falcon-914
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class EntitiesPatternSearchTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(EntitiesPatternSearchTest.class);
     private String baseTestHDFSDir = cleanAndGetTestDir();

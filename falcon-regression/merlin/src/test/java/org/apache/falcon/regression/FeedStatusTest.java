@@ -39,7 +39,7 @@ import org.testng.annotations.Test;
 /**
  * Feed status tests. Checks getStatus functionality.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedStatusTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

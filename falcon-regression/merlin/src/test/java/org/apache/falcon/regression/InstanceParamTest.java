@@ -49,7 +49,7 @@ import java.net.URISyntaxException;
 /**
  * tests for instance option params.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class InstanceParamTest extends BaseTestClass {
 
     /**

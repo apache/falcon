@@ -49,7 +49,7 @@ import java.io.IOException;
 /**
  * Update replication feed tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
