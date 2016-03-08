@@ -413,7 +413,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         credential.setName(credentialName);
         credential.setType("hcat");
 
-        credential.getProperty().add(createProperty(HiveUtil.METASTROE_URI, metaStoreUrl));
+        credential.getProperty().add(createProperty(HiveUtil.METASTORE_URI, metaStoreUrl));
         credential.getProperty().add(createProperty(SecurityUtil.METASTORE_PRINCIPAL,
                 ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL)));
 

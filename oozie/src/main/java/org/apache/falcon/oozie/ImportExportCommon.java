@@ -18,6 +18,7 @@
 
 package org.apache.falcon.oozie;
 
+import com.google.common.base.Splitter;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.DatasourceHelper;
@@ -30,14 +31,16 @@ import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
-import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Helper class that implements common functions across Import and Export.
@@ -47,17 +50,17 @@ public final class ImportExportCommon {
 
     static final String ARG_SEPARATOR = " ";
 
-    private static final Set<String> FALCON_IMPORT_SQOOP_ACTIONS = new HashSet<String>(
+    public static final Logger LOG = LoggerFactory.getLogger(ImportExportCommon.class);
+
+    private static final Set<String> FALCON_IMPORT_SQOOP_ACTIONS = new HashSet<>(
             Arrays.asList(new String[]{ OozieOrchestrationWorkflowBuilder.PREPROCESS_ACTION_NAME,
                                         OozieOrchestrationWorkflowBuilder.USER_ACTION_NAME, }));
 
     private ImportExportCommon() {
     }
 
-    static StringBuilder buildUserPasswordArg(StringBuilder builder, StringBuilder sqoopOpts,
-                                                 Cluster cluster, Feed entity) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        Datasource db = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
+    static StringBuilder buildUserPasswordArg(StringBuilder builder, StringBuilder sqoopOpts, Datasource db)
+        throws FalconException {
         Credential cred = DatasourceHelper.getReadPasswordInfo(db);
         builder.append("--username").append(ARG_SEPARATOR)
                 .append(cred.getUserName())
@@ -85,7 +88,7 @@ public final class ImportExportCommon {
     }
 
     public static void addHCatalogProperties(Properties props, Feed entity, Cluster cluster,
-        Path buildPath, WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder)
+        WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder)
         throws FalconException {
         if (FeedHelper.getStorageType(entity, cluster) == Storage.TYPE.TABLE) {
             addHCatalogShareLibs(props);
@@ -110,10 +113,15 @@ public final class ImportExportCommon {
     }
 
     private static void addMetastoreURI(Properties props, Cluster cluster) throws FalconException {
-        props.put("hcatMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
-        props.put("hiveMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
+        if (ClusterHelper.getRegistryEndPoint(cluster) != null) {
+            props.put("hcatMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
+            props.put("hiveMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
+        }
         props.put("hiveMetastoreExecuteSetUGI", "true");
     }
 
+    public static Map<String, String> getPartitionKeyValues(String partitionStr) {
+        return Splitter.on(";").withKeyValueSeparator("=").split(partitionStr);
+    }
 
 }

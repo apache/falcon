@@ -76,7 +76,7 @@ public class FeedImportIT {
         client = TestContext.getHCatClient(METASTORE_URL);
 
         HiveTestUtils.createDatabase(METASTORE_URL, DATABASE_NAME);
-        List<String> partitionKeys = new ArrayList<String>();
+        List<String> partitionKeys = new ArrayList<>();
         partitionKeys.add("year");
         partitionKeys.add("month");
         partitionKeys.add("day");
@@ -178,7 +178,8 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import FEED entity with datasource {} via entity -submit -type feed -file {}",
+            dsName, filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
     }
 
@@ -224,7 +225,8 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import FEED entity with datasource {} via entity -submit -type feed -file {}",
+            dsName, filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
     }
 
@@ -246,7 +248,8 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("Submit feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName,
+            filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
 
@@ -268,7 +271,8 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE5, overlay);
-        LOG.info("Submit feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName,
+            filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
 
