@@ -1,0 +1,8 @@
+---+++Resume
+
+[[CommonCLI][Common CLI Options]]
+
+Puts a suspended process/feed back to active, which in turn resumes applicable oozie bundle.
+
+Usage:
+ $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -resume

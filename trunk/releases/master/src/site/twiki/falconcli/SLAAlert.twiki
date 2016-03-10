@@ -1,0 +1,49 @@
+---+++SLAAlert
+
+[[CommonCLI][Common CLI Options]]
+
+<verbatim>
+Since: 0.8
+</verbatim>
+
+This command lists all the feed instances which have missed sla and are still not available. If a feed instance missed
+sla but is now available, then it will not be reported in results. The purpose of this API is alerting and hence it
+ doesn't return feed instances which missed SLA but are available as they don't require any action.
+
+* Currently sla monitoring is supported only for feeds.
+
+* Option end is optional and will default to current time if missing.
+
+* Option name is optional, if provided only instances of that feed will be considered.
+
+Usage:
+
+*Example 1*
+
+*$FALCON_HOME/bin/falcon entity -type feed -start 2014-09-05T00:00Z -slaAlert  -end 2016-05-03T00:00Z -colo local*
+
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T11:59Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:00Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:01Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:02Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:03Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:04Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:05Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:06Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:07Z, tags: Missed SLA High
+name: out, type: FEED, cluster: local, instanceTime: 2015-09-26T12:08Z, tags: Missed SLA Low
+
+
+Response: default/Success!
+
+Request Id: default/216978070@qtp-830047511-4 - f5a6c129-ab42-4feb-a2bf-c3baed356248
+
+*Example 2*
+
+*$FALCON_HOME/bin/falcon entity -type feed -start 2014-09-05T00:00Z -slaAlert  -end 2016-05-03T00:00Z -colo local -name in*
+
+name: in, type: FEED, cluster: local, instanceTime: 2015-09-26T06:00Z, tags: Missed SLA High
+
+Response: default/Success!
+
+Request Id: default/1580107885@qtp-830047511-7 - f16cbc51-5070-4551-ad25-28f75e5e4cf2

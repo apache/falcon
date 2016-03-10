@@ -1,0 +1,8 @@
+---+++Status
+
+[[CommonCLI][Common CLI Options]]
+
+Status returns the current state of Falcon (running or stopped).
+Usage:
+$FALCON_HOME/bin/falcon admin -status
+

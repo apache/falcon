@@ -1,0 +1,12 @@
+---+++Lineage
+
+
+Returns the relationship between processes and feeds in a given pipeline in [[http://www.graphviz.org/content/dot-language/][dot]] format.
+You can use the output and view a graphical representation of DAG using an online graphviz viewer like [[http://www.webgraphviz.com/][this]].
+
+Usage:
+
+$FALCON_HOME/bin/falcon metadata -lineage -pipeline my-pipeline
+
+pipeline is a mandatory option.
+

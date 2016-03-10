@@ -1,0 +1,15 @@
+---+ Migration Instructions
+
+---++ Migrate from 0.5-incubating to 0.6-incubating
+
+This is a placeholder wiki for migration instructions from falcon 0.5-incubating to 0.6-incubating.
+
+---+++ Update Entities
+
+---+++ Change cluster dir permissions
+
+---+++ Enable/Disable TLS
+
+---+++ Authorization
+
+
