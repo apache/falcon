@@ -516,7 +516,7 @@ public final class InstanceUtil {
     private static String getReplicatedFolderFromInstanceRunConf(String runConf) {
         String inputPathExample = getReplicationFolderFromInstanceRunConf(runConf).get(0);
         String postFix = inputPathExample.substring(inputPathExample.length() - 7, inputPathExample.length());
-        return getReplicatedFolderBaseFromInstanceRunConf(runConf) + postFix;
+        return getReplicatedFolderBaseFromInstanceRunConf(runConf) + "/" + postFix;
     }
 
     public static String getOutputFolderBaseForInstanceForReplication(
