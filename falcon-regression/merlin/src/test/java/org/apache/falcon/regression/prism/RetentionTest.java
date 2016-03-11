@@ -72,7 +72,7 @@ import java.util.Random;
 /**
  * Test with retention.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class RetentionTest extends BaseTestClass {
     private static final String TEST_FOLDERS = "/testFolders/";
     private String baseTestHDFSDir = cleanAndGetTestDir();

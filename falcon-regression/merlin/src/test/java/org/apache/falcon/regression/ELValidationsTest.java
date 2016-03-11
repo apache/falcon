@@ -53,7 +53,7 @@ import java.util.TimeZone;
 /**
  * EL Validations tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ELValidationsTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

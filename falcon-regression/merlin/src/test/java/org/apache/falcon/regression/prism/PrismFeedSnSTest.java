@@ -44,6 +44,7 @@ import org.testng.annotations.Test;
 /**
  * Submit and schedule feed via prism tests.
  */
+@Test(groups = "distributed")
 public class PrismFeedSnSTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);

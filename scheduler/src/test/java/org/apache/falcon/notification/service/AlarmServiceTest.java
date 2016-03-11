@@ -69,7 +69,7 @@ public class AlarmServiceTest {
 
         timeService.register(request.build());
         // Asynchronous execution, hence a small wait.
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         // Based on the minute boundary, there might be 3.
         Mockito.verify(handler, Mockito.atLeast(2)).onEvent(Mockito.any(Event.class));
 

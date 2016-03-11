@@ -45,6 +45,7 @@ import java.util.ArrayList;
 /**
  * Schedule process via prism tests.
  */
+@Test(groups = "distributed")
 public class PrismProcessScheduleTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);

@@ -708,17 +708,15 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
         setUmaskInFsConf(srcCluster, umask);
 
-        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed,
-                srcCluster.getName());
+        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, srcCluster.getName());
         Calendar startCal = Calendar.getInstance();
         Calendar endCal = Calendar.getInstance();
-        endCal.roll(Calendar.DATE, 1);
+        endCal.add(Calendar.DATE, 1);
         cluster.getValidity().setEnd(endCal.getTime());
         RuntimeProperties.get().setProperty("falcon.retention.keep.instances.beyond.validity", "false");
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(feed, Tag.RETENTION);
-        List<Properties> coords = builder.buildCoords(
-                srcCluster, new Path("/projects/falcon/" + umask));
+        List<Properties> coords = builder.buildCoords(srcCluster, new Path("/projects/falcon/" + umask));
         COORDINATORAPP coord = getCoordinator(srcMiniDFS, coords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
 
         Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(),
@@ -782,7 +780,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(tableFeed, trgCluster.getName());
         final Calendar instance = Calendar.getInstance();
-        instance.roll(Calendar.YEAR, 1);
+        instance.add(Calendar.YEAR, 1);
         cluster.getValidity().setEnd(instance.getTime());
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(tableFeed, Tag.RETENTION);

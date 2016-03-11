@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 /**
  * Validate API is exposed both via server and prism.
  */
-@Test(groups = {"singleCluster"})
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ValidateAPIPrismAndServerTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private String baseTestHDFSDir = cleanAndGetTestDir();

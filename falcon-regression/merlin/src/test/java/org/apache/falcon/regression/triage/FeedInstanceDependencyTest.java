@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * Test Suite for feed InstanceDependency corresponding to FALCON-1039.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class FeedInstanceDependencyTest extends BaseTestClass {
 
     private String baseTestDir = cleanAndGetTestDir();

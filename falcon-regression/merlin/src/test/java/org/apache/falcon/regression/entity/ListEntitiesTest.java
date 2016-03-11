@@ -51,7 +51,7 @@ import java.util.Random;
 /**
  * Testing the list entities API.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ListEntitiesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListEntitiesTest.class);
     private String baseTestHDFSDir = cleanAndGetTestDir();
