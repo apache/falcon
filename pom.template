@@ -57,7 +57,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <outputDirectory>../../../site/${branch}</outputDirectory>
+                    <outputDirectory>../../../content/${branch}</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

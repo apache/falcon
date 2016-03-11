@@ -57,7 +57,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <outputDirectory>../../site</outputDirectory>
+                    <outputDirectory>../../content</outputDirectory>
                     <reportPlugins>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>

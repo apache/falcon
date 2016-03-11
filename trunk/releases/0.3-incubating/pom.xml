@@ -57,7 +57,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <outputDirectory>../../../site/0.3-incubating</outputDirectory>
+                    <outputDirectory>../../../content/0.3-incubating</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

@@ -57,7 +57,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <outputDirectory>../../../site/0.7</outputDirectory>
+                    <outputDirectory>../../../content/0.7</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
