@@ -42,10 +42,7 @@ import static org.apache.falcon.cli.FalconRecipeCLI.validateRecipePropertiesFile
  */
 @Component
 public class FalconRecipeCommands extends BaseFalconCommands {
-    public static final String RECIPE_PREFIX = "recipe";
-    public static final String RECIPE_COMMAND_PREFIX = RECIPE_PREFIX + " ";
-
-    @CliCommand(value = {RECIPE_COMMAND_PREFIX})
+    @CliCommand(value = {"recipe"})
     public String submitRecipe(
             @CliOption(key = {RECIPE_NAME}, mandatory = true, help = RECIPE_NAME_DESCRIPTION) final String recipeName,
             @CliOption(key = {RECIPE_TOOL_CLASS_NAME}, mandatory = true, help = RECIPE_TOOL_CLASS_NAME_DESCRIPTION)
