@@ -83,7 +83,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
  */
 public class FalconClient extends AbstractFalconClient {
 
-    public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
+    public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");

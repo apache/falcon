@@ -39,7 +39,7 @@ import org.testng.annotations.Test;
 /**
 * Process SLA tests.
 */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessSLATest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

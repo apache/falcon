@@ -59,7 +59,7 @@ import java.util.List;
  * expected instance statuses which are being compared with actual result of -list request
  * with different parameters in different order, variation, etc.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ListFeedInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListFeedInstancesTest.class);
     private OozieClient cluster2OC = serverOC.get(1);

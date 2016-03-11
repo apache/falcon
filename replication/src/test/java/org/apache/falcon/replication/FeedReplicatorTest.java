@@ -58,6 +58,7 @@ public class FeedReplicatorTest {
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
         validateMandatoryArguments(options, srcPaths, true);
+        Assert.assertTrue(options.shouldDeleteMissing());
     }
 
     @Test
@@ -87,7 +88,7 @@ public class FeedReplicatorTest {
             "-overwrite", "true",
             "-ignoreErrors", "false",
             "-skipChecksum", "false",
-            "-removeDeletedFiles", "true",
+            "-removeDeletedFiles", "false",
             "-preserveBlockSize", "false",
             "-preserveReplicationNumber", "true",
             "-preservePermission", "false",
@@ -115,7 +116,7 @@ public class FeedReplicatorTest {
         Assert.assertTrue(options.shouldOverwrite());
         Assert.assertFalse(options.shouldIgnoreFailures());
         Assert.assertFalse(options.shouldSkipCRC());
-        Assert.assertTrue(options.shouldDeleteMissing());
+        Assert.assertFalse(options.shouldDeleteMissing());
         Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.BLOCKSIZE));
         Assert.assertTrue(options.shouldPreserve(DistCpOptions.FileAttribute.REPLICATION));
         Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.PERMISSION));

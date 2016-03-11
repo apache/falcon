@@ -43,7 +43,7 @@ import org.testng.annotations.Test;
 /**
  * Process instance resume tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceResumeTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

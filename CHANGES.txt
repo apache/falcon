@@ -35,6 +35,8 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-1842 Falcon build failed in Jenkins at OozieFeedWorkflowBuilderTest (Balu Vellanki)
+
     FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)
 
     FALCON-1795 Kill api not killing waiting/ready instances
@@ -50,10 +52,6 @@ Trunk
     FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
 
     FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
-
-  NEW FEATURES
-    FALCON-1596 Spring shell based CLI for Falcon
-        FALCON-1609 Add entity commands to falcon shell
 
 
 Proposed Release Version: 0.9
