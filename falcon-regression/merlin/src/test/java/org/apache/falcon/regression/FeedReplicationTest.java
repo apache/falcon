@@ -60,7 +60,7 @@ import java.util.Map;
  * feed replication test.
  * Replicates empty directories as well as directories containing data.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedReplicationTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);

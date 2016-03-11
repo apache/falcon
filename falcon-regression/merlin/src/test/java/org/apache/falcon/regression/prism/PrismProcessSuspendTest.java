@@ -38,6 +38,7 @@ import org.testng.annotations.Test;
 /**
  * Suspend process tests.
  */
+@Test(groups = "distributed")
 public class PrismProcessSuspendTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);

@@ -52,7 +52,7 @@ import java.util.List;
 /**
  * Process late data test.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ProcessLateRerunTest extends BaseTestClass {
     private ColoHelper cluster1 = servers.get(0);
     private OozieClient cluster1OC = serverOC.get(0);

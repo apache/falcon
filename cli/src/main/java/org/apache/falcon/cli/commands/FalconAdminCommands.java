@@ -56,7 +56,7 @@ public class FalconAdminCommands extends BaseFalconCommands {
         return getFalconClient().getThreadDump(getDoAs());
     }
 
-    @CliCommand(value = {ADMIN_COMMAND_PREFIX + VERSION_OPT}, help = VERSION_OPT_DESCRIPTION)
+    @CliCommand(value = {"server " + VERSION_OPT}, help = VERSION_OPT_DESCRIPTION)
     public String version(
     ) {
         return getFalconClient().getVersion(getDoAs());

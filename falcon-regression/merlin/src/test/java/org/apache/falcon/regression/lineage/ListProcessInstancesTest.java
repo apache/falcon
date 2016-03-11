@@ -47,7 +47,7 @@ import java.util.UUID;
 /**
  * Test list instances api for process.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ListProcessInstancesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListProcessInstancesTest.class);
     private ColoHelper cluster = servers.get(0);

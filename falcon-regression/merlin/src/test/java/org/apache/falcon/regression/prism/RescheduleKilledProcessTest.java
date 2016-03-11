@@ -40,7 +40,7 @@ import java.util.Random;
 /**
  * Tests with rescheduling killed process.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class RescheduleKilledProcessTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

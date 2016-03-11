@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-1839 Test case for APIs for entities scheduled on native scheduler (Pragya Mittal) 
+  
    FALCON-1566 Add test for SLA monitoring API (Pragya Mittal)
 
    FALCON-1567 Test case for Lifecycle feature  (Pragya Mittal)
@@ -127,6 +129,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-1841 Grouping test in falcon for running nightly regression(Pragya Mittal)
+
    FALCON-1819 Improve test class entity cleanup logic (Paul Isaychuk)
 
    FALCON-1697 Stabilization of scenarios which are based on instances lifecycle(Paul Isaychuk via Ajay Yadava)

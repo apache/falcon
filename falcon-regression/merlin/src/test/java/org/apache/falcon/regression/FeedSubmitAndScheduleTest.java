@@ -43,7 +43,7 @@ import java.net.URISyntaxException;
 /**
  * Feed submit and schedule tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedSubmitAndScheduleTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

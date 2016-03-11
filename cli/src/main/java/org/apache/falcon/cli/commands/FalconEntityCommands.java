@@ -117,10 +117,11 @@ public class FalconEntityCommands extends BaseFalconCommands {
     @CliCommand(value = ENTITY_COMMAND_PREFIX + SLA_MISS_ALERT_OPT, help = SLA_MISS_ALERT_OPT_DESCRIPTION)
     public String slaAlert(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
-            @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION)
+            @CliOption(key = {ENTITY_NAME_OPT}, mandatory = false, help = ENTITY_NAME_OPT_DESCRIPTION)
             final String entityName,
-            @CliOption(key = {COLO_OPT}, mandatory = true, help = COLO_OPT_DESCRIPTION) final String colo,
-            @CliOption(key = {START_OPT}, mandatory = false, help = START_OPT_DESCRIPTION) final String start,
+            @CliOption(key = {COLO_OPT}, mandatory = false, help = COLO_OPT_DESCRIPTION,
+                    unspecifiedDefaultValue = "*") final String colo,
+            @CliOption(key = {START_OPT}, mandatory = true, help = START_OPT_DESCRIPTION) final String start,
             @CliOption(key = {END_OPT}, mandatory = false, help = END_OPT_DESCRIPTION) final String end
     ) {
         SchedulableEntityInstanceResult response = getFalconClient()
@@ -169,7 +170,7 @@ public class FalconEntityCommands extends BaseFalconCommands {
             @CliOption(key = {FILE_PATH_OPT}, mandatory = true, help = FILE_PATH_OPT_DESCRIPTION) final File filePath,
             @CliOption(key = {SKIPDRYRUN_OPT}, mandatory = false, help = SKIPDRYRUN_OPT_DESCRIPTION,
                     unspecifiedDefaultValue = "false", specifiedDefaultValue = "true") boolean skipDryRun,
-            @CliOption(key = {PROPS_OPT}, mandatory = true, help = PROPS_OPT_DESCRIPTION) final String properties
+            @CliOption(key = {PROPS_OPT}, mandatory = false, help = PROPS_OPT_DESCRIPTION) final String properties
     ) {
 
         return getFalconClient()
@@ -195,10 +196,11 @@ public class FalconEntityCommands extends BaseFalconCommands {
     public String schedule(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION) String entityName,
-            @CliOption(key = {COLO_OPT}, mandatory = true, help = COLO_OPT_DESCRIPTION) final String colo,
+            @CliOption(key = {COLO_OPT}, mandatory = false, help = COLO_OPT_DESCRIPTION,
+                    unspecifiedDefaultValue = "*") final String colo,
             @CliOption(key = {SKIPDRYRUN_OPT}, mandatory = false, help = SKIPDRYRUN_OPT_DESCRIPTION,
                     unspecifiedDefaultValue = "false", specifiedDefaultValue = "true") boolean skipDryRun,
-            @CliOption(key = {PROPS_OPT}, mandatory = true, help = PROPS_OPT_DESCRIPTION) final String properties
+            @CliOption(key = {PROPS_OPT}, mandatory = false, help = PROPS_OPT_DESCRIPTION) final String properties
     ) {
 
         return getFalconClient().schedule(entityType, entityName, colo, skipDryRun, getDoAs(), properties).getMessage();
@@ -208,7 +210,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
     public String suspend(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION) String entityName,
-            @CliOption(key = {COLO_OPT}, mandatory = true, help = COLO_OPT_DESCRIPTION) final String colo
+            @CliOption(key = {COLO_OPT}, mandatory = false, help = COLO_OPT_DESCRIPTION,
+                    unspecifiedDefaultValue = "*") final String colo
     ) {
 
         return getFalconClient().suspend(entityType, entityName, colo, getDoAs()).getMessage();
@@ -218,7 +221,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
     public String resume(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION) String entityName,
-            @CliOption(key = {COLO_OPT}, mandatory = true, help = COLO_OPT_DESCRIPTION) final String colo
+            @CliOption(key = {COLO_OPT}, mandatory = false, help = COLO_OPT_DESCRIPTION,
+                    unspecifiedDefaultValue = "*") final String colo
     ) {
 
         return getFalconClient().resume(entityType, entityName, colo, getDoAs()).getMessage();
@@ -237,7 +241,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
     public String getStatus(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION) String entityName,
-            @CliOption(key = {COLO_OPT}, mandatory = true, help = COLO_OPT_DESCRIPTION) final String colo,
+            @CliOption(key = {COLO_OPT}, mandatory = false, help = COLO_OPT_DESCRIPTION,
+                    unspecifiedDefaultValue = "*") final String colo,
             @CliOption(key = {SHOWSCHEDULER_OPT}, mandatory = true,
                     help = SHOWSCHEDULER_OPT_DESCRIPTION) final boolean showScheduler
     ) {
@@ -294,18 +299,18 @@ public class FalconEntityCommands extends BaseFalconCommands {
     public String summary(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {CLUSTER_OPT}, mandatory = true, help = CLUSTER_OPT_DESCRIPTION) final String cluster,
-            @CliOption(key = {START_OPT}, mandatory = true, help = START_OPT_DESCRIPTION) final String start,
-            @CliOption(key = {END_OPT}, mandatory = true, help = END_OPT_DESCRIPTION) final String end,
-            @CliOption(key = {FIELDS_OPT}, mandatory = true, help = FIELDS_OPT_DESCRIPTION) final String fields,
-            @CliOption(key = {ORDER_BY_OPT}, mandatory = true, help = ORDER_BY_OPT_DESCRIPTION) final String orderBy,
-            @CliOption(key = {SORT_ORDER_OPT}, mandatory = true,
+            @CliOption(key = {START_OPT}, mandatory = false, help = START_OPT_DESCRIPTION) final String start,
+            @CliOption(key = {END_OPT}, mandatory = false, help = END_OPT_DESCRIPTION) final String end,
+            @CliOption(key = {FIELDS_OPT}, mandatory = false, help = FIELDS_OPT_DESCRIPTION) final String fields,
+            @CliOption(key = {ORDER_BY_OPT}, mandatory = false, help = ORDER_BY_OPT_DESCRIPTION) final String orderBy,
+            @CliOption(key = {SORT_ORDER_OPT}, mandatory = false,
                     help = SORT_ORDER_OPT_DESCRIPTION) final String sortOrder,
-            @CliOption(key = {FILTER_BY_OPT}, mandatory = true, help = FILTER_BY_OPT_DESCRIPTION) final String filterBy,
-            @CliOption(key = {TAGS_OPT}, mandatory = true, help = TAGS_OPT_DESCRIPTION) final String filterTags,
-            @CliOption(key = {OFFSET_OPT}, mandatory = true, help = OFFSET_OPT_DESCRIPTION) final Integer offset,
-            @CliOption(key = {NUM_RESULTS_OPT}, mandatory = true,
+            @CliOption(key = {FILTER_BY_OPT}, mandatory = false, help = FILTER_BY_OPT_DESCRIPTION) final String filterBy,
+            @CliOption(key = {TAGS_OPT}, mandatory = false, help = TAGS_OPT_DESCRIPTION) final String filterTags,
+            @CliOption(key = {OFFSET_OPT}, mandatory = false, help = OFFSET_OPT_DESCRIPTION) final Integer offset,
+            @CliOption(key = {NUM_RESULTS_OPT}, mandatory = false,
                     help = NUM_RESULTS_OPT_DESCRIPTION) final Integer numResults,
-            @CliOption(key = {NUM_INSTANCES_OPT}, mandatory = true,
+            @CliOption(key = {NUM_INSTANCES_OPT}, mandatory = false,
                     help = NUM_INSTANCES_OPT_DESCRIPTION) final Integer numInstances
 
     ) {

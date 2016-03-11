@@ -657,7 +657,7 @@ public final class InstanceUtil {
      * @param expectedStatus expected status we are waiting for
      * @return minutes to wait for expected status
      */
-    private static int getMinutesToWait(EntityType entityType, CoordinatorAction.Status expectedStatus) {
+    public static int getMinutesToWait(EntityType entityType, CoordinatorAction.Status expectedStatus) {
         switch (expectedStatus) {
         case RUNNING:
             if (entityType == EntityType.PROCESS) {
