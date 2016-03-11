@@ -53,10 +53,6 @@ Trunk
 
     FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
 
-  NEW FEATURES
-    FALCON-1596 Spring shell based CLI for Falcon
-        FALCON-1609 Add entity commands to falcon shell
-
 
 Proposed Release Version: 0.9
   TASKS:
