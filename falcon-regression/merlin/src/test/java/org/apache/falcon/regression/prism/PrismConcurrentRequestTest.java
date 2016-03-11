@@ -42,7 +42,7 @@ import org.testng.annotations.Test;
 /**
  * Tests with concurrent request to prism.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class PrismConcurrentRequestTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

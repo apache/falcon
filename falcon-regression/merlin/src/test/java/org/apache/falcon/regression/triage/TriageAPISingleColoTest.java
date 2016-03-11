@@ -51,7 +51,7 @@ import java.util.List;
 /**
  * Test Class for Testing the Triage API on a single colo corresponding to FALCON-1377.
  */
-@Test(groups = {"singleCluster"})
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class TriageAPISingleColoTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);

@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.notification.service.impl;
 
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -86,7 +85,6 @@ public class SchedulerService implements FalconNotificationService, Notification
 
     private static final StateStore STATE_STORE = AbstractStateStore.get();
 
-    private Cache<InstanceID, Object> instancesToIgnore;
     // TODO : limit the no. of awaiting instances per entity
     private LoadingCache<EntityClusterID, SortedMap<Integer, ExecutionInstance>> executorAwaitedInstances;
 
@@ -96,22 +94,28 @@ public class SchedulerService implements FalconNotificationService, Notification
         if (request.getInstance() == null) {
             throw new NotificationServiceException("Request must contain an instance.");
         }
-        // When the instance is getting rescheduled for run. As in the case of suspend and resume.
-        Object obj = instancesToIgnore.getIfPresent(request.getInstance().getId());
-        if (obj != null) {
-            instancesToIgnore.invalidate(request.getInstance().getId());
-        }
         LOG.debug("Received request to schedule instance {} with sequence {}.", request.getInstance().getId(),
                 request.getInstance().getInstanceSequence());
         runQueue.execute(new InstanceRunner(request));
     }
 
     @Override
-    public void unregister(NotificationHandler handler, ID listenerID) {
+    public void unregister(NotificationHandler handler, ID listenerID) throws NotificationServiceException {
         // If ID is that of an entity, do nothing
         if (listenerID instanceof InstanceID) {
-            // Not efficient to iterate over elements to remove this. Add to ignore list.
-            instancesToIgnore.put((InstanceID) listenerID, new Object());
+            try {
+                InstanceID instanceID = (InstanceID) listenerID;
+                SortedMap<Integer, ExecutionInstance> instances = executorAwaitedInstances.get(instanceID
+                            .getEntityClusterID());
+                if (instances != null && !instances.isEmpty()) {
+                    synchronized (instances) {
+                        instances.remove(STATE_STORE.getExecutionInstance(instanceID)
+                                .getInstance().getInstanceSequence());
+                    }
+                }
+            } catch (Exception e) {
+                throw new NotificationServiceException(e);
+            }
         }
     }
 
@@ -155,10 +159,6 @@ public class SchedulerService implements FalconNotificationService, Notification
                 .removalListener(this)
                 .build(instanceCacheLoader);
 
-        instancesToIgnore = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.HOURS)
-                .concurrencyLevel(1)
-                .build();
         // Interested in all job completion events.
         JobCompletionNotificationRequest completionRequest = (JobCompletionNotificationRequest)
                 NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.JOB_COMPLETION)
@@ -243,7 +243,6 @@ public class SchedulerService implements FalconNotificationService, Notification
     @Override
     public void destroy() throws FalconException {
         runQueue.shutdownNow();
-        instancesToIgnore.invalidateAll();
     }
 
     private void notifyFailureEvent(JobScheduleNotificationRequest request) throws FalconException {
@@ -290,12 +289,6 @@ public class SchedulerService implements FalconNotificationService, Notification
         @Override
         public void run() {
             try {
-                // If de-registered
-                if (instancesToIgnore.getIfPresent(instance.getId()) != null) {
-                    LOG.debug("Instance {} has been deregistered. Ignoring.", instance.getId());
-                    instancesToIgnore.invalidate(instance.getId());
-                    return;
-                }
                 LOG.debug("Received request to run instance {}", instance.getId());
                 if (checkConditions()) {
                     String externalId = instance.getExternalID();

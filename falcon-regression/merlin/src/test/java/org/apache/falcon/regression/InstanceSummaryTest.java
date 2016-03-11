@@ -54,7 +54,7 @@ import java.util.List;
     3. feed : same as test 1 for feed
     4. feed : same as test 2 for feed
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class InstanceSummaryTest extends BaseTestClass {
 
     private String baseTestHDFSDir = cleanAndGetTestDir();

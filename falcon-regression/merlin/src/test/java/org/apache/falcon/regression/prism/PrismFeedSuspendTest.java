@@ -38,6 +38,7 @@ import org.testng.annotations.Test;
 /**
  * Suspend feed via prism tests.
  */
+@Test(groups = "distributed")
 public class PrismFeedSuspendTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
