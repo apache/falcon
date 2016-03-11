@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * Tests with process lib folder detached from workflow.xml.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessLibPathTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

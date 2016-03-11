@@ -43,7 +43,7 @@ import org.testng.annotations.Test;
 /**
  * Feed instance status tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedInstanceStatusTest extends BaseTestClass {
 
     private String baseTestDir = cleanAndGetTestDir();

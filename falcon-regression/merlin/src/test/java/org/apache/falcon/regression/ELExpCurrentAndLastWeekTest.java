@@ -49,7 +49,7 @@ import java.util.List;
  * EL Expression Current and last week test.
  */
 
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ELExpCurrentAndLastWeekTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
