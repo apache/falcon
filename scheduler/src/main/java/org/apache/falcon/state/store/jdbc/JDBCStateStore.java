@@ -22,6 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
+import org.apache.falcon.persistence.EntityBean;
+import org.apache.falcon.persistence.InstanceBean;
 import org.apache.falcon.state.EntityClusterID;
 import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
@@ -30,7 +32,7 @@ import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.util.StateStoreProperties;
 import org.joda.time.DateTime;
 
