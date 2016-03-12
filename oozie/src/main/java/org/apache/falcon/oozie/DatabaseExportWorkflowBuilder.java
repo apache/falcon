@@ -31,9 +31,11 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LoadMethod;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 
+import javax.xml.bind.JAXBElement;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -57,18 +59,24 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
     protected Properties getWorkflow(Cluster cluster, WORKFLOWAPP workflow, Path buildPath)
         throws FalconException {
 
-        ACTION sqoopExport = unmarshalAction(EXPORT_SQOOP_ACTION_TEMPLATE);
-        addTransition(sqoopExport, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(sqoopExport);
+        ACTION action = unmarshalAction(EXPORT_SQOOP_ACTION_TEMPLATE);
+        JAXBElement<org.apache.falcon.oozie.sqoop.ACTION> actionJaxbElement = OozieUtils.unMarshalSqoopAction(action);
+        org.apache.falcon.oozie.sqoop.ACTION sqoopExport = actionJaxbElement.getValue();
+
+        Properties props = new Properties();
+        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath);
+        sqoopExport.getJobXml().add("${wf:appPath()}/conf/hive-site.xml");
+        OozieUtils.marshalSqoopAction(action, actionJaxbElement);
+
+        addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        workflow.getDecisionOrForkOrJoin().add(action);
 
         //Add post-processing actions
         ACTION success = getSuccessPostProcessAction();
-        // delete addHDFSServersConfig(success, src, target);
         addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(success);
 
         ACTION fail = getFailPostProcessAction();
-        // delete addHDFSServersConfig(fail, src, target);
         addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(fail);
 
@@ -78,10 +86,7 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
         // build the sqoop command and put it in the properties
         String sqoopCmd = buildSqoopCommand(cluster, entity);
         LOG.info("SQOOP EXPORT COMMAND : " + sqoopCmd);
-        Properties props = new Properties();
         props.put("sqoopCommand", sqoopCmd);
-
-        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this);
         return props;
     }
 

@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 
 import java.util.Iterator;
@@ -37,6 +38,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
+
+import javax.xml.bind.JAXBElement;
 
 /**
  * Builds Datasource import workflow for Oozie.
@@ -58,18 +61,24 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
     protected Properties getWorkflow(Cluster cluster, WORKFLOWAPP workflow, Path buildPath)
         throws FalconException {
 
-        ACTION sqoopImport = unmarshalAction(IMPORT_SQOOP_ACTION_TEMPLATE);
-        addTransition(sqoopImport, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(sqoopImport);
+        ACTION action = unmarshalAction(IMPORT_SQOOP_ACTION_TEMPLATE);
+        JAXBElement<org.apache.falcon.oozie.sqoop.ACTION> actionJaxbElement = OozieUtils.unMarshalSqoopAction(action);
+        org.apache.falcon.oozie.sqoop.ACTION sqoopImport = actionJaxbElement.getValue();
+
+        Properties props = new Properties();
+        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath);
+        sqoopImport.getJobXml().add("${wf:appPath()}/conf/hive-site.xml");
+        OozieUtils.marshalSqoopAction(action, actionJaxbElement);
+
+        addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        workflow.getDecisionOrForkOrJoin().add(action);
 
         //Add post-processing actions
         ACTION success = getSuccessPostProcessAction();
-        // delete addHDFSServersConfig(success, src, target);
         addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(success);
 
         ACTION fail = getFailPostProcessAction();
-        // delete addHDFSServersConfig(fail, src, target);
         addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(fail);
 
@@ -78,11 +87,8 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
 
         // build the sqoop command and put it in the properties
         String sqoopCmd = buildSqoopCommand(cluster, entity);
-        LOG.info("SQOOP COMMAND : " + sqoopCmd);
-        Properties props = new Properties();
+        LOG.info("SQOOP IMPORT COMMAND : " + sqoopCmd);
         props.put("sqoopCommand", sqoopCmd);
-
-        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this);
         return props;
     }
 

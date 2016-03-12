@@ -20,7 +20,6 @@ package org.apache.falcon.oozie;
 
 import com.google.common.base.Splitter;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
@@ -31,6 +30,7 @@ import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,36 +88,20 @@ public final class ImportExportCommon {
     }
 
     public static void addHCatalogProperties(Properties props, Feed entity, Cluster cluster,
-        WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder)
+        WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder, Path buildPath)
         throws FalconException {
         if (FeedHelper.getStorageType(entity, cluster) == Storage.TYPE.TABLE) {
+            wBuilder.createHiveConfiguration(cluster, buildPath, "");
             addHCatalogShareLibs(props);
-            addMetastoreURI(props, cluster);
             if (SecurityUtil.isSecurityEnabled()) {
                 // add hcatalog credentials for secure mode and add a reference to each action
                 wBuilder.addHCatalogCredentials(workflow, cluster,
                         OozieOrchestrationWorkflowBuilder.HIVE_CREDENTIAL_NAME, FALCON_IMPORT_SQOOP_ACTIONS);
             }
-        } else {
-            ignoreMetastoreURI(props);
         }
-    }
-
-    private static void ignoreMetastoreURI(Properties props) {
-        props.put("hcatMetastoreURI", "NA");
-        props.put("hiveMetastoreURI", "NA");
-        props.put("hiveMetastoreExecuteSetUGI", "NA");
     }
     private static void addHCatalogShareLibs(Properties props) throws FalconException {
         props.put("oozie.action.sharelib.for.sqoop", "sqoop,hive,hcatalog");
-    }
-
-    private static void addMetastoreURI(Properties props, Cluster cluster) throws FalconException {
-        if (ClusterHelper.getRegistryEndPoint(cluster) != null) {
-            props.put("hcatMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
-            props.put("hiveMetastoreURI", ClusterHelper.getRegistryEndPoint(cluster));
-        }
-        props.put("hiveMetastoreExecuteSetUGI", "true");
     }
 
     public static Map<String, String> getPartitionKeyValues(String partitionStr) {
