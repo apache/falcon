@@ -76,7 +76,7 @@ import java.util.Set;
  * @param <T>
  */
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
-    protected static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+    public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
 
     protected static final String USER_ACTION_NAME = "user-action";
     protected static final String PREPROCESS_ACTION_NAME = "pre-processing";
@@ -329,7 +329,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     }
 
     // creates hive-site.xml configuration in conf dir for the given cluster on the same cluster.
-    protected void createHiveConfiguration(Cluster cluster, Path workflowPath,
+    public void createHiveConfiguration(Cluster cluster, Path workflowPath,
                                            String prefix) throws FalconException {
         Configuration hiveConf = getHiveCredentialsAsConf(cluster);
 
@@ -413,7 +413,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         credential.setName(credentialName);
         credential.setType("hcat");
 
-        credential.getProperty().add(createProperty(HiveUtil.METASTROE_URI, metaStoreUrl));
+        credential.getProperty().add(createProperty(HiveUtil.METASTORE_URI, metaStoreUrl));
         credential.getProperty().add(createProperty(SecurityUtil.METASTORE_PRINCIPAL,
                 ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL)));
 
