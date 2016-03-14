@@ -121,7 +121,10 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
                 END_TIME, colo, null, null, null, null);
         status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
                 processName, START_INSTANCE);
-        Assert.assertEquals(status, InstancesResult.WorkflowStatus.RUNNING);
+        Assert.assertEquals(status, InstancesResult.WorkflowStatus.READY);
+
+        waitForStatus(EntityType.PROCESS.toString(), processName,
+                START_INSTANCE, InstancesResult.WorkflowStatus.RUNNING);
     }
 
     @Test

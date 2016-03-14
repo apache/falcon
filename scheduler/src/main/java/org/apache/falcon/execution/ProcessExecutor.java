@@ -267,10 +267,7 @@ public class ProcessExecutor extends EntityExecutor {
     public void resume(ExecutionInstance instance) throws FalconException {
         try {
             instance.resume();
-            if (((ProcessExecutionInstance) instance).isScheduled()) {
-                stateService.handleStateChange(instance, InstanceState.EVENT.RESUME_RUNNING, this);
-                onSchedule(instance);
-            } else if (((ProcessExecutionInstance) instance).isReady()) {
+            if (((ProcessExecutionInstance) instance).isReady()) {
                 stateService.handleStateChange(instance, InstanceState.EVENT.RESUME_READY, this);
                 onConditionsMet(instance);
             } else {
