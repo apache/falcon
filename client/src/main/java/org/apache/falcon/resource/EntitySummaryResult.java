@@ -77,10 +77,7 @@ public class EntitySummaryResult extends APIResult {
         if (items == null) {
             setEntitySummaries(new EntitySummary[0]);
         } else {
-            EntitySummary[] summaries = new EntitySummary[items.length];
-            for (int index = 0; index < items.length; index++) {
-                summaries[index] = (EntitySummary)items[index];
-            }
+            EntitySummary[] summaries = Arrays.copyOf(items, items.length, EntitySummary[].class);
             setEntitySummaries(summaries);
         }
     }
