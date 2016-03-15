@@ -269,15 +269,26 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
 
     public void addImportedInstance(WorkflowExecutionContext context) throws FalconException {
+        addImportExportInstanceHelper(context, RelationshipLabel.DATASOURCE_IMPORT_EDGE);
+    }
 
-        String feedName = context.getOutputFeedNames();
-        String feedInstanceDataPath = context.getOutputFeedInstancePaths();
+    public void addExportedInstance(WorkflowExecutionContext context) throws FalconException {
+        addImportExportInstanceHelper(context, RelationshipLabel.DATASOURCE_EXPORT_EDGE);
+    }
+
+    private void addImportExportInstanceHelper(WorkflowExecutionContext context,
+        RelationshipLabel label) throws FalconException {
+        String feedName = (label == RelationshipLabel.DATASOURCE_IMPORT_EDGE)
+            ? context.getOutputFeedNames() : context.getInputFeedNames();
+        String feedInstanceDataPath = (label == RelationshipLabel.DATASOURCE_IMPORT_EDGE)
+            ? context.getOutputFeedInstancePaths() : context.getInputFeedInstancePaths();
         String datasourceName = context.getDatasourceName();
         String sourceClusterName = context.getSrcClusterName();
 
-        LOG.info("Computing import feed instance for : name= {} path= {}, in cluster: {} "
-                       +  "from datasource: {}", feedName,
+        LOG.info("Computing {} feed instance for : name= {} path= {}, in cluster: {} "
+                        +  "from datasource: {}", label.getName(), feedName,
                 feedInstanceDataPath, sourceClusterName, datasourceName);
+
         String feedInstanceName = getFeedInstanceName(feedName, sourceClusterName,
                 feedInstanceDataPath, context.getNominalTimeAsISO8601());
         Vertex feedInstanceVertex = findVertex(feedInstanceName, RelationshipType.FEED_INSTANCE);
@@ -291,7 +302,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                     feedInstanceName, context, feedName, context.getSrcClusterName());
         }
         addInstanceToEntity(feedInstanceVertex, datasourceName, RelationshipType.DATASOURCE_ENTITY,
-                RelationshipLabel.DATASOURCE_IMPORT_EDGE, context.getTimeStampAsISO8601());
+                label, context.getTimeStampAsISO8601());
         addInstanceToEntity(feedInstanceVertex, sourceClusterName, RelationshipType.CLUSTER_ENTITY,
                 RelationshipLabel.FEED_CLUSTER_EDGE, context.getTimeStampAsISO8601());
     }
