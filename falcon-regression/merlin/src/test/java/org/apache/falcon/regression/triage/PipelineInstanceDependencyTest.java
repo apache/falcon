@@ -66,7 +66,7 @@ import java.util.Map;
 /**
  * Test for instance dependency endpoint.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class PipelineInstanceDependencyTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

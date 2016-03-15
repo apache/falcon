@@ -50,7 +50,7 @@ import java.util.List;
 /**
  * Test Suite for Entity lineage.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class EntityLineageTest extends BaseTestClass {
 
     private String baseTestDir = cleanAndGetTestDir();

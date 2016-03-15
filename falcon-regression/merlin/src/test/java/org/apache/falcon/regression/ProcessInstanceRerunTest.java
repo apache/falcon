@@ -50,7 +50,7 @@ import java.util.List;
 /**
  * Test Suite for instance rerun.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceRerunTest extends BaseTestClass {
 
     private boolean restartRequired;

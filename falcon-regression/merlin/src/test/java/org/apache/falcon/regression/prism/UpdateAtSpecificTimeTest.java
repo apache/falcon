@@ -61,6 +61,7 @@ import java.util.List;
 /**
  * Test updating of feed with custom update time.
  */
+@Test(groups = "distributed")
 public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     private static final Logger LOGGER = Logger.getLogger(UpdateAtSpecificTimeTest.class);

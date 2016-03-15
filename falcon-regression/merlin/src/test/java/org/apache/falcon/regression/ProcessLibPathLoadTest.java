@@ -55,7 +55,7 @@ import java.util.Map;
 /**
  * Tests with process lib folder with workflow.xml.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ProcessLibPathLoadTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

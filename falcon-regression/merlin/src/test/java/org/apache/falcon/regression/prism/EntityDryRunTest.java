@@ -44,7 +44,7 @@ import javax.xml.bind.JAXBException;
 /**
  * test cases for https://issues.apache.org/jira/browse/FALCON-353.
  */
-@Test(groups = "embedded")
+@Test(groups = { "prism", "distributed", "embedded" })
 public class EntityDryRunTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
