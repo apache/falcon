@@ -18,7 +18,12 @@
 
 package org.apache.falcon.metadata;
 
+import com.thinkaurelius.titan.core.EdgeLabel;
+import com.thinkaurelius.titan.core.Order;
+import com.thinkaurelius.titan.core.PropertyKey;
+import com.thinkaurelius.titan.core.schema.TitanManagement;
 import com.thinkaurelius.titan.graphdb.blueprints.TitanBlueprintsGraph;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphFactory;
@@ -150,24 +155,41 @@ public class MetadataMappingService
         makeKeyIndex(RelationshipProperty.TYPE.getName());
         makeKeyIndex(RelationshipProperty.TIMESTAMP.getName());
         makeKeyIndex(RelationshipProperty.VERSION.getName());
+        makeInstanceIndex();
+    }
+
+    private void makeInstanceIndex() {
+        // build index for instance search
+        TitanManagement titanManagement = getTitanGraph().getManagementSystem();
+        PropertyKey statusKey = makePropertyKey(titanManagement, RelationshipProperty.STATUS.getName());
+        PropertyKey nominalTimeKey = makePropertyKey(titanManagement, RelationshipProperty.NOMINAL_TIME.getName());
+        EdgeLabel edgeLabel = titanManagement.makeEdgeLabel(RelationshipLabel.INSTANCE_ENTITY_EDGE.getName()).make();
+        titanManagement.buildEdgeIndex(edgeLabel, "indexInstanceN", Direction.OUT, Order.DESC, nominalTimeKey);
+        titanManagement.buildEdgeIndex(edgeLabel, "indexInstanceSN", Direction.OUT, Order.DESC,
+                statusKey, nominalTimeKey);
+        titanManagement.commit();
     }
 
     private void makeNameKeyIndex() {
-        getTitanGraph().makeKey(RelationshipProperty.NAME.getName())
-                .dataType(String.class)
-                .indexed(Vertex.class)
-                .indexed(Edge.class)
-                // .unique() todo this ought to be unique?
-                .make();
-        getTitanGraph().commit();
+        TitanManagement titanManagement = getTitanGraph().getManagementSystem();
+        PropertyKey nameKey = makePropertyKey(titanManagement, RelationshipProperty.NAME.getName());
+        titanManagement.buildIndex("indexByVertexName", Vertex.class).addKey(nameKey).buildCompositeIndex();
+        titanManagement.buildIndex("indexByEdgeName", Edge.class).addKey(nameKey).buildCompositeIndex();
+        titanManagement.commit();
     }
 
     private void makeKeyIndex(String key) {
-        getTitanGraph().makeKey(key)
-                .dataType(String.class)
-                .indexed(Vertex.class)
-                .make();
-        getTitanGraph().commit();
+        TitanManagement titanManagement = getTitanGraph().getManagementSystem();
+        PropertyKey propertyKey = makePropertyKey(titanManagement, key);
+        titanManagement.buildIndex("indexBy" + key, Vertex.class).addKey(propertyKey).buildCompositeIndex();
+        titanManagement.commit();
+    }
+
+    private PropertyKey makePropertyKey(TitanManagement titanManagement, String key) {
+        if (titanManagement.containsPropertyKey(key)) {
+            return titanManagement.getPropertyKey(key);
+        }
+        return titanManagement.makePropertyKey(key).dataType(String.class).make();
     }
 
     public Graph getGraph() {
