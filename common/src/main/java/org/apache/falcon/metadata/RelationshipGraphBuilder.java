@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Base class for Metadata relationship mapping helper.
@@ -113,12 +114,14 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Edge addEdge(Vertex fromVertex, Vertex toVertex,
-                           String edgeLabel, String timestamp) {
+                           String edgeLabel, Map<RelationshipProperty, String> properties) {
         Edge edge = findEdge(fromVertex, toVertex, edgeLabel);
 
         Edge edgeToVertex = edge != null ? edge : fromVertex.addEdge(edgeLabel, toVertex);
-        if (timestamp != null) {
-            edgeToVertex.setProperty(RelationshipProperty.TIMESTAMP.getName(), timestamp);
+        if (properties != null) {
+            for (Map.Entry<RelationshipProperty, String> property : properties.entrySet()) {
+                edgeToVertex.setProperty(property.getKey().getName(), property.getValue());
+            }
         }
 
         return edgeToVertex;

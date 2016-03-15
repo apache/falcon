@@ -34,6 +34,7 @@ import java.util.Properties;
 public class MockDAGEngine implements DAGEngine {
     private List<ExecutionInstance> failInstances = new ArrayList<>();
     private Map<ExecutionInstance, Integer> runInvocations =  new HashMap<>();
+    private Map<ExecutionInstance, Integer> resumeInvocations =  new HashMap<>();
 
     public MockDAGEngine(String cluster) {
 
@@ -68,7 +69,13 @@ public class MockDAGEngine implements DAGEngine {
 
     @Override
     public void resume(ExecutionInstance instance) throws DAGEngineException {
+        Integer count = 1;
+        if (resumeInvocations.containsKey(instance)) {
+            // Increment count
+            count = resumeInvocations.get(instance) + 1;
+        }
 
+        resumeInvocations.put(instance, count);
     }
 
     @Override
@@ -124,5 +131,9 @@ public class MockDAGEngine implements DAGEngine {
 
     public Integer getTotalRuns(ExecutionInstance instance) {
         return runInvocations.get(instance);
+    }
+
+    public Integer getTotalResumes(ExecutionInstance instance) {
+        return resumeInvocations.get(instance);
     }
 }

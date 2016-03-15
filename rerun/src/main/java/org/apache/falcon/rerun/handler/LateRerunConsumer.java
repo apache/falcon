@@ -84,7 +84,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             if (StringUtils.isBlank(id)) {
                 id = message.getWfId();
             }
-            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, false);
+            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, true);
             LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
                     message.getWfId(), message.getClusterName());
         } catch (Exception e) {

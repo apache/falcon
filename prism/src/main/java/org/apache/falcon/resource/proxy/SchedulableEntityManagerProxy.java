@@ -659,7 +659,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     /**
      * Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity.
      * @param type Valid options are feed or process.
-     * @param cluster Show entities that belong to this cluster.
+     * @param clusterName Show entities that belong to this cluster.
      * @param startStr <optional param> Show entity summaries from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
      *                 By default, it is set to (end - 2 days).
      * @param endStr <optional param> Show entity summary up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
@@ -690,20 +690,40 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Override
     public EntitySummaryResult getEntitySummary(
             @Dimension("type") @PathParam("type") final String type,
-            @Dimension("cluster") @QueryParam("cluster") final String cluster,
-            @DefaultValue("") @QueryParam("start") String startStr,
-            @DefaultValue("") @QueryParam("end") String endStr,
+            @Dimension("cluster") @QueryParam("cluster") final String clusterName,
+            @DefaultValue("") @QueryParam("start") final String startStr,
+            @DefaultValue("") @QueryParam("end") final String endStr,
             @DefaultValue("") @QueryParam("fields") final String entityFields,
             @DefaultValue("") @QueryParam("filterBy") final String entityFilter,
             @DefaultValue("") @QueryParam("tags") final String entityTags,
             @DefaultValue("") @QueryParam("orderBy") final String entityOrderBy,
-            @DefaultValue("asc") @QueryParam("sortOrder") String entitySortOrder,
+            @DefaultValue("asc") @QueryParam("sortOrder") final String entitySortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer entityOffset,
             @DefaultValue("10") @QueryParam("numResults") final Integer numEntities,
             @DefaultValue("7") @QueryParam("numInstances") final Integer numInstanceResults,
             @DefaultValue("") @QueryParam("doAs") final String doAsUser) {
-        return super.getEntitySummary(type, cluster, startStr, endStr, entityFields, entityFilter,
-                entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults, doAsUser);
+        final String entityName = null;
+        return new EntityProxy<EntitySummaryResult>(type, null, EntitySummaryResult.class) {
+            @Override
+            protected Set<String> getColosToApply() {
+                Set<String> result = new HashSet<>();
+                try {
+                    Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+                    result.add(cluster.getColo());
+                } catch (FalconException e) {
+                    // ignore, just return blank result
+                }
+                return result;
+            }
+
+            @Override
+            protected EntitySummaryResult doExecute(String colo) throws FalconException {
+                EntitySummaryResult es = getEntityManager(colo).invoke("getEntitySummary", type, clusterName, startStr,
+                    endStr, entityFields, entityFilter, entityTags, entityOrderBy, entitySortOrder, entityOffset,
+                    numEntities, numInstanceResults, doAsUser);
+                return es;
+            }
+        }.execute();
     }
 
     /**

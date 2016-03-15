@@ -417,7 +417,7 @@ public final class OozieBuilderUtils {
         credential.setName(credentialName);
         credential.setType("hcat");
 
-        credential.getProperty().add(createProperty(HiveUtil.METASTROE_URI, metaStoreUrl));
+        credential.getProperty().add(createProperty(HiveUtil.METASTORE_URI, metaStoreUrl));
         credential.getProperty().add(createProperty(SecurityUtil.METASTORE_PRINCIPAL,
                 ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL)));
 
@@ -441,7 +441,7 @@ public final class OozieBuilderUtils {
         hiveCredentials.put(HiveUtil.METASTOREURIS, metaStoreUrl);
         hiveCredentials.put(HiveUtil.METASTORE_UGI, "true");
         hiveCredentials.put(HiveUtil.NODE, metaStoreUrl.replace("thrift", "hcat"));
-        hiveCredentials.put(HiveUtil.METASTROE_URI, metaStoreUrl);
+        hiveCredentials.put(HiveUtil.METASTORE_URI, metaStoreUrl);
 
         if (SecurityUtil.isSecurityEnabled()) {
             String principal = ClusterHelper
