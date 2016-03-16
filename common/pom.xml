@@ -180,12 +180,12 @@
 
         <dependency>
             <groupId>com.thinkaurelius.titan</groupId>
-            <artifactId>titan-core-jre6</artifactId>
+            <artifactId>titan-core</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.thinkaurelius.titan</groupId>
-            <artifactId>titan-berkeleyje-jre6</artifactId>
+            <artifactId>titan-berkeleyje</artifactId>
         </dependency>
     </dependencies>
 
