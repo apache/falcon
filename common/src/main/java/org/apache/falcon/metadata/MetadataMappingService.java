@@ -346,7 +346,7 @@ public class MetadataMappingService
             updateImportedFeedInstance(context);
             break;
         case EXPORT:
-            onFeedInstanceExported(context);
+            updateExportedFeedInstance(context);
             break;
         default:
             throw new IllegalArgumentException("Invalid EntityOperation - " + entityOperation);
@@ -373,7 +373,7 @@ public class MetadataMappingService
         LOG.info("Updating imported feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addImportedInstance(context);
     }
-    private void onFeedInstanceExported(WorkflowExecutionContext context) throws FalconException {
+    private void updateExportedFeedInstance(WorkflowExecutionContext context) throws FalconException {
         LOG.info("Adding export feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addExportedInstance(context);
     }
