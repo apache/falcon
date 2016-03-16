@@ -23,9 +23,9 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "GET_MONITERED_INSTANCE", query = "select OBJECT(a) from MonitoredFeedsBean a where a.feedName = :feedName"),
-        @NamedQuery(name = "DELETE_MONITORED_INSTANCES", query = "delete from MonitoredFeedsBean a where a.feedName = :feedName"),
-        @NamedQuery(name = "GET_ALL_MONITORING_FEEDS", query = "select OBJECT(a) from MonitoredFeedsBean a")
+        @NamedQuery(name = PersistenceConstants.GET_MONITERED_INSTANCE, query = "select OBJECT(a) from MonitoredFeedsBean a where a.feedName = :feedName"),
+        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredFeedsBean a where a.feedName = :feedName"),
+        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) from MonitoredFeedsBean a")
 })
 @Table(name="MONITORED_FEEDS")
 public class MonitoredFeedsBean {

@@ -88,19 +88,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     private static final FsPermission STORE_PERMISSION = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
 
     /**
-     * Feeds to be monitored.
-     */
-    protected Set<String> monitoredFeeds;
-
-
-    /**
-     * Map<Pair<feedName, clusterName>, Set<instanceTime> to store
-     * each missing instance of a feed.
-     */
-    protected Map<Pair<String, String>, BlockingQueue<Date>>    pendingInstances;
-
-
-    /**
      * Used to store the last time when pending instances were checked for SLA.
      */
     private Date lastCheckedAt;
@@ -421,7 +408,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
             Map<String, Object> state = new HashMap<>();
             state.put("lastSerializedAt", lastSerializedAt.getTime());
             state.put("lastCheckedAt", lastCheckedAt.getTime());
-            state.put("pendingInstances", pendingInstances);
             oos.writeObject(state);
             fileSystem.rename(tmp, filePath);
         } catch (IOException e) {
@@ -436,7 +422,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     private void deserialize(Path path) throws FalconException {
         try {
             Map<String, Object> state = deserializeInternal(path);
-//            pendingInstances = new ConcurrentHashMap<>();
             Map<Pair<String, String>, BlockingQueue<Date>> pendingInstancesCopy =
                     (Map<Pair<String, String>, BlockingQueue<Date>>) state.get("pendingInstances");
             // queue size can change during restarts, hence copy
@@ -468,10 +453,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     }
 
     protected void initializeService() {
-        //pendingInstances = new ConcurrentHashMap<>();
         lastCheckedAt = new Date();
         lastSerializedAt = new Date();
-        //monitoredFeeds = new ConcurrentHashSet<>();
     }
 
     @SuppressWarnings("unchecked")

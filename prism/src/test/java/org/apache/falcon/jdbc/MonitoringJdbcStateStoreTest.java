@@ -79,21 +79,9 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         monitoringJdbcStateStore.putPendingInstances("test_feed1","test_cluster",dateOne);
         monitoringJdbcStateStore.putPendingInstances("test_feed1","test_cluster",dateTwo);
 
-        System.out.println(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() + " abc1");
+        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() ,2);
         monitoringJdbcStateStore.deletePendingNominalInstances("test_feed1","test_cluster",dateOne);
-        System.out.println(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() + " abc2");
+        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() ,1);
         monitoringJdbcStateStore.deletePendingInstances("test_feed1","test_cluster");
-        //System.out.println(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() + " abc3");
-        //TODO
-        //check for unique contraint in the table
-        //monitoringJdbcStateStore.putMonitoredFeed("test_feed");
-
-//        System.out.println(monitoringJdbcStateStore.getMonitoredFeed("test_feed").getFeedName());
-
-    }
-
-    @Test
-    public void testgetMonitoredFeed() throws Exception {
-
     }
 }
