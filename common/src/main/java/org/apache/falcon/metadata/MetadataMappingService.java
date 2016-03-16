@@ -374,7 +374,7 @@ public class MetadataMappingService
         instanceGraphBuilder.addImportedInstance(context);
     }
     private void updateExportedFeedInstance(WorkflowExecutionContext context) throws FalconException {
-        LOG.info("Adding export feed instance: {}", context.getNominalTimeAsISO8601());
+        LOG.info("Updating export feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addExportedInstance(context);
     }
 }
