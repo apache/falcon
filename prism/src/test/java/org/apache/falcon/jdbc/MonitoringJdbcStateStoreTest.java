@@ -1,30 +1,43 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.falcon.jdbc;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.SchemaHelper;
-import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.openjpa.persistence.OpenJPAEntityManager;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import java.io.File;
 import java.util.Date;
 import java.util.Random;
 
 /**
- * Created by praveen on 8/3/16.
- */
+*Unit test for MonitoringJdbcStateStore.
+ * */
+
 public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     private static final String DB_BASE_DIR = "target/test-data/falcondb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
@@ -69,19 +82,19 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         MonitoringJdbcStateStore monitoringJdbcStateStore = new MonitoringJdbcStateStore();
         monitoringJdbcStateStore.putMonitoredFeed("test_feed1");
         monitoringJdbcStateStore.putMonitoredFeed("test_feed2");
-        Assert.assertEquals("test_feed1",monitoringJdbcStateStore.getMonitoredFeed("test_feed1").getFeedName());
-        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredFeed().size(),2);
+        Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredFeed("test_feed1").getFeedName());
+        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredFeed().size(), 2);
 
         monitoringJdbcStateStore.deleteMonitoringFeed("test_feed1");
         monitoringJdbcStateStore.deleteMonitoringFeed("test_feed2");
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
         Date dateTwo =  SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
-        monitoringJdbcStateStore.putPendingInstances("test_feed1","test_cluster",dateOne);
-        monitoringJdbcStateStore.putPendingInstances("test_feed1","test_cluster",dateTwo);
+        monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateOne);
+        monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateTwo);
 
-        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() ,2);
-        monitoringJdbcStateStore.deletePendingNominalInstances("test_feed1","test_cluster",dateOne);
-        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1","test_cluster").size() ,1);
-        monitoringJdbcStateStore.deletePendingInstances("test_feed1","test_cluster");
+        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 2);
+        monitoringJdbcStateStore.deletePendingNominalInstances("test_feed1", "test_cluster", dateOne);
+        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 1);
+        monitoringJdbcStateStore.deletePendingInstances("test_feed1", "test_cluster");
     }
 }

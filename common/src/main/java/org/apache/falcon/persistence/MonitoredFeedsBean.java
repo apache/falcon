@@ -17,17 +17,33 @@
  */
 package org.apache.falcon.persistence;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Column;
+import javax.persistence.Basic;
 import javax.validation.constraints.NotNull;
 
+//SUSPEND CHECKSTYLE CHECK LineLengthCheck
+/**
+* The Feeds that are to be monitered will be stored in the db.
+* */
 
 @Entity
 @NamedQueries({
-        @NamedQuery(name = PersistenceConstants.GET_MONITERED_INSTANCE, query = "select OBJECT(a) from MonitoredFeedsBean a where a.feedName = :feedName"),
-        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredFeedsBean a where a.feedName = :feedName"),
-        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) from MonitoredFeedsBean a")
+        @NamedQuery(name = PersistenceConstants.GET_MONITERED_INSTANCE, query = "select OBJECT(a) from "
+                + "MonitoredFeedsBean a where a.feedName = :feedName"),
+        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredFeedsBean "
+                + "a where a.feedName = :feedName"),
+        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) "
+                + "from MonitoredFeedsBean a")
 })
 @Table(name="MONITORED_FEEDS")
+//RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class MonitoredFeedsBean {
     @NotNull
     @GeneratedValue(strategy = GenerationType.AUTO)

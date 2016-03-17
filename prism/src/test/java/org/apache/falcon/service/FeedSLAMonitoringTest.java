@@ -137,7 +137,7 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
 //
 //        Assert.assertEquals(FeedSLAMonitoringService.get().pendingInstances.get(feedCluster).size(), 1);
 //    }
-//
+
 //    @Test
 //    public void testEndDateCheck() throws Exception {
 //        Cluster cluster = publishCluster();
