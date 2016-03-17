@@ -250,6 +250,11 @@ public final class ConfigurationStore implements FalconService {
 
     public synchronized void update(EntityType type, Entity entity) throws FalconException {
         if (updatesInProgress.get() == entity) {
+            try {
+                archive(type,entity.getName());
+            } catch (IOException e) {
+                throw new StoreAccessException(e);
+            }
             updateInternal(type, entity);
         } else {
             throw new FalconException(entity.toShortString() + " is not initialized for update");
