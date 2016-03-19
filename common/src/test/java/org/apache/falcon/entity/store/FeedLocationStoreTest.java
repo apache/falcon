@@ -29,16 +29,12 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconRadixUtils;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -125,7 +121,7 @@ public class FeedLocationStoreTest extends AbstractTestBase {
             FileStatus [] files= store.getFs().listStatus(archivePath);
             for(FileStatus f:files){
                 String name = f.getPath().getName();
-                if(name.startsWith(f2.getName())){
+                if (name.startsWith(f2.getName())){
                     isArchived= true;
                     break;
                 }
@@ -156,7 +152,7 @@ public class FeedLocationStoreTest extends AbstractTestBase {
             FileStatus [] files= store.getFs().listStatus(archivePath);
             for(FileStatus f:files){
                 String name = f.getPath().getName();
-                if(name.startsWith(feedName)){
+                if (name.startsWith(feedName)){
                     isArchived= true;
                     break;
                 }
