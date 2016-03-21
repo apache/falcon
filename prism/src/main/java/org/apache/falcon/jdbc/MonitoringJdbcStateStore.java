@@ -53,10 +53,13 @@ public class MonitoringJdbcStateStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_MONITERED_INSTANCE);
         q.setParameter("feedName", feedName);
         List result = q.getResultList();
-        if (result.isEmpty()) {
-            return null;
+        try{
+            if (result.isEmpty()) {
+                return null;
+            }
+        } finally {
+            entityManager.close();
         }
-        entityManager.close();
         return ((MonitoredFeedsBean)result.get(0));
     }
 
@@ -73,10 +76,13 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_FEEDS);
         List result = q.getResultList();
-        if (result.isEmpty()) {
-            return null;
+        try{
+            if (result.isEmpty()) {
+                return null;
+            }
+        } finally {
+            entityManager.close();
         }
-        entityManager.close();
         return result;
     }
 

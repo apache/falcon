@@ -450,7 +450,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
             }
             lastCheckedAt = new Date((Long) state.get("lastCheckedAt"));
             lastSerializedAt = new Date((Long) state.get("lastSerializedAt"));
-            //monitoredFeeds = new ConcurrentHashSet<>(); // will be populated on the onLoad of entities.
             LOG.debug("Restored the service from old state.");
         } catch (IOException | ClassNotFoundException e) {
             throw new FalconException("Couldn't deserialize the old state", e);
