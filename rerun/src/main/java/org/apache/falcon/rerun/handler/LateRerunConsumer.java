@@ -60,7 +60,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
                     || jobStatus.equals("SUSPENDED")) {
                 LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
-                        + "job status is running: {}", message.getWfId());
+                        + "job status is {} for : {}", jobStatus, message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
