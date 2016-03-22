@@ -29,7 +29,7 @@ import java.util.Properties;
  */
 public final class HiveUtil {
     public static final String METASTOREURIS = "hive.metastore.uris";
-    public static final String METASTROE_URI = "hcat.metastore.uri";
+    public static final String METASTORE_URI = "hcat.metastore.uri";
     public static final String NODE = "hcatNode";
     public static final String METASTORE_UGI = "hive.metastore.execute.setugi";
 
@@ -48,7 +48,7 @@ public final class HiveUtil {
         hiveCredentials.put(METASTOREURIS, metaStoreUrl);
         hiveCredentials.put(METASTORE_UGI, "true");
         hiveCredentials.put(NODE, metaStoreUrl.replace("thrift", "hcat"));
-        hiveCredentials.put(METASTROE_URI, metaStoreUrl);
+        hiveCredentials.put(METASTORE_URI, metaStoreUrl);
 
         if (SecurityUtil.isSecurityEnabled()) {
             String principal = ClusterHelper

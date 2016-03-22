@@ -298,7 +298,9 @@ public class SchedulerService implements FalconNotificationService, Notification
                         if (props != null) {
                             isForced = Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_FORCE_RERUN));
                         }
-                        if (isReRun(props)) {
+                        if (isResume(props)) {
+                            DAGEngineFactory.getDAGEngine(instance.getCluster()).resume(instance);
+                        } else if (isReRun(props)) {
                             DAGEngineFactory.getDAGEngine(instance.getCluster()).reRun(instance, props, isForced);
                         }
                     } else {
@@ -325,6 +327,13 @@ public class SchedulerService implements FalconNotificationService, Notification
         private boolean isReRun(Properties props) {
             if (props != null && !props.isEmpty()) {
                 return Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_RERUN));
+            }
+            return false;
+        }
+
+        private boolean isResume(Properties props) {
+            if (props != null && !props.isEmpty()) {
+                return Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_RESUME));
             }
             return false;
         }

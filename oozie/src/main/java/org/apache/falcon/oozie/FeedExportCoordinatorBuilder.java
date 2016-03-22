@@ -53,7 +53,6 @@ public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
     }
 
     public static final String EXPORT_DATASET_NAME = "export-dataset";
-
     public static final String EXPORT_DATAIN_NAME = "export-input";
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(FeedExportCoordinatorBuilder.class);
@@ -63,19 +62,19 @@ public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
     public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
 
         LOG.info("Generating Feed EXPORT coordinator.");
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster((Feed) entity, cluster.getName());
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         if (!FeedHelper.isExportEnabled(feedCluster)) {
             return null;
         }
 
-        if (feedCluster.getValidity().getEnd().before(new Date())) {
+        if ((feedCluster.getValidity() != null) && (feedCluster.getValidity().getEnd().before(new Date()))) {
             LOG.warn("Feed IMPORT is not applicable as Feed's end time for cluster {} is not in the future",
                     cluster.getName());
             return null;
         }
 
         COORDINATORAPP coord = new COORDINATORAPP();
-        initializeCoordAttributes(coord, (Feed) entity, cluster);
+        initializeCoordAttributes(coord, entity, cluster);
         Properties props = createCoordDefaultConfiguration(getEntityName());
         initializeInputPath(coord, cluster, props);
 
@@ -108,8 +107,8 @@ public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
             coord.setInputEvents(new INPUTEVENTS());
         }
 
-        Storage storage = FeedHelper.createStorage(cluster, (Feed) entity);
-        SYNCDATASET syncdataset = createDataSet((Feed) entity, cluster, storage,
+        Storage storage = FeedHelper.createStorage(cluster, entity);
+        SYNCDATASET syncdataset = createDataSet(entity, cluster, storage,
                 EXPORT_DATASET_NAME, LocationType.DATA);
 
         if (syncdataset == null) {
@@ -126,6 +125,7 @@ public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
         datain.setDataset(EXPORT_DATASET_NAME);
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
         datain.getInstance().add(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
+        datain.getInstance().add(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
         return datain;
     }
 
@@ -138,7 +138,7 @@ public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
      * @param storage
      * @param datasetName
      * @param locationType
-     * @return
+     * @return Sync dataset
      * @throws FalconException
      */
     private SYNCDATASET createDataSet(Feed feed, Cluster cluster, Storage storage,

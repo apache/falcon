@@ -1067,8 +1067,8 @@
 
             <dependency>
                 <groupId>com.thinkaurelius.titan</groupId>
-                <artifactId>titan-core-jre6</artifactId>
-                <version>0.4.2</version>
+                <artifactId>titan-core</artifactId>
+                <version>0.5.4</version>
                 <exclusions>
                     <!-- rexster does not work with servlet-api -->
                     <exclusion>
@@ -1097,8 +1097,8 @@
 
             <dependency>
                 <groupId>com.thinkaurelius.titan</groupId>
-                <artifactId>titan-berkeleyje-jre6</artifactId>
-                <version>0.4.2</version>
+                <artifactId>titan-berkeleyje</artifactId>
+                <version>0.5.4</version>
             </dependency>
 
             <dependency>
