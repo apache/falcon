@@ -86,6 +86,7 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
+        <class>org.apache.falcon.persistence.PendingInstanceBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
