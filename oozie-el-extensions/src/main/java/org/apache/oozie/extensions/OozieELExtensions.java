@@ -20,11 +20,14 @@ package org.apache.oozie.extensions;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.command.coord.CoordCommandUtils;
 import org.apache.oozie.coord.CoordELEvaluator;
 import org.apache.oozie.coord.CoordELFunctions;
 import org.apache.oozie.coord.SyncCoordAction;
 import org.apache.oozie.coord.SyncCoordDataset;
+import org.apache.oozie.dependency.ActionDependency;
+import org.apache.oozie.dependency.DependencyChecker;
 import org.apache.oozie.util.ELEvaluator;
 import org.apache.oozie.util.ParamChecker;
 import org.apache.oozie.util.XLog;
@@ -34,8 +37,10 @@ import org.jdom.Text;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -72,15 +77,31 @@ public final class OozieELExtensions {
         //optional input
         if (uristr == null) {
             Element dsEle = getDSElement(eval, dataInName);
-            Configuration conf = new Configuration();
             SyncCoordAction appInst = (SyncCoordAction) eval.getVariable(CoordELFunctions.COORD_ACTION);
+
+            Configuration conf = new Configuration();
+            conf.set(OozieClient.USER_NAME, (String)eval.getVariable(OozieClient.USER_NAME));
             try {
                 ELEvaluator instEval = CoordELEvaluator.createInstancesELEvaluator(dsEle, appInst, conf);
                 StringBuilder instances = new StringBuilder();
-                CoordCommandUtils.resolveInstanceRange(dsEle, instances , appInst, conf, instEval);
-                uristr = CoordCommandUtils.createEarlyURIs(dsEle, instances.toString(),
-                        new StringBuilder(), new StringBuilder());
-                uristr = uristr.replace(CoordELFunctions.INSTANCE_SEPARATOR, ",");
+                StringBuilder urisWithDoneFlag = new StringBuilder();
+                CoordCommandUtils.resolveInstanceRange(dsEle, instances, appInst, conf, instEval);
+                CoordCommandUtils.createEarlyURIs(dsEle, instances.toString(),
+                        new StringBuilder(), urisWithDoneFlag);
+                XLog.getLog(OozieELExtensions.class).debug("Resolved instances for " + dataInName + " : "
+                        + urisWithDoneFlag.toString());
+                // Check if availability flags are present for each instance.
+                ActionDependency actionDep = DependencyChecker.checkForAvailability(urisWithDoneFlag.toString(),
+                        conf, false);
+                String doneFlag = (String) eval.getVariable(dataInName + ".done-flag");
+                uristr = StringUtils.join(stripDoneFlag(actionDep.getAvailableDependencies(), doneFlag), ",");
+                // If no instances are present, point the optional input to empty dir.
+                if (StringUtils.isEmpty(uristr)) {
+                    String emptyDir = (String) eval.getVariable(dataInName + ".empty-dir");
+                    XLog.getLog(OozieELExtensions.class).debug("No instances could be resolved. Passing empty dir : "
+                            + emptyDir);
+                    uristr = emptyDir;
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to resolve instance range for " + dataInName, e);
             }
@@ -108,6 +129,17 @@ public final class OozieELExtensions {
         return uristr;
     }
 
+    private static List<String> stripDoneFlag(List<String> availableDependencies, String doneFlag) {
+        if (StringUtils.isEmpty(doneFlag)) {
+            return availableDependencies;
+        }
+        List<String> strippedAvailableDeps = new ArrayList<>();
+        for (String availableDep : availableDependencies) {
+            strippedAvailableDeps.add(StringUtils.stripEnd(availableDep, "/" + doneFlag));
+        }
+        return strippedAvailableDeps;
+    }
+
     private static Element getDSElement(ELEvaluator eval, String dataInName) {
         Element ele = new Element("datain");
         Element dsEle = new Element("dataset");
@@ -121,7 +153,10 @@ public final class OozieELExtensions {
         String[] children = {"done-flag", "uri-template"};
         for (String child : children) {
             Element childEle = new Element(child);
-            childEle.setContent(new Text(((String) eval.getVariable(dataInName + "." + child)).replace('%', '$')));
+            String text = (String) eval.getVariable(dataInName + "." + child);
+            if (text != null) {
+                childEle.setContent(new Text(text.replace('%', '$')));
+            }
             dsEle.getChildren().add(childEle);
         }
 

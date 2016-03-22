@@ -19,6 +19,10 @@
 package org.apache.oozie.extensions;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
@@ -27,13 +31,23 @@ import org.apache.oozie.coord.CoordELFunctions;
 import org.apache.oozie.coord.SyncCoordAction;
 import org.apache.oozie.coord.SyncCoordDataset;
 import org.apache.oozie.coord.TimeUnit;
+import org.apache.oozie.dependency.FSURIHandler;
+import org.apache.oozie.dependency.URIHandler;
+import org.apache.oozie.dependency.URIHandlerException;
 import org.apache.oozie.service.ConfigurationService;
 import org.apache.oozie.service.ELService;
+import org.apache.oozie.service.Service;
+import org.apache.oozie.service.ServiceException;
 import org.apache.oozie.service.Services;
+import org.apache.oozie.service.URIHandlerService;
 import org.apache.oozie.util.DateUtils;
 import org.apache.oozie.util.ELEvaluator;
+
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -122,23 +136,47 @@ public class TestOozieELExtensions {
         String expuris =
                 "hdfs://localhost:8020/clicks/2009/09/02/10/*/US,hdfs://localhost:8020/clicks/2009/09/02/09/*/US";
         Assert.assertEquals(expuris, CoordELFunctions.evalAndWrap(eval, "${dataIn('clicks', '*/US')}"));
+    }
 
-        //test optional input
+    @Test(dataProvider = "optionalDatasets")
+    public void testDataInOptional(String expuris, String partition, String doneFlag) throws Exception {
+        ELEvaluator eval = createActionStartEvaluator();
         String inName = "clicks";
+        eval.setVariable(".datain.clicks", null);
+        Services.get().setService(DummyURIHandlerService.class);
+
         SyncCoordDataset ds = createDataSet("2007-09-30T010:00Z");
         eval.setVariable(inName + ".frequency", String.valueOf(ds.getFrequency()));
         eval.setVariable(inName + ".freq_timeunit", ds.getTimeUnit().name());
         eval.setVariable(inName + ".timezone", ds.getTimeZone().getID());
         eval.setVariable(inName + ".end_of_duration", Timeunit.NONE.name());
         eval.setVariable(inName + ".initial-instance", OozieELExtensions.formatDateUTC(ds.getInitInstance()));
-        eval.setVariable(inName + ".done-flag", "notused");
+        eval.setVariable(inName + ".done-flag", doneFlag);
         eval.setVariable(inName + ".uri-template", ds.getUriTemplate());
         eval.setVariable(inName + ".start-instance", "now(-1,0)");
         eval.setVariable(inName + ".end-instance", "now(0,0)");
-        // TODO Had to comment this out for this test to PASS else NPE in
-        // TODO org.apache.oozie.command.coord.CoordCommandUtils.createEarlyURIs(CoordCommandUtils.java:359)
-        // eval.setVariable(".datain.clicks", null);
-        Assert.assertEquals(expuris, CoordELFunctions.evalAndWrap(eval, "${dataIn('clicks', '*/US')}"));
+        eval.setVariable(OozieClient.USER_NAME, "test");
+        eval.setVariable(inName + ".empty-dir", "hdfs://localhost:8020/projects/falcon/staging/EMPTY_DIR_DONT_DELETE");
+        Assert.assertEquals(CoordELFunctions.evalAndWrap(eval, "${dataIn('clicks', '" + partition + "')}"), expuris);
+    }
+
+    @DataProvider(name = "optionalDatasets")
+    public Object[][] getOptionalDatasets() {
+        return new Object[][] {
+            // With partitions and availability flag. All instances available.
+            {"hdfs://localhost:8020/clicks/2009/09/02/10/*/US,hdfs://localhost:8020/clicks/2009/09/02/09/*/US",
+                "*/US", "_DONE", },
+            // With availability flag. All instances missing
+            {"hdfs://localhost:8020/projects/falcon/staging/EMPTY_DIR_DONT_DELETE", "null", "_FINISH"},
+            // No availability flag. One instance missing
+            {"hdfs://localhost:8020/clicks/2009/09/02/09", "null", ""},
+            // With availability flag. One instance missing.
+            {"hdfs://localhost:8020/clicks/2009/09/02/10", "null", "_SUCCESS"},
+            // No availability flag and partition. One instance missing
+            {"hdfs://localhost:8020/clicks/2009/09/02/09/US", "US", ""},
+            // With availability flag and partition. One instance missing.
+            {"hdfs://localhost:8020/clicks/2009/09/02/10/US", "US", "_SUCCESS"},
+        };
     }
 
     @Test
@@ -308,5 +346,56 @@ public class TestOozieELExtensions {
         ELEvaluator eval = Services.get().get(ELService.class).createEvaluator("coord-action-start");
         CoordELFunctions.configureEvaluator(eval, null, appInst);
         return eval;
+    }
+
+    // A mock URIHandlerService that simulates availability of data as per testcase requirement
+    private static class DummyURIHandlerService extends URIHandlerService {
+        private URIHandler mockHandler = Mockito.mock(FSURIHandler.class);
+
+        @Override
+        public void init(Services services) throws ServiceException {
+            try {
+                Mockito.when(mockHandler.exists((URI)Mockito.argThat(new URIMatcher()),
+                        Mockito.any(Configuration.class), Mockito.matches("test"))).thenReturn(true);
+                Mockito.when(mockHandler.getURIWithDoneFlag(Mockito.anyString(),
+                        Mockito.anyString())).thenCallRealMethod();
+            } catch (URIHandlerException e) {
+                throw new ServiceException(e);
+            }
+        }
+
+        @Override
+        public void destroy() {
+
+        }
+
+        public URIHandler getURIHandler(URI uri) {
+            return mockHandler;
+        }
+
+        @Override
+        public Class<? extends Service> getInterface() {
+            return URIHandlerService.class;
+        }
+    }
+
+    private static class URIMatcher extends ArgumentMatcher {
+        private List<URI> availableURIs = new ArrayList<>();
+
+        public URIMatcher() {
+            try {
+                availableURIs.add(new URI("hdfs://localhost:8020/clicks/2009/09/02/10/_DONE"));
+                availableURIs.add(new URI("hdfs://localhost:8020/clicks/2009/09/02/09/_DONE"));
+                availableURIs.add(new URI("hdfs://localhost:8020/clicks/2009/09/02/10/_SUCCESS"));
+                availableURIs.add(new URI("hdfs://localhost:8020/clicks/2009/09/02/09"));
+            } catch (URISyntaxException e) {
+                //Shouldn't happen
+            }
+        }
+
+        @Override
+        public boolean matches(Object o) {
+            return availableURIs.contains(o);
+        }
     }
 }

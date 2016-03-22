@@ -347,8 +347,8 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateWorkflowInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
-        this.dfsCluster.getFileSystem().mkdirs(new Path(ClusterHelper.getLocation(cluster,
-                ClusterLocationType.STAGING).getPath()), HadoopClientFactory.ALL_PERMISSION);
+        String stagingPath = ClusterHelper.getLocation(cluster, ClusterLocationType.STAGING).getPath();
+        this.dfsCluster.getFileSystem().mkdirs(new Path(stagingPath), HadoopClientFactory.ALL_PERMISSION);
         clusterEntityParser.validate(cluster);
         String workingDirPath = cluster.getLocations().getLocations().get(0).getPath() + "/working";
         Assert.assertEquals(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(), workingDirPath);
@@ -356,6 +356,11 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Assert.assertTrue(workingDirStatus.isDirectory());
         Assert.assertEquals(workingDirStatus.getPermission(), HadoopClientFactory.READ_EXECUTE_PERMISSION);
         Assert.assertEquals(workingDirStatus.getOwner(), UserGroupInformation.getLoginUser().getShortUserName());
+
+        FileStatus emptyDirStatus = this.dfsCluster.getFileSystem().getFileStatus(new Path(stagingPath
+                + "/" + ClusterHelper.EMPTY_DIR_NAME));
+        Assert.assertEquals(emptyDirStatus.getPermission(), HadoopClientFactory.READ_ONLY_PERMISSION);
+        Assert.assertEquals(emptyDirStatus.getOwner(), UserGroupInformation.getLoginUser().getShortUserName());
 
         String stagingSubdirFeed = cluster.getLocations().getLocations().get(0).getPath() + "/falcon/workflows/feed";
         String stagingSubdirProcess =

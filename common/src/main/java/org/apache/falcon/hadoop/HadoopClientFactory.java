@@ -57,6 +57,8 @@ public final class HadoopClientFactory {
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
 
     private static final HadoopClientFactory INSTANCE = new HadoopClientFactory();
+    public static final FsPermission READ_ONLY_PERMISSION =
+            new FsPermission(FsAction.READ, FsAction.READ, FsAction.READ);
 
     private HadoopClientFactory() {
     }
