@@ -33,6 +33,8 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconRadixUtils;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -40,6 +42,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 
@@ -49,7 +52,6 @@ import java.util.Collection;
  */
 public class FeedLocationStoreTest extends AbstractTestBase {
     private ConfigurationStore store;
-
 
     @BeforeClass
     public void initConfigStore() throws Exception {
@@ -65,7 +67,6 @@ public class FeedLocationStoreTest extends AbstractTestBase {
         StartupProperties.get().setProperty("configstore.listeners", listeners);
         store = ConfigurationStore.get();
         store.init();
-
         CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
 
     }
@@ -102,10 +103,41 @@ public class FeedLocationStoreTest extends AbstractTestBase {
     }
 
     @Test
+    public void testOnUpdate() throws FalconException{
+        Feed f1 = createFeed("f1");
+        f1.getLocations().getLocations().add(createLocation(LocationType.DATA,
+                "/projects/cas/data/hourly/2014/09/09/09"));
+        store.publish(EntityType.FEED, f1);
+
+        Feed f2 = createFeed("f1");
+        f2.getLocations().getLocations().add(createLocation(LocationType.DATA,
+                "/projects/cas/data/monthly"));
+        store.initiateUpdate(f2);
+        store.update(EntityType.FEED, f2);
+        store.cleanupUpdateInit();
+        boolean isArchived = false;
+        try {
+            Path archivePath = new Path(store.getStorePath(), "archive" + Path.SEPARATOR + "FEED");
+            FileStatus [] files= store.getFs().listStatus(archivePath);
+            for(FileStatus f:files){
+                String name = f.getPath().getName();
+                if (name.startsWith(f2.getName())){
+                    isArchived= true;
+                    break;
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        Assert.assertTrue(isArchived);
+    }
+
+
+    @Test
     public void testOnRemove() throws FalconException{
         int initialSize = FeedLocationStore.get().store.getSize();
-
-        Feed f1 = createFeed("f1ForRemove");
+        String feedName = "f1ForRemove";
+        Feed f1 = createFeed(feedName);
         f1.getLocations().getLocations().add(createLocation(LocationType.DATA,
                 "/projects/cas/data/hourly/2014/09/09/09"));
         f1.getLocations().getLocations().add(createLocation(LocationType.STATS,
@@ -113,9 +145,23 @@ public class FeedLocationStoreTest extends AbstractTestBase {
 
         store.publish(EntityType.FEED, f1);
         Assert.assertEquals(FeedLocationStore.get().store.getSize() - initialSize, 4);
-        store.remove(EntityType.FEED, "f1ForRemove");
+        store.remove(EntityType.FEED, feedName);
+        boolean isArchived = false;
+        try {
+            Path archivePath = new Path(store.getStorePath(), "archive" + Path.SEPARATOR + "FEED");
+            FileStatus [] files= store.getFs().listStatus(archivePath);
+            for(FileStatus f:files){
+                String name = f.getPath().getName();
+                if (name.startsWith(feedName)){
+                    isArchived= true;
+                    break;
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        Assert.assertTrue(isArchived);
         Assert.assertEquals(FeedLocationStore.get().store.getSize(), initialSize);
-
     }
 
 

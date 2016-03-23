@@ -2,8 +2,7 @@
 
 [[CommonCLI][Common CLI Options]]
 
-Update operation allows an already submitted/scheduled entity to be updated. Cluster and datasource updates are
-currently not allowed.
+Update operation allows an already submitted/scheduled entity to be updated and put it into the archive.Archive path is defined in startup.properties in variable "config.store.uri". Cluster and datasource updates are currently not allowed.
 
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update -file <<path_to_file>>
