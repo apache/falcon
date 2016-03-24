@@ -73,7 +73,6 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         falconJPAService.init();
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
-       // registerServices();
     }
 
     @Test
@@ -93,7 +92,7 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateTwo);
 
         Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 2);
-        monitoringJdbcStateStore.deletePendingNominalInstances("test_feed1", "test_cluster", dateOne);
+        monitoringJdbcStateStore.deletePendingInstance("test_feed1", "test_cluster", dateOne);
         Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 1);
         monitoringJdbcStateStore.deletePendingInstances("test_feed1", "test_cluster");
     }

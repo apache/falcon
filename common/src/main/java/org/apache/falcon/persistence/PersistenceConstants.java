@@ -29,7 +29,7 @@ public final class PersistenceConstants {
     public static final String GET_ALL_MONITORING_FEEDS = "GET_ALL_MONITORING_FEEDS";
     public static final String GET_PENDING_INSTANCES = "GET_PENDING_INSTANCES";
     public static final String DELETE_PENDING_NOMINAL_INSTANCES = "DELETE_PENDING_NOMINAL_INSTANCES";
-    public static final String DELETE_ALL_PENDING_INSTANCES = "DELETE_ALL_PENDING_INSTANCES";
+    public static final String DELETE_ALL_INSTANCES_FOR_FEED = "DELETE_ALL_INSTANCES_FOR_FEED";
     public static final String GET_DATE_FOR_PENDING_INSTANCES = "GET_DATE_FOR_PENDING_INSTANCES";
     public static final String GET_ALL_PENDING_INSTANCES = "GET_ALL_PENDING_INSTANCES";
 }

@@ -21,6 +21,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.falcon.persistence.MonitoredFeedsBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.persistence.PersistenceConstants;
+import org.apache.falcon.persistence.ResultNotFoundException;
 import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
@@ -38,14 +39,18 @@ public class MonitoringJdbcStateStore {
         return FalconJPAService.get().getEntityManager();
     }
 
+
     public void putMonitoredFeed(String feedName){
+
         MonitoredFeedsBean monitoredFeedsBean = new MonitoredFeedsBean();
         monitoredFeedsBean.setFeedName(feedName);
-
         EntityManager entityManager = getEntityManager();
-        beginTransaction(entityManager);
-        entityManager.persist(monitoredFeedsBean);
-        commitAndCloseTransaction(entityManager);
+        try {
+            beginTransaction(entityManager);
+            entityManager.persist(monitoredFeedsBean);
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
     }
 
     public MonitoredFeedsBean getMonitoredFeed(String feedName){
@@ -53,7 +58,7 @@ public class MonitoringJdbcStateStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_MONITERED_INSTANCE);
         q.setParameter("feedName", feedName);
         List result = q.getResultList();
-        try{
+        try {
             if (result.isEmpty()) {
                 return null;
             }
@@ -68,17 +73,20 @@ public class MonitoringJdbcStateStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_MONITORED_INSTANCES);
         q.setParameter("feedName", feedName);
-        q.executeUpdate();
-        commitAndCloseTransaction(entityManager);
+        try{
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
     }
 
-    public List<MonitoredFeedsBean> getAllMonitoredFeed(){
+    public List<MonitoredFeedsBean> getAllMonitoredFeed() throws ResultNotFoundException{
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_FEEDS);
         List result = q.getResultList();
         try{
             if (result.isEmpty()) {
-                return null;
+                throw new ResultNotFoundException("No Feed has been scheduled for monitoring.");
             }
         } finally {
             entityManager.close();
@@ -86,59 +94,72 @@ public class MonitoringJdbcStateStore {
         return result;
     }
 
-    public void deletePendingNominalInstances(String feedName, String clusterName , Date nominalTime){
+    public void deletePendingInstance(String feedName, String clusterName , Date nominalTime){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_PENDING_NOMINAL_INSTANCES);
         q.setParameter("feedName", feedName);
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
-        q.executeUpdate();
-        commitAndCloseTransaction(entityManager);
+        try{
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
     }
 
     public void deletePendingInstances(String feedName, String clusterName){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_PENDING_INSTANCES);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_INSTANCES_FOR_FEED);
         q.setParameter("feedName", feedName);
         q.setParameter("clusterName", clusterName);
-        q.executeUpdate();
-        commitAndCloseTransaction(entityManager);
+        try{
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
     }
 
     public void putPendingInstances(String feed, String clusterName, Date nominalTime){
+        EntityManager entityManager = getEntityManager();
         PendingInstanceBean pendingInstanceBean = new PendingInstanceBean();
         pendingInstanceBean.setFeedName(feed);
         pendingInstanceBean.setClusterName(clusterName);
         pendingInstanceBean.setNominalTime(nominalTime);
 
-        EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         entityManager.persist(pendingInstanceBean);
         commitAndCloseTransaction(entityManager);
     }
 
-    public List<Date> getNominalInstances(String feedName, String clusterName){
+    public List<Date> getNominalInstances(String feedName, String clusterName) throws ResultNotFoundException{
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_DATE_FOR_PENDING_INSTANCES);
         q.setParameter("feedName", feedName);
         q.setParameter("clusterName", clusterName);
         List result = q.getResultList();
-        if (CollectionUtils.isEmpty(result)) {
-            return null;
+        try{
+            if (CollectionUtils.isEmpty(result)) {
+                throw new ResultNotFoundException(feedName + " with " + clusterName + "Not Found");
+            }
+        } finally {
+            entityManager.close();
         }
-        entityManager.close();
         return result;
     }
     public List<PendingInstanceBean> getAllInstances(){
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PENDING_INSTANCES);
         List result = q.getResultList();
-        if (CollectionUtils.isEmpty(result)) {
-            return null;
+
+        try {
+            if (CollectionUtils.isEmpty(result)) {
+                return null;
+            }
+        } finally{
+            entityManager.close();
         }
-        entityManager.close();
         return result;
     }
 
