@@ -42,7 +42,7 @@ public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     public static final String WORKINGDIR = "working";
     public static final String NO_USER_BROKER_URL = "NA";
-
+    public static final String EMPTY_DIR_NAME = "EMPTY_DIR_DONT_DELETE";
 
 
     private ClusterHelper() {
@@ -191,5 +191,10 @@ public final class ClusterHelper {
             }
         }
         return null;
+    }
+
+    public static String getEmptyDir(Cluster cluster) {
+        return getStorageUrl(cluster) + getLocation(cluster, ClusterLocationType.STAGING).getPath()
+                + "/" + EMPTY_DIR_NAME;
     }
 }

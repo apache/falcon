@@ -158,20 +158,20 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
             Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
 
+            if (coord.getDatasets() == null) {
+                coord.setDatasets(new DATASETS());
+            }
+
+            SYNCDATASET syncdataset = createDataSet(feed, cluster, storage, input.getName(), LocationType.DATA);
+            if (syncdataset == null) {
+                return;
+            }
+            coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+
             if (!input.isOptional()) {
-                if (coord.getDatasets() == null) {
-                    coord.setDatasets(new DATASETS());
-                }
                 if (coord.getInputEvents() == null) {
                     coord.setInputEvents(new INPUTEVENTS());
                 }
-
-                SYNCDATASET syncdataset = createDataSet(feed, cluster, storage, input.getName(), LocationType.DATA);
-                if (syncdataset == null) {
-                    return;
-                }
-                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
-
                 DATAIN datain = createDataIn(input);
                 coord.getInputEvents().getDataIn().add(datain);
             }

@@ -301,6 +301,10 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                     "falcon/workflows/feed", HadoopClientFactory.ALL_PERMISSION);
             createStagingSubdirs(fs, cluster, stagingLocation,
                     "falcon/workflows/process", HadoopClientFactory.ALL_PERMISSION);
+
+            // Create empty dirs for optional input
+            createStagingSubdirs(fs, cluster, stagingLocation,
+                    ClusterHelper.EMPTY_DIR_NAME, HadoopClientFactory.READ_ONLY_PERMISSION);
         }
     }
 

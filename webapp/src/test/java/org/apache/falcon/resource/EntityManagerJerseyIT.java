@@ -198,6 +198,8 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         schedule(context);
+        waitForStatus(EntityType.PROCESS.name(), context.getProcessName(), START_INSTANCE,
+                InstancesResult.WorkflowStatus.SUCCEEDED);
     }
 
     public void testDryRun() throws Exception {
