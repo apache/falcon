@@ -66,8 +66,7 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
         org.apache.falcon.oozie.sqoop.ACTION sqoopImport = actionJaxbElement.getValue();
 
         Properties props = new Properties();
-        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath);
-        sqoopImport.getJobXml().add("${wf:appPath()}/conf/hive-site.xml");
+        ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath, sqoopImport);
         OozieUtils.marshalSqoopAction(action, actionJaxbElement);
 
         addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);

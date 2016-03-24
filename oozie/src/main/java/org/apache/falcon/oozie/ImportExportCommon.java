@@ -28,6 +28,7 @@ import org.apache.falcon.entity.v0.datasource.Credential;
 import org.apache.falcon.entity.v0.datasource.Credentialtype;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.oozie.sqoop.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.hadoop.fs.Path;
@@ -88,7 +89,8 @@ public final class ImportExportCommon {
     }
 
     public static void addHCatalogProperties(Properties props, Feed entity, Cluster cluster,
-        WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder, Path buildPath)
+                                             WORKFLOWAPP workflow, OozieOrchestrationWorkflowBuilder<Feed> wBuilder,
+                                             Path buildPath, ACTION sqoopAction)
         throws FalconException {
         if (FeedHelper.getStorageType(entity, cluster) == Storage.TYPE.TABLE) {
             wBuilder.createHiveConfiguration(cluster, buildPath, "");
@@ -98,6 +100,7 @@ public final class ImportExportCommon {
                 wBuilder.addHCatalogCredentials(workflow, cluster,
                         OozieOrchestrationWorkflowBuilder.HIVE_CREDENTIAL_NAME, FALCON_IMPORT_SQOOP_ACTIONS);
             }
+            sqoopAction.getJobXml().add("${wf:appPath()}/conf/hive-site.xml");
         }
     }
     private static void addHCatalogShareLibs(Properties props) throws FalconException {

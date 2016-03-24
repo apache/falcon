@@ -125,7 +125,6 @@ public class FeedExportCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> 
         datain.setDataset(EXPORT_DATASET_NAME);
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
         datain.getInstance().add(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
-        datain.getInstance().add(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
         return datain;
     }
 
