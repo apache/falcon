@@ -39,11 +39,10 @@ import java.util.Random;
  * */
 
 public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
-    private static final String DB_BASE_DIR = "target/test-data/falcondb";
+    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
-    protected static final String DB_UPDATE_SQL_FILE = DB_BASE_DIR + File.separator + "update.sql";
     protected LocalFileSystem fs = new LocalFileSystem();
 
     private static Random randomValGenerator = new Random();
@@ -63,8 +62,7 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     }
 
     @BeforeClass
-    public void setup() throws Exception {
-        System.out.println("Executing setup");
+    public void setup() throws Exception{
         StateStoreProperties.get().setProperty(FalconJPAService.URL, url);
         Configuration localConf = new Configuration();
         fs.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
