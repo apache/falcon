@@ -38,14 +38,35 @@
     </Match>
 
     <Match>
-        <Class name="org.apache.falcon.state.store.jdbc.EntityBean" />
+        <Class name="org.apache.falcon.persistence.EntityBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL" />
     </Match>
 
     <Match>
-        <Class name="org.apache.falcon.state.store.jdbc.InstanceBean" />
+        <Class name="org.apache.falcon.persistence.InstanceBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL" />
     </Match>
+
+    <Match>
+        <Class name="org.apache.falcon.persistence.PendingInstanceBean" />
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
+    </Match>
+
+    <!--<Match>-->
+        <!--<Class name="org.apache.falcon.persistence.PendingInstanceBean" />-->
+        <!--<Bug pattern="UWF_UNWRITTEN_FIELD" />-->
+    <!--</Match>-->
+
+
+    <Match>
+        <Class name="org.apache.falcon.persistence.MonitoredFeedsBean" />
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
+    </Match>
+
+    <!--<Match>-->
+        <!--<Class name="org.apache.falcon.persistence.MonitoredFeedsBean" />-->
+        <!--<Bug pattern="UWF_UNWRITTEN_FIELD" />-->
+    <!--</Match>-->
 
     <Match>
         <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />

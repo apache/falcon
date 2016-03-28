@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.falcon.state.store.service;
+package org.apache.falcon.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.service.FalconService;
-import org.apache.falcon.state.store.jdbc.EntityBean;
-import org.apache.falcon.state.store.jdbc.InstanceBean;
+import org.apache.falcon.persistence.EntityBean;
+import org.apache.falcon.persistence.InstanceBean;
 import org.apache.falcon.util.StateStoreProperties;
 import org.apache.openjpa.persistence.OpenJPAEntityManagerFactorySPI;
 import org.slf4j.Logger;

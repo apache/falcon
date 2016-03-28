@@ -133,6 +133,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
             ParseException, InterruptedException {
         // submit cluster and feeds
         submitClusterAndFeeds();
+
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
