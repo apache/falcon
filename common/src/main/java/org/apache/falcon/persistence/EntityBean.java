@@ -36,13 +36,13 @@ import java.util.List;
  */
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "GET_ENTITY", query = "select OBJECT(a) from EntityBean a where a.id = :id"),
-        @NamedQuery(name = "GET_ENTITY_FOR_STATE", query = "select OBJECT(a) from EntityBean a where a.state = :state"),
-        @NamedQuery(name = "UPDATE_ENTITY", query = "update EntityBean a set a.state = :state, a.name = :name, a.type = :type where a.id = :id"),
-        @NamedQuery(name = "GET_ENTITIES_FOR_TYPE", query = "select OBJECT(a) from EntityBean a where a.type = :type"),
-        @NamedQuery(name = "GET_ENTITIES", query = "select OBJECT(a) from EntityBean a"),
-        @NamedQuery(name = "DELETE_ENTITY", query = "delete from EntityBean a where a.id = :id"),
-        @NamedQuery(name = "DELETE_ENTITIES", query = "delete from EntityBean")})
+        @NamedQuery(name = PersistenceConstants.GET_ENTITY, query = "select OBJECT(a) from EntityBean a where a.id = :id"),
+        @NamedQuery(name = PersistenceConstants.GET_ENTITY_FOR_STATE, query = "select OBJECT(a) from EntityBean a where a.state = :state"),
+        @NamedQuery(name = PersistenceConstants.UPDATE_ENTITY, query = "update EntityBean a set a.state = :state, a.name = :name, a.type = :type where a.id = :id"),
+        @NamedQuery(name = PersistenceConstants.GET_ENTITIES_FOR_TYPE, query = "select OBJECT(a) from EntityBean a where a.type = :type"),
+        @NamedQuery(name = PersistenceConstants.GET_ENTITIES, query = "select OBJECT(a) from EntityBean a"),
+        @NamedQuery(name = PersistenceConstants.DELETE_ENTITY, query = "delete from EntityBean a where a.id = :id"),
+        @NamedQuery(name = PersistenceConstants.DELETE_ENTITIES, query = "delete from EntityBean")})
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 @Table(name = "ENTITIES")
 public class EntityBean {
