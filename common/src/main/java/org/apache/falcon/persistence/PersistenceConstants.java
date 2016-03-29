@@ -24,7 +24,7 @@ public final class PersistenceConstants {
     private PersistenceConstants(){
 
     }
-    public static final String  GET_MONITERED_INSTANCE = "GET_MONITERED_INSTANCE";
+    public static final String GET_MONITERED_INSTANCE = "GET_MONITERED_INSTANCE";
     public static final String DELETE_MONITORED_INSTANCES = "DELETE_MONITORED_INSTANCES";
     public static final String GET_ALL_MONITORING_FEEDS = "GET_ALL_MONITORING_FEEDS";
     public static final String GET_PENDING_INSTANCES = "GET_PENDING_INSTANCES";
