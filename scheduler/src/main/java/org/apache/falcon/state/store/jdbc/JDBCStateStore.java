@@ -104,10 +104,10 @@ public final class JDBCStateStore extends AbstractStateStore {
         Query q = entityManager.createNamedQuery("GET_ENTITY");
         q.setParameter("id", id.getKey());
         List result = q.getResultList();
+        entityManager.close();
         if (result.isEmpty()) {
             return null;
         }
-        entityManager.close();
         return ((EntityBean)result.get(0));
     }
 
