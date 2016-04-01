@@ -172,6 +172,12 @@
                     <artifactId>hadoop-distcp</artifactId>
                     <scope>compile</scope>
                 </dependency>
+
+                <dependency>
+                    <groupId>org.apache.derby</groupId>
+                    <artifactId>derby</artifactId>
+                    <version>${derby.version}</version>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>

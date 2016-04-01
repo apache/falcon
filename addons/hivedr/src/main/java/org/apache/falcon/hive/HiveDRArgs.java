@@ -64,6 +64,9 @@ public enum HiveDRArgs {
     REPLICATION_MAX_MAPS("replicationMaxMaps", "number of maps", false),
     DISTCP_MAX_MAPS("distcpMaxMaps", "number of maps", false),
 
+    // Set to true if TDE is enabled
+    TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
+
     // Map Bandwidth
     DISTCP_MAP_BANDWIDTH("distcpMapBandwidth", "map bandwidth in mb", false),
 
