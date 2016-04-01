@@ -22,7 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.falcon.cli.CLIParser;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.StateStoreProperties;
 
@@ -241,8 +241,10 @@ public class FalconStateStoreDBCLI {
         }
         args.add("-indexes");
         args.add("true");
-        args.add("org.apache.falcon.state.store.jdbc.EntityBean");
-        args.add("org.apache.falcon.state.store.jdbc.InstanceBean");
+        args.add("org.apache.falcon.persistence.EntityBean");
+        args.add("org.apache.falcon.persistence.InstanceBean");
+        args.add("org.apache.falcon.persistence.PendingInstanceBean");
+        args.add("org.apache.falcon.persistence.MonitoredFeedsBean");
         return args.toArray(new String[args.size()]);
     }
 

@@ -19,7 +19,7 @@ package org.apache.falcon.state.service;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.state.AbstractSchedulerTestBase;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

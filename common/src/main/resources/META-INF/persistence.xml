@@ -23,8 +23,10 @@
     <persistence-unit name="falcon-derby" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
-        <class>org.apache.falcon.state.store.jdbc.EntityBean</class>
-        <class>org.apache.falcon.state.store.jdbc.InstanceBean</class>
+        <class>org.apache.falcon.persistence.EntityBean</class>
+        <class>org.apache.falcon.persistence.InstanceBean</class>
+        <class>org.apache.falcon.persistence.PendingInstanceBean</class>
+        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -32,8 +34,9 @@
             <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
 
             <property name="openjpa.MetaDataFactory"
-                      value="jpa(Types=org.apache.falcon.state.store.EntityBean;
-                org.apache.falcon.state.store.InstanceBean)"></property>
+                      value="jpa(Types=org.apache.falcon.persistence.EntityBean;
+                org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
+                org.apache.falcon.persistence.MonitoredFeedsBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -50,8 +53,10 @@
     <persistence-unit name="falcon-mysql" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
-        <class>org.apache.falcon.state.store.jdbc.EntityBean</class>
-        <class>org.apache.falcon.state.store.jdbc.InstanceBean</class>
+        <class>org.apache.falcon.persistence.EntityBean</class>
+        <class>org.apache.falcon.persistence.InstanceBean</class>
+        <class>org.apache.falcon.persistence.PendingInstanceBean</class>
+        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -59,8 +64,9 @@
             <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
 
             <property name="openjpa.MetaDataFactory"
-                      value="jpa(Types=org.apache.falcon.state.store.EntityBean;
-                org.apache.falcon.state.store.InstanceBean)"></property>
+                      value="jpa(Types=org.apache.falcon.persistence.EntityBean;
+                org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
+                org.apache.falcon.persistence.MonitoredFeedsBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -77,8 +83,10 @@
     <persistence-unit name="falcon-postgresql" transaction-type="RESOURCE_LOCAL">
         <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
 
-        <class>org.apache.falcon.state.store.jdbc.EntityBean</class>
-        <class>org.apache.falcon.state.store.jdbc.InstanceBean</class>
+        <class>org.apache.falcon.persistence.EntityBean</class>
+        <class>org.apache.falcon.persistence.InstanceBean</class>
+        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
+        <class>org.apache.falcon.persistence.PendingInstanceBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -86,8 +94,9 @@
             <property name="openjpa.ConnectionProperties" value="**INVALID**"/> <!--Set by StoreService at init time -->
 
             <property name="openjpa.MetaDataFactory"
-                      value="jpa(Types=org.apache.falcon.state.store.EntityBean;
-                org.apache.falcon.state.store.InstanceBean)"></property>
+                      value="jpa(Types=org.apache.falcon.persistence.EntityBean;
+                org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
+                org.apache.falcon.persistence.MonitoredFeedsBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>

@@ -121,40 +121,6 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-05T00:00Z", null, "*");
     }
 
-    @Test
-    public void  testMakeFeedInstanceAvailable() {
-        Date instanceDate = SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
-        Date nextInstanceDate = SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
-        Pair<String, String> feedCluster = new Pair<>("testFeed", "testCluster");
-
-        BlockingQueue<Date> missingInstances = new LinkedBlockingQueue<>();
-        missingInstances.add(instanceDate);
-        missingInstances.add(nextInstanceDate);
-
-        FeedSLAMonitoringService.get().initializeService();
-        FeedSLAMonitoringService.get().pendingInstances.put(feedCluster, missingInstances);
-        FeedSLAMonitoringService.get().makeFeedInstanceAvailable("testFeed", "testCluster", instanceDate);
-
-        Assert.assertEquals(FeedSLAMonitoringService.get().pendingInstances.get(feedCluster).size(), 1);
-    }
-
-    @Test
-    public void testEndDateCheck() throws Exception {
-        Cluster cluster = publishCluster();
-        publishFeed(cluster, "hours(1)", "2015-11-20 00:00 UTC", "2015-11-20 05:00 UTC");
-        Pair<String, String> feedCluster = new Pair<>(FEED_NAME, CLUSTER_NAME);
-
-        FeedSLAMonitoringService service = FeedSLAMonitoringService.get();
-        service.initializeService();
-        service.queueSize = 100;
-        service.monitoredFeeds.add(FEED_NAME);
-        Date from = SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
-        Date to = SchemaHelper.parseDateUTC("2015-11-25T00:00Z");
-        service.addNewPendingFeedInstances(from, to);
-        // check that instances after feed's end date are not added.
-        Assert.assertEquals(service.pendingInstances.get(feedCluster).size(), 5);
-    }
-
     private Cluster publishCluster() throws FalconException {
         Cluster cluster = new Cluster();
         cluster.setName(CLUSTER_NAME);
