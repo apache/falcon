@@ -171,7 +171,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         prism.getProcessHelper().getProcessInstanceSuspend(processName, param);
         prism.getProcessHelper().getProcessInstanceResume(processName, param);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, param);
-        InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
+        InstanceUtil.validateResponse(r, 6, 1, 0, 2, 0);
     }
 
     /**
