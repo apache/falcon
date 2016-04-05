@@ -17,6 +17,12 @@
  */
 package org.apache.falcon.jdbc;
 
+import java.io.File;
+import java.util.Date;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -26,19 +32,11 @@ import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.io.File;
-import java.util.Date;
-import java.util.Random;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
 /**
 *Unit test for MonitoringJdbcStateStore.
