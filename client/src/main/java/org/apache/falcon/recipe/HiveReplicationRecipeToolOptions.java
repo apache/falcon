@@ -54,6 +54,7 @@ public enum HiveReplicationRecipeToolOptions {
     CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal",
             "Write EP of cluster on which replication job runs", false),
     CLUSTER_FOR_JOB_RUN_WRITE_EP("clusterForJobRunWriteEP", "Write EP of cluster on which replication job runs", false),
+    TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
     HIVE_DR_JOB_NAME("drJobName", "Unique hive DR job name", false);
 
     private final String name;

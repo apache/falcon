@@ -142,6 +142,8 @@
             <arg>${clusterForJobRunWriteEP}</arg>
             <arg>-clusterForJobNNKerberosPrincipal</arg>
             <arg>${clusterForJobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
             <arg>-drJobName</arg>
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>
@@ -240,6 +242,8 @@
             <arg>${clusterForJobRunWriteEP}</arg>
             <arg>-clusterForJobNNKerberosPrincipal</arg>
             <arg>${clusterForJobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
             <arg>-drJobName</arg>
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>
@@ -340,6 +344,8 @@
             <arg>${clusterForJobRunWriteEP}</arg>
             <arg>-clusterForJobNNKerberosPrincipal</arg>
             <arg>${clusterForJobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
             <arg>-drJobName</arg>
             <arg>${drJobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>

@@ -53,6 +53,11 @@ Following is the prerequisites to use Hive DR
    in Falcon conf client.properties. Now update the copied recipe properties file with required attributes to replicate metadata and data from source cluster to
    destination cluster for Hive DR.
 
+   * *Note : HiveDR on TDE encrypted clusters*
+   When submitting HiveDR recipe in a kerberos secured setup, it is possible that the source and target staging directories
+   are encrypted using Transparent Data Encryption (TDE). If your cluster dirs are TDE encrypted, please set
+   "tdeEncryptionEnabled=true" in the recipe properties file. Default value for this property is "false".
+
 ---+++ Submit Hive DR recipe
    After updating the recipe properties file with required attributes in directory path or in falcon.recipe.path,
    there are two ways of submitting the Hive DR recipe:
@@ -72,3 +77,4 @@ Following is the prerequisites to use Hive DR
 *Note:*
    * Recipe properties file, workflow file and template file name must match to the recipe name, it must be unique and in the same directory.
    * If kerberos security is enabled on cluster, use the secure templates for Hive DR from $FALCON_HOME/data-mirroring/hive-disaster-recovery .
+

@@ -120,7 +120,7 @@ public class HiveDROptions {
     }
 
     public int getMaxEvents() {
-        return Integer.valueOf(context.get(HiveDRArgs.MAX_EVENTS));
+        return Integer.parseInt(context.get(HiveDRArgs.MAX_EVENTS));
     }
 
     public boolean shouldKeepHistory() {
@@ -145,6 +145,11 @@ public class HiveDROptions {
 
     public String getExecutionStage() {
         return context.get(HiveDRArgs.EXECUTION_STAGE);
+    }
+
+    public boolean isTDEEncryptionEnabled() {
+        return StringUtils.isEmpty(context.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED))
+                ? false : Boolean.valueOf(context.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED));
     }
 
     public boolean shouldBlock() {
