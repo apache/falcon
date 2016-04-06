@@ -139,7 +139,7 @@ public final class NativeInstanceUtil {
         for (int i = 0; i < totalSleepTime; i = i+sleepTime) {
             InstancesResult statusResult = cluster.getProcessHelper().getProcessInstanceStatus(entityName, params);
             if (statusResult.getInstances() != null) {
-                if (statusResult.getInstances()[0].getStatus().name() == expectedStatus.name()) {
+                if ((statusResult.getInstances()[0].getStatus().name()).equals(expectedStatus.name())) {
                     return;
                 }
             }

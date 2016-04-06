@@ -146,7 +146,8 @@ public class NativeSchedulerAPITest extends BaseTestClass {
         Assert.assertTrue(XmlUtil.isIdentical(processMerlin.toString(), processDef), "Definitions are not equal.");
 
         // Entity List
-        EntityList.EntityElement[] entityList = prism.getProcessHelper().listAllEntities().getEntityList().getElements();
+        EntityList.EntityElement[] entityList = prism.getProcessHelper().listAllEntities().getEntityList().
+                getElements();
         Assert.assertTrue(entityList.length==1);
         Assert.assertTrue(entityList[0].type.equals("PROCESS"));
         Assert.assertTrue(entityList[0].name.equals(processMerlin.getName()));
