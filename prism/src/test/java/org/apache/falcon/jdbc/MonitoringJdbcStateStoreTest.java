@@ -17,6 +17,12 @@
  */
 package org.apache.falcon.jdbc;
 
+import java.io.File;
+import java.util.Date;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -26,13 +32,11 @@ import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.io.File;
-import java.util.Date;
-import java.util.Random;
 
 /**
 *Unit test for MonitoringJdbcStateStore.
@@ -45,7 +49,7 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
     protected LocalFileSystem fs = new LocalFileSystem();
 
-    private static Random randomValGenerator = new Random();
+    private static MonitoringJdbcStateStore monitoringJdbcStateStore;
     private static FalconJPAService falconJPAService = FalconJPAService.get();
 
     protected int execDBCLICommands(String[] args) {
@@ -71,12 +75,16 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         falconJPAService.init();
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
+        monitoringJdbcStateStore = new MonitoringJdbcStateStore();
+    }
+
+    @BeforeMethod
+    public void init() {
+        clear();
     }
 
     @Test
     public void testInsertRetrieveAndUpdate() throws Exception {
-
-        MonitoringJdbcStateStore monitoringJdbcStateStore = new MonitoringJdbcStateStore();
         monitoringJdbcStateStore.putMonitoredFeed("test_feed1");
         monitoringJdbcStateStore.putMonitoredFeed("test_feed2");
         Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredFeed("test_feed1").getFeedName());
@@ -93,5 +101,38 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         monitoringJdbcStateStore.deletePendingInstance("test_feed1", "test_cluster", dateOne);
         Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 1);
         monitoringJdbcStateStore.deletePendingInstances("test_feed1", "test_cluster");
+    }
+
+    @Test
+    public void testEmptyLatestInstance() throws Exception {
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        store.putMonitoredFeed("test-feed1");
+        store.putMonitoredFeed("test-feed2");
+        Assert.assertNull(store.getLastInstanceTime("test-feed1"));
+
+        Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+        Date dateTwo =  SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
+
+        store.putPendingInstances("test-feed1", "test_cluster", dateTwo);
+        store.putPendingInstances("test-feed1", "test_cluster", dateOne);
+        store.putPendingInstances("test-feed2", "test_cluster", dateOne);
+
+        Assert.assertTrue(dateTwo.equals(store.getLastInstanceTime("test-feed1")));
+        Assert.assertTrue(dateOne.equals(store.getLastInstanceTime("test-feed2")));
+
+    }
+
+    private void clear() {
+        EntityManager em = FalconJPAService.get().getEntityManager();
+        em.getTransaction().begin();
+        try {
+            Query query = em.createNativeQuery("delete from MONITORED_FEEDS");
+            query.executeUpdate();
+            query = em.createNativeQuery("delete from PENDING_INSTANCES");
+            query.executeUpdate();
+        } finally {
+            em.getTransaction().commit();
+            em.close();
+        }
     }
 }

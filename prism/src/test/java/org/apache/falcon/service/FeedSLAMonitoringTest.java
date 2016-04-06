@@ -21,12 +21,12 @@ package org.apache.falcon.service;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
@@ -65,7 +65,7 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
         Date start = SchemaHelper.parseDateUTC("2014-05-05T00:00Z");
         Date end = SchemaHelper.parseDateUTC("2015-05-05T00:00Z");
 
-        BlockingQueue<Date> missingInstances = new LinkedBlockingQueue<>();
+        List<Date> missingInstances = new ArrayList<>();
         missingInstances.add(SchemaHelper.parseDateUTC("2013-05-05T00:00Z")); // before start time
         missingInstances.add(SchemaHelper.parseDateUTC("2014-05-05T00:00Z")); // equal to start time
         missingInstances.add(SchemaHelper.parseDateUTC("2014-05-06T00:00Z")); // in between
