@@ -85,8 +85,6 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
 
     @Test
     public void testInsertRetrieveAndUpdate() throws Exception {
-
-//        int initial = monitoringJdbcStateStore.getAllMonitoredFeed().size();
         monitoringJdbcStateStore.putMonitoredFeed("test_feed1");
         monitoringJdbcStateStore.putMonitoredFeed("test_feed2");
         Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredFeed("test_feed1").getFeedName());
