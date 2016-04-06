@@ -1213,9 +1213,9 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void testExportFeedSqoopExcludeFields() throws Exception {
 
         storeEntity(EntityType.CLUSTER, "testCluster");
-        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-exclude-fields-0.1.xml");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-fields-0.1.xml");
         Feed feed = parser.parseAndValidate(feedStream);
-        Assert.fail("An exception should have been thrown: Feed Export policy not yet implement Field exclusion.");
+        Assert.fail("An exception should have been thrown: Feed Export policy does not require Fields specification.");
     }
 
     @Test (expectedExceptions = ValidationException.class)

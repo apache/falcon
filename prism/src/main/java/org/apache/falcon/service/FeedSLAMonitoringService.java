@@ -17,6 +17,14 @@
  */
 package org.apache.falcon.service;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
@@ -35,24 +43,18 @@ import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.MonitoredFeedsBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Service to monitor Feed SLAs.
@@ -61,8 +63,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     private static final Logger LOG = LoggerFactory.getLogger("FeedSLA");
 
     private static final MonitoringJdbcStateStore MONITORING_JDBC_STATE_STORE = new MonitoringJdbcStateStore();
-
-    private static final String ONE_HOUR = String.valueOf(60 * 60 * 1000);
 
     private static final int ONE_MS = 1;
 
@@ -76,17 +76,11 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         return SERVICE;
     }
 
-    protected int queueSize;
-
     /**
      * Permissions for storePath.
      */
     private static final FsPermission STORE_PERMISSION = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
 
-    /**
-     * Used to store the last time when pending instances were checked for SLA.
-     */
-    private Date lastCheckedAt;
 
     /**
      * Frequency in seconds of "status check" for pending feed instances.
@@ -101,11 +95,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      */
     private int lookAheadWindowMillis; // 15 MINUTES
 
-
-    /**
-     * Frequency in milliseconds of serializing(for backup) monitoring service's state.
-     */
-    private int serializationFrequencyMillis;
 
     /**
      * Filesystem used for serializing and deserializing.
@@ -212,21 +201,12 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         filePath = new Path(storePath, "feedSLAMonitoringService");
         fileSystem = initializeFileSystem();
 
-        String freq = StartupProperties.get().getProperty("feed.sla.serialization.frequency.millis", ONE_HOUR);
-        serializationFrequencyMillis = Integer.parseInt(freq);
-
-        freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
+        String freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
         statusCheckFrequencySeconds = Integer.parseInt(freq);
 
         freq = StartupProperties.get().getProperty("feed.sla.lookAheadWindow.millis", "900000");
         lookAheadWindowMillis = Integer.parseInt(freq);
-
-        String size = StartupProperties.get().getProperty("feed.sla.queue.size", "288");
-        queueSize = Integer.parseInt(size);
-
         LOG.debug("No old state exists at: {}, Initializing a clean state.", filePath.toString());
-        initializeService();
-
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         executor.scheduleWithFixedDelay(new Monitor(), 0, statusCheckFrequencySeconds, TimeUnit.SECONDS);
     }
@@ -272,8 +252,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     // add Instances from last checked time to 10 minutes from now(some buffer for status check)
                     Date now = new Date();
                     Date newCheckPoint = new Date(now.getTime() + lookAheadWindowMillis);
-                    addNewPendingFeedInstances(lastCheckedAt, newCheckPoint);
-                    lastCheckedAt = newCheckPoint;
+                    addNewPendingFeedInstances(newCheckPoint);
                 }
             } catch (Throwable e) {
                 LOG.error("Feed SLA monitoring failed: ", e);
@@ -282,7 +261,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     }
 
 
-    void addNewPendingFeedInstances(Date from, Date to) throws FalconException {
+    void addNewPendingFeedInstances(Date to) throws FalconException {
         Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
         List<MonitoredFeedsBean> feedsBeanList = MONITORING_JDBC_STATE_STORE.getAllMonitoredFeed();
         for(MonitoredFeedsBean monitoredFeedsBean : feedsBeanList) {
@@ -290,41 +269,27 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
             Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
             for (Cluster feedCluster : feed.getClusters().getClusters()) {
                 if (currentClusters.contains(feedCluster.getName())) {
-                    Date nextInstanceTime = from;
+                    // get start of instances from the database
+                    Date nextInstanceTime = MONITORING_JDBC_STATE_STORE.getLastInstanceTime(feedName);
                     Pair<String, String> key = new Pair<>(feed.getName(), feedCluster.getName());
-                    BlockingQueue<Date> instances = new LinkedBlockingQueue<>(
-                            MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, feedCluster.getName()));
-                    if (CollectionUtils.isEmpty(MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName,
-                            feedCluster.getName()))) {
-                        instances = new LinkedBlockingQueue<>(queueSize);
-                        Date feedStartTime = feedCluster.getValidity().getStart();
-                        Frequency retentionFrequency = FeedHelper.getRetentionFrequency(feed, feedCluster);
-                        ExpressionHelper evaluator = ExpressionHelper.get();
-                        ExpressionHelper.setReferenceDate(new Date());
-                        Date retention = new Date(evaluator.evaluate(retentionFrequency.toString(), Long.class));
-                        if (feedStartTime.before(retention)) {
-                            feedStartTime = retention;
-                        }
-                        nextInstanceTime = feedStartTime;
+                    if (nextInstanceTime == null) {
+                        nextInstanceTime = getInitialStartTime(feed, feedCluster.getName());
+                    } else {
+                        nextInstanceTime = new Date(nextInstanceTime.getTime() + ONE_MS);
                     }
-                    Set<Date> exists = new HashSet<>(instances);
+
+                    Set<Date> instances = new HashSet<>();
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =
                             EntityUtil.getEntity(EntityType.CLUSTER, feedCluster.getName());
                     nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
                     Date endDate = FeedHelper.getClusterValidity(feed, currentCluster.getName()).getEnd();
                     while (nextInstanceTime.before(to) && nextInstanceTime.before(endDate)) {
-                        if (instances.size() >= queueSize) { // if no space, first make some space
-                            LOG.debug("Removing instance={} for <feed,cluster>={}", instances.peek(), key);
-                            exists.remove(instances.peek());
-                            instances.remove();
-                        }
                         LOG.debug("Adding instance={} for <feed,cluster>={}", nextInstanceTime, key);
-                        if (exists.add(nextInstanceTime)) {
-                            instances.add(nextInstanceTime);
-                        }
+                        instances.add(nextInstanceTime);
                         nextInstanceTime = new Date(nextInstanceTime.getTime() + ONE_MS);
                         nextInstanceTime = EntityUtil.getNextStartTime(feed, currentCluster, nextInstanceTime);
                     }
+
                     for(Date date:instances){
                         MONITORING_JDBC_STATE_STORE.putPendingInstances(feed.getName(), feedCluster.getName(), date);
                     }
@@ -376,10 +341,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     }
 
 
-    protected void initializeService() {
-        lastCheckedAt = new Date();
-    }
-
     /**
      * Returns all {@link org.apache.falcon.entity.v0.feed.Feed} instances between given time range which have missed
      * slaLow or slaHigh.
@@ -403,11 +364,11 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
             Sla sla = FeedHelper.getSLA(cluster, feed);
             if (sla != null) {
                 Set<Pair<Date, String>> slaStatus = getSLAStatus(sla, start, end,
-                        new LinkedBlockingQueue<Date>(MONITORING_JDBC_STATE_STORE.getNominalInstances(
-                                pendingInstanceBean.getFeedName(), pendingInstanceBean.getClusterName())));
-                for (Pair<Date, String> status : slaStatus){
+                    MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getFeedName(),
+                        pendingInstanceBean.getClusterName()));
+                for (Pair<Date, String> status : slaStatus) {
                     SchedulableEntityInstance instance = new SchedulableEntityInstance(feedClusterPair.first,
-                            feedClusterPair.second, status.first, EntityType.FEED);
+                        feedClusterPair.second, status.first, EntityType.FEED);
                     instance.setTags(status.second);
                     result.add(instance);
                 }
@@ -431,8 +392,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
         Set<SchedulableEntityInstance> result = new HashSet<>();
         Pair<String, String> feedClusterPair = new Pair<>(feedName, clusterName);
-        BlockingQueue<Date> missingInstances = new LinkedBlockingQueue<>(MONITORING_JDBC_STATE_STORE.
-                getNominalInstances(feedName, clusterName));
+        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, clusterName);
         Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
         Cluster cluster = FeedHelper.getCluster(feed, feedClusterPair.second);
         Sla sla = FeedHelper.getSLA(cluster, feed);
@@ -448,7 +408,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         return result;
     }
 
-    Set<Pair<Date, String>> getSLAStatus(Sla sla, Date start, Date end, BlockingQueue<Date> missingInstances)
+    Set<Pair<Date, String>> getSLAStatus(Sla sla, Date start, Date end, List<Date> missingInstances)
         throws FalconException {
         String tagCritical = "Missed SLA High";
         String tagWarn = "Missed SLA Low";
@@ -472,5 +432,18 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
             }
         }
         return result;
+    }
+
+    @VisibleForTesting
+    Date getInitialStartTime(Feed feed, String clusterName) throws FalconException {
+        Sla sla = FeedHelper.getSLA(clusterName, feed);
+        if (sla == null) {
+            throw new IllegalStateException("InitialStartTime can not be determined as the feed: "
+                + feed.getName() + " and cluster: " + clusterName + " does not have any sla");
+        }
+        Date startTime = FeedHelper.getFeedValidityStart(feed, clusterName);
+        Frequency slaLow = sla.getSlaLow();
+        Date slaTime = new Date(DateUtil.now().getTime() - DateUtil.getFrequencyInMillis(slaLow));
+        return startTime.before(slaTime) ? startTime : slaTime;
     }
 }

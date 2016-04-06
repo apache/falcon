@@ -298,8 +298,8 @@ public class RetentionTest extends BaseTestClass {
         // a negative value like -4 should be covered in validation scenarios.
         Integer[] retentionPeriods = new Integer[]{0, 10080, 60, 8, 24};
         RetentionUnit[] retentionUnits = new RetentionUnit[]{
-                RetentionUnit.HOURS,
-                RetentionUnit.DAYS,
+            RetentionUnit.HOURS,
+            RetentionUnit.DAYS,
         }; // "minutes","hours", "days",
         Boolean[] gaps = new Boolean[]{false, true};
         FreqType[] freqTypes = new FreqType[]{FreqType.DAILY, FreqType.YEARLY, FreqType.MONTHLY};
@@ -376,9 +376,9 @@ public class RetentionTest extends BaseTestClass {
     @DataProvider(name = "lifecycleDPFail")
     public Object[][] getLifecycleFail() {
         return new Object[][]{
-                {true, true}, // cluster/global : No retention stage. Should fail.
-                {true, false}, // global : no retention stage. Should fail.
-                {false, true}, // cluster : no retention stage.Should fail.
+            {true, true}, // cluster/global : No retention stage. Should fail.
+            {true, false}, // global : no retention stage. Should fail.
+            {false, true}, // cluster : no retention stage.Should fail.
         };
     }
 
@@ -435,8 +435,8 @@ public class RetentionTest extends BaseTestClass {
     @DataProvider(name = "getLifecycleWithGlobalStage")
     public Object[][] getLifecycleWithGlobalStage() {
         return new Object[][]{
-                {true, false}, // Global level lifecycle. Should pass.
-                {true, true}, // Cluster level : no retention stage - (pick from global). Should pass.
+            {true, false}, // Global level lifecycle. Should pass.
+            {true, true}, // Cluster level : no retention stage - (pick from global). Should pass.
 
         };
     }
@@ -498,9 +498,9 @@ public class RetentionTest extends BaseTestClass {
     public Object[][] getLifecycleWithClusterStage() {
         return new Object[][]{
 
-                {true, true}, // Cluster level lifecylce. Should pass.
-                {false, false}, // Cluster level with no global level lifecylce. Should pass.
-                {true, false}, // Cluster level with empty global level lifecycle.Should pass.
+            {true, true}, // Cluster level lifecylce. Should pass.
+            {false, false}, // Cluster level with no global level lifecylce. Should pass.
+            {true, false}, // Cluster level with empty global level lifecycle.Should pass.
 
         };
     }
@@ -516,16 +516,16 @@ public class RetentionTest extends BaseTestClass {
             String priority, String queue, boolean stage) {
         Lifecycle lifecycle = new Lifecycle();
         if (stage) {
-            String LIMIT_PROPERTY_NAME = "retention.policy.agebaseddelete.limit";
+            String limitPropertyName = "retention.policy.agebaseddelete.limit";
             Property property = new Property();
-            property.setName(LIMIT_PROPERTY_NAME);
+            property.setName(limitPropertyName);
             property.setValue(retentionPeriod.getTimeUnit() + "(" + retentionPeriod.getFrequencyAsInt() + ")");
 
             Properties properties = new Properties();
             properties.getProperties().add(property);
             RetentionStage retentionStage = new RetentionStage();
-            retentionStage.setFrequency(new Frequency(retentionFrequency.getTimeUnit() +
-                    "(" + retentionFrequency.getFrequencyAsInt() + ")"));
+            retentionStage.setFrequency(new Frequency(retentionFrequency.getTimeUnit()
+                    + "(" + retentionFrequency.getFrequencyAsInt() + ")"));
 
             if (!priority.isEmpty()) {
                 retentionStage.setPriority(priority);
@@ -545,7 +545,7 @@ public class RetentionTest extends BaseTestClass {
      * @param frequency : expected frequency.
      */
     private void validateFrequency(String feedName, int frequency)
-            throws OozieClientException, JMSException, JSONException {
+        throws OozieClientException, JMSException, JSONException {
         List<CoordinatorJob> coordJobs = OozieUtil.getBundleCoordinators(clusterOC,
                 OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0));
         CoordinatorJob coordJobInfo = clusterOC.getCoordJobInfo(coordJobs.get(0).getId());
@@ -560,7 +560,7 @@ public class RetentionTest extends BaseTestClass {
      * @param expectedQueue : expected queue.
      */
     private void validatePriorityAndQueue(String feedName, String expectedPriority, String expectedQueue)
-            throws OozieClientException, JMSException, JSONException {
+        throws OozieClientException, JMSException, JSONException {
 
         Configuration configuration = OozieUtil.getRetentionConfiguration(clusterOC,
                 OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0));

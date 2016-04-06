@@ -42,10 +42,10 @@
                 <target name="test-hsql-db" tableName="customer">
                     <load type="updateonly"/>
                     <fields>
-                        <excludes>
+                        <includes>
                             <field>id</field>
                             <field>name</field>
-                        </excludes>
+                        </includes>
                     </fields>
                 </target>
                 <arguments>
