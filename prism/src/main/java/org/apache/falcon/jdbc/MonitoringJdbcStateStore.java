@@ -84,13 +84,7 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_FEEDS);
         List result = q.getResultList();
-        try{
-            if (result.isEmpty()) {
-                throw new ResultNotFoundException("No Feed has been scheduled for monitoring.");
-            }
-        } finally {
-            entityManager.close();
-        }
+        entityManager.close();
         return result;
     }
 
