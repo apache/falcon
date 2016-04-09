@@ -14,34 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Maven
-target
+HDFS Directory Replication Extension
 
-# IntelliJ
-*.iml
-*.ipr
-*.iws
-.idea
+Overview
+This extesion implements replicating arbitrary directories on HDFS from one
+Hadoop cluster to another Hadoop cluster.
+This piggy backs on replication solution in Falcon which uses the DistCp tool.
 
-# Eclipse
-.classpath
-.project
-.settings
-.externalToolBuilders
-maven-eclipse.xml
+Use Case
+* Copy directories between HDFS clusters with out dated partitions
+* Archive directories from HDFS to Cloud. Ex: S3, Azure WASB
 
-#ActiveMQ
-activemq-data
-#build
-
-#log files
-logs
-*.log
-
-#Falcon UI NPM files
-falcon-ui/dist
-falcon-ui/node
-falcon-ui/node_modules
-
-#Falcon addons json files
-*.json
+Limitations
+As the data volume and number of files grow, this can get inefficient.

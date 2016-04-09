@@ -429,6 +429,7 @@
         <module>retention</module>
         <module>archival</module>
         <module>rerun</module>
+        <module>extensions</module>
         <module>prism</module>
         <module>unit</module>
         <module>lifecycle</module>
