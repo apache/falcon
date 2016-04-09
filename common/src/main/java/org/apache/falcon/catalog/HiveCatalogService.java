@@ -208,6 +208,22 @@ public class HiveCatalogService extends AbstractCatalogService {
     }
 
     @Override
+    public boolean dbExists(Configuration conf, final String catalogUrl,
+                            final String databaseName) throws FalconException {
+        LOG.info("Checking if the db exists: {}", databaseName);
+
+        try {
+            HiveMetaStoreClient client = createProxiedClient(conf, catalogUrl);
+            Database db = client.getDatabase(databaseName);
+            return db != null;
+        } catch (NoSuchObjectException e) {
+            return false;
+        } catch (Exception e) {
+            throw new FalconException("Exception checking if the db exists:" + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public boolean tableExists(Configuration conf, final String catalogUrl, final String database,
                                final String tableName) throws FalconException {
         LOG.info("Checking if the table exists: {}", tableName);

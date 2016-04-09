@@ -115,17 +115,72 @@
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
-
         <fileSet>
-            <directory>../addons/recipes/hdfs-replication/src/main/resources</directory>
-            <outputDirectory>data-mirroring/hdfs-replication</outputDirectory>
-            <fileMode>0644</fileMode>
+            <directory>addons/extensions/hdfs-mirroring/src/main/META</directory>
+            <outputDirectory>extensions/hdfs-mirroring/META</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>../addons/recipes/hive-disaster-recovery/src/main/resources</directory>
-            <outputDirectory>data-mirroring/hive-disaster-recovery</outputDirectory>
-        <fileMode>0644</fileMode>
+            <directory>./</directory>
+            <outputDirectory>extensions/hdfs-mirroring/libs/build</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>./</directory>
+            <outputDirectory>extensions/hdfs-mirroring/libs/runtime</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>addons/extensions/hdfs-mirroring/src/main/resources</directory>
+            <outputDirectory>extensions/hdfs-mirroring/resources</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>addons/extensions/hive-mirroring/src/main/META</directory>
+            <outputDirectory>extensions/hive-mirroring/META</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>./</directory>
+            <fileMode>0755</fileMode>
+            <outputDirectory>extensions/hive-mirroring/libs/build</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>./</directory>
+            <outputDirectory>extensions/hive-mirroring/libs/runtime</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>addons/extensions/hive-mirroring/src/main/resources</directory>
+            <outputDirectory>extensions/hive-mirroring/resources</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
@@ -180,6 +235,18 @@
             <source>../oozie-el-extensions/src/main/conf/oozie-site.xml</source>
             <outputDirectory>oozie/conf</outputDirectory>
             <fileMode>0644</fileMode>
+        </file>
+
+        <file>
+            <source>../addons/extensions/hdfs-mirroring/README</source>
+            <outputDirectory>extensions/hdfs-mirroring</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+
+        <file>
+            <source>../addons/extensions/hive-mirroring/README</source>
+            <outputDirectory>extensions/hive-mirroring</outputDirectory>
+            <fileMode>0755</fileMode>
         </file>
     </files>
 </assembly>

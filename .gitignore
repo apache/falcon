@@ -42,3 +42,6 @@ logs
 falcon-ui/dist
 falcon-ui/node
 falcon-ui/node_modules
+
+#Falcon addons json files
+*.json
