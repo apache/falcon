@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.monitors.Dimension;
@@ -306,6 +307,28 @@ public class InstanceManager extends AbstractInstanceManager {
             throw FalconWebException.newAPIException(throwable);
         }
     }
+
+    @GET
+    @Path("search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-search")
+    @Override
+    public InstancesResult searchInstances(
+            @DefaultValue("") @QueryParam("type") String type,
+            @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
+            @DefaultValue("") @QueryParam("tagkeys") String tagKeywords,
+            @DefaultValue("") @QueryParam("start") String nominalStartTime,
+            @DefaultValue("") @QueryParam("end") String nominalEndTime,
+            @DefaultValue("") @QueryParam("instanceStatus") String status,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("0") @QueryParam("offset") Integer offset,
+            @QueryParam("numResults") Integer resultsPerPage) {
+        type = StringUtils.isEmpty(type) ? "feed,process" : type;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        return super.searchInstances(type, nameSubsequence, tagKeywords, nominalStartTime, nominalEndTime,
+                status, orderBy, offset, resultsPerPage);
+    }
+
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
 
