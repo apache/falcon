@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 
@@ -44,7 +45,7 @@ public class FalconRecipeCLI extends FalconCLI {
 
     public Options createRecipeOptions() {
         Options recipeOptions = new Options();
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
+        Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
         recipeOptions.addOption(url);
 
         Option recipeFileOpt = new Option(RECIPE_NAME, true, "recipe name");
@@ -59,10 +60,10 @@ public class FalconRecipeCLI extends FalconCLI {
         Option recipeProperties = new Option(RECIPE_PROPERTIES_FILE, true, "recipe properties file path");
         recipeOptions.addOption(recipeProperties);
 
-        Option skipDryRunOperation = new Option(SKIPDRYRUN_OPT, false, "skip dryrun operation");
+        Option skipDryRunOperation = new Option(FalconCLIConstants.SKIPDRYRUN_OPT, false, "skip dryrun operation");
         recipeOptions.addOption(skipDryRunOperation);
 
-        Option doAs = new Option(DO_AS_OPT, true, "doAs user");
+        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
         recipeOptions.addOption(doAs);
 
         return recipeOptions;
@@ -78,14 +79,14 @@ public class FalconRecipeCLI extends FalconCLI {
         String recipeToolClass = commandLine.getOptionValue(RECIPE_TOOL_CLASS_NAME);
         String recipeOperation = commandLine.getOptionValue(RECIPE_OPERATION);
         String recipePropertiesFile = commandLine.getOptionValue(RECIPE_PROPERTIES_FILE);
-        String doAsUser = commandLine.getOptionValue(DO_AS_OPT);
+        String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
 
         validateNotEmpty(recipeName, RECIPE_NAME);
         validateNotEmpty(recipeOperation, RECIPE_OPERATION);
         validateRecipeOperations(recipeOperation);
         validateRecipePropertiesFile(recipePropertiesFile, recipeName);
         Boolean skipDryRun = null;
-        if (optionsList.contains(SKIPDRYRUN_OPT)) {
+        if (optionsList.contains(FalconCLIConstants.SKIPDRYRUN_OPT)) {
             skipDryRun = true;
         }
 
@@ -95,13 +96,13 @@ public class FalconRecipeCLI extends FalconCLI {
     }
 
     private static void validateRecipeOperations(String recipeOperation) throws FalconCLIException {
-        for(RecipeOperation operation : RecipeOperation.values()) {
+        for(FalconCLIConstants.RecipeOperation operation : FalconCLIConstants.RecipeOperation.values()) {
             if (operation.toString().equalsIgnoreCase(recipeOperation)) {
                 return;
             }
         }
         throw new FalconCLIException("Allowed Recipe operations: "
-                + java.util.Arrays.asList((RecipeOperation.values())));
+                + java.util.Arrays.asList((FalconCLIConstants.RecipeOperation.values())));
     }
 
     private static void validateRecipePropertiesFile(String recipePropertiesFile, String recipeName)

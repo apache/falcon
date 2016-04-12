@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.ResponseHelper;
 import org.apache.falcon.client.FalconCLIException;
@@ -64,17 +65,17 @@ public class FalconInstanceCLI extends FalconCLI {
 
         Option running = new Option(RUNNING_OPT, false,
                 "Gets running process instances for a given process");
-        Option list = new Option(LIST_OPT, false,
+        Option list = new Option(FalconCLIConstants.LIST_OPT, false,
                 "Gets all instances for a given process in the range start time and optional end time");
-        Option status = new Option(STATUS_OPT, false,
+        Option status = new Option(FalconCLIConstants.STATUS_OPT, false,
                 "Gets status of process instances for a given process in the range start time and optional end time");
-        Option summary = new Option(SUMMARY_OPT, false,
+        Option summary = new Option(FalconCLIConstants.SUMMARY_OPT, false,
                 "Gets summary of instances for a given process in the range start time and optional end time");
         Option kill = new Option(KILL_OPT, false,
                 "Kills active process instances for a given process in the range start time and optional end time");
-        Option suspend = new Option(SUSPEND_OPT, false,
+        Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false,
                 "Suspends active process instances for a given process in the range start time and optional end time");
-        Option resume = new Option(RESUME_OPT, false,
+        Option resume = new Option(FalconCLIConstants.RESUME_OPT, false,
                 "Resumes suspended process instances for a given process "
                         + "in the range start time and optional end time");
         Option rerun = new Option(RERUN_OPT, false,
@@ -88,7 +89,7 @@ public class FalconInstanceCLI extends FalconCLI {
                         + "start time represents nominal time and end time is not considered");
         Option listing = new Option(LISTING_OPT, false,
                 "Displays feed listing and their status between a start and end time range.");
-        Option dependency = new Option(DEPENDENCY_OPT, false,
+        Option dependency = new Option(FalconCLIConstants.DEPENDENCY_OPT, false,
                 "Displays dependent instances for a specified instance.");
         Option triage = new Option(TRIAGE_OPT, false,
                 "Triage a feed or process instance and find the failures in it's lineage.");
@@ -109,11 +110,11 @@ public class FalconInstanceCLI extends FalconCLI {
         group.addOption(dependency);
         group.addOption(triage);
 
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
-        Option start = new Option(START_OPT, true,
+        Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
+        Option start = new Option(FalconCLIConstants.START_OPT, true,
                 "Start time is required for commands, status, kill, suspend, resume and re-run"
                         + "and it is nominal time while displaying workflow params");
-        Option end = new Option(END_OPT, true,
+        Option end = new Option(FalconCLIConstants.END_OPT, true,
                 "End time is optional for commands, status, kill, suspend, resume and re-run; "
                         + "if not specified then current time is considered as end time");
         Option runid = new Option(RUNID_OPT, true,
@@ -124,31 +125,32 @@ public class FalconInstanceCLI extends FalconCLI {
         Option sourceClusters = new Option(SOURCECLUSTER_OPT, true,
                 " source cluster is optional for commands kill, suspend and resume, "
                         + "should not be specified for other commands (required for only feed)");
-        Option filePath = new Option(FILE_PATH_OPT, true,
+        Option filePath = new Option(FalconCLIConstants.FILE_PATH_OPT, true,
                 "Path to job.properties file is required for rerun command, "
                         + "it should contain name=value pair for properties to override for rerun");
-        Option entityType = new Option(TYPE_OPT, true,
+        Option entityType = new Option(FalconCLIConstants.TYPE_OPT, true,
                 "Entity type, can be feed or process xml");
-        Option entityName = new Option(ENTITY_NAME_OPT, true,
+        Option entityName = new Option(FalconCLIConstants.ENTITY_NAME_OPT, true,
                 "Entity name, can be feed or process name");
-        Option colo = new Option(COLO_OPT, true,
+        Option colo = new Option(FalconCLIConstants.COLO_OPT, true,
                 "Colo on which the cmd has to be executed");
         Option lifecycle = new Option(LIFECYCLE_OPT, true,
                 "describes life cycle of entity , for feed it can be replication/retention "
                         + "and for process it can be execution");
-        Option filterBy = new Option(FILTER_BY_OPT, true,
+        Option filterBy = new Option(FalconCLIConstants.FILTER_BY_OPT, true,
                 "Filter returned instances by the specified fields");
-        Option orderBy = new Option(ORDER_BY_OPT, true,
+        Option orderBy = new Option(FalconCLIConstants.ORDER_BY_OPT, true,
                 "Order returned instances by this field");
-        Option sortOrder = new Option(SORT_ORDER_OPT, true, "asc or desc order for results");
-        Option offset = new Option(OFFSET_OPT, true,
+        Option sortOrder = new Option(FalconCLIConstants.SORT_ORDER_OPT, true, "asc or desc order for results");
+        Option offset = new Option(FalconCLIConstants.OFFSET_OPT, true,
                 "Start returning instances from this offset");
-        Option numResults = new Option(NUM_RESULTS_OPT, true,
+        Option numResults = new Option(FalconCLIConstants.NUM_RESULTS_OPT, true,
                 "Number of results to return per request");
         Option forceRerun = new Option(FORCE_RERUN_FLAG, false,
                 "Flag to forcefully rerun entire workflow of an instance");
-        Option doAs = new Option(DO_AS_OPT, true, "doAs user");
-        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
+        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
+        Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false, "Use debug mode to see"
+                + " debugging statements on stdout");
 
         Option instanceTime = new Option(INSTANCE_TIME_OPT, true, "Time for an instance");
 
@@ -187,23 +189,24 @@ public class FalconInstanceCLI extends FalconCLI {
         }
 
         String result;
-        String type = commandLine.getOptionValue(TYPE_OPT);
-        String entity = commandLine.getOptionValue(ENTITY_NAME_OPT);
+        String type = commandLine.getOptionValue(FalconCLIConstants.TYPE_OPT);
+        String entity = commandLine.getOptionValue(FalconCLIConstants.ENTITY_NAME_OPT);
         String instanceTime = commandLine.getOptionValue(INSTANCE_TIME_OPT);
-        String start = commandLine.getOptionValue(START_OPT);
-        String end = commandLine.getOptionValue(END_OPT);
-        String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
+        String start = commandLine.getOptionValue(FalconCLIConstants.START_OPT);
+        String end = commandLine.getOptionValue(FalconCLIConstants.END_OPT);
+        String filePath = commandLine.getOptionValue(FalconCLIConstants.FILE_PATH_OPT);
         String runId = commandLine.getOptionValue(RUNID_OPT);
-        String colo = commandLine.getOptionValue(COLO_OPT);
+        String colo = commandLine.getOptionValue(FalconCLIConstants.COLO_OPT);
         String clusters = commandLine.getOptionValue(CLUSTERS_OPT);
         String sourceClusters = commandLine.getOptionValue(SOURCECLUSTER_OPT);
         List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
-        String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
-        String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
-        String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
-        String doAsUser = commandLine.getOptionValue(DO_AS_OPT);
-        Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
-        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT), null, "numResults");
+        String filterBy = commandLine.getOptionValue(FalconCLIConstants.FILTER_BY_OPT);
+        String orderBy = commandLine.getOptionValue(FalconCLIConstants.ORDER_BY_OPT);
+        String sortOrder = commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT);
+        String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
+        Integer offset = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT), 0, "offset");
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
+                null, "numResults");
 
         colo = getColo(colo);
         String instanceAction = "instance";
@@ -211,13 +214,13 @@ public class FalconInstanceCLI extends FalconCLI {
         validateInstanceCommands(optionsList, entity, type, colo);
 
         if (optionsList.contains(TRIAGE_OPT)) {
-            validateNotEmpty(colo, COLO_OPT);
-            validateNotEmpty(start, START_OPT);
-            validateNotEmpty(type, TYPE_OPT);
+            validateNotEmpty(colo, FalconCLIConstants.COLO_OPT);
+            validateNotEmpty(start, FalconCLIConstants.START_OPT);
+            validateNotEmpty(type, FalconCLIConstants.TYPE_OPT);
             validateEntityTypeForSummary(type);
-            validateNotEmpty(entity, ENTITY_NAME_OPT);
+            validateNotEmpty(entity, FalconCLIConstants.ENTITY_NAME_OPT);
             result = client.triage(type, entity, start, colo).toString();
-        } else if (optionsList.contains(DEPENDENCY_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.DEPENDENCY_OPT)) {
             validateNotEmpty(instanceTime, INSTANCE_TIME_OPT);
             InstanceDependencyResult response = client.getInstanceDependencies(type, entity, instanceTime, colo);
             result = ResponseHelper.getString(response);
@@ -227,7 +230,8 @@ public class FalconInstanceCLI extends FalconCLI {
             validateFilterBy(filterBy, instanceAction);
             result = ResponseHelper.getString(client.getRunningInstances(type,
                     entity, colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser));
-        } else if (optionsList.contains(STATUS_OPT) || optionsList.contains(LIST_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.STATUS_OPT)
+                || optionsList.contains(FalconCLIConstants.LIST_OPT)) {
             boolean allAttempts = false;
             if (optionsList.contains(ALL_ATTEMPTS)) {
                 allAttempts = true;
@@ -236,29 +240,29 @@ public class FalconInstanceCLI extends FalconCLI {
             validateFilterBy(filterBy, instanceAction);
             result = ResponseHelper.getString(client.getStatusOfInstances(type, entity, start, end, colo,
                     lifeCycles, filterBy, orderBy, sortOrder, offset, numResults, doAsUser, allAttempts));
-        } else if (optionsList.contains(SUMMARY_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.SUMMARY_OPT)) {
             validateOrderBy(orderBy, "summary");
             validateFilterBy(filterBy, "summary");
             result = ResponseHelper.getString(client.getSummaryOfInstances(type, entity, start, end, colo,
                     lifeCycles, filterBy, orderBy, sortOrder, doAsUser));
         } else if (optionsList.contains(KILL_OPT)) {
-            validateNotEmpty(start, START_OPT);
-            validateNotEmpty(end, END_OPT);
+            validateNotEmpty(start, FalconCLIConstants.START_OPT);
+            validateNotEmpty(end, FalconCLIConstants.END_OPT);
             result = ResponseHelper.getString(client.killInstances(type, entity, start, end, colo, clusters,
                     sourceClusters, lifeCycles, doAsUser));
-        } else if (optionsList.contains(SUSPEND_OPT)) {
-            validateNotEmpty(start, START_OPT);
-            validateNotEmpty(end, END_OPT);
+        } else if (optionsList.contains(FalconCLIConstants.SUSPEND_OPT)) {
+            validateNotEmpty(start, FalconCLIConstants.START_OPT);
+            validateNotEmpty(end, FalconCLIConstants.END_OPT);
             result = ResponseHelper.getString(client.suspendInstances(type, entity, start, end, colo, clusters,
                     sourceClusters, lifeCycles, doAsUser));
-        } else if (optionsList.contains(RESUME_OPT)) {
-            validateNotEmpty(start, START_OPT);
-            validateNotEmpty(end, END_OPT);
+        } else if (optionsList.contains(FalconCLIConstants.RESUME_OPT)) {
+            validateNotEmpty(start, FalconCLIConstants.START_OPT);
+            validateNotEmpty(end, FalconCLIConstants.END_OPT);
             result = ResponseHelper.getString(client.resumeInstances(type, entity, start, end, colo, clusters,
                     sourceClusters, lifeCycles, doAsUser));
         } else if (optionsList.contains(RERUN_OPT)) {
-            validateNotEmpty(start, START_OPT);
-            validateNotEmpty(end, END_OPT);
+            validateNotEmpty(start, FalconCLIConstants.START_OPT);
+            validateNotEmpty(end, FalconCLIConstants.END_OPT);
             boolean isForced = false;
             if (optionsList.contains(FORCE_RERUN_FLAG)) {
                 isForced = true;
@@ -287,15 +291,15 @@ public class FalconInstanceCLI extends FalconCLI {
                                           String entity, String type,
                                           String colo) throws FalconCLIException {
 
-        validateNotEmpty(entity, ENTITY_NAME_OPT);
-        validateNotEmpty(type, TYPE_OPT);
-        validateNotEmpty(colo, COLO_OPT);
+        validateNotEmpty(entity, FalconCLIConstants.ENTITY_NAME_OPT);
+        validateNotEmpty(type, FalconCLIConstants.TYPE_OPT);
+        validateNotEmpty(colo, FalconCLIConstants.COLO_OPT);
 
         if (optionsList.contains(CLUSTERS_OPT)) {
             if (optionsList.contains(RUNNING_OPT)
                     || optionsList.contains(LOG_OPT)
-                    || optionsList.contains(STATUS_OPT)
-                    || optionsList.contains(SUMMARY_OPT)) {
+                    || optionsList.contains(FalconCLIConstants.STATUS_OPT)
+                    || optionsList.contains(FalconCLIConstants.SUMMARY_OPT)) {
                 throw new FalconCLIException("Invalid argument: clusters");
             }
         }
@@ -303,8 +307,8 @@ public class FalconInstanceCLI extends FalconCLI {
         if (optionsList.contains(SOURCECLUSTER_OPT)) {
             if (optionsList.contains(RUNNING_OPT)
                     || optionsList.contains(LOG_OPT)
-                    || optionsList.contains(STATUS_OPT)
-                    || optionsList.contains(SUMMARY_OPT) || !type.equals("feed")) {
+                    || optionsList.contains(FalconCLIConstants.STATUS_OPT)
+                    || optionsList.contains(FalconCLIConstants.SUMMARY_OPT) || !type.equals("feed")) {
                 throw new FalconCLIException("Invalid argument: sourceClusters");
             }
         }

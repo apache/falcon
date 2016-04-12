@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.cli;
+package cli;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.falcon.cliParser.CLIParser;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

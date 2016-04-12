@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 
@@ -42,20 +43,21 @@ public class FalconAdminCLI extends FalconCLI {
 
     public Options createAdminOptions() {
         Options adminOptions = new Options();
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
+        Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
         adminOptions.addOption(url);
 
         OptionGroup group = new OptionGroup();
-        Option status = new Option(STATUS_OPT, false,
+        Option status = new Option(FalconCLIConstants.STATUS_OPT, false,
                 "show the current system status");
-        Option version = new Option(VERSION_OPT, false,
+        Option version = new Option(FalconCLIConstants.VERSION_OPT, false,
                 "show Falcon server build version");
         Option stack = new Option(STACK_OPTION, false,
                 "show the thread stack dump");
-        Option doAs = new Option(DO_AS_OPT, true,
+        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true,
                 "doAs user");
         Option help = new Option("help", false, "show Falcon help");
-        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
+        Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
+                "Use debug mode to see debugging statements on stdout");
         group.addOption(status);
         group.addOption(version);
         group.addOption(stack);
@@ -75,7 +77,7 @@ public class FalconAdminCLI extends FalconCLI {
             optionsList.add(option.getOpt());
         }
 
-        String doAsUser = commandLine.getOptionValue(DO_AS_OPT);
+        String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
 
         if (optionsList.contains(STACK_OPTION)) {
             result = client.getThreadDump(doAsUser);
@@ -83,7 +85,7 @@ public class FalconAdminCLI extends FalconCLI {
         }
 
         int exitValue = 0;
-        if (optionsList.contains(STATUS_OPT)) {
+        if (optionsList.contains(FalconCLIConstants.STATUS_OPT)) {
             try {
                 int status = client.getStatus(doAsUser);
                 if (status != 200) {
@@ -97,10 +99,10 @@ public class FalconAdminCLI extends FalconCLI {
                 ERR.get().println("Falcon server doesn't seem to be running on " + falconUrl);
                 exitValue = -1;
             }
-        } else if (optionsList.contains(VERSION_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.VERSION_OPT)) {
             result = client.getVersion(doAsUser);
             OUT.get().println("Falcon server build version: " + result);
-        } else if (optionsList.contains(HELP_CMD)) {
+        } else if (optionsList.contains(FalconCLIConstants.HELP_CMD)) {
             OUT.get().println("Falcon Help");
         }
         return exitValue;

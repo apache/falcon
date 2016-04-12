@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.cli;
+package org.apache.falcon.cliParser;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;

@@ -53,10 +53,7 @@
     </profiles>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.falcon</groupId>
-            <artifactId>falcon-client</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>commons-net</groupId>
@@ -141,6 +138,16 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
             <version>4.0.3.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-client</artifactId>
+            <version>0.10-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
+            <version>0.10-SNAPSHOT</version>
         </dependency>
 
     </dependencies>

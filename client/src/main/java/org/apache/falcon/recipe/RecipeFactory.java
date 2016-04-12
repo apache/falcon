@@ -18,7 +18,7 @@
 
 package org.apache.falcon.recipe;
 
-import org.apache.falcon.cli.FalconCLI.RecipeOperation;
+import org.apache.falcon.FalconCLIConstants .RecipeOperation;
 
 /**
  * Recipe factory.
