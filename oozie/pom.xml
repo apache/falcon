@@ -67,6 +67,12 @@
 
         <dependency>
             <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-extensions</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
         </dependency>
 

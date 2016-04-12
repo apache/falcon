@@ -24,7 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.hive.exception.HiveReplicationException;
+import org.apache.falcon.hive.util.FileUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -70,11 +70,14 @@ public class HiveDROptions {
         return Arrays.asList(context.get(HiveDRArgs.SOURCE_TABLE).trim().split(","));
     }
 
-    public String getSourceStagingPath() throws HiveReplicationException {
-        if (StringUtils.isNotEmpty(context.get(HiveDRArgs.SOURCE_STAGING_PATH))) {
-            return context.get(HiveDRArgs.SOURCE_STAGING_PATH) + File.separator + getJobName();
+    public String getSourceStagingPath() {
+        String stagingPath = context.get(HiveDRArgs.SOURCE_STAGING_PATH);
+        if (StringUtils.isNotBlank(stagingPath)) {
+            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
+            return stagingPath + File.separator + getJobName();
+        } else {
+            return FileUtils.DEFAULT_EVENT_STORE_PATH + getJobName();
         }
-        throw new HiveReplicationException("Source StagingPath cannot be empty");
     }
 
     public String getSourceWriteEP() {
@@ -100,15 +103,19 @@ public class HiveDROptions {
     public String getTargetMetastoreKerberosPrincipal() {
         return context.get(HiveDRArgs.TARGET_HIVE_METASTORE_KERBEROS_PRINCIPAL);
     }
+
     public String getTargetHive2KerberosPrincipal() {
         return context.get(HiveDRArgs.TARGET_HIVE2_KERBEROS_PRINCIPAL);
     }
 
-    public String getTargetStagingPath() throws HiveReplicationException {
-        if (StringUtils.isNotEmpty(context.get(HiveDRArgs.TARGET_STAGING_PATH))) {
-            return context.get(HiveDRArgs.TARGET_STAGING_PATH) + File.separator + getJobName();
+    public String getTargetStagingPath() {
+        String stagingPath = context.get(HiveDRArgs.TARGET_STAGING_PATH);
+        if (StringUtils.isNotBlank(stagingPath)) {
+            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
+            return stagingPath + File.separator + getJobName();
+        } else {
+            return FileUtils.DEFAULT_EVENT_STORE_PATH + getJobName();
         }
-        throw new HiveReplicationException("Target StagingPath cannot be empty");
     }
 
     public String getReplicationMaxMaps() {
@@ -135,21 +142,8 @@ public class HiveDROptions {
         return context.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL);
     }
 
-    public void setSourceStagingDir(String path) {
-        context.put(HiveDRArgs.SOURCE_STAGING_PATH, path);
-    }
-
-    public void setTargetStagingDir(String path) {
-        context.put(HiveDRArgs.TARGET_STAGING_PATH, path);
-    }
-
     public String getExecutionStage() {
         return context.get(HiveDRArgs.EXECUTION_STAGE);
-    }
-
-    public boolean isTDEEncryptionEnabled() {
-        return StringUtils.isEmpty(context.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED))
-                ? false : Boolean.valueOf(context.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED));
     }
 
     public boolean shouldBlock() {

@@ -29,9 +29,14 @@ import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,16 +80,70 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         }
     };
 
-    private void addLibsTo(Cluster cluster) throws FalconException {
-        FileSystem fs = null;
-        try {
-            LOG.info("Initializing FS: {} for cluster: {}", ClusterHelper.getStorageUrl(cluster), cluster.getName());
-            fs = HadoopClientFactory.get().createFalconFileSystem(ClusterHelper.getConfiguration(cluster));
-            fs.getStatus();
-        } catch (Exception e) {
-            throw new FalconException("Failed to initialize FS for cluster : " + cluster.getName(), e);
+    private void pushExtensionArtifactsToCluster(final Cluster cluster,
+                                                 final FileSystem clusterFs) throws FalconException {
+
+        ExtensionStore store = ExtensionStore.get();
+        if (!store.isExtensionStoreInitialized()) {
+            LOG.info("Extension store not initialized by Extension service. Make sure Extension service is added in "
+                    + "start up properties");
+            return;
         }
 
+        Path extensionStorePath = store.getExtensionStorePath();
+        LOG.info("extensionStorePath :{}", extensionStorePath);
+        FileSystem falconFileSystem =
+                HadoopClientFactory.get().createFalconFileSystem(extensionStorePath.toUri());
+        String nameNode = StringUtils.removeEnd(falconFileSystem.getConf().get(HadoopClientFactory
+                .FS_DEFAULT_NAME_KEY), File.separator);
+
+
+        String clusterStorageUrl = StringUtils.removeEnd(ClusterHelper.getStorageUrl(cluster), File.separator);
+
+        // If default fs for Falcon server is same as cluster fs abort copy
+        if (nameNode.equalsIgnoreCase(clusterStorageUrl)) {
+            LOG.info("clusterStorageUrl :{} same return", clusterStorageUrl);
+            return;
+        }
+
+        try {
+            RemoteIterator<LocatedFileStatus> fileStatusListIterator =
+                    falconFileSystem.listFiles(extensionStorePath, true);
+
+            while (fileStatusListIterator.hasNext()) {
+                LocatedFileStatus srcfileStatus = fileStatusListIterator.next();
+                Path filePath = Path.getPathWithoutSchemeAndAuthority(srcfileStatus.getPath());
+
+                if (srcfileStatus.isDirectory()) {
+                    if (!clusterFs.exists(filePath)) {
+                        HadoopClientFactory.mkdirs(clusterFs, filePath, srcfileStatus.getPermission());
+                    }
+                } else {
+                    if (clusterFs.exists(filePath)) {
+                        FileStatus targetfstat = clusterFs.getFileStatus(filePath);
+                        if (targetfstat.getLen() == srcfileStatus.getLen()) {
+                            continue;
+                        }
+                    }
+
+                    Path parentPath = filePath.getParent();
+                    if (!clusterFs.exists(parentPath)) {
+                        FsPermission dirPerm = falconFileSystem.getFileStatus(parentPath).getPermission();
+                        HadoopClientFactory.mkdirs(clusterFs, parentPath, dirPerm);
+                    }
+
+                    FileUtil.copy(falconFileSystem, srcfileStatus, clusterFs, filePath, false, true,
+                            falconFileSystem.getConf());
+                    FileUtil.chmod(clusterFs.makeQualified(filePath).toString(),
+                            srcfileStatus.getPermission().toString());
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new FalconException("Failed to copy extension artifacts to cluster" + cluster.getName(), e);
+        }
+    }
+
+    private void addLibsTo(Cluster cluster, FileSystem fs) throws FalconException {
         try {
             Path lib = new Path(ClusterHelper.getLocation(cluster, ClusterLocationType.WORKING).getPath(),
                     "lib");
@@ -173,7 +232,8 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             return;
         }
 
-        addLibsTo(cluster);
+        addLibsTo(cluster, getFilesystem(cluster));
+        pushExtensionArtifactsToCluster(cluster, getFilesystem(cluster));
     }
 
     @Override
@@ -192,7 +252,8 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
                 .equals(ClusterHelper.getInterface(newCluster, Interfacetype.WRITE).getEndpoint())
                 || !ClusterHelper.getInterface(oldCluster, Interfacetype.WORKFLOW).getEndpoint()
                 .equals(ClusterHelper.getInterface(newCluster, Interfacetype.WORKFLOW).getEndpoint())) {
-            addLibsTo(newCluster);
+            addLibsTo(newCluster, getFilesystem(newCluster));
+            pushExtensionArtifactsToCluster(newCluster, getFilesystem(newCluster));
         }
     }
 
@@ -202,6 +263,18 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             onAdd(entity);
         } catch (FalconException e) {
             LOG.error(e.getMessage(), e);
+        }
+    }
+
+    private FileSystem getFilesystem(final Cluster cluster) throws FalconException {
+        FileSystem fs;
+        try {
+            LOG.info("Initializing FS: {} for cluster: {}", ClusterHelper.getStorageUrl(cluster), cluster.getName());
+            fs = HadoopClientFactory.get().createFalconFileSystem(ClusterHelper.getConfiguration(cluster));
+            fs.getStatus();
+            return fs;
+        } catch (Exception e) {
+            throw new FalconException("Failed to initialize FS for cluster : " + cluster.getName(), e);
         }
     }
 }

@@ -301,6 +301,7 @@
                                 <exclude>**/db1.properties</exclude>
                                 <exclude>**/db1.script</exclude>
                                 <exclude>**/credential_provider.jceks</exclude>
+                                <exclude>**/*.json</exclude>
                             </excludes>
                         </configuration>
                         <executions>
@@ -429,6 +430,7 @@
         <module>retention</module>
         <module>archival</module>
         <module>rerun</module>
+        <module>extensions</module>
         <module>prism</module>
         <module>unit</module>
         <module>lifecycle</module>
