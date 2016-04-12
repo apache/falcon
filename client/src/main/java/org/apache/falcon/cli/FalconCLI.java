@@ -56,7 +56,6 @@ public class FalconCLI {
     public static final String METADATA_CMD = "metadata";
     public static final String ENTITY_CMD = "entity";
     public static final String INSTANCE_CMD = "instance";
-    public static final String RECIPE_CMD = "recipe";
 
     public static final String TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
@@ -89,14 +88,6 @@ public class FalconCLI {
 
     public FalconCLI() throws Exception {
         clientProperties = getClientProperties();
-    }
-
-    /**
-     * Recipe operation enum.
-     */
-    public enum RecipeOperation {
-        HDFS_REPLICATION,
-        HIVE_DISASTER_RECOVERY
     }
 
     /**
@@ -134,7 +125,6 @@ public class FalconCLI {
         FalconEntityCLI entityCLI = new FalconEntityCLI();
         FalconInstanceCLI instanceCLI = new FalconInstanceCLI();
         FalconMetadataCLI metadataCLI = new FalconMetadataCLI();
-        FalconRecipeCLI recipeCLI = new FalconRecipeCLI();
 
         parser.addCommand(ADMIN_CMD, "", "admin operations", adminCLI.createAdminOptions(), true);
         parser.addCommand(HELP_CMD, "", "display usage", new Options(), false);
@@ -146,7 +136,6 @@ public class FalconCLI {
                 instanceCLI.createInstanceOptions(), false);
         parser.addCommand(METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
-        parser.addCommand(RECIPE_CMD, "", "recipe operations", recipeCLI.createRecipeOptions(), true);
         parser.addCommand(VERSION_OPT, "", "show client version", new Options(), false);
 
         try {
@@ -168,8 +157,6 @@ public class FalconCLI {
                     instanceCLI.instanceCommand(commandLine, client);
                 } else if (command.getName().equals(METADATA_CMD)) {
                     metadataCLI.metadataCommand(commandLine, client);
-                } else if (command.getName().equals(RECIPE_CMD)) {
-                    recipeCLI.recipeCommand(commandLine, client);
                 }
             }
             return exitValue;
