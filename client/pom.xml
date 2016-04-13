@@ -111,7 +111,6 @@
             <artifactId>hive-webhcat-java-client</artifactId>
             <version>${hive.version}</version>
         </dependency>
-
     </dependencies>
 
     <build>
