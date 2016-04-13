@@ -24,6 +24,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.cliParser.CLIParser;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.EntityType;
@@ -46,44 +48,7 @@ public class FalconCLI {
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
-    public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
-    public static final String DEBUG_OPTION = "debug";
-    public static final String URL_OPTION = "url";
     private static final String FALCON_URL = "FALCON_URL";
-
-    public static final String ADMIN_CMD = "admin";
-    public static final String HELP_CMD = "help";
-    public static final String METADATA_CMD = "metadata";
-    public static final String ENTITY_CMD = "entity";
-    public static final String INSTANCE_CMD = "instance";
-
-    public static final String TYPE_OPT = "type";
-    public static final String COLO_OPT = "colo";
-    public static final String CLUSTER_OPT = "cluster";
-    public static final String FEED_OPT = "feed";
-    public static final String PROCESS_OPT = "process";
-    public static final String ENTITY_NAME_OPT = "name";
-    public static final String FILE_PATH_OPT = "file";
-    public static final String VERSION_OPT = "version";
-    public static final String SCHEDULE_OPT = "schedule";
-    public static final String SUSPEND_OPT = "suspend";
-    public static final String RESUME_OPT = "resume";
-    public static final String STATUS_OPT = "status";
-    public static final String SUMMARY_OPT = "summary";
-    public static final String DEPENDENCY_OPT = "dependency";
-    public static final String LIST_OPT = "list";
-    public static final String SKIPDRYRUN_OPT = "skipDryRun";
-    public static final String FILTER_BY_OPT = "filterBy";
-    public static final String ORDER_BY_OPT = "orderBy";
-    public static final String SORT_ORDER_OPT = "sortOrder";
-    public static final String OFFSET_OPT = "offset";
-    public static final String NUM_RESULTS_OPT = "numResults";
-    public static final String START_OPT = "start";
-    public static final String END_OPT = "end";
-    public static final String CURRENT_COLO = "current.colo";
-    public static final String CLIENT_PROPERTIES = "/client.properties";
-    public static final String DO_AS_OPT = "doAs";
-
     private final Properties clientProperties;
 
     public FalconCLI() throws Exception {
@@ -103,8 +68,8 @@ public class FalconCLI {
 
     // TODO help and headers
     private static final String[] FALCON_HELP = { "the env variable '" + FALCON_URL
-                                                          + "' is used as default value for the '-" + URL_OPTION
-                                                          + "' option",
+            + "' is used as default value for the '-"
+            + FalconCLIConstants.URL_OPTION + "' option",
                                                   "custom headers for Falcon web services can be specified using '-D"
                                                           + FalconClient.WS_HEADER_PREFIX + "NAME=VALUE'", };
     /**
@@ -126,36 +91,36 @@ public class FalconCLI {
         FalconInstanceCLI instanceCLI = new FalconInstanceCLI();
         FalconMetadataCLI metadataCLI = new FalconMetadataCLI();
 
-        parser.addCommand(ADMIN_CMD, "", "admin operations", adminCLI.createAdminOptions(), true);
-        parser.addCommand(HELP_CMD, "", "display usage", new Options(), false);
-        parser.addCommand(ENTITY_CMD, "",
+        parser.addCommand(FalconCLIConstants.ADMIN_CMD, "", "admin operations", adminCLI.createAdminOptions(), true);
+        parser.addCommand(FalconCLIConstants.HELP_CMD, "", "display usage", new Options(), false);
+        parser.addCommand(FalconCLIConstants.ENTITY_CMD, "",
                 "Entity operations like submit, suspend, resume, delete, status, definition, submitAndSchedule",
                 entityCLI.createEntityOptions(), false);
-        parser.addCommand(INSTANCE_CMD, "",
+        parser.addCommand(FalconCLIConstants.INSTANCE_CMD, "",
                 "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
                 instanceCLI.createInstanceOptions(), false);
-        parser.addCommand(METADATA_CMD, "", "Metadata operations like list, relations",
+        parser.addCommand(FalconCLIConstants.METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
-        parser.addCommand(VERSION_OPT, "", "show client version", new Options(), false);
+        parser.addCommand(FalconCLIConstants.VERSION_OPT, "", "show client version", new Options(), false);
 
         try {
             CLIParser.Command command = parser.parse(args);
             int exitValue = 0;
-            if (command.getName().equals(HELP_CMD)) {
+            if (command.getName().equals(FalconCLIConstants.HELP_CMD)) {
                 parser.showHelp();
             } else {
                 CommandLine commandLine = command.getCommandLine();
                 String falconUrl = getFalconEndpoint(commandLine);
                 FalconClient client = new FalconClient(falconUrl, clientProperties);
 
-                setDebugMode(client, commandLine.hasOption(DEBUG_OPTION));
-                if (command.getName().equals(ADMIN_CMD)) {
+                setDebugMode(client, commandLine.hasOption(FalconCLIConstants.DEBUG_OPTION));
+                if (command.getName().equals(FalconCLIConstants.ADMIN_CMD)) {
                     exitValue = adminCLI.adminCommand(commandLine, client, falconUrl);
-                } else if (command.getName().equals(ENTITY_CMD)) {
+                } else if (command.getName().equals(FalconCLIConstants.ENTITY_CMD)) {
                     entityCLI.entityCommand(commandLine, client);
-                } else if (command.getName().equals(INSTANCE_CMD)) {
+                } else if (command.getName().equals(FalconCLIConstants.INSTANCE_CMD)) {
                     instanceCLI.instanceCommand(commandLine, client);
-                } else if (command.getName().equals(METADATA_CMD)) {
+                } else if (command.getName().equals(FalconCLIConstants.METADATA_CMD)) {
                     metadataCLI.metadataCommand(commandLine, client);
                 }
             }
@@ -223,7 +188,7 @@ public class FalconCLI {
     protected String getColo(String colo) throws FalconCLIException, IOException {
         if (colo == null) {
             Properties prop = getClientProperties();
-            colo = prop.getProperty(CURRENT_COLO, "*");
+            colo = prop.getProperty(FalconCLIConstants.CURRENT_COLO, "*");
         }
         return colo;
     }
@@ -274,7 +239,7 @@ public class FalconCLI {
     }
 
     protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {
-        String url = commandLine.getOptionValue(URL_OPTION);
+        String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);
         if (url == null) {
             url = System.getenv(FALCON_URL);
         }
@@ -291,11 +256,11 @@ public class FalconCLI {
     }
 
     private void setDebugMode(FalconClient client, boolean debugOpt) {
-        String debug = System.getenv(ENV_FALCON_DEBUG);
+        String debug = System.getenv(FalconCLIConstants.ENV_FALCON_DEBUG);
         if (debugOpt) {  // CLI argument "-debug" used
             client.setDebugMode(true);
         } else if (StringUtils.isNotBlank(debug)) {
-            System.out.println(ENV_FALCON_DEBUG + ": " + debug);
+            System.out.println(FalconCLIConstants.ENV_FALCON_DEBUG + ": " + debug);
             if (debug.trim().toLowerCase().equals("true")) {
                 client.setDebugMode(true);
             }
@@ -305,7 +270,7 @@ public class FalconCLI {
     private Properties getClientProperties() throws IOException {
         InputStream inputStream = null;
         try {
-            inputStream = FalconCLI.class.getResourceAsStream(CLIENT_PROPERTIES);
+            inputStream = FalconCLI.class.getResourceAsStream(FalconCLIConstants.CLIENT_PROPERTIES);
             Properties prop = new Properties();
             if (inputStream != null) {
                 prop.load(inputStream);

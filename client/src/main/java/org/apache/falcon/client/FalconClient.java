@@ -45,9 +45,8 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.LifeCycle;
-import org.apache.falcon.cli.FalconCLI;
-import org.apache.falcon.cli.FalconMetadataCLI;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -667,7 +666,7 @@ public class FalconClient extends AbstractFalconClient {
     public LineageGraphResult getEntityLineageGraph(String pipelineName, String doAsUser) throws FalconCLIException {
         MetadataOperations operation = MetadataOperations.LINEAGE;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path).addQueryParam(DO_AS_OPT, doAsUser)
-            .addQueryParam(FalconMetadataCLI.PIPELINE_OPT, pipelineName).call(operation);
+            .addQueryParam(FalconCLIConstants.PIPELINE_OPT, pipelineName).call(operation);
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(LineageGraphResult.class);
@@ -861,18 +860,18 @@ public class FalconClient extends AbstractFalconClient {
         WebResource resource = service.path(operation.path)
                 .path(schedEntityName)
                 .path(RelationshipType.REPLICATION_METRICS.getName())
-                .path(FalconMetadataCLI.LIST_OPT);
+                .path(FalconCLIConstants.LIST_OPT);
 
         if (StringUtils.isNotEmpty(schedEntityName)) {
-            resource = resource.queryParam(FalconCLI.TYPE_OPT, schedEntityType);
+            resource = resource.queryParam(FalconCLIConstants.TYPE_OPT, schedEntityType);
         }
 
         if (numResults != null) {
-            resource = resource.queryParam(FalconCLI.NUM_RESULTS_OPT, numResults.toString());
+            resource = resource.queryParam(FalconCLIConstants.NUM_RESULTS_OPT, numResults.toString());
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         ClientResponse clientResponse = resource
@@ -897,14 +896,14 @@ public class FalconClient extends AbstractFalconClient {
         case LIST:
             resource = service.path(operation.path)
                     .path(dimensionType)
-                    .path(FalconMetadataCLI.LIST_OPT);
+                    .path(FalconCLIConstants.LIST_OPT);
             break;
 
         case RELATIONS:
             resource = service.path(operation.path)
                     .path(dimensionType)
                     .path(dimensionName)
-                    .path(FalconMetadataCLI.RELATIONS_OPT);
+                    .path(FalconCLIConstants.RELATIONS_OPT);
             break;
 
         default:
@@ -912,11 +911,11 @@ public class FalconClient extends AbstractFalconClient {
         }
 
         if (!StringUtils.isEmpty(cluster)) {
-            resource = resource.queryParam(FalconMetadataCLI.CLUSTER_OPT, cluster);
+            resource = resource.queryParam(FalconCLIConstants.CLUSTER_OPT, cluster);
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         ClientResponse clientResponse = resource

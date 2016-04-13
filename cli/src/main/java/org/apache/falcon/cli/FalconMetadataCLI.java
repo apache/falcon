@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.EntityType;
@@ -43,16 +44,13 @@ public class FalconMetadataCLI extends FalconCLI {
     // Discovery Commands
     public static final String DISCOVERY_OPT = "discovery";
     public static final String LIST_OPT = "list";
-    public static final String RELATIONS_OPT = "relations";
     public static final String URL_OPTION = "url";
-    public static final String NAME_OPT = "name";
 
     // Lineage Commands
     public static final String LINEAGE_OPT = "lineage";
     public static final String VERTEX_CMD = "vertex";
     public static final String VERTICES_CMD = "vertices";
     public static final String VERTEX_EDGES_CMD = "edges";
-    public static final String PIPELINE_OPT = "pipeline";
     public static final String EDGE_CMD = "edge";
     public static final String ID_OPT = "id";
     public static final String KEY_OPT = "key";
@@ -71,24 +69,24 @@ public class FalconMetadataCLI extends FalconCLI {
         Option lineage = new Option(LINEAGE_OPT, false, "Get falcon metadata lineage information");
         group.addOption(discovery);
         group.addOption(lineage);
-        Option pipeline = new Option(PIPELINE_OPT, true,
+        Option pipeline = new Option(FalconCLIConstants.PIPELINE_OPT, true,
                 "Get lineage graph for the entities in a pipeline");
         metadataOptions.addOptionGroup(group);
 
         // Add discovery options
 
         Option list = new Option(LIST_OPT, false, "List all dimensions");
-        Option relations = new Option(RELATIONS_OPT, false, "List all relations for a dimension");
+        Option relations = new Option(FalconCLIConstants.RELATIONS_OPT, false, "List all relations for a dimension");
         metadataOptions.addOption(list);
         metadataOptions.addOption(relations);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
-        Option type = new Option(TYPE_OPT, true, "Dimension type");
-        Option name = new Option(NAME_OPT, true, "Dimension name");
-        Option cluster = new Option(CLUSTER_OPT, true, "Cluster name");
-        Option feed = new Option(FEED_OPT, true, "Feed Entity name");
-        Option process = new Option(PROCESS_OPT, true, "Process Entity name");
-        Option numResults = new Option(NUM_RESULTS_OPT, true,
+        Option type = new Option(FalconCLIConstants.TYPE_OPT, true, "Dimension type");
+        Option name = new Option(FalconCLIConstants.NAME_OPT, true, "Dimension name");
+        Option cluster = new Option(FalconCLIConstants.CLUSTER_OPT, true, "Cluster name");
+        Option feed = new Option(FalconCLIConstants.FEED_OPT, true, "Feed Entity name");
+        Option process = new Option(FalconCLIConstants.PROCESS_OPT, true, "Process Entity name");
+        Option numResults = new Option(FalconCLIConstants.NUM_RESULTS_OPT, true,
                 "Number of results to return per request");
 
         // Add lineage options
@@ -110,7 +108,8 @@ public class FalconMetadataCLI extends FalconCLI {
         Option key = new Option(KEY_OPT, true, "key property");
         Option value = new Option(VALUE_OPT, true, "value property");
         Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
-        Option debug = new Option(DEBUG_OPTION, false, "Use debug mode to see debugging statements on stdout");
+        Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
+                "Use debug mode to see debugging statements on stdout");
 
         metadataOptions.addOption(vertex);
         metadataOptions.addOption(vertices);
@@ -122,7 +121,7 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(direction);
         metadataOptions.addOption(debug);
 
-        Option doAs = new Option(FalconCLI.DO_AS_OPT, true, "doAs user");
+        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
         metadataOptions.addOption(doAs);
 
         return metadataOptions;
@@ -135,18 +134,19 @@ public class FalconMetadataCLI extends FalconCLI {
         }
 
         String result;
-        String dimensionType = commandLine.getOptionValue(TYPE_OPT);
-        String cluster = commandLine.getOptionValue(CLUSTER_OPT);
-        String feed = commandLine.getOptionValue(FEED_OPT);
-        String process = commandLine.getOptionValue(PROCESS_OPT);
-        String dimensionName = commandLine.getOptionValue(NAME_OPT);
+        String dimensionType = commandLine.getOptionValue(FalconCLIConstants.TYPE_OPT);
+        String cluster = commandLine.getOptionValue(FalconCLIConstants.CLUSTER_OPT);
+        String feed = commandLine.getOptionValue(FalconCLIConstants.FEED_OPT);
+        String process = commandLine.getOptionValue(FalconCLIConstants.PROCESS_OPT);
+        String dimensionName = commandLine.getOptionValue(FalconCLIConstants.NAME_OPT);
         String id = commandLine.getOptionValue(ID_OPT);
         String key = commandLine.getOptionValue(KEY_OPT);
         String value = commandLine.getOptionValue(VALUE_OPT);
         String direction = commandLine.getOptionValue(DIRECTION_OPT);
-        String pipeline = commandLine.getOptionValue(PIPELINE_OPT);
-        String doAsUser = commandLine.getOptionValue(FalconCLI.DO_AS_OPT);
-        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT), null, "numResults");
+        String pipeline = commandLine.getOptionValue(FalconCLIConstants.PIPELINE_OPT);
+        String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
+                null, "numResults");
 
         if (optionsList.contains(LINEAGE_OPT)) {
             validatePipelineName(pipeline);
@@ -160,10 +160,10 @@ public class FalconMetadataCLI extends FalconCLI {
                 String schedEntityType = null;
                 String schedEntityName = null;
                 if (StringUtils.isNotEmpty(feed)) {
-                    schedEntityType = EntityType.getEnum(FEED_OPT).name();
+                    schedEntityType = EntityType.getEnum(FalconCLIConstants.FEED_OPT).name();
                     schedEntityName = feed;
                 } else if (StringUtils.isNotEmpty(process)) {
-                    schedEntityType = EntityType.getEnum(PROCESS_OPT).name();
+                    schedEntityType = EntityType.getEnum(FalconCLIConstants.PROCESS_OPT).name();
                     schedEntityName = process;
                 }
                 validateScheduleEntity(schedEntityType, schedEntityName);
@@ -171,9 +171,9 @@ public class FalconMetadataCLI extends FalconCLI {
                 result = client.getReplicationMetricsDimensionList(schedEntityType, schedEntityName,
                         numResults, doAsUser);
             }
-        } else if (optionsList.contains(RELATIONS_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.RELATIONS_OPT)) {
             validateDimensionType(dimensionType.toUpperCase());
-            validateDimensionName(dimensionName, RELATIONS_OPT);
+            validateDimensionName(dimensionName, FalconCLIConstants.RELATIONS_OPT);
             result = client.getDimensionRelations(dimensionType, dimensionName, doAsUser);
         } else if (optionsList.contains(VERTEX_CMD)) {
             validateId(id);
