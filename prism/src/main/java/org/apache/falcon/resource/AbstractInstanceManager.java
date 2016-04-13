@@ -696,7 +696,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         for (EntityList.EntityElement entityElement : entityList.getElements()) {
             String entityName = entityElement.name;
             String entityType = entityElement.type;
-            RelationshipType relationshipType = RelationshipType.fromEntityType(entityType);
+            RelationshipType relationshipType = RelationshipType.fromSchedulableEntityType(entityType);
             TitanVertex entityVertex = (TitanVertex) GraphUtils.findVertex(titanGraph, entityName, relationshipType);
             if (entityVertex == null) {
                 LOG.warn("No entity vertex found for type " + entityType + ", name " + entityName);

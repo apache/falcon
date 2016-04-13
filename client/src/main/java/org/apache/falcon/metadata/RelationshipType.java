@@ -65,7 +65,7 @@ public enum RelationshipType {
         throw new IllegalArgumentException("No constant with value " + value + " found");
     }
 
-    public static RelationshipType fromEntityType(String type) {
+    public static RelationshipType fromSchedulableEntityType(String type) {
         switch (type) {
         case "FEED":
             return RelationshipType.FEED_ENTITY;
