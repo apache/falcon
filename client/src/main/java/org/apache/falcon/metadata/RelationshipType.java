@@ -64,4 +64,15 @@ public enum RelationshipType {
 
         throw new IllegalArgumentException("No constant with value " + value + " found");
     }
+
+    public static RelationshipType fromEntityType(String type) {
+        switch (type) {
+        case "FEED":
+            return RelationshipType.FEED_ENTITY;
+        case "PROCESS":
+            return RelationshipType.PROCESS_ENTITY;
+        default:
+            throw new IllegalArgumentException("Invalid entity type: " + type);
+        }
+    }
 }

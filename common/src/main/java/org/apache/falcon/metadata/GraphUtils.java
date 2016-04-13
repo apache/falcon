@@ -88,23 +88,11 @@ public final class GraphUtils {
                 + "]";
     }
 
-    public static Vertex findVertex(Graph graph, String name, String type) {
-        LOG.debug("Finding vertex for: name={}, type={}", name, type);
-        RelationshipType relationShipType;
-        switch (type) {
-        case "FEED":
-            relationShipType = RelationshipType.FEED_ENTITY;
-            break;
-        case "PROCESS":
-            relationShipType = RelationshipType.PROCESS_ENTITY;
-            break;
-        default:
-            LOG.info("Invalid type: " + type);
-            return null;
-        }
+    public static Vertex findVertex(Graph graph, String name, RelationshipType relationshipType) {
+        LOG.debug("Finding vertex for: name={}, type={}", name, relationshipType.getName());
         GraphQuery query = graph.query()
                 .has(RelationshipProperty.NAME.getName(), name)
-                .has(RelationshipProperty.TYPE.getName(), relationShipType.getName());
+                .has(RelationshipProperty.TYPE.getName(), relationshipType.getName());
         Iterator<Vertex> results = query.vertices().iterator();
         return results.hasNext() ? results.next() : null;  // returning one since name is unique
     }

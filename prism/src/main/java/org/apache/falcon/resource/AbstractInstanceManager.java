@@ -65,6 +65,7 @@ import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.metadata.GraphUtils;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
+import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
@@ -695,7 +696,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         for (EntityList.EntityElement entityElement : entityList.getElements()) {
             String entityName = entityElement.name;
             String entityType = entityElement.type;
-            TitanVertex entityVertex = (TitanVertex) GraphUtils.findVertex(titanGraph, entityName, entityType);
+            RelationshipType relationshipType = RelationshipType.fromEntityType(entityType);
+            TitanVertex entityVertex = (TitanVertex) GraphUtils.findVertex(titanGraph, entityName, relationshipType);
             if (entityVertex == null) {
                 LOG.warn("No entity vertex found for type " + entityType + ", name " + entityName);
             } else {
