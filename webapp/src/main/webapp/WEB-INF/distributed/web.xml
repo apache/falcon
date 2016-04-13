@@ -99,7 +99,13 @@
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
             <param-value>
-                org.apache.falcon.resource.admin.AdminResource,org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.SchedulableEntityManager,org.apache.falcon.resource.InstanceManager,org.apache.falcon.resource.metadata.MetadataDiscoveryResource,org.apache.falcon.resource.metadata.LineageMetadataResource
+                org.apache.falcon.resource.admin.AdminResource,
+                org.apache.falcon.resource.provider.JAXBContextResolver,
+                org.apache.falcon.resource.SchedulableEntityManager,
+                org.apache.falcon.resource.InstanceManager,
+                org.apache.falcon.resource.metadata.MetadataDiscoveryResource,
+                org.apache.falcon.resource.metadata.LineageMetadataResource,
+                org.apache.falcon.resource.extensions.ExtensionManager
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
