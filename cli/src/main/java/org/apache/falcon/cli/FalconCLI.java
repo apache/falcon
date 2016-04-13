@@ -49,13 +49,11 @@ public class FalconCLI {
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
     private static final String FALCON_URL = "FALCON_URL";
-
     private final Properties clientProperties;
 
     public FalconCLI() throws Exception {
         clientProperties = getClientProperties();
     }
-
 
     /**
      * Entry point for the Falcon CLI when invoked from the command line. Upon
@@ -92,7 +90,6 @@ public class FalconCLI {
         FalconEntityCLI entityCLI = new FalconEntityCLI();
         FalconInstanceCLI instanceCLI = new FalconInstanceCLI();
         FalconMetadataCLI metadataCLI = new FalconMetadataCLI();
-        FalconRecipeCLI recipeCLI = new FalconRecipeCLI();
 
         parser.addCommand(FalconCLIConstants.ADMIN_CMD, "", "admin operations", adminCLI.createAdminOptions(), true);
         parser.addCommand(FalconCLIConstants.HELP_CMD, "", "display usage", new Options(), false);
@@ -104,8 +101,6 @@ public class FalconCLI {
                 instanceCLI.createInstanceOptions(), false);
         parser.addCommand(FalconCLIConstants.METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
-        parser.addCommand(FalconCLIConstants.RECIPE_CMD, "", "recipe operations",
-                recipeCLI.createRecipeOptions(), true);
         parser.addCommand(FalconCLIConstants.VERSION_OPT, "", "show client version", new Options(), false);
 
         try {
@@ -127,8 +122,6 @@ public class FalconCLI {
                     instanceCLI.instanceCommand(commandLine, client);
                 } else if (command.getName().equals(FalconCLIConstants.METADATA_CMD)) {
                     metadataCLI.metadataCommand(commandLine, client);
-                } else if (command.getName().equals(FalconCLIConstants.RECIPE_CMD)) {
-                    recipeCLI.recipeCommand(commandLine, client);
                 }
             }
             return exitValue;

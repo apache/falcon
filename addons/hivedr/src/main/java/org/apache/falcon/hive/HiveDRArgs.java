@@ -32,7 +32,7 @@ public enum HiveDRArgs {
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
     SOURCE_DATABASE("sourceDatabase", "comma source databases"),
     SOURCE_TABLE("sourceTable", "comma source tables"),
-    SOURCE_STAGING_PATH("sourceStagingPath", "source staging path for data"),
+    SOURCE_STAGING_PATH("sourceStagingPath", "source staging path for data", false),
 
     // source hadoop endpoints
     SOURCE_NN("sourceNN", "source name node"),
@@ -47,7 +47,7 @@ public enum HiveDRArgs {
     TARGET_METASTORE_URI("targetMetastoreUri", "source meta store uri"),
     TARGET_HS2_URI("targetHiveServer2Uri", "source meta store uri"),
 
-    TARGET_STAGING_PATH("targetStagingPath", "source staging path for data"),
+    TARGET_STAGING_PATH("targetStagingPath", "source staging path for data", false),
 
     // target hadoop endpoints
     TARGET_NN("targetNN", "target name node"),
@@ -70,15 +70,12 @@ public enum HiveDRArgs {
     // Map Bandwidth
     DISTCP_MAP_BANDWIDTH("distcpMapBandwidth", "map bandwidth in mb", false),
 
-    JOB_NAME("drJobName", "unique job name"),
+    JOB_NAME("jobName", "unique job name"),
 
     CLUSTER_FOR_JOB_RUN("clusterForJobRun", "cluster where job runs"),
     JOB_CLUSTER_NN("clusterForJobRunWriteEP", "write end point of cluster where job runs"),
     JOB_CLUSTER_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal",
             "Namenode kerberos principal of cluster on which replication job runs", false),
-
-
-    FALCON_LIBPATH("falconLibPath", "Falcon Lib Path for Jar files", false),
 
     KEEP_HISTORY("keepHistory", "Keep history of events file generated", false),
     EXECUTION_STAGE("executionStage", "Flag for workflow stage execution", false),
