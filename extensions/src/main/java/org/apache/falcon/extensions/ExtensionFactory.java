@@ -18,14 +18,10 @@
 
 package org.apache.falcon.extensions;
 
-<<<<<<< HEAD:client/src/main/java/org/apache/falcon/recipe/RecipeFactory.java
-import org.apache.falcon.FalconCLIConstants .RecipeOperation;
-=======
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 
 import java.util.List;
->>>>>>> 3e22a77fec451ae5169548f2cee70ab483eba650:extensions/src/main/java/org/apache/falcon/extensions/ExtensionFactory.java
 
 /**
  * Extension Factory class to get the corresponding extension.
