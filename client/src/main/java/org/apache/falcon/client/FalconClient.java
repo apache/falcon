@@ -19,7 +19,6 @@
 package org.apache.falcon.client;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.List;
@@ -54,8 +52,6 @@ import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.metadata.RelationshipType;
-import org.apache.falcon.recipe.RecipeTool;
-import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
@@ -949,76 +945,6 @@ public class FalconClient extends AbstractFalconClient {
 
     public String getEdge(String id, String doAsUser) throws FalconCLIException {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
-    }
-
-    private String getRecipePath(String recipePropertiesFile) throws FalconCLIException {
-        String recipePath = null;
-        if (StringUtils.isNotBlank(recipePropertiesFile)) {
-            File file = new File(recipePropertiesFile);
-            if (file.exists()) {
-                recipePath = file.getAbsoluteFile().getParentFile().getAbsolutePath();
-            }
-        } else {
-            recipePath = clientProperties.getProperty("falcon.recipe.path");
-        }
-
-        return recipePath;
-    }
-
-    public APIResult submitRecipe(String recipeName, String recipeToolClassName,
-                                  final String recipeOperation, String recipePropertiesFile, Boolean skipDryRun,
-                                  final String doAsUser) throws FalconCLIException {
-        String recipePath = getRecipePath(recipePropertiesFile);
-
-        if (StringUtils.isEmpty(recipePath)) {
-            throw new FalconCLIException("falcon.recipe.path is not set in client.properties or properties "
-                    + " file is not provided");
-        }
-
-        String templateFilePath = recipePath + File.separator + recipeName + TEMPLATE_SUFFIX;
-        File file = new File(templateFilePath);
-        if (!file.exists()) {
-            throw new FalconCLIException("Recipe template file does not exist : " + templateFilePath);
-        }
-
-        String propertiesFilePath = recipePath + File.separator + recipeName + PROPERTIES_SUFFIX;
-        file = new File(propertiesFilePath);
-        if (!file.exists()) {
-            throw new FalconCLIException("Recipe properties file does not exist : " + propertiesFilePath);
-        }
-
-        String processFile;
-        try {
-            String prefix =  "falcon-recipe" + "-" + System.currentTimeMillis();
-            File tmpPath = new File("/tmp");
-            if (!tmpPath.exists()) {
-                if (!tmpPath.mkdir()) {
-                    throw new FalconCLIException("Creating directory failed: " + tmpPath.getAbsolutePath());
-                }
-            }
-            File f = File.createTempFile(prefix, ".xml", tmpPath);
-            f.deleteOnExit();
-
-            processFile = f.getAbsolutePath();
-            String[] args = {
-                "-" + RecipeToolArgs.RECIPE_FILE_ARG.getName(), templateFilePath,
-                "-" + RecipeToolArgs.RECIPE_PROPERTIES_FILE_ARG.getName(), propertiesFilePath,
-                "-" + RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG.getName(), processFile,
-                "-" + RecipeToolArgs.RECIPE_OPERATION_ARG.getName(), recipeOperation,
-            };
-
-            if (recipeToolClassName != null) {
-                Class<?> clz = Class.forName(recipeToolClassName);
-                Method method = clz.getMethod("main", String[].class);
-                method.invoke(null, args);
-            } else {
-                RecipeTool.main(args);
-            }
-            validate(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser);
-            return submitAndSchedule(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser, null);
-        } catch (Exception e) {
-            throw new FalconCLIException(e.getMessage(), e);
-        }
     }
 
     private String sendMetadataLineageRequest(MetadataOperations job, String id,
