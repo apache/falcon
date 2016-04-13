@@ -146,11 +146,6 @@ public class HiveDROptions {
         return context.get(HiveDRArgs.EXECUTION_STAGE);
     }
 
-    public boolean isTDEEncryptionEnabled() {
-        return StringUtils.isEmpty(context.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED))
-                ? false : Boolean.valueOf(context.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED));
-    }
-
     public boolean shouldBlock() {
         return true;
     }

@@ -346,7 +346,7 @@
             <arg>${clusterForJobNNKerberosPrincipal}</arg>
             <arg>-tdeEncryptionEnabled</arg>
             <arg>${tdeEncryptionEnabled}</arg>
-           <arg>-jobName</arg>
+            <arg>-jobName</arg>
             <arg>${jobName}-${nominalTime}</arg>
             <arg>-executionStage</arg>
             <arg>import</arg>
