@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FalconExtensionCLI {
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
 
-    // Extension store Commands
+    // Extension artifact repository Commands
     public static final String ENUMERATE_OPT = "enumerate";
     public static final String DEFINITION_OPT = "definition";
     public static final String DESCRIBE_OPT = "describe";
