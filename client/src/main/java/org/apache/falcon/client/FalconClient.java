@@ -333,7 +333,7 @@ public class FalconClient extends AbstractFalconClient {
 
         ENUMERATE("api/extensions/enumerate/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DESCRIBE("api/extensions/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        DEFINITION("api/extensions/definition", HttpMethod.GET, MediaType.TEXT_PLAIN);
+        DEFINITION("api/extensions/definition", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
