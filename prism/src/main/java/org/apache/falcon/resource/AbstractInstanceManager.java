@@ -690,8 +690,28 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         EntityList entityList = getEntityList(
                 "", nameSubsequence, tagKeywords, type, "", "", "", "", 0, 0, "", true);
 
-        // search instances with TitanMultiVertexQuery
+        // search instances with TitanDB
         TitanBlueprintsGraph titanGraph = (TitanBlueprintsGraph) getGraph();
+        Map<TitanVertex, Iterable<TitanVertex>> instanceMap = titanInstances(
+                titanGraph, entityList, resultsPerPage + offset, nominalStartTime, nominalEndTime, status, orderBy);
+
+        // integrate search results from each entity
+        List<Instance> instances = consolidateTitanInstances(instanceMap);
+
+        // sort by descending order and pagination
+        List<Instance> instancesReturn = sortInstancesPagination(instances, orderBy, "desc", offset, resultsPerPage);
+
+        // output format
+        InstancesResult result = new InstancesResult(APIResult.Status.SUCCEEDED, "Instances Search Results");
+        result.setInstances(instancesReturn.toArray(new Instance[instancesReturn.size()]));
+        titanGraph.commit();
+        return result;
+    }
+
+    private Map<TitanVertex, Iterable<TitanVertex>> titanInstances(TitanBlueprintsGraph titanGraph,
+                                                                   EntityList entityList, int numTopInstances,
+                                                                   String nominalStartTime, String nominalEndTime,
+                                                                   String status, String orderBy) {
         List<TitanVertex> entityVertices = new ArrayList<TitanVertex>();
         for (EntityList.EntityElement entityElement : entityList.getElements()) {
             String entityName = entityElement.name;
@@ -705,41 +725,32 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             }
         }
 
-        List<Instance> instancesReturn;
         if (entityVertices.isEmpty()) { // Need to add at least one vertex for TitanMultiVertexQuery
-            instancesReturn = new ArrayList<>();
-        } else {
-            int numTopInstances = resultsPerPage + offset;
-            TitanMultiVertexQuery vertexQuery = titanGraph.multiQuery(entityVertices)
-                    .labels(RelationshipLabel.INSTANCE_ENTITY_EDGE.getName());
-            GraphUtils.addRangeQuery(vertexQuery, RelationshipProperty.NOMINAL_TIME, nominalStartTime, nominalEndTime);
-            GraphUtils.addEqualityQuery(vertexQuery, RelationshipProperty.STATUS, status);
-            GraphUtils.addOrderLimitQuery(vertexQuery, orderBy, numTopInstances);
-            Map<TitanVertex, Iterable<TitanVertex>> instanceMap = vertexQuery.vertices();
-
-            // integrate search results from each entity
-            List<Instance> instances = new ArrayList<>();
-            for (Iterable<TitanVertex> vertices : instanceMap.values()) {
-                for (TitanVertex vertex : vertices) {
-                    Instance instance = new Instance();
-                    instance.instance = vertex.getProperty(RelationshipProperty.NAME.getName());
-                    String instanceStatus = vertex.getProperty(RelationshipProperty.STATUS.getName());
-                    if (StringUtils.isNotEmpty(instanceStatus)) {
-                        instance.status = InstancesResult.WorkflowStatus.valueOf(instanceStatus);
-                    }
-                    instances.add(instance);
-                }
-            }
-
-            // sort by descending order and pagination
-            instancesReturn = sortInstancesPagination(instances, orderBy, "desc", offset, resultsPerPage);
+            return new HashMap<>();
         }
 
-        // output format
-        InstancesResult result = new InstancesResult(APIResult.Status.SUCCEEDED, "Instances Search Results");
-        result.setInstances(instancesReturn.toArray(new Instance[instancesReturn.size()]));
-        titanGraph.commit();
-        return result;
+        TitanMultiVertexQuery vertexQuery = titanGraph.multiQuery(entityVertices)
+                .labels(RelationshipLabel.INSTANCE_ENTITY_EDGE.getName());
+        GraphUtils.addRangeQuery(vertexQuery, RelationshipProperty.NOMINAL_TIME, nominalStartTime, nominalEndTime);
+        GraphUtils.addEqualityQuery(vertexQuery, RelationshipProperty.STATUS, status);
+        GraphUtils.addOrderLimitQuery(vertexQuery, orderBy, numTopInstances);
+        return vertexQuery.vertices();
+    }
+
+    private List<Instance> consolidateTitanInstances(Map<TitanVertex, Iterable<TitanVertex>> instanceMap) {
+        List<Instance> instances = new ArrayList<>();
+        for (Iterable<TitanVertex> vertices : instanceMap.values()) {
+            for (TitanVertex vertex : vertices) {
+                Instance instance = new Instance();
+                instance.instance = vertex.getProperty(RelationshipProperty.NAME.getName());
+                String instanceStatus = vertex.getProperty(RelationshipProperty.STATUS.getName());
+                if (StringUtils.isNotEmpty(instanceStatus)) {
+                    instance.status = InstancesResult.WorkflowStatus.valueOf(instanceStatus);
+                }
+                instances.add(instance);
+            }
+        }
+        return instances;
     }
 
     protected List<Instance> sortInstancesPagination(List<Instance> instances, String orderBy, String sortOrder,
