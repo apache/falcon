@@ -26,8 +26,6 @@ import org.apache.falcon.service.FalconService;
  * Extension service.
  */
 public class ExtensionService implements FalconService {
-    private static ExtensionStore extensionStore = ExtensionStore.get();
-
     public static final String SERVICE_NAME = ExtensionService.class.getSimpleName();
 
     @Override
@@ -44,6 +42,6 @@ public class ExtensionService implements FalconService {
     }
 
     public static ExtensionStore getExtensionStore() {
-        return extensionStore;
+        return ExtensionStore.get();
     }
 }
