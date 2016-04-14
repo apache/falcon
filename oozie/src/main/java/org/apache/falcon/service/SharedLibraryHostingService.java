@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.extensions.ExtensionService;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -82,6 +83,10 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
 
     private void pushExtensionArtifactsToCluster(final Cluster cluster,
                                                  final FileSystem clusterFs) throws FalconException {
+        if (!Services.get().isRegistered(ExtensionService.SERVICE_NAME)) {
+            LOG.info("ExtensionService not registered, return");
+            return;
+        }
 
         ExtensionStore store = ExtensionStore.get();
         if (!store.isExtensionStoreInitialized()) {
