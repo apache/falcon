@@ -34,7 +34,7 @@ public final class FalconCLIConstants {
     public static final String METADATA_CMD = "metadata";
     public static final String ENTITY_CMD = "entity";
     public static final String INSTANCE_CMD = "instance";
-    public static final String RECIPE_CMD = "recipe";
+    public static final String EXTENSION_CMD = "extension";
 
     public static final String TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
@@ -65,12 +65,4 @@ public final class FalconCLIConstants {
     public static final String RELATIONS_OPT = "relations";
     public static final String PIPELINE_OPT = "pipeline";
     public static final String NAME_OPT = "name";
-
-    /**
-     * Recipe operation enum.
-     */
-    public enum RecipeOperation {
-        HDFS_REPLICATION,
-        HIVE_DISASTER_RECOVERY
-    }
 }
