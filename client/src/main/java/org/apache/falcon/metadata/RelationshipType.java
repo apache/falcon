@@ -18,6 +18,8 @@
 
 package org.apache.falcon.metadata;
 
+import org.apache.falcon.entity.v0.EntityType;
+
 /**
  * Enumerates Relationship types.
  */
@@ -66,13 +68,14 @@ public enum RelationshipType {
     }
 
     public static RelationshipType fromSchedulableEntityType(String type) {
-        switch (type) {
-        case "FEED":
+        EntityType entityType = EntityType.getEnum(type);
+        switch (entityType) {
+        case FEED:
             return RelationshipType.FEED_ENTITY;
-        case "PROCESS":
+        case PROCESS:
             return RelationshipType.PROCESS_ENTITY;
         default:
-            throw new IllegalArgumentException("Invalid entity type: " + type);
+            throw new IllegalArgumentException("Invalid schedulable entity type: " + entityType.name());
         }
     }
 }
