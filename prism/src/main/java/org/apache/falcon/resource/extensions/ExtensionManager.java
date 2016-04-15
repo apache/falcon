@@ -40,7 +40,6 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
-import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
@@ -68,40 +67,12 @@ import java.util.Properties;
 public class ExtensionManager extends AbstractSchedulableEntityManager {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionManager.class);
 
-    private static final ExtensionStore STORE = ExtensionStore.get();
-    private static final String RESULTS = "extensions";
-    private static final String TOTAL_RESULTS = "totalResults";
-    private static final String README = "README";
-    private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
-    private static final String SHORT_DESCRIPTION = "shortDescription";
-
-    private static final String TRUSTED_EXTENSION = "Trusted extension";
-    private static final String CUSTOM_EXTENSION = "Custom extension";
-
     public static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
     public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
     public static final String ASCENDING_SORT_ORDER = "asc";
     public static final String DESCENDING_SORT_ORDER = "desc";
 
     private Extension extension = new Extension();
-
-    /**
-     * Enum for extension element.
-     */
-    private static enum ExtensionElement {
-        NAME("name"),
-        Type("type"),
-        DESCRIPTION("description");
-
-        private final String name;
-        ExtensionElement(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-    }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
@@ -150,7 +121,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             return jobList;
         } catch (FalconException | IOException e) {
             LOG.error("Failed to get extension job list of " + extensionName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -183,7 +154,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             return instances;
         } catch (FalconException | IOException e) {
             LOG.error("Error when listing instances of extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -200,7 +171,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when scheduling extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " scheduled successfully");
     }
@@ -222,7 +193,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when scheduling extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " suspended successfully");
     }
@@ -244,7 +215,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when resuming extension job " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " resumed successfully");
     }
@@ -267,7 +238,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when deleting extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " deleted successfully");
     }
@@ -288,7 +259,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when submitting extension job: ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully");
     }
@@ -311,7 +282,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when submitting extension job: ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted and scheduled successfully");
     }
@@ -331,7 +302,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when updating extension job: ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Updated successfully");
     }
@@ -351,7 +322,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         } catch (FalconException | IOException e) {
             LOG.error("Error when validating extension job: ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully");
     }
