@@ -69,6 +69,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     public static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
     public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
+    public static final String TAG_SEPARATOR = ",";
     public static final String ASCENDING_SORT_ORDER = "asc";
     public static final String DESCENDING_SORT_ORDER = "desc";
 
@@ -89,11 +90,9 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         try {
             // get filtered entities
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_NAME + extensionName, "", doAsUser);
-            LOG.info("find " + entities.size() + " entities");
 
             // group entities by extension job name
             Map<String, List<Entity>> groupedEntities = groupEntitiesByJob(entities);
-            LOG.info("grouped entities by job names: " + groupedEntities.keySet().toString());
 
             // sort by extension job name
             List<String> jobNames = new ArrayList<>(groupedEntities.keySet());
@@ -104,7 +103,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             default:
                 Collections.sort(jobNames, String.CASE_INSENSITIVE_ORDER);
             }
-            LOG.info("sorted job names: " + jobNames.toString());
 
             // pagination and format output
             int pageCount = getRequiredNumberOfResults(jobNames.size(), offset, resultsPerPage);
@@ -112,11 +110,9 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             ExtensionJobList jobList = new ExtensionJobList(pageCount);
             for (int i = offset; i < offset + pageCount; i++) {
                 String jobName = jobNames.get(i);
-                LOG.info("formatting output for job " + jobName);
                 List<Entity> jobEntities = groupedEntities.get(jobName);
                 EntityList entityList = new EntityList(buildEntityElements(fieldSet, jobEntities), jobEntities.size());
                 jobList.addJob(new ExtensionJobList.JobElement(jobName, entityList));
-                LOG.info("added " + jobEntities.size() + " entities: " + entityList.toString());
             }
             return jobList;
         } catch (FalconException | IOException e) {
@@ -254,7 +250,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         try {
             List<Entity> entities = generateEntities(extensionName, request);
             for (Entity entity : entities) {
-                LOG.info("to submit entity: " + entity.getName() + ", " + entity.getTags());
                 submitInternal(entity, doAsUser);
             }
         } catch (FalconException | IOException e) {
@@ -332,15 +327,13 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         // get entities for extension job
         Properties properties = new Properties();
         properties.load(request.getInputStream());
-        LOG.info("properties: " + properties.toString());
         List<Entity> entities = extension.getEntities(extensionName, properties);
-        LOG.info("generated " + entities.size() + " entities");
 
         // add tags on extension name and job
         for (Entity entity : entities) {
             String tags = entity.getTags();
             if (StringUtils.isEmpty(tags)) {
-                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + ","
+                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
                         + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
             } else {
                 if (tags.indexOf(TAG_PREFIX_EXTENSION_NAME) != -1) {
@@ -351,7 +344,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                     throw new FalconException("Generated extention entity " + entity.getName()
                             + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_JOB);
                 }
-                setEntityTags(entity, tags + "," + TAG_PREFIX_EXTENSION_NAME + extensionName + ","
+                setEntityTags(entity, tags + TAG_SEPARATOR + TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
                         + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
             }
         }

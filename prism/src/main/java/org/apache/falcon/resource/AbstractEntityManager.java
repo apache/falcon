@@ -302,7 +302,7 @@ public abstract class AbstractEntityManager {
             return update(entity, type, entityName, skipDryRun);
         } catch (IOException | FalconException e) {
             LOG.error("Update failed", e);
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
