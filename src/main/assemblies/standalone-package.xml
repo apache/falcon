@@ -197,6 +197,12 @@
         </file>
 
         <file>
+            <source>../cli/target/falcon-cli-${project.version}.jar</source>
+            <outputDirectory>client/lib</outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>
+
+        <file>
             <source>../prism/target/prism.keystore</source>
             <outputDirectory>conf</outputDirectory>
             <destName>prism.keystore</destName>
