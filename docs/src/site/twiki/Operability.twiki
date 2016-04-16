@@ -80,12 +80,11 @@ By default, Falcon starts an ActiveMQ embedded JMS server on Falcon machine on p
 users can make Falcon to use an existing JMS server instead of starting an embedded instance by doing the
 following 2 steps:
 
-   1. setting the property broker.url in the startup.properties as below
+   * Setting the property broker.url in the startup.properties as below
 <verbatim>
    *.broker.url=tcp://jms-server-host:61616
 </verbatim>
-
-   2. set the system property falcon.embeddedmq to false as below
+   * Set the system property falcon.embeddedmq to false as below
 <verbatim>
    <FALCON-INSTALL-DIR>/bin/falcon-start -Dfalcon.embeddedmq=false
 </verbatim>
