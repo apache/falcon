@@ -17,12 +17,12 @@
   ~ limitations under the License.
   -->
 
-<cluster colo="gs" description="" name="backupCluster" xmlns="uri:falcon:cluster:0.1"
+<cluster colo="gs" description="" name="backupSnapshotRepl" xmlns="uri:falcon:cluster:0.1"
         >
     <interfaces>
         <interface type="readonly" endpoint="hftp://localhost:50010"
                    version="0.20.2"/>
-        <interface type="write" endpoint="hdfs://localhost:54134"
+        <interface type="write" endpoint="hdfs://localhost:54136"
                    version="0.20.2"/>
         <interface type="execute" endpoint="localhost:8021" version="0.20.2"/>
         <interface type="workflow" endpoint="http://localhost:11000/oozie/"

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
@@ -28,6 +29,7 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -68,6 +70,18 @@ public final class ClusterHelper {
             }
         }
 
+        return conf;
+    }
+
+    public static Configuration getConfiguration(String storageUrl, String executeEndPoint,
+                                                 String kerberosPrincipal) {
+        Configuration conf = new Configuration();
+        conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
+        conf.set(HadoopClientFactory.MR_JT_ADDRESS_KEY, executeEndPoint);
+        conf.set(HadoopClientFactory.YARN_RM_ADDRESS_KEY, executeEndPoint);
+        if (StringUtils.isNotBlank(kerberosPrincipal)) {
+            conf.set(SecurityUtil.NN_PRINCIPAL, kerberosPrincipal);
+        }
         return conf;
     }
 

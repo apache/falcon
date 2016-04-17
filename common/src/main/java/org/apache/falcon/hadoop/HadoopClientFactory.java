@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -132,6 +133,28 @@ public final class HadoopClientFactory {
         }
     }
 
+    /**
+     * Return a DistributedFileSystem created with the authenticated proxy user for the specified conf.
+     *
+     * @param conf Configuration with all necessary information to create the FileSystem.
+     * @return DistributedFileSystem created with the provided proxyUser/group.
+     * @throws org.apache.falcon.FalconException
+     *          if the filesystem could not be created.
+     */
+    public DistributedFileSystem createDistributedProxiedFileSystem(final Configuration conf) throws FalconException {
+        Validate.notNull(conf, "configuration cannot be null");
+
+        String nameNode = getNameNode(conf);
+        try {
+            return createDistributedFileSystem(CurrentUser.getProxyUGI(), new URI(nameNode), conf);
+        } catch (URISyntaxException e) {
+            throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode, e);
+        } catch (IOException e) {
+            throw new FalconException("Exception while getting Distributed FileSystem for proxy: "
+                    + CurrentUser.getUser(), e);
+        }
+    }
+
     private static String getNameNode(Configuration conf) {
         return conf.get(FS_DEFAULT_NAME_KEY);
     }
@@ -172,19 +195,7 @@ public final class HadoopClientFactory {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public FileSystem createFileSystem(UserGroupInformation ugi, final URI uri,
                                        final Configuration conf) throws FalconException {
-        Validate.notNull(ugi, "ugi cannot be null");
-        Validate.notNull(conf, "configuration cannot be null");
-
-        try {
-            if (UserGroupInformation.isSecurityEnabled()) {
-                ugi.checkTGTAndReloginFromKeytab();
-            }
-        } catch (IOException ioe) {
-            throw new FalconException("Exception while getting FileSystem. Unable to check TGT for user "
-                    + ugi.getShortUserName(), ioe);
-        }
-
-        validateNameNode(uri, conf);
+        validateInputs(ugi, uri, conf);
 
         try {
             // prevent falcon impersonating falcon, no need to use doas
@@ -201,11 +212,63 @@ public final class HadoopClientFactory {
                     return FileSystem.get(uri, conf);
                 }
             });
-        } catch (InterruptedException ex) {
-            throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
+        } catch (InterruptedException | IOException ex) {
             throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * Return a DistributedFileSystem created with the provided user for the specified URI.
+     *
+     * @param ugi user group information
+     * @param uri  file system URI.
+     * @param conf Configuration with all necessary information to create the FileSystem.
+     * @return DistributedFileSystem created with the provided user/group.
+     * @throws org.apache.falcon.FalconException
+     *          if the filesystem could not be created.
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public DistributedFileSystem createDistributedFileSystem(UserGroupInformation ugi, final URI uri,
+                                                             final Configuration conf) throws FalconException {
+        validateInputs(ugi, uri, conf);
+        FileSystem returnFs;
+        try {
+            // prevent falcon impersonating falcon, no need to use doas
+            final String proxyUserName = ugi.getShortUserName();
+            if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
+                LOG.info("Creating Distributed FS for the login user {}, impersonation not required",
+                        proxyUserName);
+                returnFs = DistributedFileSystem.get(uri, conf);
+            } else {
+                LOG.info("Creating FS impersonating user {}", proxyUserName);
+                returnFs = ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+                    public FileSystem run() throws Exception {
+                        return DistributedFileSystem.get(uri, conf);
+                    }
+                });
+            }
+
+            return (DistributedFileSystem) returnFs;
+        } catch (InterruptedException | IOException ex) {
+            throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
+        }
+    }
+
+    private void validateInputs(UserGroupInformation ugi, final URI uri,
+                                final Configuration conf) throws FalconException {
+        Validate.notNull(ugi, "ugi cannot be null");
+        Validate.notNull(conf, "configuration cannot be null");
+
+        try {
+            if (UserGroupInformation.isSecurityEnabled()) {
+                ugi.checkTGTAndReloginFromKeytab();
+            }
+        } catch (IOException ioe) {
+            throw new FalconException("Exception while getting FileSystem. Unable to check TGT for user "
+                    + ugi.getShortUserName(), ioe);
+        }
+
+        validateNameNode(uri, conf);
     }
 
     /**
