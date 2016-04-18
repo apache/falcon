@@ -42,6 +42,7 @@ import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 
 /**
@@ -305,7 +307,10 @@ public class ProcessExecutionInstance extends ExecutionInstance {
     public void resume() throws FalconException {
         // Was already scheduled on the DAGEngine, so resume on DAGEngine if suspended
         if (getExternalID() != null) {
-            dagEngine.resume(this);
+            if (getProperties() == null) {
+                setProperties(new Properties());
+            }
+            getProperties().setProperty(FalconWorkflowEngine.FALCON_RESUME, "true");
         } else if (awaitedPredicates != null && !awaitedPredicates.isEmpty()) {
             // Evaluate any remaining predicates
             registerForNotifications(true);

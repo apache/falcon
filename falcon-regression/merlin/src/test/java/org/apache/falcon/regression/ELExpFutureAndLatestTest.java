@@ -43,7 +43,7 @@ import java.util.List;
 /**
  * EL Expression test.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded" })
 public class ELExpFutureAndLatestTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

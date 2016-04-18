@@ -18,7 +18,12 @@
 
 package org.apache.falcon.metadata;
 
+import com.thinkaurelius.titan.core.EdgeLabel;
+import com.thinkaurelius.titan.core.Order;
+import com.thinkaurelius.titan.core.PropertyKey;
+import com.thinkaurelius.titan.core.schema.TitanManagement;
 import com.thinkaurelius.titan.graphdb.blueprints.TitanBlueprintsGraph;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphFactory;
@@ -150,24 +155,41 @@ public class MetadataMappingService
         makeKeyIndex(RelationshipProperty.TYPE.getName());
         makeKeyIndex(RelationshipProperty.TIMESTAMP.getName());
         makeKeyIndex(RelationshipProperty.VERSION.getName());
+        makeInstanceIndex();
+    }
+
+    private void makeInstanceIndex() {
+        // build index for instance search
+        TitanManagement titanManagement = getTitanGraph().getManagementSystem();
+        PropertyKey statusKey = makePropertyKey(titanManagement, RelationshipProperty.STATUS.getName());
+        PropertyKey nominalTimeKey = makePropertyKey(titanManagement, RelationshipProperty.NOMINAL_TIME.getName());
+        EdgeLabel edgeLabel = titanManagement.makeEdgeLabel(RelationshipLabel.INSTANCE_ENTITY_EDGE.getName()).make();
+        titanManagement.buildEdgeIndex(edgeLabel, "indexInstanceN", Direction.OUT, Order.DESC, nominalTimeKey);
+        titanManagement.buildEdgeIndex(edgeLabel, "indexInstanceSN", Direction.OUT, Order.DESC,
+                statusKey, nominalTimeKey);
+        titanManagement.commit();
     }
 
     private void makeNameKeyIndex() {
-        getTitanGraph().makeKey(RelationshipProperty.NAME.getName())
-                .dataType(String.class)
-                .indexed(Vertex.class)
-                .indexed(Edge.class)
-                // .unique() todo this ought to be unique?
-                .make();
-        getTitanGraph().commit();
+        TitanManagement titanManagement = getTitanGraph().getManagementSystem();
+        PropertyKey nameKey = makePropertyKey(titanManagement, RelationshipProperty.NAME.getName());
+        titanManagement.buildIndex("indexByVertexName", Vertex.class).addKey(nameKey).buildCompositeIndex();
+        titanManagement.buildIndex("indexByEdgeName", Edge.class).addKey(nameKey).buildCompositeIndex();
+        titanManagement.commit();
     }
 
     private void makeKeyIndex(String key) {
-        getTitanGraph().makeKey(key)
-                .dataType(String.class)
-                .indexed(Vertex.class)
-                .make();
-        getTitanGraph().commit();
+        TitanManagement titanManagement = getTitanGraph().getManagementSystem();
+        PropertyKey propertyKey = makePropertyKey(titanManagement, key);
+        titanManagement.buildIndex("indexBy" + key, Vertex.class).addKey(propertyKey).buildCompositeIndex();
+        titanManagement.commit();
+    }
+
+    private PropertyKey makePropertyKey(TitanManagement titanManagement, String key) {
+        if (titanManagement.containsPropertyKey(key)) {
+            return titanManagement.getPropertyKey(key);
+        }
+        return titanManagement.makePropertyKey(key).dataType(String.class).make();
     }
 
     public Graph getGraph() {
@@ -257,14 +279,42 @@ public class MetadataMappingService
     }
 
     @Override
+    public void onStart(final WorkflowExecutionContext context) throws FalconException {
+        LOG.info("onStart {}", context);
+        onInstanceExecutionUpdate(context);
+    }
+
+    @Override
     public void onSuccess(final WorkflowExecutionContext context) throws FalconException {
-        LOG.info("Adding lineage for context {}", context);
+        LOG.info("onSuccess {}", context);
+        onInstanceExecutionUpdate(context);
+    }
+
+    @Override
+    public void onFailure(final WorkflowExecutionContext context) throws FalconException {
+        LOG.info("onFailure {}", context);
+        onInstanceExecutionUpdate(context);
+    }
+
+    @Override
+    public void onSuspend(final WorkflowExecutionContext context) throws FalconException {
+        LOG.info("onSuspend {}", context);
+        onInstanceExecutionUpdate(context);
+    }
+
+    @Override
+    public void onWait(final WorkflowExecutionContext context) throws FalconException {
+        LOG.info("onWait {}", context);
+        onInstanceExecutionUpdate(context);
+    }
+
+    private void onInstanceExecutionUpdate(final WorkflowExecutionContext context) throws FalconException {
         try {
             new TransactionRetryHelper.Builder<Void>(getTransactionalGraph())
                     .perform(new TransactionWork<Void>() {
                         @Override
                         public Void execute(TransactionalGraph transactionalGraph) throws Exception {
-                            onSuccessfulExecution(context);
+                            updateInstanceStatus(context);
                             transactionalGraph.commit();
                             return null;
                         }
@@ -275,64 +325,56 @@ public class MetadataMappingService
         }
     }
 
-    private void onSuccessfulExecution(final WorkflowExecutionContext context) throws FalconException {
+    private void updateInstanceStatus(final WorkflowExecutionContext context) throws FalconException {
+        if (context.getContextType() == WorkflowExecutionContext.Type.COORDINATOR_ACTION) {
+            // TODO(yzheng): FALCON-1776 Instance update on titan DB based on JMS notifications on coordinator actions
+            return;
+        }
+
         WorkflowExecutionContext.EntityOperations entityOperation = context.getOperation();
         switch (entityOperation) {
         case GENERATE:
-            onProcessInstanceExecuted(context);
+            updateProcessInstance(context);
             break;
         case REPLICATE:
-            onFeedInstanceReplicated(context);
+            updateReplicatedFeedInstance(context);
             break;
         case DELETE:
-            onFeedInstanceEvicted(context);
+            updateEvictedFeedInstance(context);
             break;
         case IMPORT:
-            onFeedInstanceImported(context);
+            updateImportedFeedInstance(context);
+            break;
+        case EXPORT:
+            updateExportedFeedInstance(context);
             break;
         default:
             throw new IllegalArgumentException("Invalid EntityOperation - " + entityOperation);
         }
     }
 
-    @Override
-    public void onFailure(WorkflowExecutionContext context) throws FalconException {
-        // do nothing since lineage is only recorded for successful workflow
-    }
-
-    @Override
-    public void onStart(WorkflowExecutionContext context) throws FalconException {
-        // Do nothing
-    }
-
-    @Override
-    public void onSuspend(WorkflowExecutionContext context) throws FalconException {
-        // Do nothing
-    }
-
-    @Override
-    public void onWait(WorkflowExecutionContext context) throws FalconException {
-        // TBD
-    }
-
-
-    private void onProcessInstanceExecuted(WorkflowExecutionContext context) throws FalconException {
+    private void updateProcessInstance(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Updating process instance: {}", context.getNominalTimeAsISO8601());
         Vertex processInstance = instanceGraphBuilder.addProcessInstance(context);
         instanceGraphBuilder.addOutputFeedInstances(context, processInstance);
         instanceGraphBuilder.addInputFeedInstances(context, processInstance);
     }
 
-    private void onFeedInstanceReplicated(WorkflowExecutionContext context) throws FalconException {
-        LOG.info("Adding replicated feed instance: {}", context.getNominalTimeAsISO8601());
+    private void updateReplicatedFeedInstance(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Updating replicated feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addReplicatedInstance(context);
     }
 
-    private void onFeedInstanceEvicted(WorkflowExecutionContext context) throws FalconException {
-        LOG.info("Adding evicted feed instance: {}", context.getNominalTimeAsISO8601());
+    private void updateEvictedFeedInstance(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Updating evicted feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addEvictedInstance(context);
     }
-    private void onFeedInstanceImported(WorkflowExecutionContext context) throws FalconException {
-        LOG.info("Adding imported feed instance: {}", context.getNominalTimeAsISO8601());
+    private void updateImportedFeedInstance(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Updating imported feed instance: {}", context.getNominalTimeAsISO8601());
         instanceGraphBuilder.addImportedInstance(context);
+    }
+    private void updateExportedFeedInstance(WorkflowExecutionContext context) throws FalconException {
+        LOG.info("Updating export feed instance: {}", context.getNominalTimeAsISO8601());
+        instanceGraphBuilder.addExportedInstance(context);
     }
 }

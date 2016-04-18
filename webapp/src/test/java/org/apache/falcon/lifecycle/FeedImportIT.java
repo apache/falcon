@@ -22,13 +22,17 @@ import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.HiveTestUtils;
 import org.apache.falcon.util.HsqldbTestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hive.hcatalog.api.HCatClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -37,6 +41,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,6 +54,12 @@ public class FeedImportIT {
     public static final Logger LOG =  LoggerFactory.getLogger(FeedImportIT.class);
 
     private static final String DATASOURCE_NAME_KEY = "datasourcename";
+    private static final String METASTORE_URL = "thrift://localhost:49083";
+    private static final String DATABASE_NAME = "SqoopTestDB";
+    private static final String TABLE_NAME = "SqoopTestTable";
+
+    private HCatClient client;
+    private CatalogStorage storage;
 
     @BeforeClass
     public void setUp() throws Exception {
@@ -58,6 +70,18 @@ public class FeedImportIT {
 
         TestContext.cleanupStore();
         TestContext.prepare();
+
+        // setup hcat
+        CurrentUser.authenticate(TestContext.REMOTE_USER);
+        client = TestContext.getHCatClient(METASTORE_URL);
+
+        HiveTestUtils.createDatabase(METASTORE_URL, DATABASE_NAME);
+        List<String> partitionKeys = new ArrayList<>();
+        partitionKeys.add("year");
+        partitionKeys.add("month");
+        partitionKeys.add("day");
+        partitionKeys.add("hour");
+        HiveTestUtils.createTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionKeys);
     }
 
     @AfterClass
@@ -154,7 +178,8 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import FEED entity with datasource {} via entity -submit -type feed -file {}",
+            dsName, filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
     }
 
@@ -200,7 +225,8 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("Submit FEED entity with datasource {} via entity -submit -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import FEED entity with datasource {} via entity -submit -type feed -file {}",
+            dsName, filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
     }
 
@@ -222,7 +248,31 @@ public class FeedImportIT {
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE3, overlay);
-        LOG.info("Submit feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName, filePath);
+        LOG.info("Submit import feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName,
+            filePath);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+    }
+
+    @Test
+    public void testSqoopHCatImport() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        context.setCluster(filePath);
+        LOG.info("entity -submit -type cluster -file " + filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
+
+        // Make a new datasource name into the overlay so that DATASOURCE_TEMPLATE1 and FEED_TEMPLATE3
+        // are populated  with the same datasource name
+        String dsName = "datasource-test-1";
+        overlay.put(DATASOURCE_NAME_KEY, dsName);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.DATASOURCE_TEMPLATE1, overlay);
+        LOG.info("Submit datatsource entity {} via entity -submit -type datasource -file {}", dsName, filePath);
+        Assert.assertEquals(TestContext.executeWithURL("entity -submit -type datasource -file " + filePath), 0);
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE5, overlay);
+        LOG.info("Submit import feed with datasource {} via entity -submitAndSchedule -type feed -file {}", dsName,
+            filePath);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
 

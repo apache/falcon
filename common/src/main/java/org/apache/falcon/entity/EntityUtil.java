@@ -1092,6 +1092,13 @@ public final class EntityUtil {
         return JOBPRIORITY.NORMAL;
     }
 
+
+    /**
+     * Evaluates feedpath based on instance time.
+     * @param feedPath
+     * @param instanceTime
+     * @return
+     */
     public static String evaluateDependentPath(String feedPath, Date instanceTime) {
         String timestamp = PATH_FORMAT.get().format(instanceTime);
         String instancePath = feedPath.replaceAll("\\$\\{YEAR\\}", timestamp.substring(0, 4));

@@ -39,7 +39,7 @@ import org.testng.annotations.Test;
 /**
  * Feed SLA tests.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class FeedSLATest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

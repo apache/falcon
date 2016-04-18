@@ -21,6 +21,7 @@ package org.apache.falcon.expression;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.util.CalendarUnit;
 import org.apache.falcon.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,20 +261,39 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         return originalValue;
     }
 
+    /**
+     * Converts date string to required format.
+     * @param dateTimeStr
+     * @param format
+     * @return
+     * @throws ParseException
+     */
     public static String formatTime(String dateTimeStr, String format) throws ParseException {
-        Date dateTime = DateUtil.parseDateOozieTZ(dateTimeStr);
+        Date dateTime = DateUtil.parseDateFalconTZ(dateTimeStr);
         return DateUtil.formatDateCustom(dateTime, format);
     }
 
+    /**
+     * Formats the instance and return.
+     * @return
+     */
     public static String instanceTime() {
-        return DateUtil.formatDateOozieTZ(referenceDate.get());
+        return DateUtil.formatDateFalconTZ(referenceDate.get());
     }
 
+    /**
+     * EL function calculates date based on the following equation : newDate = baseDate + instance, * timeUnit.
+     * @param strBaseDate
+     * @param offset
+     * @param unit
+     * @return
+     * @throws Exception
+     */
     public static String dateOffset(String strBaseDate, int offset, String unit) throws Exception {
         Calendar baseCalDate = DateUtil.getCalendar(strBaseDate);
         StringBuilder buffer = new StringBuilder();
-        baseCalDate.add(org.apache.falcon.util.TimeUnit.valueOf(unit).getCalendarUnit(), offset);
-        buffer.append(DateUtil.formatDateOozieTZ(baseCalDate));
+        baseCalDate.add(CalendarUnit.valueOf(unit).getCalendarUnit(), offset);
+        buffer.append(DateUtil.formatDateFalconTZ(baseCalDate));
         return buffer.toString();
     }
 

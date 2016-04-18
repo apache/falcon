@@ -57,7 +57,7 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
     }
 
     @Override
-    public java.util.Properties build(org.apache.falcon.entity.v0.cluster.Cluster cluster,
+    public java.util.Properties build(Cluster cluster,
                                       Path buildPath, Properties suppliedProps) throws FalconException {
         Properties elProps = new Properties();
         DateTimeFormatter fmt = DateTimeFormat.forPattern(INSTANCE_FORMAT);

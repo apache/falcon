@@ -45,7 +45,7 @@ import javax.xml.bind.JAXBException;
 /**
  * Touch feature test both via server and prism.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class TouchAPIPrismAndServerTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);

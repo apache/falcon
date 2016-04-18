@@ -19,7 +19,6 @@
 package org.apache.falcon.client;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.List;
@@ -47,15 +45,12 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.LifeCycle;
-import org.apache.falcon.cli.FalconCLI;
-import org.apache.falcon.cli.FalconMetadataCLI;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.metadata.RelationshipType;
-import org.apache.falcon.recipe.RecipeTool;
-import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
@@ -325,6 +320,26 @@ public class FalconClient extends AbstractFalconClient {
         private String mimeType;
 
         AdminOperations(String path, String method, String mimeType) {
+            this.path = path;
+            this.method = method;
+            this.mimeType = mimeType;
+        }
+    }
+
+    /**
+     * Methods allowed on Extension Resources.
+     */
+    protected static enum ExtensionOperations {
+
+        ENUMERATE("api/extensions/enumerate/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DESCRIBE("api/extensions/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
+        DEFINITION("api/extensions/definition", HttpMethod.GET, MediaType.APPLICATION_JSON);
+
+        private String path;
+        private String method;
+        private String mimeType;
+
+        ExtensionOperations(String path, String method, String mimeType) {
             this.path = path;
             this.method = method;
             this.mimeType = mimeType;
@@ -671,7 +686,7 @@ public class FalconClient extends AbstractFalconClient {
     public LineageGraphResult getEntityLineageGraph(String pipelineName, String doAsUser) throws FalconCLIException {
         MetadataOperations operation = MetadataOperations.LINEAGE;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path).addQueryParam(DO_AS_OPT, doAsUser)
-            .addQueryParam(FalconMetadataCLI.PIPELINE_OPT, pipelineName).call(operation);
+            .addQueryParam(FalconCLIConstants.PIPELINE_OPT, pipelineName).call(operation);
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(LineageGraphResult.class);
@@ -865,18 +880,18 @@ public class FalconClient extends AbstractFalconClient {
         WebResource resource = service.path(operation.path)
                 .path(schedEntityName)
                 .path(RelationshipType.REPLICATION_METRICS.getName())
-                .path(FalconMetadataCLI.LIST_OPT);
+                .path(FalconCLIConstants.LIST_OPT);
 
         if (StringUtils.isNotEmpty(schedEntityName)) {
-            resource = resource.queryParam(FalconCLI.TYPE_OPT, schedEntityType);
+            resource = resource.queryParam(FalconCLIConstants.TYPE_OPT, schedEntityType);
         }
 
         if (numResults != null) {
-            resource = resource.queryParam(FalconCLI.NUM_RESULTS_OPT, numResults.toString());
+            resource = resource.queryParam(FalconCLIConstants.NUM_RESULTS_OPT, numResults.toString());
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         ClientResponse clientResponse = resource
@@ -901,14 +916,14 @@ public class FalconClient extends AbstractFalconClient {
         case LIST:
             resource = service.path(operation.path)
                     .path(dimensionType)
-                    .path(FalconMetadataCLI.LIST_OPT);
+                    .path(FalconCLIConstants.LIST_OPT);
             break;
 
         case RELATIONS:
             resource = service.path(operation.path)
                     .path(dimensionType)
                     .path(dimensionName)
-                    .path(FalconMetadataCLI.RELATIONS_OPT);
+                    .path(FalconCLIConstants.RELATIONS_OPT);
             break;
 
         default:
@@ -916,11 +931,11 @@ public class FalconClient extends AbstractFalconClient {
         }
 
         if (!StringUtils.isEmpty(cluster)) {
-            resource = resource.queryParam(FalconMetadataCLI.CLUSTER_OPT, cluster);
+            resource = resource.queryParam(FalconCLIConstants.CLUSTER_OPT, cluster);
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         ClientResponse clientResponse = resource
@@ -951,74 +966,42 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    private String getRecipePath(String recipePropertiesFile) throws FalconCLIException {
-        String recipePath = null;
-        if (StringUtils.isNotBlank(recipePropertiesFile)) {
-            File file = new File(recipePropertiesFile);
-            if (file.exists()) {
-                recipePath = file.getAbsoluteFile().getParentFile().getAbsolutePath();
-            }
-        } else {
-            recipePath = clientProperties.getProperty("falcon.recipe.path");
-        }
-
-        return recipePath;
+    public String enumerateExtensions() throws FalconCLIException {
+        return sendExtensionRequest(ExtensionOperations.ENUMERATE, null);
     }
 
-    public APIResult submitRecipe(String recipeName, String recipeToolClassName,
-                                  final String recipeOperation, String recipePropertiesFile, Boolean skipDryRun,
-                                  final String doAsUser) throws FalconCLIException {
-        String recipePath = getRecipePath(recipePropertiesFile);
+    public String getExtensionDefinition(final String extensionName) throws FalconCLIException {
+        return sendExtensionRequest(ExtensionOperations.DEFINITION, extensionName);
+    }
 
-        if (StringUtils.isEmpty(recipePath)) {
-            throw new FalconCLIException("falcon.recipe.path is not set in client.properties or properties "
-                    + " file is not provided");
+    public String getExtensionDescription(final String extensionName) throws FalconCLIException {
+        return sendExtensionRequest(ExtensionOperations.DESCRIBE, extensionName);
+    }
+
+    private String sendExtensionRequest(final ExtensionOperations operation,
+                                        final String extensionName) throws FalconCLIException {
+        WebResource resource;
+        switch (operation) {
+        case ENUMERATE:
+            resource = service.path(operation.path);
+            break;
+
+        case DESCRIBE:
+        case DEFINITION:
+            resource = service.path(operation.path).path(extensionName);
+            break;
+
+        default:
+            throw new FalconCLIException("Invalid extension client Operation " + operation.toString());
         }
 
-        String templateFilePath = recipePath + File.separator + recipeName + TEMPLATE_SUFFIX;
-        File file = new File(templateFilePath);
-        if (!file.exists()) {
-            throw new FalconCLIException("Recipe template file does not exist : " + templateFilePath);
-        }
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(operation.mimeType).type(operation.mimeType)
+                .method(operation.method, ClientResponse.class);
 
-        String propertiesFilePath = recipePath + File.separator + recipeName + PROPERTIES_SUFFIX;
-        file = new File(propertiesFilePath);
-        if (!file.exists()) {
-            throw new FalconCLIException("Recipe properties file does not exist : " + propertiesFilePath);
-        }
-
-        String processFile;
-        try {
-            String prefix =  "falcon-recipe" + "-" + System.currentTimeMillis();
-            File tmpPath = new File("/tmp");
-            if (!tmpPath.exists()) {
-                if (!tmpPath.mkdir()) {
-                    throw new FalconCLIException("Creating directory failed: " + tmpPath.getAbsolutePath());
-                }
-            }
-            File f = File.createTempFile(prefix, ".xml", tmpPath);
-            f.deleteOnExit();
-
-            processFile = f.getAbsolutePath();
-            String[] args = {
-                "-" + RecipeToolArgs.RECIPE_FILE_ARG.getName(), templateFilePath,
-                "-" + RecipeToolArgs.RECIPE_PROPERTIES_FILE_ARG.getName(), propertiesFilePath,
-                "-" + RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG.getName(), processFile,
-                "-" + RecipeToolArgs.RECIPE_OPERATION_ARG.getName(), recipeOperation,
-            };
-
-            if (recipeToolClassName != null) {
-                Class<?> clz = Class.forName(recipeToolClassName);
-                Method method = clz.getMethod("main", String[].class);
-                method.invoke(null, args);
-            } else {
-                RecipeTool.main(args);
-            }
-            validate(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser);
-            return submitAndSchedule(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser, null);
-        } catch (Exception e) {
-            throw new FalconCLIException(e.getMessage(), e);
-        }
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(String.class);
     }
 
     private String sendMetadataLineageRequest(MetadataOperations job, String id,

@@ -24,7 +24,7 @@ import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.state.AbstractSchedulerTestBase;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.unit.FalconUnitTestBase;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.util.StateStoreProperties;

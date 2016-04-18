@@ -23,7 +23,7 @@ package org.apache.falcon.metadata;
  */
 public enum RelationshipProperty {
 
-    // vertex property keys - indexed
+    // vertex/edge property keys - indexed
     NAME("name"),
     TYPE("type"),
     TIMESTAMP("timestamp"),
@@ -39,8 +39,10 @@ public enum RelationshipProperty {
     RUN_ID("runId", "current run-id of the instance"),
     STATUS("status", "status of the user workflow instance"),
     WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex: oozie"),
-    USER_SUBFLOW_ID("subflowId", "external id of user workflow");
+    USER_SUBFLOW_ID("subflowId", "external id of user workflow"),
 
+    // instance-entity edge property
+    NOMINAL_TIME("nominalTime");
 
     private final String name;
     private final String description;

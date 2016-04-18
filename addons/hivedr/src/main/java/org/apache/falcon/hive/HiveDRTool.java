@@ -271,8 +271,8 @@ public class HiveDRTool extends Configured implements Tool {
     private String sourceEvents() throws Exception {
         MetaStoreEventSourcer defaultSourcer = null;
         String inputFilename = null;
-        String lastEventsIdFile = FileUtils.DEFAULT_EVENT_STORE_PATH +File.separator+inputOptions.getJobName()+"/"
-                +inputOptions.getJobName()+".id";
+        String lastEventsIdFile = FileUtils.DEFAULT_EVENT_STORE_PATH + File.separator
+                + inputOptions.getJobName() + File.separator + inputOptions.getJobName() + ".id";
         Map<String, Long> lastEventsIdMap = getLastDBTableEvents(new Path(lastEventsIdFile));
         try {
             HCatClient sourceMetastoreClient = HiveMetastoreUtils.initializeHiveMetaStoreClient(

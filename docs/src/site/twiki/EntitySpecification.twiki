@@ -682,8 +682,7 @@ Example workflow configuration:
 
 
 ---+++ Optional Inputs
-User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are
-mentioned as optional. If they are present it considers them otherwise continue with the compulsory ones.
+User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are mentioned as optional. If they are present it considers them otherwise continues with the mandatory ones. If some instances of the optional feed are present for the given data window, those are considered and passed on to the process. While checking for presence of an feed instance, Falcon looks for __availabilityFlag__ in the directory, if specified in the feed definition. If no __availabilityFlag__ is specified, presence of the instance directory is treated as indication of availability of data.
 Example:
 <verbatim>
 <feed name="feed1">

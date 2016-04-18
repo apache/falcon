@@ -44,6 +44,16 @@
         <dependency>
             <groupId>org.apache.oozie</groupId>
             <artifactId>oozie-core</artifactId>
+            <exclusions>
+                <exclusion>
+            <groupId>org.apache.openjpa</groupId>
+                    <artifactId>openjpa-jdbc</artifactId>
+                    </exclusion>
+                <exclusion>
+                    <groupId>org.apache.openjpa</groupId>
+                    <artifactId>openjpa-persistence</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

@@ -47,7 +47,7 @@ import org.testng.annotations.Test;
 /**
  * Regression for instance running api.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessInstanceRunningTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);

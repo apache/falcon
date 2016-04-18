@@ -27,6 +27,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.catalog.HiveCatalogService;
@@ -304,7 +305,7 @@ public class TestContext extends AbstractTestContext {
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         if (StringUtils.isNotEmpty(properties)) {
@@ -408,7 +409,7 @@ public class TestContext extends AbstractTestContext {
         WebResource resource = this.service.path("api/entities/submit/" + entityType.name().toLowerCase());
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         return resource.header("Cookie", getAuthenticationToken())

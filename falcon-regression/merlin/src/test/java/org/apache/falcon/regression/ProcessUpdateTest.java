@@ -43,7 +43,7 @@ import org.testng.annotations.Test;
 /**
  * Tests related to update feature.
  */
-@Test(groups = "embedded")
+@Test(groups = { "distributed", "embedded", "sanity" })
 public class ProcessUpdateTest extends BaseTestClass {
 
     private OozieClient clusterOC = serverOC.get(0);

@@ -211,11 +211,11 @@ public class FeedReplicator extends Configured implements Tool {
             distcpOptions.setSkipCRC(Boolean.parseBoolean(skipChecksum));
         }
 
+        // Removing deleted files by default - FALCON-1844
         String removeDeletedFiles = cmd.getOptionValue(
-                ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName());
-        if (StringUtils.isNotEmpty(removeDeletedFiles)) {
-            distcpOptions.setDeleteMissing(Boolean.parseBoolean(removeDeletedFiles));
-        }
+                ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), "true");
+        distcpOptions.setDeleteMissing(Boolean.parseBoolean(removeDeletedFiles));
+
 
         String preserveBlockSize = cmd.getOptionValue(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName());

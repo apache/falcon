@@ -27,6 +27,8 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
 import org.apache.falcon.execution.ProcessExecutionInstance;
+import org.apache.falcon.persistence.EntityBean;
+import org.apache.falcon.persistence.InstanceBean;
 import org.apache.falcon.predicate.Predicate;
 import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;

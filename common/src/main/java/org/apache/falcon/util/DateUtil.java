@@ -63,7 +63,7 @@ public final class DateUtil {
     private DateUtil() {}
 
     /**
-     * Configures the Datetime parsing with Oozie processing timezone.
+     * Configures the Datetime parsing with  process timezone.
      *
      */
     public static void setTimeZone(String tz) throws FalconException {
@@ -138,14 +138,14 @@ public final class DateUtil {
     }
 
     /**
-     * Parses a datetime in ISO8601 format in the Oozie processing timezone.
+     * Parses a datetime in ISO8601 format in the  process timezone.
      *
      * @param s string with the datetime to parse.
      * @return the corresponding {@link java.util.Date} instance for the parsed date.
      * @throws java.text.ParseException thrown if the given string was
-     * not an ISO8601 value for the Oozie processing timezon.
+     * not an ISO8601 value for the  process timezone.
      */
-    public static Date parseDateOozieTZ(String s) throws ParseException {
+    public static Date parseDateFalconTZ(String s) throws ParseException {
         s = s.trim();
         ParsePosition pos = new ParsePosition(0);
         Date d = getISO8601DateFormat(activeTimeZone, activeTimeMask).parse(s, pos);
@@ -187,13 +187,13 @@ public final class DateUtil {
     }
 
     /**
-     * Formats a {@link java.util.Date} as a string in ISO8601 format using Oozie processing timezone.
+     * Formats a {@link java.util.Date} as a string in ISO8601 format using process timezone.
      *
      * @param d {@link java.util.Date} to format.
      * @return the ISO8601 string for the given date, <code>NULL</code> if the {@link java.util.Date} instance was
      * <code>NULL</code>
      */
-    public static String formatDateOozieTZ(Date d) {
+    public static String formatDateFalconTZ(Date d) {
         return (d != null) ? getISO8601DateFormat(activeTimeZone, activeTimeMask).format(d) : "NULL";
     }
 
@@ -256,7 +256,7 @@ public final class DateUtil {
      * @throws Exception
      */
     public static Calendar getCalendar(String dateString, TimeZone tz) throws Exception {
-        Date date = DateUtil.parseDateOozieTZ(dateString);
+        Date date = DateUtil.parseDateFalconTZ(dateString);
         Calendar calDate = Calendar.getInstance();
         calDate.setTime(date);
         calDate.setTimeZone(tz);
@@ -264,14 +264,14 @@ public final class DateUtil {
     }
 
     /**
-     * Formats a {@link java.util.Calendar} as a string in ISO8601 format using Oozie processing timezone.
+     * Formats a {@link java.util.Calendar} as a string in ISO8601 format process timezone.
      *
      * @param c {@link java.util.Calendar} to format.
      * @return the ISO8601 string for the given date, <code>NULL</code> if the {@link java.util.Calendar} instance was
      * <code>NULL</code>
      */
-    public static String formatDateOozieTZ(Calendar c) {
-        return (c != null) ? formatDateOozieTZ(c.getTime()) : "NULL";
+    public static String formatDateFalconTZ(Calendar c) {
+        return (c != null) ? formatDateFalconTZ(c.getTime()) : "NULL";
     }
 
 }

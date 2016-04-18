@@ -516,7 +516,7 @@ public final class InstanceUtil {
     private static String getReplicatedFolderFromInstanceRunConf(String runConf) {
         String inputPathExample = getReplicationFolderFromInstanceRunConf(runConf).get(0);
         String postFix = inputPathExample.substring(inputPathExample.length() - 7, inputPathExample.length());
-        return getReplicatedFolderBaseFromInstanceRunConf(runConf) + postFix;
+        return getReplicatedFolderBaseFromInstanceRunConf(runConf) + "/" + postFix;
     }
 
     public static String getOutputFolderBaseForInstanceForReplication(
@@ -657,7 +657,7 @@ public final class InstanceUtil {
      * @param expectedStatus expected status we are waiting for
      * @return minutes to wait for expected status
      */
-    private static int getMinutesToWait(EntityType entityType, CoordinatorAction.Status expectedStatus) {
+    public static int getMinutesToWait(EntityType entityType, CoordinatorAction.Status expectedStatus) {
         switch (expectedStatus) {
         case RUNNING:
             if (entityType == EntityType.PROCESS) {

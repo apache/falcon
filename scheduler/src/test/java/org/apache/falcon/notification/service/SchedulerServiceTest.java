@@ -45,6 +45,7 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.util.StateStoreProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.apache.oozie.client.WorkflowJob;
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
@@ -56,6 +57,7 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Properties;
 
 import static org.apache.falcon.state.InstanceState.STATE;
 
@@ -242,7 +244,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
     public void testDeRegistration() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize4");
         Process mockProcess = getStore().get(EntityType.PROCESS, "summarize4");
-        mockProcess.setParallel(3);
+        mockProcess.setParallel(2);
         Date startTime = EntityUtil.getStartTime(mockProcess, cluster);
         ExecutionInstance instance1 = new ProcessExecutionInstance(mockProcess, new DateTime(startTime), cluster);
         // Schedule 3 instances.
@@ -263,14 +265,15 @@ public class SchedulerServiceTest extends AbstractTestBase {
         request3.setInstance(instance3);
         scheduler.register(request3.build());
 
-        // Abort second instance
-        scheduler.unregister(handler, instance2.getId());
+        // Abort third instance
+        stateStore.putExecutionInstance(new InstanceState(instance3));
+        scheduler.unregister(handler, instance3.getId());
 
         Thread.sleep(100);
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance1), new Integer(1));
-        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), new Integer(1));
+        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
         // Second instance should not run.
-        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), null);
+        Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance3), null);
     }
 
     @Test
@@ -302,6 +305,25 @@ public class SchedulerServiceTest extends AbstractTestBase {
         Thread.sleep(100);
         Assert.assertFalse(failed);
         ((MockDAGEngine)mockDagEngine).removeFailInstance(instance1);
+    }
+
+    @Test
+    public void testResume() throws Exception {
+        storeEntity(EntityType.PROCESS, "summarize6");
+        Process mockProcess = getStore().get(EntityType.PROCESS, "summarize6");
+        mockProcess.setParallel(1);
+        Date startTime = EntityUtil.getStartTime(mockProcess, cluster);
+        ExecutionInstance instance1 = new ProcessExecutionInstance(mockProcess, new DateTime(startTime), cluster);
+        Properties resumeProps = new Properties();
+        resumeProps.setProperty(FalconWorkflowEngine.FALCON_RESUME, "true");
+        instance1.setProperties(resumeProps);
+        instance1.setExternalID("123");
+        SchedulerService.JobScheduleRequestBuilder request = (SchedulerService.JobScheduleRequestBuilder)
+                scheduler.createRequestBuilder(handler, instance1.getId());
+        request.setInstance(instance1);
+        scheduler.register(request.build());
+        Thread.sleep(100);
+        Assert.assertEquals(((MockDAGEngine)mockDagEngine).getTotalResumes(instance1), new Integer(1));
     }
 
     /**

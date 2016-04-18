@@ -22,6 +22,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
+import org.apache.falcon.persistence.EntityBean;
+import org.apache.falcon.persistence.InstanceBean;
+import org.apache.falcon.persistence.PersistenceConstants;
 import org.apache.falcon.state.EntityClusterID;
 import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
@@ -30,7 +33,7 @@ import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.util.StateStoreProperties;
 import org.joda.time.DateTime;
 
@@ -108,13 +111,13 @@ public final class JDBCStateStore extends AbstractStateStore {
 
     private EntityBean getEntityBean(EntityID id) {
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_ENTITY");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ENTITY);
         q.setParameter("id", id.getKey());
         List result = q.getResultList();
+        entityManager.close();
         if (result.isEmpty()) {
             return null;
         }
-        entityManager.close();
         return ((EntityBean)result.get(0));
     }
 
@@ -126,7 +129,7 @@ public final class JDBCStateStore extends AbstractStateStore {
     @Override
     public Collection<Entity> getEntities(EntityState.STATE state) throws StateStoreException {
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_ENTITY_FOR_STATE");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ENTITY_FOR_STATE);
         q.setParameter("state", state.toString());
         List result = q.getResultList();
         entityManager.close();
@@ -136,7 +139,7 @@ public final class JDBCStateStore extends AbstractStateStore {
     @Override
     public Collection<EntityState> getAllEntities() throws StateStoreException {
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_ENTITIES");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ENTITIES);
         List result = q.getResultList();
         entityManager.close();
         try {
@@ -154,7 +157,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("UPDATE_ENTITY");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_ENTITY);
         q.setParameter("id", entityID.getKey());
         if (entityState.getCurrentState() != null) {
             q.setParameter("state", entityState.getCurrentState().toString());
@@ -172,7 +175,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("DELETE_ENTITY");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ENTITY);
         q.setParameter("id", entityID.getKey());
         q.executeUpdate();
         commitAndCloseTransaction(entityManager);
@@ -185,7 +188,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("DELETE_ENTITIES");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ENTITIES);
         q.executeUpdate();
         commitAndCloseTransaction(entityManager);
     }
@@ -226,7 +229,7 @@ public final class JDBCStateStore extends AbstractStateStore {
 
     private InstanceState getExecutionInstanceByKey(ID instanceKey) throws StateStoreException {
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCE");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_INSTANCE);
         q.setParameter("id", instanceKey.toString());
         List result = q.getResultList();
         entityManager.close();
@@ -247,7 +250,7 @@ public final class JDBCStateStore extends AbstractStateStore {
             throw new StateStoreException("External ID for retrieving instance cannot be null or empty");
         }
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCE_FOR_EXTERNAL_ID");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_INSTANCE_FOR_EXTERNAL_ID);
         q.setParameter("externalID", externalID);
         List result = q.getResultList();
         entityManager.close();
@@ -273,7 +276,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("UPDATE_INSTANCE");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_INSTANCE);
         ExecutionInstance instance = instanceState.getInstance();
         q.setParameter("id", key);
         q.setParameter("cluster", instance.getCluster());
@@ -312,7 +315,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         throws StateStoreException {
         EntityClusterID id = new EntityClusterID(entity, cluster);
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_CLUSTER");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_INSTANCES_FOR_ENTITY_CLUSTER);
         q.setParameter("entityId", id.getEntityID().getKey());
         q.setParameter("cluster", cluster);
         List result  = q.getResultList();
@@ -331,7 +334,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         EntityClusterID entityClusterID = new EntityClusterID(entity, cluster);
         String entityKey = entityClusterID.getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_CLUSTER_FOR_STATES");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_INSTANCES_FOR_ENTITY_CLUSTER_FOR_STATES);
         q.setParameter("entityId", entityKey);
         q.setParameter("cluster", cluster);
         List<String> instanceStates = new ArrayList<>();
@@ -354,7 +357,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         throws StateStoreException {
         String entityKey = id.getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_FOR_STATES");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_INSTANCES_FOR_ENTITY_FOR_STATES);
         q.setParameter("entityId", entityKey);
         List<String> instanceStates = new ArrayList<>();
         for (InstanceState.STATE state : states) {
@@ -375,7 +378,7 @@ public final class JDBCStateStore extends AbstractStateStore {
             DateTime start, DateTime end) throws StateStoreException {
         String entityKey = new EntityClusterID(entity, cluster).getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE);
         q.setParameter("entityId", entityKey);
         q.setParameter("cluster", cluster);
         q.setParameter("startTime", new Timestamp(start.getMillis()));
@@ -392,7 +395,8 @@ public final class JDBCStateStore extends AbstractStateStore {
                                                            DateTime end) throws StateStoreException {
         String entityKey = new EntityClusterID(entity, cluster).getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_INSTANCES_FOR_ENTITY_CLUSTER_FOR_STATES_WITH_RANGE");
+        Query q = entityManager.
+                createNamedQuery(PersistenceConstants.GET_INSTANCES_FOR_ENTITY_CLUSTER_FOR_STATES_WITH_RANGE);
         q.setParameter("entityId", entityKey);
         List<String> instanceStates = new ArrayList<>();
         for (InstanceState.STATE state : states) {
@@ -415,7 +419,7 @@ public final class JDBCStateStore extends AbstractStateStore {
     public InstanceState getLastExecutionInstance(Entity entity, String cluster) throws StateStoreException {
         String key = new EntityClusterID(entity, cluster).getEntityID().getKey();
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery("GET_LAST_INSTANCE_FOR_ENTITY_CLUSTER");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_LAST_INSTANCE_FOR_ENTITY_CLUSTER);
         q.setParameter("entityId", key);
         q.setParameter("cluster", cluster);
         q.setMaxResults(1);
@@ -444,7 +448,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("DELETE_INSTANCE");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_INSTANCE);
         q.setParameter("id", instanceKey);
         q.executeUpdate();
         commitAndCloseTransaction(entityManager);
@@ -455,7 +459,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         String entityKey = entityID.getKey();
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("DELETE_INSTANCE_FOR_ENTITY");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_INSTANCE_FOR_ENTITY);
         q.setParameter("entityId", entityKey);
         q.executeUpdate();
         commitAndCloseTransaction(entityManager);
@@ -468,7 +472,7 @@ public final class JDBCStateStore extends AbstractStateStore {
         }
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery("DELETE_INSTANCES_TABLE");
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_INSTANCES_TABLE);
         q.executeUpdate();
         commitAndCloseTransaction(entityManager);
     }

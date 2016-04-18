@@ -274,7 +274,7 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
         if (instance.getId() != null) {
             output.append(instance.getId());
         }
-        return output.toString() + "STATE: " + currentState.toString();
+        return output.append("STATE").append(currentState.toString()).toString();
     }
 
 
