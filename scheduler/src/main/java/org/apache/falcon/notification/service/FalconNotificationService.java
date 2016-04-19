@@ -51,6 +51,7 @@ public interface FalconNotificationService extends FalconService {
      */
     RequestBuilder createRequestBuilder(NotificationHandler handler, ID callbackID);
 
+
     /**
      * Builder to build appropriate {@link NotificationRequest}.
      * @param <T>

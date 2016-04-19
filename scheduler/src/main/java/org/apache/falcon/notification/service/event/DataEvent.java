@@ -31,6 +31,7 @@ public class DataEvent extends Event {
     private final ID callbackID;
     private List<Path> dataLocations;
     private STATUS status;
+    private String inputName;
 
     /**
      * Enumerates the status of data.
@@ -40,11 +41,12 @@ public class DataEvent extends Event {
         UNAVAILABLE
     }
 
-    public DataEvent(ID callbackID, List<Path> dataLocations, STATUS availability) {
+    public DataEvent(ID callbackID, List<Path> dataLocations, STATUS availability, String inName) {
         this.callbackID = callbackID;
         this.dataLocations = dataLocations;
         this.status = availability;
         this.type = EventType.DATA_AVAILABLE;
+        this.inputName = inName;
     }
 
     public STATUS getStatus() {
@@ -59,12 +61,12 @@ public class DataEvent extends Event {
         return dataLocations;
     }
 
-    public void setDataLocations(List<Path> locations) {
-        this.dataLocations = locations;
-    }
-
     @Override
     public ID getTarget() {
         return callbackID;
+    }
+
+    public String getInputName() {
+        return inputName;
     }
 }

@@ -36,6 +36,8 @@ public abstract class AbstractTestContext {
     public static final String FEED_TEMPLATE5 = "/feed-template5.xml";
     public static final String FEED_EXPORT_TEMPLATE6 = "/feed-export-template6.xml";
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
+    public static final String FEED_TEMPLATE6 = "/feed-template6.xml";
+    public static final String FEED_TEMPLATE7 = "/feed-template7.xml";
 
     protected static void mkdir(FileSystem fileSystem, Path path) throws Exception {
         if (!fileSystem.exists(path) && !fileSystem.mkdirs(path)) {

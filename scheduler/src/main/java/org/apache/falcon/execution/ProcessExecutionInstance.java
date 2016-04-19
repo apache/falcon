@@ -39,6 +39,7 @@ import org.apache.falcon.notification.service.event.JobScheduledEvent;
 import org.apache.falcon.notification.service.impl.DataAvailabilityService;
 import org.apache.falcon.predicate.Predicate;
 import org.apache.falcon.state.InstanceID;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
@@ -122,18 +123,22 @@ public class ProcessExecutionInstance extends ExecutionInstance {
             return;
         }
         for (Input input : process.getInputs().getInputs()) {
-            // Register for notification for every required input
-            if (input.isOptional()) {
-                continue;
-            }
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
             String startTimeExp = input.getStart();
             String endTimeExp = input.getEnd();
+            SchedulerUtil.validateELExpType(startTimeExp, endTimeExp, input.getName());
             DateTime processInstanceTime = getInstanceTime();
-            expressionHelper.setReferenceDate(new Date(processInstanceTime.getMillis()));
-
-            Date startTime = expressionHelper.evaluate(startTimeExp, Date.class);
-            Date endTime = expressionHelper.evaluate(endTimeExp, Date.class);
+            Date startTime = null, endTime = null;
+            SchedulerUtil.EXPTYPE exptype = SchedulerUtil.getExpType(startTimeExp);
+            if (exptype == SchedulerUtil.EXPTYPE.ABSOLUTE) {
+                expressionHelper.setReferenceDate(new Date(processInstanceTime.getMillis()));
+                startTime = expressionHelper.evaluate(startTimeExp, Date.class);
+                endTime = expressionHelper.evaluate(endTimeExp, Date.class);
+                SchedulerUtil.validateStartAndEndTime(startTime, endTime);
+            } else {
+                SchedulerUtil.validateStartEndForNonAbsExp(startTimeExp, endTimeExp, input.getName(),
+                        process.getName());
+            }
 
             for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
                 org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
@@ -141,48 +146,96 @@ public class ProcessExecutionInstance extends ExecutionInstance {
                 if (!EntityUtil.responsibleFor(clusterEntity.getColo())) {
                     continue;
                 }
-                List<Path> paths = new ArrayList<>();
-                List<Location> locations = FeedHelper.getLocations(cluster, feed);
-                for (Location loc : locations) {
-                    if (loc.getType() != LocationType.DATA) {
+
+                if (exptype == SchedulerUtil.EXPTYPE.ABSOLUTE) {
+                    List<Path> paths = getPaths(cluster, feed, startTime, endTime);
+                    Predicate predicate  = Predicate.createDataPredicate(paths.size());
+                    // To ensure we evaluate only predicates not evaluated before when an instance is resumed.
+                    if (isResume && !awaitedPredicates.contains(predicate)) {
                         continue;
                     }
-                    List<Date> instanceTimes = EntityUtil.getEntityInstanceTimes(feed, cluster.getName(),
-                            startTime, endTime);
-                    for (Date instanceTime : instanceTimes) {
-                        String path = EntityUtil.evaluateDependentPath(loc.getPath(), instanceTime);
-                        if (feed.getAvailabilityFlag() != null && !feed.getAvailabilityFlag().isEmpty()) {
-                            if (!path.endsWith("/")) {
-                                path = path + "/";
-                            }
-                            path = path + feed.getAvailabilityFlag();
-                        }
-                        if (!paths.contains(new Path(path))) {
-                            paths.add(new Path(path));
-                        }
-                    }
-                }
+                    addDataPredicate(predicate);
+                    DataAvailabilityService.DataRequestBuilder requestBuilder =
+                            (DataAvailabilityService.DataRequestBuilder)
+                                    NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
+                                            .createRequestBuilder(executionService, getId());
+                    requestBuilder.setLocations(paths)
+                            .setCluster(cluster.getName())
+                            .setPollingFrequencyInMillis(SchedulerUtil
+                                    .getPollingFrequencyinMillis(process.getFrequency()))
+                            .setTimeoutInMillis(getTimeOutInMillis())
+                            .setLocations(paths)
+                            .setInputName(input.getName())
+                            .setExpType(exptype)
+                            .setIsOptional(input.isOptional());
+                    NotificationServicesRegistry.register(requestBuilder.build());
+                    LOG.info("Registered for a data notification for process {} of instance time {} "
+                                    + "for data location {}", process.getName(), getInstanceTime(),
+                            StringUtils.join(paths, ","));
+                } else {
+                    int startInstance = Math.abs(SchedulerUtil.getExpInstance(startTimeExp, exptype));
+                    int endInstance = Math.abs(SchedulerUtil.getExpInstance(endTimeExp, exptype));
+                    int noOfPaths = Math.abs(endInstance - startInstance) + 1;
+                    Predicate predicate  = Predicate.createDataPredicate(noOfPaths);
 
-                Predicate predicate = Predicate.createDataPredicate(paths);
-                // To ensure we evaluate only predicates not evaluated before when an instance is resumed.
-                if (isResume && !awaitedPredicates.contains(predicate)) {
-                    continue;
+                    // check may be awaiting predicates already contains this
+                    if (isResume && !awaitedPredicates.contains(predicate)) {
+                        continue;
+                    }
+                    addDataPredicate(predicate);
+                    DataAvailabilityService.DataRequestBuilder regexDataRequestBuilder =
+                            (DataAvailabilityService.DataRequestBuilder)
+                            NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
+                                    .createRequestBuilder(executionService, getId());
+                    Date referenceTime = new Date(System.currentTimeMillis()); // need to configure this.
+                    regexDataRequestBuilder.setExpType(exptype)
+                            .setCluster(cluster.getName())
+                            .setPollingFrequencyInMillis(SchedulerUtil.
+                                    getPollingFrequencyinMillis(process.getFrequency()))
+                            .setTimeoutInMillis(getTimeOutInMillis())
+                            .setStartInstance(startInstance)
+                            .setEndInstance(endInstance)
+                            .setStartTimeInMillis(SchedulerUtil.getStartTimeInMillis(cluster.getValidity().getStart(),
+                                    feed.getFrequency(), process.getTimezone(), referenceTime, exptype))
+                            .setEndTimeInMillis(SchedulerUtil.getEndTimeInMillis(cluster.getValidity().getStart(),
+                                    feed.getFrequency(), process.getTimezone(), referenceTime, exptype,
+                                    SchedulerUtil.getExpLimit(startTimeExp, exptype)))
+                            .setBasePath(FeedHelper.getLocation(feed, clusterEntity, LocationType.DATA).getPath())
+                            .setInputName(input.getName())
+                            .setFrequencyInMillis(SchedulerUtil.getFrequencyInMillis(feed.getFrequency()))
+                            .setIsOptional(input.isOptional());
+                    NotificationServicesRegistry.register(regexDataRequestBuilder.build());
+                    LOG.info("Registered for a data notification for process {} of instance time {} "
+                            + "for expression type {}", process.getName(), getInstanceTime(), exptype);
                 }
-                addDataPredicate(predicate);
-                DataAvailabilityService.DataRequestBuilder requestBuilder =
-                        (DataAvailabilityService.DataRequestBuilder)
-                                NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
-                                        .createRequestBuilder(executionService, getId());
-                requestBuilder.setLocations(paths)
-                        .setCluster(cluster.getName())
-                        .setPollingFrequencyInMillis(SchedulerUtil.getPollingFrequencyinMillis(process.getFrequency()))
-                        .setTimeoutInMillis(getTimeOutInMillis())
-                        .setLocations(paths);
-                NotificationServicesRegistry.register(requestBuilder.build());
-                LOG.info("Registered for a data notification for process {} of instance time {} for data location {}",
-                        process.getName(), getInstanceTime(), StringUtils.join(paths, ","));
             }
         }
+    }
+
+    private List<Path> getPaths(org.apache.falcon.entity.v0.feed.Cluster cluster,
+                                Feed feed, Date startTime, Date endTime) {
+        List<Path> paths = new ArrayList<>();
+        List<Location> locations = FeedHelper.getLocations(cluster, feed);
+        for (Location loc : locations) {
+            if (loc.getType() != LocationType.DATA) {
+                continue;
+            }
+            List<Date> instanceTimes = EntityUtil.getEntityInstanceTimes(feed, cluster.getName(),
+                    startTime, endTime);
+            for (Date instanceTime : instanceTimes) {
+                String path = EntityUtil.evaluateDependentPath(loc.getPath(), instanceTime);
+                if (feed.getAvailabilityFlag() != null && !feed.getAvailabilityFlag().isEmpty()) {
+                    if (!path.endsWith("/")) {
+                        path = path + "/";
+                    }
+                    path = path + feed.getAvailabilityFlag();
+                }
+                if (!paths.contains(new Path(path))) {
+                    paths.add(new Path(path));
+                }
+            }
+        }
+        return paths;
     }
 
     @Override
@@ -197,9 +250,17 @@ public class ProcessExecutionInstance extends ExecutionInstance {
             setActualEnd(((JobCompletedEvent)event).getEndTime());
             break;
         case DATA_AVAILABLE:
+            DataEvent dataEvent = (DataEvent) event;
             // Data has not become available and the wait time has passed
-            if (((DataEvent) event).getStatus() == DataEvent.STATUS.UNAVAILABLE) {
+            if (dataEvent.getStatus() == DataEvent.STATUS.UNAVAILABLE) {
                 hasTimedOut = true;
+            } else {
+                String feedName = dataEvent.getInputName();
+                if (this.getProperties() == null) {
+                    this.setProperties(new Properties());
+                }
+                this.getProperties().setProperty(OozieUtils.FALCON_PROCESS_INPUT_PATHS
+                        + "." + feedName, StringUtils.join(dataEvent.getDataLocations(), ","));
             }
             // If the event matches any of the awaited predicates, remove the predicate of the awaited list
             Predicate toRemove = null;

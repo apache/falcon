@@ -606,7 +606,7 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         case DATA:
             DataEvent dataEvent = new DataEvent(id,
                     new ArrayList<Path>(Arrays.asList(new Path("/projects/falcon/clicks"))),
-                    DataEvent.STATUS.AVAILABLE);
+                    DataEvent.STATUS.AVAILABLE, "in");
             return dataEvent;
         default:
             return null;
@@ -620,7 +620,7 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         case DATA:
             DataEvent dataEvent = new DataEvent(id,
                     new ArrayList<Path>(Arrays.asList(new Path("/projects/falcon/clicks/_SUCCESS"))),
-                    DataEvent.STATUS.AVAILABLE);
+                    DataEvent.STATUS.AVAILABLE, "in");
             return dataEvent;
         case JOB_SCHEDULE:
             JobScheduledEvent scheduledEvent = new JobScheduledEvent(id, JobScheduledEvent.STATUS.SUCCESSFUL);

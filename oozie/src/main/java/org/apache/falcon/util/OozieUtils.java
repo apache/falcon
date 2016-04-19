@@ -40,6 +40,7 @@ import java.util.Properties;
  * Help methods relating to oozie configuration.
  */
 public final class OozieUtils {
+    public static final String FALCON_PROCESS_INPUT_PATHS = "falcon.system.inpaths";
     public static final JAXBContext WORKFLOW_JAXB_CONTEXT;
     public static final JAXBContext ACTION_JAXB_CONTEXT;
     public static final JAXBContext COORD_JAXB_CONTEXT;

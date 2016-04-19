@@ -47,4 +47,22 @@ public class SchedulerUtilTest {
             {formatter.parseDateTime("02/10/2015 03:30:00 +0530"), new Frequency("months(2)"), (31+30)*24*60*60*1000L},
         };
     }
+
+    @Test
+    public void testLatestExp() {
+        String exp = "latest( -2)";
+        Assert.assertEquals(SchedulerUtil.getLatestInstance(exp), -2);
+        exp = "latest(10)";
+        Assert.assertEquals(SchedulerUtil.getLatestInstance(exp), 10);
+    }
+
+    @Test
+    public void testFutureExp() {
+        String exp  = "future(0,25)";
+        Assert.assertEquals(SchedulerUtil.getFutureExpInstance(exp), 0);
+        Assert.assertEquals(SchedulerUtil.getExpLimit(exp, SchedulerUtil.EXPTYPE.FUTURE), 25);
+        exp = "future(10, 20)";
+        Assert.assertEquals(SchedulerUtil.getFutureExpInstance(exp), 10);
+        Assert.assertEquals(SchedulerUtil.getExpLimit(exp, SchedulerUtil.EXPTYPE.FUTURE), 20);
+    }
 }

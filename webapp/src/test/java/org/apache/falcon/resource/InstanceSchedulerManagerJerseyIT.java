@@ -196,4 +196,33 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
                 processName, START_INSTANCE);
         Assert.assertEquals(status, InstancesResult.WorkflowStatus.SUCCEEDED);
     }
+
+    @Test
+    public void testProcessWithInputsLatest() throws Exception {
+        UnitTestContext context = new UnitTestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        String colo = overlay.get(COLO);
+        String cluster = overlay.get(CLUSTER);
+
+        submitCluster(colo, cluster, null);
+        String tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE6, overlay);
+        APIResult result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE7, overlay);
+        result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
+        Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        context.prepare(HELLO_WORLD_WORKFLOW);
+
+        submitProcess(PROCESS_TEMPLATE_NOLATE_DATA_LATEST, overlay);
+
+        String processName = overlay.get(PROCESS_NAME);
+        scheduleProcess(processName, cluster, "2016-03-20T00:00Z", 1);
+
+        waitForStatus(EntityType.PROCESS.toString(), processName,
+                "2016-03-20T00:00Z", InstancesResult.WorkflowStatus.SUCCEEDED);
+
+        InstancesResult.WorkflowStatus status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
+                processName, "2016-03-20T00:00Z");
+        Assert.assertEquals(status, InstancesResult.WorkflowStatus.SUCCEEDED);
+    }
 }
