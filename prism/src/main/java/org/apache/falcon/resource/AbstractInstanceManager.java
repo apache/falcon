@@ -686,6 +686,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     public InstancesResult searchInstances(String type, String nameSubsequence, String tagKeywords,
                                            String nominalStartTime, String nominalEndTime,
                                            String status, String orderBy, Integer offset, Integer resultsPerPage) {
+        type = org.apache.commons.lang.StringUtils.isEmpty(type) ? "feed,process" : type;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+
         // filter entities
         EntityList entityList = getEntityList(
                 "", nameSubsequence, tagKeywords, type, "", "", "", "", 0, 0, "", true);
