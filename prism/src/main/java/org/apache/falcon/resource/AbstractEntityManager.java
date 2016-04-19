@@ -161,8 +161,15 @@ public abstract class AbstractEntityManager {
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
             for (String cluster : clusters) {
-                Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
-                colos.add(clusterEntity.getColo());
+                try{
+                    Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                    colos.add(clusterEntity.getColo());
+                } catch (EntityNotRegisteredException e){
+                    e.printStackTrace();
+                }
+            }
+            if (colos.size() == 0) {
+                throw new EntityNotRegisteredException(entity.getName()  + " (" + type + ") not found");
             }
             return colos;
         } catch (FalconException e) {
