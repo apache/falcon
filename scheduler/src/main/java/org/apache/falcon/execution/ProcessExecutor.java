@@ -33,6 +33,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.exception.InvalidStateTransitionException;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
+import org.apache.falcon.notification.service.event.DataEvent;
 import org.apache.falcon.notification.service.event.Event;
 import org.apache.falcon.notification.service.event.EventType;
 import org.apache.falcon.notification.service.event.JobCompletedEvent;
@@ -93,8 +94,9 @@ public class ProcessExecutor extends EntityExecutor {
             initInstances();
         }
         // Check to handle restart and restoration from state store.
-        if (STATE_STORE.getEntity(id.getEntityID()).getCurrentState() != EntityState.STATE.SCHEDULED) {
-            dryRun();
+        EntityState entityState = STATE_STORE.getEntity(id.getEntityID());
+        if (entityState.getCurrentState() != EntityState.STATE.SCHEDULED) {
+            dryRun(entityState.getProperties());
         } else {
             LOG.info("Process, {} was already scheduled on cluster, {}.", process.getName(), cluster);
             LOG.info("Loading instances for process {} from state store.", process.getName());
@@ -103,8 +105,8 @@ public class ProcessExecutor extends EntityExecutor {
         registerForNotifications(getLastInstanceTime());
     }
 
-    private void dryRun() throws FalconException {
-        DAGEngineFactory.getDAGEngine(cluster).submit(process);
+    private void dryRun(Properties properties) throws FalconException {
+        DAGEngineFactory.getDAGEngine(cluster).submit(process, properties);
     }
 
     // Initializes the cache of execution instances. Cache is backed by the state store.
@@ -419,6 +421,30 @@ public class ProcessExecutor extends EntityExecutor {
                     stateService.handleStateChange(instance, InstanceState.EVENT.CONDITIONS_MET, this);
                 }
                 break;
+            case DATA_AVAILABLE:
+                instance = instances.get((InstanceID)event.getTarget());
+                instance.onEvent(event);
+                switch (((DataEvent) event).getStatus()) {
+                case AVAILABLE:
+                    if (instance.areDataAwaitingPredicatesEmpty() && !instance.hasTimedOut) {
+                        LOG.info("Data conditions met for instance {} and scheduled for running ", instance.getId());
+                        stateService.handleStateChange(instance, InstanceState.EVENT.CONDITIONS_MET, this);
+                    } else if (instance.areDataAwaitingPredicatesEmpty()) {
+                        LOG.info("Instance {} timedout since input data not available", instance.getId());
+                        stateService.handleStateChange(instance, InstanceState.EVENT.TIME_OUT, this);
+                    } else {
+                        STATE_STORE.updateExecutionInstance(new InstanceState(instance));
+                    }
+                    break;
+                case UNAVAILABLE:
+                    if (instance.areDataAwaitingPredicatesEmpty()) {
+                        stateService.handleStateChange(instance, InstanceState.EVENT.TIME_OUT, this);
+                    }
+                    break;
+                default:
+                    throw new InvalidStateTransitionException("Invalid Data event status.");
+                }
+                break;
             default:
                 if (isTriggerEvent(event)) {
                     instance = buildInstance(event);
@@ -473,7 +499,8 @@ public class ProcessExecutor extends EntityExecutor {
         return event.getTarget().equals(id)
                 || event.getType() == EventType.JOB_COMPLETED
                 || event.getType() == EventType.JOB_SCHEDULED
-                || event.getType() == EventType.RE_RUN;
+                || event.getType() == EventType.RE_RUN
+                || event.getType() == EventType.DATA_AVAILABLE;
     }
 
     @Override

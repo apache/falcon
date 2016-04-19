@@ -75,11 +75,16 @@ public final class JDBCStateStore extends AbstractStateStore {
         if (entityExists(entityID)) {
             throw new StateStoreException("Entity with key, " + key + " already exists.");
         }
-        EntityBean entityBean = BeanMapperUtil.convertToEntityBean(entityState);
-        EntityManager entityManager = getEntityManager();
-        beginTransaction(entityManager);
-        entityManager.persist(entityBean);
-        commitAndCloseTransaction(entityManager);
+        EntityBean entityBean = null;
+        try {
+            entityBean = BeanMapperUtil.convertToEntityBean(entityState);
+            EntityManager entityManager = getEntityManager();
+            beginTransaction(entityManager);
+            entityManager.persist(entityBean);
+            commitAndCloseTransaction(entityManager);
+        } catch (IOException e) {
+            throw new StateStoreException(e);
+        }
     }
 
 
@@ -97,7 +102,11 @@ public final class JDBCStateStore extends AbstractStateStore {
         if (entityBean == null) {
             return null;
         }
-        return BeanMapperUtil.convertToEntityState(entityBean);
+        try {
+            return BeanMapperUtil.convertToEntityState(entityBean);
+        } catch (IOException e) {
+            throw new StateStoreException(e);
+        }
     }
 
     private EntityBean getEntityBean(EntityID id) {
@@ -133,7 +142,11 @@ public final class JDBCStateStore extends AbstractStateStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ENTITIES);
         List result = q.getResultList();
         entityManager.close();
-        return BeanMapperUtil.convertToEntityState(result);
+        try {
+            return BeanMapperUtil.convertToEntityState(result);
+        } catch (IOException e) {
+            throw new StateStoreException(e);
+        }
     }
 
     @Override
