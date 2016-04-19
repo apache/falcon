@@ -151,7 +151,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         LOG.info("Validating execute interface: {}", executeUrl);
 
         try {
-            HadoopClientFactory.get().validateJobClient(executeUrl);
+            String rmPrincipal = ClusterHelper.getPropertyValue(cluster, SecurityUtil.RM_PRINCIPAL);
+            HadoopClientFactory.get().validateJobClient(executeUrl, rmPrincipal);
         } catch (IOException e) {
             throw new ValidationException("Invalid Execute server or port: " + executeUrl, e);
         }
