@@ -165,10 +165,10 @@ public abstract class AbstractEntityManager {
                     Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
                     colos.add(clusterEntity.getColo());
                 } catch (EntityNotRegisteredException e){
-                    e.printStackTrace();
+                    LOG.warn(e.getMessage(), e);
                 }
             }
-            if (colos.size() == 0) {
+            if (colos.isEmpty()) {
                 throw new EntityNotRegisteredException(entity.getName()  + " (" + type + ") not found");
             }
             return colos;
