@@ -326,6 +326,26 @@ public class FalconClient extends AbstractFalconClient {
         }
     }
 
+    /**
+     * Methods allowed on Extension Resources.
+     */
+    protected static enum ExtensionOperations {
+
+        ENUMERATE("api/extensions/enumerate/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DESCRIBE("api/extensions/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
+        DEFINITION("api/extensions/definition", HttpMethod.GET, MediaType.APPLICATION_JSON);
+
+        private String path;
+        private String method;
+        private String mimeType;
+
+        ExtensionOperations(String path, String method, String mimeType) {
+            this.path = path;
+            this.method = method;
+            this.mimeType = mimeType;
+        }
+    }
+
     public String notEmpty(String str, String name) {
         if (str == null) {
 
@@ -944,6 +964,44 @@ public class FalconClient extends AbstractFalconClient {
 
     public String getEdge(String id, String doAsUser) throws FalconCLIException {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
+    }
+
+    public String enumerateExtensions() throws FalconCLIException {
+        return sendExtensionRequest(ExtensionOperations.ENUMERATE, null);
+    }
+
+    public String getExtensionDefinition(final String extensionName) throws FalconCLIException {
+        return sendExtensionRequest(ExtensionOperations.DEFINITION, extensionName);
+    }
+
+    public String getExtensionDescription(final String extensionName) throws FalconCLIException {
+        return sendExtensionRequest(ExtensionOperations.DESCRIBE, extensionName);
+    }
+
+    private String sendExtensionRequest(final ExtensionOperations operation,
+                                        final String extensionName) throws FalconCLIException {
+        WebResource resource;
+        switch (operation) {
+        case ENUMERATE:
+            resource = service.path(operation.path);
+            break;
+
+        case DESCRIBE:
+        case DEFINITION:
+            resource = service.path(operation.path).path(extensionName);
+            break;
+
+        default:
+            throw new FalconCLIException("Invalid extension client Operation " + operation.toString());
+        }
+
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(operation.mimeType).type(operation.mimeType)
+                .method(operation.method, ClientResponse.class);
+
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(String.class);
     }
 
     private String sendMetadataLineageRequest(MetadataOperations job, String id,

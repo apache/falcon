@@ -90,6 +90,7 @@ public class FalconCLI {
         FalconEntityCLI entityCLI = new FalconEntityCLI();
         FalconInstanceCLI instanceCLI = new FalconInstanceCLI();
         FalconMetadataCLI metadataCLI = new FalconMetadataCLI();
+        FalconExtensionCLI extensionCLI = new FalconExtensionCLI();
 
         parser.addCommand(FalconCLIConstants.ADMIN_CMD, "", "admin operations", adminCLI.createAdminOptions(), true);
         parser.addCommand(FalconCLIConstants.HELP_CMD, "", "display usage", new Options(), false);
@@ -101,6 +102,9 @@ public class FalconCLI {
                 instanceCLI.createInstanceOptions(), false);
         parser.addCommand(FalconCLIConstants.METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
+        parser.addCommand(FalconCLIConstants.EXTENSION_CMD, "",
+                "Extension operations like enumerate, definition, describe",
+                extensionCLI.createExtensionOptions(), true);
         parser.addCommand(FalconCLIConstants.VERSION_OPT, "", "show client version", new Options(), false);
 
         try {
@@ -122,6 +126,8 @@ public class FalconCLI {
                     instanceCLI.instanceCommand(commandLine, client);
                 } else if (command.getName().equals(FalconCLIConstants.METADATA_CMD)) {
                     metadataCLI.metadataCommand(commandLine, client);
+                } else if (command.getName().equals(FalconCLIConstants.EXTENSION_CMD)) {
+                    extensionCLI.extensionCommand(commandLine, client);
                 }
             }
             return exitValue;

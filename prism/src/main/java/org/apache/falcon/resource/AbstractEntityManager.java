@@ -297,11 +297,21 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     protected APIResult update(InputStream inputStream, String type, String entityName,
                                String colo, Boolean skipDryRun) {
         checkColo(colo);
+        try {
+            EntityType entityType = EntityType.getEnum(type);
+            Entity entity = deserializeEntity(inputStream, entityType);
+            return update(entity, type, entityName, skipDryRun);
+        } catch (IOException | FalconException e) {
+            LOG.error("Update failed", e);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected APIResult update(Entity newEntity, String type, String entityName, Boolean skipDryRun) {
         List<Entity> tokenList = new ArrayList<>();
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
-            Entity newEntity = deserializeEntity(inputStream, entityType);
             // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
             decorateEntityWithACL(newEntity);
             validate(newEntity);
@@ -401,7 +411,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    private void canRemove(Entity entity) throws FalconException {
+    protected void canRemove(Entity entity) throws FalconException {
         Pair<String, EntityType>[] referencedBy = EntityIntegrityChecker.referencedBy(entity);
         if (referencedBy != null && referencedBy.length > 0) {
             StringBuilder messages = new StringBuilder();
@@ -416,9 +426,14 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
     protected Entity submitInternal(InputStream inputStream, String type, String doAsUser)
         throws IOException, FalconException {
-
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(inputStream, entityType);
+        submitInternal(entity, doAsUser);
+        return entity;
+    }
+
+    protected synchronized void submitInternal(Entity entity, String doAsUser) throws IOException, FalconException {
+        EntityType entityType = entity.getEntityType();
         List<Entity> tokenList = new ArrayList<>();
         // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
         decorateEntityWithACL(entity);
@@ -432,7 +447,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         Entity existingEntity = configStore.get(entityType, entity.getName());
         if (existingEntity != null) {
             if (EntityUtil.equals(existingEntity, entity)) {
-                return existingEntity;
+                return;
             }
 
             throw new EntityAlreadyExistsException(
@@ -443,8 +458,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         SecurityUtil.tryProxy(entity, doAsUser); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
-        LOG.info("Submit successful: ({}): {}", type, entity.getName());
-        return entity;
+        LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
     }
 
     /**
@@ -515,7 +529,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void validate(Entity entity) throws FalconException {
+    protected void validate(Entity entity) throws FalconException {
         EntityParser entityParser = EntityParserFactory.getParser(entity.getEntityType());
         entityParser.validate(entity);
     }
@@ -625,14 +639,38 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
                                     String filterType, String filterTags, String filterBy,
                                     String orderBy, String sortOrder, Integer offset,
                                     Integer resultsPerPage, final String doAsUser, boolean isReturnAll) {
-
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
         Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
-        for (String  key : filterByFieldsValues.keySet()) {
+        for (String key : filterByFieldsValues.keySet()) {
             if (!key.toUpperCase().equals("NAME") && !key.toUpperCase().equals("CLUSTER")) {
                 fields.add(key.toUpperCase());
             }
         }
+        try {
+            // get filtered entities
+            List<Entity> entities = getEntityList(
+                    nameSubsequence, tagKeywords, filterType, filterTags, filterBy, doAsUser);
+
+            // sort entities and pagination
+            List<Entity> entitiesReturn = sortEntitiesPagination(
+                    entities, orderBy, sortOrder, offset, resultsPerPage, isReturnAll);
+
+            // add total number of results
+            EntityList entityList = entitiesReturn.size() == 0
+                    ? new EntityList(new Entity[]{}, 0)
+                    : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
+            return entityList;
+        } catch (Exception e) {
+            LOG.error("Failed to get entity list", e);
+            throw FalconWebException.newAPIException(e);
+        }
+    }
+
+    public List<Entity> getEntityList(String nameSubsequence, String tagKeywords,
+                                      String filterType, String filterTags, String filterBy, final String doAsUser)
+        throws FalconException, IOException {
+
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         validateEntityFilterByClause(filterByFieldsValues);
         if (StringUtils.isNotEmpty(filterTags)) {
             filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), Arrays.asList(filterTags));
@@ -640,35 +678,22 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
         // get filtered entities
         List<Entity> entities = new ArrayList<Entity>();
-        try {
-            if (StringUtils.isEmpty(filterType)) {
-                // return entities of all types if no entity type specified
-                for (EntityType entityType : EntityType.values()) {
-                    entities.addAll(getFilteredEntities(
-                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
-                }
-            } else {
-                String[] types = filterType.split(",");
-                for (String type : types) {
-                    EntityType entityType = EntityType.getEnum(type);
-                    entities.addAll(getFilteredEntities(
-                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
-                }
+        if (StringUtils.isEmpty(filterType)) {
+            // return entities of all types if no entity type specified
+            for (EntityType entityType : EntityType.values()) {
+                entities.addAll(getFilteredEntities(
+                        entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
             }
-        } catch (Exception e) {
-            LOG.error("Failed to get entity list", e);
-            throw FalconWebException.newAPIException(e);
+        } else {
+            String[] types = filterType.split(",");
+            for (String type : types) {
+                EntityType entityType = EntityType.getEnum(type);
+                entities.addAll(getFilteredEntities(
+                        entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
+            }
         }
 
-        // sort entities and pagination
-        List<Entity> entitiesReturn = sortEntitiesPagination(
-                entities, orderBy, sortOrder, offset, resultsPerPage, isReturnAll);
-
-        // add total number of results
-        EntityList entityList = entitiesReturn.size() == 0
-                ? new EntityList(new Entity[]{}, 0)
-                : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
-        return entityList;
+        return entities;
     }
 
     protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
@@ -1052,7 +1077,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         return retLen;
     }
 
-    private EntityElement[] buildEntityElements(HashSet<String> fields, List<Entity> entities) {
+    protected EntityElement[] buildEntityElements(HashSet<String> fields, List<Entity> entities) {
         EntityElement[] elements = new EntityElement[entities.size()];
         int elementIndex = 0;
         for (Entity entity : entities) {
@@ -1061,7 +1086,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         return elements;
     }
 
-    private EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
+    protected EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
         EntityElement elem = new EntityElement();
         elem.type = entity.getEntityType().toString();
         elem.name = entity.getName();
