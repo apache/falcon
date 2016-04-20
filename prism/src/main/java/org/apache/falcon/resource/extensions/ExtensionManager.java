@@ -80,32 +80,17 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     private Extension extension = new Extension();
     private static final ExtensionStore STORE = ExtensionStore.get();
-    private static final String RESULTS = "extensions";
+    private static final String EXTENSION_RESULTS = "extensions";
     private static final String TOTAL_RESULTS = "totalResults";
     private static final String README = "README";
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     private static final String SHORT_DESCRIPTION = "shortDescription";
+    private static final String EXTENSION_NAME = "name";
+    private static final String EXTENSION_TYPE = "type";
+    private static final String EXTENSION_DESC = "description";
 
     private static final String TRUSTED_EXTENSION = "Trusted extension";
     private static final String CUSTOM_EXTENSION = "Custom extension";
-
-    /**
-     * Enum for extension element.
-     */
-    private static enum ExtensionElement {
-        NAME("name"),
-        Type("type"),
-        DESCRIPTION("description");
-
-        private final String name;
-        ExtensionElement(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-    }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
@@ -366,7 +351,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             List<String> extensions = STORE.getExtensions();
             results = buildEnumerateResult(extensions);
         } catch (StoreAccessException e) {
-            LOG.error("Enumerate extensions failed", e);
+            LOG.error("Failed when accessing extension store.", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -374,7 +359,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
         try {
             JSONObject response = new JSONObject();
-            response.put(RESULTS, results);
+            response.put(EXTENSION_RESULTS, results);
             response.put(TOTAL_RESULTS, results.length());
 
             return Response.ok(response).build();
@@ -390,7 +375,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @PathParam("extension-name") String extensionName) {
         validateExtensionName(extensionName);
         try {
-            return getResource(extensionName, README);
+            return STORE.getResource(extensionName, README);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -403,7 +388,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @PathParam("extension-name") String extensionName) {
         validateExtensionName(extensionName);
         try {
-            return getResource(extensionName,
+            return STORE.getResource(extensionName,
                     extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -427,9 +412,9 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             JSONObject resultObject = new JSONObject();
 
             try {
-                resultObject.put(ExtensionElement.NAME.getName(), extension.toLowerCase());
-                resultObject.put(ExtensionElement.Type.getName(), extensionType);
-                resultObject.put(ExtensionElement.DESCRIPTION.getName(), getShortDescription(extension));
+                resultObject.put(EXTENSION_NAME, extension.toLowerCase());
+                resultObject.put(EXTENSION_TYPE, extensionType);
+                resultObject.put(EXTENSION_DESC, getShortDescription(extension));
             } catch (JSONException e) {
                 throw new FalconException(e);
             }
@@ -440,7 +425,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     private static String getShortDescription(final String extensionName) throws FalconException {
-        String content = getResource(extensionName, extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
+        String content = STORE.getResource(extensionName, extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
         String description;
         try {
             JSONObject jsonObject = new JSONObject(content);
@@ -449,15 +434,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             throw new FalconException(e);
         }
         return description;
-    }
-
-    private static String getResource(final String extensionName, final String resourceName) throws FalconException {
-        Map<String, String> resources = STORE.getExtensionArtifacts(extensionName);
-        if (resources.isEmpty()) {
-            throw new FalconException("No extension resources found for " + extensionName);
-        }
-
-        return STORE.getExtensionResource(resources.get(resourceName));
     }
 
     private List<Entity> generateEntities(String extensionName, HttpServletRequest request)
@@ -470,7 +446,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         // add tags on extension name and job
         for (Entity entity : entities) {
             String tags = entity.getTags();
-            if (!StringUtils.isEmpty(tags)) {
+            if (StringUtils.isNotEmpty(tags)) {
                 if (tags.contains(TAG_PREFIX_EXTENSION_NAME)) {
                     throw new FalconException("Generated extention entity " + entity.getName()
                             + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_NAME);
