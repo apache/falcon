@@ -99,7 +99,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>src/main/examples</directory>
+            <directory>examples</directory>
             <outputDirectory>examples</outputDirectory>
         </fileSet>
 
