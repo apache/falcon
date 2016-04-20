@@ -41,6 +41,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.resource.EntityList.EntityElement;
+import org.apache.falcon.resource.metadata.AbstractMetadataResource;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
@@ -72,7 +73,7 @@ import java.util.Set;
 /**
  * A base class for managing Entity operations.
  */
-public abstract class AbstractEntityManager {
+public abstract class AbstractEntityManager extends AbstractMetadataResource {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     protected static final String DO_AS_PARAM = "doAs";
@@ -629,6 +630,15 @@ public abstract class AbstractEntityManager {
                                     String filterType, String filterTags, String filterBy,
                                     String orderBy, String sortOrder, Integer offset,
                                     Integer resultsPerPage, final String doAsUser) {
+        return getEntityList(fieldStr, nameSubsequence, tagKeywords, filterType, filterTags, filterBy,
+                orderBy, sortOrder, offset, resultsPerPage, doAsUser, false);
+    }
+
+
+    public EntityList getEntityList(String fieldStr, String nameSubsequence, String tagKeywords,
+                                    String filterType, String filterTags, String filterBy,
+                                    String orderBy, String sortOrder, Integer offset,
+                                    Integer resultsPerPage, final String doAsUser, boolean isReturnAll) {
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
         Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         for (String key : filterByFieldsValues.keySet()) {
@@ -642,7 +652,8 @@ public abstract class AbstractEntityManager {
                     nameSubsequence, tagKeywords, filterType, filterTags, filterBy, doAsUser);
 
             // sort entities and pagination
-            List<Entity> entitiesReturn = sortEntitiesPagination(entities, orderBy, sortOrder, offset, resultsPerPage);
+            List<Entity> entitiesReturn = sortEntitiesPagination(
+                    entities, orderBy, sortOrder, offset, resultsPerPage, isReturnAll);
 
             // add total number of results
             EntityList entityList = entitiesReturn.size() == 0
@@ -681,16 +692,22 @@ public abstract class AbstractEntityManager {
                         entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
             }
         }
+
         return entities;
     }
 
     protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
                                                   Integer offset, Integer resultsPerPage) {
+        return sortEntitiesPagination(entities, orderBy, sortOrder, offset, resultsPerPage, false);
+    }
+
+    protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
+                                                  Integer offset, Integer resultsPerPage, boolean isReturnAll) {
         // sort entities
         entities = sortEntities(entities, orderBy, sortOrder);
 
         // pagination
-        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
+        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage, isReturnAll);
         List<Entity> entitiesReturn = new ArrayList<Entity>();
         if (pageCount > 0) {
             entitiesReturn.addAll(entities.subList(offset, (offset + pageCount)));
@@ -1031,13 +1048,17 @@ public abstract class AbstractEntityManager {
     }
 
     protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults) {
+        return getRequiredNumberOfResults(arraySize, offset, numresults, false);
+    }
+
+    protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults, boolean isReturnAll) {
         /* Get a subset of elements based on offset and count. When returning subset of elements,
               elements[offset] is included. Size 10, offset 10, return empty list.
               Size 10, offset 5, count 3, return elements[5,6,7].
               Size 10, offset 5, count >= 5, return elements[5,6,7,8,9]
               return elements starting from elements[offset] until the end OR offset+numResults*/
 
-        if (numresults < 1) {
+        if (!isReturnAll && numresults < 1) {
             LOG.error("Value for param numResults should be > than 0  : {}", numresults);
             throw FalconWebException.newAPIException("Value for param numResults should be > than 0  : " + numresults);
         }
@@ -1050,7 +1071,7 @@ public abstract class AbstractEntityManager {
         }
 
         int retLen = arraySize - offset;
-        if (retLen > numresults) {
+        if (!isReturnAll && retLen > numresults) {
             retLen = numresults;
         }
         return retLen;

@@ -55,8 +55,9 @@ import java.util.List;
  */
 public class MetadataTestContext {
     public static final String FALCON_USER = "falcon-user";
-    private static final String LOGS_DIR = "target/log";
-    private static final String NOMINAL_TIME = "2014-01-01-01-00";
+    public static final String SUCCEEDED_STATUS = "SUCCEEDED";
+    public static final String FAILED_STATUS = "FAILED";
+    public static final String RUNNING_STATUS = "RUNNING";
     public static final String OPERATION = "GENERATE";
 
     public static final String CLUSTER_ENTITY_NAME = "primary-cluster";
@@ -73,6 +74,9 @@ public class MetadataTestContext {
     public static final String OUTPUT_FEED_NAMES = "imp-click-join1,imp-click-join2";
     public static final String OUTPUT_INSTANCE_PATHS =
             "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join2/20140101";
+
+    private static final String LOGS_DIR = "target/log";
+    private static final String NOMINAL_TIME = "2014-01-01-01-00";
 
     private ConfigurationStore configStore;
     private MetadataMappingService service;
@@ -99,8 +103,8 @@ public class MetadataTestContext {
 
         addClusterEntity();
         addFeedEntity();
-        addProcessEntity();
-        addInstance();
+        addProcessEntity(PROCESS_ENTITY_NAME);
+        addInstance(PROCESS_ENTITY_NAME, NOMINAL_TIME, SUCCEEDED_STATUS);
     }
 
     public MetadataMappingService getService() {
@@ -164,9 +168,9 @@ public class MetadataTestContext {
         }
     }
 
-    public void addProcessEntity() throws Exception {
+    public void addProcessEntity(String processEntityName) throws Exception {
         org.apache.falcon.entity.v0.process.Process processEntity =
-                EntityBuilderTestUtil.buildProcess(PROCESS_ENTITY_NAME,
+                EntityBuilderTestUtil.buildProcess(processEntityName,
                 clusterEntity, "classified-as=Critical", "testPipeline");
         EntityBuilderTestUtil.addProcessWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
 
@@ -198,11 +202,25 @@ public class MetadataTestContext {
         configStore.publish(EntityType.PROCESS, processEntity);
     }
 
-    public void addInstance() throws Exception {
+    public void addInstance(String entityName, String nominalTime, String status) throws Exception {
         createJobCountersFileForTest();
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(),
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(
+                getTestMessageArgs(entityName, nominalTime, status),
                 WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
+        switch (status) {
+        case SUCCEEDED_STATUS:
+            service.onSuccess(context);
+            break;
+        case FAILED_STATUS:
+            service.onFailure(context);
+            break;
+        case RUNNING_STATUS:
+            service.onStart(context);
+            break;
+        default:
+            // Should not reach here
+            Assert.assertTrue(false, "Adding instance with an unsupported status in test context: " + status);
+        }
     }
 
     private void cleanupGraphStore(Graph graph) {
@@ -240,12 +258,12 @@ public class MetadataTestContext {
         }
     }
 
-    private static String[] getTestMessageArgs() {
+    private static String[] getTestMessageArgs(String entityName, String nominalTime, String status) {
         return new String[]{
             "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), CLUSTER_ENTITY_NAME,
             "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), ("process"),
-            "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), PROCESS_ENTITY_NAME,
-            "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), NOMINAL_TIME,
+            "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), entityName,
+            "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), nominalTime,
             "-" + WorkflowExecutionArgs.OPERATION.getName(), OPERATION,
             "-" + WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), INPUT_FEED_NAMES,
             "-" + WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), INPUT_INSTANCE_PATHS,
@@ -254,8 +272,8 @@ public class MetadataTestContext {
             "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
             "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), FALCON_USER,
             "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
-            "-" + WorkflowExecutionArgs.STATUS.getName(), "SUCCEEDED",
-            "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), NOMINAL_TIME,
+            "-" + WorkflowExecutionArgs.STATUS.getName(), status,
+            "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), nominalTime,
             "-" + WorkflowExecutionArgs.WF_ENGINE_URL.getName(), "http://localhost:11000/oozie",
             "-" + WorkflowExecutionArgs.USER_SUBFLOW_ID.getName(), "userflow@wf-id",
             "-" + WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(), WORKFLOW_NAME,
