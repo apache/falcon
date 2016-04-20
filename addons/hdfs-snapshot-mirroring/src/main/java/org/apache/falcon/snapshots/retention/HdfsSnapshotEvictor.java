@@ -16,23 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.retention.snapshots;
+package org.apache.falcon.snapshots.retention;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
-import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.retention.EvictionHelper;
+import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -60,24 +60,8 @@ public class HdfsSnapshotEvictor extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
         CommandLine cmd = getCommand(args);
-
-        String sourceStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_NN.getName());
-        String sourceExecuteEndpoint = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName());
-        String sourcePrincipal = cmd.getOptionValue(
-                HdfsSnapshotMirrorProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName());
-
-        String targetStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_NN.getName());
-        String taregtExecuteEndpoint = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_EXEC_URL.getName());
-        String targetPrincipal = cmd.getOptionValue(
-                HdfsSnapshotMirrorProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName());
-
-        Configuration sourceConf = ClusterHelper.getConfiguration(sourceStorageUrl,
-                sourceExecuteEndpoint, sourcePrincipal);
-        Configuration targetConf = ClusterHelper.getConfiguration(targetStorageUrl,
-                taregtExecuteEndpoint, targetPrincipal);
-
-        DistributedFileSystem sourceFs = HadoopClientFactory.get().createDistributedProxiedFileSystem(sourceConf);
-        DistributedFileSystem targetFs = HadoopClientFactory.get().createDistributedProxiedFileSystem(targetConf);
+        DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd);
+        DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd);
 
         String sourceDir = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_DIR.getName());
         String targetDir = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_DIR.getName());
@@ -112,15 +96,16 @@ public class HdfsSnapshotEvictor extends Configured implements Tool {
         return 0;
     }
 
-    protected void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit,
-                                  int numSnapshots) throws FalconException {
+    protected static void evictSnapshots(DistributedFileSystem fs, String dirName, String ageLimit,
+                                         int numSnapshots) throws FalconException {
         try {
             LOG.info("Started evicting snapshots on dir {}{} using policy {}, agelimit {}, numSnapshot {}",
                     fs.getUri(), dirName, ageLimit, numSnapshots);
 
             long evictionTime = System.currentTimeMillis() - EvictionHelper.evalExpressionToMilliSeconds(ageLimit);
 
-            String snapshotDir = dirName + Path.SEPARATOR + ".snapshot" + Path.SEPARATOR;
+            dirName = StringUtils.removeEnd(dirName, Path.SEPARATOR);
+            String snapshotDir = dirName + Path.SEPARATOR + HdfsSnapshotUtil.SNAPSHOT_DIR_PREFIX + Path.SEPARATOR;
             FileStatus[] snapshots = fs.listStatus(new Path(snapshotDir));
             if (snapshots.length <= numSnapshots) {
                 // no eviction needed
@@ -184,11 +169,6 @@ public class HdfsSnapshotEvictor extends Configured implements Tool {
         options.addOption(opt);
         opt = new Option(HdfsSnapshotMirrorProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
                 true, "Replication instance target NN Kerberos Principal");
-        opt.setRequired(false);
-        options.addOption(opt);
-
-        opt = new Option(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(),
-                true, "Is TDE encryption enabled on dirs being replicated?");
         opt.setRequired(false);
         options.addOption(opt);
 

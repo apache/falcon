@@ -73,6 +73,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
     private static final String RETENTION_POLICY = "delete";
     private static final String RETENTION_AGE = "mins(5)";
     private static final String RETENTION_NUM = "7";
+    private static final String TARGET_KERBEROS_PRINCIPAL = "nn/backup@REALM";
 
     private Extension extension;
     private MiniDFSCluster miniDFSCluster;
@@ -271,6 +272,9 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         Assert.assertEquals(TARGET_CLUSTER, props.getProperty("targetCluster"));
         Assert.assertEquals(JOB_NAME, props.getProperty("snapshotJobName"));
         Assert.assertEquals(JOB_CLUSTER_NAME, props.getProperty("jobCluster"));
+        Assert.assertEquals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL,
+                props.getProperty("sourceNNKerberosPrincipal"));
+        Assert.assertEquals(TARGET_KERBEROS_PRINCIPAL, props.getProperty("targetNNKerberosPrincipal"));
 
         //retry
         Assert.assertEquals(3, processEntity.getRetry().getAttempts());

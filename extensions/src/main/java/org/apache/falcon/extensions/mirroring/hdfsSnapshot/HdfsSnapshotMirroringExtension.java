@@ -43,6 +43,7 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
     private static final Logger LOG = LoggerFactory.getLogger(HdfsSnapshotMirroringExtension.class);
     private static final String EXTENSION_NAME = "HDFS-SNAPSHOT-MIRRORING";
     private static final String DEFAULT_RETENTION_POLICY = "delete";
+    public static final String EMPTY_KERBEROS_PRINCIPAL = "NA";
 
     @Override
     public String getName() {
@@ -109,7 +110,7 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
 
     }
 
-    private boolean isDirSnapshotable(DistributedFileSystem hdfs, Path path) throws FalconException {
+    private static boolean isDirSnapshotable(DistributedFileSystem hdfs, Path path) throws FalconException {
         try {
             LOG.debug("HDFS Snapshot extension validating if dir {} is snapshotable.", path.toString());
             SnapshottableDirectoryStatus[] snapshotableDirs = hdfs.getSnapshottableDirListing();
@@ -145,7 +146,9 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
 
         String tdeEnabled = extensionProperties.getProperty(
                 HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName());
-        if (StringUtils.isBlank(tdeEnabled)) {
+        if (StringUtils.isNotBlank(tdeEnabled) && Boolean.parseBoolean(tdeEnabled)) {
+            additionalProperties.put(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(), "true");
+        } else {
             additionalProperties.put(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(), "false");
         }
 
@@ -162,10 +165,11 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
         additionalProperties.put(HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName(),
                 ClusterHelper.getMREndPoint(sourceCluster));
         String sourceKerberosPrincipal = ClusterHelper.getPropertyValue(sourceCluster, SecurityUtil.NN_PRINCIPAL);
-        if (StringUtils.isNotBlank(sourceKerberosPrincipal)) {
-            additionalProperties.put(HdfsSnapshotMirrorProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
-                    sourceKerberosPrincipal);
+        if (StringUtils.isBlank(sourceKerberosPrincipal)) {
+            sourceKerberosPrincipal = EMPTY_KERBEROS_PRINCIPAL;
         }
+        additionalProperties.put(HdfsSnapshotMirrorProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
+                sourceKerberosPrincipal);
 
         String sourceRetentionPolicy = extensionProperties.getProperty(
                 HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_RETENTION_POLICY.getName());
@@ -189,10 +193,11 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
         additionalProperties.put(HdfsSnapshotMirrorProperties.TARGET_EXEC_URL.getName(),
                 ClusterHelper.getMREndPoint(targetCluster));
         String targetKerberosPrincipal = ClusterHelper.getPropertyValue(targetCluster, SecurityUtil.NN_PRINCIPAL);
-        if (StringUtils.isNotBlank(targetKerberosPrincipal)) {
-            additionalProperties.put(HdfsSnapshotMirrorProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
-                    targetKerberosPrincipal);
+        if (StringUtils.isBlank(targetKerberosPrincipal)) {
+            targetKerberosPrincipal = EMPTY_KERBEROS_PRINCIPAL;
         }
+        additionalProperties.put(HdfsSnapshotMirrorProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
+                targetKerberosPrincipal);
 
         String targetRetentionPolicy = extensionProperties.getProperty(
                 HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_RETENTION_POLICY.getName());
@@ -224,14 +229,15 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
         additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_EXEC_URL.getName(),
                 ClusterHelper.getMREndPoint(jobCluster));
         String jobKerberosPrincipal = ClusterHelper.getPropertyValue(jobCluster, SecurityUtil.NN_PRINCIPAL);
-        if (StringUtils.isNotBlank(jobKerberosPrincipal)) {
-            additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_NN_KERBEROS_PRINCIPAL.getName(),
-                    jobKerberosPrincipal);
+        if (StringUtils.isBlank(jobKerberosPrincipal)) {
+            jobKerberosPrincipal = EMPTY_KERBEROS_PRINCIPAL;
         }
+        additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_NN_KERBEROS_PRINCIPAL.getName(),
+                jobKerberosPrincipal);
         return additionalProperties;
     }
 
-    private void validateRetentionPolicy(String retentionPolicy) throws FalconException {
+    public static void validateRetentionPolicy(String retentionPolicy) throws FalconException {
         if (!retentionPolicy.equalsIgnoreCase("delete")) {
             throw new FalconException("Retention policy \"" + retentionPolicy + "\" is invalid");
         }

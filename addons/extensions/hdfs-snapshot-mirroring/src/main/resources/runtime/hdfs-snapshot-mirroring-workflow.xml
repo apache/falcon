@@ -17,6 +17,7 @@
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-hdfs-snapshot-mirroring'>
     <start to='snapshot-replication'/>
+    <!-- Snapshot replication action -->
     <action name="snapshot-replication">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
@@ -55,7 +56,7 @@
                     <value>${sourceNN},${targetNN}</value>
                 </property>
             </configuration>
-            <main-class>org.apache.falcon.replication.snapshots.HdfsSnapshotReplicator</main-class>
+            <main-class>org.apache.falcon.snapshots.replication.HdfsSnapshotReplicator</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-distcpMaxMaps</arg>
@@ -66,25 +67,33 @@
             <arg>${sourceNN}</arg>
             <arg>-sourceExecUrl</arg>
             <arg>${sourceExecUrl}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
             <arg>-sourceSnapshotDir</arg>
             <arg>${sourceSnapshotDir}</arg>
             <arg>-targetNN</arg>
             <arg>${targetNN}</arg>
             <arg>-targetExecUrl</arg>
             <arg>${targetExecUrl}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
             <arg>-targetSnapshotDir</arg>
             <arg>${targetSnapshotDir}</arg>
             <arg>-jobNN</arg>
             <arg>${jobNN}</arg>
             <arg>-jobExecUrl</arg>
             <arg>${jobExecUrl}</arg>
+            <arg>-jobNNKerberosPrincipal</arg>
+            <arg>${jobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
             <arg>-snapshotJobName</arg>
             <arg>${snapshotJobName}-${nominalTime}</arg>
         </java>
         <ok to="snapshot-retention"/>
         <error to="fail"/>
     </action>
-    <!-- Export Replication action -->
+    <!-- Snapshot retention action -->
     <action name="snapshot-retention">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
@@ -107,12 +116,12 @@
                     <value>true</value>
                 </property>
                 <property>
-                    <name>oozie.launcher.oozie.libpath</name>
-                    <value>${wf:conf("falcon.libpath")}</value>
-                </property>
-                <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>distcp</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.oozie.libpath</name>
+                    <value>${wf:conf("falcon.libpath")}</value>
                 </property>
                 <property>
                     <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
@@ -123,13 +132,15 @@
                     <value>${sourceNN},${targetNN}</value>
                 </property>
             </configuration>
-            <main-class>org.apache.falcon.retention.snapshots.HdfsSnapshotEvictor</main-class>
+            <main-class>org.apache.falcon.snapshots.retention.HdfsSnapshotEvictor</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-sourceNN</arg>
             <arg>${sourceNN}</arg>
             <arg>-sourceExecUrl</arg>
             <arg>${sourceExecUrl}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
             <arg>-sourceSnapshotDir</arg>
             <arg>${sourceSnapshotDir}</arg>
             <arg>-sourceSnapshotRetentionPolicy</arg>
@@ -142,6 +153,8 @@
             <arg>${targetNN}</arg>
             <arg>-targetExecUrl</arg>
             <arg>${targetExecUrl}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
             <arg>-targetSnapshotDir</arg>
             <arg>${targetSnapshotDir}</arg>
             <arg>-targetSnapshotRetentionPolicy</arg>

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.replication.snapshots;
+package org.apache.falcon.snapshots.replication;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.MiniHdfsClusterUtil;

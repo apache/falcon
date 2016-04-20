@@ -19,6 +19,7 @@ HDFS Snapshot Mirroring Extension.
 Overview
 This extension implements replication for snapshot-able directories on HDFS from one
 Hadoop cluster to another. This piggybacks on snapshot solution supported in HDFS (HDFS-7535).
+It also performs retention on the snapshots generated in source and target.
 
 Use Case
 * Create snapshots in source directory

@@ -41,7 +41,7 @@ public enum HdfsSnapshotMirrorProperties {
     TARGET_NN_KERBEROS_PRINCIPAL("targetNNKerberosPrincipal",
             "Snapshot replication target kerberos principal", false),
 
-    TARGET_SNAPSHOT_DIR("targetSnapshotDir", "Target Hive metastore uri", false),
+    TARGET_SNAPSHOT_DIR("targetSnapshotDir", "Target Hive metastore uri", true),
     TARGET_SNAPSHOT_RETENTION_POLICY("targetSnapshotRetentionPolicy", "Retention policy for target snapshots", false),
     TARGET_SNAPSHOT_RETENTION_AGE_LIMIT("targetSnapshotRetentionAgeLimit",
             "Delete target snapshots older than this age", true),
@@ -53,9 +53,9 @@ public enum HdfsSnapshotMirrorProperties {
 
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Is TDE encryption enabled on source and target", false),
 
-    SNAPSHOT_JOB_NAME("snapshotJobName", "Name of cluster on which job will be run", false),
+    SNAPSHOT_JOB_NAME("snapshotJobName", "Name of snapshot based mirror job", false),
     JOB_CLUSTER("jobCluster", "Snapshot replication job cluster", false),
-    JOB_NN("jobNN", "Name of cluster on which job will be run", false),
+    JOB_NN("jobNN", "Namenode Url of cluster on which job will be run", false),
     JOB_EXEC_URL("jobExecUrl", "Snapshot replication job execute endpoint", false),
     JOB_NN_KERBEROS_PRINCIPAL("jobNNKerberosPrincipal",
                                          "Snapshot replication job kerberos principal", false);

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.retention.snapshots;
+package org.apache.falcon.snapshots.retention;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.MiniHdfsClusterUtil;

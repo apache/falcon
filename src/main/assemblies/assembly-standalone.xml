@@ -275,6 +275,12 @@
         </file>
 
         <file>
+            <source>addons/extensions/hdfs-snapshot-mirroring/README</source>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+
+        <file>
             <source>addons/extensions/hive-mirroring/README</source>
             <outputDirectory>extensions/hive-mirroring</outputDirectory>
             <fileMode>0755</fileMode>
