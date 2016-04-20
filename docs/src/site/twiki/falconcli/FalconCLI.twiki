@@ -68,7 +68,8 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 | [[ContinueInstance][Continue]]                 | Continue the failed workflow instances          |
 | [[RerunInstance][Rerun]]                       | Rerun instances of specified process            |
 | [[ResumeInstance][Resume]]                     | Resume instance of specified process from suspended state   |
-| [[StatusInstance][Status]]                     | Gets the status of entity                       |
+| [[SearchInstance][Search]]                     | Search instances                                |
+| [[StatusInstance][Status]]                     | Gets the status of instances                    |
 | [[ListInstance][List]]                         | Gets single or multiple instances               |
 | [[SummaryInstance][Summary]]                   | Gets consolidated status of the instances between the specified time period    |
 | [[RunningInstance][Running]]                   | Gets running instances of the mentioned process |
