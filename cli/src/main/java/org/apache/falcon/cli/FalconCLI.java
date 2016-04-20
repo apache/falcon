@@ -98,7 +98,7 @@ public class FalconCLI {
                 "Entity operations like submit, suspend, resume, delete, status, definition, submitAndSchedule",
                 entityCLI.createEntityOptions(), false);
         parser.addCommand(FalconCLIConstants.INSTANCE_CMD, "",
-                "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
+                "Process instances operations like running, status, kill, suspend, resume, rerun, logs, search",
                 instanceCLI.createInstanceOptions(), false);
         parser.addCommand(FalconCLIConstants.METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
