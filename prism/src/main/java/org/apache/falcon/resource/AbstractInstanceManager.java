@@ -37,6 +37,9 @@ import java.util.Set;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
+import com.thinkaurelius.titan.core.TitanMultiVertexQuery;
+import com.thinkaurelius.titan.core.TitanVertex;
+import com.thinkaurelius.titan.graphdb.blueprints.TitanBlueprintsGraph;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -59,6 +62,10 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.logging.LogProvider;
+import org.apache.falcon.metadata.GraphUtils;
+import org.apache.falcon.metadata.RelationshipLabel;
+import org.apache.falcon.metadata.RelationshipProperty;
+import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
@@ -674,6 +681,93 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             LOG.error("Failed to triage", e);
             throw FalconWebException.newAPIException(e);
         }
+    }
+
+    public InstancesResult searchInstances(String type, String nameSubsequence, String tagKeywords,
+                                           String nominalStartTime, String nominalEndTime,
+                                           String status, String orderBy, Integer offset, Integer resultsPerPage) {
+        type = org.apache.commons.lang.StringUtils.isEmpty(type) ? "feed,process" : type;
+        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+
+        // filter entities
+        EntityList entityList = getEntityList(
+                "", nameSubsequence, tagKeywords, type, "", "", "", "", 0, 0, "", true);
+
+        // search instances with TitanDB
+        TitanBlueprintsGraph titanGraph = (TitanBlueprintsGraph) getGraph();
+        Map<TitanVertex, Iterable<TitanVertex>> instanceMap = titanInstances(
+                titanGraph, entityList, resultsPerPage + offset, nominalStartTime, nominalEndTime, status, orderBy);
+
+        // integrate search results from each entity
+        List<Instance> instances = consolidateTitanInstances(instanceMap);
+
+        // sort by descending order and pagination
+        List<Instance> instancesReturn = sortInstancesPagination(instances, orderBy, "desc", offset, resultsPerPage);
+
+        // output format
+        InstancesResult result = new InstancesResult(APIResult.Status.SUCCEEDED, "Instances Search Results");
+        result.setInstances(instancesReturn.toArray(new Instance[instancesReturn.size()]));
+        titanGraph.commit();
+        return result;
+    }
+
+    private Map<TitanVertex, Iterable<TitanVertex>> titanInstances(TitanBlueprintsGraph titanGraph,
+                                                                   EntityList entityList, int numTopInstances,
+                                                                   String nominalStartTime, String nominalEndTime,
+                                                                   String status, String orderBy) {
+        List<TitanVertex> entityVertices = new ArrayList<TitanVertex>();
+        for (EntityList.EntityElement entityElement : entityList.getElements()) {
+            String entityName = entityElement.name;
+            String entityType = entityElement.type;
+            RelationshipType relationshipType = RelationshipType.fromSchedulableEntityType(entityType);
+            TitanVertex entityVertex = (TitanVertex) GraphUtils.findVertex(titanGraph, entityName, relationshipType);
+            if (entityVertex == null) {
+                LOG.warn("No entity vertex found for type " + entityType + ", name " + entityName);
+            } else {
+                entityVertices.add(entityVertex);
+            }
+        }
+
+        if (entityVertices.isEmpty()) { // Need to add at least one vertex for TitanMultiVertexQuery
+            return new HashMap<>();
+        }
+
+        TitanMultiVertexQuery vertexQuery = titanGraph.multiQuery(entityVertices)
+                .labels(RelationshipLabel.INSTANCE_ENTITY_EDGE.getName());
+        GraphUtils.addRangeQuery(vertexQuery, RelationshipProperty.NOMINAL_TIME, nominalStartTime, nominalEndTime);
+        GraphUtils.addEqualityQuery(vertexQuery, RelationshipProperty.STATUS, status);
+        GraphUtils.addOrderLimitQuery(vertexQuery, orderBy, numTopInstances);
+        return vertexQuery.vertices();
+    }
+
+    private List<Instance> consolidateTitanInstances(Map<TitanVertex, Iterable<TitanVertex>> instanceMap) {
+        List<Instance> instances = new ArrayList<>();
+        for (Iterable<TitanVertex> vertices : instanceMap.values()) {
+            for (TitanVertex vertex : vertices) {
+                Instance instance = new Instance();
+                instance.instance = vertex.getProperty(RelationshipProperty.NAME.getName());
+                String instanceStatus = vertex.getProperty(RelationshipProperty.STATUS.getName());
+                if (StringUtils.isNotEmpty(instanceStatus)) {
+                    instance.status = InstancesResult.WorkflowStatus.valueOf(instanceStatus);
+                }
+                instances.add(instance);
+            }
+        }
+        return instances;
+    }
+
+    protected List<Instance> sortInstancesPagination(List<Instance> instances, String orderBy, String sortOrder,
+                                                     Integer offset, Integer resultsPerPage) {
+        // sort instances
+        instances = sortInstances(instances, orderBy, sortOrder);
+
+        // pagination
+        int pageCount = super.getRequiredNumberOfResults(instances.size(), offset, resultsPerPage);
+        List<Instance> instancesReturn = new ArrayList<Instance>();
+        if (pageCount > 0) {
+            instancesReturn.addAll(instances.subList(offset, (offset + pageCount)));
+        }
+        return instancesReturn;
     }
 
     private void checkName(String entityName) {
