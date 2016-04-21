@@ -20,6 +20,7 @@ package org.apache.falcon.extensions;
 
 import junit.framework.Assert;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.cluster.util.MiniHdfsClusterUtil;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.EntityParserFactory;
@@ -34,12 +35,22 @@ import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtensionProperties;
+import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
+import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirroringExtension;
 import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Properties;
 
@@ -58,9 +69,18 @@ public class ExtensionTest extends AbstractTestExtensionStore {
     private static final String SOURCE_CLUSTER = "primaryCluster";
     private static final String TARGETDIR = "/users/target/file1";
     private static final String TARGET_CLUSTER = "backupCluster";
-    private Extension extension;
+    private static final String NN_URI = "hdfs://localhost:54314";
+    private static final String RETENTION_POLICY = "delete";
+    private static final String RETENTION_AGE = "mins(5)";
+    private static final String RETENTION_NUM = "7";
+    private static final String TARGET_KERBEROS_PRINCIPAL = "nn/backup@REALM";
 
-    private static Properties getHdfsProperties() {
+    private Extension extension;
+    private MiniDFSCluster miniDFSCluster;
+    private DistributedFileSystem miniDfs;
+    private File baseDir;
+
+    private static Properties getCommonProperties() {
         Properties properties = new Properties();
         properties.setProperty(ExtensionProperties.JOB_NAME.getName(),
                 JOB_NAME);
@@ -72,6 +92,11 @@ public class ExtensionTest extends AbstractTestExtensionStore {
                 VALIDITY_END);
         properties.setProperty(ExtensionProperties.FREQUENCY.getName(),
                 FREQUENCY);
+        return properties;
+    }
+
+    private static Properties getHdfsProperties() {
+        Properties properties = getCommonProperties();
         properties.setProperty(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
                 SOURCEDIR);
         properties.setProperty(HdfsMirroringExtensionProperties.SOURCE_CLUSTER.getName(),
@@ -84,10 +109,52 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         return properties;
     }
 
+    private static Properties getHdfsSnapshotExtensionProperties() {
+        Properties properties = getCommonProperties();
+        properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_DIR.getName(),
+                SOURCEDIR);
+        properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_CLUSTER.getName(),
+                SOURCE_CLUSTER);
+        properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_RETENTION_POLICY.getName(),
+                RETENTION_POLICY);
+        properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+                RETENTION_AGE);
+        properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_RETENTION_NUMBER.getName(),
+                RETENTION_NUM);
+        properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_NN.getName(),
+                NN_URI);
+
+        properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_DIR.getName(),
+                TARGETDIR);
+        properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_CLUSTER.getName(),
+                TARGET_CLUSTER);
+        properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_RETENTION_POLICY.getName(),
+                RETENTION_POLICY);
+        properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_RETENTION_AGE_LIMIT.getName(),
+                RETENTION_AGE);
+        properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_RETENTION_NUMBER.getName(),
+                RETENTION_NUM);
+        properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_NN.getName(),
+                NN_URI);
+        properties.setProperty(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(),
+                "5");
+        properties.setProperty(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName(),
+                "100");
+        properties.setProperty(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(),
+                "false");
+
+        return properties;
+    }
+
     @BeforeClass
     public void init() throws Exception {
         extension = new Extension();
+        baseDir = Files.createTempDirectory("test_extensions_hdfs").toFile().getAbsoluteFile();
+        miniDFSCluster = MiniHdfsClusterUtil.initMiniDfs(MiniHdfsClusterUtil.EXTENSION_TEST_PORT, baseDir);
         initClusters();
+        miniDfs = miniDFSCluster.getFileSystem();
+        miniDfs.mkdirs(new Path(SOURCEDIR), new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL));
+        miniDfs.mkdirs(new Path(TARGETDIR), new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL));
     }
 
     private void initClusters() throws Exception {
@@ -156,5 +223,101 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         props.remove(ExtensionProperties.CLUSTER_NAME.getName());
 
         extension.getEntities(new HdfsMirroringExtension().getName(), props);
+    }
+
+    @Test
+    public void testGetExtensionEntitiesForHdfsSnapshotMirroring() throws Exception {
+        ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+
+        miniDfs.allowSnapshot(new Path(SOURCEDIR));
+        miniDfs.allowSnapshot(new Path(TARGETDIR));
+
+        List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
+                getHdfsSnapshotExtensionProperties());
+        if (entities == null || entities.isEmpty()) {
+            Assert.fail("Entities returned cannot be null or empty");
+        }
+
+        Assert.assertEquals(1, entities.size());
+        Entity entity = entities.get(0);
+        Assert.assertEquals(EntityType.PROCESS, entity.getEntityType());
+        parser.parse(new ByteArrayInputStream(entity.toString().getBytes()));
+
+        // Validate
+        Process processEntity = (Process) entity;
+        Assert.assertEquals(JOB_NAME, processEntity.getName());
+        org.apache.falcon.entity.v0.process.Cluster jobCluster = processEntity.getClusters().
+                getClusters().get(0);
+        Assert.assertEquals(JOB_CLUSTER_NAME, jobCluster.getName());
+        Assert.assertEquals(VALIDITY_START, SchemaHelper.formatDateUTC(jobCluster.getValidity().getStart()));
+        Assert.assertEquals(VALIDITY_END, SchemaHelper.formatDateUTC(jobCluster.getValidity().getEnd()));
+
+        Assert.assertEquals(FREQUENCY, processEntity.getFrequency().toString());
+        Assert.assertEquals("UTC", processEntity.getTimezone().getID());
+
+        Assert.assertEquals(EngineType.OOZIE, processEntity.getWorkflow().getEngine());
+        Assert.assertEquals(extensionStorePath + "/hdfs-snapshot-mirroring/libs",
+                processEntity.getWorkflow().getLib());
+        Assert.assertEquals(extensionStorePath
+                        + "/hdfs-snapshot-mirroring/resources/runtime/hdfs-snapshot-mirroring-workflow.xml",
+                processEntity.getWorkflow().getPath());
+
+        Properties props = EntityUtil.getEntityProperties(processEntity);
+
+        Assert.assertEquals(SOURCEDIR, props.getProperty("sourceSnapshotDir"));
+        Assert.assertEquals(SOURCE_CLUSTER, props.getProperty("sourceCluster"));
+        Assert.assertEquals(TARGETDIR, props.getProperty("targetSnapshotDir"));
+        Assert.assertEquals(TARGET_CLUSTER, props.getProperty("targetCluster"));
+        Assert.assertEquals(JOB_NAME, props.getProperty("snapshotJobName"));
+        Assert.assertEquals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL,
+                props.getProperty("sourceNNKerberosPrincipal"));
+        Assert.assertEquals(TARGET_KERBEROS_PRINCIPAL, props.getProperty("targetNNKerberosPrincipal"));
+
+        //retry
+        Assert.assertEquals(3, processEntity.getRetry().getAttempts());
+        Assert.assertEquals(PolicyType.PERIODIC, processEntity.getRetry().getPolicy());
+        Assert.assertEquals("minutes(30)", processEntity.getRetry().getDelay().toString());
+    }
+
+
+    @Test(dependsOnMethods = "testGetExtensionEntitiesForHdfsSnapshotMirroring",
+            expectedExceptions = FalconException.class,
+            expectedExceptionsMessageRegExp = "sourceSnapshotDir /users/source/file1 does not allow snapshots.")
+    public void testHdfsSnapshotMirroringNonSnapshotableDir() throws Exception {
+        miniDfs.disallowSnapshot(new Path(SOURCEDIR));
+
+        List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
+                getHdfsSnapshotExtensionProperties());
+        if (entities == null || entities.isEmpty()) {
+            Assert.fail("Entities returned cannot be null or empty");
+        }
+    }
+
+    @Test(expectedExceptions = FalconException.class,
+            expectedExceptionsMessageRegExp = "Missing extension property: sourceCluster")
+    public void testGetExtensionEntitiesForHdfsSnapshotMirroringMissingProperties() throws FalconException {
+        Properties props = getHdfsSnapshotExtensionProperties();
+        props.remove(HdfsSnapshotMirrorProperties.SOURCE_CLUSTER.getName());
+        extension.getEntities(new HdfsSnapshotMirroringExtension().getName(), props);
+    }
+
+    @Test(dependsOnMethods = "testHdfsSnapshotMirroringNonSnapshotableDir",
+            expectedExceptions = FalconException.class,
+            expectedExceptionsMessageRegExp = "sourceSnapshotDir /users/source/file1 does not exist.")
+    public void testHdfsSnapshotMirroringNonExistingDir() throws Exception {
+        if (miniDfs.exists(new Path(SOURCEDIR))) {
+            miniDfs.delete(new Path(SOURCEDIR), true);
+        }
+
+        List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
+                getHdfsSnapshotExtensionProperties());
+        if (entities == null || entities.isEmpty()) {
+            Assert.fail("Entities returned cannot be null or empty");
+        }
+    }
+
+    @AfterClass
+    public void cleanup() throws Exception {
+        MiniHdfsClusterUtil.cleanupDfs(miniDFSCluster, baseDir);
     }
 }

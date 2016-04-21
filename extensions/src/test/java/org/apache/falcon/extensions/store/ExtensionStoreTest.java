@@ -39,7 +39,11 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
                 "hdfs-mirroring-template.xml", extensionStorePath
                         + "/hdfs-mirroring/resources/runtime/hdfs-mirroring-template.xml",
                 "hdfs-mirroring-workflow.xml", extensionStorePath
-                        + "/hdfs-mirroring/resources/runtime/hdfs-mirroring-workflow.xml"
+                        + "/hdfs-mirroring/resources/runtime/hdfs-mirroring-workflow.xml",
+                "hdfs-snapshot-mirroring-template.xml", extensionStorePath
+                        + "/hdfs-mirroring/resources/runtime/hdfs-snapshot-mirroring-template.xml",
+                "hdfs-snapshot-mirroring-workflow.xml", extensionStorePath
+                        + "/hdfs-mirroring/resources/runtime/hdfs-snapshot-mirroring-workflow.xml"
         );
     }
 
