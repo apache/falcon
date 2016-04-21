@@ -58,6 +58,7 @@ public final class FalconCLIConstants {
     public static final String LIST_OPT = "list";
     public static final String SKIPDRYRUN_OPT = "skipDryRun";
     public static final String FIELDS_OPT = "fields";
+    public static final String INSTANCE_STATUS_OPT = "instanceStatus";
     public static final String NAMESEQ_OPT = "nameseq";
     public static final String TAGKEYS_OPT = "tagkeys";
     public static final String FILTER_BY_OPT = "filterBy";
@@ -73,5 +74,4 @@ public final class FalconCLIConstants {
     public static final String RELATIONS_OPT = "relations";
     public static final String PIPELINE_OPT = "pipeline";
     public static final String NAME_OPT = "name";
-    public static final String INSTANCE_STATUS_OPT = "instanceStatus";
 }

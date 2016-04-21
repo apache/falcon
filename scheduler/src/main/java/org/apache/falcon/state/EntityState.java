@@ -20,6 +20,8 @@ package org.apache.falcon.state;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.exception.InvalidStateTransitionException;
 
+import java.util.Properties;
+
 /**
  * Represents the state of a schedulable entity.
  * Implements {@link org.apache.falcon.state.StateMachine} for an entity.
@@ -27,7 +29,16 @@ import org.apache.falcon.exception.InvalidStateTransitionException;
 public class EntityState implements StateMachine<EntityState.STATE, EntityState.EVENT> {
     private Entity entity;
     private STATE currentState;
+    private Properties properties;
     private static final STATE INITIAL_STATE = STATE.SUBMITTED;
+
+    public Properties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 
     /**
      * Enumerates all the valid states of a schedulable entity and the valid transitions from that state.

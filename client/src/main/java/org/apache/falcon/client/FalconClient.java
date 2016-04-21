@@ -97,6 +97,7 @@ public class FalconClient extends AbstractFalconClient {
     public static final String FORCE = "force";
     public static final String SHOW_SCHEDULER = "showScheduler";
     public static final String ENTITY_NAME = "name";
+    public static final String ENTITY_TYPE = "type";
     public static final String SKIP_DRYRUN = "skipDryRun";
     public static final String FILTER_BY = "filterBy";
     public static final String ORDER_BY = "orderBy";
@@ -300,7 +301,8 @@ public class FalconClient extends AbstractFalconClient {
         PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DEPENDENCY("api/instance/dependencies/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         TRIAGE("api/instance/triage/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        SEARCH("api/instance/search/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -573,12 +575,30 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(InstancesSummaryResult.class, clientResponse);
     }
 
+
     public FeedInstanceResult getFeedListing(String type, String entity, String start,
                                      String end, String colo, String doAsUser) throws FalconCLIException {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.KILL.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(USER, doAsUser).call(Instances.LISTING);
         return getResponse(FeedInstanceResult.class, clientResponse);
+    }
+
+    public InstancesResult searchInstances(String type, String nameSubsequence, String tagKeywords,
+                                           String start, String end, String status, String orderBy,
+                                           Integer offset, Integer numResults) throws FalconCLIException {
+        ClientResponse clientResponse = new ResourceBuilder().path(Instances.SEARCH.path)
+                .addQueryParam(ENTITY_TYPE, type)
+                .addQueryParam(NAME_SUBSEQUENCE, nameSubsequence)
+                .addQueryParam(TAG_KEYWORDS, tagKeywords)
+                .addQueryParam(START, start)
+                .addQueryParam(END, end)
+                .addQueryParam(INSTANCE_STATUS, status)
+                .addQueryParam(ORDER_BY, orderBy)
+                .addQueryParam(OFFSET, offset)
+                .addQueryParam(NUM_RESULTS, numResults)
+                .call(Instances.SEARCH);
+        return getResponse(InstancesResult.class, clientResponse);
     }
 
     public InstancesResult killInstances(String type, String entity, String start,

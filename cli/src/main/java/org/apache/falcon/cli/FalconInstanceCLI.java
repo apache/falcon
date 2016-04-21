@@ -46,6 +46,7 @@ public class FalconInstanceCLI extends FalconCLI {
     private static final String KILL_OPT = "kill";
     private static final String RERUN_OPT = "rerun";
     private static final String LOG_OPT = "logs";
+    private static final String SEARCH_OPT = "search";
     private static final String ALL_ATTEMPTS = "allAttempts";
     private static final String RUNID_OPT = "runid";
     private static final String CLUSTERS_OPT = "clusters";
@@ -93,6 +94,8 @@ public class FalconInstanceCLI extends FalconCLI {
                 "Displays dependent instances for a specified instance.");
         Option triage = new Option(TRIAGE_OPT, false,
                 "Triage a feed or process instance and find the failures in it's lineage.");
+        Option search = new Option(SEARCH_OPT, false,
+                "Search instances with filtering criteria on the entity, instance time and status.");
 
         OptionGroup group = new OptionGroup();
         group.addOption(running);
@@ -109,6 +112,7 @@ public class FalconInstanceCLI extends FalconCLI {
         group.addOption(listing);
         group.addOption(dependency);
         group.addOption(triage);
+        group.addOption(search);
 
         Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
         Option start = new Option(FalconCLIConstants.START_OPT, true,
@@ -151,9 +155,10 @@ public class FalconInstanceCLI extends FalconCLI {
         Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
         Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false, "Use debug mode to see"
                 + " debugging statements on stdout");
-
         Option instanceTime = new Option(INSTANCE_TIME_OPT, true, "Time for an instance");
-
+        Option instanceStatus = new Option(FalconCLIConstants.INSTANCE_STATUS_OPT, true, "Instance status");
+        Option nameSubsequence = new Option(FalconCLIConstants.NAMESEQ_OPT, true, "Subsequence of entity name");
+        Option tagKeywords = new Option(FalconCLIConstants.TAGKEYS_OPT, true, "Keywords in tags");
         Option allAttempts = new Option(ALL_ATTEMPTS, false, "To get all attempts of corresponding instances");
 
         instanceOptions.addOption(url);
@@ -177,6 +182,9 @@ public class FalconInstanceCLI extends FalconCLI {
         instanceOptions.addOption(doAs);
         instanceOptions.addOption(debug);
         instanceOptions.addOption(instanceTime);
+        instanceOptions.addOption(instanceStatus);
+        instanceOptions.addOption(nameSubsequence);
+        instanceOptions.addOption(tagKeywords);
         instanceOptions.addOption(allAttempts);
 
         return instanceOptions;
@@ -194,6 +202,9 @@ public class FalconInstanceCLI extends FalconCLI {
         String instanceTime = commandLine.getOptionValue(INSTANCE_TIME_OPT);
         String start = commandLine.getOptionValue(FalconCLIConstants.START_OPT);
         String end = commandLine.getOptionValue(FalconCLIConstants.END_OPT);
+        String status = commandLine.getOptionValue(FalconCLIConstants.INSTANCE_STATUS_OPT);
+        String nameSubsequence = commandLine.getOptionValue(FalconCLIConstants.NAMESEQ_OPT);
+        String tagKeywords = commandLine.getOptionValue(FalconCLIConstants.TAGKEYS_OPT);
         String filePath = commandLine.getOptionValue(FalconCLIConstants.FILE_PATH_OPT);
         String runId = commandLine.getOptionValue(RUNID_OPT);
         String colo = commandLine.getOptionValue(FalconCLIConstants.COLO_OPT);
@@ -211,7 +222,9 @@ public class FalconInstanceCLI extends FalconCLI {
         colo = getColo(colo);
         String instanceAction = "instance";
         validateSortOrder(sortOrder);
-        validateInstanceCommands(optionsList, entity, type, colo);
+        if (!optionsList.contains(SEARCH_OPT)) {
+            validateInstanceCommands(optionsList, entity, type, colo);
+        }
 
         if (optionsList.contains(TRIAGE_OPT)) {
             validateNotEmpty(colo, FalconCLIConstants.COLO_OPT);
@@ -280,6 +293,9 @@ public class FalconInstanceCLI extends FalconCLI {
                     start, colo, lifeCycles, doAsUser));
         } else if (optionsList.contains(LISTING_OPT)) {
             result = ResponseHelper.getString(client.getFeedInstanceListing(type, entity, start, end, colo, doAsUser));
+        } else if (optionsList.contains(SEARCH_OPT)) {
+            result = ResponseHelper.getString(client.searchInstances(
+                    type, nameSubsequence, tagKeywords, start, end, status, orderBy, offset, numResults));
         } else {
             throw new FalconCLIException("Invalid command");
         }
