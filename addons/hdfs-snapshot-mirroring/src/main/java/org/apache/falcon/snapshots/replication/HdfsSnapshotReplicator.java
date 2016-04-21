@@ -25,10 +25,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
+import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -59,7 +59,11 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
     protected CommandLine cmd;
 
     public static void main(String[] args) throws Exception {
-        ToolRunner.run(new Configuration(), new HdfsSnapshotReplicator(), args);
+        Configuration conf = OozieActionConfigurationHelper.createActionConf();
+        int ret = ToolRunner.run(conf, new HdfsSnapshotReplicator(), args);
+        if (ret != 0) {
+            throw new Exception("Unable to perform Snapshot based replication action args: " + Arrays.toString(args));
+        }
     }
 
     @Override
@@ -68,12 +72,6 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
 
         String sourceStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_NN.getName());
         String targetStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_NN.getName());
-
-        String jobStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.JOB_NN.getName());
-        String jobExecuteEndpoint = cmd.getOptionValue(HdfsSnapshotMirrorProperties.JOB_EXEC_URL.getName());
-        String jobPrincipal = HdfsSnapshotUtil.parseKerberosPrincipal(cmd.getOptionValue(
-                HdfsSnapshotMirrorProperties.JOB_NN_KERBEROS_PRINCIPAL.getName()));
-        Configuration jobConf = ClusterHelper.getConfiguration(jobStorageUrl, jobExecuteEndpoint, jobPrincipal);
 
         DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd);
         DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd);
@@ -90,7 +88,7 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
         // Find most recently recplicated snapshot. If it exists, distCp using the snapshots.
         // If not, do regular distcp as this is the first time job is running.
         invokeCopy(sourceStorageUrl, targetStorageUrl, sourceFs, targetFs,
-                sourceDir, targetDir, jobConf, currentSnapshotName);
+                sourceDir, targetDir, currentSnapshotName);
 
         // Generate snapshot on target if distCp succeeds.
         createSnapshotInFileSystem(targetDir, currentSnapshotName, targetFs);
@@ -111,13 +109,12 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
         }
     }
 
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
-
     protected void invokeCopy(String sourceStorageUrl, String targetStorageUrl,
                               DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
                               String sourceDir, String targetDir,
-                              Configuration jobConf, String currentSnapshotName) throws FalconException {
+                              String currentSnapshotName) throws FalconException {
         try {
+            Configuration jobConf = this.getConf();
             DistCpOptions options = getDistCpOptions(sourceStorageUrl, targetStorageUrl,
                     sourceFs, targetFs, sourceDir, targetDir, currentSnapshotName);
             DistCp distCp = new DistCp(jobConf, options);
@@ -168,8 +165,6 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
                 Integer.parseInt(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName())));
         return distcpOptions;
     }
-
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
             String sourceDir, String targetDir) throws FalconException {
@@ -269,19 +264,6 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
         opt = new Option(HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName(),
                 true, "Replication instance job name");
         opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option(HdfsSnapshotMirrorProperties.JOB_NN.getName(),
-                true, "Replication instance job NN");
-        opt.setRequired(true);
-        options.addOption(opt);
-        opt = new Option(HdfsSnapshotMirrorProperties.JOB_EXEC_URL.getName(),
-                true, "Replication instance job Exec Url");
-        opt.setRequired(true);
-        options.addOption(opt);
-        opt = new Option(HdfsSnapshotMirrorProperties.JOB_NN_KERBEROS_PRINCIPAL.getName(),
-                true, "Replication instance job NN Kerberos Principal");
-        opt.setRequired(false);
         options.addOption(opt);
 
         try {

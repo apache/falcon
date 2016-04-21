@@ -52,13 +52,7 @@ public enum HdfsSnapshotMirrorProperties {
     MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
 
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Is TDE encryption enabled on source and target", false),
-
-    SNAPSHOT_JOB_NAME("snapshotJobName", "Name of snapshot based mirror job", false),
-    JOB_CLUSTER("jobCluster", "Snapshot replication job cluster", false),
-    JOB_NN("jobNN", "Namenode Url of cluster on which job will be run", false),
-    JOB_EXEC_URL("jobExecUrl", "Snapshot replication job execute endpoint", false),
-    JOB_NN_KERBEROS_PRINCIPAL("jobNNKerberosPrincipal",
-                                         "Snapshot replication job kerberos principal", false);
+    SNAPSHOT_JOB_NAME("snapshotJobName", "Name of snapshot based mirror job", false);
 
 
     private final String name;

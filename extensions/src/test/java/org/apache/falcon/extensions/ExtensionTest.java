@@ -136,8 +136,6 @@ public class ExtensionTest extends AbstractTestExtensionStore {
                 RETENTION_NUM);
         properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_NN.getName(),
                 NN_URI);
-        properties.setProperty(HdfsSnapshotMirrorProperties.JOB_CLUSTER.getName(),
-                SOURCE_CLUSTER);
         properties.setProperty(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(),
                 "5");
         properties.setProperty(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName(),
@@ -271,7 +269,6 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         Assert.assertEquals(TARGETDIR, props.getProperty("targetSnapshotDir"));
         Assert.assertEquals(TARGET_CLUSTER, props.getProperty("targetCluster"));
         Assert.assertEquals(JOB_NAME, props.getProperty("snapshotJobName"));
-        Assert.assertEquals(JOB_CLUSTER_NAME, props.getProperty("jobCluster"));
         Assert.assertEquals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL,
                 props.getProperty("sourceNNKerberosPrincipal"));
         Assert.assertEquals(TARGET_KERBEROS_PRINCIPAL, props.getProperty("targetNNKerberosPrincipal"));

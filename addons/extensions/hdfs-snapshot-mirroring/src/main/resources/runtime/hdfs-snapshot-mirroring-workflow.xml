@@ -79,12 +79,6 @@
             <arg>${targetNNKerberosPrincipal}</arg>
             <arg>-targetSnapshotDir</arg>
             <arg>${targetSnapshotDir}</arg>
-            <arg>-jobNN</arg>
-            <arg>${jobNN}</arg>
-            <arg>-jobExecUrl</arg>
-            <arg>${jobExecUrl}</arg>
-            <arg>-jobNNKerberosPrincipal</arg>
-            <arg>${jobNNKerberosPrincipal}</arg>
             <arg>-tdeEncryptionEnabled</arg>
             <arg>${tdeEncryptionEnabled}</arg>
             <arg>-snapshotJobName</arg>

@@ -68,9 +68,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         "--" + HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_DIR.getName(),
         "/apps/falcon/snapshot-replication/targetDir/",
         "--" + HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(), "false",
-        "--" + HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName(), "snapshotJobName",
-        "--" + HdfsSnapshotMirrorProperties.JOB_NN.getName(), "hdfs://localhost:54136",
-        "--" + HdfsSnapshotMirrorProperties.JOB_EXEC_URL.getName(), "localhost:8021", };
+        "--" + HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName(), "snapshotJobName", };
 
     @BeforeClass
     public void init() throws Exception {
@@ -103,6 +101,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
     @Test
     public void replicationTest() throws Exception {
         Configuration sourceConf = ClusterHelper.getConfiguration(sourceCluster);
+        this.setConf(sourceConf);
         Configuration targetConf = ClusterHelper.getConfiguration(targetCluster);
         sourceStorageUrl = ClusterHelper.getStorageUrl(sourceCluster);
         targetStorageUrl = ClusterHelper.getStorageUrl(targetCluster);
@@ -115,7 +114,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         miniDfs.mkdir(dir1, fsPermission);
         miniDfs.createSnapshot(sourceDir, "snapshot1");
         invokeCopy(sourceStorageUrl, targetStorageUrl, sourceFs, targetFs,
-                sourceDir.toString(), targetDir.toString(), sourceConf, "snapshot1");
+                sourceDir.toString(), targetDir.toString(), "snapshot1");
         miniDfs.createSnapshot(targetDir, "snapshot1");
         Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir1")));
 
@@ -124,7 +123,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         miniDfs.mkdir(dir2, fsPermission);
         miniDfs.createSnapshot(sourceDir, "snapshot2");
         invokeCopy(sourceStorageUrl, targetStorageUrl, sourceFs, targetFs,
-                sourceDir.toString(), targetDir.toString(), sourceConf, "snapshot2");
+                sourceDir.toString(), targetDir.toString(), "snapshot2");
         miniDfs.createSnapshot(targetDir, "snapshot2");
         Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir2")));
@@ -133,7 +132,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         miniDfs.delete(dir1, true);
         miniDfs.createSnapshot(sourceDir, "snapshot3");
         invokeCopy(sourceStorageUrl, targetStorageUrl, sourceFs, targetFs,
-                sourceDir.toString(), targetDir.toString(), sourceConf, "snapshot3");
+                sourceDir.toString(), targetDir.toString(), "snapshot3");
         miniDfs.createSnapshot(targetDir, "snapshot3");
         Assert.assertFalse(miniDfs.exists(new Path(targetDir, "dir1")));
         Assert.assertTrue(miniDfs.exists(new Path(targetDir, "dir2")));
@@ -154,7 +153,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         miniDfs.mkdir(dir1, fsPermission);
         miniDfs.createSnapshot(sourceDir, "snapshot4");
         invokeCopy(sourceStorageUrl, targetStorageUrl, miniDfs, miniDfs,
-                sourceDir.toString(), targetDir.toString(), new Configuration(), "snapshot4");
+                sourceDir.toString(), targetDir.toString(), "snapshot4");
     }
 
     @AfterClass

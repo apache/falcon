@@ -223,17 +223,6 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
             throw new FalconException("Cluster entity "
                     + ExtensionProperties.CLUSTER_NAME.getName() + " not found");
         }
-        additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_CLUSTER.getName(), jobClusterName);
-        additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_NN.getName(),
-                ClusterHelper.getStorageUrl(jobCluster));
-        additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_EXEC_URL.getName(),
-                ClusterHelper.getMREndPoint(jobCluster));
-        String jobKerberosPrincipal = ClusterHelper.getPropertyValue(jobCluster, SecurityUtil.NN_PRINCIPAL);
-        if (StringUtils.isBlank(jobKerberosPrincipal)) {
-            jobKerberosPrincipal = EMPTY_KERBEROS_PRINCIPAL;
-        }
-        additionalProperties.put(HdfsSnapshotMirrorProperties.JOB_NN_KERBEROS_PRINCIPAL.getName(),
-                jobKerberosPrincipal);
         return additionalProperties;
     }
 
