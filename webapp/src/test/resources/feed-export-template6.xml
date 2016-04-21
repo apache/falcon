@@ -31,12 +31,6 @@
             <export>
                 <target name="##datasourcename##" tableName="simple_export">
                 <load type="allowinsert"/>
-                <fields>
-                    <includes>
-                        <field>id</field>
-                        <field>name</field>
-                    </includes>
-                </fields>
             </target>
             <arguments>
                 <argument name="--update-key" value="id"/>

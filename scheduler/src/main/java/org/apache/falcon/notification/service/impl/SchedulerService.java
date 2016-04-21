@@ -43,6 +43,8 @@ import org.apache.falcon.notification.service.request.JobScheduleNotificationReq
 import org.apache.falcon.notification.service.request.NotificationRequest;
 import org.apache.falcon.predicate.Predicate;
 import org.apache.falcon.state.EntityClusterID;
+import org.apache.falcon.state.EntityID;
+import org.apache.falcon.state.EntityState;
 import org.apache.falcon.state.ID;
 import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
@@ -304,7 +306,9 @@ public class SchedulerService implements FalconNotificationService, Notification
                             DAGEngineFactory.getDAGEngine(instance.getCluster()).reRun(instance, props, isForced);
                         }
                     } else {
-                        externalId = DAGEngineFactory.getDAGEngine(instance.getCluster()).run(instance);
+                        EntityState entityState = STATE_STORE.getEntity(new EntityID(instance.getEntity()));
+                        externalId = DAGEngineFactory.getDAGEngine(instance.getCluster())
+                                .run(instance, entityState.getProperties());
                     }
                     LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     JobScheduledEvent event = new JobScheduledEvent(instance.getId(),

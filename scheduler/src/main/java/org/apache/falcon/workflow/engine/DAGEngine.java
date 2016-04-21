@@ -35,10 +35,11 @@ public interface DAGEngine {
      * Run an instance for execution.
      *
      * @param instance
+     * @param props
      * @return
      * @throws DAGEngineException
      */
-    String run(ExecutionInstance instance) throws DAGEngineException;
+    String run(ExecutionInstance instance, Properties props) throws DAGEngineException;
 
     /**
      * @param instance
@@ -85,9 +86,10 @@ public interface DAGEngine {
      * Perform dryrun of an instance.
      *
      * @param entity
+     * @param props
      * @throws DAGEngineException
      */
-    void submit(Entity entity) throws DAGEngineException;
+    void submit(Entity entity, Properties props) throws DAGEngineException;
 
     /**
      * Returns info about the Job.

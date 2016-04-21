@@ -94,6 +94,15 @@ public final class EntityUtil {
     public static final String WF_LIB_SEPARATOR = ",";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
 
+    public static final ThreadLocal<SimpleDateFormat> PATH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format;
+        }
+    };
+
     /** Priority with which the DAG will be scheduled.
      *  Matches the five priorities of Hadoop jobs.
      */
@@ -1082,4 +1091,22 @@ public final class EntityUtil {
         }
         return JOBPRIORITY.NORMAL;
     }
+
+
+    /**
+     * Evaluates feedpath based on instance time.
+     * @param feedPath
+     * @param instanceTime
+     * @return
+     */
+    public static String evaluateDependentPath(String feedPath, Date instanceTime) {
+        String timestamp = PATH_FORMAT.get().format(instanceTime);
+        String instancePath = feedPath.replaceAll("\\$\\{YEAR\\}", timestamp.substring(0, 4));
+        instancePath = instancePath.replaceAll("\\$\\{MONTH\\}", timestamp.substring(4, 6));
+        instancePath = instancePath.replaceAll("\\$\\{DAY\\}", timestamp.substring(6, 8));
+        instancePath = instancePath.replaceAll("\\$\\{HOUR\\}", timestamp.substring(8, 10));
+        instancePath = instancePath.replaceAll("\\$\\{MINUTE\\}", timestamp.substring(10, 12));
+        return instancePath;
+    }
+
 }

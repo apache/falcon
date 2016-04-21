@@ -53,4 +53,5 @@ public final class PersistenceConstants {
     public static final String GET_LAST_INSTANCE_FOR_ENTITY_CLUSTER = "GET_LAST_INSTANCE_FOR_ENTITY_CLUSTER";
     public static final String DELETE_INSTANCES_TABLE = "DELETE_INSTANCES_TABLE";
     public static final String GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE = "GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE";
+    public static final String GET_LATEST_INSTANCE_TIME = "GET_LATEST_INSTANCE_TIME";
 }

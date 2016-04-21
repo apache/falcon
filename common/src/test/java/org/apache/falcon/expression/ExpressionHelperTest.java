@@ -81,4 +81,28 @@ public class ExpressionHelperTest {
             {"future(1,0)", "2015-02-01T00:00Z"},
         };
     }
+
+    @Test
+    public void testFormatTime() throws FalconException {
+        String output = expressionHelper.evaluate("formatTime(\"2016-02-01T10:59Z\", \"yyyy\")",
+                String.class);
+        Assert.assertEquals(output, "2016");
+        output = expressionHelper.evaluate("formatTime(\"2016-02-01T10:59Z\", \"yyyy-MM\")",
+                String.class);
+        Assert.assertEquals(output, "2016-02");
+        output = expressionHelper.evaluate("formatTime(\"2016-02-01T10:59Z\", \"yyyy-MM-dd\")",
+                String.class);
+        Assert.assertEquals(output, "2016-02-01");
+    }
+
+
+    @Test
+    public void testOffsetAndInstanceTime() throws FalconException {
+        String date = expressionHelper.evaluate("dateOffset(instanceTime(), 1, 'DAY')", String.class);
+        Assert.assertEquals(date, "2015-02-02T00:00Z");
+        date = expressionHelper.evaluate("dateOffset(instanceTime(), 3, 'HOUR')", String.class);
+        Assert.assertEquals(date, "2015-02-01T03:00Z");
+        date = expressionHelper.evaluate("dateOffset(instanceTime(), -25, 'MINUTE')", String.class);
+        Assert.assertEquals(date, "2015-01-31T23:35Z");
+    }
 }

@@ -21,7 +21,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.falcon.cli.CLIParser;
+import org.apache.falcon.cliParser.CLIParser;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.StateStoreProperties;
