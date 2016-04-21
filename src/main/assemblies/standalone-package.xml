@@ -155,6 +155,40 @@
         </fileSet>
 
         <fileSet>
+            <directory>addons/extensions/hdfs-snapshot-mirroring/src/main/META</directory>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring/META</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>./</directory>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring/libs/build</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>./</directory>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring/libs/runtime</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>addons/extensions/hdfs-snapshot-mirroring/src/main/resources</directory>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring/resources</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
             <directory>addons/extensions/hive-mirroring/src/main/META</directory>
             <outputDirectory>extensions/hive-mirroring/META</outputDirectory>
             <fileMode>0755</fileMode>
@@ -231,6 +265,12 @@
         <file>
             <source>../addons/extensions/hdfs-mirroring/README</source>
             <outputDirectory>extensions/hdfs-mirroring</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+
+        <file>
+            <source>../addons/extensions/hdfs-snapshot-mirroring/README</source>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring</outputDirectory>
             <fileMode>0755</fileMode>
         </file>
 

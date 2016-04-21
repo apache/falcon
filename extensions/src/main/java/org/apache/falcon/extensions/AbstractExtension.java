@@ -20,6 +20,7 @@ package org.apache.falcon.extensions;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
+import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirroringExtension;
 import org.apache.falcon.extensions.mirroring.hive.HiveMirroringExtension;
 
 import java.util.ArrayList;
@@ -33,12 +34,14 @@ import java.util.Properties;
 public abstract class AbstractExtension {
     private static final List<String> TRUSTED_EXTENSIONS = Arrays.asList(
             new HdfsMirroringExtension().getName().toUpperCase(),
+            new HdfsSnapshotMirroringExtension().getName().toUpperCase(),
             new HiveMirroringExtension().getName().toUpperCase());
     private static List<AbstractExtension> extensions = new ArrayList<>();
 
     public static List<AbstractExtension> getExtensions() {
         if (extensions.isEmpty()) {
             extensions.add(new HdfsMirroringExtension());
+            extensions.add(new HdfsSnapshotMirroringExtension());
             extensions.add(new HiveMirroringExtension());
         }
         return extensions;

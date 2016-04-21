@@ -88,6 +88,16 @@
             </dependencies>
         </profile>
         <profile>
+            <id>hdfs-snapshot-mirroring</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.falcon</groupId>
+                    <artifactId>falcon-hdfs-snapshot-mirroring</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>adf</id>
             <dependencies>
                 <dependency>
