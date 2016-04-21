@@ -58,8 +58,6 @@ public class FalconEntityCLI extends FalconCLI {
     private static final String FIELDS_OPT = "fields";
     private static final String TAGS_OPT = "tags";
     private static final String NUM_INSTANCES_OPT = "numInstances";
-    private static final String NAMESEQ_OPT = "nameseq";
-    private static final String TAGKEYS_OPT = "tagkeys";
     private static final String SHOWSCHEDULER_OPT = "showScheduler";
 
     public FalconEntityCLI() throws Exception {
@@ -135,8 +133,8 @@ public class FalconEntityCLI extends FalconCLI {
         Option filterBy = new Option(FalconCLIConstants.FILTER_BY_OPT, true,
                 "Filter returned entities by the specified status");
         Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
-        Option nameSubsequence = new Option(NAMESEQ_OPT, true, "Subsequence of entity name");
-        Option tagKeywords = new Option(TAGKEYS_OPT, true, "Keywords in tags");
+        Option nameSubsequence = new Option(FalconCLIConstants.NAMESEQ_OPT, true, "Subsequence of entity name");
+        Option tagKeywords = new Option(FalconCLIConstants.TAGKEYS_OPT, true, "Keywords in tags");
         Option orderBy = new Option(FalconCLIConstants.ORDER_BY_OPT, true,
                 "Order returned entities by this field");
         Option sortOrder = new Option(FalconCLIConstants.SORT_ORDER_OPT, true, "asc or desc order for results");
@@ -203,8 +201,8 @@ public class FalconEntityCLI extends FalconCLI {
         String sortOrder = commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT);
         String filterBy = commandLine.getOptionValue(FalconCLIConstants.FILTER_BY_OPT);
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
-        String nameSubsequence = commandLine.getOptionValue(NAMESEQ_OPT);
-        String tagKeywords = commandLine.getOptionValue(TAGKEYS_OPT);
+        String nameSubsequence = commandLine.getOptionValue(FalconCLIConstants.NAMESEQ_OPT);
+        String tagKeywords = commandLine.getOptionValue(FalconCLIConstants.TAGKEYS_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
         String feedInstancePath = commandLine.getOptionValue(PATH_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT), 0, "offset");
