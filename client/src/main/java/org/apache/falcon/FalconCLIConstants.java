@@ -44,6 +44,11 @@ public final class FalconCLIConstants {
     public static final String ENTITY_NAME_OPT = "name";
     public static final String FILE_PATH_OPT = "file";
     public static final String VERSION_OPT = "version";
+    public static final String SUBMIT_OPT = "submit";
+    public static final String UPDATE_OPT = "update";
+    public static final String DELETE_OPT = "delete";
+    public static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
+    public static final String VALIDATE_OPT = "validate";
     public static final String SCHEDULE_OPT = "schedule";
     public static final String SUSPEND_OPT = "suspend";
     public static final String RESUME_OPT = "resume";
@@ -52,6 +57,7 @@ public final class FalconCLIConstants {
     public static final String DEPENDENCY_OPT = "dependency";
     public static final String LIST_OPT = "list";
     public static final String SKIPDRYRUN_OPT = "skipDryRun";
+    public static final String FIELDS_OPT = "fields";
     public static final String INSTANCE_STATUS_OPT = "instanceStatus";
     public static final String NAMESEQ_OPT = "nameseq";
     public static final String TAGKEYS_OPT = "tagkeys";

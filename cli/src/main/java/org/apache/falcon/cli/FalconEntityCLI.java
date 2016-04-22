@@ -43,11 +43,6 @@ import java.util.Set;
  */
 public class FalconEntityCLI extends FalconCLI {
 
-    private static final String SUBMIT_OPT = "submit";
-    private static final String UPDATE_OPT = "update";
-    private static final String DELETE_OPT = "delete";
-    private static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
-    private static final String VALIDATE_OPT = "validate";
     private static final String DEFINITION_OPT = "definition";
     public static final String SLA_MISS_ALERT_OPT = "slaAlert";
 
@@ -55,7 +50,6 @@ public class FalconEntityCLI extends FalconCLI {
     private static final String PATH_OPT = "path";
     private static final String TOUCH_OPT = "touch";
     private static final String PROPS_OPT = "properties";
-    private static final String FIELDS_OPT = "fields";
     private static final String TAGS_OPT = "tags";
     private static final String NUM_INSTANCES_OPT = "numInstances";
     private static final String SHOWSCHEDULER_OPT = "showScheduler";
@@ -68,9 +62,9 @@ public class FalconEntityCLI extends FalconCLI {
 
         Options entityOptions = new Options();
 
-        Option submit = new Option(SUBMIT_OPT, false,
+        Option submit = new Option(FalconCLIConstants.SUBMIT_OPT, false,
                 "Submits an entity xml to Falcon");
-        Option update = new Option(UPDATE_OPT, false,
+        Option update = new Option(FalconCLIConstants.UPDATE_OPT, false,
                 "Updates an existing entity xml");
         Option schedule = new Option(FalconCLIConstants.SCHEDULE_OPT, false,
                 "Schedules a submited entity in Falcon");
@@ -78,11 +72,11 @@ public class FalconEntityCLI extends FalconCLI {
                 "Suspends a running entity in Falcon");
         Option resume = new Option(FalconCLIConstants.RESUME_OPT, false,
                 "Resumes a suspended entity in Falcon");
-        Option delete = new Option(DELETE_OPT, false,
+        Option delete = new Option(FalconCLIConstants.DELETE_OPT, false,
                 "Deletes an entity in Falcon, and kills its instance from workflow engine");
-        Option submitAndSchedule = new Option(SUBMIT_AND_SCHEDULE_OPT, false,
+        Option submitAndSchedule = new Option(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT, false,
                 "Submits and entity to Falcon and schedules it immediately");
-        Option validate = new Option(VALIDATE_OPT, false,
+        Option validate = new Option(FalconCLIConstants.VALIDATE_OPT, false,
                 "Validates an entity based on the entity type");
         Option status = new Option(FalconCLIConstants.STATUS_OPT, false,
                 "Gets the status of entity");
@@ -129,7 +123,7 @@ public class FalconEntityCLI extends FalconCLI {
         Option colo = new Option(FalconCLIConstants.COLO_OPT, true, "Colo name");
         Option cluster = new Option(FalconCLIConstants.CLUSTER_OPT, true, "Cluster name");
         colo.setRequired(false);
-        Option fields = new Option(FIELDS_OPT, true, "Entity fields to show for a request");
+        Option fields = new Option(FalconCLIConstants.FIELDS_OPT, true, "Entity fields to show for a request");
         Option filterBy = new Option(FalconCLIConstants.FILTER_BY_OPT, true,
                 "Filter returned entities by the specified status");
         Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
@@ -203,7 +197,7 @@ public class FalconEntityCLI extends FalconCLI {
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
         String nameSubsequence = commandLine.getOptionValue(FalconCLIConstants.NAMESEQ_OPT);
         String tagKeywords = commandLine.getOptionValue(FalconCLIConstants.TAGKEYS_OPT);
-        String fields = commandLine.getOptionValue(FIELDS_OPT);
+        String fields = commandLine.getOptionValue(FalconCLIConstants.FIELDS_OPT);
         String feedInstancePath = commandLine.getOptionValue(PATH_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT), 0, "offset");
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
@@ -248,7 +242,7 @@ public class FalconEntityCLI extends FalconCLI {
             SchedulableEntityInstanceResult response = client.getFeedSlaMissPendingAlerts(entityType,
                     entityName, start, end, colo);
             result = ResponseHelper.getString(response);
-        } else if (optionsList.contains(SUBMIT_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.submit(entityType, filePath, doAsUser).getMessage();
@@ -256,16 +250,16 @@ public class FalconEntityCLI extends FalconCLI {
             validateNotEmpty(feedInstancePath, PATH_OPT);
             FeedLookupResult resp = client.reverseLookUp(entityType, feedInstancePath, doAsUser);
             result = ResponseHelper.getString(resp);
-        } else if (optionsList.contains(UPDATE_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.UPDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             result = client.update(entityType, entityName, filePath, skipDryRun, doAsUser).getMessage();
-        } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.submitAndSchedule(entityType, filePath, skipDryRun, doAsUser, userProps).getMessage();
-        } else if (optionsList.contains(VALIDATE_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.VALIDATE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.validate(entityType, filePath, skipDryRun, doAsUser).getMessage();
@@ -281,7 +275,7 @@ public class FalconEntityCLI extends FalconCLI {
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.resume(entityTypeEnum, entityName, colo, doAsUser).getMessage();
-        } else if (optionsList.contains(DELETE_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.DELETE_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             result = client.delete(entityTypeEnum, entityName, doAsUser).getMessage();
@@ -341,7 +335,7 @@ public class FalconEntityCLI extends FalconCLI {
             try {
                 EntityList.EntityFieldList.valueOf(s.toUpperCase());
             } catch (IllegalArgumentException ie) {
-                throw new FalconCLIException("Invalid fields argument : " + FIELDS_OPT);
+                throw new FalconCLIException("Invalid fields argument : " + FalconCLIConstants.FIELDS_OPT);
             }
         }
     }
