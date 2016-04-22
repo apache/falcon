@@ -73,7 +73,7 @@ public final class GraphUtils {
         StringBuilder properties = new StringBuilder();
         for (String propertyKey : vertex.getPropertyKeys()) {
             properties.append(propertyKey)
-                    .append("=").append(vertex.getProperty(propertyKey))
+                        .append("=").append(vertex.<Long>getProperty(propertyKey))
                     .append(", ");
         }
 

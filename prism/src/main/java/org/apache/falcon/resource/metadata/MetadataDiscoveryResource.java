@@ -196,7 +196,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             Vertex vertex = edge.getVertex(direction);
             JSONObject vertexObject = new JSONObject();
             vertexObject.put(RelationshipProperty.NAME.getName(),
-                    vertex.getProperty(RelationshipProperty.NAME.getName()));
+                    vertex.<String>getProperty(RelationshipProperty.NAME.getName()));
             vertexObject.put(RelationshipProperty.TYPE.getName(),
                     getVertexRelationshipType(vertex));
             vertexObject.put("label", edge.getLabel());
@@ -216,13 +216,13 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             if (vertex.getProperty(ReplicationJobCountersList.BYTESCOPIED.getName()) != null) {
                 JSONObject vertexObject = new JSONObject();
                 vertexObject.put(RelationshipProperty.NAME.getName(),
-                        vertex.getProperty(RelationshipProperty.NAME.getName()));
+                        vertex.<String>getProperty(RelationshipProperty.NAME.getName()));
                 vertexObject.put(ReplicationJobCountersList.TIMETAKEN.getName(),
-                        vertex.getProperty(ReplicationJobCountersList.TIMETAKEN.getName()));
+                        vertex.<String>getProperty(ReplicationJobCountersList.TIMETAKEN.getName()));
                 vertexObject.put(ReplicationJobCountersList.BYTESCOPIED.getName(),
-                        vertex.getProperty(ReplicationJobCountersList.BYTESCOPIED.getName()));
+                        vertex.<String>getProperty(ReplicationJobCountersList.BYTESCOPIED.getName()));
                 vertexObject.put(ReplicationJobCountersList.COPY.getName(),
-                        vertex.getProperty(ReplicationJobCountersList.COPY.getName()));
+                        vertex.<String>getProperty(ReplicationJobCountersList.COPY.getName()));
                 adjVertices.put(vertexObject);
 
                 resultsPerQuery--;
@@ -328,7 +328,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
     }
 
     private JSONArray getDimensionFromVertex(JSONArray dimensionValues, Vertex vertex) {
-        return dimensionValues.put(vertex.getProperty(RelationshipProperty.NAME.getName()));
+        return dimensionValues.put(vertex.<String>getProperty(RelationshipProperty.NAME.getName()));
     }
 
     private RelationshipType validateAndParseDimensionType(String type) {
