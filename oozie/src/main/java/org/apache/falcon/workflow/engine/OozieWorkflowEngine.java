@@ -873,7 +873,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     if (wfJob!=null) {
                         newInstance.startTime = wfJob.getStartTime();
                         newInstance.endTime = wfJob.getEndTime();
-                        newInstance.logFile = wfJob.getConsoleUrl();
+                        newInstance.logFile = coordinatorAction.getId();
                         populateInstanceActions(cluster, wfJob, newInstance);
                         newInstance.status = WorkflowStatus.valueOf(mapActionStatus(wfJob.getStatus().name()));
                         instanceList.add(newInstance);
@@ -893,7 +893,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             status = jobInfo.getStatus().name();
             instance.startTime = jobInfo.getStartTime();
             instance.endTime = jobInfo.getEndTime();
-            instance.logFile = jobInfo.getConsoleUrl();
+            instance.logFile = coordinatorAction.getId();
             instance.runId = jobInfo.getRun();
         }
 
