@@ -115,8 +115,20 @@
         </fileSet>
 
         <fileSet>
-            <directory>../src/main/examples</directory>
-            <outputDirectory>examples</outputDirectory>
+            <directory>../examples/app</directory>
+            <outputDirectory>examples/app</outputDirectory>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>../examples/data</directory>
+            <outputDirectory>examples/data</outputDirectory>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>../examples/entity</directory>
+            <outputDirectory>examples/entity</outputDirectory>
             <directoryMode>0755</directoryMode>
         </fileSet>
 
