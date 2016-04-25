@@ -167,6 +167,7 @@
                 messaging specifies the interface for sending feed availability messages, it's
                 endpoint is broker url with tcp address.ex: tcp://corp.messaging:61616?daemon=true
                 registry specifies the interface for Hcatalog.
+                spark specifies the interface for spark master.
             </xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
@@ -176,6 +177,7 @@
             <xs:enumeration value="workflow"/>
             <xs:enumeration value="messaging"/>
             <xs:enumeration value="registry"/>
+            <xs:enumeration value="spark"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="IDENTIFIER">
