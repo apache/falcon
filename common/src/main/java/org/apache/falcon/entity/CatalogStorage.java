@@ -106,14 +106,6 @@ public class CatalogStorage extends Configured implements Storage {
         parseFeedUri(tableUri);
     }
 
-    private void verifyAndUpdateConfiguration(Configuration conf) {
-        if (conf == null) {
-            setConf(new Configuration());
-        } else {
-            setConf(conf);
-        }
-    }
-
     /**
      * Validate URI to conform to catalog:$database:$table#$partitions.
      * scheme=catalog:database=$database:table=$table#$partitions
@@ -595,5 +587,13 @@ public class CatalogStorage extends Configured implements Storage {
                 + ", table='" + table + '\''
                 + ", partitions=" + partitions
                 + '}';
+    }
+
+    private void verifyAndUpdateConfiguration(Configuration conf) {
+        if (conf == null) {
+            setConf(new Configuration());
+        } else {
+            setConf(conf);
+        }
     }
 }
