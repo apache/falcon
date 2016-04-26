@@ -481,7 +481,7 @@ public class FalconCLIIT {
 
     }
 
-    public void testInstanceRunningAndSummaryCommands() throws Exception {
+    public void testInstanceRunningAndSearchSummaryCommands() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
         submitTestFiles(context, overlay);
@@ -495,9 +495,14 @@ public class FalconCLIIT {
         Assert.assertEquals(executeWithURL("instance -status -type feed -name " + overlay.get("outputFeedName")
                 + " -start " + START_INSTANCE), 0);
 
+        Assert.assertEquals(executeWithURL("instance -search"), 0);
+
         Assert.assertEquals(executeWithURL("instance -running -type process -name " + overlay.get("processName")), 0);
 
         //with doAs
+        Assert.assertEquals(executeWithURL(
+                "instance -search -type process -instanceStatus RUNNING -doAs " + FalconTestUtil.TEST_USER_2), 0);
+
         Assert.assertEquals(executeWithURL("instance -running -type process -doAs " + FalconTestUtil.TEST_USER_2
                 + " -name " + overlay.get("processName")), 0);
 

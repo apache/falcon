@@ -53,8 +53,8 @@ public final class ExtensionStore {
     private Path storePath;
 
     // Convention over configuration design paradigm
-    private static final String RESOURCES_DIR= "resources";
-    private static final String LIBS_DIR= "libs";
+    private static final String RESOURCES_DIR = "resources";
+    private static final String LIBS_DIR = "libs";
 
     private static final String EXTENSION_STORE_URI = "extension.store.uri";
 
@@ -202,6 +202,15 @@ public final class ExtensionStore {
             throw new StoreAccessException(e);
         }
         return extesnionList;
+    }
+
+    public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
+        Map<String, String> resources = getExtensionArtifacts(extensionName);
+        if (resources.isEmpty()) {
+            throw new StoreAccessException(new Exception("No extension resources found for " + extensionName));
+        }
+
+        return getExtensionResource(resources.get(resourceName));
     }
 
     public Path getExtensionStorePath() {

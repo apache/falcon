@@ -19,6 +19,7 @@
 package org.apache.falcon.hadoop;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
@@ -277,11 +278,19 @@ public final class HadoopClientFactory {
      * @param executeUrl jt url or RM url
      * @throws IOException
      */
-    public void validateJobClient(String executeUrl) throws IOException {
+    public void validateJobClient(String executeUrl, String rmPrincipal) throws IOException {
         final JobConf jobConf = new JobConf();
         jobConf.set(MR_JT_ADDRESS_KEY, executeUrl);
         jobConf.set(YARN_RM_ADDRESS_KEY, executeUrl);
-
+        /**
+         * It is possible that the RM/JT principal can be different between clusters,
+         * for example, the cluster is using a different KDC with cross-domain trust
+         * with the Falcon KDC.   in that case, we want to allow the user to provide
+         * the RM principal similar to NN principal.
+         */
+        if (UserGroupInformation.isSecurityEnabled() && StringUtils.isNotEmpty(rmPrincipal)) {
+            jobConf.set(SecurityUtil.RM_PRINCIPAL, rmPrincipal);
+        }
         UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
         try {
             JobClient jobClient = loginUser.doAs(new PrivilegedExceptionAction<JobClient>() {

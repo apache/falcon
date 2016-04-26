@@ -469,6 +469,7 @@
         <module>prism</module>
         <module>unit</module>
         <module>lifecycle</module>
+        <module>examples</module>
         <module>webapp</module>
         <module>docs</module>
         <module>distro</module>

@@ -103,6 +103,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -68,6 +68,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
     public static final String FALCON_FORCE_RERUN = "falcon.system.force.rerun";
     public static final String FALCON_RERUN = "falcon.system.rerun";
+    public static final String FALCON_SKIP_DRYRUN = "falcon.system.skip.dryrun";
     public static final String FALCON_RESUME = "falcon.system.resume";
 
     private enum JobAction {
@@ -85,13 +86,24 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> properties) throws FalconException {
-        EXECUTION_SERVICE.schedule(entity);
+    public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> suppliedProps) throws FalconException {
+        Properties props  = new Properties();
+        if (suppliedProps != null && !suppliedProps.isEmpty()) {
+            props.putAll(suppliedProps);
+        }
+        if (skipDryRun) {
+            props.put(FalconWorkflowEngine.FALCON_SKIP_DRYRUN, "true");
+        }
+        EXECUTION_SERVICE.schedule(entity, props);
     }
 
     @Override
     public void dryRun(Entity entity, String clusterName, Boolean skipDryRun) throws FalconException {
-        DAGEngineFactory.getDAGEngine(clusterName).submit(entity);
+        Properties props  = new Properties();
+        if (skipDryRun) {
+            props.put(FalconWorkflowEngine.FALCON_SKIP_DRYRUN, "true");
+        }
+        DAGEngineFactory.getDAGEngine(clusterName).submit(entity, props);
     }
 
     @Override

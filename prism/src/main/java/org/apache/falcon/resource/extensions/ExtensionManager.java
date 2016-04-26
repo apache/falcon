@@ -18,38 +18,43 @@
 
 package org.apache.falcon.resource.extensions;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.store.StoreAccessException;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.extensions.AbstractExtension;
+import org.apache.falcon.extensions.Extension;
+import org.apache.falcon.extensions.ExtensionProperties;
+import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.AbstractSchedulableEntityManager;
+import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.ExtensionInstanceList;
+import org.apache.falcon.resource.ExtensionJobList;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.util.DeploymentUtil;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconException;
-import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionProperties;
-import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.AbstractSchedulableEntityManager;
-import org.apache.falcon.resource.EntityList;
-import org.apache.falcon.resource.ExtensionJobList;
-import org.apache.falcon.resource.ExtensionInstanceList;
-import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.util.DeploymentUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,6 +79,18 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     public static final String DESCENDING_SORT_ORDER = "desc";
 
     private Extension extension = new Extension();
+    private static final ExtensionStore STORE = ExtensionStore.get();
+    private static final String EXTENSION_RESULTS = "extensions";
+    private static final String TOTAL_RESULTS = "totalResults";
+    private static final String README = "README";
+    private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
+    private static final String SHORT_DESCRIPTION = "shortDescription";
+    private static final String EXTENSION_NAME = "name";
+    private static final String EXTENSION_TYPE = "type";
+    private static final String EXTENSION_DESC = "description";
+
+    private static final String TRUSTED_EXTENSION = "Trusted extension";
+    private static final String CUSTOM_EXTENSION = "Custom extension";
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
@@ -322,6 +339,103 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully");
     }
 
+
+    // Extension store related REST API's
+    @GET
+    @Path("enumerate")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getExtensions() {
+        JSONArray results;
+
+        try {
+            List<String> extensions = STORE.getExtensions();
+            results = buildEnumerateResult(extensions);
+        } catch (StoreAccessException e) {
+            LOG.error("Failed when accessing extension store.", e);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        try {
+            JSONObject response = new JSONObject();
+            response.put(EXTENSION_RESULTS, results);
+            response.put(TOTAL_RESULTS, results.length());
+
+            return Response.ok(response).build();
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("describe/{extension-name}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getExtensionDescription(
+            @PathParam("extension-name") String extensionName) {
+        validateExtensionName(extensionName);
+        try {
+            return STORE.getResource(extensionName, README);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GET
+    @Path("definition/{extension-name}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public String getExtensionDefinition(
+            @PathParam("extension-name") String extensionName) {
+        validateExtensionName(extensionName);
+        try {
+            return STORE.getResource(extensionName,
+                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static void validateExtensionName(final String extensionName) {
+        if (StringUtils.isBlank(extensionName)) {
+            throw FalconWebException.newAPIException("Extension name is mandatory and shouldn't be blank",
+                    Response.Status.BAD_REQUEST);
+        }
+    }
+
+    private static JSONArray buildEnumerateResult(final List<String> extensions) throws FalconException {
+        JSONArray results = new JSONArray();
+
+        for (String extension : extensions) {
+            String extensionType = AbstractExtension.isExtensionTrusted(extension) ? TRUSTED_EXTENSION
+                    : CUSTOM_EXTENSION;
+
+            JSONObject resultObject = new JSONObject();
+
+            try {
+                resultObject.put(EXTENSION_NAME, extension.toLowerCase());
+                resultObject.put(EXTENSION_TYPE, extensionType);
+                resultObject.put(EXTENSION_DESC, getShortDescription(extension));
+            } catch (JSONException e) {
+                throw new FalconException(e);
+            }
+            results.put(resultObject);
+
+        }
+        return results;
+    }
+
+    private static String getShortDescription(final String extensionName) throws FalconException {
+        String content = STORE.getResource(extensionName, extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
+        String description;
+        try {
+            JSONObject jsonObject = new JSONObject(content);
+            description = (String) jsonObject.get(SHORT_DESCRIPTION);
+        } catch (JSONException e) {
+            throw new FalconException(e);
+        }
+        return description;
+    }
+
     private List<Entity> generateEntities(String extensionName, HttpServletRequest request)
         throws FalconException, IOException {
         // get entities for extension job
@@ -332,19 +446,19 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         // add tags on extension name and job
         for (Entity entity : entities) {
             String tags = entity.getTags();
-            if (StringUtils.isEmpty(tags)) {
-                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
-                        + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
-            } else {
-                if (tags.indexOf(TAG_PREFIX_EXTENSION_NAME) != -1) {
+            if (StringUtils.isNotEmpty(tags)) {
+                if (tags.contains(TAG_PREFIX_EXTENSION_NAME)) {
                     throw new FalconException("Generated extention entity " + entity.getName()
                             + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_NAME);
                 }
-                if (tags.indexOf(TAG_PREFIX_EXTENSION_JOB) != -1) {
+                if (tags.contains(TAG_PREFIX_EXTENSION_JOB)) {
                     throw new FalconException("Generated extention entity " + entity.getName()
                             + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_JOB);
                 }
                 setEntityTags(entity, tags + TAG_SEPARATOR + TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
+                        + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
+            } else {
+                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
                         + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
             }
         }

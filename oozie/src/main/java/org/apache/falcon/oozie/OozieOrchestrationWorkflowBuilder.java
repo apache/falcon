@@ -37,6 +37,7 @@ import org.apache.falcon.oozie.feed.FSReplicationWorkflowBuilder;
 import org.apache.falcon.oozie.feed.FeedRetentionWorkflowBuilder;
 import org.apache.falcon.oozie.feed.HCatReplicationWorkflowBuilder;
 import org.apache.falcon.oozie.process.HiveProcessWorkflowBuilder;
+import org.apache.falcon.oozie.process.NativeOozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.OozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.PigProcessWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
@@ -58,6 +59,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.joda.time.DateTime;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
@@ -93,10 +95,18 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
             new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME, }));
 
     private LifeCycle lifecycle;
+    private DateTime nominalTime;
 
     protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
     protected static final String MR_QUEUE_NAME = "queueName";
     protected static final String MR_JOB_PRIORITY = "jobPriority";
+
+    /**
+     * Represents Scheduler for Entities.
+     */
+    public enum Scheduler {
+        OOZIE, NATIVE
+    }
 
     public OozieOrchestrationWorkflowBuilder(T entity, LifeCycle lifecycle) {
         super(entity);
@@ -115,7 +125,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         super(entity);
     }
 
-    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
+    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster,
+                                                        Tag lifecycle) throws FalconException {
+        return get(entity, cluster, lifecycle, Scheduler.OOZIE);
+    }
+
+    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle,
+                                                        Scheduler scheduler)
         throws FalconException {
         switch (entity.getEntityType()) {
         case FEED:
@@ -166,6 +182,9 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 return new PigProcessWorkflowBuilder(process);
 
             case OOZIE:
+                if (Scheduler.NATIVE == scheduler) {
+                    return new NativeOozieProcessWorkflowBuilder(process);
+                }
                 return new OozieProcessWorkflowBuilder(process);
 
             case HIVE:
@@ -496,5 +515,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
             conf.getProperty().add(confProp);
         }
         return conf;
+    }
+
+    public void setNominalTime(DateTime nominalTime) {
+        this.nominalTime = nominalTime;
+    }
+
+    public DateTime getNominalTime() {
+        return nominalTime;
     }
 }
