@@ -90,6 +90,7 @@ public class CatalogStorage extends Configured implements Storage {
 
     public CatalogStorage(Cluster cluster, CatalogTable table) throws URISyntaxException {
         this(ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint(), table);
+        verifyAndUpdateConfiguration(getConf());
     }
 
     protected CatalogStorage(String catalogUrl, CatalogTable table) throws URISyntaxException {
@@ -100,10 +101,16 @@ public class CatalogStorage extends Configured implements Storage {
         if (catalogUrl == null || catalogUrl.length() == 0) {
             throw new IllegalArgumentException("Catalog Registry URL cannot be null or empty");
         }
-
+        verifyAndUpdateConfiguration(getConf());
         this.catalogUrl = catalogUrl;
 
         parseFeedUri(tableUri);
+    }
+
+    private void verifyAndUpdateConfiguration(Configuration conf) {
+        if (conf == null) {
+            setConf(new Configuration());
+        }
     }
 
     /**
@@ -186,13 +193,14 @@ public class CatalogStorage extends Configured implements Storage {
         URI uri = new URI(processed);
 
         this.catalogUrl = uri.getScheme() + "://" + uri.getAuthority();
-
+        verifyAndUpdateConfiguration(getConf());
         parseUriTemplate(uri);
     }
 
     protected CatalogStorage(String uriTemplate, Configuration conf) throws URISyntaxException {
         this(uriTemplate);
         setConf(conf);
+        verifyAndUpdateConfiguration(conf);
     }
 
     private void parseUriTemplate(URI uriTemplate) throws URISyntaxException {
