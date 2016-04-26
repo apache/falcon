@@ -349,7 +349,6 @@
                     master element is optional and indicates the url of the Spark Master. Ex: yarn-client, yarn-master, or local. This will override the Spark interface, if define in cluster entity.
                     mode element if present indicates the mode of spark, where to run spark driver program. Ex: client,cluster.
                     name element indicates the name of the spark application.
-                    application-type indicates type of the spark application java, python or spark-sql.
                     class element if present, indicates the spark's application main class.
                     jar element indicates a comma separated list of jars or python files. Also provide the jar or file directory path to workflow attribute path
                     spark-opts element if present, contains a list of spark options that can be passed to spark driver.
