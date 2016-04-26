@@ -18,7 +18,10 @@
 
 package org.apache.falcon.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
@@ -28,7 +31,10 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class StartupProperties extends ApplicationProperties {
 
+    public static final String SAFEMODE_PROPERTY = "falcon.safeMode";
+
     private static final String PROPERTY_FILE = "startup.properties";
+    private static final Logger LOG = LoggerFactory.getLogger(StartupProperties.class);
 
     private static final AtomicReference<StartupProperties> INSTANCE =
             new AtomicReference<StartupProperties>();
@@ -46,6 +52,10 @@ public final class StartupProperties extends ApplicationProperties {
         try {
             if (INSTANCE.get() == null) {
                 INSTANCE.compareAndSet(null, new StartupProperties());
+                String isSafeMode = (StringUtils.isBlank(System.getProperty(SAFEMODE_PROPERTY)))
+                        ? "false" : System.getProperty(SAFEMODE_PROPERTY);
+                LOG.info("Initializing Falcon StartupProperties with safemode set to {}.", isSafeMode);
+                INSTANCE.get().setProperty(SAFEMODE_PROPERTY, isSafeMode);
             }
             return INSTANCE.get();
         } catch (FalconException e) {

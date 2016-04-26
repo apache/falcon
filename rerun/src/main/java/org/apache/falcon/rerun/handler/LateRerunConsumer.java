@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.workflow.LateDataHandler;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
@@ -58,7 +59,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
                                LaterunEvent message, String entityType, String entityName) {
         try {
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
-                    || jobStatus.equals("SUSPENDED")) {
+                    || jobStatus.equals("SUSPENDED") || SecurityUtil.isServerInSafeMode()) {
                 LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
                         + "job status is {} for : {}", jobStatus, message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());

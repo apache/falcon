@@ -18,30 +18,11 @@
 
 package org.apache.falcon.client;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.security.SecureRandom;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
@@ -68,11 +49,28 @@ import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.security.SecureRandom;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Client API to submit and manage Falcon Entities (Cluster, Feed, Process) jobs
@@ -318,7 +316,8 @@ public class FalconClient extends AbstractFalconClient {
     protected static enum AdminOperations {
 
         STACK("api/admin/stack", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        VERSION("api/admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        VERSION("api/admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        SAFEMODE("api/admin/setSafeMode", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -704,6 +703,14 @@ public class FalconClient extends AbstractFalconClient {
             .call(job);
         printClientResponse(clientResponse);
         return clientResponse.getStatus();
+    }
+
+    public ClientResponse setSafemode(String safemode, String doAsUser) throws FalconCLIException {
+        AdminOperations job =  AdminOperations.SAFEMODE;
+        ClientResponse clientResponse = new ResourceBuilder().path(job.path).path(safemode)
+                .addQueryParam(DO_AS_OPT, doAsUser).call(job);
+        printClientResponse(clientResponse);
+        return clientResponse;
     }
 
     public String getDimensionList(String dimensionType, String cluster, String doAsUser) throws FalconCLIException {

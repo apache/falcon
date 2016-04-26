@@ -13,6 +13,17 @@
 #  limitations under the License. See accompanying LICENSE file.
 #
 
+# validate args
+args=("$@")
+for ((i=0; i < $#; i++)) {
+   if [ "-setsafemode" == "${args[$i]}" ]; then
+      if [ "false" != "${args[$i+1]}" ] && [ "true" != "${args[$i+1]}" ]; then
+        echo "Invalid argument for option -safemode. Acceptable values are true or false."
+        exit 1
+      fi
+   fi
+}
+
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
