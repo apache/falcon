@@ -40,6 +40,7 @@ import org.apache.falcon.oozie.process.HiveProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.NativeOozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.OozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.PigProcessWorkflowBuilder;
+import org.apache.falcon.oozie.process.SparkProcessWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.CREDENTIAL;
@@ -189,6 +190,9 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
             case HIVE:
                 return new HiveProcessWorkflowBuilder(process);
+
+            case SPARK:
+                return new SparkProcessWorkflowBuilder(process);
 
             default:
                 break;
