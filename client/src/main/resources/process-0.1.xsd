@@ -152,6 +152,13 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element type="spark-attributes" name="spark-attributes" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Defines the spark related attributes to run the Spark application. Attributes
+                        must be defined when workflow engine "spark" is selected.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element type="retry" name="retry" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Retry defines how to handle workflow failures. Policy type - periodic, exponential
@@ -331,8 +338,33 @@
             <xs:enumeration value="oozie"/>
             <xs:enumeration value="pig"/>
             <xs:enumeration value="hive"/>
+            <xs:enumeration value="spark"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:complexType name="spark-attributes">
+        <xs:annotation>
+            <xs:documentation>
+                List of Spark attributes to run Spark application:
+                    master element is optional and indicates the url of the Spark Master. Ex: yarn-client, yarn-master, or local. This will override the Spark interface, if define in cluster entity.
+                    mode element if present indicates the mode of spark, where to run spark driver program. Ex: client,cluster.
+                    name element indicates the name of the spark application.
+                    class element if present, indicates the spark's application main class.
+                    jar element indicates a comma separated list of jars or python files. Also provide the jar or file directory path to workflow attribute path
+                    spark-opts element if present, contains a list of spark options that can be passed to spark driver.
+                    arg element if present, contains arguments that can be passed to spark application.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="master" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="mode" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="class" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="jar" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="spark-opts" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="arg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
 
     <xs:complexType name="retry">
         <xs:attribute type="policy-type" name="policy" use="required"/>
