@@ -363,7 +363,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         JAXBElement<org.apache.falcon.oozie.spark.ACTION> actionJaxbElement =
                 OozieUtils.unMarshalSparkAction(sparkNode);
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
-        assertEquals(sparkAction.getMaster(), "yarn-cluster");
+        assertEquals(sparkAction.getMaster(), "local");
         assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/spark-wordcount.jar");
         List<String> argsList = sparkAction.getArg();
         Input input = process.getInputs().getInputs().get(0);

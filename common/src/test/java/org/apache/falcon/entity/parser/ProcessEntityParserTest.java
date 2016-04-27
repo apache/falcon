@@ -645,7 +645,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         String processEntitySparkMaster = process.getSparkAttributes().getMaster();
         String sparkMaster = (processEntitySparkMaster == null) ? clusterEntitySparkMaster : processEntitySparkMaster;
 
-        Assert.assertEquals(sparkMaster, "yarn-cluster");
+        Assert.assertEquals(sparkMaster, "local");
         parser.validate(process);
     }
 }
