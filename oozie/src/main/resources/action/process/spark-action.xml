@@ -21,12 +21,12 @@
         <name-node>${nameNode}</name-node>
         <configuration>
             <property>
-                <name>oozie.launcher.mapreduce.map.memory.mb</name>
-                <value>2072</value>
+                <name>mapred.job.queue.name</name>
+                <value>${queueName}</value>
             </property>
             <property>
-                <name>oozie.launcher.mapreduce.map.java.opts</name>
-                <value>-Xmx2457m</value>
+                <name>oozie.launcher.mapred.job.priority</name>
+                <value>${jobPriority}</value>
             </property>
         </configuration>
         <master>#MASTER_URL#</master>
