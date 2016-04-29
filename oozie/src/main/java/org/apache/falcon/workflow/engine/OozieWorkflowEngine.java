@@ -45,7 +45,6 @@ import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.OozieUtils;
@@ -151,7 +150,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> suppliedProps) throws FalconException {
-        if (SecurityUtil.isServerInSafeMode()) {
+        if (StartupProperties.isServerInSafeMode()) {
             throwSafemodeException("SCHEDULE");
         }
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
@@ -214,7 +213,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void dryRun(Entity entity, String clusterName, Boolean skipDryRun) throws FalconException {
-        if (SecurityUtil.isServerInSafeMode()) {
+        if (StartupProperties.isServerInSafeMode()) {
             throwSafemodeException("DRYRUN");
         }
         OozieEntityBuilder builder = OozieEntityBuilder.get(entity);
@@ -426,7 +425,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String doBundleAction(Entity entity, BundleAction action) throws FalconException {
-        if (SecurityUtil.isServerInSafeMode() && !action.equals(BundleAction.SUSPEND)) {
+        if (StartupProperties.isServerInSafeMode() && !action.equals(BundleAction.SUSPEND)) {
             throwSafemodeException(action.name());
         }
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
@@ -653,7 +652,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
-        if (SecurityUtil.isServerInSafeMode()
+        if (StartupProperties.isServerInSafeMode()
                 && (action.equals(JobAction.RERUN) || action.equals(JobAction.RESUME))) {
             throwSafemodeException(action.name());
         }

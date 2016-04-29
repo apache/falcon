@@ -142,8 +142,4 @@ public final class SecurityUtil {
         }
     }
 
-    public static boolean isServerInSafeMode() {
-        return Boolean.parseBoolean(StartupProperties.get().getProperty(StartupProperties.SAFEMODE_PROPERTY, "false"));
-    }
-
 }

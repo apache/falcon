@@ -49,8 +49,8 @@ import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
-import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -625,7 +625,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                           String colo, List<LifeCycle> lifeCycles) {
         checkColo(colo);
         checkType(type);
-        if (SecurityUtil.isServerInSafeMode()) {
+        if (StartupProperties.isServerInSafeMode()) {
             throwSafemodeException("RESUME");
         }
         try {
@@ -915,7 +915,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                          String colo, List<LifeCycle> lifeCycles, Boolean isForced) {
         checkColo(colo);
         checkType(type);
-        if (SecurityUtil.isServerInSafeMode()) {
+        if (StartupProperties.isServerInSafeMode()) {
             throwSafemodeException("RERUN");
         }
         try {

@@ -122,7 +122,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <hadoop.version>2.7.1</hadoop.version>
+                <hadoop.version>2.6.2</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>

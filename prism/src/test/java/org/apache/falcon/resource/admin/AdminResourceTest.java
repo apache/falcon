@@ -51,9 +51,12 @@ public class AdminResourceTest {
         AdminResource resource = new AdminResource();
         String safemode = resource.setSafeMode("true");
         Assert.assertEquals(safemode, "true");
+        Assert.assertTrue(StartupProperties.doesSafemodeFileExist());
+        checkProperty(AdminResource.SAFEMODE, "true");
+
         safemode = resource.setSafeMode("false");
         Assert.assertEquals(safemode, "false");
-
+        Assert.assertFalse(StartupProperties.doesSafemodeFileExist());
         checkProperty(AdminResource.SAFEMODE, "false");
     }
 

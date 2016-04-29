@@ -94,13 +94,15 @@ public final class FalconServer {
             appPath = cmd.getOptionValue(APP_PATH);
         }
 
-        String isSafeMode = "false";
         if (cmd.hasOption(SAFE_MODE)) {
-            isSafeMode = cmd.getOptionValue(SAFE_MODE);
-            validateSafemode(isSafeMode);
+            validateSafemode(cmd.getOptionValue(SAFE_MODE));
+            boolean isSafeMode = Boolean.parseBoolean(cmd.getOptionValue(SAFE_MODE));
+            if (isSafeMode) {
+                StartupProperties.createSafemodeFile();
+            } else {
+                StartupProperties.deleteSafemodeFile();
+            }
         }
-        LOG.info("Setting system property Safemode to : {}", isSafeMode);
-        System.setProperty(StartupProperties.SAFEMODE_PROPERTY, isSafeMode);
 
         final String enableTLSFlag = StartupProperties.get().getProperty("falcon.enableTLS");
         final int appPort = getApplicationPort(cmd, enableTLSFlag);

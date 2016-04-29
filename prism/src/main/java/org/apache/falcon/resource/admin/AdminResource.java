@@ -42,6 +42,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -136,12 +137,19 @@ public class AdminResource {
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public String setSafeMode(@PathParam("mode") String mode) {
         LOG.info("Setting falcon server safemode property to: {}", mode);
-        if ("true".equals(mode) || "false".equals(mode)) {
-            StartupProperties.get().setProperty(StartupProperties.SAFEMODE_PROPERTY, mode);
-        } else {
-            LOG.error("Bad request, Invalid value for setsafemode : {}", mode);
-            throw FalconWebException.newAPIException("Invalid value \"" + mode + "\" provided for safemode.",
-                    Response.Status.BAD_REQUEST);
+        try {
+            if ("true".equalsIgnoreCase(mode)) {
+                StartupProperties.createSafemodeFile();
+            } else if ("false".equalsIgnoreCase(mode)) {
+                StartupProperties.deleteSafemodeFile();
+            } else {
+                LOG.error("Bad request, Invalid value for setsafemode : {}", mode);
+                throw FalconWebException.newAPIException("Invalid value \"" + mode + "\" provided for safemode.",
+                        Response.Status.BAD_REQUEST);
+            }
+        } catch (IOException e) {
+            LOG.error("Unable to manage safemode file in Falcon Server {} ", e.getMessage());
+            throw FalconWebException.newAPIException(e.getMessage(), Response.Status.BAD_REQUEST);
         }
         return StartupProperties.get().getProperty(StartupProperties.SAFEMODE_PROPERTY, "false");
     }

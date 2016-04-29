@@ -46,6 +46,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
@@ -228,7 +229,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
             // Validate that the entity can be scheduled in the cluster.
             // Perform dryrun only if falcon is not in safemode.
-            if (entity.getEntityType().isSchedulable() && !SecurityUtil.isServerInSafeMode()) {
+            if (entity.getEntityType().isSchedulable() && !StartupProperties.isServerInSafeMode()) {
                 Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
                 for (String cluster : clusters) {
                     try {
@@ -445,7 +446,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
     protected void verifySafemodeOperation(Entity entity, EntityUtil.ENTITY_OPERATION operation) {
         // if Falcon not in safemode, return
-        if (!SecurityUtil.isServerInSafeMode()) {
+        if (!StartupProperties.isServerInSafeMode()) {
             return;
         }
 
