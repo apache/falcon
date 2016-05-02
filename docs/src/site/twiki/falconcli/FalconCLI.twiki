@@ -11,7 +11,8 @@ CLI options are classified into :
    * <a href="#Instance_Management_Commands">Instance Management Commands</a>
    * <a href="#Metadata_Commands">Metadata Commands</a>
    * <a href="#Admin_Commands">Admin commands</a>
-   * <a href="#Recipe_Commands">Recipe commands</a>
+   * <a href="#Extension_Artifacts_Commands">Extension artifacts commands</a>
+   * <a href="#Extension_Commands">Extension commands</a>
 
 
 
@@ -104,10 +105,19 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 
 -----------
 
----++Recipe Commands
+---++Extension artifacts management Commands
 
 | *Command*                                      | *Description*                                   |
-|[[SubmitRecipe][Submit]]                        | Submit the specified Recipe                     |
+|[[EnumerateExtension][Enumerate]]               | Return all the extensions supported             |
+|[[DescribeExtension][Describe]]                 | Return description of an extension              |
+|[[DefineExtension][Definition]]                 | Return the definition of an extension           |
+
+-----------
+
+---++Extension Commands
+
+| *Command*                                      | *Description*                                   |
+|[[SubmitExtension][Submit]]                     | Submit the specified extension                  |
 
 
 

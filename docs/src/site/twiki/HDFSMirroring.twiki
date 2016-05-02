@@ -1,0 +1,27 @@
+---+ HDFS mirroring Extension
+---++ Overview
+Falcon supports HDFS mirroring extension to replicate data from source cluster to destination cluster. This extension implements replicating arbitrary directories on HDFS and piggy backs on replication solution in Falcon which uses the DistCp tool. It also allows users to replicate data from on-premise to cloud, either Azure WASB or S3.
+
+---++ Use Case
+* Copy directories between HDFS clusters with out dated partitions
+* Archive directories from HDFS to Cloud. Ex: S3, Azure WASB
+
+---++ Limitations
+As the data volume and number of files grow, this can get inefficient.
+
+---++ Usage
+---+++ Setup source and destination clusters
+   <verbatim>
+    $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
+   </verbatim>
+
+---+++ HDFS mirroring extension properties
+   Extension artifacts are expected to be installed on HDFS at the path specified by "extension.store.uri" in startup properties. hdfs-mirroring-properties.json file located at "<extension.store.uri>/hdfs-mirroring/META/hdfs-mirroring-properties.json" lists all the required and optional parameters/arguments for scheduling HDFS mirroring job.
+
+---+++ Submit and schedule HDFS mirroring extension
+
+   <verbatim>
+    $FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName hdfs-mirroring -file /process/definition.xml
+   </verbatim>
+
+   Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details on usage of CLI and REST API's.
