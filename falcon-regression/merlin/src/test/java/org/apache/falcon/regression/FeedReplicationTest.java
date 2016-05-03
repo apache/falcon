@@ -401,7 +401,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test for https://issues.apache.org/jira/browse/FALCON-668.
      * Check that new DistCp options are allowed.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test
     public void testNewDistCpOptions() throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
@@ -503,7 +503,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test demonstrates failure pf replication of stored data from one source cluster to one target cluster.
      * When replication job fails test checks if failed logs are present in staging directory or not.
      */
-    @Test(dataProvider = "dataFlagProvider")
+    @Test
     public void replicate1Source1TargetFail()
         throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
