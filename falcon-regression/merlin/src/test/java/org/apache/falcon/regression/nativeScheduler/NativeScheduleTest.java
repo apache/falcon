@@ -184,7 +184,7 @@ public class NativeScheduleTest extends BaseTestClass {
      * Successfully schedule process via native scheduler through prism and server on multiple cluster.
      * Schedule the same process on oozie. It should fail.
      */
-    @Test(groups = {"prism", "0.2"})
+    @Test(groups = {"prism", "0.2", "multiCluster"})
     public void scheduleProcessWithNativeOnTwoClusters() throws Exception {
 
         ProcessMerlin processMerlinNative = bundles[0].getProcessObject();

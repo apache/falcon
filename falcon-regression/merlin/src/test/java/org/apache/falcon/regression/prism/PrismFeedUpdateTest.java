@@ -96,7 +96,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
      * Set 2 processes with common output feed. Second one is zero-input process. Update feed
      * queue. TODO : complete test case
      */
-    @Test(enabled = true, timeOut = 1200000)
+    @Test(enabled = true, timeOut = 1200000 , groups = "multiCluster")
     public void updateFeedQueueDependentMultipleProcessOneProcessZeroInput() throws Exception {
         //cluster1colo and cluster2colo are source. feed01 on cluster1colo target cluster2colo,
         // feed02 on cluster2colo target cluster1colo

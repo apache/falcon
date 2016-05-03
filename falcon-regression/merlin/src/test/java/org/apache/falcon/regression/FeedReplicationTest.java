@@ -60,7 +60,7 @@ import java.util.Map;
  * feed replication test.
  * Replicates empty directories as well as directories containing data.
  */
-@Test(groups = { "distributed", "embedded", "sanity" })
+@Test(groups = { "distributed", "embedded", "sanity", "multiCluster" })
 public class FeedReplicationTest extends BaseTestClass {
 
     private ColoHelper cluster1 = servers.get(0);
@@ -401,7 +401,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test for https://issues.apache.org/jira/browse/FALCON-668.
      * Check that new DistCp options are allowed.
      */
-    @Test
+    @Test(dataProvider = "dataFlagProvider")
     public void testNewDistCpOptions() throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
@@ -503,7 +503,7 @@ public class FeedReplicationTest extends BaseTestClass {
      * Test demonstrates failure pf replication of stored data from one source cluster to one target cluster.
      * When replication job fails test checks if failed logs are present in staging directory or not.
      */
-    @Test
+    @Test(dataProvider = "dataFlagProvider")
     public void replicate1Source1TargetFail()
         throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
