@@ -266,6 +266,12 @@ to false in runtime.properties.
 
 With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
 
+When a feed is scheduled Falcon kicks off the retention policy immediately. When job runs, it deletes everything that's eligible for eviction - eligibility criteria is the date pattern on the partition and NOT creation date.
+For e.g. if the retention limit is 90 days then retention job consistently deletes files older than 90 days.
+
+For retention, Falcon expects data to be in dated partitions. When the retention job is kicked off, it discovers data that needs to be evicted based on retention policy. It gets the location from the feed and uses pattern matching
+to find the pattern to get the list of data for the feed, then gets the date from the data path. If the data path date is beyond the retention limit it's deleted. As this uses pattern matching it is not time consuming and hence doesn't introduce performance overhead.
+
 ---+++ Example:
 If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
 one after or equal to t-10h . Any data before t-10h is removed from the system.
