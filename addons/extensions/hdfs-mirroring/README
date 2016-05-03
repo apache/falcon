@@ -14,16 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-HDFS Directory Replication Extension
+HDFS Mirroring Extension
 
 Overview
-This extension implements replicating arbitrary directories on HDFS from one
-Hadoop cluster to another Hadoop cluster.
-This piggy backs on replication solution in Falcon which uses the DistCp tool.
+Falcon supports HDFS mirroring extension to replicate data from source cluster to destination cluster.
+This extension implements replicating arbitrary directories on HDFS and piggy backs on replication solution in Falcon which uses the DistCp tool.
+It also allows users to replicate data from on-premise to cloud, either Azure WASB or S3.
+
 
 Use Case
 * Copy directories between HDFS clusters with out dated partitions
 * Archive directories from HDFS to Cloud. Ex: S3, Azure WASB
 
 Limitations
-As the data volume and number of files grow, this can get inefficient.
+* As the data volume and number of files grow, this can get inefficient.

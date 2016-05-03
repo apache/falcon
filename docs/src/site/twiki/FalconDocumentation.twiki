@@ -13,7 +13,7 @@
    * <a href="#Falcon_EL_Expressions">Falcon EL Expressions</a>
    * <a href="#Lineage">Lineage</a>
    * <a href="#Security">Security</a>
-   * <a href="#Recipes">Recipes</a>
+   * <a href="#Extensions">Extensions</a>
    * <a href="#Monitoring">Monitoring</a>
    * <a href="#Email_Notification">Email Notification</a>
    * <a href="#Backwards_Compatibility">Backwards Compatibility Instructions</a>
@@ -738,9 +738,9 @@ lifecycle policies such as replication and retention.
 
 Security is detailed in [[Security][Security]].
 
----++ Recipes
+---++ Extensions
 
-Recipes is detailed in [[Recipes][Recipes]].
+Extensions is detailed in [[Extensions][Extensions]].
 
 ---++ Monitoring
 
