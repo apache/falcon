@@ -1,4 +1,4 @@
----++  GET api/extensions/describe/:extension­name
+---++  GET api/extension/describe/:extension­name
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -16,7 +16,7 @@ Outputs the README of the specified extension.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/extensions/describe/hdfs­mirroring
+GET http://localhost:15000/api/extension/describe/hdfs­mirroring
 </verbatim>
 ---+++ Result
 <verbatim>

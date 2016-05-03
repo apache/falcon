@@ -95,7 +95,7 @@ The current version of the rest api's documentation is also hosted on the Falcon
 
 ---++ REST Call on Extension Artifact
 
-| *Call Type* | *Resource*                                                         | *Description*                                                          |
-| GET         | [[ExtensionEnumeration][api/extensions/enumerate]]                 | List all the extensions supported                                      |
-| GET         | [[ExtensionDescription][api/extensions/describe/:extension­name]]  | Return the README of the specified extension                           |
-| GET         | [[ExtensionDefinition][api/extensions/definition/:extension­name]] | Return a JSON document describing the extension invocation parameters  |
+| *Call Type* | *Resource*                                                        | *Description*                                                          |
+| GET         | [[ExtensionEnumeration][api/extension/enumerate]]                 | List all the extensions supported                                      |
+| GET         | [[ExtensionDescription][api/extension/describe/:extension­name]]  | Return the README of the specified extension                           |
+| GET         | [[ExtensionDefinition][api/extension/definition/:extension­name]] | Return a JSON document describing the extension invocation parameters  |
