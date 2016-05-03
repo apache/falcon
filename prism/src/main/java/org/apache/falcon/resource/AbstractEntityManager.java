@@ -46,6 +46,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
@@ -226,8 +227,9 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             Entity entity = deserializeEntity(inputStream, entityType);
             validate(entity);
 
-            //Validate that the entity can be scheduled in the cluster
-            if (entity.getEntityType().isSchedulable()) {
+            // Validate that the entity can be scheduled in the cluster.
+            // Perform dryrun only if falcon is not in safemode.
+            if (entity.getEntityType().isSchedulable() && !StartupProperties.isServerInSafeMode()) {
                 Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
                 for (String cluster : clusters) {
                     try {
@@ -266,6 +268,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             String removedFromEngine = "";
             try {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
+                verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.DELETE);
 
                 canRemove(entityObj);
                 obtainEntityLocks(entityObj, "delete", tokenList);
@@ -307,6 +310,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity entity = deserializeEntity(inputStream, entityType);
+            verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.UPDATE);
             return update(entity, type, entityName, skipDryRun);
         } catch (IOException | FalconException e) {
             LOG.error("Update failed", e);
@@ -435,8 +439,47 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         throws IOException, FalconException {
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(inputStream, entityType);
+        verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.SUBMIT);
         submitInternal(entity, doAsUser);
         return entity;
+    }
+
+    protected void verifySafemodeOperation(Entity entity, EntityUtil.ENTITY_OPERATION operation) {
+        // if Falcon not in safemode, return
+        if (!StartupProperties.isServerInSafeMode()) {
+            return;
+        }
+
+        switch (operation) {
+        case UPDATE:
+            if (entity.getEntityType().equals(EntityType.CLUSTER)) {
+                return;
+            } else {
+                LOG.error("Entity operation {} is not allowed on non-cluster entities during safemode",
+                        operation.name());
+                throw FalconWebException.newAPIException("Entity operation " + operation.name()
+                        + " is only allowed on cluster entities during safemode");
+            }
+        case SUSPEND:
+            if (entity.getEntityType().equals(EntityType.CLUSTER)) {
+                LOG.error("Entity operation {} is not allowed on cluster entity",
+                        operation.name());
+                throw FalconWebException.newAPIException("Entity operation " + operation.name()
+                        + " is not allowed on cluster entity");
+            } else {
+                return;
+            }
+        case SCHEDULE:
+        case SUBMIT_AND_SCHEDULE:
+        case DELETE:
+        case RESUME:
+        case TOUCH:
+        case SUBMIT:
+        default:
+            LOG.error("Entity operation {} is not allowed during safemode", operation.name());
+            throw FalconWebException.newAPIException("Entity operation "
+                    + operation.name() + " not allowed during safemode");
+        }
     }
 
     protected synchronized void submitInternal(Entity entity, String doAsUser) throws IOException, FalconException {

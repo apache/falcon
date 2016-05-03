@@ -124,6 +124,20 @@ public final class EntityUtil {
         }
     }
 
+    /**
+     *  List of entity operations.
+     */
+    public enum ENTITY_OPERATION {
+        SUBMIT,
+        UPDATE,
+        SCHEDULE,
+        SUBMIT_AND_SCHEDULE,
+        DELETE,
+        SUSPEND,
+        RESUME,
+        TOUCH
+    }
+
     private EntityUtil() {}
 
     public static <T extends Entity> T getEntity(EntityType type, String entityName) throws FalconException {

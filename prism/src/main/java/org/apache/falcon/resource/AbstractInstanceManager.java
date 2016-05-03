@@ -18,25 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Set;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-
 import com.thinkaurelius.titan.core.TitanMultiVertexQuery;
 import com.thinkaurelius.titan.core.TitanVertex;
 import com.thinkaurelius.titan.graphdb.blueprints.TitanBlueprintsGraph;
@@ -69,10 +50,28 @@ import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * A base class for managing Entity's Instance operations.
@@ -616,7 +615,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     public InstancesResult resumeInstance(HttpServletRequest request, String type, String entity, String startStr,
-                                          String endStr, String colo, List<LifeCycle> lifeCycles) {
+                                          String endStr, String colo,
+                                          List<LifeCycle> lifeCycles) {
         Properties props = getProperties(request);
         return resumeInstance(props, type, entity, startStr, endStr, colo, lifeCycles);
     }
@@ -625,6 +625,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                           String colo, List<LifeCycle> lifeCycles) {
         checkColo(colo);
         checkType(type);
+        if (StartupProperties.isServerInSafeMode()) {
+            throwSafemodeException("RESUME");
+        }
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
@@ -912,6 +915,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                          String colo, List<LifeCycle> lifeCycles, Boolean isForced) {
         checkColo(colo);
         checkType(type);
+        if (StartupProperties.isServerInSafeMode()) {
+            throwSafemodeException("RERUN");
+        }
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
@@ -1065,5 +1071,11 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             }
         }
         return earliestDate;
+    }
+
+    private void throwSafemodeException(String operation) {
+        String error = "Instance operation " + operation + " cannot be performed when server is in safemode";
+        LOG.error(error);
+        throw FalconWebException.newAPIException(error);
     }
 }

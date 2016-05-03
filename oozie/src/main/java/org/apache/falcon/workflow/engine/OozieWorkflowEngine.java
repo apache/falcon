@@ -150,6 +150,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> suppliedProps) throws FalconException {
+        if (StartupProperties.isServerInSafeMode()) {
+            throwSafemodeException("SCHEDULE");
+        }
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -181,6 +184,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private void throwSafemodeException(String operation) throws FalconException {
+        String error = "Workflow Engine does not allow " + operation + " opeartion when Falcon server is in safemode";
+        LOG.error(error);
+        throw new FalconException(error);
+    }
+
     /**
      * Prepare the staging and logs dir for this entity with default permissions.
      *
@@ -204,6 +213,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void dryRun(Entity entity, String clusterName, Boolean skipDryRun) throws FalconException {
+        if (StartupProperties.isServerInSafeMode()) {
+            throwSafemodeException("DRYRUN");
+        }
         OozieEntityBuilder builder = OozieEntityBuilder.get(entity);
         Path buildPath = new Path("/tmp", "falcon" + entity.getName() + System.currentTimeMillis());
         Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
@@ -413,6 +425,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String doBundleAction(Entity entity, BundleAction action) throws FalconException {
+        if (StartupProperties.isServerInSafeMode() && !action.equals(BundleAction.SUSPEND)) {
+            throwSafemodeException(action.name());
+        }
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         String result = null;
         for (String cluster : clusters) {
@@ -637,6 +652,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        if (StartupProperties.isServerInSafeMode()
+                && (action.equals(JobAction.RERUN) || action.equals(JobAction.RESUME))) {
+            throwSafemodeException(action.name());
+        }
         return doJobAction(action, entity, start, end, props, lifeCycles, null);
     }
 

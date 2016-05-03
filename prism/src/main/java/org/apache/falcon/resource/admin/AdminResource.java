@@ -19,6 +19,7 @@
 package org.apache.falcon.resource.admin;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.BuildProperties;
@@ -26,6 +27,8 @@ import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.util.VersionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -35,9 +38,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -47,6 +52,8 @@ import java.util.Properties;
  */
 @Path("admin")
 public class AdminResource {
+    public static final String SAFEMODE = "safemode";
+    private static final Logger LOG = LoggerFactory.getLogger(AdminResource.class);
 
     /**
      * Get stack trace of the falcon server.
@@ -107,11 +114,44 @@ public class AdminResource {
             property.value = StartupProperties.get().getProperty("falcon.authentication.type", "simple");
             props.add(property);
 
+            property = new Property();
+            property.key = SAFEMODE;
+            property.value = StartupProperties.get().getProperty(StartupProperties.SAFEMODE_PROPERTY, "false");
+            props.add(property);
+
             version = new PropertyList();
             version.properties = props;
         }
 
         return version;
+    }
+
+    /**
+     * Set safemode for falcon server.
+     *
+     * @param mode Set safemode to true/false based on mode.
+     * @return Configuration information of the server.
+     */
+    @GET
+    @Path("setSafeMode/{mode}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    public String setSafeMode(@PathParam("mode") String mode) {
+        LOG.info("Setting falcon server safemode property to: {}", mode);
+        try {
+            if ("true".equalsIgnoreCase(mode)) {
+                StartupProperties.createSafemodeFile();
+            } else if ("false".equalsIgnoreCase(mode)) {
+                StartupProperties.deleteSafemodeFile();
+            } else {
+                LOG.error("Bad request, Invalid value for setsafemode : {}", mode);
+                throw FalconWebException.newAPIException("Invalid value \"" + mode + "\" provided for safemode.",
+                        Response.Status.BAD_REQUEST);
+            }
+        } catch (IOException e) {
+            LOG.error("Unable to manage safemode file in Falcon Server {} ", e.getMessage());
+            throw FalconWebException.newAPIException(e.getMessage(), Response.Status.BAD_REQUEST);
+        }
+        return StartupProperties.get().getProperty(StartupProperties.SAFEMODE_PROPERTY, "false");
     }
 
     /**
