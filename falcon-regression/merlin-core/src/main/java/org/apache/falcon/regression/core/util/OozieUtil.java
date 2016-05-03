@@ -4,7 +4,7 @@
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
+ * "License"); you may not use this file except in compliancegetActionStatus
  * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -714,7 +714,9 @@ public final class OozieUtil {
         List<WorkflowAction> wfAction = oozieClient.getJobInfo(workflowId).getActions();
         for (WorkflowAction wf : wfAction) {
             if (wf.getName().contains(actionName)) {
-                return wf.getExternalStatus();
+                if (wf.getExternalStatus() != null) {
+                    return wf.getExternalStatus();
+                }
             }
         }
         return "";
