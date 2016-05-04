@@ -46,7 +46,15 @@ Sample extensions are published in addons/extensions
 
 ---++ Packaging and installation
 
-Extension artifacts in addons/extensions are packaged in falcon war under extensions directory. For manual installation user is expected to install the extension artifacts under extensions in falcon war to HDFS at "extension.store.uri" path defined in startup properties and then restart Falcon.
+This feature is enabled by default but could be disabled by removing the following from startup properties:
+<verbatim>
+config name: *.application.services
+config value: org.apache.falcon.extensions.ExtensionService
+</verbatim>
+
+For manual installation user is expected to update "extension.store.uri" property defined in startup properties with
+HDFS path where the extension artifacts will be copied to.
+Extension artifacts in addons/extensions are packaged in falcon. For manual installation once the Falcon Server is setup user is expected to copy the extension artifacts under {falcon-server-dir}/extensions to HDFS at "extension.store.uri" path defined in startup properties and then restart Falcon.
 
 ---++ Migration
 Recipes framework and HDFS mirroring capability was added in Apache Falcon 0.6.0 release and it was client side logic. With 0.10 release its moved to server side and renamed as server side extensions. Client side recipes only had CLI support and expected certain pre steps to get it working. This is no longer required in 0.10 release as new CLI and REST API support has been provided.

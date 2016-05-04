@@ -87,7 +87,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>.././</directory>
+            <directory>../</directory>
             <outputDirectory>/</outputDirectory>
             <fileMode>0644</fileMode>
             <includes>
@@ -133,14 +133,14 @@
         </fileSet>
 
         <fileSet>
-            <directory>addons/extensions/hdfs-mirroring/src/main/META</directory>
+            <directory>../addons/extensions/hdfs-mirroring/src/main/META</directory>
             <outputDirectory>extensions/hdfs-mirroring/META</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>../</directory>
             <outputDirectory>extensions/hdfs-mirroring/libs/build</outputDirectory>
             <excludes>
                 <exclude>*/**</exclude>
@@ -150,7 +150,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>../</directory>
             <outputDirectory>extensions/hdfs-mirroring/libs/runtime</outputDirectory>
             <excludes>
                 <exclude>*/**</exclude>
@@ -160,21 +160,31 @@
         </fileSet>
 
         <fileSet>
-            <directory>addons/extensions/hdfs-mirroring/src/main/resources</directory>
+            <directory>../addons/extensions/hdfs-mirroring/src/main/resources</directory>
             <outputDirectory>extensions/hdfs-mirroring/resources</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>addons/extensions/hdfs-snapshot-mirroring/src/main/META</directory>
+            <directory>../</directory>
+            <outputDirectory>extensions/hdfs-mirroring/resources/build</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>../addons/extensions/hdfs-snapshot-mirroring/src/main/META</directory>
             <outputDirectory>extensions/hdfs-snapshot-mirroring/META</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>../</directory>
             <outputDirectory>extensions/hdfs-snapshot-mirroring/libs/build</outputDirectory>
             <excludes>
                 <exclude>*/**</exclude>
@@ -184,7 +194,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>../</directory>
             <outputDirectory>extensions/hdfs-snapshot-mirroring/libs/runtime</outputDirectory>
             <excludes>
                 <exclude>*/**</exclude>
@@ -194,21 +204,31 @@
         </fileSet>
 
         <fileSet>
-            <directory>addons/extensions/hdfs-snapshot-mirroring/src/main/resources</directory>
+            <directory>../addons/extensions/hdfs-snapshot-mirroring/src/main/resources</directory>
             <outputDirectory>extensions/hdfs-snapshot-mirroring/resources</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>addons/extensions/hive-mirroring/src/main/META</directory>
+            <directory>../</directory>
+            <outputDirectory>extensions/hdfs-snapshot-mirroring/resources/build</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>../addons/extensions/hive-mirroring/src/main/META</directory>
             <outputDirectory>extensions/hive-mirroring/META</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>../</directory>
             <fileMode>0755</fileMode>
             <outputDirectory>extensions/hive-mirroring/libs/build</outputDirectory>
             <excludes>
@@ -218,7 +238,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>./</directory>
+            <directory>../</directory>
             <outputDirectory>extensions/hive-mirroring/libs/runtime</outputDirectory>
             <excludes>
                 <exclude>*/**</exclude>
@@ -228,8 +248,18 @@
         </fileSet>
 
         <fileSet>
-            <directory>addons/extensions/hive-mirroring/src/main/resources</directory>
+            <directory>../addons/extensions/hive-mirroring/src/main/resources</directory>
             <outputDirectory>extensions/hive-mirroring/resources</outputDirectory>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>../</directory>
+            <outputDirectory>extensions/hive-mirroring/resources/build</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
