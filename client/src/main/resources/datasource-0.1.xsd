@@ -76,6 +76,7 @@
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="xs:string"  name="colo" use="required"/>
         <xs:attribute type="xs:string"  name="description"/>
+        <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
         <xs:attribute type="datasource-type"  name="type" use="required">
             <xs:annotation>
                 <xs:documentation>
@@ -263,7 +264,7 @@
     <xs:complexType name="ACL">
         <xs:annotation>
             <xs:documentation>
-                Access control list for this cluster.
+                Access control list for this Entity.
                 owner is the Owner of this entity.
                 group is the one which has access to read - not used at this time.
                 permission is not enforced at this time
