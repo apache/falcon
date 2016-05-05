@@ -97,6 +97,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 cluster.getValidity().setEnd(DateUtil.NEVER);
             }
 
+            // set Cluster version
+            int clusterVersion = ClusterHelper.getCluster(cluster.getName()).getVersion();
+            if (cluster.getVersion() > 0 && cluster.getVersion() > clusterVersion) {
+                throw new ValidationException("Feed should not set cluster to a version that does not exist");
+            } else {
+                cluster.setVersion(clusterVersion);
+            }
+
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);

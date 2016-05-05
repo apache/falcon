@@ -18,25 +18,6 @@
 
 package org.apache.falcon.resource.proxy;
 
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
@@ -57,6 +38,24 @@ import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.util.DeploymentUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A proxy implementation of the schedulable entity operations.
@@ -374,6 +373,55 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         // update only if all are updated
         if (!embeddedMode && result) {
             results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo, skipDryRun));
+        }
+
+        return consolidateResult(results, APIResult.class);
+    }
+
+    /**
+     * Updates the dependent entities of a cluster in workflow engine.
+     * @param clusterName Name of cluster.
+     * @param ignore colo.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
+    @POST
+    @Path("updateClusterDependents/{clusterName}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "updateClusterDependents")
+    @Override
+    public APIResult updateClusterDependents(
+            @Dimension("entityName") @PathParam("clusterName") final String clusterName,
+            @Dimension("colo") @QueryParam("colo") String ignore,
+            @QueryParam("skipDryRun") final Boolean skipDryRun) {
+
+        final Set<String> allColos = getApplicableColos("cluster", clusterName);
+        Map<String, APIResult> results = new HashMap<String, APIResult>();
+        boolean result = true;
+
+        if (!allColos.isEmpty()) {
+            results.put(FALCON_TAG + "/updateClusterDependents", new EntityProxy("cluster", clusterName) {
+                @Override
+                protected Set<String> getColosToApply() {
+                    return allColos;
+                }
+
+                @Override
+                protected APIResult doExecute(String colo) throws FalconException {
+                    return getConfigSyncChannel(colo).invoke("updateClusterDependents", clusterName,
+                            colo, skipDryRun);
+                }
+            }.execute());
+        }
+
+        for (APIResult apiResult : results.values()) {
+            if (apiResult.getStatus() != APIResult.Status.SUCCEEDED) {
+                result = false;
+            }
+        }
+        // update only if all are updated
+        if (!embeddedMode && result) {
+            results.put(PRISM_TAG, super.updateClusterDependents(clusterName, currentColo, skipDryRun));
         }
 
         return consolidateResult(results, APIResult.class);

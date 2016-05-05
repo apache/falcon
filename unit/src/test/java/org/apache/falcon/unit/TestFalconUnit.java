@@ -195,7 +195,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Process process = getEntity(EntityType.PROCESS, PROCESS_NAME);
         setDummyProperty(process);
         String processXml = process.toString();
-
         File file = new File("target/newprocess.xml");
         file.createNewFile();
         FileWriter fw = new FileWriter(file.getAbsoluteFile());
@@ -208,9 +207,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         result = falconUnitClient.touch(EntityType.PROCESS.name(), PROCESS_NAME, null, true, null);
         assertStatus(result);
 
-        process = getEntity(EntityType.PROCESS,
-                PROCESS_NAME);
-        Assert.assertEquals(process.toString(), processXml);
+        Process process2 = getEntity(EntityType.PROCESS, PROCESS_NAME);
+        Assert.assertEquals(process2.toString(), process.toString());
         file.delete();
     }
 

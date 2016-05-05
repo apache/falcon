@@ -606,6 +606,29 @@ public class MetadataMappingServiceTest {
         verifyLineageGraphForJobCounters(context);
     }
 
+    @Test(dependsOnMethods = "testOnFeedEntityChange")
+    public void testOnClusterEntityChange() throws Exception {
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+
+        Cluster oldCluster = clusterEntity;
+        Cluster newCluster = EntityBuilderTestUtil.buildCluster(oldCluster.getName(),
+                "clusterUpdateColo", oldCluster.getTags() + ",clusterUpdateTagKey=clusterUpdateTagVal");
+
+        try {
+            configStore.initiateUpdate(newCluster);
+            configStore.update(EntityType.CLUSTER, newCluster);
+        } finally {
+            configStore.cleanupUpdateInit();
+        }
+
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 2); // +1 new tag +1 new colo
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 1); // +1 new tag edge
+        Vertex newClusterVertex = getEntityVertex(newCluster.getName(), RelationshipType.CLUSTER_ENTITY);
+        verifyVertexForEdge(newClusterVertex, Direction.OUT, RelationshipLabel.CLUSTER_COLO.getName(),
+                "clusterUpdateColo", RelationshipType.COLO.getName());
+    }
+
     private void verifyUpdatedEdges(Process newProcess) {
         Vertex processVertex = getEntityVertex(newProcess.getName(), RelationshipType.PROCESS_ENTITY);
 
