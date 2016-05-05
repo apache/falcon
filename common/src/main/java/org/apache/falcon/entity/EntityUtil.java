@@ -35,6 +35,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.ClusterType;
@@ -130,6 +131,7 @@ public final class EntityUtil {
     public enum ENTITY_OPERATION {
         SUBMIT,
         UPDATE,
+        UPDATE_CLUSTER_DEPENDENTS,
         SCHEDULE,
         SUBMIT_AND_SCHEDULE,
         DELETE,
@@ -706,6 +708,40 @@ public final class EntityUtil {
         }
     }
 
+    public static Integer getVersion(final Entity entity) throws FalconException {
+        switch (entity.getEntityType()) {
+        case FEED:
+            return ((Feed)entity).getVersion();
+        case PROCESS:
+            return ((Process)entity).getVersion();
+        case CLUSTER:
+            return ((Cluster)entity).getVersion();
+        case DATASOURCE:
+            return ((Datasource)entity).getVersion();
+        default:
+            throw new FalconException("Invalid entity type:" + entity.getEntityType());
+        }
+    }
+
+    public static void setVersion(Entity entity, final Integer version) throws FalconException {
+        switch (entity.getEntityType()) {
+        case FEED:
+            ((Feed)entity).setVersion(version);
+            break;
+        case PROCESS:
+            ((Process)entity).setVersion(version);
+            break;
+        case CLUSTER:
+            ((Cluster)entity).setVersion(version);
+            break;
+        case DATASOURCE:
+            ((Datasource)entity).setVersion(version);
+            break;
+        default:
+            throw new FalconException("Invalid entity type:" + entity.getEntityType());
+        }
+    }
+
     //Staging path that stores scheduler configs like oozie coord/bundle xmls, parent workflow xml
     //Each entity update creates a new staging path
     //Base staging path is the base path for all staging dirs
@@ -1121,6 +1157,39 @@ public final class EntityUtil {
         instancePath = instancePath.replaceAll("\\$\\{HOUR\\}", timestamp.substring(8, 10));
         instancePath = instancePath.replaceAll("\\$\\{MINUTE\\}", timestamp.substring(10, 12));
         return instancePath;
+    }
+
+    /**
+     * Returns true if entity is dependent on cluster, else returns false.
+     * @param entity
+     * @param clusterName
+     * @return
+     */
+    public static boolean isEntityDependentOnCluster(Entity entity, String clusterName) {
+        switch (entity.getEntityType()) {
+        case CLUSTER:
+            return entity.getName().equalsIgnoreCase(clusterName);
+
+        case FEED:
+            Feed feed = (Feed) entity;
+            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
+                if (cluster.getName().equalsIgnoreCase(clusterName)) {
+                    return true;
+                }
+            }
+            break;
+
+        case PROCESS:
+            Process process = (Process) entity;
+            for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
+                if (cluster.getName().equalsIgnoreCase(clusterName)) {
+                    return true;
+                }
+            }
+            break;
+        default:
+        }
+        return false;
     }
 
 }

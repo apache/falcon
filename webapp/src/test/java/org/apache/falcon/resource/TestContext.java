@@ -95,6 +95,7 @@ public class TestContext extends AbstractTestContext {
     public static final String DATASOURCE_TEMPLATE3 = "/datasource-template3.xml";
     public static final String DATASOURCE_TEMPLATE4 = "/datasource-template4.xml";
     public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
+    public static final String CLUSTER_UPDATED_TEMPLATE = "/cluster-updated-template.xml";
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "https://localhost:41443/falcon-webapp";
