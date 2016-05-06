@@ -28,14 +28,15 @@ import java.util.List;
 /**
  * Instance list of an extension job used for marshalling / unmarshalling with REST calls.
  */
+//SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
 @XmlRootElement
 @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class ExtensionInstanceList {
     @XmlElement
-    private int numEntities;
+    public int numEntities;
 
     @XmlElementWrapper(name = "entitiesSummary")
-    private List<EntitySummary> entitySummary;
+    public List<EntitySummary> entitySummary;
 
     public ExtensionInstanceList() {
         numEntities = 0;
@@ -70,10 +71,10 @@ public class ExtensionInstanceList {
      */
     public static class EntitySummary {
         @XmlElement
-        private EntityList.EntityElement entityProfile;
+        public EntityList.EntityElement entityProfile;
 
         @XmlElement
-        private InstancesResult.Instance[] instances;
+        public InstancesResult.Instance[] instances;
 
         public EntitySummary() {
             entityProfile = null;

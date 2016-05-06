@@ -27,7 +27,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,19 +42,19 @@ public class AbstractTestExtensionStore {
     protected ExtensionStore store;
     private FileSystem fileSystem;
 
-    @BeforeClass
-    public void initConfigStore() throws Exception {
-        String configPath = new URI(StartupProperties.get().getProperty("extension.store.uri")).getPath();
-        extensionStorePath = configPath + "-" + getClass().getName();
-        StartupProperties.get().setProperty("extension.store.uri", extensionStorePath);
+    public void initExtensionStore() throws Exception {
+        initExtensionStore(this.getClass());
+    }
+
+    public void initExtensionStore(Class resourceClass) throws Exception {
         new ExtensionService().init();
         store = ExtensionService.getExtensionStore();
         fileSystem = HadoopClientFactory.get().createFalconFileSystem(new Configuration(true));
-
-        extensionStoreSetup();
+        extensionStorePath = new URI(StartupProperties.get().getProperty(ExtensionStore.EXTENSION_STORE_URI)).getPath();
+        extensionStoreSetup(resourceClass);
     }
 
-    private void extensionStoreSetup() throws IOException {
+    private void extensionStoreSetup(Class resourceClass) throws IOException {
         List<AbstractExtension> extensions = AbstractExtension.getExtensions();
         for (AbstractExtension extension : extensions) {
             String extensionName = extension.getName().toLowerCase();
@@ -86,13 +85,13 @@ public class AbstractTestExtensionStore {
             Path dstFile = new Path(runTimeResourcePath, extensionName + "-template.xml");
             fileSystem.create(dstFile);
             String srcFile = extensionName + "-template.xml";
-            fileSystem.copyFromLocalFile(new Path(getAbsolutePath(srcFile)), dstFile);
+            fileSystem.copyFromLocalFile(new Path(getAbsolutePath(resourceClass, srcFile)), dstFile);
         }
 
     }
 
-    private String getAbsolutePath(String fileName) {
-        return this.getClass().getResource("/" + fileName).getPath();
+    private String getAbsolutePath(Class resourceClass, String fileName) {
+        return resourceClass.getResource("/" + fileName).getPath();
     }
 
 
