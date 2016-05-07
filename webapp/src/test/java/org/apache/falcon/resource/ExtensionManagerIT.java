@@ -62,7 +62,7 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
         String endTime = context.getProcessEndTime();
 
         // submit cluster
-        overlay.put("cluster", "primaryCluster");
+        overlay.put("cluster", CLUSTER_NAME);
         String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         System.out.println("entity -submit -type cluster -file " + filePath);
         Assert.assertEquals(TestContext.executeWithURL("entity -submit -type cluster -file " + filePath), 0);
