@@ -36,18 +36,17 @@ public class FalconClusterUpdateCLIIT {
     private InMemoryWriter stream = new InMemoryWriter(System.out);
     private TestContext context = new TestContext();
     private Map<String, String> overlay;
-    private static final String START_INSTANCE = "2012-04-20T00:00Z";
 
     @BeforeClass
     public void prepare() throws Exception {
-        TestContext.prepare();
+        context.prepare();
         FalconCLI.OUT.set(stream);
     }
 
     @AfterClass
     public void tearDown() throws Exception {
         clearSafemode();
-        TestContext.deleteEntitiesFromStore();
+        context.deleteEntitiesFromStore();
     }
 
 
@@ -56,8 +55,7 @@ public class FalconClusterUpdateCLIIT {
         FalconCLI.OUT.set(stream);
 
         String filePath;
-        TestContext context = new TestContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
+        overlay = context.getUniqueOverlay();
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         Assert.assertEquals(executeWithURL("entity -submit -type cluster -file " + filePath), 0);
