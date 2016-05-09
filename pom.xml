@@ -1392,7 +1392,6 @@
                 <version>2.6</version>
                   <configuration>
                       <descriptors>
-                          <descriptor>src/main/assemblies/assembly-standalone.xml</descriptor>
                           <descriptor>src/main/assemblies/assembly-src.xml</descriptor>
                       </descriptors>
                       <finalName>falcon-${project.version}</finalName>
