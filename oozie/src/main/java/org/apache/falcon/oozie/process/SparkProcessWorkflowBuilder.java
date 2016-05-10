@@ -20,21 +20,14 @@ package org.apache.falcon.oozie.process;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.oozie.spark.CONFIGURATION.Property;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
-import org.apache.falcon.oozie.spark.CONFIGURATION.Property;
 import org.apache.falcon.util.OozieUtils;
-import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.Storage;
-import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.FeedHelper;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -90,7 +83,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             argList.addAll(sparkArgs);
         }
 
-        checkDataFeedsAsArgument(argList, cluster);
+        checkDataFeedsAsArgument(entity);
         sparkAction.setJar(addUri(sparkFilePath, cluster));
 
 
@@ -140,7 +133,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         }
     }
 
-    private void checkDataFeedsAsArgument(List<String> argList, Cluster cluster) throws FalconException {
+    private void checkDataFeedsAsArgument(Process entity) throws FalconException {
         if (entity.getInputs() == null) {
             LOG.error("Input Feed Entity is null for process : {}" +entity.getName());
             return;
@@ -151,47 +144,6 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             return;
         }
 
-        boolean inputArgument = checkInputFeedsAsArgument(argList, cluster);
-        boolean outputArgument = checkOutputFeedsAsArgument(argList, cluster);
-
-        if (!(inputArgument && outputArgument)) {
-            LOG.error("Input and Output entity has not been specified "
-                    + "to process entity as argument to Spark Application");
-            return;
-        }
-    }
-
-    private boolean checkInputFeedsAsArgument(List<String> argList, Cluster cluster) throws FalconException {
-        boolean inputArgument = false;
-        for (Input input : entity.getInputs().getInputs()) {
-            Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
-            Storage storage = FeedHelper.createStorage(cluster, feed);
-            final String inputName = input.getName();
-            if (storage.getType() == Storage.TYPE.FILESYSTEM) {
-                if (argList.contains("${" + inputName + "}")) {
-                    inputArgument = true;
-                }
-            }
-        }
-
-        return inputArgument;
-    }
-
-    private boolean checkOutputFeedsAsArgument(List<String> argList, Cluster cluster) throws FalconException {
-        boolean outputArgument = false;
-        for (Output output : entity.getOutputs().getOutputs()) {
-            Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
-            Storage storage = FeedHelper.createStorage(cluster, feed);
-
-            if (storage.getType() == Storage.TYPE.FILESYSTEM) {
-                final String outputName = output.getName();
-                if (argList.contains("${" + outputName + "}")) {
-                    outputArgument = true;
-                }
-            }
-        }
-
-        return outputArgument;
     }
 
     private String addUri(String jarFile, Cluster cluster) throws FalconException {

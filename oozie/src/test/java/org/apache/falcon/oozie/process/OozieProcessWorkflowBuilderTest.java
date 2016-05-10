@@ -88,7 +88,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     private static final String FEED_XML = "/config/feed/feed-0.1.xml";
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     private static final String PIG_PROCESS_XML = "/config/process/pig-process-0.1.xml";
-    private static final String SPARK_PROCESS_XML = "/config/process/spark-process.xml";
+    private static final String SPARK_PROCESS_XML = "/config/process/spark-process-0.1.xml";
 
     private String hdfsUrl;
     private FileSystem fs;
@@ -328,7 +328,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     @Test
     public void testSparkProcess() throws Exception {
 
-        URL resource = this.getClass().getResource("/config/process/spark-process.xml");
+        URL resource = this.getClass().getResource(SPARK_PROCESS_XML);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
         Assert.assertEquals("spark", process.getWorkflow().getEngine().value());
