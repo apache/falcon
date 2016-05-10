@@ -40,8 +40,8 @@ public final class FileUtils {
 
     private FileUtils() {}
 
-    public static Configuration getConfiguration(final String writeEP, final String nnKerberosPrincipal) {
-        Configuration conf = new Configuration();
+    public static Configuration getConfiguration(final String writeEP, final String nnKerberosPrincipal) throws IOException {
+        Configuration conf = HiveDRUtils.getDefaultConf();
         conf.set("fs.defaultFS", writeEP);
         if (StringUtils.isNotEmpty(nnKerberosPrincipal)) {
             conf.set("dfs.namenode.kerberos.principal", nnKerberosPrincipal);
