@@ -26,6 +26,7 @@ import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.WorkflowNameBuilder;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.messaging.util.MessagingUtil;
+import org.apache.falcon.metrics.MetricNotificationService;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
