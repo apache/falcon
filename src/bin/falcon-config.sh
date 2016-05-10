@@ -135,5 +135,8 @@ case $type in
     exit 1
   ;;
 esac
+# Allow FALCONCPPATH to be augmented with extra classpath.  Add to the end
+# so that Falcon classes are higher in precedence.
+FALCONCPPATH="${FALCONCPPATH}:${FALCON_EXTRA_CLASS_PATH}"
 export FALCONCPPATH
 export FALCON_OPTS
