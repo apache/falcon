@@ -25,6 +25,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Shell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,6 +58,8 @@ public final class HiveDRUtils {
 
     public static final String SEPARATOR = File.separator;
 
+    private static final Logger LOG = LoggerFactory.getLogger(HiveDRUtils.class);
+
     private HiveDRUtils() {}
 
     public static ReplicationType getReplicationType(List<String> sourceTables) {
@@ -65,12 +69,32 @@ public final class HiveDRUtils {
 
     public static Configuration getDefaultConf() throws IOException {
         Configuration conf = new Configuration();
-        conf.addResource(new Path("file:///", System.getProperty("oozie.action.conf.xml")));
-        String delegationToken = getFilePathFromEnv("HADOOP_TOKEN_FILE_LOCATION");
-        if (delegationToken != null) {
-            conf.set("mapreduce.job.credentials.binary", delegationToken);
-            conf.set("tez.credentials.path", delegationToken);
+        Path confPath = new Path("file:///", System.getProperty("oozie.action.conf.xml"));
+
+        final boolean actionConfExists = confPath.getFileSystem(conf).exists(confPath);
+        LOG.info("Oozie Action conf {} found ? {}", confPath, actionConfExists);
+        if (actionConfExists) {
+            LOG.info("Oozie Action conf found, adding path={}, conf={}", confPath, conf.toString());
+            conf.addResource(confPath);
         }
+
+        String tokenFile = System.getenv("HADOOP_TOKEN_FILE_LOCATION");
+        if (StringUtils.isNotBlank(tokenFile)) {
+            if (Shell.WINDOWS) {
+                if (tokenFile.charAt(0) == '"') {
+                    tokenFile = tokenFile.substring(1);
+                }
+                if (tokenFile.charAt(tokenFile.length() - 1) == '"') {
+                    tokenFile = tokenFile.substring(0, tokenFile.length() - 1);
+                }
+            }
+
+            conf.set("mapreduce.job.credentials.binary", tokenFile);
+            System.setProperty("mapreduce.job.credentials.binary", tokenFile);
+            conf.set("tez.credentials.path", tokenFile);
+            System.setProperty("tez.credentials.path", tokenFile);
+        }
+
         return conf;
     }
 
