@@ -44,7 +44,7 @@ public abstract class AbstractCatalogService {
      *
      * @param conf  conf
      * @param catalogUrl url for the catalog service
-     * @param database database the table belongs to
+     * @param databaseName database the table belongs to
      * @return if the db exists
      * @throws FalconException exception
      */

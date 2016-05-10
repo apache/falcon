@@ -3,6 +3,16 @@ Trunk
   TASKS:
   INCOMPATIBLE CHANGES
   NEW FEATURES
+    FALCON-1623 Implement safemode in Falcon Server (Balu Vellanki)
+
+    FALCON-1861 Support HDFS Snapshot based replication in Falcon (Balu Vellanki)
+
+    FALCON-1789 Extension Job Management: REST API (Ying Zheng via Balu Vellanki)
+
+    FALCON-1107 Move trusted extensions processing to server side  (Sowmya Ramesh via Balu Vellanki)
+
+    FALCON-1836 Import from database to HCatalog (Venky Ramachandran via Balu Vellanki)
+
     FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
    
     FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
@@ -12,6 +22,24 @@ Trunk
     FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
 
   IMPROVEMENTS
+    FALCON-1897 Extension Job Management: CLI support (Ying Zheng via Balu Vellanki)
+
+    FALCON-1105 REST API support for Server side extensions artifact repository management (Sowmya Ramesh)
+
+    FALCON-1790 CLI support for instance search (Ying Zheng via Balu Vellanki)
+
+    FALCON-1335 Backend support of instance search of a group of entities (Ying Zheng via Balu Vellanki)
+
+    FALCON-1802 EL Expressions support in Native Scheduler (Pavankumar Kolamuri)
+
+    FALCON-1902 Command line support for server side extension artifacts (Sowmya Ramesh)
+
+    FALCON-1334 Improve search performance with Titan graph database indexing (Ying Zheng via Peeyush Bishnoi)
+
+    FALCON-1111 Instance update on titan DB based on JMS notifications on workflow jobs (Ying Zheng)
+
+    FALCON-1835 Falcon should do coord rerun rather than workflow rerun to ensure concurrency (Pallavi Rao)
+
     FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
 
     FALCON-1774 Falcon to honour PRISM_URL env var (Praveen Adlakha) 
@@ -35,6 +63,92 @@ Trunk
     FALCON-1770 Update README file (Ajay Yadava)
 
   BUG FIXES
+    FALCON-1106 Documentation for server side extensions (Sowmya Ramesh)
+
+    FALCON-1767 Improve Falcon retention policy documentation (Sowmya Ramesh)
+
+    FALCON-1817 Extend the cluster and process XSD to include the spark execution engine (Peeyush Bishnoi)
+
+    FALCON-1928 Updating default startup.properties to add FalconJPAService (Pallavi Rao)
+
+    FALCON-1909 Catalog instance triage action fails with null pointer exception (Balu Vellanki)
+
+    FALCON-1899 Create examples artifact module in Falcon (Peeyush Bishnoi)
+
+    FALCON-1924 Falcon Coordinator rerun return old workflow id (Praveen Adlakha via Peeyush Bishnoi)
+
+    FALCON-1925 Add hadoop classpath to falcon client classpath (Venkat Ranganathan via Balu Vellanki)
+
+    FALCON-1916 Allow RM principal to be specified in Cluster entity (Venkat Ranganathan via Balu Vellanki)
+
+    FALCON-1749 Instance status does not show instances if entity is deleted from one of the colos (Praveen Adlakha via Pallavi Rao)
+
+    FALCON-1917 Fix build failure (Sowmya Ramesh)
+
+    FALCON-1907 Package new CLI module with falcon client (Sowmya Ramesh)
+
+    FALCON-1888 Falcon JMS notification details and example (Venkatesan Ramachandran via Peeyush Bishnoi)
+
+    FALCON-1901 Fix intermittent IT test failures caused by extension code (Sowmya Ramesh)
+
+    FALCON-1895 Refactoring of FalconCLI and FalconClient (Praveen Adlakha via Peeyush Bishnoi)
+
+    FALCON-1898 Build fails on assembly:assembly when using maven-assembly-plugin version 2.6 (Balu Vellanki)
+
+    FALCON-1892 Remove client side Recipe logic (Sowmya Ramesh via Balu Vellanki)
+
+    FALCON-1896 Failure in Falcon build in distro module (Praveen Adlakha via Balu Vellanki)
+
+    FALCON-1885 SLA monitoring API throws ResultNotFoundException (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1882 Instance status api not working via prism (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1880 To support TDE encryption, add --skipcrccheck to distcp options for HiveDR (Balu Vellanki)
+
+    FALCON-1881 Database export does not require fields tag in entity specification (Venkatesan Ramachandran via Balu Vellanki)
+
+    FALCON-1886 Feed sla monitoring does not work across restarts. (Ajay Yadava)
+
+    FALCON-1845 Retries fix when entity was deleted during instance rerun (Pavankumar K via Ajay Yadava)
+
+    FALCON-1866 Bug in JDBCStateStore (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1877 Falcon webUI returns 413 (Venkat Ranganathan via Balu Vellanki)
+
+    FALCON-1867 Hardcoded query names in JDBCStateStore (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1865 Persist Feed sla data to database (Praveen Adlakha via Ajay Yadava)
+
+    FALCON-1874 Import and Export fails with HDFS as src/dest (Pallavi Rao)
+
+    FALCON-1864 Retry event does not get removed from delay queue (Pallavi Rao)
+
+    FALCON-1840 Archive older definition in case of update (Praveen Adlakha via Peeyush Bishnoi)
+
+    FALCON-1852 Make optional input to a process truly optional (Pallavi Rao)
+
+    FALCON-1838 Export instances are not added graph db for lineage tracking  (Venkatesan Ramachandran via Balu Vellanki)
+
+    FALCON-1860 ADFProviderService should be optional as default setting (Ying Zheng via Balu Vellanki)
+
+    FALCON-1847 Execution order not honored when instances are suspended/resumed (Pallavi Rao)
+
+    FALCON-1743 Entity summary does not work via prism. (Ajay Yadava)
+
+    FALCON-1848 Late rerun has to be a forced rerun (Pallavi Rao)
+
+    FALCON-1825 Process end time not exclusive in case of Native Scheduler (Pavankumar Kolamuri)
+
+    FALCON-1826 Execution order not honoured when instances are KILLED (Pallavi Rao)
+
+    FALCON-1844 Replication to delete files removed in source by default (Pallavi Rao)
+
+    FALCON-1724 Falcon CLI.twiki in docs folder is not pointed by index page (Praveen Adlakha)
+
+    FALCON-1811 Status API does not honour start option (Praveen Adlakha)
+
+    FALCON-1621 Lifecycle of entity gets missed when prism and falcon server communicates (Praveen Adlakha)
+
     FALCON-1842 Falcon build failed in Jenkins at OozieFeedWorkflowBuilderTest (Balu Vellanki)
 
     FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)

@@ -107,7 +107,7 @@
         <mockito.version>1.9.5</mockito.version>
         <openjpa.version>2.4.0</openjpa.version>
         <javax-validation.version>1.0.0.GA</javax-validation.version>
-        <derby.version>10.10.1.1</derby.version>
+        <derby.version>10.11.1.1</derby.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
         <mysql.version>5.1.36</mysql.version>
         <postgres.version>9.1-901-1.jdbc4</postgres.version>
@@ -276,6 +276,7 @@
                             <excludes>
                                 <exclude>*.txt</exclude>
                                 <exclude>**/*.txt</exclude>
+                                <exclude>**/*.svg</exclude>
                                 <exclude>*.md</exclude>
                                 <exclude>**/*.md</exclude>
                                 <exclude>.git/**</exclude>
