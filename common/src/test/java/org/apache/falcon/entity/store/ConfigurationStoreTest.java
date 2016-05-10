@@ -19,8 +19,10 @@
 package org.apache.falcon.entity.store;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.util.StartupProperties;
@@ -96,6 +98,7 @@ public class ConfigurationStoreTest {
         store.publish(EntityType.PROCESS, process);
         Process p = store.get(EntityType.PROCESS, "hello");
         Assert.assertEquals(p, process);
+        Assert.assertEquals(p.getVersion(), 0);
 
         store.registerListener(listener);
         process.setName("world");
@@ -106,6 +109,34 @@ public class ConfigurationStoreTest {
             //expected
         }
         store.unregisterListener(listener);
+    }
+
+    @Test
+    public void testUpdate() throws Exception {
+        Cluster cluster1 = createClusterObj();
+        store.publish(EntityType.CLUSTER, cluster1);
+        Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.CLUSTER, "cluster1")).intValue(), 0);
+
+        Cluster cluster2 = createClusterObj();
+        cluster2.setDescription("new Desc");
+        store.initiateUpdate(cluster2);
+        store.update(EntityType.CLUSTER, cluster2);
+        store.cleanupUpdateInit();
+        Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.CLUSTER, "cluster1")).intValue(), 0);
+
+        Cluster cluster3 = createClusterObj();
+        cluster3.setColo("newColo");
+        store.initiateUpdate(cluster3);
+        store.update(EntityType.CLUSTER, cluster3);
+        store.cleanupUpdateInit();
+        Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.CLUSTER, "cluster1")).intValue(), 1);
+    }
+
+    private Cluster createClusterObj() {
+        Cluster cluster = new Cluster();
+        cluster.setName("cluster1");
+        cluster.setColo("colo1");
+        return cluster;
     }
 
     @Test

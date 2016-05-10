@@ -121,6 +121,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()), "2011-11-02T00:00Z");
         Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()), "2091-12-30T00:00Z");
         Assert.assertEquals(process.getTimezone().getID(), "UTC");
+        Assert.assertEquals(processCluster.getVersion(), 0);
 
         Assert.assertEquals(process.getSla().getShouldStartIn().toString(), "hours(2)");
         Assert.assertEquals(process.getSla().getShouldEndIn().toString(), "hours(4)");
@@ -383,6 +384,17 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertNull(process.getACL());
 
         parser.validate(process);
+    }
+
+    @Test
+    public void testValidateVersion() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream(PROCESS_XML);
+
+        Process process = parser.parse(stream);
+        Assert.assertEquals(process.getVersion(), 0);
+        process.setVersion(10);
+        parser.validate(process);
+        Assert.assertEquals(process.getVersion(), 10);
     }
 
     @Test

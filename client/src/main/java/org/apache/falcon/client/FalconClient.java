@@ -236,6 +236,7 @@ public class FalconClient extends AbstractFalconClient {
         VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML),
         SUBMIT("api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML),
         UPDATE("api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML),
+        UPDATEDEPENDENTS("api/entities/updateClusterDependents/", HttpMethod.POST, MediaType.TEXT_XML),
         SUBMITANDSCHEDULE("api/entities/submitAndSchedule/", HttpMethod.POST, MediaType.TEXT_XML),
         SCHEDULE("api/entities/schedule/", HttpMethod.POST, MediaType.TEXT_XML),
         SUSPEND("api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML),
@@ -427,6 +428,14 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityType, entityName)
             .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
             .call(operation, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult updateClusterDependents(String clusterName, Boolean skipDryRun,
+                                             String doAsUser) throws FalconCLIException {
+        ClientResponse clientResponse = new ResourceBuilder().path(Entities.UPDATEDEPENDENTS.path, clusterName)
+                .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
+                .call(Entities.UPDATEDEPENDENTS);
         return getResponse(APIResult.class, clientResponse);
     }
 

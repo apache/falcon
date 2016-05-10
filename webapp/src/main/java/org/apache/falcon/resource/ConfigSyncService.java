@@ -87,4 +87,20 @@ public class ConfigSyncService extends AbstractEntityManager {
             throw FalconWebException.newAPIException(throwable);
         }
     }
+
+    @POST
+    @Path("updateClusterDependents/{clusterName}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Monitored(event = "updateClusterDependents")
+    @Override
+    public APIResult updateClusterDependents(
+                            @Dimension("entityName") @PathParam("clusterName") final String clusterName,
+                            @Dimension("colo") @QueryParam("colo") String colo,
+                            @QueryParam("skipDryRun") final Boolean skipDryRun) {
+        try {
+            return super.updateClusterDependents(clusterName, colo, skipDryRun);
+        } catch (Throwable throwable) {
+            throw FalconWebException.newAPIException(throwable);
+        }
+    }
 }
