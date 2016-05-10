@@ -26,9 +26,11 @@
         <version>0.10-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>falcon-unit</artifactId>
-
+    <description>Apache Falcon Unit Module</description>
+    <name>Apache Falcon Unit</name>
+    <packaging>jar</packaging>
+    
     <profiles>
         <profile>
             <id>hadoop-2</id>

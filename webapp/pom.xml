@@ -287,7 +287,7 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-cli</artifactId>
-            <version>0.10-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -425,6 +425,24 @@
                             </artifactItems>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.oozie</groupId>
+                                    <artifactId>oozie-client</artifactId>
+                                    <outputDirectory>${project.build.directory}/webapps/oozie/conf/action-conf</outputDirectory>
+                                    <includes>**/*.xsd</includes>
+                                    <excludes>**/*.class</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -446,31 +464,6 @@
                             <goal>run</goal>
                         </goals>
                         <phase>pre-integration-test</phase>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>unpack</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.oozie</groupId>
-                                    <artifactId>oozie-client</artifactId>
-                                    <outputDirectory>${project.build.directory}/webapps/oozie/conf/action-conf</outputDirectory>
-                                    <includes>**/*.xsd</includes>
-                                    <excludes>**/*.class</excludes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
