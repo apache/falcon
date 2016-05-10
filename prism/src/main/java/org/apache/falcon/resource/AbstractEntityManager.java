@@ -375,8 +375,8 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     public APIResult updateClusterDependents(String clusterName, String colo, Boolean skipDryRun) {
         checkColo(colo);
         try {
-            verifySafemodeOperation(null, EntityUtil.ENTITY_OPERATION.UPDATE_CLUSTER_DEPENDENTS);
             Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+            verifySafemodeOperation(cluster, EntityUtil.ENTITY_OPERATION.UPDATE_CLUSTER_DEPENDENTS);
             int clusterVersion = cluster.getVersion();
             StringBuilder result = new StringBuilder("Updating entities dependent on cluster \n");
             // get dependent entities. check if cluster version changed. if yes, update dependent entities

@@ -245,29 +245,18 @@ public final class ClusterHelper {
     }
 
     public static boolean matchProperties(final Cluster oldEntity, final Cluster newEntity) {
-        Map<String, String> oldProps = new HashMap<String, String>();
-        Map<String, String> newProps = new HashMap<String, String>();
+        Map<String, String> oldProps = getClusterProperties(oldEntity);
+        Map<String, String> newProps = getClusterProperties(newEntity);
+        return oldProps.equals(newProps);
+    }
 
-        if (oldEntity.getProperties() != null) {
-            for (Property prop : oldEntity.getProperties().getProperties()) {
-                oldProps.put(prop.getName(), prop.getValue());
+    private static Map<String, String> getClusterProperties(final Cluster cluster) {
+        Map<String, String> returnProps = new HashMap<String, String>();
+        if (cluster.getProperties() != null) {
+            for (Property prop : cluster.getProperties().getProperties()) {
+                returnProps.put(prop.getName(), prop.getValue());
             }
         }
-        if (newEntity.getProperties() != null) {
-            for (Property prop : newEntity.getProperties().getProperties()) {
-                newProps.put(prop.getName(), prop.getValue());
-            }
-        }
-
-        if (oldProps.keySet().equals(newProps.keySet())) {
-            for (Map.Entry<String, String> keyVals : oldProps.entrySet()) {
-                if (!keyVals.getValue().equals(newProps.get(keyVals.getKey()))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        return false;
+        return returnProps;
     }
 }
