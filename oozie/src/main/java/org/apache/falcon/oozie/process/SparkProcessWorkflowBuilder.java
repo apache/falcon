@@ -135,15 +135,12 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
 
     private void checkDataFeedsAsArgument(Process entity) throws FalconException {
         if (entity.getInputs() == null) {
-            LOG.error("Input Feed Entity is null for process : {}" +entity.getName());
             return;
         }
 
         if (entity.getOutputs() == null) {
-            LOG.error("Output Feed Entity is null for process : {}" +entity.getName());
             return;
         }
-
     }
 
     private String addUri(String jarFile, Cluster cluster) throws FalconException {
