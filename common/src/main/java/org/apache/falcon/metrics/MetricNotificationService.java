@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.falcon.metrics;
 
 import com.codahale.metrics.Gauge;
@@ -5,43 +23,39 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.graphite.Graphite;
 import com.codahale.metrics.graphite.GraphiteReporter;
-import com.google.common.collect.Maps;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.service.FalconService;
-import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.falcon.workflow.WorkflowExecutionContext;
-import org.apache.falcon.workflow.WorkflowExecutionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * Created by praveen on 7/5/16.
+ * Service for metrics notification.
  */
 public class MetricNotificationService implements FalconService {
     private static final Logger LOG = LoggerFactory.getLogger(MetricNotificationService.class);
 
     public static final String SERVICE_NAME = MetricNotificationService.class.getSimpleName();
-    private final GraphiteReporter graphiteReporter ;
+    private final GraphiteReporter graphiteReporter;
     private final MetricRegistry metricRegistry;
 
-    private static String PREFIX = "falcon";
-    private Map<String,MyGauge> metricMap = new ConcurrentHashMap<>();
+    private static String prefix = "falcon.default.GENERATE";
+    private Map<String, MyGauge> metricMap = new ConcurrentHashMap<>();
 
     public MetricNotificationService(){
-        Graphite graphite = new Graphite(new InetSocketAddress("graphite.example.com", 2003));
+        StartupProperties.get().getProperty("falcon.graphite.hostname");
+        Graphite graphite = new Graphite(new InetSocketAddress(StartupProperties
+                .get().getProperty("falcon.graphite.hostname"), Integer.parseInt(StartupProperties.get()
+                    .getProperty("falcon.graphite.port"))));
         metricRegistry=new MetricRegistry();
         this.graphiteReporter = GraphiteReporter.forRegistry(metricRegistry)
-                .prefixedWith(PREFIX)
+                .prefixedWith(prefix)
                 .convertDurationsTo(TimeUnit.SECONDS)
                 .filter(MetricFilter.ALL)
                 .build(graphite);
@@ -71,19 +85,19 @@ public class MetricNotificationService implements FalconService {
         });
     }
 
-    public void publish(String metricsName,Double value){
+    public void publish(String metricsName, Long value){
         createMetric(metricsName).setValue(value);
     }
 
-    private static class MyGauge implements Gauge<Double> {
+    private static class MyGauge implements Gauge<Long> {
 
-        private Double value=0d;
-        public void setValue(Double value){
+        private Long value=0L;
+        public void setValue(Long value){
             this.value=value;
         }
 
         @Override
-        public Double getValue() {
+        public Long getValue() {
             return value;
         }
     }
