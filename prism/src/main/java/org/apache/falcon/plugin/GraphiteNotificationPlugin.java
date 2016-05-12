@@ -18,14 +18,19 @@
 
 package org.apache.falcon.plugin;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.aspect.ResourceMessage;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.metrics.MetricNotificationService;
 import org.apache.falcon.service.Services;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Graphite Notification Plugin.
@@ -41,31 +46,33 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
         try {
             String entityType = message.getDimensions().get("entity-type");
             String entityName = message.getDimensions().get("entity-name");
-            Entity entity = null;
-//            if (entityType.equals("PROCESS")) {
-//                entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
-//            }
+            String prefix = "falcon.";
+            if (entityType.equals("PROCESS")) {
+                Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
+                Process process = (Process) entity;
+                String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
 
-            if ((message.getAction().equals("wf-instance-succeeded")) && entityType.equals("PROCESS")) {
-//                entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
-                Long timeTaken =  message.getExecutionTime() / 1000000000;
-                String metricsName =  entityName + ".processing_time";
-                metricNotificationService.publish(metricsName, timeTaken);
 
-                DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));
-                DateTime startTime = new DateTime(message.getDimensions().get("start-time"));
-                metricsName = entityName + ".start_delay";
-                metricNotificationService.publish(metricsName,
+                if ((message.getAction().equals("wf-instance-succeeded"))) {
+                    Long timeTaken =  message.getExecutionTime() / 1000000000;
+                    String metricsName = prefix + pipeline + ".GENERATE." + entityName + ".processing_time";
+                    metricNotificationService.publish(metricsName, timeTaken);
+
+                    DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));
+                    DateTime startTime = new DateTime(message.getDimensions().get("start-time"));
+                    metricsName = prefix + pipeline + ".GENERATE." + entityName + ".start_delay";
+                    metricNotificationService.publish(metricsName,
                         (long)Seconds.secondsBetween(nominalTime, startTime).getSeconds());
-            }
+                }
 
-            if (message.getAction().equals("wf-instance-failed") && entityType.equals("PROCESS")){
-                String metricName =   entityName + ".failure"
+                if (message.getAction().equals("wf-instance-failed")){
+                    String metricName =  prefix + pipeline + ".GENERATE." +  entityName + ".failure"
                         + message.getDimensions().get("error-message");
-                metricNotificationService.publish(metricName, (long) 1);
+                    metricNotificationService.publish(metricName, (long) 1);
+                }
             }
         } catch (Exception e) {
-            LOG.error("Exception in sending Notification from EmailNotificationPlugin:" +e);
+            LOG.error("Exception in sending metricS to Graphite:" +e);
         }
     }
 }

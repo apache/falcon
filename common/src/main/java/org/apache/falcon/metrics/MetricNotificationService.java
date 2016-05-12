@@ -42,23 +42,26 @@ public class MetricNotificationService implements FalconService {
     private static final Logger LOG = LoggerFactory.getLogger(MetricNotificationService.class);
 
     public static final String SERVICE_NAME = MetricNotificationService.class.getSimpleName();
+    private static final MetricNotificationService METRIC_NOTIFICATION_SERVICE = new MetricNotificationService();
     private final GraphiteReporter graphiteReporter;
     private final MetricRegistry metricRegistry;
 
-    private static String prefix = "falcon.default.GENERATE";
     private Map<String, MyGauge> metricMap = new ConcurrentHashMap<>();
 
+    public static MetricNotificationService get(){
+        return METRIC_NOTIFICATION_SERVICE;
+    }
+
     public MetricNotificationService(){
-        StartupProperties.get().getProperty("falcon.graphite.hostname");
         Graphite graphite = new Graphite(new InetSocketAddress(StartupProperties
                 .get().getProperty("falcon.graphite.hostname"), Integer.parseInt(StartupProperties.get()
                     .getProperty("falcon.graphite.port"))));
         metricRegistry=new MetricRegistry();
         this.graphiteReporter = GraphiteReporter.forRegistry(metricRegistry)
-                .prefixedWith(prefix)
                 .convertDurationsTo(TimeUnit.SECONDS)
                 .filter(MetricFilter.ALL)
                 .build(graphite);
+        graphiteReporter.start(1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -68,7 +71,9 @@ public class MetricNotificationService implements FalconService {
 
     @Override
     public void init() throws FalconException {
-        graphiteReporter.start(1, TimeUnit.SECONDS);
+        LOG.info("Starting Graphite Service");
+        graphiteReporter.start(Long.parseLong(StartupProperties.get().getProperty("falcon.graphite.frequency")),
+                TimeUnit.SECONDS);
     }
 
     @Override
@@ -76,11 +81,13 @@ public class MetricNotificationService implements FalconService {
         graphiteReporter.stop();
     }
 
-    private MyGauge createMetric(String metricName){
+    private MyGauge createMetric(final String metricName){
         return metricMap.computeIfAbsent(metricName, new Function<String, MyGauge>() {
             @Override
             public MyGauge apply(String s) {
-                return new MyGauge();
+                MyGauge myGauge = new MyGauge();
+                metricRegistry.register(metricName, myGauge);
+                return myGauge;
             }
         });
     }
@@ -101,5 +108,4 @@ public class MetricNotificationService implements FalconService {
             return value;
         }
     }
-
 }
