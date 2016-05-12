@@ -35,6 +35,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
 
     @BeforeClass
     public void init() throws Exception {
+        initExtensionStore();
         resourcesMap = ImmutableMap.of(
                 "hdfs-mirroring-template.xml", extensionStorePath
                         + "/hdfs-mirroring/resources/runtime/hdfs-mirroring-template.xml",

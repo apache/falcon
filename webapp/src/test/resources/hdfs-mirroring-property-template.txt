@@ -1,0 +1,9 @@
+jobName=##jobName##
+jobClusterName=##jobClusterName##
+jobValidityStart=##jobValidityStart##
+jobValidityEnd=##jobValidityEnd##
+jobFrequency=##jobFrequency##
+sourceDir=##sourceDir##
+sourceCluster=##sourceCluster##
+targetDir=##targetDir##
+targetCluster=##targetCluster##

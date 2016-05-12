@@ -61,6 +61,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.servlet.ServletInputStream;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -288,6 +289,41 @@ public class TestContext extends AbstractTestContext {
         };
     }
 
+    public ExtensionJobList getExtensionJobs(String extensionName, String fields, String sortOrder, String offset,
+                                             String resultsPerPage, String doAsUser) {
+        WebResource resource = this.service.path("api/extension/list/" + extensionName);
+        resource = addQueryParam(resource, "doAs", doAsUser);
+        resource = addQueryParam(resource, "fields", fields);
+        resource = addQueryParam(resource, "sortOrder", sortOrder);
+        resource = addQueryParam(resource, "offset", offset);
+        resource = addQueryParam(resource, "numResults", resultsPerPage);
+        ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                .method(HttpMethod.GET, ClientResponse.class);
+        return response.getEntity(ExtensionJobList.class);
+    }
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public ExtensionInstanceList getExtensionInstances(String jobName, String nominalStart, String nominalEnd,
+                                                       String instanceStatus, String fields, String orderBy,
+                                                       String sortOrder, String offset, String resultsPerPage,
+                                                       String doAsUser) {
+        WebResource resource = this.service.path("api/extension/instances/" + jobName);
+        resource = addQueryParam(resource, "start", nominalStart);
+        resource = addQueryParam(resource, "end", nominalEnd);
+        resource = addQueryParam(resource, "instanceStatus", instanceStatus);
+        resource = addQueryParam(resource, "doAs", doAsUser);
+        resource = addQueryParam(resource, "fields", fields);
+        resource = addQueryParam(resource, "orderBy", orderBy);
+        resource = addQueryParam(resource, "sortOrder", sortOrder);
+        resource = addQueryParam(resource, "offset", offset);
+        resource = addQueryParam(resource, "numResults", resultsPerPage);
+        ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                .method(HttpMethod.GET, ClientResponse.class);
+        return response.getEntity(ExtensionInstanceList.class);
+    }
+
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
         return submitAndSchedule(template, overlay, entityType, null, "", null);
@@ -448,8 +484,12 @@ public class TestContext extends AbstractTestContext {
 
     public static String overlayParametersOverTemplate(String template,
                                                        Map<String, String> overlay) throws IOException {
-        File tmpFile = getTempFile();
-        OutputStream out = new FileOutputStream(tmpFile);
+        return overlayParametersOverTemplate(getTempFile(), template, overlay);
+    }
+
+    public static String overlayParametersOverTemplate(File file, String template,
+                                                       Map<String, String> overlay) throws IOException {
+        OutputStream out = new FileOutputStream(file);
 
         InputStreamReader in;
         InputStream resourceAsStream = TestContext.class.getResourceAsStream(template);
@@ -472,7 +512,7 @@ public class TestContext extends AbstractTestContext {
         }
         reader.close();
         out.close();
-        return tmpFile.getAbsolutePath();
+        return file.getAbsolutePath();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -578,5 +618,12 @@ public class TestContext extends AbstractTestContext {
 
     public static int executeWithURL(String command) throws Exception {
         return new FalconCLI().run((command + " -url " + TestContext.BASE_URL).split("\\s+"));
+    }
+
+    private WebResource addQueryParam(WebResource resource, String key, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return resource;
+        }
+        return resource.queryParam(key, value);
     }
 }
