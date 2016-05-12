@@ -1,0 +1,15 @@
+---+++Delete
+
+[[CommonCLI][Common CLI Options]]
+
+Delete an extension job.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -delete -jobName <<extension-job-name>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionDelete.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -delete -jobName sales-monthly

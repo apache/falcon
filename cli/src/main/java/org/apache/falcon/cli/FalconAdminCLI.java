@@ -18,6 +18,7 @@
 
 package org.apache.falcon.cli;
 
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -55,6 +56,8 @@ public class FalconAdminCLI extends FalconCLI {
                 "show the thread stack dump");
         Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true,
                 "doAs user");
+        Option safemode = new Option(FalconCLIConstants.SAFE_MODE_OPT, true,
+                "doAs user");
         Option help = new Option("help", false, "show Falcon help");
         Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
                 "Use debug mode to see debugging statements on stdout");
@@ -62,6 +65,7 @@ public class FalconAdminCLI extends FalconCLI {
         group.addOption(version);
         group.addOption(stack);
         group.addOption(help);
+        group.addOption(safemode);
 
         adminOptions.addOptionGroup(group);
         adminOptions.addOption(doAs);
@@ -102,6 +106,16 @@ public class FalconAdminCLI extends FalconCLI {
         } else if (optionsList.contains(FalconCLIConstants.VERSION_OPT)) {
             result = client.getVersion(doAsUser);
             OUT.get().println("Falcon server build version: " + result);
+        } else if (optionsList.contains(FalconCLIConstants.SAFE_MODE_OPT)) {
+            String safemode = commandLine.getOptionValue(FalconCLIConstants.SAFE_MODE_OPT);
+            ClientResponse response = client.setSafemode(safemode, doAsUser);
+            if (response.getStatus() == 200) {
+                OUT.get().println("Falcon server safemode set to : " + safemode);
+            } else {
+                ERR.get().println("Unable to set Falcon server to safemode value : " + safemode);
+                ERR.get().println(response.toString());
+                exitValue = -1;
+            }
         } else if (optionsList.contains(FalconCLIConstants.HELP_CMD)) {
             OUT.get().println("Falcon Help");
         }

@@ -66,6 +66,8 @@ public class FalconEntityCLI extends FalconCLI {
                 "Submits an entity xml to Falcon");
         Option update = new Option(FalconCLIConstants.UPDATE_OPT, false,
                 "Updates an existing entity xml");
+        Option updateClusterDependents = new Option(FalconCLIConstants.UPDATE_CLUSTER_DEPENDENTS_OPT, false,
+                "Updates dependent entities of a cluster in workflow engine");
         Option schedule = new Option(FalconCLIConstants.SCHEDULE_OPT, false,
                 "Schedules a submited entity in Falcon");
         Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false,
@@ -96,6 +98,7 @@ public class FalconEntityCLI extends FalconCLI {
         OptionGroup group = new OptionGroup();
         group.addOption(submit);
         group.addOption(update);
+        group.addOption(updateClusterDependents);
         group.addOption(schedule);
         group.addOption(suspend);
         group.addOption(resume);
@@ -217,7 +220,8 @@ public class FalconEntityCLI extends FalconCLI {
         }
 
         EntityType entityTypeEnum = null;
-        if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
+        if (optionsList.contains(FalconCLIConstants.LIST_OPT)
+                || optionsList.contains(FalconCLIConstants.UPDATE_CLUSTER_DEPENDENTS_OPT)) {
             if (entityType == null) {
                 entityType = "";
             }
@@ -255,6 +259,9 @@ public class FalconEntityCLI extends FalconCLI {
             validateColo(optionsList);
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             result = client.update(entityType, entityName, filePath, skipDryRun, doAsUser).getMessage();
+        }  else if (optionsList.contains(FalconCLIConstants.UPDATE_CLUSTER_DEPENDENTS_OPT)) {
+            validateNotEmpty(cluster, FalconCLIConstants.CLUSTER_OPT);
+            result = client.updateClusterDependents(cluster, skipDryRun, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT)) {
             validateNotEmpty(filePath, "file");
             validateColo(optionsList);

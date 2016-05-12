@@ -14,20 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Hive Disaster Recovery
+Hive Mirroring
 =======================
 
 Overview
 ---------
 
-Falcon provides feature to replicate Hive metadata and data events from one hadoop cluster
-to another cluster. This is supported for secure and unsecure cluster through Falcon Recipes.
+Falcon provides feature to replicate Hive metadata and data events from source cluster to destination cluster. This is supported for both secure and unsecure cluster through Falcon extensions.
 
 
 Prerequisites
 -------------
 
-Following is the prerequisites to use Hive DR
+Following is the prerequisites to use Hive mirrroing
 
 * Hive 1.2.0+
 * Oozie 4.2.0+
@@ -69,12 +68,9 @@ a. Perform initial bootstrap of Table and Database from one Hadoop cluster to an
 b. Setup cluster definition
    $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
 
-c. Submit Hive DR recipe
-   $FALCON_HOME/bin/falcon recipe -name hive-disaster-recovery -operation HIVE_DISASTER_RECOVERY
+c. Submit Hive mirroring extension
+   $FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName hive-mirroring -file /process/definition.xml
+
+   Please Refer to Falcon CLI and REST API twiki in the Falcon documentation for more details on usage of CLI and REST API's for extension jobs and instances management.
 
 
-Recipe templates for Hive DR is available in addons/recipe/hive-disaster-recovery and copy it to
-recipe path specified in client.properties.
-
-*Note:* If kerberos security is enabled on cluster, use the secure templates for Hive DR from
-        addons/recipe/hive-disaster-recovery

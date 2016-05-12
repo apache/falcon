@@ -167,6 +167,10 @@ public class FalconExtensionCLI {
         group.addOption(delete);
         extensionOptions.addOptionGroup(group);
 
+        Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
+        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
+        Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
+                "Use debug mode to see debugging statements on stdout");
         Option extensionName = new Option(ENTENSION_NAME_OPT, true, "Extension name");
         Option jobName = new Option(JOB_NAME_OPT, true, "Extension job name");
         Option instanceStatus = new Option(FalconCLIConstants.INSTANCE_STATUS_OPT, true, "Instance status");
@@ -175,13 +179,15 @@ public class FalconExtensionCLI {
         Option numResults = new Option(FalconCLIConstants.NUM_RESULTS_OPT, true,
                 "Number of results to return per request");
         Option fields = new Option(FalconCLIConstants.FIELDS_OPT, true, "Entity fields to show for a request");
-        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
         Option start = new Option(FalconCLIConstants.START_OPT, true, "Start time of instances");
         Option end = new Option(FalconCLIConstants.END_OPT, true, "End time of instances");
         Option status = new Option(FalconCLIConstants.STATUS_OPT, true, "Filter returned instances by status");
         Option orderBy = new Option(FalconCLIConstants.ORDER_BY_OPT, true, "Order returned instances by this field");
         Option filePath = new Option(FalconCLIConstants.FILE_PATH_OPT, true, "File path of extension parameters");
 
+        extensionOptions.addOption(url);
+        extensionOptions.addOption(doAs);
+        extensionOptions.addOption(debug);
         extensionOptions.addOption(extensionName);
         extensionOptions.addOption(jobName);
         extensionOptions.addOption(instanceStatus);
@@ -189,7 +195,6 @@ public class FalconExtensionCLI {
         extensionOptions.addOption(offset);
         extensionOptions.addOption(numResults);
         extensionOptions.addOption(fields);
-        extensionOptions.addOption(doAs);
         extensionOptions.addOption(start);
         extensionOptions.addOption(end);
         extensionOptions.addOption(status);

@@ -35,6 +35,7 @@ public final class FalconCLIConstants {
     public static final String ENTITY_CMD = "entity";
     public static final String INSTANCE_CMD = "instance";
     public static final String EXTENSION_CMD = "extension";
+    public static final String SAFE_MODE_OPT = "setsafemode";
 
     public static final String TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
@@ -46,6 +47,7 @@ public final class FalconCLIConstants {
     public static final String VERSION_OPT = "version";
     public static final String SUBMIT_OPT = "submit";
     public static final String UPDATE_OPT = "update";
+    public static final String UPDATE_CLUSTER_DEPENDENTS_OPT = "updateClusterDependents";
     public static final String DELETE_OPT = "delete";
     public static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
     public static final String VALIDATE_OPT = "validate";
