@@ -56,7 +56,7 @@ public final class ExtensionStore {
     private static final String RESOURCES_DIR = "resources";
     private static final String LIBS_DIR = "libs";
 
-    private static final String EXTENSION_STORE_URI = "extension.store.uri";
+    public static final String EXTENSION_STORE_URI = "extension.store.uri";
 
     private static final ExtensionStore STORE = new ExtensionStore();
 

@@ -148,6 +148,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
 
     @BeforeClass
     public void init() throws Exception {
+        initExtensionStore();
         extension = new Extension();
         baseDir = Files.createTempDirectory("test_extensions_hdfs").toFile().getAbsoluteFile();
         miniDFSCluster = MiniHdfsClusterUtil.initMiniDfs(MiniHdfsClusterUtil.EXTENSION_TEST_PORT, baseDir);
