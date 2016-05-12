@@ -87,7 +87,6 @@ export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= 
 </verbatim>
 
 ---+++Activemq
-
 * falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D
 option in environment variable FALCON_OPTS:
    * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
@@ -95,14 +94,58 @@ option in environment variable FALCON_OPTS:
    * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
 
 ---+++Falcon System Notifications
-Some Falcon features such as late data handling, retries, metadata service, depend on JMS notifications sent when the Oozie workflow completes. These system notifications are sent as part of Falcon Post Processing action. Given that the post processing action is also a job, it is prone to failures and in case of failures, Falcon is blind to the status of the workflow. To alleviate this problem and make the notifications more reliable, you can enable Oozie's JMS notification feature and disable Falcon post-processing notification by making the following changes:
-   * In Falcon runtime.properties, set *.falcon.jms.notification.enabled to false. This will turn off JMS notification in post-processing.
-   * Copy notification related properties in oozie/conf/oozie-site.xml to oozie-site.xml of the Oozie installation.  Restart Oozie so changes get reflected.  
 
-*NOTE : If you disable Falcon post-processing JMS notification and not enable Oozie JMS notification, features such as failure retry, late data handling and metadata service will be disabled for all entities on the server.*
+Some Falcon features such as late data handling, retries, metadata service, depend on JMS notifications sent when the Oozie workflow completes.
+Falcon listens to Oozie notification via JMS. You need to enable Oozie JMS notification as explained below. Falcon post processing
+feature continues to only send user notifications so enabling Oozie JMS notification is important.
+
+*NOTE : If Oozie JMS notification is not enabled, the Falcon features such as failure retry, late data handling and metadata
+service will be disabled for all entities on the server.*
+
+---++++ Enable Oozie JMS notification
+
+   * Please add/change the following properties in oozie-site.xml in the oozie installation dir.
+
+<verbatim>
+   <property>
+      <name>oozie.jms.producer.connection.properties</name>
+      <value>java.naming.factory.initial#org.apache.activemq.jndi.ActiveMQInitialContextFactory;java.naming.provider.url#tcp://<activemq-host>:<port></value>
+    </property>
+
+   <property>
+      <name>oozie.service.EventHandlerService.event.listeners</name>
+      <value>org.apache.oozie.jms.JMSJobEventListener</value>
+   </property>
+
+   <property>
+      <name>oozie.service.JMSTopicService.topic.name</name>
+      <value>WORKFLOW=ENTITY.TOPIC,COORDINATOR=ENTITY.TOPIC</value>
+    </property>
+
+   <property>
+      <name>oozie.service.JMSTopicService.topic.prefix</name>
+      <value>FALCON.</value>
+    </property>
+
+    <!-- add org.apache.oozie.service.JMSAccessorService to the other existing services if any -->
+    <property>
+       <name>oozie.services.ext</name>
+       <value>org.apache.oozie.service.JMSAccessorService,org.apache.oozie.service.PartitionDependencyManagerService,org.apache.oozie.service.HCatAccessorService</value>
+    </property>
+</verbatim>
+
+   * In falcon startup.properties, set JMS broker url to be the same as the one set in oozie-site.xml property
+   oozie.jms.producer.connection.properties (see above)
+
+<verbatim>
+   *.broker.url=tcp://<activemq-host>:<port>
+</verbatim>
 
 ---+++Enabling Falcon Native Scheudler
-You can either choose to schedule entities using Oozie's coordinator or using Falcon's native scheduler. To be able to schedule entities natively on Falcon, you will need to add some additional properties to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the Falcon Server. For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
+You can either choose to schedule entities using Oozie's coordinator or using Falcon's native scheduler. To be able to
+schedule entities natively on Falcon, you will need to add some additional properties
+to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the Falcon Server.
+For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
 
 ---+++Adding Extension Libraries
 
