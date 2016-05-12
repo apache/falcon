@@ -83,9 +83,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             argList.addAll(sparkArgs);
         }
 
-        checkDataFeedsAsArgument(entity);
         sparkAction.setJar(addUri(sparkFilePath, cluster));
-
 
         setSparkLibFileToWorkflowLib(sparkFilePath, entity);
         propagateEntityProperties(sparkAction);
@@ -130,16 +128,6 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             sparkProp.setName(prop.getName());
             sparkProp.setValue(prop.getValue());
             sparkConf.add(sparkProp);
-        }
-    }
-
-    private void checkDataFeedsAsArgument(Process entity) throws FalconException {
-        if (entity.getInputs() == null) {
-            return;
-        }
-
-        if (entity.getOutputs() == null) {
-            return;
         }
     }
 
