@@ -18,11 +18,11 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.FalconException;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -72,18 +72,18 @@ public final class CredentialProviderHelper {
                 || methFlush == null);
     }
 
-    public static String resolveAlias(Configuration conf, String alias) throws IOException {
+    public static String resolveAlias(Configuration conf, String alias) throws FalconException {
         try {
             char[] cred = (char[]) methGetPassword.invoke(conf, alias);
             if (cred == null) {
-                throw new IOException("The provided alias cannot be resolved");
+                throw new FalconException("The provided alias cannot be resolved");
             }
             return new String(cred);
         } catch (InvocationTargetException ite) {
-            throw new RuntimeException("Error resolving password "
+            throw new FalconException("Error resolving password "
                     + " from the credential providers ", ite.getTargetException());
         } catch (IllegalAccessException iae) {
-            throw new RuntimeException("Error invoking the credential provider method", iae);
+            throw new FalconException("Error invoking the credential provider method", iae);
         }
     }
 }
