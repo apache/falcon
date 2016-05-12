@@ -18,6 +18,7 @@
 
 package org.apache.falcon.hive.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.job.JobCounters;
 import org.apache.falcon.job.JobCountersHandler;
 import org.apache.falcon.job.JobType;
