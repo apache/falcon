@@ -40,7 +40,8 @@ public final class FileUtils {
 
     private FileUtils() {}
 
-    public static Configuration getConfiguration(final String writeEP, final String nnKerberosPrincipal) throws IOException {
+    public static Configuration getConfiguration(final String writeEP,
+                                                 final String nnKerberosPrincipal) throws IOException {
         Configuration conf = HiveDRUtils.getDefaultConf();
         conf.set("fs.defaultFS", writeEP);
         if (StringUtils.isNotEmpty(nnKerberosPrincipal)) {
