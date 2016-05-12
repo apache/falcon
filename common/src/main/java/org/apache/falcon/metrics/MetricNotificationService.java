@@ -61,7 +61,6 @@ public class MetricNotificationService implements FalconService {
                 .convertDurationsTo(TimeUnit.SECONDS)
                 .filter(MetricFilter.ALL)
                 .build(graphite);
-        graphiteReporter.start(1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -93,7 +92,9 @@ public class MetricNotificationService implements FalconService {
     }
 
     public void publish(String metricsName, Long value){
+        synchronized(this){
         createMetric(metricsName).setValue(value);
+        }
     }
 
     private static class MyGauge implements Gauge<Long> {
