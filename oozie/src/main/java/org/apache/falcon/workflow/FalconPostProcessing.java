@@ -48,14 +48,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         // serialize the context to HDFS under logs dir before sending the message
         context.serialize();
 
-        boolean systemNotificationEnabled = Boolean.parseBoolean(context.
-                getValue(WorkflowExecutionArgs.SYSTEM_JMS_NOTIFICATION_ENABLED, "true"));
-
-        if (systemNotificationEnabled) {
-            LOG.info("Sending Falcon message {} ", context);
-            invokeFalconMessageProducer(context);
-        }
-
         String userBrokerUrl = context.getValue(WorkflowExecutionArgs.USER_BRKR_URL);
         boolean userNotificationEnabled = Boolean.parseBoolean(context.
                 getValue(WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED, "true"));
@@ -78,13 +70,6 @@ public class FalconPostProcessing extends Configured implements Tool {
                 .type(JMSMessageProducer.MessageType.USER)
                 .build();
         jmsMessageProducer.sendMessage(WorkflowExecutionContext.USER_MESSAGE_ARGS);
-    }
-
-    private void invokeFalconMessageProducer(WorkflowExecutionContext context) throws Exception {
-        JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
-                .type(JMSMessageProducer.MessageType.FALCON)
-                .build();
-        jmsMessageProducer.sendMessage();
     }
 
     private void invokeLogProducer(WorkflowExecutionContext context) {
