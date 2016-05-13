@@ -20,8 +20,6 @@ package org.apache.falcon.util;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.security.CredentialProviderHelper;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -39,8 +37,6 @@ public final class StartupProperties extends ApplicationProperties {
     public static final String SAFEMODE_PROPERTY = "falcon.safeMode";
     private static final String SAFEMODE_FILE = ".safemode";
     private static final String CONFIGSTORE_PROPERTY = "config.store.uri";
-    private static final String CREDENTIAL_PROVIDER_PROPERTY = "hadoop.security.credential.provider.path";
-    private static final String ALIAS_PROPERTY_PREFIX = "hadoop.security.alias.";
 
     private static FileSystem fileSystem;
     private static Path storePath;
@@ -54,31 +50,6 @@ public final class StartupProperties extends ApplicationProperties {
     private StartupProperties() throws FalconException {
         super();
         resolveAlias();
-    }
-
-    private void resolveAlias() throws FalconException {
-        try {
-            final Configuration conf = new Configuration();
-            String providerPath = getProperty(CREDENTIAL_PROVIDER_PROPERTY);
-            if (providerPath != null) {
-                conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, providerPath);
-            }
-
-            Properties aliasProperties = new Properties();
-            for (Object keyObj : keySet()) {
-                String key = (String) keyObj;
-                if (key.startsWith(ALIAS_PROPERTY_PREFIX)) {
-                    String propertyKey = key.substring(ALIAS_PROPERTY_PREFIX.length());
-                    String propertyValue = CredentialProviderHelper.resolveAlias(conf, getProperty(key));
-                    aliasProperties.setProperty(propertyKey, propertyValue);
-                }
-            }
-            LOG.info("Resolved alias properties: {}", aliasProperties.stringPropertyNames());
-            putAll(aliasProperties);
-        } catch (Exception e) {
-            LOG.error("Exception while resolving credential alias", e);
-            throw new FalconException("Exception while resolving credential alias", e);
-        }
     }
 
     @Override
