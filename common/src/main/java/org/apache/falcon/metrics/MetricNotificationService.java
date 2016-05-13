@@ -46,7 +46,7 @@ public class MetricNotificationService implements FalconService {
     private final GraphiteReporter graphiteReporter;
     private final MetricRegistry metricRegistry;
 
-    private Map<String, MyGauge> metricMap = new ConcurrentHashMap<>();
+    private Map<String, MetricGauge> metricMap = new ConcurrentHashMap<>();
 
     public static MetricNotificationService get(){
         return METRIC_NOTIFICATION_SERVICE;
@@ -80,13 +80,13 @@ public class MetricNotificationService implements FalconService {
         graphiteReporter.stop();
     }
 
-    private MyGauge createMetric(final String metricName){
-        return metricMap.computeIfAbsent(metricName, new Function<String, MyGauge>() {
+    private MetricGauge createMetric(final String metricName){
+        return metricMap.computeIfAbsent(metricName, new Function<String, MetricGauge>() {
             @Override
-            public MyGauge apply(String s) {
-                MyGauge myGauge = new MyGauge();
-                metricRegistry.register(metricName, myGauge);
-                return myGauge;
+            public MetricGauge apply(String s) {
+                MetricGauge metricGauge = new MetricGauge();
+                metricRegistry.register(metricName, metricGauge);
+                return metricGauge;
             }
         });
     }
@@ -97,7 +97,7 @@ public class MetricNotificationService implements FalconService {
         }
     }
 
-    private static class MyGauge implements Gauge<Long> {
+    private static class MetricGauge implements Gauge<Long> {
 
         private Long value=0L;
         public void setValue(Long value){
