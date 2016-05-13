@@ -33,7 +33,6 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /**
  * Service for metrics notification.
@@ -81,19 +80,17 @@ public class MetricNotificationService implements FalconService {
     }
 
     private MetricGauge createMetric(final String metricName){
-        return metricMap.computeIfAbsent(metricName, new Function<String, MetricGauge>() {
-            @Override
-            public MetricGauge apply(String s) {
-                MetricGauge metricGauge = new MetricGauge();
-                metricRegistry.register(metricName, metricGauge);
-                return metricGauge;
-            }
-        });
+        if (!metricMap.containsKey(metricName)) {
+            MetricGauge metricGauge = new MetricGauge();
+            metricMap.put(metricName, metricGauge);
+            metricRegistry.register(metricName, metricGauge);
+        }
+        return metricMap.get(metricName);
     }
 
     public void publish(String metricsName, Long value){
         synchronized(this){
-        createMetric(metricsName).setValue(value);
+            createMetric(metricsName).setValue(value);
         }
     }
 

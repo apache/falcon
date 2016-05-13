@@ -48,7 +48,7 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
             String entityType = message.getDimensions().get("entity-type");
             String entityName = message.getDimensions().get("entity-name");
             String prefix = StartupProperties.get().getProperty("falcon.graphite.prefix");
-            if (entityType.equals(EntityType.PROCESS)) {
+            if (entityType.equals(EntityType.PROCESS.name())) {
                 Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 Process process = (Process) entity;
                 String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
@@ -73,7 +73,7 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
                 }
             }
         } catch (Exception e) {
-            LOG.error("Exception in sending metrics to Graphite:" ,e);
+            LOG.error("Exception in sending metrics to Graphite:", e);
         }
     }
 }
