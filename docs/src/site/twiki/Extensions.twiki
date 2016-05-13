@@ -43,6 +43,7 @@ Sample extensions are published in addons/extensions
 ---++ Types of extensions
    * [[HDFSMirroring][HDFS mirroring extension]]
    * [[HiveMirroring][Hive mirroring extension]]
+   * [[HdfsSnapshotMirroring][HDFS snapshot based mirroring]]
 
 ---++ Packaging and installation
 
