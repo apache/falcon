@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.metrics.MetricNotificationService;
 import org.apache.falcon.service.Services;
+import org.apache.falcon.util.StartupProperties;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
         try {
             String entityType = message.getDimensions().get("entity-type");
             String entityName = message.getDimensions().get("entity-name");
-            String prefix = "falcon.";
+            String prefix = StartupProperties.get().getProperty("falcon.graphite.prefix");
             if (entityType.equals(EntityType.PROCESS)) {
                 Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 Process process = (Process) entity;
