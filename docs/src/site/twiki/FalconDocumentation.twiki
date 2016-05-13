@@ -95,9 +95,9 @@ Startup property file in both falcon & prism server need to be configured with t
 ---+++ Safe Mode
 Safemode is useful when the admin wants to prevent Falcon users from scheduling entities in the workflow engine. This can happen when
    * Hadoop clusters are being upgraded.
-   * Falcon cluster entity is being updated.
+   * Falcon cluster entities are being updated.
 
-When in Safemode, Falcon Server restricts users from performing certain operations. The restrictions are as follows.
+When in Safemode, users can only perform limited operations. To be specific,
    * Users can perform read operations on entities subject to authorization.
    * Superuser can perform cluster entity update operation.
    * Suspend/Kill of individual instances will be allowed if users want to suspend specific job operations.
@@ -108,8 +108,7 @@ When in Safemode, Falcon Server restricts users from performing certain operatio
       * Instance operations not allowed are : rerun, resume
 
 ---++++ Getting into/out-of Safemode.
-Falcon process owner can start Falcon in safemode by using following command. When -setsafemode is true, Falcon starts in safemode.
-When -setsafemode is false, falcon starts in normal mode.
+The Falcon process user can specify whether to start Falcon in safemode with the following command:
 <verbatim>
 <falcon-server>/bin/falcon-start -setsafemode <true/false>
 </verbatim>
