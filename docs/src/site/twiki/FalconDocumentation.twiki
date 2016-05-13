@@ -128,7 +128,7 @@ OR
 GET http://falcon-server:15000/api/admin/setSafeMode/false
 </verbatim>
 
-User can find if FalconServer is in safemode or not, by calling the [[restapi/AdminVersion][Admin Version]] API. Once
+*NOTE* User can find if FalconServer is in safemode or not, by calling the [[restapi/AdminVersion][Admin Version]] API. Once
 server is set to safemode, this state is persisted during restarts. It has to be unset explicitly if user wants to exit safemode.
 
  
