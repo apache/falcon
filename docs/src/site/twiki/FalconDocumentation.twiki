@@ -91,6 +91,46 @@ Startup property file in both falcon & prism server need to be configured with t
 
 ---++++ Prism Setup
 <img src="PrismSetup.png" height="400" width="600" />
+
+---+++ Safe Mode
+Safemode is useful when the admin wants to prevent Falcon users from scheduling entities in the workflow engine. This can happen when
+   * Hadoop clusters are being upgraded.
+   * Falcon cluster entities are being updated.
+
+When in Safemode, users can only perform limited operations. To be specific,
+   * Users can perform read operations on entities subject to authorization.
+   * Superuser can perform cluster entity update operation.
+   * Suspend/Kill of individual instances will be allowed if users want to suspend specific job operations.
+   * Suspend operation on schedulable entities will be allowed. This is because, a user might want to suspend entities during rolling-upgrade to handle jobs incompatible with updated versions.
+   * All other operations are not allowed. To enumerate,
+      * All entity submit, submitAndSchedule operations are not allowed.
+      * Entity operations not allowed are : update, schedule, touch, delete, submit, submitAndSchedule, resume
+      * Instance operations not allowed are : rerun, resume
+
+---++++ Getting into/out-of Safemode.
+The Falcon process user can specify whether to start Falcon in safemode with the following command:
+<verbatim>
+<falcon-server>/bin/falcon-start -setsafemode <true/false>
+</verbatim>
+
+A superuser or admin-user can set Falcon server into/outof safemode using CLI or RestAPI. A user is considered superuser if they
+owns the Falcon process or belong to group specified in startup property falcon.security.authorization.superusergroup. A user is
+considered admin user if they are listed under startup property falcon.security.authorization.admin.users, OR they belong to group
+listed under startup property falcon.security.authorization.admin.groups.
+
+<verbatim>
+## CLI
+<falcon-server>/bin/falcon admin  [-setsafemode <true/false>]
+
+## RestAPI
+GET http://falcon-server:15000/api/admin/setSafeMode/true
+OR
+GET http://falcon-server:15000/api/admin/setSafeMode/false
+</verbatim>
+
+*NOTE* User can find if FalconServer is in safemode or not, by calling the [[restapi/AdminVersion][Admin Version]] API. Once
+server is set to safemode, this state is persisted during restarts. It has to be unset explicitly if user wants to exit safemode.
+
  
 ---+++ Configuration Store
 Configuration store is file system based store that the Falcon system maintains where the entity definitions

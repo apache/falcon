@@ -1,0 +1,10 @@
+---+++SetSafeMode
+
+[[CommonCLI][Common CLI Options]]
+
+When -setsafemode is true, Falcon starts in safemode.
+When -setsafemode is false, falcon starts in normal mode.
+
+Usage:
+$FALCON_HOME/bin/falcon admin -setsafemode true/false
+
