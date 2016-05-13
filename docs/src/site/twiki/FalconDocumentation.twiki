@@ -2,6 +2,7 @@
    * <a href="#Architecture">Architecture</a>
    * <a href="#Control_flow">Control flow</a>
    * <a href="#Modes_Of_Deployment">Modes Of Deployment</a>
+   * <a href="#Configuring_Falcon">Configuring Falcon</a>
    * <a href="#Entity_Management_actions">Entity Management actions</a>
    * <a href="#Instance_Management_actions">Instance Management actions</a>
    * <a href="#Retention">Retention</a>
@@ -196,6 +197,9 @@ Examples:
 <table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 </verbatim>
 
+---++ Configuring Falcon
+
+Configuring Falcon is detailed in [[Configuration][Configuration]].
 
 ---++ Entity Management actions
 All the following operation can also be done using [[restapi/ResourceList][Falcon's RESTful API]].
