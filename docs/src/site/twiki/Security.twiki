@@ -4,7 +4,7 @@
 
 Apache Falcon provides the following security features:
    * Support credential provider alias for passwords used in Falcon server.
-   * Support authentication to identify proper user.
+   * Support authentication to identify proper users.
    * Support authorization to specify resource access permission for users or groups.
    * Support SSL to provide transport level security for data confidentiality and integrity.
 
@@ -23,7 +23,7 @@ _credential.provider.alias.for.[property-key]_. For example,
 _credential.provider.alias.for.falcon.email.smtp.password=SMTPPassword_ for SMTP password.
 Falcon server, during the start, will automatically retrieve the real password provided the alias name.
 
-The user can specify the provider path with property key _credential.provider.path_,
+The user can specify the provider path with the property key _credential.provider.path_,
 e.g. _credential.provider.path=jceks://file/tmp/test.jceks_.
 If not specified, Falcon will use the default Hadoop credential provider path in core-site.xml.
 
