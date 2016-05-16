@@ -258,7 +258,8 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
             if (entities.size() == 0) {
                 // return failure if the extension job doesn't exist
-                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+                return new APIResult(APIResult.Status.SUCCEEDED,
+                        "Extension job " + jobName + " doesn't exist. Nothing to delete.");
             }
 
             for (Entity entity : entities) {
