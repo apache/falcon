@@ -179,6 +179,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.size() == 0) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 scheduleInternal(entity.getEntityType().name(), entity.getName(), null, null);
             }
@@ -197,6 +202,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                              @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.size() == 0) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 if (entity.getEntityType().isSchedulable()) {
                     if (getWorkflowEngine(entity).isActive(entity)) {
@@ -219,6 +229,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.size() == 0) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 if (entity.getEntityType().isSchedulable()) {
                     if (getWorkflowEngine(entity).isSuspended(entity)) {
@@ -241,6 +256,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.size() == 0) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 // TODO(yzheng): need to remember the entity dependency graph for clean ordered removal
                 canRemove(entity);
