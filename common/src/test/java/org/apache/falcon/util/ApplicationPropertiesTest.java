@@ -67,6 +67,12 @@ public class ApplicationPropertiesTest {
         properties.resolveAlias();
         Assert.assertEquals(properties.getProperty(PROPERTY_1), PASSWORD_1);
         Assert.assertEquals(properties.getProperty(PROPERTY_2), PASSWORD_2);
+
+        // delete temporary jks files
+        file = new File(credDir, JKS_FILE_NAME);
+        file.delete();
+        file = new File(credDir, "." + JKS_FILE_NAME + ".crc");
+        file.delete();
     }
 
     @Test
