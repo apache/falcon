@@ -56,18 +56,21 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
 
                 if ((message.getAction().equals("wf-instance-succeeded"))) {
                     Long timeTaken =  message.getExecutionTime() / 1000000000;
-                    String metricsName = prefix + pipeline + ".GENERATE." + entityName + ".processing_time";
+                    String metricsName = prefix + message.getDimensions().get("cluster") + pipeline
+                            + ".GENERATE." + entityName + ".processing_time";
                     metricNotificationService.publish(metricsName, timeTaken);
 
                     DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));
                     DateTime startTime = new DateTime(message.getDimensions().get("start-time"));
-                    metricsName = prefix + pipeline + ".GENERATE." + entityName + ".start_delay";
+                    metricsName = prefix + message.getDimensions().get("cluster") + pipeline
+                            + ".GENERATE." + entityName + ".start_delay";
                     metricNotificationService.publish(metricsName,
                         (long)Seconds.secondsBetween(nominalTime, startTime).getSeconds());
                 }
 
                 if (message.getAction().equals("wf-instance-failed")){
-                    String metricName =  prefix + pipeline + ".GENERATE." +  entityName + ".failure"
+                    String metricName =  prefix + message.getDimensions().get("cluster") + pipeline
+                            + ".GENERATE." +  entityName + ".failure"
                         + message.getDimensions().get("error-message");
                     metricNotificationService.publish(metricName, (long) 1);
                 }
