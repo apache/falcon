@@ -53,8 +53,6 @@
         <class>org.apache.falcon.example.spark.SparkWordCount</class>
         <jar>/falcon/test/workflow/lib/falcon-examples.jar</jar>
         <spark-opts>--executor-core 1 --executor-memory 512m --driver-memory 512m</spark-opts>
-        <arg>${input}</arg>
-        <arg>${output}</arg>
     </spark-attributes>
 
     <retry policy="periodic" delay="hours(10)" attempts="3"/>

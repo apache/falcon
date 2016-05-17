@@ -21,7 +21,14 @@ package org.apache.falcon.oozie.process;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.spark.CONFIGURATION.Property;
@@ -61,8 +68,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         //Overriding cluster spark master url if defined in process entity
         sparkMasterURL = (sparkMasterURL == null) ? clusterEntitySparkMasterURL : sparkMasterURL;
         if (StringUtils.isBlank(sparkMasterURL)) {
-            LOG.error("Spark Master URL can'be empty");
-            return null;
+            throw new FalconException("Spark Master URL can'be empty");
         }
         sparkAction.setMaster(sparkMasterURL);
         sparkAction.setName(sparkJobName);
@@ -82,6 +88,9 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         if (sparkArgs != null) {
             argList.addAll(sparkArgs);
         }
+
+        addInputFeedsAsArgument(argList, cluster);
+        addOutputFeedsAsArgument(argList, cluster);
 
         sparkAction.setJar(addUri(sparkFilePath, cluster));
 
@@ -128,6 +137,39 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             sparkProp.setName(prop.getName());
             sparkProp.setValue(prop.getValue());
             sparkConf.add(sparkProp);
+        }
+    }
+
+    private void addInputFeedsAsArgument(List<String> argList, Cluster cluster) throws FalconException {
+        if (entity.getInputs() == null) {
+            return;
+        }
+
+        int numInputFeed = entity.getInputs().getInputs().size();
+        while (numInputFeed > 0) {
+            Input input = entity.getInputs().getInputs().get(numInputFeed-1);
+            Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
+            Storage storage = FeedHelper.createStorage(cluster, feed);
+            final String inputName = input.getName();
+            if (storage.getType() == Storage.TYPE.FILESYSTEM) {
+                argList.add(0, "${" + inputName + "}");
+            }
+            numInputFeed--;
+        }
+    }
+
+    private void addOutputFeedsAsArgument(List<String> argList, Cluster cluster) throws FalconException {
+        if (entity.getOutputs() == null) {
+            return;
+        }
+
+        for(Output output : entity.getOutputs().getOutputs()) {
+            Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
+            Storage storage = FeedHelper.createStorage(cluster, feed);
+            final String outputName = output.getName();
+            if (storage.getType() == Storage.TYPE.FILESYSTEM) {
+                argList.add(argList.size(), "${" + outputName + "}");
+            }
         }
     }
 

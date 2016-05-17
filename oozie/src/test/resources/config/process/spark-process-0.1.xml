@@ -54,9 +54,7 @@
         <name>Spark WordCount Application</name>
         <class>org.examples.WordCount</class>
         <jar>/resources/action/lib/spark-wordcount.jar</jar>
-        <spark-opts>--num-executors 3 --driver-memory 512m</spark-opts>
-        <arg>${input}</arg>
-        <arg>${output}</arg>
+        <spark-opts>--num-executors 1 --executor-memory 512m  --driver-memory 512m</spark-opts>
     </spark-attributes>
 
     <retry policy="periodic" delay="hours(10)" attempts="3"/>

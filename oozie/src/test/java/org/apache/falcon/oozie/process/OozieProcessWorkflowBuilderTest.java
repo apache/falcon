@@ -369,7 +369,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Input input = process.getInputs().getInputs().get(0);
         Output output = process.getOutputs().getOutputs().get(0);
         assertEquals(argsList.get(0), "${"+input.getName().toString()+"}");
-        assertEquals(argsList.get(1), "${"+output.getName().toString()+"}");
+        assertEquals(argsList.get(argsList.size()-1), "${"+output.getName().toString()+"}");
     }
 
     @Test (dataProvider = "secureOptions")
