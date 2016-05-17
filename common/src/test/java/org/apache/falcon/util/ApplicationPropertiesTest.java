@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.security.CredentialProviderHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -38,6 +39,16 @@ public class ApplicationPropertiesTest {
     private static final String PROPERTY_1 = "property-key-1";
     private static final String PROPERTY_2 = "property-key-2";
     private static final String JKS_FILE_NAME = "credentials.jks";
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        // delete temporary jks files
+        File credDir = new File(".");
+        File file = new File(credDir, JKS_FILE_NAME);
+        file.delete();
+        file = new File(credDir, "." + JKS_FILE_NAME + ".crc");
+        file.delete();
+    }
 
     @Test
     public void testResolveAlias() throws Exception {
@@ -67,12 +78,6 @@ public class ApplicationPropertiesTest {
         properties.resolveAlias();
         Assert.assertEquals(properties.getProperty(PROPERTY_1), PASSWORD_1);
         Assert.assertEquals(properties.getProperty(PROPERTY_2), PASSWORD_2);
-
-        // delete temporary jks files
-        file = new File(credDir, JKS_FILE_NAME);
-        file.delete();
-        file = new File(credDir, "." + JKS_FILE_NAME + ".crc");
-        file.delete();
     }
 
     @Test
