@@ -103,7 +103,8 @@ public class FalconCLI {
         parser.addCommand(FalconCLIConstants.METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
         parser.addCommand(FalconCLIConstants.EXTENSION_CMD, "",
-                "Extension operations like enumerate, definition, describe",
+                "Extension operations like enumerate, definition, describe, list, instances, "
+                        + "submit, submitAndSchedule, schedule, suspend, resume, delete, update, validate",
                 extensionCLI.createExtensionOptions(), true);
         parser.addCommand(FalconCLIConstants.VERSION_OPT, "", "show client version", new Options(), false);
 
