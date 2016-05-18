@@ -47,7 +47,7 @@ public class FalconCLIException extends Exception {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
         String statusValue = status.toString();
         String message = "";
-        if (status == ClientResponse.Status.BAD_REQUEST) {
+        if (status == ClientResponse.Status.BAD_REQUEST || status == ClientResponse.Status.INTERNAL_SERVER_ERROR) {
             clientResponse.bufferEntity();
             InputStream in = clientResponse.getEntityInputStream();
             try {
