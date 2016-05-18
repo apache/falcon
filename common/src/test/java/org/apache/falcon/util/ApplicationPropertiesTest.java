@@ -40,10 +40,11 @@ public class ApplicationPropertiesTest {
     private static final String PROPERTY_2 = "property-key-2";
     private static final String JKS_FILE_NAME = "credentials.jks";
 
+    private static final File credDir = new File(".");
+
     @AfterClass
     public void tearDown() throws Exception {
         // delete temporary jks files
-        File credDir = new File(".");
         File file = new File(credDir, JKS_FILE_NAME);
         file.delete();
         file = new File(credDir, "." + JKS_FILE_NAME + ".crc");
@@ -56,7 +57,6 @@ public class ApplicationPropertiesTest {
         Assert.assertTrue(CredentialProviderHelper.isProviderAvailable());
 
         // clean credential provider store
-        File credDir = new File(".");
         File file = new File(credDir, JKS_FILE_NAME);
         file.delete();
 
