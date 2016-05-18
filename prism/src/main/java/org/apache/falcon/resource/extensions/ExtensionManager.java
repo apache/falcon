@@ -107,6 +107,9 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         try {
             // get filtered entities
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_NAME + extensionName, "", doAsUser);
+            if (entities.isEmpty()) {
+                return new ExtensionJobList(0);
+            }
 
             // group entities by extension job name
             Map<String, List<Entity>> groupedEntities = groupEntitiesByJob(entities);
@@ -155,6 +158,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.isEmpty()) {
+                return new ExtensionInstanceList(0);
+            }
+
             HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
             ExtensionInstanceList instances = new ExtensionInstanceList(entities.size());
             for (Entity entity : entities) {
@@ -179,7 +186,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.size() == 0) {
+            if (entities.isEmpty()) {
                 // return failure if the extension job doesn't exist
                 return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
             }
@@ -202,7 +209,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                              @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.size() == 0) {
+            if (entities.isEmpty()) {
                 // return failure if the extension job doesn't exist
                 return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
             }
@@ -229,7 +236,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.size() == 0) {
+            if (entities.isEmpty()) {
                 // return failure if the extension job doesn't exist
                 return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
             }
@@ -256,7 +263,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.size() == 0) {
+            if (entities.isEmpty()) {
                 // return failure if the extension job doesn't exist
                 return new APIResult(APIResult.Status.SUCCEEDED,
                         "Extension job " + jobName + " doesn't exist. Nothing to delete.");
