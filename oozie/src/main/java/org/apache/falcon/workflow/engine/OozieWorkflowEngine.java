@@ -1274,7 +1274,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.debug("Going to update! : {} for cluster {}, bundle: {}",
                     newEntity.toShortString(), cluster, bundle.getId());
             result.append(updateInternal(oldEntity, newEntity, clusterEntity, bundle,
-                    CurrentUser.getUser(), skipDryRun)).append("\n");
+                    bundle.getUser(), skipDryRun)).append("\n");
             LOG.info("Entity update complete: {} for cluster {}, bundle: {}", newEntity.toShortString(), cluster,
                 bundle.getId());
         }
@@ -1434,34 +1434,40 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob oldBundle,
-        String user, Boolean skipDryRun) throws FalconException {
+                                  String user, Boolean skipDryRun) throws FalconException {
+        String currentUser = CurrentUser.getUser();
+        switchUser(user);
+
         String clusterName = cluster.getName();
 
         Date effectiveTime = getEffectiveTime(cluster, newEntity);
         LOG.info("Effective time " + effectiveTime);
+        try {
+            //Validate that new entity can be scheduled
+            dryRunForUpdate(cluster, newEntity, effectiveTime, skipDryRun);
 
-        //Validate that new entity can be scheduled
-        dryRunForUpdate(cluster, newEntity, effectiveTime, skipDryRun);
+            boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
 
-        boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
+            //Set end times for old coords
+            updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
+            //schedule new entity
+            String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
+            BundleJob newBundle = null;
+            if (newJobId != null) {
+                newBundle = getBundleInfo(clusterName, newJobId);
+            }
 
-        //Set end times for old coords
-        updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
-
-        //schedule new entity
-        String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
-        BundleJob newBundle = null;
-        if (newJobId != null) {
-            newBundle = getBundleInfo(clusterName, newJobId);
+            //Sometimes updateCoords() resumes the suspended coords. So, if already suspended, resume now
+            //Also suspend new bundle
+            if (suspended) {
+                doBundleAction(newEntity, BundleAction.SUSPEND, cluster.getName());
+            }
+            switchUser(currentUser);
+            return getUpdateString(newEntity, effectiveTime, oldBundle, newBundle);
+        } finally {
+            // Switch back to current user in case of exception.
+            switchUser(currentUser);
         }
-
-        //Sometimes updateCoords() resumes the suspended coords. So, if already suspended, resume now
-        //Also suspend new bundle
-        if (suspended) {
-            doBundleAction(newEntity, BundleAction.SUSPEND, cluster.getName());
-        }
-
-        return getUpdateString(newEntity, effectiveTime, oldBundle, newBundle);
     }
 
     private Date getEffectiveTime(Cluster cluster, Entity newEntity) {

@@ -375,6 +375,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     public APIResult updateClusterDependents(String clusterName, String colo, Boolean skipDryRun) {
         checkColo(colo);
         try {
+            verifySuperUser();
             Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
             verifySafemodeOperation(cluster, EntityUtil.ENTITY_OPERATION.UPDATE_CLUSTER_DEPENDENTS);
             int clusterVersion = cluster.getVersion();
@@ -390,41 +391,43 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
                 Entity entity = EntityUtil.getEntity(depEntity.second, depEntity.first);
                 switch (entity.getEntityType()) {
                 case FEED:
-                    Clusters feedClusters = ((Feed)entity).getClusters();
-                    List<org.apache.falcon.entity.v0.feed.Cluster> updatedFeedClusters =
-                            new ArrayList<org.apache.falcon.entity.v0.feed.Cluster>();
+                    Feed newFeedEntity = (Feed) entity.copy();
+                    Clusters feedClusters = newFeedEntity.getClusters();
                     if (feedClusters != null) {
+                        boolean requireUpdate = false;
                         for(org.apache.falcon.entity.v0.feed.Cluster feedCluster : feedClusters.getClusters()) {
                             if (feedCluster.getName().equals(clusterName)
                                     && feedCluster.getVersion() != clusterVersion) {
                                 // update feed cluster entity
                                 feedCluster.setVersion(clusterVersion);
+                                requireUpdate = true;
                             }
-                            updatedFeedClusters.add(feedCluster);
                         }
-                        ((Feed)entity).getClusters().getClusters().clear();
-                        ((Feed)entity).getClusters().getClusters().addAll(updatedFeedClusters);
-                        result.append(update(entity, entity.getEntityType().name(),
-                                entity.getName(), skipDryRun).getMessage());
+                        if (requireUpdate) {
+                            result.append(getWorkflowEngine(entity).update(entity, newFeedEntity,
+                                    cluster.getName(), skipDryRun));
+                            updateEntityInConfigStore(entity, newFeedEntity);
+                        }
                     }
                     break;
                 case PROCESS:
-                    org.apache.falcon.entity.v0.process.Clusters processClusters = ((Process)entity).getClusters();
-                    List<org.apache.falcon.entity.v0.process.Cluster> updatedProcClusters =
-                            new ArrayList<org.apache.falcon.entity.v0.process.Cluster>();
+                    Process newProcessEntity = (Process) entity.copy();
+                    org.apache.falcon.entity.v0.process.Clusters processClusters = newProcessEntity.getClusters();
                     if (processClusters != null) {
+                        boolean requireUpdate = false;
                         for(org.apache.falcon.entity.v0.process.Cluster procCluster : processClusters.getClusters()) {
                             if (procCluster.getName().equals(clusterName)
                                     && procCluster.getVersion() != clusterVersion) {
                                 // update feed cluster entity
                                 procCluster.setVersion(clusterVersion);
+                                requireUpdate = true;
                             }
-                            updatedProcClusters.add(procCluster);
                         }
-                        ((Process)entity).getClusters().getClusters().clear();
-                        ((Process)entity).getClusters().getClusters().addAll(updatedProcClusters);
-                        result.append(update(entity, entity.getEntityType().name(),
-                                entity.getName(), skipDryRun).getMessage());
+                        if (requireUpdate) {
+                            result.append(getWorkflowEngine(entity).update(entity, newProcessEntity,
+                                    cluster.getName(), skipDryRun));
+                            updateEntityInConfigStore(entity, newProcessEntity);
+                        }
                     }
                     break;
                 default:
@@ -432,10 +435,26 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
                 }
             }
             return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
-        } catch (FalconException e) {
+        } catch (Exception e) {
             LOG.error("Update failed", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void updateEntityInConfigStore(Entity oldEntity, Entity newEntity) {
+        List<Entity> tokenList = new ArrayList<>();
+        try {
+            configStore.initiateUpdate(newEntity);
+            obtainEntityLocks(oldEntity, "update", tokenList);
+            configStore.update(newEntity.getEntityType(), newEntity);
+        } catch (Throwable e) {
+            LOG.error("Update failed", e);
+            throw FalconWebException.newAPIException(e);
+        } finally {
+            ConfigurationStore.get().cleanupUpdateInit();
+            releaseEntityLocks(oldEntity.getName(), tokenList);
+        }
+
     }
 
     private void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)
@@ -483,12 +502,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
 
         if (oldEntity.getEntityType() == EntityType.CLUSTER) {
-            final UserGroupInformation authenticatedUGI = CurrentUser.getAuthenticatedUGI();
-            DefaultAuthorizationProvider authorizationProvider = new DefaultAuthorizationProvider();
-            if (!authorizationProvider.isSuperUser(authenticatedUGI)) {
-                throw new FalconException("Permission denied : "
-                        + "Cluster entity update can only be performed by superuser.");
-            }
+            verifySuperUser();
         }
 
         String[] props = oldEntity.getEntityType().getImmutableProperties();
@@ -529,8 +543,15 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     }
 
     protected void verifySafemodeOperation(Entity entity, EntityUtil.ENTITY_OPERATION operation) {
-        // if Falcon not in safemode, return
+        // if Falcon not in safemode, allow everything except cluster update
         if (!StartupProperties.isServerInSafeMode()) {
+            if (operation.equals(EntityUtil.ENTITY_OPERATION.UPDATE)
+                    && entity.getEntityType().equals(EntityType.CLUSTER)) {
+                LOG.error("Entity operation {} is only allowed on cluster entities during safemode",
+                        operation.name());
+                throw FalconWebException.newAPIException("Entity operation " + operation.name()
+                        + " is only allowed on cluster entities during safemode");
+            }
             return;
         }
 
@@ -1353,5 +1374,14 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             }
         }
         return false;
+    }
+
+    private void verifySuperUser() throws FalconException, IOException {
+        final UserGroupInformation authenticatedUGI = CurrentUser.getAuthenticatedUGI();
+        DefaultAuthorizationProvider authorizationProvider = new DefaultAuthorizationProvider();
+        if (!authorizationProvider.isSuperUser(authenticatedUGI)) {
+            throw new FalconException("Permission denied : "
+                    + "Cluster entity update can only be performed by superuser.");
+        }
     }
 }
