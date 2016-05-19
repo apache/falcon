@@ -1451,7 +1451,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             //Set end times for old coords
             updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
             //schedule new entity
-            String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
+            String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime);
             BundleJob newBundle = null;
             if (newJobId != null) {
                 newBundle = getBundleInfo(clusterName, newJobId);
@@ -1462,7 +1462,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             if (suspended) {
                 doBundleAction(newEntity, BundleAction.SUSPEND, cluster.getName());
             }
-            switchUser(currentUser);
             return getUpdateString(newEntity, effectiveTime, oldBundle, newBundle);
         } finally {
             // Switch back to current user in case of exception.
@@ -1490,27 +1489,19 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private String scheduleForUpdate(Entity entity, Cluster cluster, Date startDate, String user)
-        throws FalconException {
+    private String scheduleForUpdate(Entity entity, Cluster cluster, Date startDate) throws FalconException {
         Entity clone = entity.copy();
-
-        String currentUser = CurrentUser.getUser();
-        switchUser(user);
-        try {
-            EntityUtil.setStartDate(clone, cluster.getName(), startDate);
-            Path buildPath = EntityUtil.getNewStagingPath(cluster, clone);
-            OozieEntityBuilder builder = OozieEntityBuilder.get(clone);
-            Properties properties = builder.build(cluster, buildPath);
-            if (properties != null) {
-                LOG.info("Scheduling {} on cluster {} with props {}", entity.toShortString(), cluster.getName(),
+        EntityUtil.setStartDate(clone, cluster.getName(), startDate);
+        Path buildPath = EntityUtil.getNewStagingPath(cluster, clone);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(clone);
+        Properties properties = builder.build(cluster, buildPath);
+        if (properties != null) {
+            LOG.info("Scheduling {} on cluster {} with props {}", entity.toShortString(), cluster.getName(),
                     properties);
-                return scheduleEntity(cluster.getName(), properties, entity);
-            } else {
-                LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
-                return null;
-            }
-        } finally {
-            switchUser(currentUser);
+            return scheduleEntity(cluster.getName(), properties, entity);
+        } else {
+            LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
+            return null;
         }
     }
 
