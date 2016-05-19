@@ -171,6 +171,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateLocations(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateSparkMasterInterface(cluster);
 
         // Good set of properties, should work
         clusterEntityParser.validateProperties(cluster);

@@ -45,6 +45,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +96,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateRegistryInterface(cluster);
         validateLocations(cluster);
         validateProperties(cluster);
+        validateSparkMasterInterface(cluster);
     }
 
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
@@ -229,6 +232,19 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             }
         } catch (FalconException e) {
             throw new ValidationException("Invalid Catalog server or port: " + catalogUrl, e);
+        }
+    }
+
+    protected void validateSparkMasterInterface(Cluster cluster) throws ValidationException {
+        final String sparkMasterUrl = ClusterHelper.getSparkMasterEndPoint(cluster);
+        if (StringUtils.isNotEmpty(sparkMasterUrl)) {
+            SparkConf sparkConf = new SparkConf();
+            sparkConf.setMaster(sparkMasterUrl).setAppName("Falcon Spark");
+
+            JavaSparkContext sc = new JavaSparkContext(sparkConf);
+            if (sc.startTime() == null) {
+                throw new ValidationException("Unable to reach Spark master URL:" + sparkMasterUrl);
+            }
         }
     }
 

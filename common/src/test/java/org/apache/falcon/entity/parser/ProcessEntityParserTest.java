@@ -21,7 +21,9 @@ package org.apache.falcon.entity.parser;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -639,6 +641,23 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
         feedEntity.getClusters().getClusters().get(0).getValidity().setEnd(null);
         process.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(process);
+    }
+
+    @Test
+    public void testSparkProcessEntity() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class)
+                .getResourceAsStream(SPARK_PROCESS_XML));
+        Assert.assertEquals(process.getWorkflow().getEngine().value(), "spark");
+        Assert.assertNotNull(process.getWorkflow().getPath());
+        Cluster processCluster = process.getClusters().getClusters().get(0);
+        org.apache.falcon.entity.v0.cluster.Cluster cluster =
+                ConfigurationStore.get().get(EntityType.CLUSTER, processCluster.getName());
+        String clusterEntitySparkMaster = ClusterHelper.getSparkMasterEndPoint(cluster);
+        String processEntitySparkMaster = process.getSparkAttributes().getMaster();
+        String sparkMaster = (processEntitySparkMaster == null) ? clusterEntitySparkMaster : processEntitySparkMaster;
+
+        Assert.assertEquals(sparkMaster, "local");
         parser.validate(process);
     }
 }

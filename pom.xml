@@ -100,6 +100,7 @@
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.12.0</activemq.version>
         <hive.version>0.13.1</hive.version>
+        <spark.version>1.6.1</spark.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <quartz.version>2.2.1</quartz.version>
@@ -1078,6 +1079,12 @@
                         <artifactId>httpclient</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-core_2.10</artifactId>
+                <version>${spark.version}</version>
             </dependency>
 
             <dependency>
