@@ -53,10 +53,11 @@ public class HiveMirroringExtension extends AbstractExtension {
             }
         }
 
-        Cluster srcCluster = ClusterHelper.getCluster(HiveMirroringExtensionProperties.SOURCE_CLUSTER.getName());
+        String srcClusterName = extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_CLUSTER
+                .getName());
+        Cluster srcCluster = ClusterHelper.getCluster(srcClusterName);
         if (srcCluster == null) {
-            throw new FalconException("Cluster entity " + HiveMirroringExtensionProperties.SOURCE_CLUSTER.getName()
-                    + " not found");
+            throw new FalconException("Cluster entity " + srcClusterName + " not found");
         }
         String srcClusterCatalogUrl = ClusterHelper.getRegistryEndPoint(srcCluster);
         Configuration srcClusterConf = ClusterHelper.getConfiguration(srcCluster);
@@ -96,10 +97,11 @@ public class HiveMirroringExtension extends AbstractExtension {
         }
 
         // Verify db exists on target
-        Cluster targetCluster = ClusterHelper.getCluster(HiveMirroringExtensionProperties.TARGET_CLUSTER.getName());
+        String targetClusterName = extensionProperties.getProperty(HiveMirroringExtensionProperties.TARGET_CLUSTER
+                .getName());
+        Cluster targetCluster = ClusterHelper.getCluster(targetClusterName);
         if (targetCluster == null) {
-            throw new FalconException("Cluster entity " + HiveMirroringExtensionProperties.TARGET_CLUSTER.getName()
-                    + " not found");
+            throw new FalconException("Cluster entity " + targetClusterName + " not found");
         }
         String targetClusterCatalogUrl = ClusterHelper.getRegistryEndPoint(targetCluster);
         Configuration targetClusterConf = ClusterHelper.getConfiguration(targetCluster);
@@ -118,15 +120,15 @@ public class HiveMirroringExtension extends AbstractExtension {
         String jobName = extensionProperties.getProperty(ExtensionProperties.JOB_NAME.getName());
         // Add job name as Hive DR job
         additionalProperties.put(HiveMirroringExtensionProperties.HIVE_MIRRORING_JOB_NAME.getName(),
-                jobName + System.currentTimeMillis());
+                jobName);
 
+        String clusterName = extensionProperties.getProperty(ExtensionProperties.CLUSTER_NAME.getName());
         // Add required properties of cluster where job should run
         additionalProperties.put(HiveMirroringExtensionProperties.CLUSTER_FOR_JOB_RUN.getName(),
-                extensionProperties.getProperty(ExtensionProperties.CLUSTER_NAME.getName()));
-        Cluster jobCluster = ClusterHelper.getCluster(ExtensionProperties.CLUSTER_NAME.getName());
+                clusterName);
+        Cluster jobCluster = ClusterHelper.getCluster(clusterName);
         if (jobCluster == null) {
-            throw new FalconException("Cluster entity " + ExtensionProperties.CLUSTER_NAME.getName()
-                    + " not found");
+            throw new FalconException("Cluster entity " + clusterName + " not found");
         }
         additionalProperties.put(HiveMirroringExtensionProperties.CLUSTER_FOR_JOB_RUN_WRITE_EP.getName(),
                 ClusterHelper.getStorageUrl(jobCluster));
@@ -139,10 +141,11 @@ public class HiveMirroringExtension extends AbstractExtension {
         }
 
         // Properties for src cluster
-        Cluster srcCluster = ClusterHelper.getCluster(HiveMirroringExtensionProperties.SOURCE_CLUSTER.getName());
+        String srcClusterName = extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_CLUSTER
+                .getName());
+        Cluster srcCluster = ClusterHelper.getCluster(srcClusterName);
         if (srcCluster == null) {
-            throw new FalconException("Cluster entity " + HiveMirroringExtensionProperties.SOURCE_CLUSTER.getName()
-                    + " not found");
+            throw new FalconException("Cluster entity " + srcClusterName + " not found");
         }
         additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_METASTORE_URI.getName(),
                 ClusterHelper.getRegistryEndPoint(srcCluster));
@@ -171,10 +174,11 @@ public class HiveMirroringExtension extends AbstractExtension {
         }
 
         // Properties for target cluster
-        Cluster targetCluster = ClusterHelper.getCluster(HiveMirroringExtensionProperties.TARGET_CLUSTER.getName());
+        String targetClusterName = extensionProperties.getProperty(HiveMirroringExtensionProperties.TARGET_CLUSTER
+                .getName());
+        Cluster targetCluster = ClusterHelper.getCluster(targetClusterName);
         if (targetCluster == null) {
-            throw new FalconException("Cluster entity " + HiveMirroringExtensionProperties.TARGET_CLUSTER.getName()
-                    + " not found");
+            throw new FalconException("Cluster entity " + targetClusterName + " not found");
         }
         additionalProperties.put(HiveMirroringExtensionProperties.TARGET_METASTORE_URI.getName(),
                 ClusterHelper.getRegistryEndPoint(targetCluster));
