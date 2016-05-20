@@ -8,6 +8,7 @@
    * <a href="#Retention">Retention</a>
    * <a href="#Replication">Replication</a>
    * <a href="#Cross_entity_validations">Cross entity validations</a>
+   * <a href="#Updating_cluster_entity_definition">Updating cluster entity</a>
    * <a href="#Updating_process_and_feed_definition">Updating process and feed definition</a>
    * <a href="#Handling_late_input_data">Handling late input data</a>
    * <a href="#Idempotency">Idempotency</a>
@@ -249,9 +250,10 @@ entity from the falcon configuration store. Delete operation on an entity would 
 no dependent entities on the deleted entity.
 
 ---+++ Update
-Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
-not allowed. Feed update can cause cascading update to all the processes already scheduled. Process update triggers
-update in falcon if entity is updated. The following set of actions are performed in scheduler to realize an update:
+Update operation allows an already submitted/scheduled entity to be updated. Cluster update will require user to  update
+ dependent Feed and Process entities that are already scheduled. Feed update can cause cascading update to all the processes
+already scheduled. Process update triggers update in falcon if entity is scheduled. The following set of actions are
+performed in scheduler to realize an update:
    * Update the old scheduled entity to set the end time to "now"
    * Schedule as per the new process/feed definition with the start time as "now"
 
@@ -615,10 +617,35 @@ Failure to follow any of the above rules would result in a process submission fa
 present in the system for the specified time period, the process can be submitted and scheduled, but all instances
 created would result in a WAITING state unless data is actually provided in the cluster.
 
+---++ Updating cluster entity definition
+User would want to update the cluster entity in following scenarios
+   * when hadoop clusters are updated from unsecure to secure
+   * when hadoop clusters move from non high-availability to high-availability etc
 
+In these scenarios, user would want to change the cluster entity to reflect updated interface endpoints or properties.
+Updating cluster would require cascading update to feed and process entity jobs in the workflow engine. So Falcon restricts
+Cluster update to following
+   * Cluster update can only be performed by superuser and when Falcon Server is in safemode.
+   * The underlying namenode or workflow engine referenced by interface URI is the same. It is only the URI that has changed to reflect secure/HA environments.
+
+Cluster entity should be updated by superuser using following CLI command.
+<verbatim>
+bash$ falcon entity -type cluster -name primaryCluster -update -file ~/primary-updated.xml
+</verbatim>
+
+Once the cluster entity is updated, user should exit FalconServer from safemode and update the scheduled entities that are
+dependent on this Cluster. In case of an error during update, user should address the root cause of failure and retry
+the command. For example : if the cluster has 10 dependent entities and the updateClusterDependents command failed
+after updating 6th entity, rerun of this command will only update entities 7 to 10.
+<verbatim>
+bash$ falcon entity -updateClusterDependents -cluster primaryCluster
+</verbatim>
 
 ---++ Updating process and feed definition
-Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated. Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates feed workflows like retention, replication etc. and also updates the processes that reference the feed.
+Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to
+be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated.
+Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates
+feed workflows like retention, replication etc. and also updates the processes that reference the feed.
 
 
 ---++ Handling late input data
