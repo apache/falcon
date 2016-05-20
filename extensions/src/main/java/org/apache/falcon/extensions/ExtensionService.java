@@ -35,6 +35,8 @@ public class ExtensionService implements FalconService {
 
     @Override
     public void init() throws FalconException {
+        // Validate if extension store is setup
+        getExtensionStore();
     }
 
     @Override
