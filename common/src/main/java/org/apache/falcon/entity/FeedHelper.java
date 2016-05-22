@@ -874,14 +874,6 @@ public final class FeedHelper {
         }
     }
 
-
-    public static org.apache.falcon.entity.v0.feed.Cluster getSourceCluster(Feed feed) {
-        for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
-        }
-        return null;
-    }
-
-
     /**
      * Returns Datasource table name.
      *

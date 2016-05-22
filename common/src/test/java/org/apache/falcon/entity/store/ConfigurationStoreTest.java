@@ -23,6 +23,13 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.datasource.Credential;
+import org.apache.falcon.entity.v0.datasource.Credentialtype;
+import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.entity.v0.datasource.Interfaces;
+import org.apache.falcon.entity.v0.datasource.Interface;
+import org.apache.falcon.entity.v0.datasource.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.util.StartupProperties;
@@ -112,7 +119,7 @@ public class ConfigurationStoreTest {
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    public void testClusterUpdate() throws Exception {
         Cluster cluster1 = createClusterObj();
         store.publish(EntityType.CLUSTER, cluster1);
         Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.CLUSTER, "cluster1")).intValue(), 0);
@@ -132,11 +139,53 @@ public class ConfigurationStoreTest {
         Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.CLUSTER, "cluster1")).intValue(), 1);
     }
 
+    @Test
+    public void testDatasourceUpdate() throws Exception {
+        Datasource ds1 = createDatasourceObj();
+        store.publish(EntityType.DATASOURCE, ds1);
+        Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.DATASOURCE, "mysql-db")).intValue(), 0);
+
+        Datasource ds3 = createDatasourceObj();
+        ds3.setDescription("changed the description");
+        store.initiateUpdate(ds3);
+        store.update(EntityType.DATASOURCE, ds3);
+        store.cleanupUpdateInit();
+        Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.DATASOURCE, "mysql-db")).intValue(), 0);
+
+        Datasource ds2 = createDatasourceObj();
+        ds2.getInterfaces().getInterfaces().get(0).setEndpoint("jdbc:mysql://host-2/test");
+        store.initiateUpdate(ds2);
+        store.update(EntityType.DATASOURCE, ds2);
+        store.cleanupUpdateInit();
+        Assert.assertEquals(EntityUtil.getVersion(store.get(EntityType.DATASOURCE, "mysql-db")).intValue(), 1);
+    }
+
+
     private Cluster createClusterObj() {
         Cluster cluster = new Cluster();
         cluster.setName("cluster1");
         cluster.setColo("colo1");
         return cluster;
+    }
+
+    private Datasource createDatasourceObj() {
+        Datasource datasource = new Datasource();
+        datasource.setName("mysql-db");
+        datasource.setColo("colo1");
+        datasource.setDescription("mysql database");
+        datasource.setType(DatasourceType.MYSQL);
+        Interface readInterface = new Interface();
+        readInterface.setType(Interfacetype.READONLY);
+        readInterface.setEndpoint("jdbc:mysql://host-1/test");
+        Credential cred = new Credential();
+        cred.setUserName("test");
+        cred.setType(Credentialtype.PASSWORD_TEXT);
+        cred.setPasswordText("password");
+        readInterface.setCredential(cred);
+        datasource.setInterfaces(new Interfaces());
+        datasource.getInterfaces().getInterfaces().add(readInterface);
+        datasource.setVersion(0);
+        return datasource;
     }
 
     @Test

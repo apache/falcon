@@ -23,7 +23,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.datasource.*;
+import org.apache.falcon.entity.v0.datasource.Credential;
+import org.apache.falcon.entity.v0.datasource.Credentialtype;
+import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.entity.v0.datasource.DatasourceType;
+import org.apache.falcon.entity.v0.datasource.Driver;
+import org.apache.falcon.entity.v0.datasource.Interface;
+import org.apache.falcon.entity.v0.datasource.Interfaces;
+import org.apache.falcon.entity.v0.datasource.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.PasswordAliasType;
+import org.apache.falcon.entity.v0.datasource.Property;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -153,9 +162,9 @@ public final class DatasourceHelper {
             return false;
         }
 
-        return (isSameString(oIface.getEndpoint(), nIface.getEndpoint()) &&
-            isSameDriverClazz(oIface.getDriver(), nIface.getDriver()) &&
-            isSameCredentials(oIface.getCredential(), nIface.getCredential()));
+        return (isSameString(oIface.getEndpoint(), nIface.getEndpoint())
+            && isSameDriverClazz(oIface.getDriver(), nIface.getDriver())
+            && isSameCredentials(oIface.getCredential(), nIface.getCredential()));
 
     }
 
@@ -176,20 +185,27 @@ public final class DatasourceHelper {
     }
 
     public static boolean isSameCredentials(Credential oCred, Credential nCred) {
+        if ((oCred == null) && (nCred == null)) {
+            return true;
+        }
+        if ((oCred == null) || (nCred == null)) {
+            return true;
+        }
         if (isSameString(oCred.getUserName(), nCred.getUserName())) {
-           if (oCred.getType() == nCred.getType()) {
-               if (oCred.getType() == Credentialtype.PASSWORD_TEXT) {
-                   return isSameString(oCred.getPasswordText(), nCred.getPasswordText());
-               } else if (oCred.getType() == Credentialtype.PASSWORD_FILE) {
-                   return isSameString(oCred.getPasswordFile(), nCred.getPasswordFile());
-               } else if (oCred.getType() == Credentialtype.PASSWORD_ALIAS) {
-                   return (isSameString(oCred.getPasswordAlias().getAlias(), nCred.getPasswordAlias().getAlias()) &&
-                           isSameString(oCred.getPasswordAlias().getProviderPath(),
-                                   nCred.getPasswordAlias().getProviderPath()));
-               }
-           } else {
-               return false;
-           }
+            if (oCred.getType() == nCred.getType()) {
+                if (oCred.getType() == Credentialtype.PASSWORD_TEXT) {
+                    return isSameString(oCred.getPasswordText(), nCred.getPasswordText());
+                } else if (oCred.getType() == Credentialtype.PASSWORD_FILE) {
+                    return isSameString(oCred.getPasswordFile(), nCred.getPasswordFile());
+                } else if (oCred.getType() == Credentialtype.PASSWORD_ALIAS) {
+                    return (isSameString(oCred.getPasswordAlias().getAlias(),
+                            nCred.getPasswordAlias().getAlias())
+                            && isSameString(oCred.getPasswordAlias().getProviderPath(),
+                                    nCred.getPasswordAlias().getProviderPath()));
+                }
+            } else {
+                return false;
+            }
         }
         return false;
     }
@@ -215,25 +231,28 @@ public final class DatasourceHelper {
             return;
         }
         switch (cred.getType()) {
-            case PASSWORD_TEXT:
-                if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordText())) {
-                    throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'", cred.getType().value(), "userName", "passwordText"));
-                }
-                break;
-            case PASSWORD_FILE:
-                if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordFile())) {
-                    throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'", cred.getType().value(), "userName", "passwordFile"));
-                }
-                break;
-            case PASSWORD_ALIAS:
-                if (StringUtils.isBlank(cred.getUserName()) || (cred.getPasswordAlias() == null)
-                        || StringUtils.isBlank(cred.getPasswordAlias().getAlias())
-                        || StringUtils.isBlank(cred.getPasswordAlias().getProviderPath())) {
-                    throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s' or %s'", cred.getType().value(), "userName", "alias", "providerPath"));
-                }
-                break;
-            default:
-                throw new FalconException(String.format("Unknown Credential type '%s'", cred.getType().value()));
+        case PASSWORD_TEXT:
+            if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordText())) {
+                throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'",
+                    cred.getType().value(), "userName", "passwordText"));
+            }
+            break;
+        case PASSWORD_FILE:
+            if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordFile())) {
+                throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'",
+                    cred.getType().value(), "userName", "passwordFile"));
+            }
+            break;
+        case PASSWORD_ALIAS:
+            if (StringUtils.isBlank(cred.getUserName()) || (cred.getPasswordAlias() == null)
+                || StringUtils.isBlank(cred.getPasswordAlias().getAlias())
+                || StringUtils.isBlank(cred.getPasswordAlias().getProviderPath())) {
+                throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s' or %s'",
+                    cred.getType().value(), "userName", "alias", "providerPath"));
+            }
+            break;
+        default:
+            throw new FalconException(String.format("Unknown Credential type '%s'", cred.getType().value()));
         }
     }
 

@@ -27,7 +27,6 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.lock.MemoryLocks;
 import org.apache.falcon.entity.parser.EntityParser;
 import org.apache.falcon.entity.parser.EntityParserFactory;
@@ -41,7 +40,9 @@ import org.apache.falcon.entity.v0.EntityIntegrityChecker;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.datasource.Datasource;
-import org.apache.falcon.entity.v0.feed.*;
+import org.apache.falcon.entity.v0.feed.Clusters;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.resource.EntityList.EntityElement;
@@ -385,27 +386,27 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     public APIResult updateDatasourceDependents(String datasourceName, Boolean skipDryRun) {
         try {
             Datasource datasource = EntityUtil.getEntity(EntityType.DATASOURCE, datasourceName);
-            int datasourceVersion = datasource.getVersion();
-            StringBuilder result = new StringBuilder(String.format("Updating feed entities " +
-                    "dependent on datasource : {0} \n", datasource.getName()));
+            StringBuilder result = new StringBuilder(String.format("Updating feed entities "
+                    + "dependent on datasource : %s ", datasource.getName()));
 
             // get data source dependent entities and check the version referenced is same
             Pair<String, EntityType>[] dependentEntities = EntityIntegrityChecker.referencedBy(datasource);
             if (dependentEntities == null) {
-                return new APIResult(APIResult.Status.SUCCEEDED, String.format("Datasource {0} has " +
-                        "no dependent entities", datasourceName));
+                return new APIResult(APIResult.Status.SUCCEEDED, String.format("Datasource %s has "
+                        + "no dependent entities", datasourceName));
             }
             for (Pair<String, EntityType> depEntity : dependentEntities) {
                 Entity entity = EntityUtil.getEntity(depEntity.second, depEntity.first);
                 if (entity.getEntityType() == EntityType.FEED) {
                     Feed newFeed = (Feed) entity.copy();
-                    for (org.apache.falcon.entity.v0.feed.Cluster feedCluster :
-                            newFeed.getClusters().getClusters()) {
+                    for (org.apache.falcon.entity.v0.feed.Cluster feedCluster
+                            : newFeed.getClusters().getClusters()) {
                         if (feedCluster.getType() == ClusterType.SOURCE) {
                             boolean updatedFeed = isUpdateFeedDatasourceVersion(feedCluster, datasource, newFeed);
                             if (updatedFeed) {
                                 // rewrite the dependent feed and update it on the store
-                                result.append(getWorkflowEngine(entity).update(entity, newFeed, feedCluster.getName(), skipDryRun));
+                                result.append(getWorkflowEngine(entity).update(entity, newFeed,
+                                        feedCluster.getName(), skipDryRun));
                                 updateEntityInConfigStore(entity, newFeed);
                             }
                         }
@@ -419,8 +420,8 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    private boolean isUpdateFeedDatasourceVersion(org.apache.falcon.entity.v0.feed.Cluster feedCluster, Datasource datasource, Feed feed)
-        throws FalconException {
+    private boolean isUpdateFeedDatasourceVersion(org.apache.falcon.entity.v0.feed.Cluster feedCluster,
+        Datasource datasource, Feed feed) throws FalconException {
         org.apache.falcon.entity.v0.feed.Datasource updateFeedImp = incFeedDatasourceVersion(datasource,
                 feed, feedCluster.getImport() != null ? feedCluster.getImport().getSource() : null);
         org.apache.falcon.entity.v0.feed.Datasource updateFeedExp = incFeedDatasourceVersion(datasource,
@@ -432,14 +433,14 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         Feed feed, org.apache.falcon.entity.v0.feed.Datasource depDatasource) throws FalconException {
         if ((depDatasource != null) && (datasource.getName().equals(depDatasource.getName()))) {
             if (depDatasource.getVersion() < datasource.getVersion()) {
-                LOG.info(String.format("Updating since Feed '%s' referenced datasource '%s' " +
-                        "version '%d' < datasource entity version in store '%d'", feed.getName(),
+                LOG.info(String.format("Updating since Feed '%s' referenced datasource '%s' "
+                        + "version '%d' < datasource entity version in store '%d'", feed.getName(),
                         depDatasource.getName(), depDatasource.getVersion(), datasource.getVersion()));
                 depDatasource.setVersion(depDatasource.getVersion()+1);
                 return depDatasource;
             } else if (depDatasource.getVersion() > datasource.getVersion()) {
-                throw new FalconException(String.format("Feed '%s' datasource '%s' version '%d' > datasource " +
-                        "entity version in store '%d'", feed.getName(), depDatasource.getName(),
+                throw new FalconException(String.format("Feed '%s' datasource '%s' version '%d' > datasource "
+                        + "entity version in store '%d'", feed.getName(), depDatasource.getName(),
                         depDatasource.getVersion(), datasource.getVersion()));
             }
         }

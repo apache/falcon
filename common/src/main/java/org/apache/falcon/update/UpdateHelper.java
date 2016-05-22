@@ -20,9 +20,12 @@ package org.apache.falcon.update;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.*;
-import org.apache.falcon.entity.parser.DatasourceEntityParser;
-import org.apache.falcon.entity.parser.EntityParserFactory;
+import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.DatasourceHelper;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.ProcessHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
@@ -173,17 +176,14 @@ public final class UpdateHelper {
 
         // major change that trigger bundle rewrite
         // driver class name change but not driver jar as it is automatically picked up from share lib
-        if (!oldEntity.getDriver().getClazz().equals(newEntity.getDriver().getClazz())) {
-            return true;
-        }
 
         if (!DatasourceHelper.isSameDriverClazz(oldEntity.getDriver(), newEntity.getDriver())) {
             return true;
         }
 
         // interface endpoint, credential or driver update will trigger a bundle rewrite
-        for(org.apache.falcon.entity.v0.datasource.Interfacetype ifacetype :
-                org.apache.falcon.entity.v0.datasource.Interfacetype.values()) {
+        for(org.apache.falcon.entity.v0.datasource.Interfacetype ifacetype
+                : org.apache.falcon.entity.v0.datasource.Interfacetype.values()) {
             if (!DatasourceHelper.isSameInterface(oldEntity, newEntity, ifacetype)) {
                 return true;
             }
@@ -192,7 +192,7 @@ public final class UpdateHelper {
         if (!DatasourceHelper.isSameCredentials(oldEntity.getInterfaces().getCredential(),
                 newEntity.getInterfaces().getCredential())) {
             return true;
-        };
+        }
 
         // any change in the properties will trigger a bundle rewrite
         if (!DatasourceHelper.isSameProperties(oldEntity, newEntity)) {
