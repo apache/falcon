@@ -419,22 +419,6 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    private void updateEntityInConfigStore(Entity oldEntity, Entity newEntity) {
-        List<Entity> tokenList = new ArrayList<>();
-        try {
-            configStore.initiateUpdate(newEntity);
-            obtainEntityLocks(oldEntity, "update", tokenList);
-            configStore.update(newEntity.getEntityType(), newEntity);
-        } catch (Throwable e) {
-            LOG.error("Update failed", e);
-            throw FalconWebException.newAPIException(e);
-        } finally {
-            ConfigurationStore.get().cleanupUpdateInit();
-            releaseEntityLocks(oldEntity.getName(), tokenList);
-        }
-    }
-
-
     private boolean isUpdateFeedDatasourceVersion(org.apache.falcon.entity.v0.feed.Cluster feedCluster, Datasource datasource, Feed feed)
         throws FalconException {
         org.apache.falcon.entity.v0.feed.Datasource updateFeedImp = incFeedDatasourceVersion(datasource,
