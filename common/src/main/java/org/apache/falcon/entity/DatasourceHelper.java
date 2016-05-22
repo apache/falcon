@@ -23,14 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.datasource.Credential;
-import org.apache.falcon.entity.v0.datasource.Credentialtype;
-import org.apache.falcon.entity.v0.datasource.Datasource;
-import org.apache.falcon.entity.v0.datasource.DatasourceType;
-import org.apache.falcon.entity.v0.datasource.Interface;
-import org.apache.falcon.entity.v0.datasource.Interfaces;
-import org.apache.falcon.entity.v0.datasource.Interfacetype;
-import org.apache.falcon.entity.v0.datasource.PasswordAliasType;
+import org.apache.falcon.entity.v0.datasource.*;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -46,6 +39,8 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * DataSource entity helper methods.
@@ -70,11 +65,11 @@ public final class DatasourceHelper {
     }
 
     public static String getReadOnlyEndpoint(Datasource datasource) {
-        return getInterface(datasource, Interfacetype.READONLY);
+        return getInterfaceEndpoint(datasource, Interfacetype.READONLY);
     }
 
     public static String getWriteEndpoint(Datasource datasource) {
-        return getInterface(datasource, Interfacetype.WRITE);
+        return getInterfaceEndpoint(datasource, Interfacetype.WRITE);
     }
 
     /**
@@ -147,6 +142,111 @@ public final class DatasourceHelper {
         return credProviderPath;
     }
 
+    public static boolean isSameInterface(Datasource oldEntity, Datasource newEntity, Interfacetype ifacetype) {
+        LOG.debug("Verifying if Interfaces match for Datasource {} : Old - {}, New - {}", oldEntity, newEntity);
+        Interface oIface = getInterface(oldEntity, ifacetype);
+        Interface nIface = getInterface(newEntity, ifacetype);
+        if ((oIface == null) && (nIface == null)) {
+            return true;
+        }
+        if ((oIface == null) || (nIface == null)) {
+            return false;
+        }
+
+        return (isSameString(oIface.getEndpoint(), nIface.getEndpoint()) &&
+            isSameDriverClazz(oIface.getDriver(), nIface.getDriver()) &&
+            isSameCredentials(oIface.getCredential(), nIface.getCredential()));
+
+    }
+
+    public static boolean isSameDriverClazz(Driver oldEntity, Driver newEntity) {
+        if ((oldEntity == null) && (newEntity == null)) {
+            return true;
+        }
+        if ((oldEntity == null) || (newEntity == null)) {
+            return false;
+        }
+        return isSameString(oldEntity.getClazz(), newEntity.getClazz());
+    }
+
+    public static boolean isSameProperties(Datasource oldEntity, Datasource newEntity) {
+        Map<String, String> oldProps = getDatasourceProperties(oldEntity);
+        Map<String, String> newProps = getDatasourceProperties(newEntity);
+        return oldProps.equals(newProps);
+    }
+
+    public static boolean isSameCredentials(Credential oCred, Credential nCred) {
+        if (isSameString(oCred.getUserName(), nCred.getUserName())) {
+           if (oCred.getType() == nCred.getType()) {
+               if (oCred.getType() == Credentialtype.PASSWORD_TEXT) {
+                   return isSameString(oCred.getPasswordText(), nCred.getPasswordText());
+               } else if (oCred.getType() == Credentialtype.PASSWORD_FILE) {
+                   return isSameString(oCred.getPasswordFile(), nCred.getPasswordFile());
+               } else if (oCred.getType() == Credentialtype.PASSWORD_ALIAS) {
+                   return (isSameString(oCred.getPasswordAlias().getAlias(), nCred.getPasswordAlias().getAlias()) &&
+                           isSameString(oCred.getPasswordAlias().getProviderPath(),
+                                   nCred.getPasswordAlias().getProviderPath()));
+               }
+           } else {
+               return false;
+           }
+        }
+        return false;
+    }
+
+    public static Credential getCredential(Datasource db) {
+        return getCredential(db, null);
+    }
+    public static Credential getCredential(Datasource db, Interfacetype interfaceType) {
+        if (interfaceType == null) {
+            return db.getInterfaces().getCredential();
+        } else {
+            for(Interface iface : db.getInterfaces().getInterfaces()) {
+                if (iface.getType() == interfaceType) {
+                    return iface.getCredential();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static void validateCredential(Credential cred) throws FalconException {
+        if (cred == null) {
+            return;
+        }
+        switch (cred.getType()) {
+            case PASSWORD_TEXT:
+                if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordText())) {
+                    throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'", cred.getType().value(), "userName", "passwordText"));
+                }
+                break;
+            case PASSWORD_FILE:
+                if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordFile())) {
+                    throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'", cred.getType().value(), "userName", "passwordFile"));
+                }
+                break;
+            case PASSWORD_ALIAS:
+                if (StringUtils.isBlank(cred.getUserName()) || (cred.getPasswordAlias() == null)
+                        || StringUtils.isBlank(cred.getPasswordAlias().getAlias())
+                        || StringUtils.isBlank(cred.getPasswordAlias().getProviderPath())) {
+                    throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s' or %s'", cred.getType().value(), "userName", "alias", "providerPath"));
+                }
+                break;
+            default:
+                throw new FalconException(String.format("Unknown Credential type '%s'", cred.getType().value()));
+        }
+    }
+
+    private static boolean isSameString(String ep1, String ep2) {
+        if ((StringUtils.isBlank(ep1)) && (StringUtils.isBlank(ep2))) {
+            return true;
+        }
+        if ((StringUtils.isBlank(ep1)) && (StringUtils.isBlank(ep2))) {
+            return false;
+        }
+        return ep1.equals(ep2);
+
+    }
     /**
      * Return the Interface endpoint for the interface type specified in the argument.
      *
@@ -154,10 +254,18 @@ public final class DatasourceHelper {
      * @param type - can be read-only or write
      * @return
      */
-    private static String getInterface(Datasource db, Interfacetype type) {
+    private static String getInterfaceEndpoint(Datasource db, Interfacetype type) {
+        if (getInterface(db, type) != null) {
+            return getInterface(db, type).getEndpoint();
+        } else {
+            return null;
+        }
+    }
+
+    private static Interface getInterface(Datasource db, Interfacetype type) {
         for(Interface ifs : db.getInterfaces().getInterfaces()) {
             if (ifs.getType() == type) {
-                return ifs.getEndpoint();
+                return ifs;
             }
         }
         return null;
@@ -245,4 +353,15 @@ public final class DatasourceHelper {
             throw new FalconException(ioe);
         }
     }
+
+    private static Map<String, String> getDatasourceProperties(final Datasource datasource) {
+        Map<String, String> returnProps = new HashMap<String, String>();
+        if (datasource.getProperties() != null) {
+            for (Property prop : datasource.getProperties().getProperties()) {
+                returnProps.put(prop.getName(), prop.getValue());
+            }
+        }
+        return returnProps;
+    }
+
 }

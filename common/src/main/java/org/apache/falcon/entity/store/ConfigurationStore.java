@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
@@ -264,6 +265,10 @@ public final class ConfigurationStore implements FalconService {
         // increase version number for cluster only if dependent feeds/process needs to be updated.
         if (oldentity.getEntityType().equals(EntityType.CLUSTER)) {
             if (UpdateHelper.isClusterEntityUpdated((Cluster) oldentity, (Cluster) newEntity)) {
+                EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity) + 1);
+            }
+        } else if (oldentity.getEntityType().equals(EntityType.DATASOURCE)) {
+            if (UpdateHelper.isDatasourceEntityUpdated((Datasource) oldentity, (Datasource) newEntity)) {
                 EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity) + 1);
             }
         } else if (!EntityUtil.equals(oldentity, newEntity)) {

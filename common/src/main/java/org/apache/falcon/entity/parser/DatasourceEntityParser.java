@@ -22,9 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.datasource.ACL;
-import org.apache.falcon.entity.v0.datasource.Datasource;
-import org.apache.falcon.entity.v0.datasource.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.*;
 import org.apache.falcon.util.HdfsClassLoader;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -51,6 +49,10 @@ public class DatasourceEntityParser extends EntityParser<Datasource> {
     public void validate(Datasource db) throws FalconException {
         try {
             ClassLoader hdfsClassLoader = HdfsClassLoader.load(db.getName(), db.getDriver().getJars());
+            DatasourceHelper.validateCredential(DatasourceHelper.getCredential(db));
+            DatasourceHelper.validateCredential(DatasourceHelper.getCredential(db, Interfacetype.READONLY));
+            DatasourceHelper.validateCredential(DatasourceHelper.getCredential(db, Interfacetype.WRITE));
+
             validateInterface(db, Interfacetype.READONLY, hdfsClassLoader);
             validateInterface(db, Interfacetype.WRITE, hdfsClassLoader);
             validateACL(db);

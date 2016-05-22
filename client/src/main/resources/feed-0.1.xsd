@@ -489,6 +489,7 @@
         </xs:sequence>
         <xs:attribute type="non-empty-string" name="name" use="required"/>
         <xs:attribute type="non-empty-string" name="tableName" use="required"/>
+        <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
     </xs:complexType>
     <xs:complexType name="extract">
         <xs:sequence>
