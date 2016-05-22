@@ -29,6 +29,14 @@ GET http://localhost:15000/api/admin/version?doAs=joe
         {
             "key":"Mode",
             "value":"embedded"
+        },
+        {
+            "key":"authentication",
+            "value":"simple"
+        },
+        {
+            "key":"safemode",
+            "value":"false"
         }
     ]
 }

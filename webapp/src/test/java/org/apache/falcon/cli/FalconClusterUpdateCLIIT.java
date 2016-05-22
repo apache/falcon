@@ -72,16 +72,18 @@ public class FalconClusterUpdateCLIIT {
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(executeWithURL("entity -submit -type process -file " + filePath), 0);
 
-
-        // Update cluster here and test that it works
-
-        initSafemode();
+        // update cluster outside safemode, it should fail
         filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_UPDATED_TEMPLATE, overlay);
+        Assert.assertEquals(executeWithURL("entity -update -type cluster -file "
+                + filePath + " -name " + overlay.get("cluster")), -1);
+
+        // Update cluster after setting safemode and test that it works
+        initSafemode();
         Assert.assertEquals(executeWithURL("entity -update -type cluster -file "
                 + filePath + " -name " + overlay.get("cluster")), 0);
         clearSafemode();
 
-        // Try to update dependent entities
+        // Try to update dependent entities, it should succeed
         Assert.assertEquals(executeWithURL("entity -updateClusterDependents -cluster "
                 + overlay.get("cluster") + " -skipDryRun "), 0);
 

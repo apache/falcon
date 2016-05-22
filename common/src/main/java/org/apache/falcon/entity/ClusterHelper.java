@@ -113,6 +113,11 @@ public final class ClusterHelper {
         return messageInterface == null ? NO_USER_BROKER_URL : messageInterface.getEndpoint();
     }
 
+    public static String getSparkMasterEndPoint(Cluster cluster) {
+        final Interface sparkInterface = getInterface(cluster, Interfacetype.SPARK);
+        return sparkInterface == null ? null : sparkInterface.getEndpoint();
+    }
+
     public static String getMessageBrokerImplClass(Cluster cluster) {
         if (cluster.getProperties() != null) {
             for (Property prop : cluster.getProperties().getProperties()) {

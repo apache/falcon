@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
+import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
@@ -36,6 +37,7 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -79,7 +81,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     public static final String DESCENDING_SORT_ORDER = "desc";
 
     private Extension extension = new Extension();
-    private static final ExtensionStore STORE = ExtensionStore.get();
     private static final String EXTENSION_RESULTS = "extensions";
     private static final String TOTAL_RESULTS = "totalResults";
     private static final String README = "README";
@@ -103,10 +104,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @DefaultValue("0") @QueryParam("offset") Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         try {
             // get filtered entities
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_NAME + extensionName, "", doAsUser);
+            if (entities.isEmpty()) {
+                return new ExtensionJobList(0);
+            }
 
             // group entities by extension job name
             Map<String, List<Entity>> groupedEntities = groupEntitiesByJob(entities);
@@ -152,9 +157,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.isEmpty()) {
+                return new ExtensionInstanceList(0);
+            }
+
             HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
             ExtensionInstanceList instances = new ExtensionInstanceList(entities.size());
             for (Entity entity : entities) {
@@ -177,8 +187,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult schedule(@PathParam("job-name") String jobName,
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.isEmpty()) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 scheduleInternal(entity.getEntityType().name(), entity.getName(), null, null);
             }
@@ -195,8 +211,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult suspend(@PathParam("job-name") String jobName,
                              @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.isEmpty()) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 if (entity.getEntityType().isSchedulable()) {
                     if (getWorkflowEngine(entity).isActive(entity)) {
@@ -217,8 +239,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult resume(@PathParam("job-name") String jobName,
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.isEmpty()) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
+
             for (Entity entity : entities) {
                 if (entity.getEntityType().isSchedulable()) {
                     if (getWorkflowEngine(entity).isSuspended(entity)) {
@@ -239,8 +267,15 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult delete(@PathParam("job-name") String jobName,
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            if (entities.isEmpty()) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.SUCCEEDED,
+                        "Extension job " + jobName + " doesn't exist. Nothing to delete.");
+            }
+
             for (Entity entity : entities) {
                 // TODO(yzheng): need to remember the entity dependency graph for clean ordered removal
                 canRemove(entity);
@@ -264,6 +299,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = generateEntities(extensionName, request);
             for (Entity entity : entities) {
@@ -284,6 +320,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = generateEntities(extensionName, request);
             for (Entity entity : entities) {
@@ -307,6 +344,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = generateEntities(extensionName, request);
             for (Entity entity : entities) {
@@ -327,6 +365,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        checkIfExtensionServiceIsEnabled();
         try {
             List<Entity> entities = generateEntities(extensionName, request);
             for (Entity entity : entities) {
@@ -345,10 +384,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Path("enumerate")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getExtensions() {
+        checkIfExtensionServiceIsEnabled();
         JSONArray results;
 
         try {
-            List<String> extensions = STORE.getExtensions();
+            List<String> extensions = ExtensionStore.get().getExtensions();
             results = buildEnumerateResult(extensions);
         } catch (StoreAccessException e) {
             LOG.error("Failed when accessing extension store.", e);
@@ -373,9 +413,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces(MediaType.TEXT_PLAIN)
     public String getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
+        checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return STORE.getResource(extensionName, README);
+            return ExtensionStore.get().getResource(extensionName, README);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -386,9 +427,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.APPLICATION_JSON})
     public String getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
+        checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return STORE.getResource(extensionName,
+            return ExtensionStore.get().getResource(extensionName,
                     extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -425,7 +467,8 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     private static String getShortDescription(final String extensionName) throws FalconException {
-        String content = STORE.getResource(extensionName, extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
+        String content = ExtensionStore.get().getResource(extensionName, extensionName.toLowerCase()
+                + EXTENSION_PROPERTY_JSON_SUFFIX);
         String description;
         try {
             JSONObject jsonObject = new JSONObject(content);
@@ -506,5 +549,12 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             nameEnd = tags.length();
         }
         return tags.substring(nameStart, nameEnd);
+    }
+
+    private static void checkIfExtensionServiceIsEnabled() {
+        if (!Services.get().isRegistered(ExtensionService.SERVICE_NAME)) {
+            throw FalconWebException.newAPIException(
+                    ExtensionService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
+        }
     }
 }

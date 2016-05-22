@@ -87,7 +87,6 @@ export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= 
 </verbatim>
 
 ---+++Activemq
-
 * falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D
 option in environment variable FALCON_OPTS:
    * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
@@ -95,14 +94,232 @@ option in environment variable FALCON_OPTS:
    * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
 
 ---+++Falcon System Notifications
-Some Falcon features such as late data handling, retries, metadata service, depend on JMS notifications sent when the Oozie workflow completes. These system notifications are sent as part of Falcon Post Processing action. Given that the post processing action is also a job, it is prone to failures and in case of failures, Falcon is blind to the status of the workflow. To alleviate this problem and make the notifications more reliable, you can enable Oozie's JMS notification feature and disable Falcon post-processing notification by making the following changes:
-   * In Falcon runtime.properties, set *.falcon.jms.notification.enabled to false. This will turn off JMS notification in post-processing.
-   * Copy notification related properties in oozie/conf/oozie-site.xml to oozie-site.xml of the Oozie installation.  Restart Oozie so changes get reflected.  
 
-*NOTE : Oozie JMS notification needs to be enabled for features such as failure retry, late data handling and metadata service will be disabled for all entities on the server. Please refer Falcon documentation on how to configure Oozie for Falcon.*
+Some Falcon features such as late data handling, retries, metadata service, depend on JMS notifications sent when the
+Oozie workflow completes. Falcon listens to Oozie notification via JMS. You need to enable Oozie JMS notification as
+explained below. Falcon post processing feature continues to only send user notifications so enabling Oozie
+JMS notification is important.
+
+*NOTE : If Oozie JMS notification is not enabled, the Falcon features such as failure retry, late data handling and metadata
+service will be disabled for all entities on the server.*
+
+---+++Enable Oozie JMS notification
+
+   * Please add/change the following properties in oozie-site.xml in the oozie installation dir.
+
+<verbatim>
+   <property>
+      <name>oozie.jms.producer.connection.properties</name>
+      <value>java.naming.factory.initial#org.apache.activemq.jndi.ActiveMQInitialContextFactory;java.naming.provider.url#tcp://<activemq-host>:<port></value>
+    </property>
+
+   <property>
+      <name>oozie.service.EventHandlerService.event.listeners</name>
+      <value>org.apache.oozie.jms.JMSJobEventListener</value>
+   </property>
+
+   <property>
+      <name>oozie.service.JMSTopicService.topic.name</name>
+      <value>WORKFLOW=ENTITY.TOPIC,COORDINATOR=ENTITY.TOPIC</value>
+    </property>
+
+   <property>
+      <name>oozie.service.JMSTopicService.topic.prefix</name>
+      <value>FALCON.</value>
+    </property>
+
+    <!-- add org.apache.oozie.service.JMSAccessorService to the other existing services if any -->
+    <property>
+       <name>oozie.services.ext</name>
+       <value>org.apache.oozie.service.JMSAccessorService,org.apache.oozie.service.PartitionDependencyManagerService,org.apache.oozie.service.HCatAccessorService</value>
+    </property>
+</verbatim>
+
+   * In falcon startup.properties, set JMS broker url to be the same as the one set in oozie-site.xml property
+   oozie.jms.producer.connection.properties (see above)
+
+<verbatim>
+   *.broker.url=tcp://<activemq-host>:<port>
+</verbatim>
+
+---+++Configuring Oozie for Falcon
+
+Falcon uses HCatalog for data availability notification when Hive tables are replicated. Make the following configuration
+changes to Oozie to ensure Hive table replication in Falcon:
+
+   * Stop the Oozie service on all Falcon clusters. Run the following commands on the Oozie host machine.
+
+<verbatim>
+su - $OOZIE_USER
+
+<oozie-install-dir>/bin/oozie-stop.sh
+
+where $OOZIE_USER is the Oozie user. For example, oozie.
+</verbatim>
+
+   * Copy each cluster's hadoop conf directory to a different location. For example, if you have two clusters, copy one to /etc/hadoop/conf-1 and the other to /etc/hadoop/conf-2.
+
+   * For each oozie-site.xml file, modify the oozie.service.HadoopAccessorService.hadoop.configurations property, specifying clusters, the RPC ports of the NameNodes, and HostManagers accordingly. For example, if Falcon connects to three clusters, specify:
+
+<verbatim>
+
+<property>
+     <name>oozie.service.HadoopAccessorService.hadoop.configurations</name>
+     <value>*=/etc/hadoop/conf,$NameNode:$rpcPortNN=$hadoopConfDir1,$ResourceManager1:$rpcPortRM=$hadoopConfDir1,$NameNode2=$hadoopConfDir2,$ResourceManager2:$rpcPortRM=$hadoopConfDir2,$NameNode3 :$rpcPortNN =$hadoopConfDir3,$ResourceManager3 :$rpcPortRM =$hadoopConfDir3</value>
+     <description>
+          Comma separated AUTHORITY=HADOOP_CONF_DIR, where AUTHORITY is the HOST:PORT of
+          the Hadoop service (JobTracker, HDFS). The wildcard '*' configuration is
+          used when there is no exact match for an authority. The HADOOP_CONF_DIR contains
+          the relevant Hadoop *-site.xml files. If the path is relative is looked within
+          the Oozie configuration directory; though the path can be absolute (i.e. to point
+          to Hadoop client conf/ directories in the local filesystem.
+     </description>
+</property>
+
+</verbatim>
+
+   * Add the following properties to the /etc/oozie/conf/oozie-site.xml file:
+
+<verbatim>
+
+<property>
+     <name>oozie.service.ProxyUserService.proxyuser.falcon.hosts</name>
+     <value>*</value>
+</property>
+
+<property>
+     <name>oozie.service.ProxyUserService.proxyuser.falcon.groups</name>
+     <value>*</value>
+</property>
+
+<property>
+     <name>oozie.service.URIHandlerService.uri.handlers</name>
+     <value>org.apache.oozie.dependency.FSURIHandler, org.apache.oozie.dependency.HCatURIHandler</value>
+</property>
+
+<property>
+     <name>oozie.services.ext</name>
+     <value>org.apache.oozie.service.JMSAccessorService, org.apache.oozie.service.PartitionDependencyManagerService,
+     org.apache.oozie.service.HCatAccessorService</value>
+</property>
+
+<!-- Coord EL Functions Properties -->
+
+<property>
+     <name>oozie.service.ELService.ext.functions.coord-job-submit-instances</name>
+     <value>now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
+         today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
+         yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
+         currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
+         lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
+         currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
+         lastYear=org.apache.oozie.extensions.OozieELExtensions#ph1_lastYear_echo,
+         formatTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_formatTime_echo,
+         latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
+         future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo
+     </value>
+</property>
+
+<property>
+     <name>oozie.service.ELService.ext.functions.coord-action-create-inst</name>
+     <value>now=org.apache.oozie.extensions.OozieELExtensions#ph2_now_inst,
+         today=org.apache.oozie.extensions.OozieELExtensions#ph2_today_inst,
+         yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday_inst,
+         currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth_inst,
+         lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth_inst,
+         currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear_inst,
+         lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear_inst,
+         latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
+         future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo,
+         formatTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_formatTime,
+         user=org.apache.oozie.coord.CoordELFunctions#coord_user
+     </value>
+</property>
+
+<property>
+<name>oozie.service.ELService.ext.functions.coord-action-start</name>
+<value>
+now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
+today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
+yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
+currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
+lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
+currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
+lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear,
+latest=org.apache.oozie.coord.CoordELFunctions#ph3_coord_latest,
+future=org.apache.oozie.coord.CoordELFunctions#ph3_coord_future,
+dataIn=org.apache.oozie.extensions.OozieELExtensions#ph3_dataIn,
+instanceTime=org.apache.oozie.coord.CoordELFunctions#ph3_coord_nominalTime,
+dateOffset=org.apache.oozie.coord.CoordELFunctions#ph3_coord_dateOffset,
+formatTime=org.apache.oozie.coord.CoordELFunctions#ph3_coord_formatTime,
+user=org.apache.oozie.coord.CoordELFunctions#coord_user
+</value>
+</property>
+
+<property>
+     <name>oozie.service.ELService.ext.functions.coord-sla-submit</name>
+     <value>
+         instanceTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_nominalTime_echo_fixed,
+         user=org.apache.oozie.coord.CoordELFunctions#coord_user
+     </value>
+</property>
+
+<property>
+     <name>oozie.service.ELService.ext.functions.coord-sla-create</name>
+     <value>
+         instanceTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_nominalTime,
+         user=org.apache.oozie.coord.CoordELFunctions#coord_user
+     </value>
+</property>
+
+</verbatim>
+
+   * Copy the existing Oozie WAR file to <oozie-install-dir>/oozie.war. This will ensure that all existing items in the WAR file are still present after the current update.
+
+<verbatim>
+su - root
+cp $CATALINA_BASE/webapps/oozie.war <oozie-install-dir>/oozie.war
+
+where $CATALINA_BASE is the path for the Oozie web app. By default, $CATALINA_BASE is: <oozie-install-dir>
+</verbatim>
+
+   * Add the Falcon EL extensions to Oozie.
+
+Copy the extension JAR files provided with the Falcon Server to a temporary directory on the Oozie server. For example, if your standalone Falcon Server is on the same machine as your Oozie server, you can just copy the JAR files.
+
+<verbatim>
+
+mkdir /tmp/falcon-oozie-jars
+cp <falcon-install-dir>/oozie/ext/falcon-oozie-el-extension-<$version>.jar /tmp/falcon-oozie-jars
+cp /tmp/falcon-oozie-jars/falcon-oozie-el-extension-<$version>.jar <oozie-install-dir>/libext
+
+</verbatim>
+
+   * Package the Oozie WAR file as the Oozie user
+
+<verbatim>
+su - $OOZIE_USER
+cd <oozie-install-dir>/bin
+./oozie-setup.sh prepare-war
+
+Where $OOZIE_USER is the Oozie user. For example, oozie.
+</verbatim>
+
+   * Start the Oozie service on all Falcon clusters. Run these commands on the Oozie host machine.
+
+<verbatim>
+su - $OOZIE_USER
+<oozie-install-dir>/bin/oozie-start.sh
+
+Where $OOZIE_USER is the Oozie user. For example, oozie.
+</verbatim>
+
 
 ---+++Enabling Falcon Native Scheudler
-You can either choose to schedule entities using Oozie's coordinator or using Falcon's native scheduler. To be able to schedule entities natively on Falcon, you will need to add some additional properties to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the Falcon Server. For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
+You can either choose to schedule entities using Oozie's coordinator or using Falcon's native scheduler. To be able to
+schedule entities natively on Falcon, you will need to add some additional properties
+to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the Falcon Server.
+For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
 
 ---+++Adding Extension Libraries
 

@@ -39,6 +39,7 @@ The current version of the rest api's documentation is also hosted on the Falcon
 | GET         | [[AdminStack][api/admin/stack]]                | Get stack of the server                     |
 | GET         | [[AdminVersion][api/admin/version]]            | Get version of the server                   |
 | GET         | [[AdminConfig][api/admin/config/:config-type]] | Get configuration information of the server |
+| GET         | [[AdminSafemode][api/admin/setSafeMode/:mode]] | Set safemode to true/false in falcon server |
 
 ---++ REST Call on Entity Resource
 

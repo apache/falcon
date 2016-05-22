@@ -102,6 +102,7 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 |[[HelpAdmin][Help]]                             | Return help options                             |
 |[[VersionAdmin][Version]]                       | Return current falcon version                   |
 |[[StatusAdmin][Status]]                         | Return the status of falcon                     |
+|[[SafemodeAdmin][SetSafeMode]]                  | Set/unset Falcon Server in safemode             |
 
 -----------
 
