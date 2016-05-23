@@ -188,7 +188,9 @@ public class FalconMetadataCLI extends FalconCLI {
             validateId(id);
             result = client.getEdge(id, doAsUser);
         } else {
-            throw new FalconCLIException("Invalid metadata command");
+            throw new FalconCLIException("Invalid/missing metadata command. Supported commands include "
+                    + "list, relations, lineage, vertex, vertices, edge, edges. "
+                    + "Please refer to Falcon CLI twiki for more details.");
         }
 
         OUT.get().println(result);

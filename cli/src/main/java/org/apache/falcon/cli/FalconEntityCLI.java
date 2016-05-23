@@ -322,7 +322,9 @@ public class FalconEntityCLI extends FalconCLI {
         } else if (optionsList.contains(FalconCLIConstants.HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
-            throw new FalconCLIException("Invalid command");
+            throw new FalconCLIException("Invalid/missing entity command. Supported commands include "
+                    + "submit, suspend, resume, delete, status, definition, submitAndSchedule. "
+                    + "Please refer to Falcon CLI twiki for more details.");
         }
         OUT.get().println(result);
     }
