@@ -149,7 +149,7 @@ public class FalconClient extends AbstractFalconClient {
      * Create a Falcon client instance.
      *
      * @param falconUrl of the server to which client interacts
-     * @throws FalconCLIException - If unable to initialize SSL Props
+     * @ - If unable to initialize SSL Props
      */
     public FalconClient(String falconUrl) {
         this(falconUrl, new Properties());
@@ -160,7 +160,7 @@ public class FalconClient extends AbstractFalconClient {
      *
      * @param falconUrl of the server to which client interacts
      * @param properties client properties
-     * @throws FalconCLIException - If unable to initialize SSL Props
+     * @ - If unable to initialize SSL Props
      */
     public FalconClient(String falconUrl, Properties properties)  {
         try {
@@ -427,7 +427,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult updateClusterDependents(String clusterName, Boolean skipDryRun,
-                                             String doAsUser) throws FalconCLIException {
+                                             String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder().path(Entities.UPDATEDEPENDENTS.path, clusterName)
                 .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
                 .call(Entities.UPDATEDEPENDENTS);
@@ -588,7 +588,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public InstancesResult searchInstances(String type, String nameSubsequence, String tagKeywords,
                                            String start, String end, String status, String orderBy,
-                                           Integer offset, Integer numResults) throws FalconCLIException {
+                                           Integer offset, Integer numResults)  {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.SEARCH.path)
                 .addQueryParam(ENTITY_TYPE, type)
                 .addQueryParam(NAME_SUBSEQUENCE, nameSubsequence)
@@ -707,7 +707,7 @@ public class FalconClient extends AbstractFalconClient {
         return clientResponse.getStatus();
     }
 
-    public ClientResponse setSafemode(String safemode, String doAsUser) throws FalconCLIException {
+    public ClientResponse setSafemode(String safemode, String doAsUser)  {
         AdminOperations job =  AdminOperations.SAFEMODE;
         ClientResponse clientResponse = new ResourceBuilder().path(job.path).path(safemode)
                 .addQueryParam(DO_AS_OPT, doAsUser).call(job);
@@ -715,7 +715,7 @@ public class FalconClient extends AbstractFalconClient {
         return clientResponse;
     }
 
-    public String getDimensionList(String dimensionType, String cluster, String doAsUser) throws FalconCLIException {
+    public String getDimensionList(String dimensionType, String cluster, String doAsUser)  {
         return sendMetadataDiscoveryRequest(MetadataOperations.LIST, dimensionType, null, cluster, doAsUser);
     }
 
@@ -1018,21 +1018,21 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    public String enumerateExtensions() throws FalconCLIException {
+    public String enumerateExtensions()  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.ENUMERATE.path)
                 .call(ExtensionOperations.ENUMERATE);
         return getResponse(String.class, clientResponse);
     }
 
-    public String getExtensionDefinition(final String extensionName) throws FalconCLIException {
+    public String getExtensionDefinition(final String extensionName)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DEFINITION.path, extensionName)
                 .call(ExtensionOperations.DEFINITION);
         return getResponse(String.class, clientResponse);
     }
 
-    public String getExtensionDescription(final String extensionName) throws FalconCLIException {
+    public String getExtensionDescription(final String extensionName)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DESCRIBE.path, extensionName)
                 .call(ExtensionOperations.DESCRIBE);
@@ -1040,7 +1040,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult submitExtensionJob(final String extensionName, final String filePath, final String doAsUser)
-        throws FalconCLIException {
+         {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT.path, extensionName)
@@ -1050,7 +1050,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult submitAndScheduleExtensionJob(final String extensionName, final String filePath,
-                                                   final String doAsUser) throws FalconCLIException {
+                                                   final String doAsUser)  {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT_AND_SCHEDULE.path, extensionName)
@@ -1060,7 +1060,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult updateExtensionJob(final String extensionName, final String filePath, final String doAsUser)
-        throws FalconCLIException {
+         {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UPDATE.path, extensionName)
@@ -1070,7 +1070,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult validateExtensionJob(final String extensionName, final String filePath, final String doAsUser)
-        throws FalconCLIException {
+         {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.VALIDATE.path, extensionName)
@@ -1079,7 +1079,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult scheduleExtensionJob(final String jobName, final String doAsUser) throws FalconCLIException {
+    public APIResult scheduleExtensionJob(final String jobName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SCHEDULE.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1087,7 +1087,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult suspendExtensionJob(final String jobName, final String doAsUser) throws FalconCLIException {
+    public APIResult suspendExtensionJob(final String jobName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUSPEND.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1095,7 +1095,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult resumeExtensionJob(final String jobName, final String doAsUser) throws FalconCLIException {
+    public APIResult resumeExtensionJob(final String jobName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.RESUME.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1103,7 +1103,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult deleteExtensionJob(final String jobName, final String doAsUser) throws FalconCLIException {
+    public APIResult deleteExtensionJob(final String jobName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DELETE.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1113,7 +1113,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public ExtensionJobList listExtensionJob(final String extensionName, final String doAsUser,
                                              final String sortOrder, final String offset,
-                                             final String numResults, final String fields) throws FalconCLIException {
+                                             final String numResults, final String fields)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.LIST.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1129,7 +1129,7 @@ public class FalconClient extends AbstractFalconClient {
                                                        final String start, final String end, final String status,
                                                        final String orderBy, final String sortOrder,
                                                        final String offset, final String numResults)
-        throws FalconCLIException {
+         {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.INSTANCES.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1146,7 +1146,7 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private String sendExtensionRequest(final ExtensionOperations operation,
-                                        final String extensionName) throws FalconCLIException {
+                                        final String extensionName)  {
         WebResource resource;
         switch (operation) {
         case ENUMERATE:

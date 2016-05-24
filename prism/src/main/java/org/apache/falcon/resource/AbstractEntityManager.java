@@ -317,7 +317,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             Entity entity = deserializeEntity(inputStream, entityType);
             verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.UPDATE);
             return update(entity, type, entityName, skipDryRun);
-        } catch (IOException | FalconException e) {
+        } catch (FalconException e) {
             LOG.error("Update failed", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
