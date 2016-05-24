@@ -16,7 +16,8 @@
    limitations under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
@@ -1444,8 +1445,7 @@
                                 <requireProperty>
                                     <property>oozie.version</property>
                                     <regex>^([4-9].*)</regex>
-                                    <regexMessage>Oozie version 3.* is not supported. Use a higher version of oozie
-                                    </regexMessage>
+                                    <regexMessage>Oozie version 3.* is not supported. Use a higher version of oozie</regexMessage>
                                 </requireProperty>
                             </rules>
                             <fail>true</fail>
@@ -1542,8 +1542,7 @@
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <forkMode>always</forkMode>
                     <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=
-                        -Dhadoop.tmp.dir=${project.build.directory}/tmp-hadoop-${user.name}
-                    </argLine>
+                        -Dhadoop.tmp.dir=${project.build.directory}/tmp-hadoop-${user.name}</argLine>
                     <excludedGroups>${excluded.test.groups}</excludedGroups>
                     <systemPropertyVariables>
                         <project.version>${project.version}</project.version>

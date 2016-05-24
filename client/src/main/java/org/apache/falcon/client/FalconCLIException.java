@@ -47,21 +47,19 @@ public class FalconCLIException extends Exception {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
         String statusValue = status.toString();
         String message = "";
-        if (status == ClientResponse.Status.BAD_REQUEST) {
-            clientResponse.bufferEntity();
-            InputStream in = clientResponse.getEntityInputStream();
+        clientResponse.bufferEntity();
+        InputStream in = clientResponse.getEntityInputStream();
+        try {
+            in.mark(MB);
+            message = clientResponse.getEntity(APIResult.class).getMessage();
+        } catch (Throwable th) {
+            byte[] data = new byte[MB];
             try {
-                in.mark(MB);
-                message = clientResponse.getEntity(APIResult.class).getMessage();
-            } catch (Throwable th) {
-                byte[] data = new byte[MB];
-                try {
-                    in.reset();
-                    int len = in.read(data);
-                    message = new String(data, 0, len);
-                } catch (IOException e) {
-                    message = e.getMessage();
-                }
+                in.reset();
+                int len = in.read(data);
+                message = new String(data, 0, len);
+            } catch (IOException e) {
+                message = e.getMessage();
             }
         }
         return new FalconCLIException(statusValue + ";" + message);

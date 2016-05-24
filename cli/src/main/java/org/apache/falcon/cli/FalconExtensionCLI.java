@@ -128,7 +128,10 @@ public class FalconExtensionCLI {
                     commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT));
             result = instances != null ? instances.toString() : "No instance (" + jobName + ") found.";
         } else {
-            throw new FalconCLIException("Invalid extension command");
+            throw new FalconCLIException("Invalid/missing extension command. Supported commands include "
+                    + "enumerate, definition, describe, list, instances, submit, submitAndSchedule, "
+                    + "schedule, suspend, resume, delete, update, validate. "
+                    + "Please refer to Falcon CLI twiki for more details.");
         }
         OUT.get().println(result);
     }
