@@ -152,7 +152,7 @@ public final class DatasourceHelper {
     }
 
     /**
-     * checks if two datasource interfaces are same
+     * checks if two datasource interfaces are same.
      *
      * @param oldEntity old datasource entity
      * @param newEntity new datasource entity
@@ -177,7 +177,7 @@ public final class DatasourceHelper {
     }
 
     /**
-     * check if datasource driver is same
+     * check if datasource driver is same.
      * @param oldEntity
      * @param newEntity
      * @return true if same or false
@@ -194,7 +194,7 @@ public final class DatasourceHelper {
     }
 
     /**
-     * checks if data source properties are same
+     * checks if data source properties are same.
      * @param oldEntity
      * @param newEntity
      * @return true if same else false
@@ -207,7 +207,7 @@ public final class DatasourceHelper {
     }
 
     /**
-     * checks if data source credentials are same
+     * checks if data source credentials are same.
      * @param oCred
      * @param nCred
      * @return true true
@@ -329,7 +329,7 @@ public final class DatasourceHelper {
     }
 
     /**
-     * fetch password from the corresponding store
+     * fetch password from the corresponding store.
      * @param c
      * @return actual password
      * @throws FalconException
@@ -380,7 +380,7 @@ public final class DatasourceHelper {
     }
 
     /**
-     * fetch the password from file
+     * fetch the password from file.
      *
      * @param passwordFilePath
      * @return

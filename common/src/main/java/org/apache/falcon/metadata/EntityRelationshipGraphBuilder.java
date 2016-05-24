@@ -145,7 +145,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
             throw new IllegalStateException(oldDatasource.getName() + " entity vertex must exist.");
         }
         updateColoEdge(oldDatasource.getColo(), newDatasouce.getColo(), dsEntityVertex,
-                RelationshipType.DATASOURCE_ENTITY, RelationshipLabel.DATASOURCE_COLO);
+                RelationshipLabel.DATASOURCE_COLO);
         updateDataClassification(oldDatasource.getTags(), newDatasouce.getTags(), dsEntityVertex);
     }
 
@@ -157,23 +157,23 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
             throw new IllegalStateException(oldCluster.getName() + " entity vertex must exist.");
         }
         updateColoEdge(oldCluster.getColo(), newCluster.getColo(), clusterEntityVertex,
-                RelationshipType.CLUSTER_ENTITY, RelationshipLabel.CLUSTER_COLO);
+                RelationshipLabel.CLUSTER_COLO);
         updateDataClassification(oldCluster.getTags(), newCluster.getTags(), clusterEntityVertex);
     }
 
     private void updateColoEdge(String oldColo, String newColo, Vertex clusterEntityVertex,
-                                RelationshipType relType, RelationshipLabel relLabel) {
+                                RelationshipLabel relLabel) {
         if (areSame(oldColo, newColo)) {
             return;
         }
 
-        Vertex oldColoVertex = findVertex(oldColo, relType);
+        Vertex oldColoVertex = findVertex(oldColo, RelationshipType.COLO);
         if (oldColoVertex != null) {
             removeEdge(clusterEntityVertex, oldColoVertex, relLabel.getName());
         }
-        Vertex newColoVertex = findVertex(newColo, relType);
+        Vertex newColoVertex = findVertex(newColo, RelationshipType.COLO);
         if (newColoVertex == null) {
-            newColoVertex = addVertex(newColo, relType);
+            newColoVertex = addVertex(newColo, RelationshipType.COLO);
         }
 
         addEdge(clusterEntityVertex, newColoVertex, relLabel.getName());
