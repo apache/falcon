@@ -1039,8 +1039,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(String.class, clientResponse);
     }
 
-    public APIResult submitExtensionJob(final String extensionName, final String filePath, final String doAsUser)
-         {
+    public APIResult submitExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT.path, extensionName)
@@ -1059,8 +1058,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult updateExtensionJob(final String extensionName, final String filePath, final String doAsUser)
-         {
+    public APIResult updateExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UPDATE.path, extensionName)
@@ -1069,8 +1067,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult validateExtensionJob(final String extensionName, final String filePath, final String doAsUser)
-         {
+    public APIResult validateExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
         InputStream entityStream = getServletInputStream(filePath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.VALIDATE.path, extensionName)
@@ -1128,8 +1125,7 @@ public class FalconClient extends AbstractFalconClient {
     public ExtensionInstanceList listExtensionInstance(final String jobName, final String doAsUser, final String fields,
                                                        final String start, final String end, final String status,
                                                        final String orderBy, final String sortOrder,
-                                                       final String offset, final String numResults)
-         {
+                                                       final String offset, final String numResults) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.INSTANCES.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
