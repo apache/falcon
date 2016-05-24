@@ -40,6 +40,18 @@ public abstract class AbstractCatalogService {
     public abstract boolean isAlive(Configuration conf, String catalogUrl) throws FalconException;
 
     /**
+     * This method checks if the given db exists in the catalog.
+     *
+     * @param conf  conf
+     * @param catalogUrl url for the catalog service
+     * @param databaseName database the table belongs to
+     * @return if the db exists
+     * @throws FalconException exception
+     */
+    public abstract boolean dbExists(Configuration conf, String catalogUrl,
+                                     String databaseName) throws FalconException;
+
+    /**
      * This method checks if the given table exists in the catalog.
      *
      * @param conf  conf

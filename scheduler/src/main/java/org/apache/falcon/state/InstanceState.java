@@ -270,7 +270,11 @@ public class InstanceState implements StateMachine<InstanceState.STATE, Instance
 
     @Override
     public String toString() {
-        return instance.getId().toString() + "STATE: " + currentState.toString();
+        StringBuilder output = new StringBuilder();
+        if (instance.getId() != null) {
+            output.append(instance.getId());
+        }
+        return output.append("STATE").append(currentState.toString()).toString();
     }
 
 

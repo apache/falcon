@@ -18,9 +18,14 @@
 
 package org.apache.falcon.metadata;
 
+import org.apache.commons.lang3.StringUtils;
+import com.thinkaurelius.titan.core.BaseVertexQuery;
+import com.thinkaurelius.titan.core.Order;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.GraphQuery;
+import com.tinkerpop.blueprints.Query.Compare;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONWriter;
 import org.slf4j.Logger;
@@ -28,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 /**
  * Utility class for graph operations.
@@ -80,5 +86,40 @@ public final class GraphUtils {
                 + " -> " + edge.getLabel() + " -> "
                 + edge.getVertex(Direction.IN).getProperty("name")
                 + "]";
+    }
+
+    public static Vertex findVertex(Graph graph, String name, RelationshipType relationshipType) {
+        LOG.debug("Finding vertex for: name={}, type={}", name, relationshipType.getName());
+        GraphQuery query = graph.query()
+                .has(RelationshipProperty.NAME.getName(), name)
+                .has(RelationshipProperty.TYPE.getName(), relationshipType.getName());
+        Iterator<Vertex> results = query.vertices().iterator();
+        return results.hasNext() ? results.next() : null;  // returning one since name is unique
+    }
+
+    public static BaseVertexQuery addRangeQuery(BaseVertexQuery query,
+                                                RelationshipProperty property, String minValue, String maxValue) {
+        if (StringUtils.isNotEmpty(minValue)) {
+            query.has(property.getName(), Compare.GREATER_THAN_EQUAL, minValue);
+        }
+        if (StringUtils.isNotEmpty(maxValue)) {
+            query.has(property.getName(), Compare.LESS_THAN_EQUAL, maxValue);
+        }
+        return query;
+    }
+
+    public static BaseVertexQuery addEqualityQuery(BaseVertexQuery query, RelationshipProperty property, String value) {
+        if (StringUtils.isNotEmpty(value)) {
+            query.has(property.getName(), value);
+        }
+        return query;
+    }
+
+    public static BaseVertexQuery addOrderLimitQuery(BaseVertexQuery query, String orderBy, int numResults) {
+        if (StringUtils.isNotEmpty(orderBy)) {
+            query.orderBy(orderBy, Order.DESC);
+        }
+        query.limit(numResults);
+        return query;
     }
 }

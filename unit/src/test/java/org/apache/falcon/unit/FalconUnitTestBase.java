@@ -342,7 +342,7 @@ public class FalconUnitTestBase {
                     LOG.info("Waiting up to [{}] msec", waiting);
                     lastEcho = System.currentTimeMillis();
                 }
-                Thread.sleep(5000);
+                Thread.sleep(7000);
             }
             if (!predicate.evaluate()) {
                 LOG.info("Waiting timed out after [{}] msec", timeout);

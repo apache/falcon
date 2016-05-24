@@ -213,7 +213,9 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
             configProperty.setValue((String) entry.getValue());
             configuration.add(configProperty);
 
-            paramList.add(entry.getKey() + "=" + entry.getValue());
+            if (paramList != null) {
+                paramList.add(entry.getKey() + "=" + entry.getValue());
+            }
         }
     }
 

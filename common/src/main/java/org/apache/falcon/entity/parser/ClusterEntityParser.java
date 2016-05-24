@@ -45,6 +45,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +96,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateRegistryInterface(cluster);
         validateLocations(cluster);
         validateProperties(cluster);
+        validateSparkMasterInterface(cluster);
     }
 
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
@@ -151,7 +154,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         LOG.info("Validating execute interface: {}", executeUrl);
 
         try {
-            HadoopClientFactory.get().validateJobClient(executeUrl);
+            String rmPrincipal = ClusterHelper.getPropertyValue(cluster, SecurityUtil.RM_PRINCIPAL);
+            HadoopClientFactory.get().validateJobClient(executeUrl, rmPrincipal);
         } catch (IOException e) {
             throw new ValidationException("Invalid Execute server or port: " + executeUrl, e);
         }
@@ -231,6 +235,19 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         }
     }
 
+    protected void validateSparkMasterInterface(Cluster cluster) throws ValidationException {
+        final String sparkMasterUrl = ClusterHelper.getSparkMasterEndPoint(cluster);
+        if (StringUtils.isNotEmpty(sparkMasterUrl)) {
+            SparkConf sparkConf = new SparkConf();
+            sparkConf.setMaster(sparkMasterUrl).setAppName("Falcon Spark");
+
+            JavaSparkContext sc = new JavaSparkContext(sparkConf);
+            if (sc.startTime() == null) {
+                throw new ValidationException("Unable to reach Spark master URL:" + sparkMasterUrl);
+            }
+        }
+    }
+
     /**
      * Validate ACL if authorization is enabled.
      *
@@ -301,6 +318,10 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                     "falcon/workflows/feed", HadoopClientFactory.ALL_PERMISSION);
             createStagingSubdirs(fs, cluster, stagingLocation,
                     "falcon/workflows/process", HadoopClientFactory.ALL_PERMISSION);
+
+            // Create empty dirs for optional input
+            createStagingSubdirs(fs, cluster, stagingLocation,
+                    ClusterHelper.EMPTY_DIR_NAME, HadoopClientFactory.READ_ONLY_PERMISSION);
         }
     }
 

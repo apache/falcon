@@ -69,5 +69,25 @@ public class ColoClusterRelationTest extends AbstractTestBase {
         clusters = relation.getClusters("colo1");
         Assert.assertNotNull(clusters);
         Assert.assertEquals(0, clusters.size());
+
+        Cluster updatedCluster3 = new Cluster();
+        updatedCluster3.setName(cluster3.getName());
+        updatedCluster3.setColo("colo3");
+        try {
+            getStore().initiateUpdate(updatedCluster3);
+            getStore().update(EntityType.CLUSTER, updatedCluster3);
+        } finally {
+            getStore().cleanupUpdateInit();
+        }
+
+        relation = ColoClusterRelation.get();
+        clusters = relation.getClusters("colo3");
+        Assert.assertNotNull(clusters);
+        Assert.assertEquals(1, clusters.size());
+        Assert.assertTrue(clusters.contains(updatedCluster3.getName()));
+
+        clusters = relation.getClusters("colo2");
+        Assert.assertNotNull(clusters);
+        Assert.assertEquals(0, clusters.size());
     }
 }

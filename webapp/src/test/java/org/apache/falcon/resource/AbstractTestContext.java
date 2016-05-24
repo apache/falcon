@@ -33,7 +33,8 @@ public abstract class AbstractTestContext {
     public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
     public static final String FEED_TEMPLATE3 = "/feed-template3.xml";
-
+    public static final String FEED_TEMPLATE5 = "/feed-template5.xml";
+    public static final String FEED_EXPORT_TEMPLATE6 = "/feed-export-template6.xml";
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
 
     protected static void mkdir(FileSystem fileSystem, Path path) throws Exception {

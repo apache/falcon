@@ -43,6 +43,8 @@ import org.apache.falcon.notification.service.request.JobScheduleNotificationReq
 import org.apache.falcon.notification.service.request.NotificationRequest;
 import org.apache.falcon.predicate.Predicate;
 import org.apache.falcon.state.EntityClusterID;
+import org.apache.falcon.state.EntityID;
+import org.apache.falcon.state.EntityState;
 import org.apache.falcon.state.ID;
 import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
@@ -298,11 +300,15 @@ public class SchedulerService implements FalconNotificationService, Notification
                         if (props != null) {
                             isForced = Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_FORCE_RERUN));
                         }
-                        if (isReRun(props)) {
+                        if (isResume(props)) {
+                            DAGEngineFactory.getDAGEngine(instance.getCluster()).resume(instance);
+                        } else if (isReRun(props)) {
                             DAGEngineFactory.getDAGEngine(instance.getCluster()).reRun(instance, props, isForced);
                         }
                     } else {
-                        externalId = DAGEngineFactory.getDAGEngine(instance.getCluster()).run(instance);
+                        EntityState entityState = STATE_STORE.getEntity(new EntityID(instance.getEntity()));
+                        externalId = DAGEngineFactory.getDAGEngine(instance.getCluster())
+                                .run(instance, entityState.getProperties());
                     }
                     LOG.info("Scheduled job {} for instance {}", externalId, instance.getId());
                     JobScheduledEvent event = new JobScheduledEvent(instance.getId(),
@@ -325,6 +331,13 @@ public class SchedulerService implements FalconNotificationService, Notification
         private boolean isReRun(Properties props) {
             if (props != null && !props.isEmpty()) {
                 return Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_RERUN));
+            }
+            return false;
+        }
+
+        private boolean isResume(Properties props) {
+            if (props != null && !props.isEmpty()) {
+                return Boolean.valueOf(props.getProperty(FalconWorkflowEngine.FALCON_RESUME));
             }
             return false;
         }

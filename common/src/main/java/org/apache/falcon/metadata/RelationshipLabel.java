@@ -29,6 +29,7 @@ public enum RelationshipLabel {
     FEED_PROCESS_EDGE("input"),
     PROCESS_FEED_EDGE("output"),
     DATASOURCE_IMPORT_EDGE("import"),
+    DATASOURCE_EXPORT_EDGE("export"),
 
     // instance edge labels
     INSTANCE_ENTITY_EDGE("instance-of"),

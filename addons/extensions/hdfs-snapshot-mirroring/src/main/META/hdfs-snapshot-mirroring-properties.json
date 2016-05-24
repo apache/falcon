@@ -1,0 +1,173 @@
+{
+  "shortDescription": "This extension implements replicating snapshotable directories on HDFS from one Hadoop cluster to another.",
+  "properties":[
+    {
+      "propertyName":"jobName",
+      "required":true,
+      "description":"Unique hdfs snapshot mirroring job name",
+      "example":"hdfs-snapshot-daily-mirror"
+    },
+    {
+      "propertyName":"jobClusterName",
+      "required":true,
+      "description":"Cluster where job should run",
+      "example":"backupCluster"
+    },
+    {
+      "propertyName":"jobValidityStart",
+      "required":true,
+      "description":"Job cluster validity start time",
+      "example":"2016-03-03T00:00Z"
+    },
+    {
+      "propertyName":"jobValidityEnd",
+      "required":true,
+      "description":"Job cluster validity end time",
+      "example":"2018-03-13T00:00Z"
+    },
+    {
+      "propertyName":"jobFrequency",
+      "required":true,
+      "description":"Frequency of mirroring job. Valid frequency types are minutes(int), hours(int), days(int), months(int)",
+      "example":"months(1)"
+    },
+    {
+      "propertyName":"jobTimezone",
+      "required":false,
+      "description":"Time zone for the job",
+      "example":"UTC"
+    },
+    {
+      "propertyName":"jobTags",
+      "required":false,
+      "description":"List of comma separated tags. Key Value pairs, separated by comma",
+      "example":"consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting"
+    },
+    {
+      "propertyName":"jobRetryPolicy",
+      "required":false,
+      "description":"Job retry policy",
+      "example":"periodic"
+    },
+    {
+      "propertyName":"jobRetryDelay",
+      "required":false,
+      "description":"Job retry delay",
+      "example":"minutes(30)"
+    },
+    {
+      "propertyName":"jobRetryAttempts",
+      "required":false,
+      "description":"Job retry attempts",
+      "example":"3"
+    },
+    {
+      "propertyName":"jobAclOwner",
+      "required":false,
+      "description":"ACL owner",
+      "example":"ambari-qa"
+    },
+    {
+      "propertyName":"jobAclGroup",
+      "required":false,
+      "description":"ACL group",
+      "example":"users"
+    },
+    {
+      "propertyName":"jobAclPermission",
+      "required":false,
+      "description":"ACL permission",
+      "example":"*"
+    },
+    {
+      "propertyName":"sourceCluster",
+      "required":true,
+      "description":"Source cluster for hdfs snapshot replication",
+      "example":"primaryCluster"
+    },
+    {
+      "propertyName":"sourceSnapshotDir",
+      "required":true,
+      "description":"Snapshot-able source directory which should be replicated",
+      "example":"/user/ambari-qa/snapshot/test/primaryCluster/input"
+    },
+    {
+      "propertyName":"sourceSnapshotRetentionPolicy",
+      "required":false,
+      "description":"Retention policy for snapshots created on source. Default is delete (Right now,only delete is supported)",
+      "example":"delete"
+    },
+    {
+      "propertyName":"sourceSnapshotRetentionAgeLimit",
+      "required":true,
+      "description":"Snapshots on source older than this age limit will be eligible for deletion.",
+      "example":"days(7)"
+    },
+    {
+      "propertyName":"sourceSnapshotRetentionNumber",
+      "required":true,
+      "description":"These many latest snapshots on source will be retained, the rest of them eligible for deletion.",
+      "example":"10"
+    },
+    {
+      "propertyName":"targetCluster",
+      "required":true,
+      "description":"Target cluster for hdfs snapshot replication",
+      "example":"backupCluster"
+    },
+    {
+      "propertyName":"targetSnapshotDir",
+      "required":true,
+      "description":"Snapshot-able target directory to which source should be replicated",
+      "example":"/user/ambari-qa/snapshot/test/backupCluster/replica/"
+    },
+    {
+      "propertyName":"targetSnapshotRetentionPolicy",
+      "required":false,
+      "description":"Retention policy for snapshots created on target. Default is delete (Right now,only delete is supported)",
+      "example":"delete"
+    },
+    {
+      "propertyName":"targetSnapshotRetentionAgeLimit",
+      "required":true,
+      "description":"Snapshots on target older than this age limit will be eligible for deletion.",
+      "example":"days(7)"
+    },
+    {
+      "propertyName":"targetSnapshotRetentionNumber",
+      "required":true,
+      "description":"These many latest snapshots on target will be retained, the rest of them eligible for deletion.",
+      "example":"10"
+    },
+    {
+      "propertyName":"distcpMaxMaps",
+      "required":false,
+      "description":"Maximum number of mappers for DistCP",
+      "example":"1"
+    },
+    {
+      "propertyName":"distcpMapBandwidth",
+      "required":false,
+      "description":"Bandwidth in MB for each mapper in DistCP",
+      "example":"100"
+    },
+    {
+      "propertyName":"tdeEncryptionEnabled",
+      "required":false,
+      "description":"Specify if TDE based encryption is enabled on source and target dirs",
+      "example":"false"
+    },
+    {
+      "propertyName":"jobNotificationType",
+      "required":false,
+      "description":"Email Notification for Falcon instance completion",
+      "example":"email"
+    },
+    {
+      "propertyName":"jobNotificationReceivers",
+      "required":false,
+      "description":"Comma separated email Id's",
+      "example":"user1@gmail.com, user2@gmail.com"
+    }
+  ]
+}

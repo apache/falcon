@@ -24,7 +24,7 @@ import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.state.AbstractSchedulerTestBase;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.unit.FalconUnitTestBase;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.util.StateStoreProperties;
@@ -57,6 +57,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
     private static final String IT_RUN_MODE = "it.run.mode";
 
     public static final String PROCESS_TEMPLATE = "/local-process-noinputs-template.xml";
+    public static final String PROCESS_TEMPLATE_NOLATE_DATA = "/process-nolatedata-template.xml";
     public static final String PROCESS_NAME = "processName";
     protected static final String START_INSTANCE = "2012-04-20T00:00Z";
     private static FalconJPAService falconJPAService = FalconJPAService.get();
@@ -107,12 +108,14 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
     }
 
     protected void setupProcessExecution(UnitTestContext context,
-                                         Map<String, String> overlay, int numInstances) throws Exception {
+                                         Map<String, String> overlay, int numInstances,
+                                         String processTemplate) throws Exception {
         String colo = overlay.get(COLO);
         String cluster = overlay.get(CLUSTER);
         submitCluster(colo, cluster, null);
+        submitFeeds(overlay);
         context.prepare();
-        submitProcess(overlay);
+        submitProcess(processTemplate, overlay);
 
         String processName = overlay.get(PROCESS_NAME);
         scheduleProcess(processName, cluster, START_INSTANCE, numInstances);

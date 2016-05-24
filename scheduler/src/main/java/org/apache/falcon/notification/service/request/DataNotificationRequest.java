@@ -151,6 +151,15 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
         if (!locations.equals(that.locations)) {
             return false;
         }
+        if (pollingFrequencyInMillis != (that.pollingFrequencyInMillis)) {
+            return false;
+        }
+        if (timeoutInMillis != that.timeoutInMillis) {
+            return false;
+        }
+        if (createdTimeInMillis != that.createdTimeInMillis) {
+            return false;
+        }
         return true;
     }
 
@@ -158,8 +167,16 @@ public class DataNotificationRequest extends NotificationRequest implements Dela
     public int hashCode() {
         int result = cluster.hashCode();
         result = 31 * result + (locations != null ? locations.hashCode() : 0);
+        result = 31 * result + Long.valueOf(pollingFrequencyInMillis).hashCode();
+        result = 31 * result + Long.valueOf(timeoutInMillis).hashCode();
+        result = 31 * result + Long.valueOf(createdTimeInMillis).hashCode();
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "cluster: " + this.getCluster() + " locations: " + this.locations + " createdTime: "
+                + this.createdTimeInMillis;
+    }
 
 }

@@ -58,7 +58,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultAuthorizationProvider.class);
 
     private static final Set<String> RESOURCES = new HashSet<String>(
-            Arrays.asList(new String[]{"admin", "entities", "instance", "metadata", }));
+            Arrays.asList(new String[]{"admin", "entities", "instance", "metadata", "extension", }));
 
     /**
      * Constant for the configuration property that indicates the prefix.
