@@ -30,26 +30,17 @@
     <description>Apache Falcon Unit Module</description>
     <name>Apache Falcon Unit</name>
     <packaging>jar</packaging>
-    
-    <profiles>
-        <profile>
-            <id>hadoop-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <hadoop.version>2.7.1</hadoop.version>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-client</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
+
+    <properties>
+        <hadoop.version>2.7.1</hadoop.version>
+    </properties>
+
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>

@@ -31,22 +31,12 @@
     <name>Apache Falcon Scheduler</name>
     <packaging>jar</packaging>
 
-    <profiles>
-        <profile>
-            <id>hadoop-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-client</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-oozie-adaptor</artifactId>

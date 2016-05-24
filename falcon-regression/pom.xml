@@ -47,107 +47,97 @@
         <testng.include.pattern>**/Test*.java,**/*Test.java,**/*TestCase.java</testng.include.pattern>
     </properties>
 
-    <profiles>
-        <profile>
-            <id>hadoop-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-client</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>runtime</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.glassfish</groupId>
-                                <artifactId>javax.servlet</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-hdfs</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-auth</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-distcp</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-azure</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hive</groupId>
-                        <artifactId>hive-common</artifactId>
-                        <version>${hive.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hive.hcatalog</groupId>
-                        <artifactId>hive-webhcat-java-client</artifactId>
-                        <version>${hive.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hive.hcatalog</groupId>
-                        <artifactId>hive-hcatalog-core</artifactId>
-                        <version>${hive.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hive</groupId>
-                        <artifactId>hive-jdbc</artifactId>
-                        <version>${hive.version}</version>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hive</groupId>
-                        <artifactId>hive-metastore</artifactId>
-                        <version>${hive.version}</version>
-                    </dependency>
-
-                </dependencies>
-            </dependencyManagement>
-        </profile>
-    </profiles>
 
     <dependencyManagement>
+
         <dependencies>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>runtime</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.glassfish</groupId>
+                        <artifactId>javax.servlet</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-auth</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-distcp</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-azure</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-common</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-webhcat-java-client</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-hcatalog-core</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-jdbc</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-metastore</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
