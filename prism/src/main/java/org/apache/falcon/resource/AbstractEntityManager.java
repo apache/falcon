@@ -336,32 +336,40 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
-
             obtainEntityLocks(oldEntity, "update", tokenList);
 
             StringBuilder result = new StringBuilder("Updated successfully");
-            //Update in workflow engine if entity is not a cluster or data source (non schedule-able entities)
-            if (!DeploymentUtil.isPrism() && !entityType.equals(EntityType.CLUSTER)
-                    && !entityType.equals(EntityType.DATASOURCE)) {
-                Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
-                Set<String> newClusters = EntityUtil.getClustersDefinedInColos(newEntity);
-                newClusters.retainAll(oldClusters); //common clusters for update
-                oldClusters.removeAll(newClusters); //deleted clusters
-
-                for (String cluster : newClusters) {
-                    result.append(getWorkflowEngine(oldEntity).update(oldEntity, newEntity, cluster, skipDryRun));
+            switch(entityType) {
+            case CLUSTER:
+                configStore.update(entityType, newEntity);
+                break;
+            case DATASOURCE:
+                configStore.update(entityType, newEntity);
+                // check always if dependant feeds are already upgraded and upgrade accordingly
+                if (entityType.equals(EntityType.DATASOURCE)) {
+                    ConfigurationStore.get().cleanupUpdateInit();
+                    releaseEntityLocks(entityName, tokenList);
+                    updateDatasourceDependents(entityName, skipDryRun);
                 }
-                for (String cluster : oldClusters) {
-                    getWorkflowEngine(oldEntity).delete(oldEntity, cluster);
+                break;
+            case FEED:
+            case PROCESS:
+                if (!DeploymentUtil.isPrism()) {
+                    Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
+                    Set<String> newClusters = EntityUtil.getClustersDefinedInColos(newEntity);
+                    newClusters.retainAll(oldClusters); //common clusters for update
+                    oldClusters.removeAll(newClusters); //deleted clusters
+                    for (String cluster : newClusters) {
+                        result.append(getWorkflowEngine(oldEntity).update(oldEntity, newEntity, cluster, skipDryRun));
+                    }
+                    for (String cluster : oldClusters) {
+                        getWorkflowEngine(oldEntity).delete(oldEntity, cluster);
+                    }
                 }
-            }
-
-            configStore.update(entityType, newEntity);
-            // for Data Sources, check always if dependant feeds are already upgraded and upgrade accordingly
-            if (entityType.equals(EntityType.DATASOURCE)) {
-                ConfigurationStore.get().cleanupUpdateInit();
-                releaseEntityLocks(entityName, tokenList);
-                updateDatasourceDependents(entityName, skipDryRun);
+                configStore.update(entityType, newEntity);
+                break;
+            default:
+                throw FalconWebException.newAPIException("Unknown entity type in update : " + entityType);
             }
             return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
         } catch (Throwable e) {
@@ -397,18 +405,20 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             }
             for (Pair<String, EntityType> depEntity : dependentEntities) {
                 Entity entity = EntityUtil.getEntity(depEntity.second, depEntity.first);
-                if (entity.getEntityType() == EntityType.FEED) {
-                    Feed newFeed = (Feed) entity.copy();
-                    for (org.apache.falcon.entity.v0.feed.Cluster feedCluster
-                            : newFeed.getClusters().getClusters()) {
-                        if (feedCluster.getType() == ClusterType.SOURCE) {
-                            boolean updatedFeed = isUpdateFeedDatasourceVersion(feedCluster, datasource, newFeed);
-                            if (updatedFeed) {
-                                // rewrite the dependent feed and update it on the store
-                                result.append(getWorkflowEngine(entity).update(entity, newFeed,
-                                        feedCluster.getName(), skipDryRun));
-                                updateEntityInConfigStore(entity, newFeed);
-                            }
+                if (entity.getEntityType() != EntityType.FEED) {
+                    throw FalconWebException.newAPIException("Datasource dependents should be FEEDS, but"
+                        + "encountered type : " + entity.getEntityType());
+                }
+                Feed newFeed = (Feed) entity.copy();
+                for (org.apache.falcon.entity.v0.feed.Cluster feedCluster
+                        : newFeed.getClusters().getClusters()) {
+                    if (feedCluster.getType() == ClusterType.SOURCE) {
+                        boolean updatedFeed = isUpdateFeedDatasourceVersion(feedCluster, datasource, newFeed);
+                        if (updatedFeed) {
+                            // rewrite the dependent feed and update it on the store
+                            result.append(getWorkflowEngine(entity).update(entity, newFeed,
+                                    feedCluster.getName(), skipDryRun));
+                            updateEntityInConfigStore(entity, newFeed);
                         }
                     }
                 }

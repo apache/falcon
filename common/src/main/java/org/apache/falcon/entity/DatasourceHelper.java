@@ -151,6 +151,14 @@ public final class DatasourceHelper {
         return credProviderPath;
     }
 
+    /**
+     * checks if two datasource interfaces are same
+     *
+     * @param oldEntity old datasource entity
+     * @param newEntity new datasource entity
+     * @param ifacetype type of interface
+     * @return true if same else false
+     */
     public static boolean isSameInterface(Datasource oldEntity, Datasource newEntity, Interfacetype ifacetype) {
         LOG.debug("Verifying if Interfaces match for Datasource {} : Old - {}, New - {}", oldEntity, newEntity);
         Interface oIface = getInterface(oldEntity, ifacetype);
@@ -168,6 +176,13 @@ public final class DatasourceHelper {
 
     }
 
+    /**
+     * check if datasource driver is same
+     * @param oldEntity
+     * @param newEntity
+     * @return true if same or false
+     */
+
     public static boolean isSameDriverClazz(Driver oldEntity, Driver newEntity) {
         if ((oldEntity == null) && (newEntity == null)) {
             return true;
@@ -178,12 +193,25 @@ public final class DatasourceHelper {
         return isSameString(oldEntity.getClazz(), newEntity.getClazz());
     }
 
+    /**
+     * checks if data source properties are same
+     * @param oldEntity
+     * @param newEntity
+     * @return true if same else false
+     */
+
     public static boolean isSameProperties(Datasource oldEntity, Datasource newEntity) {
         Map<String, String> oldProps = getDatasourceProperties(oldEntity);
         Map<String, String> newProps = getDatasourceProperties(newEntity);
         return oldProps.equals(newProps);
     }
 
+    /**
+     * checks if data source credentials are same
+     * @param oCred
+     * @param nCred
+     * @return true true
+     */
     public static boolean isSameCredentials(Credential oCred, Credential nCred) {
         if ((oCred == null) && (nCred == null)) {
             return true;
@@ -213,6 +241,7 @@ public final class DatasourceHelper {
     public static Credential getCredential(Datasource db) {
         return getCredential(db, null);
     }
+
     public static Credential getCredential(Datasource db, Interfacetype interfaceType) {
         if (interfaceType == null) {
             return db.getInterfaces().getCredential();
@@ -299,6 +328,12 @@ public final class DatasourceHelper {
         }
     }
 
+    /**
+     * fetch password from the corresponding store
+     * @param c
+     * @return actual password
+     * @throws FalconException
+     */
     private static String fetchPasswordInfoFromCredentialStore(final PasswordAliasType c) throws FalconException {
         try {
             final String credPath = c.getProviderPath();
@@ -343,6 +378,15 @@ public final class DatasourceHelper {
             throw new FalconException(msg, ioe);
         }
     }
+
+    /**
+     * fetch the password from file
+     *
+     * @param passwordFilePath
+     * @return
+     * @throws FalconException
+     */
+
     private static String fetchPasswordInfoFromFile(String passwordFilePath) throws FalconException {
         try {
             Path path = new Path(passwordFilePath);
@@ -372,6 +416,11 @@ public final class DatasourceHelper {
             throw new FalconException(ioe);
         }
     }
+
+
+    /*
+     returns data store properties
+     */
 
     private static Map<String, String> getDatasourceProperties(final Datasource datasource) {
         Map<String, String> returnProps = new HashMap<String, String>();
