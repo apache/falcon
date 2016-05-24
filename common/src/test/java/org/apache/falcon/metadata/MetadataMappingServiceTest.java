@@ -253,184 +253,8 @@ public class MetadataMappingServiceTest {
         verifyEntityGraph(RelationshipType.FEED_ENTITY, "Secure");
     }
 
-    @Test
-    public void testMapLineage() throws Exception {
-        setup();
-
-        // Get the before vertices and edges
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, null, null, null, null)
-                , WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
-
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
-
-        // +6 = 1 process, 2 inputs = 3 instances,2 outputs
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 6);
-        //+40 = +26 for feed instances + 8 for process instance + 6 for second feed instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 40);
-    }
-
-    @Test
-    public void testLineageForNoDateInFeedPath() throws Exception {
-        setupForNoDateInFeedPath();
-
-        // Get the before vertices and edges
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, null,
-                        OUTPUT_INSTANCE_PATHS_NO_DATE, INPUT_INSTANCE_PATHS_NO_DATE, null),
-                WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
-
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-
-        // Verify if instance name has nominal time
-        List<String> feedNamesOwnedByUser = getFeedsOwnedByAUser(
-                RelationshipType.FEED_INSTANCE.getName());
-        List<String> expected = Arrays.asList("impression-feed/2014-01-01T01:00Z", "clicks-feed/2014-01-01T01:00Z",
-                "imp-click-join1/2014-01-01T01:00Z", "imp-click-join2/2014-01-01T01:00Z");
-        Assert.assertTrue(feedNamesOwnedByUser.containsAll(expected));
-
-        // +5 = 1 process, 2 inputs, 2 outputs
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 5);
-        //+34 = +26 for feed instances + 8 for process instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 34);
-    }
-
-    @Test
-    public void testLineageForReplication() throws Exception {
-        setupForLineageReplication();
-
-        // Get the before vertices and edges
-        // +7 [primary, bcp cluster] = cluster, colo, tag, user
-        // +3 [input feed] = feed, tag, group
-        // +4 [output feed] = 1 feed + 1 tag + 2 groups
-        // +4 [process] = 1 process + 1 tag + 2 pipeline
-        // +3 = 1 process, 1 input, 1 output
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-
-        // +4 [cluster] = cluster to colo and tag [primary and bcp],
-        // +4 [input feed] = cluster, tag, group, user
-        // +5 [output feed] = cluster + user + Group + 2Tags
-        // +7 = user,tag,cluster, 1 input,1 output, 2 pipelines
-        // +19 = +6 for output feed instances + 7 for process instance + 6 for input feed instance
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, REPLICATED_FEED,
-                        "jail://global:00/falcon/raw-click/bcp/20140101",
-                        "jail://global:00/falcon/raw-click/primary/20140101", REPLICATED_FEED),
-                WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
-
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-
-        verifyLineageGraphForReplicationOrEviction(REPLICATED_FEED,
-                "jail://global:00/falcon/raw-click/bcp/20140101", context,
-                RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE);
-
-        // No new vertex added after replication
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 0);
-
-        // +1 for replicated-to edge to target cluster for each output feed instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 1);
-    }
-
-    @Test
-    public void testLineageForReplicationForNonGeneratedInstances() throws Exception {
-        cleanUp();
-        service.init();
-        addClusterAndFeedForReplication(inputFeeds);
-        // Get the vertices before running replication WF
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, REPLICATED_FEED,
-                        "jail://global:00/falcon/raw-click/bcp/20140101",
-                        "jail://global:00/falcon/raw-click/primary/20140101", REPLICATED_FEED),
-                WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
-
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-
-        verifyFeedEntityEdges(REPLICATED_FEED, "Secure", "analytics");
-        verifyLineageGraphForReplicationOrEviction(REPLICATED_FEED,
-                "jail://global:00/falcon/raw-click/bcp/20140101", context,
-                RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE);
-
-        // +1 for the new instance vertex added
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 1);
-        // +6 = instance-of, stored-in, owned-by, classification, group, replicated-to
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 6);
-    }
-
-    @Test
-    public void testLineageForRetention() throws Exception {
-        setupForLineageEviction();
-        // Get the before vertices and edges
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.DELETE, EVICTION_WORKFLOW_NAME,
-                        EVICTED_FEED, EVICTED_INSTANCE_PATHS, "IGNORE", EVICTED_FEED),
-                WorkflowExecutionContext.Type.POST_PROCESSING);
-
-        service.onSuccess(context);
-
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-        List<String> expectedFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z", "clicks-feed/2014-01-01T00:00Z",
-                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
-        List<String> secureFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z",
-                "clicks-feed/2014-01-01T00:00Z");
-        List<String> ownedAndSecureFeeds = Arrays.asList("clicks-feed/2014-01-01T00:00Z",
-                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
-        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName(), expectedFeeds, secureFeeds, ownedAndSecureFeeds);
-        String[] paths = EVICTED_INSTANCE_PATHS.split(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
-        for (String feedInstanceDataPath : paths) {
-            verifyLineageGraphForReplicationOrEviction(EVICTED_FEED, feedInstanceDataPath, context,
-                    RelationshipLabel.FEED_CLUSTER_EVICTED_EDGE);
-        }
-
-        // No new vertices added
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 0);
-        // +2 for evicted-from edge from Feed Instance vertex to cluster
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 2);
-    }
-
-    @Test
-    public void testLineageForRetentionWithNoFeedsEvicted() throws Exception {
-        cleanUp();
-        service.init();
-        long beforeVerticesCount = getVerticesCount(service.getGraph());
-        long beforeEdgesCount = getEdgesCount(service.getGraph());
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.DELETE, EVICTION_WORKFLOW_NAME,
-                        EVICTED_FEED, "IGNORE", "IGNORE", EVICTED_FEED),
-                WorkflowExecutionContext.Type.POST_PROCESSING);
-
-        service.onSuccess(context);
-
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-        // No new vertices added
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount);
-        // No new edges added
-        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount);
-    }
-
     @Test (dependsOnMethods = "testOnAdd")
+    // @Test (dependsOnMethods = "testLineageForRetentionWithNoFeedsEvicted")
     public void testOnChange() throws Exception {
         // shutdown the graph and resurrect for testing
         service.destroy();
@@ -444,7 +268,8 @@ public class MetadataMappingServiceTest {
                 "classification=another");
         verifyEntityWasAddedToGraph("another-cluster", RelationshipType.CLUSTER_ENTITY);
 
-        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 3); // +3 = cluster, colo, tag
+        // +3 = cluster, colo, tag, user (but user falcon-user is already added so ignore from count)
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 3);
         // +3 edges to user, colo and new tag
         Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 3);
     }
@@ -480,55 +305,6 @@ public class MetadataMappingServiceTest {
         verifyUpdatedEdges(newFeed);
         Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 2); //+2 = 2 new tags
         Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 2); // +2 = 1 new cluster, 1 new tag
-    }
-
-    @Test
-    public void testLineageForTransactionFailure() throws Exception {
-        cleanUp();
-        service.init();
-        clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
-                "classification=production");
-        verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY);
-        verifyClusterEntityEdges();
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 4); // +3 = cluster, colo, user, tag
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 3); // +2 = cluster to colo, user and tag
-
-        Feed feed = EntityBuilderTestUtil.buildFeed("feed-name", new Cluster[]{clusterEntity}, null, null);
-        inputFeeds.add(feed);
-        outputFeeds.add(feed);
-
-        try {
-            processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
-                    "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
-                    WORKFLOW_VERSION, inputFeeds, outputFeeds);
-            Assert.fail();
-        } catch (FalconException e) {
-            Assert.assertEquals(getVerticesCount(service.getGraph()), 4);
-            Assert.assertEquals(getEdgesCount(service.getGraph()), 3);
-        }
-
-    }
-
-    private void verifyUpdatedEdges(Feed newFeed) {
-        Vertex feedVertex = getEntityVertex(newFeed.getName(), RelationshipType.FEED_ENTITY);
-
-        // groups
-        Edge edge = feedVertex.getEdges(Direction.OUT, RelationshipLabel.GROUPS.getName()).iterator().next();
-        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "reporting");
-
-        // tags
-        edge = feedVertex.getEdges(Direction.OUT, "classified-as").iterator().next();
-        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "Secured");
-        edge = feedVertex.getEdges(Direction.OUT, "source").iterator().next();
-        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "data-warehouse");
-
-        // new cluster
-        List<String> actual = new ArrayList<>();
-        for (Edge clusterEdge : feedVertex.getEdges(Direction.OUT, RelationshipLabel.FEED_CLUSTER_EDGE.getName())) {
-            actual.add(clusterEdge.getVertex(Direction.IN).<String>getProperty("name"));
-        }
-        Assert.assertTrue(actual.containsAll(Arrays.asList("primary-cluster", "another-cluster")),
-                "Actual does not contain expected: " + actual);
     }
 
     @Test(dependsOnMethods = "testOnFeedEntityChange")
@@ -586,27 +362,7 @@ public class MetadataMappingServiceTest {
         Assert.assertTrue(EntityRelationshipGraphBuilder.areSame(outputs1, outputs2));
     }
 
-    @Test
-    public void testLineageForJobCounter() throws Exception {
-        setupForJobCounters();
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "IGNORE", "IGNORE", "IGNORE", "NONE"),
-                WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
-        debug(service.getGraph());
-        GraphUtils.dump(service.getGraph());
-        Graph graph = service.getGraph();
-
-        Vertex vertex = graph.getVertices("name", "sample-process/2014-01-01T01:00Z").iterator().next();
-        Assert.assertEquals(vertex.getProperty("TIMETAKEN"), 36956L);
-        Assert.assertEquals(vertex.getProperty("COPY"), 30L);
-        Assert.assertEquals(vertex.getProperty("BYTESCOPIED"), 1000L);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 9);
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 14);
-        verifyLineageGraphForJobCounters(context);
-    }
-
-    @Test(dependsOnMethods = "testOnFeedEntityChange")
+    @Test(dependsOnMethods = "testAreSame")
     public void testOnClusterEntityChange() throws Exception {
         long beforeVerticesCount = getVerticesCount(service.getGraph());
         long beforeEdgesCount = getEdgesCount(service.getGraph());
@@ -628,6 +384,268 @@ public class MetadataMappingServiceTest {
         verifyVertexForEdge(newClusterVertex, Direction.OUT, RelationshipLabel.CLUSTER_COLO.getName(),
                 "clusterUpdateColo", RelationshipType.COLO.getName());
     }
+
+    @Test (dependsOnMethods = "testOnClusterEntityChange")
+    public void testMapLineage() throws Exception {
+        setup();
+
+        // Get the before vertices and edges
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, null, null, null, null)
+                , WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
+
+        // +6 = 1 process, 2 inputs = 3 instances,2 outputs
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 6);
+        //+40 = +26 for feed instances + 8 for process instance + 6 for second feed instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 40);
+    }
+
+    @Test (dependsOnMethods = "testMapLineage")
+    public void testLineageForNoDateInFeedPath() throws Exception {
+        setupForNoDateInFeedPath();
+
+        // Get the before vertices and edges
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, null,
+                        OUTPUT_INSTANCE_PATHS_NO_DATE, INPUT_INSTANCE_PATHS_NO_DATE, null),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+
+        // Verify if instance name has nominal time
+        List<String> feedNamesOwnedByUser = getFeedsOwnedByAUser(
+                RelationshipType.FEED_INSTANCE.getName());
+        List<String> expected = Arrays.asList("impression-feed/2014-01-01T01:00Z", "clicks-feed/2014-01-01T01:00Z",
+                "imp-click-join1/2014-01-01T01:00Z", "imp-click-join2/2014-01-01T01:00Z");
+        Assert.assertTrue(feedNamesOwnedByUser.containsAll(expected));
+
+        // +5 = 1 process, 2 inputs, 2 outputs
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 5);
+        //+34 = +26 for feed instances + 8 for process instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 34);
+    }
+
+    @Test (dependsOnMethods = "testLineageForNoDateInFeedPath")
+    public void testLineageForReplication() throws Exception {
+        setupForLineageReplication();
+
+        // Get the before vertices and edges
+        // +7 [primary, bcp cluster] = cluster, colo, tag, user
+        // +3 [input feed] = feed, tag, group
+        // +4 [output feed] = 1 feed + 1 tag + 2 groups
+        // +4 [process] = 1 process + 1 tag + 2 pipeline
+        // +3 = 1 process, 1 input, 1 output
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+
+        // +4 [cluster] = cluster to colo and tag [primary and bcp],
+        // +4 [input feed] = cluster, tag, group, user
+        // +5 [output feed] = cluster + user + Group + 2Tags
+        // +7 = user,tag,cluster, 1 input,1 output, 2 pipelines
+        // +19 = +6 for output feed instances + 7 for process instance + 6 for input feed instance
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, REPLICATED_FEED,
+                        "jail://global:00/falcon/raw-click/bcp/20140101",
+                        "jail://global:00/falcon/raw-click/primary/20140101", REPLICATED_FEED),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+
+        verifyLineageGraphForReplicationOrEviction(REPLICATED_FEED,
+                "jail://global:00/falcon/raw-click/bcp/20140101", context,
+                RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE);
+
+        // No new vertex added after replication
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 0);
+
+        // +1 for replicated-to edge to target cluster for each output feed instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 1);
+    }
+
+    @Test (dependsOnMethods = "testLineageForReplication")
+    public void testLineageForReplicationForNonGeneratedInstances() throws Exception {
+        cleanUp();
+        service.init();
+        addClusterAndFeedForReplication(inputFeeds);
+        // Get the vertices before running replication WF
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, REPLICATED_FEED,
+                        "jail://global:00/falcon/raw-click/bcp/20140101",
+                        "jail://global:00/falcon/raw-click/primary/20140101", REPLICATED_FEED),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+
+        verifyFeedEntityEdges(REPLICATED_FEED, "Secure", "analytics");
+        verifyLineageGraphForReplicationOrEviction(REPLICATED_FEED,
+                "jail://global:00/falcon/raw-click/bcp/20140101", context,
+                RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE);
+
+        // +1 for the new instance vertex added
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 1);
+        // +6 = instance-of, stored-in, owned-by, classification, group, replicated-to
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 6);
+    }
+
+    @Test (dependsOnMethods = "testLineageForReplicationForNonGeneratedInstances")
+    public void testLineageForRetention() throws Exception {
+        setupForLineageEviction();
+        // Get the before vertices and edges
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.DELETE, EVICTION_WORKFLOW_NAME,
+                        EVICTED_FEED, EVICTED_INSTANCE_PATHS, "IGNORE", EVICTED_FEED),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+        List<String> expectedFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z", "clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
+        List<String> secureFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z",
+                "clicks-feed/2014-01-01T00:00Z");
+        List<String> ownedAndSecureFeeds = Arrays.asList("clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
+        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName(), expectedFeeds, secureFeeds, ownedAndSecureFeeds);
+        String[] paths = EVICTED_INSTANCE_PATHS.split(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
+        for (String feedInstanceDataPath : paths) {
+            verifyLineageGraphForReplicationOrEviction(EVICTED_FEED, feedInstanceDataPath, context,
+                    RelationshipLabel.FEED_CLUSTER_EVICTED_EDGE);
+        }
+
+        // No new vertices added
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 0);
+        // +2 for evicted-from edge from Feed Instance vertex to cluster
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 2);
+    }
+
+    @Test (dependsOnMethods = "testLineageForRetention")
+    public void testLineageForRetentionWithNoFeedsEvicted() throws Exception {
+        cleanUp();
+        service.init();
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.DELETE, EVICTION_WORKFLOW_NAME,
+                        EVICTED_FEED, "IGNORE", "IGNORE", EVICTED_FEED),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+        // No new vertices added
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount);
+        // No new edges added
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount);
+    }
+
+
+
+    private String printProps(Vertex ignored) {
+
+        StringBuilder sb = new StringBuilder();
+        for(String p : ignored.getPropertyKeys()) {
+            sb.append(p).append("->").append(ignored.getProperty(p) + ";");
+        }
+        return sb.toString();
+    }
+
+
+
+    @Test (dependsOnMethods = "testLineageForRetentionWithNoFeedsEvicted")
+    public void testLineageForTransactionFailure() throws Exception {
+        cleanUp();
+        service.init();
+        clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
+                "classification=production");
+        verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY);
+        verifyClusterEntityEdges();
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 4); // +3 = cluster, colo, user, tag
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 3); // +2 = cluster to colo, user and tag
+
+        Feed feed = EntityBuilderTestUtil.buildFeed("feed-name", new Cluster[]{clusterEntity}, null, null);
+        inputFeeds.add(feed);
+        outputFeeds.add(feed);
+
+        try {
+            processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
+                    "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
+                    WORKFLOW_VERSION, inputFeeds, outputFeeds);
+            Assert.fail();
+        } catch (FalconException e) {
+            Assert.assertEquals(getVerticesCount(service.getGraph()), 4);
+            Assert.assertEquals(getEdgesCount(service.getGraph()), 3);
+        }
+
+    }
+
+    private void verifyUpdatedEdges(Feed newFeed) {
+        Vertex feedVertex = getEntityVertex(newFeed.getName(), RelationshipType.FEED_ENTITY);
+
+        // groups
+        Edge edge = feedVertex.getEdges(Direction.OUT, RelationshipLabel.GROUPS.getName()).iterator().next();
+        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "reporting");
+
+        // tags
+        edge = feedVertex.getEdges(Direction.OUT, "classified-as").iterator().next();
+        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "Secured");
+        edge = feedVertex.getEdges(Direction.OUT, "source").iterator().next();
+        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "data-warehouse");
+
+        // new cluster
+        List<String> actual = new ArrayList<>();
+        for (Edge clusterEdge : feedVertex.getEdges(Direction.OUT, RelationshipLabel.FEED_CLUSTER_EDGE.getName())) {
+            actual.add(clusterEdge.getVertex(Direction.IN).<String>getProperty("name"));
+        }
+        Assert.assertTrue(actual.containsAll(Arrays.asList("primary-cluster", "another-cluster")),
+                "Actual does not contain expected: " + actual);
+    }
+
+
+    @Test (dependsOnMethods = "testLineageForRetentionWithNoFeedsEvicted")
+    public void testLineageForJobCounter() throws Exception {
+        setupForJobCounters();
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "IGNORE", "IGNORE", "IGNORE", "NONE"),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+        Graph graph = service.getGraph();
+
+        Vertex vertex = graph.getVertices("name", "sample-process/2014-01-01T01:00Z").iterator().next();
+        Assert.assertEquals(vertex.getProperty("TIMETAKEN"), 36956L);
+        Assert.assertEquals(vertex.getProperty("COPY"), 30L);
+        Assert.assertEquals(vertex.getProperty("BYTESCOPIED"), 1000L);
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 9);
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 14);
+        verifyLineageGraphForJobCounters(context);
+    }
+
+
 
     private void verifyUpdatedEdges(Process newProcess) {
         Vertex processVertex = getEntityVertex(newProcess.getName(), RelationshipType.PROCESS_ENTITY);
