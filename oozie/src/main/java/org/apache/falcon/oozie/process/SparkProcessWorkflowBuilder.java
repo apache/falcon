@@ -89,8 +89,9 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             argList.addAll(sparkArgs);
         }
 
-        addInputFeedsAsArgument(argList, cluster);
+        //Adding output first so that final order must have input first and then output followed by user's arguments.
         addOutputFeedsAsArgument(argList, cluster);
+        addInputFeedsAsArgument(argList, cluster);
 
         sparkAction.setJar(addUri(sparkFilePath, cluster));
 
@@ -163,13 +164,16 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             return;
         }
 
-        for(Output output : entity.getOutputs().getOutputs()) {
+        int numOutputFeed = entity.getOutputs().getOutputs().size();
+        while (numOutputFeed > 0) {
+            Output output = entity.getOutputs().getOutputs().get(numOutputFeed-1);
             Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
             final String outputName = output.getName();
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
-                argList.add(argList.size(), "${" + outputName + "}");
+                argList.add(0, "${" + outputName + "}");
             }
+            numOutputFeed--;
         }
     }
 
