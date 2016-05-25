@@ -170,7 +170,7 @@ public final class DatasourceHelper {
             return false;
         }
 
-        return (isSameString(oIface.getEndpoint(), nIface.getEndpoint())
+        return (StringUtils.equals(oIface.getEndpoint(), nIface.getEndpoint())
             && isSameDriverClazz(oIface.getDriver(), nIface.getDriver())
             && isSameCredentials(oIface.getCredential(), nIface.getCredential()));
 
@@ -190,7 +190,7 @@ public final class DatasourceHelper {
         if ((oldEntity == null) || (newEntity == null)) {
             return false;
         }
-        return isSameString(oldEntity.getClazz(), newEntity.getClazz());
+        return StringUtils.equals(oldEntity.getClazz(), newEntity.getClazz());
     }
 
     /**
@@ -219,16 +219,16 @@ public final class DatasourceHelper {
         if ((oCred == null) || (nCred == null)) {
             return true;
         }
-        if (isSameString(oCred.getUserName(), nCred.getUserName())) {
+        if (StringUtils.equals(oCred.getUserName(), nCred.getUserName())) {
             if (oCred.getType() == nCred.getType()) {
                 if (oCred.getType() == Credentialtype.PASSWORD_TEXT) {
-                    return isSameString(oCred.getPasswordText(), nCred.getPasswordText());
+                    return StringUtils.equals(oCred.getPasswordText(), nCred.getPasswordText());
                 } else if (oCred.getType() == Credentialtype.PASSWORD_FILE) {
-                    return isSameString(oCred.getPasswordFile(), nCred.getPasswordFile());
+                    return StringUtils.equals(oCred.getPasswordFile(), nCred.getPasswordFile());
                 } else if (oCred.getType() == Credentialtype.PASSWORD_ALIAS) {
-                    return (isSameString(oCred.getPasswordAlias().getAlias(),
+                    return (StringUtils.equals(oCred.getPasswordAlias().getAlias(),
                             nCred.getPasswordAlias().getAlias())
-                            && isSameString(oCred.getPasswordAlias().getProviderPath(),
+                            && StringUtils.equals(oCred.getPasswordAlias().getProviderPath(),
                                     nCred.getPasswordAlias().getProviderPath()));
                 }
             } else {
@@ -285,16 +285,6 @@ public final class DatasourceHelper {
         }
     }
 
-    private static boolean isSameString(String ep1, String ep2) {
-        if ((StringUtils.isBlank(ep1)) && (StringUtils.isBlank(ep2))) {
-            return true;
-        }
-        if ((StringUtils.isBlank(ep1)) && (StringUtils.isBlank(ep2))) {
-            return false;
-        }
-        return ep1.equals(ep2);
-
-    }
     /**
      * Return the Interface endpoint for the interface type specified in the argument.
      *
