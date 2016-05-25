@@ -83,13 +83,11 @@ public class FalconAdminCLI extends FalconCLI {
 
         String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
 
+        int exitValue = 0;
         if (optionsList.contains(STACK_OPTION)) {
             result = client.getThreadDump(doAsUser);
             OUT.get().println(result);
-        }
-
-        int exitValue = 0;
-        if (optionsList.contains(FalconCLIConstants.STATUS_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.STATUS_OPT)) {
             try {
                 int status = client.getStatus(doAsUser);
                 if (status != 200) {
@@ -118,6 +116,10 @@ public class FalconAdminCLI extends FalconCLI {
             }
         } else if (optionsList.contains(FalconCLIConstants.HELP_CMD)) {
             OUT.get().println("Falcon Help");
+        } else {
+            throw new FalconCLIException("Invalid/missing admin command. Supported commands include "
+                    + "status, version, setsafemode, help. "
+                    + "Please refer to Falcon CLI twiki for more details.");
         }
         return exitValue;
     }

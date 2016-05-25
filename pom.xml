@@ -93,13 +93,14 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <include.prism>true</include.prism>
-
+        <hadoop.version>2.6.2</hadoop.version>
         <slf4j.version>1.7.5</slf4j.version>
         <oozie.version>4.2.0</oozie.version>
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.12.0</activemq.version>
         <hive.version>0.13.1</hive.version>
+        <spark.version>1.6.1</spark.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <quartz.version>2.2.1</quartz.version>
@@ -107,7 +108,7 @@
         <mockito.version>1.9.5</mockito.version>
         <openjpa.version>2.4.0</openjpa.version>
         <javax-validation.version>1.0.0.GA</javax-validation.version>
-        <derby.version>10.10.1.1</derby.version>
+        <derby.version>10.11.1.1</derby.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
         <mysql.version>5.1.36</mysql.version>
         <postgres.version>9.1-901-1.jdbc4</postgres.version>
@@ -116,150 +117,6 @@
     </properties>
 
     <profiles>
-        <profile>
-            <id>hadoop-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <hadoop.version>2.6.2</hadoop.version>
-            </properties>
-            <dependencyManagement>
-                <dependencies>
-		            <dependency>
-		                <groupId>org.apache.hadoop</groupId>
-		                <artifactId>hadoop-client</artifactId>
-		                <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-server</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.glassfish</groupId>
-                                <artifactId>javax.servlet</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-hdfs</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-mapreduce-client-common</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-
-		            <dependency>
-		                <groupId>org.apache.hadoop</groupId>
-		                <artifactId>hadoop-hdfs</artifactId>
-		                <version>${hadoop.version}</version>
-		                <classifier>tests</classifier>
-                        <scope>test</scope>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                        <version>${hadoop.version}</version>
-                        <classifier>tests</classifier>
-                        <scope>test</scope>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                    </dependency>
-
-		            <dependency>
-		                <groupId>org.apache.hadoop</groupId>
-		                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-		                <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                    </dependency>
-
-		            <dependency>
-		                <groupId>org.apache.hadoop</groupId>
-		                <artifactId>hadoop-auth</artifactId>
-		                <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-distcp</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                    </dependency>
-
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-mapreduce-client-core</artifactId>
-                        <version>${hadoop.version}</version>
-                        <scope>provided</scope>
-                    </dependency>
-
-                    <dependency>
-                    	<groupId>org.apache.hadoop</groupId>
-                    	<artifactId>hadoop-aws</artifactId>
-                    	<version>${hadoop.version}</version>
-                    	<scope>provided</scope>
-                    </dependency>
-                </dependencies>
-          </dependencyManagement>
-        </profile>
-
         <profile>
             <id>test-patch</id>
             <build>
@@ -276,6 +133,7 @@
                             <excludes>
                                 <exclude>*.txt</exclude>
                                 <exclude>**/*.txt</exclude>
+                                <exclude>**/*.svg</exclude>
                                 <exclude>*.md</exclude>
                                 <exclude>**/*.md</exclude>
                                 <exclude>.git/**</exclude>
@@ -532,6 +390,136 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-json</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish</groupId>
+                        <artifactId>javax.servlet</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-common</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-auth</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-distcp</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-aws</artifactId>
+                <version>${hadoop.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -1080,6 +1068,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-core_2.10</artifactId>
+                <version>${spark.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.github.stephenc.findbugs</groupId>
                 <artifactId>findbugs-annotations</artifactId>
                 <version>1.3.9-1</version>
@@ -1094,13 +1088,13 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.3.3</version>
+                <version>4.4.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
-                <version>4.3.2</version>
+                <version>4.4.1</version>
             </dependency>
 
             <dependency>
@@ -1163,8 +1157,25 @@
                 <version>1.1.3</version>
             </dependency>
 
-        </dependencies>
+            <dependency>
+                <groupId>com.codahale.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>3.0.2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.acplt</groupId>
+                        <artifactId>oncrpc</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 
+            <dependency>
+                <groupId>com.codahale.metrics</groupId>
+                <artifactId>metrics-graphite</artifactId>
+                <version>3.0.2</version>
+            </dependency>
+
+        </dependencies>
     </dependencyManagement>
 
     <build>
@@ -1392,7 +1403,6 @@
                 <version>2.6</version>
                   <configuration>
                       <descriptors>
-                          <descriptor>src/main/assemblies/assembly-standalone.xml</descriptor>
                           <descriptor>src/main/assemblies/assembly-src.xml</descriptor>
                       </descriptors>
                       <finalName>falcon-${project.version}</finalName>

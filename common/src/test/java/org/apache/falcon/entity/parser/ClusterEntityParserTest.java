@@ -171,9 +171,13 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Mockito.doNothing().when(clusterEntityParser).validateMessagingInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateRegistryInterface(cluster);
         Mockito.doNothing().when(clusterEntityParser).validateLocations(cluster);
+        Mockito.doNothing().when(clusterEntityParser).validateSparkMasterInterface(cluster);
 
         // Good set of properties, should work
         clusterEntityParser.validateProperties(cluster);
+
+        // validate version
+        Assert.assertEquals(cluster.getVersion(), 0);
 
         // add duplicate property, should throw validation exception.
         Property property1 = new Property();

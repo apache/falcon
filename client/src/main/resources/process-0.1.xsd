@@ -188,6 +188,7 @@
             <xs:element type="ACL" name="ACL" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
     </xs:complexType>
 
     <xs:simpleType name="IDENTIFIER">
@@ -219,6 +220,7 @@
             <xs:element type="validity" name="validity"/>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
     </xs:complexType>
 
     <xs:complexType name="validity">

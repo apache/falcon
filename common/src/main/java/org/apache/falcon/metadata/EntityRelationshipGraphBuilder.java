@@ -120,7 +120,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         EntityType entityType = oldEntity.getEntityType();
         switch (entityType) {
         case CLUSTER:
-            // a cluster cannot be updated
+            updateClusterEntity((Cluster) oldEntity, (Cluster) newEntity);
             break;
         case PROCESS:
             updateProcessEntity((Process) oldEntity, (Process) newEntity);
@@ -133,7 +133,33 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
     }
 
+    private void updateClusterEntity(Cluster oldCluster, Cluster newCluster) {
+        LOG.info("Updating Cluster entity: {}", newCluster.getName());
+        Vertex clusterEntityVertex = findVertex(oldCluster.getName(), RelationshipType.CLUSTER_ENTITY);
+        if (clusterEntityVertex == null) {
+            LOG.error("Illegal State: Cluster entity vertex must exist for {}", oldCluster.getName());
+            throw new IllegalStateException(oldCluster.getName() + " entity vertex must exist.");
+        }
+        updateColoEdge(oldCluster.getColo(), newCluster.getColo(), clusterEntityVertex);
+        updateDataClassification(oldCluster.getTags(), newCluster.getTags(), clusterEntityVertex);
+    }
 
+    private void updateColoEdge(String oldColo, String newColo, Vertex clusterEntityVertex) {
+        if (areSame(oldColo, newColo)) {
+            return;
+        }
+
+        Vertex oldColoVertex = findVertex(oldColo, RelationshipType.COLO);
+        if (oldColoVertex != null) {
+            removeEdge(clusterEntityVertex, oldColoVertex, RelationshipLabel.CLUSTER_COLO.getName());
+        }
+        Vertex newColoVertex = findVertex(newColo, RelationshipType.COLO);
+        if (newColoVertex == null) {
+            newColoVertex = addVertex(newColo, RelationshipType.COLO);
+        }
+
+        addEdge(clusterEntityVertex, newColoVertex, RelationshipLabel.CLUSTER_COLO.getName());
+    }
 
     public void updateFeedEntity(Feed oldFeed, Feed newFeed) {
         LOG.info("Updating feed entity: {}", newFeed.getName());

@@ -37,6 +37,7 @@ public final class StartupProperties extends ApplicationProperties {
     public static final String SAFEMODE_PROPERTY = "falcon.safeMode";
     private static final String SAFEMODE_FILE = ".safemode";
     private static final String CONFIGSTORE_PROPERTY = "config.store.uri";
+
     private static FileSystem fileSystem;
     private static Path storePath;
 
@@ -48,6 +49,7 @@ public final class StartupProperties extends ApplicationProperties {
 
     private StartupProperties() throws FalconException {
         super();
+        resolveAlias();
     }
 
     @Override

@@ -20,12 +20,15 @@ package org.apache.falcon.entity.store;
 
 import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
+import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -242,9 +245,10 @@ public final class ConfigurationStore implements FalconService {
     private synchronized void updateInternal(EntityType type, Entity entity) throws FalconException {
         try {
             if (get(type, entity.getName()) != null) {
-                persist(type, entity);
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
                 Entity oldEntity = entityMap.get(entity.getName());
+                updateVersion(oldEntity, entity);
+                persist(type, entity);
                 onChange(oldEntity, entity);
                 entityMap.put(entity.getName(), entity);
             } else {
@@ -254,6 +258,18 @@ public final class ConfigurationStore implements FalconService {
             throw new StoreAccessException(e);
         }
         AUDIT.info(type + "/" + entity.getName() + " is replaced into config store");
+    }
+
+    private void updateVersion(Entity oldentity, Entity newEntity) throws FalconException {
+        // increase version number for cluster only if dependent feeds/process needs to be updated.
+        if (oldentity.getEntityType().equals(EntityType.CLUSTER)) {
+            if (UpdateHelper.isClusterEntityUpdated((Cluster) oldentity, (Cluster) newEntity)) {
+                EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity) + 1);
+            }
+        } else if (!EntityUtil.equals(oldentity, newEntity)) {
+            // Increase version for other entities if they actually changed.
+            EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity));
+        }
     }
 
     public synchronized void update(EntityType type, Entity entity) throws FalconException {

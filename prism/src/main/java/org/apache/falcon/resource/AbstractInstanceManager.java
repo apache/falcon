@@ -313,7 +313,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         if (StringUtils.isNotEmpty(startStr) && StringUtils.isEmpty(sortOrder)) {
             Collections.reverse(instanceSet);
         }
-        if (StringUtils.isNoneEmpty(sortOrder)) {
+        if (StringUtils.isNotEmpty(sortOrder)) {
             // Sort the ArrayList using orderBy
             instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
         }

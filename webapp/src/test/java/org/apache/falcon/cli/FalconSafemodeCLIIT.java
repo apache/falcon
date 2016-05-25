@@ -21,7 +21,6 @@ package org.apache.falcon.cli;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.FalconTestUtil;
-import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -84,8 +83,6 @@ public class FalconSafemodeCLIIT {
     private void clearSafemode() throws Exception {
         Assert.assertEquals(new FalconCLI().run(("admin -setsafemode false -url "
                 + TestContext.BASE_URL).split("\\s")), 0);
-        Assert.assertEquals(StartupProperties.get().getProperty(StartupProperties.SAFEMODE_PROPERTY, "false"),
-                "false");
     }
 
     public void testEntityCommandsNotAllowedInSafeMode() throws Exception {

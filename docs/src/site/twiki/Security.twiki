@@ -2,8 +2,30 @@
 
 ---++ Overview
 
-Apache Falcon enforces authentication and authorization which are detailed below. Falcon also
-provides transport level security ensuring data confidentiality and integrity.
+Apache Falcon provides the following security features:
+   * Support credential provider alias for passwords used in Falcon server.
+   * Support authentication to identify proper users.
+   * Support authorization to specify resource access permission for users or groups.
+   * Support SSL to provide transport level security for data confidentiality and integrity.
+
+
+---++ Credential Provider Alias for Passwords
+Server-side configuration properties (i.e. startup.properties) contain passwords and other sensitive information.
+In addition to specifying properties in plain text, we provide the user an option to use credential provider alias in the property file.
+
+Take SMTP password for example. The user can store the password in a
+[[http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CommandsManual.html#credential][Hadoop credential provider]]
+with the alias name _SMTPPasswordAlias_. In startup.properties where SMTP password is needed, the user can refer to its
+alias name _SMTPPasswordAlias_ instead of providing the real password.
+
+The alias property to be resolved through Hadoop credential provider should have the format:
+_credential.provider.alias.for.[property-key]_. For example,
+_credential.provider.alias.for.falcon.email.smtp.password=SMTPPasswordAlias_ for SMTP password.
+Falcon server, during the start, will automatically retrieve the real password provided the alias name.
+
+The user can specify the provider path with the property key _credential.provider.path_,
+e.g. _credential.provider.path=jceks://file/tmp/test.jceks_.
+If not specified, Falcon will use the default Hadoop credential provider path in core-site.xml.
 
 
 ---++ Authentication (User Identity)

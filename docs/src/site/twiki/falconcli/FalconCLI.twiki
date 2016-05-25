@@ -102,10 +102,11 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 |[[HelpAdmin][Help]]                             | Return help options                             |
 |[[VersionAdmin][Version]]                       | Return current falcon version                   |
 |[[StatusAdmin][Status]]                         | Return the status of falcon                     |
+|[[SafemodeAdmin][SetSafeMode]]                  | Set/unset Falcon Server in safemode             |
 
 -----------
 
----++Extension artifacts management Commands
+---++Extension Artifacts Management Commands
 
 | *Command*                                      | *Description*                                   |
 |[[EnumerateExtension][Enumerate]]               | Return all the extensions supported             |
@@ -114,10 +115,16 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 
 -----------
 
----++Extension Commands
+---++Extension Job Management Commands
 
-| *Command*                                      | *Description*                                   |
-|[[SubmitExtension][Submit]]                     | Submit the specified extension                  |
-
-
-
+| *Command*                                         | *Description*                                   |
+|[[ExtensionList][List]]                            | List jobs generated from an extension           |
+|[[ExtensionInstances][Instances]]                  | List instances of an extension job              |
+|[[ExtensionValidate][Validate]]                    | Validate an extension job                       |
+|[[ExtensionSubmit][Submit]]                        | Submit an extension job                         |
+|[[ExtensionUpdate][Update]]                        | Update an extension job                         |
+|[[ExtensionSubmitAndSchedule][SubmitAndSchedule]]  | Submit and schedule an extension job            |
+|[[ExtensionSchedule][Schedule]]                    | Schedule an extension job                       |
+|[[ExtensionSuspend][Suspend]]                      | Suspend an extension job                        |
+|[[ExtensionResume][Resume]]                        | Resume an extension job                         |
+|[[ExtensionDelete][Delete]]                        | Delete an extension job                         |

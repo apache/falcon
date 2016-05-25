@@ -27,15 +27,16 @@ import java.util.List;
 /**
  * Extension job list used for marshalling / unmarshalling with REST calls.
  */
+//SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
 @XmlRootElement
 @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class ExtensionJobList {
 
     @XmlElement
-    private int numJobs;
+    public int numJobs;
 
     @XmlElementWrapper(name = "jobs")
-    private List<JobElement> job;
+    public List<JobElement> job;
 
     public ExtensionJobList() {
         numJobs = 0;
@@ -71,10 +72,10 @@ public class ExtensionJobList {
      */
     public static class JobElement {
         @XmlElement
-        private String jobName;
+        public String jobName;
 
         @XmlElement
-        private EntityList jobEntities;
+        public EntityList jobEntities;
 
         public JobElement() {
             jobName = null;
