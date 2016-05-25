@@ -99,6 +99,9 @@
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.12.0</activemq.version>
+        <tinkerpop.version>2.6.0</tinkerpop.version>
+        <titan.version>0.5.4</titan.version>
+        <hbase.version>1.1.5</hbase.version>
         <hive.version>0.13.1</hive.version>
         <spark.version>1.6.1</spark.version>
         <jetty.version>6.1.26</jetty.version>
@@ -117,6 +120,59 @@
     </properties>
 
     <profiles>
+        <profile>
+            <id>bdb-plugin-only</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>bdb-plugin-only</name>
+                </property>
+            </activation>
+            <dependencyManagement>
+                <dependencies>
+                   <dependency>
+                        <groupId>com.thinkaurelius.titan</groupId>
+                        <artifactId>titan-berkeleyje</artifactId>
+                        <version>0.5.4</version>
+                        <exclusions>
+                            <exclusion>
+                               <groupId>com.sleepycat</groupId>
+                                <artifactId>je</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                    <!--
+                     - optional=true gets je-5.0.73.jar into war classpath
+                     - without making it part of WEB-INF/lib
+                     - Version hardcoded to 5.0.73 with sleepycat licence
+                     -->
+                    <dependency>
+                        <groupId>com.sleepycat</groupId>
+                        <artifactId>je</artifactId>
+                        <version>5.0.73</version>
+                        <optional>true</optional>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+        <profile>
+            <id>bdb-backend</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+               <property>
+                    <name>!bdb-plugin-only</name>
+                </property>
+            </activation>
+            <dependencyManagement>
+               <dependencies>
+                    <dependency>
+                        <groupId>com.thinkaurelius.titan</groupId>
+                        <artifactId>titan-berkeleyje</artifactId>
+                        <version>0.5.4</version>
+                    </dependency>
+                </dependencies>
+           </dependencyManagement>
+        </profile>
         <profile>
             <id>test-patch</id>
             <build>
@@ -245,6 +301,8 @@
                                             <property>hive.version</property>
                                             <regex>^(1.2.*)</regex>
                                             <regexMessage>HiveDR only supports hive version >= 1.2.0</regexMessage>
+                                        </requireProperty>
+                                        <requireProperty>
                                             <property>oozie.version</property>
                                             <regex>^(4.2.*)</regex>
                                             <regexMessage>HiveDR only supports oozie version >= 4.2.0</regexMessage>
@@ -281,7 +339,9 @@
                                         <requireProperty>
                                             <property>hadoop.version</property>
                                             <regex>^(2.7.*)</regex>
-                                            <regexMessage>HDFS Snapshot replication only works with hadoop version >= 2.7.0</regexMessage>
+                                            <regexMessage>HDFS Snapshot replication only works with hadoop version >=
+                                                2.7.0
+                                            </regexMessage>
                                         </requireProperty>
                                     </rules>
                                     <fail>true</fail>
@@ -310,6 +370,7 @@
         <module>client</module>
         <module>cli</module>
         <module>metrics</module>
+        <module>titan</module>
         <module>common</module>
         <module>test-util</module>
         <module>hadoop-dependencies</module>
@@ -636,6 +697,60 @@
                 <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-client</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-titan</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Graph DB -->
+
+            <dependency>
+                <groupId>com.thinkaurelius.titan</groupId>
+                <artifactId>titan-core</artifactId>
+                <version>${titan.version}</version>
+                <exclusions>
+                    <!-- rexster does not work with servlet-api -->
+                    <exclusion>
+                        <groupId>com.tinkerpop.rexster</groupId>
+                        <artifactId>rexster-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.tinkerpop.rexster</groupId>
+                        <artifactId>rexster-server</artifactId>
+                    </exclusion>
+                    <!-- asm 4.0 does not work with jersey asm 3.1 -->
+                    <exclusion>
+                        <groupId>com.tinkerpop</groupId>
+                        <artifactId>frames</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.esotericsoftware.reflectasm</groupId>
+                        <artifactId>reflectasm</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                    </exclusion>
+                    <exclusion> <!-- GPL license imported from ganglia -->
+                        <groupId>org.acplt</groupId>
+                        <artifactId>oncrpc</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.thinkaurelius.titan</groupId>
+                <artifactId>titan-es</artifactId>
+                <version>${titan.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.vividsolutions</groupId>
+                <artifactId>jts</artifactId>
+                <version>1.13</version>
             </dependency>
 
             <dependency>
@@ -1100,43 +1215,7 @@
             <dependency>
                 <groupId>com.tinkerpop.blueprints</groupId>
                 <artifactId>blueprints-core</artifactId>
-                <version>2.5.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.thinkaurelius.titan</groupId>
-                <artifactId>titan-core</artifactId>
-                <version>0.5.4</version>
-                <exclusions>
-                    <!-- rexster does not work with servlet-api -->
-                    <exclusion>
-                        <groupId>com.tinkerpop.rexster</groupId>
-                        <artifactId>rexster-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.tinkerpop.rexster</groupId>
-                        <artifactId>rexster-server</artifactId>
-                    </exclusion>
-                    <!-- asm 4.0 does not work with jersey asm 3.1 -->
-                    <exclusion>
-                        <groupId>com.tinkerpop</groupId>
-                        <artifactId>frames</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.esotericsoftware.reflectasm</groupId>
-                        <artifactId>reflectasm</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.ow2.asm</groupId>
-                        <artifactId>asm</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>com.thinkaurelius.titan</groupId>
-                <artifactId>titan-berkeleyje</artifactId>
-                <version>0.5.4</version>
+                <version>${tinkerpop.version}</version>
             </dependency>
 
             <dependency>
@@ -1175,6 +1254,39 @@
                 <version>3.0.2</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.thinkaurelius.titan</groupId>
+                <artifactId>titan-hbase</artifactId>
+                <version>${titan.version}</version>
+           </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-client</artifactId>
+                <version>${hbase.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>avro</artifactId>
+                        <groupId>org.apache.avro</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>jruby-complete</artifactId>
+                        <groupId>org.jruby</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>asm</artifactId>
+                        <groupId>asm</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>*</artifactId>
+                        <groupId>org.apache.hadoop</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>*</artifactId>
+                        <groupId>org.mortbay.jetty</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1341,7 +1453,6 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
@@ -1394,21 +1505,21 @@
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
-                     </execution>
+                    </execution>
                 </executions>
             </plugin>
 
-              <plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version>
-                  <configuration>
-                      <descriptors>
-                          <descriptor>src/main/assemblies/assembly-src.xml</descriptor>
-                      </descriptors>
-                      <finalName>falcon-${project.version}</finalName>
-                  </configuration>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assemblies/assembly-src.xml</descriptor>
+                    </descriptors>
+                    <finalName>falcon-${project.version}</finalName>
+                </configuration>
             </plugin>
- 
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
