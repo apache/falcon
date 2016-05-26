@@ -41,7 +41,7 @@ import java.util.Map;
  * Integration test for Feed Export.
  */
 
-@Test
+@Test (enabled = false)
 public class FeedExportIT {
     public static final Logger LOG = LoggerFactory.getLogger(FeedExportIT.class);
 

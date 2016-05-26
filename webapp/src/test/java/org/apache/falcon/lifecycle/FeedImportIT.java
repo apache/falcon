@@ -49,7 +49,7 @@ import java.util.Map;
  * Integration test for Feed Import.
  */
 
-@Test
+@Test (enabled = false)
 public class FeedImportIT {
     public static final Logger LOG =  LoggerFactory.getLogger(FeedImportIT.class);
 
