@@ -89,7 +89,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             argList.addAll(sparkArgs);
         }
 
-        //Adding output first so that final order must have input first and then output followed by user's arguments.
+        //Adding output first so that final order must have input and then output followed by user's arguments.
         addOutputFeedsAsArgument(argList, cluster);
         addInputFeedsAsArgument(argList, cluster);
 
@@ -146,6 +146,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             return;
         }
 
+        //Adding to the 0th index and getting the args shifted as arguments are added to get the desired effect.
         int numInputFeed = entity.getInputs().getInputs().size();
         while (numInputFeed > 0) {
             Input input = entity.getInputs().getInputs().get(numInputFeed-1);
@@ -164,6 +165,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             return;
         }
 
+        //Adding to the 0th index and getting the args shifted as arguments are added to get the desired effect.
         int numOutputFeed = entity.getOutputs().getOutputs().size();
         while (numOutputFeed > 0) {
             Output output = entity.getOutputs().getOutputs().get(numOutputFeed-1);
