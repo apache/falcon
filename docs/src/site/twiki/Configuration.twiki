@@ -368,7 +368,7 @@ We recommend that in the startup config the tablename for titan storage be named
 HBase can be started in stand alone mode for testing as a backend for Titan. The following steps outline the config changes required:
 <verbatim>
 1. Build Falcon as below to package hbase binaries
-   $ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean assembly:assembly package-standalone-hbase
+   $ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean assembly:assembly -Ppackage-standalone-hbase
 2. Configure HBase
    a. When falcon tar file is expanded, HBase binaries are under ${FALCON_HOME}/hbase
    b. Copy ${FALCON_HOME}/conf/hbase-site.xml.template into hbase conf dir in ${FALCON_HOME}/hbase/conf/hbase-site.xml
