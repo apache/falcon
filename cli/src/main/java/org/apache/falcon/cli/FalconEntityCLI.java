@@ -217,7 +217,6 @@ public class FalconEntityCLI extends FalconCLI {
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
         }
-
         String result = null;
         String entityType = commandLine.getOptionValue(FalconCLIConstants.TYPE_OPT);
         String entityName = commandLine.getOptionValue(FalconCLIConstants.ENTITY_NAME_OPT);
@@ -239,19 +238,16 @@ public class FalconEntityCLI extends FalconCLI {
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
                 null, "numResults");
         String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
-
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         Boolean skipDryRun = null;
         if (optionsList.contains(FalconCLIConstants.SKIPDRYRUN_OPT)) {
             skipDryRun = true;
         }
-
         String userProps = commandLine.getOptionValue(PROPS_OPT);
         boolean showScheduler = false;
         if (optionsList.contains(SHOWSCHEDULER_OPT)) {
             showScheduler = true;
         }
-
         EntityType entityTypeEnum = null;
         if (optionsList.contains(FalconCLIConstants.LIST_OPT)
                 || optionsList.contains(FalconCLIConstants.UPDATE_CLUSTER_DEPENDENTS_OPT)) {
