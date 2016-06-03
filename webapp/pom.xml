@@ -387,6 +387,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+                            <excludeScope>provided</excludeScope>
                         </configuration>
                     </execution>
                     <execution>

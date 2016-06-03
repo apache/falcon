@@ -117,6 +117,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
+                            <excludeScope>provided</excludeScope>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
                         </configuration>
                     </execution>
