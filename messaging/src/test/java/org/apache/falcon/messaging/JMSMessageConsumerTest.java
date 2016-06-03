@@ -245,15 +245,10 @@ public class JMSMessageConsumerTest {
             sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.POST_PROCESSING);
 
             final BrokerView adminView = broker.getAdminView();
-
-            Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
-//            Assert.assertEquals(adminView.getTotalEnqueueCount(), 10);
             Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
 
             sendMessages(SECONDARY_TOPIC_NAME, WorkflowExecutionContext.Type.POST_PROCESSING);
 
-//            Assert.assertEquals(adminView.getTotalEnqueueCount(), 18);
-            Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
             Assert.assertEquals(adminView.getTotalConsumerCount(), 3);
         } catch (Exception e) {
             Assert.fail("This should not have thrown an exception.", e);
@@ -265,9 +260,6 @@ public class JMSMessageConsumerTest {
         sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.WORKFLOW_JOB);
 
         final BrokerView adminView = broker.getAdminView();
-
-        Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
-//        Assert.assertEquals(adminView.getTotalEnqueueCount(), 10);
         Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
 
         // Async operations. Give some time for messages to be processed.
@@ -283,9 +275,6 @@ public class JMSMessageConsumerTest {
         sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.COORDINATOR_ACTION);
 
         final BrokerView adminView = broker.getAdminView();
-
-        Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
-//        Assert.assertEquals(adminView.getTotalEnqueueCount(), 12);
         Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
 
         // Async operations. Give some time for messages to be processed.
@@ -309,7 +298,6 @@ public class JMSMessageConsumerTest {
         sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.WORKFLOW_JOB, false /* isFalconWF */);
 
         final BrokerView adminView = broker.getAdminView();
-
         Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
         Assert.assertEquals(adminView.getTotalEnqueueCount(), 10);
         Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
