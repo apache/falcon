@@ -49,7 +49,7 @@ import java.util.Map;
  * Integration test for Feed Import.
  */
 
-@Test
+@Test (enabled = false)
 public class FeedImportIT {
     public static final Logger LOG =  LoggerFactory.getLogger(FeedImportIT.class);
 
@@ -91,12 +91,12 @@ public class FeedImportIT {
         FileUtils.deleteDirectory(new File("localhost"));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testFeedImportHSql() throws Exception {
         Assert.assertEquals(4, HsqldbTestUtils.getNumberOfRows());
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopImport() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -118,7 +118,7 @@ public class FeedImportIT {
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopImportDeleteDatasource() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -143,7 +143,7 @@ public class FeedImportIT {
         Assert.assertEquals(-1, TestContext.executeWithURL("entity -delete -type datasource -name " + dsName));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopImport2() throws Exception {
         // create a TestContext and a test embedded cluster
         TestContext context = new TestContext();
@@ -183,7 +183,7 @@ public class FeedImportIT {
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopImport3() throws Exception {
         // create a TestContext and a test embedded cluster
         TestContext context = new TestContext();
@@ -230,7 +230,7 @@ public class FeedImportIT {
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopImportUsingDefaultCredential() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -253,7 +253,7 @@ public class FeedImportIT {
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopHCatImport() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();

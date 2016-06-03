@@ -41,7 +41,7 @@ import java.util.Map;
  * Integration test for Feed Export.
  */
 
-@Test
+@Test (enabled = false)
 public class FeedExportIT {
     public static final Logger LOG = LoggerFactory.getLogger(FeedExportIT.class);
 
@@ -83,12 +83,12 @@ public class FeedExportIT {
         FileUtils.deleteDirectory(new File("localhost"));
     }
 
-    @Test
+    @Test (enabled = false)
     public void testFeedExportHSql() throws Exception {
         Assert.assertEquals(4, HsqldbTestUtils.getNumberOfRows());
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSqoopExport() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
