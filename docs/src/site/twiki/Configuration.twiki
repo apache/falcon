@@ -47,6 +47,9 @@ before any commands are executed. The following environment variables are availa
 
 # Where do you want to expand the war file. By Default it is in /server/webapp dir under the base install dir.
 #export FALCON_EXPANDED_WEBAPP_DIR=
+
+# Any additional classpath elements to be added to the Falcon server/client classpath
+#export FALCON_EXTRA_CLASS_PATH=
 </verbatim>
 
 ---++Advanced Configurations
@@ -320,6 +323,66 @@ You can either choose to schedule entities using Oozie's coordinator or using Fa
 schedule entities natively on Falcon, you will need to add some additional properties
 to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the Falcon Server.
 For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
+
+---+++Titan GraphDB backend
+You can either choose to use 5.0.73 version of berkeleydb (the default for Falcon for the last few releases) or 1.1.x or later version HBase as the backend database. Falcon in its release distributions will have the titan storage plugins for both BerkeleyDB and HBase.
+
+----++++Using BerkeleyDB backend
+Falcon distributions may not package berkeley db artifacts (je-5.0.73.jar) based on build profiles.  If Berkeley DB is not packaged, you can download the Berkeley DB jar file from the URL: <verbatim>http://download.oracle.com/otn/berkeley-db/je-5.0.73.zip</verbatim>.   The following properties describe an example berkeley db graph storage backend that can be specified in the configuration file <verbatim>$FALCON_HOME/conf/startup.properties</verbatim>.
+
+<verbatim>
+# Graph Storage
+*.falcon.graph.storage.directory=${user.dir}/target/graphdb
+*.falcon.graph.storage.backend=berkeleyje
+*.falcon.graph.serialize.path=${user.dir}/target/graphdb
+</verbatim>
+
+----++++Using HBase backend
+
+To use HBase as the backend it is recommended that a HBase cluster be provisioned with distributed mode confiuguratoin, primarily because of the support of kerberos enabled clusters and HA considerations.  Based on build profile, a standalone hbase version can be packaged with the Falcon binary distribution.   Along with this, a template for <verbatim>hbase-site.xml</verbatim> is provided, which can be used to start the standalone mode HBase enviornment for development/testing purposes.
+
+Basic configuration
+
+<verbatim>
+*.falcon.graph.storage.backend=hbase
+#For standalone mode , specify localhost
+#for distributed mode, specify zookeeper quorum here - For more information refer http://s3.thinkaurelius.com/docs/titan/current/hbase.html#_remote_server_mode_2
+*.falcon.graph.storage.hostname=<ZooKeeper Quorum>
+</verbatim>
+
+HBase configuration file (hbase-site.xml) and hbase libraries need to be added to classpath when Falcon starts up.   The following must be appended to the environment variable <verbatim>FALCON_EXTRA_CLASS_PATH<verbatim> in <verbatim>$FALCON_HOME/bin/falcon-env.sh</verbatim>.   Additionally the correct hbase client libraries need to be added.  For example,
+<verbatim>
+export FALCON_EXTRA_CLASS_PATH=`${HBASE_HOME}/bin/hbase classpath`
+</verbatim>
+
+Table name
+We recommend that in the startup config the tablename for titan storage be named <verbatim>falcon_titan<verbatim> so that multiple applications using Titan can share the same HBase cluster.   This can be set by specifying the tablename using the startup property given below. The default value is shown.
+
+<verbatim>
+*.falcon.graph.storage.hbase.table=falcon_titan
+</verbatim>
+
+Permissions
+
+When Falcon is configured with HBase as the storage backend Titan needs to have sufficient authorizations to create and access an HBase table.  In a secure cluster it may be necessary to grant permissions to the <verbatim>falcon</verbatim> user for the <verbatim>falcon_titan</verbatim> table (or whateven tablename was specified for the property <verbatim>*.falcon.graph.storage.hbase.table</verbatim>
+
+With Ranger, a policy can be configured for <verbatim>falcon_titan</verbatim>.
+
+Without Ranger, HBase shell can be used to set the permissions.
+
+<verbatim>
+   su hbase
+   kinit -k -t <hbase keytab> <hbase principal>
+   echo "grant 'falcon', 'RWXCA', 'falcon_titan'" | hbase shell
+</verbatim>
+
+Advanced configuration
+
+HBase storage backend support in Titan has a few other configurations and they can be set in <verbatim>$FALCON_HOME/conf/startup.properties</verbatim>, by prefixing the Titan property with <verbatim>*.falcon.graph</verbatim> prefix.
+
+Please Refer to <verbatim>http://s3.thinkaurelius.com/docs/titan/0.5.4/titan-config-ref.html#_storage</verbatim> for generic storage properties, <verbaim>http://s3.thinkaurelius.com/docs/titan/0.5.4/titan-config-ref.html#_storage_berkeleydb</verbatim> for berkeley db properties and <verbatim>http://s3.thinkaurelius.com/docs/titan/0.5.4/titan-config-ref.html#_storage_hbase</verbatim> for hbase storage backend properties.
+
+
 
 ---+++Adding Extension Libraries
 

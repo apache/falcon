@@ -178,6 +178,7 @@ Submit and schedule the process:
 <verbatim>
 $bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/oozie-mr-process.xml
 $bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/pig-process.xml
+$bin/falcon entity -submitAndSchedule -type process -file examples/entity/spark/spark-process.xml
 </verbatim>
 Generate input data:
 <verbatim>
@@ -189,7 +190,7 @@ $bin/falcon instance -status -type process -name oozie-mr-process -start 2013-11
 </verbatim>
 
 HCat based example entities are in examples/entity/hcat.
-
+Spark based example entities are in examples/entity/spark.
 
 ---+++Stopping Falcon Server
 <verbatim>
