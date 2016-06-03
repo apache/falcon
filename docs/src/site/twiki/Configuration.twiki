@@ -325,10 +325,16 @@ to <verbatim>$FALCON_HOME/conf/startup.properties</verbatim> before starting the
 For details on the same, refer to [[FalconNativeScheduler][Falcon Native Scheduler]]
 
 ---+++Titan GraphDB backend
-You can either choose to use 5.0.73 version of berkeleydb (the default for Falcon for the last few releases) or 1.1.x or later version HBase as the backend database. Falcon in its release distributions will have the titan storage plugins for both BerkeleyDB and HBase.
+GraphDB backend needs to be configured to properly start Falcon server.
+You can either choose to use 5.0.73 version of berkeleydb (the default for Falcon for the last few releases) or 1.1.x or later version HBase as the backend database.
+Falcon in its release distributions will have the titan storage plugins for both BerkeleyDB and HBase.
 
 ----++++Using BerkeleyDB backend
-Falcon distributions may not package berkeley db artifacts (je-5.0.73.jar) based on build profiles.  If Berkeley DB is not packaged, you can download the Berkeley DB jar file from the URL: <verbatim>http://download.oracle.com/otn/berkeley-db/je-5.0.73.zip</verbatim>.   The following properties describe an example berkeley db graph storage backend that can be specified in the configuration file <verbatim>$FALCON_HOME/conf/startup.properties</verbatim>.
+Falcon distributions may not package berkeley db artifacts (je-5.0.73.jar) based on build profiles.
+If Berkeley DB is not packaged, you can download the Berkeley DB jar file from the URL:
+<verbatim>http://download.oracle.com/otn/berkeley-db/je-5.0.73.zip</verbatim>.
+The following properties describe an example berkeley db graph storage backend that can be specified in the configuration file
+<verbatim>$FALCON_HOME/conf/startup.properties</verbatim>.
 
 <verbatim>
 # Graph Storage

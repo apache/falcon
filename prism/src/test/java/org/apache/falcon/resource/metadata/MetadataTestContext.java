@@ -95,6 +95,10 @@ public class MetadataTestContext {
         Services.get().register(new WorkflowJobEndNotificationService());
         Assert.assertTrue(Services.get().isRegistered(WorkflowJobEndNotificationService.SERVICE_NAME));
 
+        StartupProperties.get().setProperty("falcon.graph.storage.backend", "berkeleyje");
+        String graphDBDir = "target/graphdb-" + System.currentTimeMillis();
+        StartupProperties.get().setProperty("falcon.graph.storage.directory", graphDBDir);
+        StartupProperties.get().setProperty("falcon.graph.serialize.path", graphDBDir);
         StartupProperties.get().setProperty("falcon.graph.preserve.history", "true");
         service = new MetadataMappingService();
         service.init();
