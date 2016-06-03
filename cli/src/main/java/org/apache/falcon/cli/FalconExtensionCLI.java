@@ -57,7 +57,7 @@ public class FalconExtensionCLI {
     public FalconExtensionCLI() {
     }
 
-    public void extensionCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
+    public void extensionCommand(CommandLine commandLine, FalconClient client) {
         Set<String> optionsList = new HashSet<>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -207,8 +207,7 @@ public class FalconExtensionCLI {
         return extensionOptions;
     }
 
-    private void validateRequiredParameter(final String parameter, final String parameterName)
-        throws FalconCLIException {
+    private void validateRequiredParameter(final String parameter, final String parameterName) {
         if (StringUtils.isBlank(parameter)) {
             throw new FalconCLIException("The parameter " + parameterName + " cannot be null or empty");
         }

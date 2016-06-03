@@ -283,7 +283,7 @@ public class FalconCLI {
     }
 
 
-    protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {
+    protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);
         if (url == null) {
             url = System.getenv(FALCON_URL);
