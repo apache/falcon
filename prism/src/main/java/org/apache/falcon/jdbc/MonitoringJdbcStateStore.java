@@ -26,6 +26,7 @@ import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import java.util.Date;
 import java.util.List;
 
@@ -165,6 +166,38 @@ public class MonitoringJdbcStateStore {
         entityManager.getTransaction().commit();
         entityManager.close();
     }
+
+    public PendingInstanceBean getParticularPendingInstance(String feedName, String clusterName, Date nominalTime) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        TypedQuery<PendingInstanceBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_PENDING_INSTANCE,
+                            PendingInstanceBean.class);
+        q.setParameter("feedName", feedName);
+        q.setParameter("clusterName", clusterName);
+        q.setParameter("nominalTime", nominalTime);
+        try {
+            return q.getSingleResult();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public void putSLALowCandidate() {
+
+    }
+
+    public void updateSLALowCandidate() {
+                // update sla low candidate to be
+    }
+
+    public void getSLALowCandidates() {
+
+    }
+
+    public void getSLAHighCandidates() {
+
+    }
+
 
     private void beginTransaction(EntityManager entityManager) {
         entityManager.getTransaction().begin();

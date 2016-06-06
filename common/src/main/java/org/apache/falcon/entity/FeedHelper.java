@@ -25,6 +25,7 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
@@ -1288,5 +1289,34 @@ public final class FeedHelper {
             }
         }
         return null;
+    }
+
+    public static Set<Cluster> getAddedClusters(Feed oldFeed, Feed newFeed) {
+
+        Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
+        Set<Cluster> oldClusters = new HashSet<>(oldFeed.getClusters().getClusters());
+        Set<Cluster> newClusters = new HashSet<>(newFeed.getClusters().getClusters());
+        newClusters.removeAll(oldClusters);
+        Set<Cluster> result = new HashSet<>();
+        for (Cluster cluster : newClusters) {
+            if (currentClusters.contains(cluster.getName())) {
+                result.add(cluster);
+            }
+        }
+        return result;
+    }
+
+    public static Set<Cluster> getRemovedClusters(Feed oldFeed, Feed newFeed) {
+        Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
+        Set<Cluster> oldClusters = new HashSet<>(oldFeed.getClusters().getClusters());
+        Set<Cluster> newClusters = new HashSet<>(newFeed.getClusters().getClusters());
+        oldClusters.removeAll(newClusters);
+        Set<Cluster> result = new HashSet<>();
+        for (Cluster cluster : oldClusters) {
+            if (currentClusters.contains(cluster.getName())) {
+                result.add(cluster);
+            }
+        }
+        return result;
     }
 }

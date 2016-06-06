@@ -78,7 +78,7 @@ public final class DateUtil {
         activeTimeMask = (entityInUTC) ? ISO8601_UTC_MASK : ISO8601_TZ_MASK_WITHOUT_OFFSET + tz.substring(3);
     }
 
-    public static Date getNextMinute(Date time) throws Exception {
+    public static Date getNextMinute(Date time) {
         Calendar insCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         insCal.setTime(time);
         insCal.add(Calendar.MINUTE, 1);
@@ -115,6 +115,53 @@ public final class DateUtil {
             return null;
         }
     }
+
+
+    /**
+     * Calculates the time for next occurrence from reference time and a given frequency.
+     * @param referenceTime - last run time
+     * @param frequency - frequency of the entity
+     * @return
+     */
+    public static Date addFrequency(Date referenceTime, Frequency frequency) throws FalconException {
+        return addFrequency(referenceTime, frequency, TimeZone.getTimeZone("UTC"));
+    }
+
+    /**
+     * Calculates the time for next occurrence from reference time and a given frequency in given timezone.
+     * @param referenceTime
+     * @param frequency
+     * @param timeZone
+     * @return
+     * @throws FalconException
+     */
+    public static Date addFrequency(Date referenceTime, Frequency frequency, TimeZone timeZone) throws FalconException {
+        Calendar cal = Calendar.getInstance(timeZone);
+        cal.setTime(referenceTime);
+        switch (frequency.getTimeUnit()) {
+        case minutes:
+            cal.add(Calendar.MINUTE, frequency.getFrequencyAsInt());
+            break;
+
+        case hours:
+            cal.add(Calendar.HOUR, frequency.getFrequencyAsInt());
+            break;
+
+        case days:
+            cal.add(Calendar.DAY_OF_MONTH, frequency.getFrequencyAsInt());
+            break;
+
+        case months:
+            cal.add(Calendar.MONTH, frequency.getFrequencyAsInt());
+            break;
+
+        default:
+            throw new FalconException("Invalid frequency unit: " +  frequency.getTimeUnit());
+
+        }
+        return cal.getTime();
+    }
+
 
     /**
      * Returns the current time, with seconds and milliseconds reset to 0.
@@ -273,5 +320,11 @@ public final class DateUtil {
     public static String formatDateFalconTZ(Calendar c) {
         return (c != null) ? formatDateFalconTZ(c.getTime()) : "NULL";
     }
+
+    public static String getDateStringFromDate(Date date) {
+        return getDateFormatFromTime(date.getTime());
+    }
+
+
 
 }
