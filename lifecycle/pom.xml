@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.10</version>
     </parent>
     <artifactId>falcon-feed-lifecycle</artifactId>
     <description>Apache Falcon Lifecycle Module</description>
