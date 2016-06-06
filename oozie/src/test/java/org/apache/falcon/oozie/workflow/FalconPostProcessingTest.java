@@ -100,6 +100,9 @@ public class FalconPostProcessingTest {
 
     @AfterClass
     public void tearDown() throws Exception {
+        if (broker.isStopped()) {
+            broker.start(true);
+        }
         broker.deleteAllMessages();
         broker.stop();
     }
