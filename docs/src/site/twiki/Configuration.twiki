@@ -343,13 +343,14 @@ The following properties describe an example berkeley db graph storage backend t
 *.falcon.graph.serialize.path=${user.dir}/target/graphdb
 </verbatim>
 
-----++++Using HBase backend
+---++++Using HBase backend
 
-To use HBase as the backend it is recommended that a HBase cluster be provisioned with distributed mode confiuguratoin, primarily because of the support of kerberos enabled clusters and HA considerations.  Based on build profile, a standalone hbase version can be packaged with the Falcon binary distribution.   Along with this, a template for <verbatim>hbase-site.xml</verbatim> is provided, which can be used to start the standalone mode HBase enviornment for development/testing purposes.
+To use HBase as the backend it is recommended that a HBase cluster be provisioned with distributed mode configuration primarily because of the support of kerberos enabled clusters and HA considerations.  Based on build profile, a standalone hbase version can be packaged with the Falcon binary distribution.   Along with this, a template for <verbatim>hbase-site.xml</verbatim> is provided, which can be used to start the standalone mode HBase enviornment for development/testing purposes.
 
-Basic configuration
+---++++ Basic configuration
 
 <verbatim>
+##### Falcon startup.properties
 *.falcon.graph.storage.backend=hbase
 #For standalone mode , specify localhost
 #for distributed mode, specify zookeeper quorum here - For more information refer http://s3.thinkaurelius.com/docs/titan/current/hbase.html#_remote_server_mode_2
@@ -368,7 +369,45 @@ We recommend that in the startup config the tablename for titan storage be named
 *.falcon.graph.storage.hbase.table=falcon_titan
 </verbatim>
 
-Permissions
+---++++Starting standalone HBase for testing
+
+HBase can be started in stand alone mode for testing as a backend for Titan. The following steps outline the config changes required:
+<verbatim>
+1. Build Falcon as below to package hbase binaries
+   $ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean assembly:assembly -Ppackage-standalone-hbase
+2. Configure HBase
+   a. When falcon tar file is expanded, HBase binaries are under ${FALCON_HOME}/hbase
+   b. Copy ${FALCON_HOME}/conf/hbase-site.xml.template into hbase conf dir in ${FALCON_HOME}/hbase/conf/hbase-site.xml
+   c. Set {hbase_home} property to point to a local dir
+   d. Standalone HBase starts zookeeper on the default port (2181). This port can be changed by adding the following to hbase-site.xml
+       <property>
+            <name>hbase.zookeeper.property.clientPort</name>
+            <value>2223</value>
+       </property>
+
+       <property>
+            <name>hbase.zookeeper.quorum</name>
+            <value>localhost</value>
+       </property>
+    e. set JAVA_HOME to point to Java 1.7 or above
+    f. Start hbase as ${FALCON_HOME}/hbase/bin/start-hbase.sh
+3. Configure Falcon
+   a. In ${FALCON_HOME}/conf/startup.properties, uncomment the following to enable HBase as the backend
+      *.falcon.graph.storage.backend=hbase
+      ### specify the zookeeper host and port name with which standalone hbase is started (see step 2)
+      ### by default, it will be localhost and port 2181
+      *.falcon.graph.storage.hostname=<zookeeper-host-name>:<zookeeper-host-port>
+      *.falcon.graph.serialize.path=${user.dir}/target/graphdb
+      *.falcon.graph.storage.hbase.table=falcon_titan
+      *.falcon.graph.storage.transactions=false
+4. Add HBase jars to Falcon classpath in ${FALCON_HOME}/conf/falcon-env.sh as:
+      FALCON_EXTRA_CLASS_PATH=`${FALCON_HOME}/hbase/bin/hbase classpath`
+5. Set the following in ${FALCON_HOME}/conf/startup.properties to disable SSL if needed
+      *.falcon.enableTLS=false
+6. Start Falcon
+</verbatim>
+
+---++++Permissions
 
 When Falcon is configured with HBase as the storage backend Titan needs to have sufficient authorizations to create and access an HBase table.  In a secure cluster it may be necessary to grant permissions to the <verbatim>falcon</verbatim> user for the <verbatim>falcon_titan</verbatim> table (or whateven tablename was specified for the property <verbatim>*.falcon.graph.storage.hbase.table</verbatim>
 
@@ -382,7 +421,7 @@ Without Ranger, HBase shell can be used to set the permissions.
    echo "grant 'falcon', 'RWXCA', 'falcon_titan'" | hbase shell
 </verbatim>
 
-Advanced configuration
+---++++Advanced configuration
 
 HBase storage backend support in Titan has a few other configurations and they can be set in <verbatim>$FALCON_HOME/conf/startup.properties</verbatim>, by prefixing the Titan property with <verbatim>*.falcon.graph</verbatim> prefix.
 
