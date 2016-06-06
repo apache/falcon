@@ -298,10 +298,7 @@ public class JMSMessageConsumerTest {
         sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.WORKFLOW_JOB, false /* isFalconWF */);
 
         final BrokerView adminView = broker.getAdminView();
-        Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
-        Assert.assertEquals(adminView.getTotalEnqueueCount(), 10);
         Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
-        Assert.assertEquals(adminView.getTotalMessageCount(), 0);
 
         Thread.sleep(100);
         Mockito.verify(jobEndService, Mockito.never()).notifyStart(Mockito.any(WorkflowExecutionContext.class));
