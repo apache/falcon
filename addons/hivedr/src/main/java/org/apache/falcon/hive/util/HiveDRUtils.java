@@ -70,13 +70,16 @@ public final class HiveDRUtils {
 
     public static Configuration getDefaultConf() throws IOException {
         Configuration conf = new Configuration();
-        Path confPath = new Path("file:///", System.getProperty("oozie.action.conf.xml"));
 
-        final boolean actionConfExists = confPath.getFileSystem(conf).exists(confPath);
-        LOG.info("Oozie Action conf {} found ? {}", confPath, actionConfExists);
-        if (actionConfExists) {
-            LOG.info("Oozie Action conf found, adding path={}, conf={}", confPath, conf.toString());
-            conf.addResource(confPath);
+        if (System.getProperty("oozie.action.conf.xml") != null) {
+            Path confPath = new Path("file:///", System.getProperty("oozie.action.conf.xml"));
+
+            final boolean actionConfExists = confPath.getFileSystem(conf).exists(confPath);
+            LOG.info("Oozie Action conf {} found ? {}", confPath, actionConfExists);
+            if (actionConfExists) {
+                LOG.info("Oozie Action conf found, adding path={}, conf={}", confPath, conf.toString());
+                conf.addResource(confPath);
+            }
         }
 
         String tokenFile = System.getenv("HADOOP_TOKEN_FILE_LOCATION");

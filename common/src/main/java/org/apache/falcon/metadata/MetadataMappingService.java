@@ -35,6 +35,7 @@ import com.tinkerpop.blueprints.util.TransactionWork;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -48,6 +49,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowExecutionListener;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -69,7 +73,26 @@ public class MetadataMappingService
      * Constant for the configuration property that indicates the prefix.
      */
     private static final String FALCON_PREFIX = "falcon.graph.";
-
+    /**
+     * Constant for the configuration property that indicates the storage backend.
+     */
+    public static final String PROPERTY_KEY_STORAGE_BACKEND = "storage.backend";
+    public static final String STORAGE_BACKEND_HBASE = "hbase";
+    public static final String STORAGE_BACKEND_BDB = "berkeleyje";
+    /**
+     * HBase configuration properties.
+     */
+    public static final String PROPERTY_KEY_STORAGE_HOSTNAME = "storage.hostname";
+    public static final String PROPERTY_KEY_STORAGE_TABLE = "storage.hbase.table";
+    public static final Set<String> PROPERTY_KEYS_HBASE = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            PROPERTY_KEY_STORAGE_HOSTNAME, PROPERTY_KEY_STORAGE_TABLE)));
+    /**
+     * Berkeley DB configuration properties.
+     */
+    public static final String PROPERTY_KEY_STORAGE_DIRECTORY = "storage.directory";
+    public static final String PROPERTY_KEY_SERIALIZE_PATH = "serialize.path";
+    public static final Set<String> PROPERTY_KEYS_BDB = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            PROPERTY_KEY_STORAGE_DIRECTORY, PROPERTY_KEY_SERIALIZE_PATH)));
 
     private Graph graph;
     private Set<String> vertexIndexedKeys;
@@ -118,9 +141,54 @@ public class MetadataMappingService
 
     protected Graph initializeGraphDB() {
         LOG.info("Initializing graph db");
-
         Configuration graphConfig = getConfiguration();
+        validateConfiguration(graphConfig);
         return GraphFactory.open(graphConfig);
+    }
+
+    private void validateConfiguration(Configuration graphConfig) {
+        // check if storage backend if configured
+        if (!graphConfig.containsKey(PROPERTY_KEY_STORAGE_BACKEND)) {
+            throw new FalconRuntimException("Titan GraphDB storage backend is not configured. "
+                    + "You need to choose either hbase or berkeleydb."
+                    + "Please check Configuration twiki or "
+                    + "the section Graph Database Properties in startup.properties "
+                    + "on how to configure Titan GraphDB backend.");
+        }
+
+        String backend = graphConfig.getString(PROPERTY_KEY_STORAGE_BACKEND);
+        switch (backend) {
+        case STORAGE_BACKEND_BDB:
+            // check required parameter for Berkeley DB backend
+            for (String key : PROPERTY_KEYS_BDB) {
+                if (!graphConfig.containsKey(key)) {
+                    throw new FalconRuntimException("Required parameter " + FALCON_PREFIX + key
+                            + " not found in startup.properties."
+                            + "Please check Configuration twiki or "
+                            + "the section Graph Database Properties in startup.properties "
+                            + "on how to configure Berkeley DB storage backend.");
+                }
+            }
+            break;
+        case STORAGE_BACKEND_HBASE:
+            // check required parameter for HBase backend
+            for (String key : PROPERTY_KEYS_HBASE) {
+                if (!graphConfig.containsKey(key)) {
+                    throw new FalconRuntimException("Required parameter " + FALCON_PREFIX + key
+                            + " not found in startup.properties."
+                            + "Please check Configuration twiki or "
+                            + "the section Graph Database Properties in startup.properties "
+                            + "on how to configure HBase storage backend.");
+                }
+            }
+            break;
+        default:
+            throw new FalconRuntimException("Invalid graph storage backend: " + backend + ". "
+                    + "You need to choose either hbase or berkeleydb."
+                    + "Please check Configuration twiki or "
+                    + "the section Graph Database Properties in startup.properties "
+                    + "on how to configure Titan GraphDB backend.");
+        }
     }
 
     public static Configuration getConfiguration() {

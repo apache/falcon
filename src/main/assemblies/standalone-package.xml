@@ -77,6 +77,13 @@
         </fileSet>
 
         <fileSet>
+          <directory>target/hbase</directory>
+	  <outputDirectory>hbase</outputDirectory>
+          <fileMode>0755</fileMode>
+          <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
             <directory>../logs</directory>
             <outputDirectory>logs</outputDirectory>
             <directoryMode>0777</directoryMode>
@@ -294,6 +301,13 @@
         <file>
             <source>../oozie-el-extensions/src/main/conf/oozie-site.xml</source>
             <outputDirectory>oozie/conf</outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>
+
+        <file>
+            <source>../examples/target/falcon-examples-${project.version}.jar</source>
+            <outputDirectory>examples/app/spark/lib</outputDirectory>
+            <destName>falcon-examples.jar</destName>
             <fileMode>0644</fileMode>
         </file>
 
