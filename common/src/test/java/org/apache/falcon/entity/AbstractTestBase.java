@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -136,6 +137,13 @@ public class AbstractTestBase {
 
             store.publish(type, process);
             break;
+        case DATASOURCE:
+            Datasource datasource = (Datasource) unmarshaller.unmarshal(this.getClass().getResource(DATASOURCE_XML));
+            datasource.setName(name);
+            datasource.setVersion(0);
+            decorateACL(proxyUser, defaultGroupName, datasource);
+            store.publish(type, datasource);
+            break;
         default:
         }
     }
@@ -156,6 +164,18 @@ public class AbstractTestBase {
         clusterACL.setOwner(proxyUser);
         clusterACL.setGroup(defaultGroupName);
         cluster.setACL(clusterACL);
+    }
+
+    private void decorateACL(String proxyUser, String defaultGroupName, Datasource datasource) {
+        if (datasource.getACL() != null) {
+            return;
+        }
+
+        org.apache.falcon.entity.v0.datasource.ACL dsACL =
+                new org.apache.falcon.entity.v0.datasource.ACL();
+        dsACL.setOwner(proxyUser);
+        dsACL.setGroup(defaultGroupName);
+        datasource.setACL(dsACL);
     }
 
     private void decorateACL(String proxyUser, String defaultGroupName, Feed feed) {

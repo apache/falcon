@@ -297,7 +297,9 @@ public class FalconInstanceCLI extends FalconCLI {
             result = ResponseHelper.getString(client.searchInstances(
                     type, nameSubsequence, tagKeywords, start, end, status, orderBy, offset, numResults));
         } else {
-            throw new FalconCLIException("Invalid command");
+            throw new FalconCLIException("Invalid/missing instance command. Supported commands include "
+                    + "running, status, kill, suspend, resume, rerun, logs, search. "
+                    + "Please refer to Falcon CLI twiki for more details.");
         }
 
         OUT.get().println(result);

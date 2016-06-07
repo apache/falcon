@@ -150,6 +150,8 @@ public class FalconAuthenticationFilterTest {
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
 
         CurrentUser.authenticate(FalconTestUtil.TEST_USER_2);
+        Mockito.when(mockRequest.getMethod()).thenReturn("GET");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("");
         Mockito.when(mockRequest.getRemoteUser()).thenReturn(FalconTestUtil.TEST_USER_2);
         filter.doFilter(mockRequest, mockResponse, mockChain);
         Assert.assertEquals(CurrentUser.getUser(), FalconTestUtil.TEST_USER_2);

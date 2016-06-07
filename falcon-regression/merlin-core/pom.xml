@@ -25,54 +25,50 @@
     <parent>
         <groupId>org.apache.falcon.regression</groupId>
         <artifactId>falcon-regression</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.11-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-merlin-core</artifactId>
     <description>merlin-core - utilities for Apache Falcon regression suite</description>
     <name>Apache Falcon Regression Suite Core</name>
     <packaging>jar</packaging>
-    <profiles>
-        <profile>
-            <id>hadoop-2</id>
-            <dependencies>
-            	<dependency>
-                	<groupId>org.apache.hadoop</groupId>
-                	<artifactId>hadoop-common</artifactId>
-            	</dependency>
 
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-auth</artifactId>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hive</groupId>
-                    <artifactId>hive-common</artifactId>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hive.hcatalog</groupId>
-                    <artifactId>hive-webhcat-java-client</artifactId>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hive.hcatalog</groupId>
-                    <artifactId>hive-hcatalog-core</artifactId>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hive</groupId>
-                    <artifactId>hive-jdbc</artifactId>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hive</groupId>
-                    <artifactId>hive-metastore</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive.hcatalog</groupId>
+            <artifactId>hive-webhcat-java-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive.hcatalog</groupId>
+            <artifactId>hive-hcatalog-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-metastore</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

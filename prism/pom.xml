@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.11-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>falcon-prism</artifactId>
@@ -34,21 +34,27 @@
 
     <profiles>
         <profile>
-            <id>hadoop-2</id>
+            <id>bdb-plugin-only</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+               <activeByDefault>false</activeByDefault>
+              <property>
+                  <name>bdb-plugin-only</name>
+               </property>
             </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-client</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
+            <properties>
+                 <tests.excluded.1>**/*Metadata*Test.java</tests.excluded.1>
+                 <tests.excluded.2>**/*InstanceManager*Test.java</tests.excluded.2>
+            </properties>
         </profile>
     </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
@@ -182,6 +188,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>keytool-maven-plugin</artifactId>
+                <version>1.5</version>
                 <executions>
                     <execution>
                         <phase>generate-resources</phase>
@@ -282,6 +289,16 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                         <exclude>${tests.excluded.1}</exclude>
+                         <exclude>${tests.excluded.2}</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
