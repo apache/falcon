@@ -39,6 +39,7 @@ public enum RelationshipLabel {
     USER("owned-by"),
     GROUPS("grouped-as"),
     PIPELINES("pipeline"),
+    DATASOURCE_COLO("datasource-colo"),
 
     // replication labels
     FEED_CLUSTER_REPLICATED_EDGE("replicated-to"),
