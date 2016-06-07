@@ -33,8 +33,8 @@ import java.io.IOException;
  */
 public final class FileUtils {
 
-    public static final String DEFAULT_EVENT_STORE_PATH = DRStatusStore.BASE_DEFAULT_STORE_PATH
-            + File.separator + "Events";
+    public static final String DEFAULT_EVENT_STORE_PATH = StringUtils.removeEnd(DRStatusStore
+            .BASE_DEFAULT_STORE_PATH,  File.separator) + File.separator + "Events";
     public static final FsPermission FS_PERMISSION_700 = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
 
 

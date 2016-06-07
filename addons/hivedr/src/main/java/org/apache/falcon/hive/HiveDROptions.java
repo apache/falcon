@@ -63,21 +63,29 @@ public class HiveDROptions {
     }
 
     public List<String> getSourceDatabases() {
-        return Arrays.asList(context.get(HiveDRArgs.SOURCE_DATABASE).trim().split(","));
+        return Arrays.asList(context.get(HiveDRArgs.SOURCE_DATABASES).trim().split(","));
     }
 
     public List<String> getSourceTables() {
-        return Arrays.asList(context.get(HiveDRArgs.SOURCE_TABLE).trim().split(","));
+        return Arrays.asList(context.get(HiveDRArgs.SOURCE_TABLES).trim().split(","));
     }
 
     public String getSourceStagingPath() {
+        return context.get(HiveDRArgs.SOURCE_STAGING_PATH);
+    }
+
+
+    public void setSourceStagingPath() {
         String stagingPath = context.get(HiveDRArgs.SOURCE_STAGING_PATH);
-        if (StringUtils.isNotBlank(stagingPath)) {
-            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
-            return stagingPath + File.separator + getJobName();
+        String srcStagingPath;
+        if ("NA".equalsIgnoreCase(stagingPath)) {
+            stagingPath = StringUtils.removeEnd(FileUtils.DEFAULT_EVENT_STORE_PATH, File.separator);
+            srcStagingPath = stagingPath + File.separator + getJobName();
         } else {
-            return FileUtils.DEFAULT_EVENT_STORE_PATH + getJobName();
+            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
+            srcStagingPath = stagingPath + File.separator + getJobName();
         }
+        context.put(HiveDRArgs.SOURCE_STAGING_PATH, srcStagingPath);
     }
 
     public String getSourceWriteEP() {
@@ -109,13 +117,20 @@ public class HiveDROptions {
     }
 
     public String getTargetStagingPath() {
+        return context.get(HiveDRArgs.TARGET_STAGING_PATH);
+    }
+
+    public void setTargetStagingPath() {
         String stagingPath = context.get(HiveDRArgs.TARGET_STAGING_PATH);
-        if (StringUtils.isNotBlank(stagingPath)) {
-            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
-            return stagingPath + File.separator + getJobName();
+        String targetStagingPath;
+        if ("NA".equalsIgnoreCase(stagingPath)) {
+            stagingPath = StringUtils.removeEnd(FileUtils.DEFAULT_EVENT_STORE_PATH, File.separator);
+            targetStagingPath = stagingPath + File.separator + getJobName();
         } else {
-            return FileUtils.DEFAULT_EVENT_STORE_PATH + getJobName();
+            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
+            targetStagingPath = stagingPath + File.separator + getJobName();
         }
+        context.put(HiveDRArgs.TARGET_STAGING_PATH, targetStagingPath);
     }
 
     public String getReplicationMaxMaps() {
@@ -151,7 +166,7 @@ public class HiveDROptions {
     }
 
     public static HiveDROptions create(String[] args) throws ParseException {
-        Map<HiveDRArgs, String> options = new HashMap<HiveDRArgs, String>();
+        Map<HiveDRArgs, String> options = new HashMap<>();
 
         CommandLine cmd = getCommand(args);
         for (HiveDRArgs arg : HiveDRArgs.values()) {
