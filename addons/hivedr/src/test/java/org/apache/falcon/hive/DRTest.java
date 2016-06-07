@@ -25,8 +25,8 @@ public class DRTest {
     public void testHiveDr(String[] args) {
         String[] testArgs = {
             "-sourceMetastoreUri", "thrift://localhost:9083",
-            "-sourceDatabase", "default",
-            "-sourceTable", "test",
+            "-sourceDatabases", "default",
+            "-sourceTables", "test",
             "-sourceStagingPath", "/apps/hive/tools/dr",
             "-sourceNN", "hdfs://localhost:8020",
             "-sourceRM", "local",
