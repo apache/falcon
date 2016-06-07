@@ -52,6 +52,7 @@ limitations under the License.
                 <descriptor>../src/main/assemblies/src-package.xml</descriptor>
               </descriptors>
               <finalName>apache-falcon-distributed-${project.version}</finalName>
+              <tarLongFileMode>posix</tarLongFileMode>
             </configuration>
             <executions>
               <execution>
@@ -126,6 +127,7 @@ limitations under the License.
             <descriptor>../src/main/assemblies/src-package.xml</descriptor>
           </descriptors>
           <finalName>apache-falcon-${project.version}</finalName>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>
