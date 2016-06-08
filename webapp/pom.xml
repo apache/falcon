@@ -182,11 +182,13 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-metrics</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-rerun</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
