@@ -694,7 +694,17 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             ConfigurationStore.get().cleanupUpdateInit();
             releaseEntityLocks(entity.getName(), tokenList);
         }
-        Entity existingEntity = configStore.get(entityType, entity.getName());
+
+        checkEntityExists(entity);
+
+        SecurityUtil.tryProxy(entity, doAsUser); // proxy before validating since FS/Oozie needs to be proxied
+        validate(entity);
+        configStore.publish(entityType, entity);
+        LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
+    }
+
+    protected void checkEntityExists(Entity entity) throws FalconException {
+        Entity existingEntity = configStore.get(entity.getEntityType(), entity.getName());
         if (existingEntity != null) {
             if (EntityUtil.equals(existingEntity, entity)) {
                 return;
@@ -704,11 +714,6 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
                     entity.toShortString() + " already registered with configuration store. "
                             + "Can't be submitted again. Try removing before submitting.");
         }
-
-        SecurityUtil.tryProxy(entity, doAsUser); // proxy before validating since FS/Oozie needs to be proxied
-        validate(entity);
-        configStore.publish(entityType, entity);
-        LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
     }
 
     /**
