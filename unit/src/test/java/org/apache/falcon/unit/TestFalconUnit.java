@@ -186,8 +186,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
                 getAbsolutePath(PROCESS), true, null);
         assertStatus(result);
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
-        result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
-        assertStatus(result);
         result = scheduleProcess(PROCESS_NAME, SCHEDULE_TIME, 1, CLUSTER_NAME, getAbsolutePath(WORKFLOW), true, "");
         assertStatus(result);
         waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.SUCCEEDED);
