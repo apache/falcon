@@ -39,6 +39,7 @@ public class HiveMirroringExtension extends AbstractExtension {
     private static final String ALL_TABLES = "*";
     private static final String COMMA_DELIMITER = ",";
     private static final String SECURE_RESOURCE = "-secure";
+    private static final String NOT_APPLICABLE = "NA";
 
     @Override
     public String getName() {
@@ -121,6 +122,12 @@ public class HiveMirroringExtension extends AbstractExtension {
         // Add job name as Hive DR job
         additionalProperties.put(HiveMirroringExtensionProperties.HIVE_MIRRORING_JOB_NAME.getName(),
                 jobName);
+
+        // Get the first source DB
+        additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_DATABASE.getName(),
+                extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_DATABASES
+                .getName()).trim().split(",")[0]
+        );
 
         String clusterName = extensionProperties.getProperty(ExtensionProperties.CLUSTER_NAME.getName());
         // Add required properties of cluster where job should run
@@ -228,6 +235,16 @@ public class HiveMirroringExtension extends AbstractExtension {
         if (StringUtils.isBlank(
                 extensionProperties.getProperty(HiveMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName()))) {
             additionalProperties.put(HiveMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName(), "false");
+        }
+
+        if (StringUtils.isBlank(
+                extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_STAGING_PATH.getName()))) {
+            additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_STAGING_PATH.getName(), NOT_APPLICABLE);
+        }
+
+        if (StringUtils.isBlank(
+                extensionProperties.getProperty(HiveMirroringExtensionProperties.TARGET_STAGING_PATH.getName()))) {
+            additionalProperties.put(HiveMirroringExtensionProperties.TARGET_STAGING_PATH.getName(), NOT_APPLICABLE);
         }
 
         return additionalProperties;

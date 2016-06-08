@@ -136,6 +136,13 @@ public class HiveDRTool extends Configured implements Tool {
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
+        // Update the source staging path
+        inputOptions.setSourceStagingPath();
+        inputOptions.setTargetStagingPath();
+
+        LOG.info("srcStaginPath: {}", inputOptions.getSourceStagingPath());
+        LOG.info("tgtStaginPath: {}", inputOptions.getTargetStagingPath());
+
         Configuration sourceConf = FileUtils.getConfiguration(inputOptions.getSourceWriteEP(),
                 inputOptions.getSourceNNKerberosPrincipal());
         sourceClusterFS = FileSystem.get(sourceConf);
