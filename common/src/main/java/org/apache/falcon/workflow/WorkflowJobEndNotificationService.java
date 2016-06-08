@@ -299,7 +299,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
         }
         Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
 
-        if (context.hasWorkflowFailed()) {
+        if (!context.hasWorkflowSucceeded()) {
             GenericAlert.instrumentFailedInstance(clusterName, entityType,
                     entityName, nominalTime, workflowId, workflowUser, runId, operation,
                     SchemaHelper.formatDateUTC(startTime), "", "", duration);
