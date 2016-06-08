@@ -18,10 +18,7 @@
 package org.apache.falcon.jdbc;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.falcon.persistence.MonitoredFeedsBean;
-import org.apache.falcon.persistence.PendingInstanceBean;
-import org.apache.falcon.persistence.PersistenceConstants;
-import org.apache.falcon.persistence.ResultNotFoundException;
+import org.apache.falcon.persistence.*;
 import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
@@ -182,20 +179,48 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putSLALowCandidate() {
-
+    public void putSLALowCandidate(String feedName,String cluster,Date nominalTime,Boolean isSLALowMissed,
+                                   Boolean isSLAHighMissed) {
+        EntityManager entityManager = getEntityManager();
+        FeedSLAAlertBean feedSLAAlertBean = new FeedSLAAlertBean();
+        feedSLAAlertBean.setFeedName(feedName);
+        feedSLAAlertBean.setClusterName(cluster);
+        feedSLAAlertBean.setNominalTime(nominalTime);
+        feedSLAAlertBean.setIsSLALowMissed(isSLALowMissed);
+        feedSLAAlertBean.setIsSLAHighMissed(isSLAHighMissed);
+        beginTransaction(entityManager);
+        entityManager.persist(feedSLAAlertBean);
+        commitAndCloseTransaction(entityManager);
     }
 
-    public void updateSLALowCandidate() {
-                // update sla low candidate to be
+    public void updateSLAHighCandidate(String feedName,String cluster,Date nominalTime) {
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_SLA_HIGH);
+        q.setParameter("feedName",feedName);
+        q.setParameter("cluster",cluster);
+        q.setParameter("nominalTime",nominalTime);
+        q.executeUpdate();
+        commitAndCloseTransaction(entityManager);
     }
 
     public void getSLALowCandidates() {
 
     }
 
-    public void getSLAHighCandidates() {
+    public List<FeedSLAAlertBean> getSLAHighCandidates() {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_SLA_HIGH_CANDIDATES);
+        List result = q.getResultList();
 
+        try {
+            if (CollectionUtils.isEmpty(result)) {
+                return null;
+            }
+        } finally{
+            entityManager.close();
+        }
+        return result;
     }
 
 

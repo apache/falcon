@@ -37,7 +37,9 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.*;
+import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
+import org.apache.falcon.persistence.FeedSLAAlertBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.util.DateUtil;
@@ -63,6 +65,8 @@ public final class FeedSLAAlertService implements FalconService {
     DelayQueue<AlertObject> slaHighCandidates;
 
     Multimap<Pair,Date> feedInstancesToBeMonitored ;
+
+    MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
 
 /**
   * Permissions for storePath.
@@ -245,8 +249,7 @@ public final class FeedSLAAlertService implements FalconService {
     }
 
     void processSLALowCandidates(){
-        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
-
+//Get all feeds instances to be monitored
         List<PendingInstanceBean> pendingInstanceBeanList = store.getAllInstances();
 
         if(!pendingInstanceBeanList.isEmpty()){
@@ -257,24 +260,84 @@ public final class FeedSLAAlertService implements FalconService {
 
         try{
             for(Map.Entry<Pair, Date> pairDateEntry : feedInstancesToBeMonitored.entries()) {
+
                 Pair pair = pairDateEntry.getKey();
                 Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) pair.getLeft());
 
-                Cluster cluster1 =  FeedHelper.getCluster(feed,(String)pair.getRight());
+                Cluster cluster =  FeedHelper.getCluster(feed,(String)pair.getRight());
 
                 FileSystemStorage fileSystemStorage = new FileSystemStorage(FileSystemStorage.FILE_SYSTEM_URL,
-                        cluster1.getLocations());
-                List<FeedInstanceStatus> actual = fileSystemStorage.
-                        getListing(feed, "TestFeedListing", LocationType.DATA, pairDateEntry.getValue(),
+                        cluster.getLocations());
+
+                // Get the status of the feed instance from HDFS if it is available look for the time stamp wheather it missed the sla
+                //if its not available look if the instance has missed the SLA low mark
+                List<FeedInstanceStatus> feedStatus = fileSystemStorage.
+                        getListing(feed, cluster.getName(), LocationType.DATA, pairDateEntry.getValue(),
                                 pairDateEntry.getValue());
+                //Only one result would always be retured as start and end data is same.
+                FeedInstanceStatus feedInstanceStatus =  feedStatus.get(0);
+                Long creationTime =  feedInstanceStatus.getCreationTime() == 0L ? System.nanoTime()
+                        : feedInstanceStatus.getCreationTime();
+                Date createdTime =  new Date(creationTime*1000);
+                Frequency slaLow  = feed.getSla().getSlaLow();
+                ExpressionHelper evaluator = ExpressionHelper.get();
+                Long slaLowDuration = evaluator.evaluate(slaLow.toString(), Long.class);
+                Date slaLowTime = new Date(pairDateEntry.getValue().getTime() + slaLowDuration);
+
+                if(createdTime.after(slaLowTime)) {
+                    store.putSLALowCandidate(pair.getLeft().toString(),pair.getRight().toString(),
+                            pairDateEntry.getValue(),true,false);
+                //Mark in DB as SLA missed
+                    LOG.info( "Feed :"+ pairDateEntry.getKey().getLeft() +
+                            "Cluster:" + pairDateEntry.getKey().getRight() + "Nominal Time:" + pairDateEntry.getValue()
+                            + "missed SLA");
+                }
+
             }
+        } catch (FalconException e){
+            LOG.error("Exception in FeedSLAALertService:"+ e);
 
-
-
-
-        }catch (FalconException e){
-
+            }
         }
+
+    }
+
+    void processSLAHighCandidates(){
+        List<FeedSLAAlertBean> feedSLAAlertBeanList = store.getSLAHighCandidates();
+
+        if(!feedSLAAlertBeanList.isEmpty()) {
+            for (FeedSLAAlertBean bean : feedSLAAlertBeanList) {
+                try {
+                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) bean.getFeedName());
+                    Cluster cluster =  FeedHelper.getCluster(feed,bean.getClusterName());
+                    Date nominalTime = bean.getNominalTime();
+
+                    Frequency slaHigh = feed.getSla().getSlaHigh();
+                    ExpressionHelper evaluator = ExpressionHelper.get();
+                    Long slaHighDuration = evaluator.evaluate(slaHigh.toString(), Long.class);
+                    Date slaHighTime = new Date(nominalTime.getTime() + slaHighDuration);
+                    FileSystemStorage fileSystemStorage = new FileSystemStorage(FileSystemStorage.FILE_SYSTEM_URL,
+                            cluster.getLocations());
+
+                    List<FeedInstanceStatus> feedStatus = fileSystemStorage.
+                            getListing(feed, cluster.getName(), LocationType.DATA, nominalTime,nominalTime);
+
+                    FeedInstanceStatus feedInstanceStatus = feedStatus.get(0);
+
+                    Long creationTime =  feedInstanceStatus.getCreationTime() == 0L ? System.nanoTime()
+                            : feedInstanceStatus.getCreationTime();
+                    Date createdTime = new Date(creationTime*1000);
+
+                    if(slaHighTime.before(createdTime)){
+                        store.updateSLAHighCandidate(bean.getFeedName(),bean.getClusterName(),nominalTime);
+                    }
+
+
+                } catch (FalconException e){
+                    LOG.error("Exception in FeedSLAALertService processSLAHighCandidates:" + e);
+                }
+
+            }
         }
 
     }
@@ -320,40 +383,40 @@ public final class FeedSLAAlertService implements FalconService {
 //        }
 //    }
 
-    void processSLAHighCandidates() {
-        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
-        AlertObject next;
-        while (((next = slaHighCandidates.poll()) != null)) {
-            SchedulableEntityInstance instance = next.instance;
-
-// check if this instance is still pending
-            if (true) {
-// send alert - for now just log it.
-                LOG.info("SLA Low Missed for feed: {}, cluster: {}, instanceTime: {}", instance.getEntityName(),
-                        instance.getCluster(), DateUtil.getDateStringFromDate(instance.getInstanceTime()));
-                try {
-                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, instance.getEntityName());
-                    Sla sla = FeedHelper.getSLA(instance.getCluster(), feed);
-                    Cluster cluster = FeedHelper.getCluster(feed, instance.getCluster());
-                    if (cluster == null) {
-                        throw new FalconException("Invalid cluster: " + instance.getCluster() + " for the feed: "
-                                + feed.getName());
-                    }
-
-                    Date referenceTime = DateUtil.getNextMinute(instance.getInstanceTime());
-                    Date nextInstanceTime = EntityUtil.getNextStartTime(cluster.getValidity().getStart(),
-                        feed.getFrequency(), feed.getTimezone(), referenceTime);
-                    SchedulableEntityInstance newInstance = new SchedulableEntityInstance(instance.getEntityName(),
-                        instance.getCluster(), nextInstanceTime, EntityType.FEED);
-                    AlertObject newObject = new AlertObject(newInstance, sla.getSlaHigh(), feed.getTimezone());
-                    slaHighCandidates.add(newObject);
-                } catch (FalconException e) {
-                    LOG.error("Couldn't find feed:{}, cluster:{} matching to SLA alert", instance.getEntityName(),
-                            instance.getCluster());
-                }
-            }
-        }
-    }
+//    void processSLAHighCandidates() {
+//        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+//        AlertObject next;
+//        while (((next = slaHighCandidates.poll()) != null)) {
+//            SchedulableEntityInstance instance = next.instance;
+//
+//// check if this instance is still pending
+//            if (true) {
+//// send alert - for now just log it.
+//                LOG.info("SLA Low Missed for feed: {}, cluster: {}, instanceTime: {}", instance.getEntityName(),
+//                        instance.getCluster(), DateUtil.getDateStringFromDate(instance.getInstanceTime()));
+//                try {
+//                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, instance.getEntityName());
+//                    Sla sla = FeedHelper.getSLA(instance.getCluster(), feed);
+//                    Cluster cluster = FeedHelper.getCluster(feed, instance.getCluster());
+//                    if (cluster == null) {
+//                        throw new FalconException("Invalid cluster: " + instance.getCluster() + " for the feed: "
+//                                + feed.getName());
+//                    }
+//
+//                    Date referenceTime = DateUtil.getNextMinute(instance.getInstanceTime());
+//                    Date nextInstanceTime = EntityUtil.getNextStartTime(cluster.getValidity().getStart(),
+//                        feed.getFrequency(), feed.getTimezone(), referenceTime);
+//                    SchedulableEntityInstance newInstance = new SchedulableEntityInstance(instance.getEntityName(),
+//                        instance.getCluster(), nextInstanceTime, EntityType.FEED);
+//                    AlertObject newObject = new AlertObject(newInstance, sla.getSlaHigh(), feed.getTimezone());
+//                    slaHighCandidates.add(newObject);
+//                } catch (FalconException e) {
+//                    LOG.error("Couldn't find feed:{}, cluster:{} matching to SLA alert", instance.getEntityName(),
+//                            instance.getCluster());
+//                }
+//            }
+//        }
+//    }
 
     @SuppressWarnings("unchecked")
     private void deserialize(Path path) throws FalconException {

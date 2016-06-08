@@ -57,5 +57,6 @@ public final class PersistenceConstants {
     public static final String GET_LATEST_INSTANCE_TIME = "GET_LATEST_INSTANCE_TIME";
     public static final String GET_FEED_ALERTS = "GET_FEED_ALERTS";
     public static final String GET_ALL_FEED_ALERTS = "GET_ALL_FEED_ALERTS";
-    public static final String GET_SLA_CANDIDATES = "GET_ALL_SLA_CANDIDATES";
+    public static final String GET_SLA_HIGH_CANDIDATES = "GET_SLA_HIGH_CANDIDATES";
+    public static final String UPDATE_SLA_HIGH = "UPDATE_SLA_HIGH";
 }
