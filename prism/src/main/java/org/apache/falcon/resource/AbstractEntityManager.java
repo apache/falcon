@@ -712,7 +712,8 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
             throw new EntityAlreadyExistsException(
                     entity.toShortString() + " already registered with configuration store. "
-                            + "Can't be submitted again. Try removing before submitting.");
+                            + "Can't be submitted again. Try removing before submitting. "
+                            + "Alternatively, use the update API.");
         }
     }
 
