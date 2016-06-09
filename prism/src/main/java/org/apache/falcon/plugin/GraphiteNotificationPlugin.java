@@ -59,23 +59,25 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
 
                 if ((message.getAction().equals("wf-instance-succeeded"))) {
                     Long timeTaken =  message.getExecutionTime() / 1000000000;
-                    String metricsName = prefix + separator +message.getDimensions().get("cluster") + separator
-                            + pipeline + ".GENERATE." + entityName + ".processing_time";
-                    metricNotificationService.publish(metricsName, timeTaken);
+                    StringBuilder processingMetric = new StringBuilder(prefix).append(".").append(message.
+                            getDimensions().get("cluster")).append(".").append(pipeline).append(".GENERATE.")
+                            .append(entityName).append(".processing_time");
+                    metricNotificationService.publish(processingMetric.toString(), timeTaken);
 
                     DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));
                     DateTime startTime = new DateTime(message.getDimensions().get("start-time"));
-                    metricsName = prefix + separator  + message.getDimensions().get("cluster") + separator + pipeline
-                            + ".GENERATE." + entityName + ".start_delay";
-                    metricNotificationService.publish(metricsName,
+                    StringBuilder startTimeMetric = new StringBuilder(prefix).append(".").append(message.
+                            getDimensions().get("cluster")).append(".").append(pipeline).append(".GENERATE.").
+                            append(entityName).append(".start_delay");
+                    metricNotificationService.publish(startTimeMetric.toString(),
                             (long)Seconds.secondsBetween(nominalTime, startTime).getSeconds());
                 }
 
                 if (message.getAction().equals("wf-instance-failed")){
-                    String metricName =  prefix + separator + message.getDimensions().get("cluster") + separator
-                            + pipeline + ".GENERATE." +  entityName + ".failure"
-                            + message.getDimensions().get("error-message");
-                    metricNotificationService.publish(metricName, (long) 1);
+                    StringBuilder metricName = new StringBuilder(prefix).append(".").append(message.
+                            getDimensions().get("cluster")).append(".").append(pipeline).append(".GENERATE.").
+                            append(entityName).append(".failure").append(message.getDimensions().get("error-message"));
+                    metricNotificationService.publish(metricName.toString(), (long) 1);
                 }
             }
         } catch (Exception e) {
