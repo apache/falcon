@@ -45,34 +45,39 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
         MetricNotificationService metricNotificationService =
                 Services.get().getService(MetricNotificationService.SERVICE_NAME);
         try {
-            String entityType = message.getDimensions().get("entity-type");
-            String entityName = message.getDimensions().get("entity-name");
+            String entityType = StringUtils.isNotBlank(message.getDimensions().get("entityType"))
+                    ? message.getDimensions().get("entityType") :message.getDimensions().get("entity-type");
+            String entityName = StringUtils.isNotBlank(message.getDimensions().get("entityName"))
+                    ? message.getDimensions().get("entityName") :message.getDimensions().get("entity-name");
             String prefix = StartupProperties.get().getProperty("falcon.graphite.prefix");
-            if (entityType.equals(EntityType.PROCESS.name())) {
+            String separator = ".";
+            LOG.debug("message:" + message.getAction());
+            if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())) {
                 Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 Process process = (Process) entity;
                 String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
 
-
                 if ((message.getAction().equals("wf-instance-succeeded"))) {
                     Long timeTaken =  message.getExecutionTime() / 1000000000;
-                    String metricsName = prefix + message.getDimensions().get("cluster") + pipeline
-                            + ".GENERATE." + entityName + ".processing_time";
-                    metricNotificationService.publish(metricsName, timeTaken);
+                    StringBuilder processingMetric = new StringBuilder(prefix).append(".").append(message.
+                            getDimensions().get("cluster")).append(".").append(pipeline).append(".GENERATE.")
+                            .append(entityName).append(".processing_time");
+                    metricNotificationService.publish(processingMetric.toString(), timeTaken);
 
                     DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));
                     DateTime startTime = new DateTime(message.getDimensions().get("start-time"));
-                    metricsName = prefix + message.getDimensions().get("cluster") + pipeline
-                            + ".GENERATE." + entityName + ".start_delay";
-                    metricNotificationService.publish(metricsName,
-                        (long)Seconds.secondsBetween(nominalTime, startTime).getSeconds());
+                    StringBuilder startTimeMetric = new StringBuilder(prefix).append(".").append(message.
+                            getDimensions().get("cluster")).append(".").append(pipeline).append(".GENERATE.").
+                            append(entityName).append(".start_delay");
+                    metricNotificationService.publish(startTimeMetric.toString(),
+                            (long)Seconds.secondsBetween(nominalTime, startTime).getSeconds());
                 }
 
                 if (message.getAction().equals("wf-instance-failed")){
-                    String metricName =  prefix + message.getDimensions().get("cluster") + pipeline
-                            + ".GENERATE." +  entityName + ".failure"
-                        + message.getDimensions().get("error-message");
-                    metricNotificationService.publish(metricName, (long) 1);
+                    StringBuilder metricName = new StringBuilder(prefix).append(".").append(message.
+                            getDimensions().get("cluster")).append(".").append(pipeline).append(".GENERATE.").
+                            append(entityName).append(".failure").append(message.getDimensions().get("error-message"));
+                    metricNotificationService.publish(metricName.toString(), (long) 1);
                 }
             }
         } catch (Exception e) {
