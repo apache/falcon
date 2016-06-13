@@ -19,10 +19,7 @@
 package org.apache.falcon.service;
 
 import java.util.*;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import javax.annotation.Nonnull;
 import javax.persistence.EntityManager;
@@ -259,6 +256,9 @@ public final class FeedSLAAlertService implements FalconService {
             }
 
         try{
+            int length = feedInstancesToBeMonitored.size();
+
+            Callable callable ;
             for(Map.Entry<Pair, Date> pairDateEntry : feedInstancesToBeMonitored.entries()) {
 
                 Pair pair = pairDateEntry.getKey();
@@ -292,6 +292,9 @@ public final class FeedSLAAlertService implements FalconService {
                             "Cluster:" + pairDateEntry.getKey().getRight() + "Nominal Time:" + pairDateEntry.getValue()
                             + "missed SLA");
                 }
+                else{
+                    feedInstancesToBeMonitored.remove(pairDateEntry.getKey(),pairDateEntry.getValue());
+                }
 
             }
         } catch (FalconException e){
@@ -300,6 +303,15 @@ public final class FeedSLAAlertService implements FalconService {
             }
         }
 
+    }
+
+    class abc implements Callable{
+        public abc(List<>){
+
+        }
+        public Integer  call(){
+            return 1;
+        }
     }
 
     void processSLAHighCandidates(){
