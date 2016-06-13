@@ -476,17 +476,18 @@ public class FeedEvictorTest {
             createTestData("/tmp");
             final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
             FeedEvictor.main(new String[] {
-                    "-feedBasePath", getFeedBasePath(LocationType.DATA, storageUrl)
-                    + "#" + getStatsOrMetaPath(LocationType.STATS, storageUrl)
+                "-feedBasePath",
+                getFeedBasePath(LocationType.DATA, storageUrl) + "#"
+                    + getStatsOrMetaPath(LocationType.STATS, storageUrl)
                     + "#" + getStatsOrMetaPath(LocationType.META, storageUrl)
                     + "#" + getFeedBasePath(LocationType.TMP, storageUrl),
-                    "-retentionType", "instance",
-                    "-retentionLimit", "months(5)",
-                    "-timeZone", "UTC",
-                    "-frequency", "hourly",
-                    "-logFile", conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
-                    + "/falcon/staging/feed/2012-01-01-04-00", "-falconFeedStorageType",
-                    Storage.TYPE.FILESYSTEM.name(),
+                "-retentionType", "instance",
+                "-retentionLimit", "months(5)",
+                "-timeZone", "UTC",
+                "-frequency", "hourly",
+                "-logFile", conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                + "/falcon/staging/feed/2012-01-01-04-00", "-falconFeedStorageType",
+                Storage.TYPE.FILESYSTEM.name(),
             });
 
             // should not throw exception
