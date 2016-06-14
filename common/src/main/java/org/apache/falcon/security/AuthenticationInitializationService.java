@@ -83,8 +83,13 @@ public class AuthenticationInitializationService implements FalconService {
             String authTokenValidity = StartupProperties.get().getProperty(AUTH_TOKEN_VALIDITY_SECONDS);
             long validateFrequency;
             try {
+                // -100 so that revalidation is done before expiry.
                 validateFrequency = (StringUtils.isNotEmpty(authTokenValidity))
-                        ? Long.parseLong(authTokenValidity) : 86400;
+                        ? (Long.parseLong(authTokenValidity) - 100) : 86300;
+                if (validateFrequency < 0) {
+                    throw new NumberFormatException("Value provided for startup property \""
+                            + AUTH_TOKEN_VALIDITY_SECONDS + "\" is too small.");
+                }
             } catch (NumberFormatException nfe) {
                 throw new FalconException("Invalid value provided for startup property \""
                         + AUTH_TOKEN_VALIDITY_SECONDS + "\", please provide a valid long number", nfe);
@@ -149,12 +154,12 @@ public class AuthenticationInitializationService implements FalconService {
         @Override
         public void run() {
             try {
-                LOG.info("Validating Auth Token: {}", new Date());
-                initializeKerberos();
+                LOG.debug("Revalidating Auth Token at : {} with auth method {}", new Date(),
+                        UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
+                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
             } catch (Throwable t) {
-                LOG.error("Error in Auth Token Validation task: ", t);
-                GenericAlert.initializeKerberosFailed(
-                        "Exception in Auth Token Validation : ", t);
+                LOG.error("Error in Auth Token revalidation task: ", t);
+                GenericAlert.initializeKerberosFailed("Exception in Auth Token revalidation : ", t);
             }
         }
     }
