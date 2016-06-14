@@ -67,7 +67,7 @@ public class AuthenticationInitializationService implements FalconService {
 
     private Timer timer = new Timer();
     private static final String SERVICE_NAME = "Authentication initialization service";
-    private static final int DEFAULT_VALIDATE_FREQUENCY_SECS = 86300;
+    private static final long DEFAULT_VALIDATE_FREQUENCY_SECS = 86300;
 
     @Override
     public String getName() {
@@ -89,7 +89,7 @@ public class AuthenticationInitializationService implements FalconService {
                         ? (Long.parseLong(authTokenValidity) - 100) : DEFAULT_VALIDATE_FREQUENCY_SECS;
                 if (validateFrequency < 0) {
                     throw new NumberFormatException("Value provided for startup property \""
-                            + AUTH_TOKEN_VALIDITY_SECONDS + "\" is too small.");
+                            + AUTH_TOKEN_VALIDITY_SECONDS + "\" should be greater than 100.");
                 }
             } catch (NumberFormatException nfe) {
                 throw new FalconException("Invalid value provided for startup property \""
