@@ -52,7 +52,8 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
             String prefix = StartupProperties.get().getProperty("falcon.graphite.prefix");
             String separator = ".";
             LOG.debug("message:" + message.getAction());
-            if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())) {
+            if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())
+                    && ConfigurationStore.get().get(EntityType.PROCESS, entityName) != null) {
                 Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 Process process = (Process) entity;
                 String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
