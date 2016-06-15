@@ -43,11 +43,8 @@ import java.util.Set;
  */
 public class FalconEntityCLI extends FalconCLI {
 
-    public static final String SUBMIT_OPT = "submit";
     public static final String SUBMIT_OPT_DESCRIPTION = "Submits an entity xml to Falcon";
-    public static final String UPDATE_OPT = "update";
     public static final String UPDATE_OPT_DESCRIPTION = "Updates an existing entity";
-    public static final String DELETE_OPT = "delete";
     public static final String DELETE_OPT_DESCRIPTION = "Deletes an entity in Falcon, and kills its instance from "
             + "workflow engine";
     public static final String SUBMIT_AND_SCHEDULE_OPT = "submitAndSchedule";
@@ -55,16 +52,13 @@ public class FalconEntityCLI extends FalconCLI {
             + "schedules it immediately";
     public static final String VALIDATE_OPT = "validate";
     public static final String VALIDATE_OPT_DESCRIPTION = "Validates an entity based on the entity type";
-    public static final String DEFINITION_OPT = "definition";
     public static final String DEFINITION_OPT_DESCRIPTION = "Gets the Definition of entity";
-    public static final String SLA_MISS_ALERT_OPT = "slaAlert";
     public static final String SLA_MISS_ALERT_OPT_DESCRIPTION = "Get missing feed instances which missed SLA";
 
-    public static final String LOOKUP_OPT = "lookup";
+
     public static final String LOOKUP_OPT_DESCRIPTION = "Lookup a feed given its instance's path";
     public static final String PATH_OPT = "path";
     public static final String PATH_OPT_DESCRIPTION = "Path for a feed's instance";
-    public static final String TOUCH_OPT = "touch";
     public static final String TOUCH_OPT_DESCRIPTION = "Force update the entity in workflow engine"
             + "(even without any changes to entity)";
     public static final String PROPS_OPT = "properties";
@@ -117,22 +111,23 @@ public class FalconEntityCLI extends FalconCLI {
 
         Options entityOptions = new Options();
 
-        Option submit = new Option(SUBMIT_OPT, false, SUBMIT_OPT_DESCRIPTION);
-        Option update = new Option(UPDATE_OPT, false, UPDATE_OPT_DESCRIPTION);
-        Option schedule = new Option(SCHEDULE_OPT, false, SCHEDULE_OPT_DESCRIPTION);
-        Option suspend = new Option(SUSPEND_OPT, false, SUSPEND_OPT_DESCRIPTION);
-        Option resume = new Option(RESUME_OPT, false, RESUME_OPT_DESCRIPTION);
-        Option delete = new Option(DELETE_OPT, false, DELETE_OPT_DESCRIPTION);
-        Option submitAndSchedule = new Option(SUBMIT_AND_SCHEDULE_OPT, false, SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION);
-        Option validate = new Option(VALIDATE_OPT, false, VALIDATE_OPT_DESCRIPTION);
-        Option status = new Option(STATUS_OPT, false, STATUS_OPT_DESCRIPTION);
-        Option definition = new Option(DEFINITION_OPT, false, DEFINITION_OPT_DESCRIPTION);
-        Option dependency = new Option(DEPENDENCY_OPT, false, DEPENDENCY_OPT_DESCRIPTION);
-        Option list = new Option(LIST_OPT, false, LIST_OPT_DESCRIPTION);
-        Option lookup = new Option(LOOKUP_OPT, false, LOOKUP_OPT_DESCRIPTION);
-        Option slaAlert = new Option(SLA_MISS_ALERT_OPT, false, SLA_MISS_ALERT_OPT_DESCRIPTION);
-        Option entitySummary = new Option(SUMMARY_OPT, false, SUMMARY_OPT_DESCRIPTION);
-        Option touch = new Option(TOUCH_OPT, false, TOUCH_OPT_DESCRIPTION);
+        Option submit = new Option(FalconCLIConstants.SUBMIT_OPT, false, SUBMIT_OPT_DESCRIPTION);
+        Option update = new Option(FalconCLIConstants.UPDATE_OPT, false, UPDATE_OPT_DESCRIPTION);
+        Option schedule = new Option(FalconCLIConstants.SCHEDULE_OPT, false, SCHEDULE_OPT_DESCRIPTION);
+        Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false, SUSPEND_OPT_DESCRIPTION);
+        Option resume = new Option(FalconCLIConstants.RESUME_OPT, false, RESUME_OPT_DESCRIPTION);
+        Option delete = new Option(FalconCLIConstants.DELETE_OPT, false, DELETE_OPT_DESCRIPTION);
+        Option submitAndSchedule = new Option(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT, false,
+                SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION);
+        Option validate = new Option(FalconCLIConstants.VALIDATE_OPT, false, VALIDATE_OPT_DESCRIPTION);
+        Option status = new Option(FalconCLIConstants.STATUS_OPT, false, STATUS_OPT_DESCRIPTION);
+        Option definition = new Option(FalconCLIConstants.DEFINITION_OPT, false, DEFINITION_OPT_DESCRIPTION);
+        Option dependency = new Option(FalconCLIConstants.DEPENDENCY_OPT, false, DEPENDENCY_OPT_DESCRIPTION);
+        Option list = new Option(FalconCLIConstants.LIST_OPT, false, LIST_OPT_DESCRIPTION);
+        Option lookup = new Option(FalconCLIConstants.LOOKUP_OPT, false, LOOKUP_OPT_DESCRIPTION);
+        Option slaAlert = new Option(FalconCLIConstants.SLA_MISS_ALERT_OPT, false, SLA_MISS_ALERT_OPT_DESCRIPTION);
+        Option entitySummary = new Option(FalconCLIConstants.SUMMARY_OPT, false, SUMMARY_OPT_DESCRIPTION);
+        Option touch = new Option(FalconCLIConstants.TOUCH_OPT, false, TOUCH_OPT_DESCRIPTION);
 
         Option updateClusterDependents = new Option(FalconCLIConstants.UPDATE_CLUSTER_DEPENDENTS_OPT, false,
                 "Updates dependent entities of a cluster in workflow engine");
@@ -267,7 +262,7 @@ public class FalconEntityCLI extends FalconCLI {
         validateSortOrder(sortOrder);
         String entityAction = "entity";
 
-        if (optionsList.contains(SLA_MISS_ALERT_OPT)) {
+        if (optionsList.contains(FalconCLIConstants.SLA_MISS_ALERT_OPT)) {
             validateNotEmpty(entityType, FalconCLIConstants.TYPE_OPT);
             validateNotEmpty(start, FalconCLIConstants.START_OPT);
             parseDateString(start);
@@ -275,11 +270,11 @@ public class FalconEntityCLI extends FalconCLI {
             SchedulableEntityInstanceResult response = client.getFeedSlaMissPendingAlerts(entityType,
                     entityName, start, end, colo);
             result = ResponseHelper.getString(response);
-        } else if (optionsList.contains(SUBMIT_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
             validateNotEmpty(filePath, FILE_PATH_OPT);
             validateColo(optionsList);
             result = client.submit(entityType, filePath, doAsUser).getMessage();
-        } else if (optionsList.contains(LOOKUP_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.LOOKUP_OPT)) {
             validateNotEmpty(feedInstancePath, PATH_OPT);
             FeedLookupResult resp = client.reverseLookUp(entityType, feedInstancePath, doAsUser);
             result = ResponseHelper.getString(resp);
@@ -323,7 +318,7 @@ public class FalconEntityCLI extends FalconCLI {
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.getStatus(entityTypeEnum, entityName, colo, doAsUser, showScheduler).getMessage();
-        } else if (optionsList.contains(DEFINITION_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.DEFINITION_OPT)) {
             validateColo(optionsList);
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             result = client.getDefinition(entityType, entityName, doAsUser).toString();
@@ -348,7 +343,7 @@ public class FalconEntityCLI extends FalconCLI {
             result = ResponseHelper.getString(client.getEntitySummary(
                     entityType, cluster, start, end, fields, filterBy, filterTags,
                     orderBy, sortOrder, offset, numResults, numInstances, doAsUser));
-        } else if (optionsList.contains(TOUCH_OPT)) {
+        } else if (optionsList.contains(FalconCLIConstants.TOUCH_OPT)) {
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.touch(entityType, entityName, colo, skipDryRun, doAsUser).getMessage();

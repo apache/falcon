@@ -28,7 +28,10 @@ public final class FalconCLIConstants {
     public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
     public static final String DEBUG_OPTION = "debug";
     public static final String URL_OPTION = "url";
-
+    public static final String DEFINITION_OPT = "definition";
+    public static final String LOOKUP_OPT = "lookup";
+    public static final String SLA_MISS_ALERT_OPT = "slaAlert";
+    public static final String TOUCH_OPT = "touch";
     public static final String ADMIN_CMD = "admin";
     public static final String HELP_CMD = "help";
     public static final String METADATA_CMD = "metadata";
@@ -36,7 +39,6 @@ public final class FalconCLIConstants {
     public static final String INSTANCE_CMD = "instance";
     public static final String EXTENSION_CMD = "extension";
     public static final String SAFE_MODE_OPT = "setsafemode";
-
     public static final String TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
     public static final String CLUSTER_OPT = "cluster";
