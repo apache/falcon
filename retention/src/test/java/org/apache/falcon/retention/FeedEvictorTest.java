@@ -462,6 +462,43 @@ public class FeedEvictorTest {
         }
     }
 
+    @Test
+    public void testEvictionStatsMetaWithNoPattern() throws Exception {
+        try {
+            Configuration conf = cluster.getConf();
+            FileSystem fs = FileSystem.get(conf);
+            fs.delete(new Path("/"), true);
+            stream.clear();
+
+            Pair<List<String>, List<String>> pair = createTestData("/data");
+            createDir("/stats");
+            createDir("/meta");
+            createTestData("/tmp");
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
+            FeedEvictor.main(new String[] {
+                "-feedBasePath",
+                getFeedBasePath(LocationType.DATA, storageUrl) + "#"
+                    + getStatsOrMetaPath(LocationType.STATS, storageUrl)
+                    + "#" + getStatsOrMetaPath(LocationType.META, storageUrl)
+                    + "#" + getFeedBasePath(LocationType.TMP, storageUrl),
+                "-retentionType", "instance",
+                "-retentionLimit", "months(5)",
+                "-timeZone", "UTC",
+                "-frequency", "hourly",
+                "-logFile", conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                + "/falcon/staging/feed/2012-01-01-04-00", "-falconFeedStorageType",
+                Storage.TYPE.FILESYSTEM.name(),
+            });
+
+            // should not throw exception
+            // stats and meta dir should not be deleted
+            Assert.assertTrue(isDirPresent("/stats"));
+            Assert.assertTrue(isDirPresent("/meta"));
+        } catch (Exception e) {
+            Assert.fail("Unknown exception", e);
+        }
+    }
+
 
     private Pair<List<String>, List<String>> createTestData(String locationType) throws Exception {
         Configuration conf = cluster.getConf();
@@ -480,6 +517,12 @@ public class FeedEvictorTest {
         outOfRange.add(locationType + "/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
 
         return Pair.of(inRange, outOfRange);
+    }
+
+    private void createDir(String locationType) throws Exception {
+        Configuration conf = cluster.getConf();
+        FileSystem fs = FileSystem.get(conf);
+        touch(fs, locationType, false);
     }
 
     private Pair<List<String>, List<String>> createTestData(String feed, String mask,
@@ -542,9 +585,19 @@ public class FeedEvictorTest {
         }
     }
 
+    private boolean isDirPresent(String path) throws Exception {
+        FileSystem fs = FileSystem.get(cluster.getConf());
+        return fs.exists(new Path(path));
+    }
+
     private String getFeedBasePath(LocationType locationType, String storageUrl) {
         return locationType.name() + "=" + storageUrl
                 + "/" + locationType.name().toLowerCase() + "/data/YYYY/feed3/dd/MM/?{MONTH}/more/?{HOUR}";
+    }
+
+    private String getStatsOrMetaPath(LocationType locationType, String storageUrl) {
+        return locationType.name() + "=" + storageUrl
+                + "/" + locationType.name().toLowerCase();
     }
 
     private static class InMemoryWriter extends PrintStream {
