@@ -306,6 +306,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         for(PendingInstanceBean pendingInstanceBean : MONITORING_JDBC_STATE_STORE.getAllInstances()){
             for (Date date : MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getFeedName(),
                     pendingInstanceBean.getClusterName())) {
+
                 boolean status = checkFeedInstanceAvailability(pendingInstanceBean.getFeedName(),
                         pendingInstanceBean.getClusterName(), date);
                 if (status) {
