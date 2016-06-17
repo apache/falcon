@@ -447,9 +447,11 @@ cluster, (no dirty reads)
 
 ---+++ Archival as Replication
 
-Falcon allows users to archive data from on-premice to cloud, either Azure WASB or S3.
+Falcon allows users to archive data from on-premise to cloud, either Azure WASB or S3.
 It uses the underlying replication for archiving data from source to target. The archival URI is
 specified as the overridden location for the target cluster.
+Note that for data replication between on-premise and Azure cloud, Azure credentials need to be added to core-site.xml.
+Please refer to [[DataReplicationAzure][AzureDataReplication]] for details and examples.
 
 *Example:*
 <verbatim>
