@@ -81,7 +81,7 @@ public class FileSystemStorage extends Configured implements Storage {
         this(FILE_SYSTEM_URL, feed.getLocations());
     }
 
-    public FileSystemStorage(String storageUrl, Locations locations) {
+    protected FileSystemStorage(String storageUrl, Locations locations) {
         this(storageUrl, locations.getLocations());
     }
 

@@ -15,25 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.falcon.service;
 
-import java.util.*;
-import java.util.concurrent.*;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
 
 import com.google.common.collect.Multimap;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.*;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.FeedInstanceStatus;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.*;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.FeedSLAAlertBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
+import org.apache.falcon.util.Pair;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
@@ -49,9 +56,9 @@ public final class FeedSLAAlertService implements FalconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeedSLAAlertService.class);
 
-    Multimap<Pair,Date> feedInstancesToBeMonitored ;
+    private Multimap<Pair, Date> feedInstancesToBeMonitored;
 
-    MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+    private MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
 
 /**
   * Permissions for storePath.
@@ -85,32 +92,6 @@ public final class FeedSLAAlertService implements FalconService {
 
     }
 
-    public class Pair<L,R> {
-
-        private final L left;
-        private final R right;
-
-        public Pair(L left, R right) {
-            this.left = left;
-            this.right = right;
-        }
-
-        public L getLeft() { return left; }
-        public R getRight() { return right; }
-
-        @Override
-        public int hashCode() { return left.hashCode() ^ right.hashCode(); }
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof Pair)) return false;
-            Pair pairo = (Pair) o;
-            return this.left.equals(pairo.getLeft()) &&
-                    this.right.equals(pairo.getRight());
-        }
-
-    }
-
 
     private class Monitor implements Runnable {
 
@@ -124,12 +105,14 @@ public final class FeedSLAAlertService implements FalconService {
     void processSLALowCandidates(){
 //Get all feeds instances to be monitored
         List<PendingInstanceBean> pendingInstanceBeanList = store.getAllInstances();
+        if (pendingInstanceBeanList.isEmpty()){
+            return;
+        }
 
-        if(!pendingInstanceBeanList.isEmpty()){
-            for (PendingInstanceBean pendingInstanceBean : pendingInstanceBeanList) {
-                Pair pair = new Pair(pendingInstanceBean.getFeedName(),pendingInstanceBean.getClusterName());
-                feedInstancesToBeMonitored.put(pair, pendingInstanceBean.getNominalTime()) ;
-            }
+        for (PendingInstanceBean pendingInstanceBean : pendingInstanceBeanList) {
+            Pair pair = new Pair(pendingInstanceBean.getFeedName(), pendingInstanceBean.getClusterName());
+            feedInstancesToBeMonitored.put(pair, pendingInstanceBean.getNominalTime());
+        }
 
         try{
             for(Map.Entry<Pair, Date> pairDateEntry : feedInstancesToBeMonitored.entries()) {
@@ -137,10 +120,11 @@ public final class FeedSLAAlertService implements FalconService {
                 Pair pair = pairDateEntry.getKey();
                 Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) pair.getLeft());
 
-                Cluster cluster =  FeedHelper.getCluster(feed,(String)pair.getRight());
+                Cluster cluster =  FeedHelper.getCluster(feed, (String)pair.getRight());
 
 
-                // Get the status of the feed instance from HDFS if it is available look for the time stamp wheather it missed the sla
+                // Get the status of the feed instance from HDFS if it is available look
+                // for the time stamp wheather it missed the sla
                 //if its not available look if the instance has missed the SLA low mark
                 List<FeedInstanceStatus> feedStatus = FeedHelper.
                         getListing(feed, cluster.getName(), LocationType.DATA, pairDateEntry.getValue(),
@@ -155,23 +139,19 @@ public final class FeedSLAAlertService implements FalconService {
                 Long slaLowDuration = evaluator.evaluate(slaLow.toString(), Long.class);
                 Date slaLowTime = new Date(pairDateEntry.getValue().getTime() + slaLowDuration);
 
-                if(createdTime.after(slaLowTime)) {
-                    store.putSLALowCandidate(pair.getLeft().toString(),pair.getRight().toString(),
-                            pairDateEntry.getValue(),true,false);
-                //Mark in DB as SLA missed
-                    LOG.info( "Feed :"+ pairDateEntry.getKey().getLeft() +
-                            "Cluster:" + pairDateEntry.getKey().getRight() + "Nominal Time:" + pairDateEntry.getValue()
-                            + "missed SLA");
+                if (createdTime.after(slaLowTime)) {
+                    store.putSLALowCandidate(pair.getLeft().toString(), pair.getRight().toString(),
+                            pairDateEntry.getValue(), true, false);
+                    //Mark in DB as SLA missed
+                    LOG.info("Feed :"+ pairDateEntry.getKey().getLeft()
+                                + "Cluster:" + pairDateEntry.getKey().getRight() + "Nominal Time:"
+                                + pairDateEntry.getValue() + "missed SLA");
                 }
-                else{
-                    feedInstancesToBeMonitored.remove(pairDateEntry.getKey(),pairDateEntry.getValue());
-                }
+                feedInstancesToBeMonitored.remove(pairDateEntry.getKey(), pairDateEntry.getValue());
 
             }
         } catch (FalconException e){
-            LOG.error("Exception in FeedSLAALertService:"+ e);
-
-            }
+            LOG.error("Exception in FeedSLAALertService:", e);
         }
 
     }
@@ -179,11 +159,11 @@ public final class FeedSLAAlertService implements FalconService {
     void processSLAHighCandidates(){
         List<FeedSLAAlertBean> feedSLAAlertBeanList = store.getSLAHighCandidates();
 
-        if(!feedSLAAlertBeanList.isEmpty()) {
+        if (!feedSLAAlertBeanList.isEmpty()) {
             for (FeedSLAAlertBean bean : feedSLAAlertBeanList) {
                 try {
                     Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) bean.getFeedName());
-                    Cluster cluster =  FeedHelper.getCluster(feed,bean.getClusterName());
+                    Cluster cluster =  FeedHelper.getCluster(feed, bean.getClusterName());
                     Date nominalTime = bean.getNominalTime();
 
                     Frequency slaHigh = feed.getSla().getSlaHigh();
@@ -192,7 +172,7 @@ public final class FeedSLAAlertService implements FalconService {
                     Date slaHighTime = new Date(nominalTime.getTime() + slaHighDuration);
 
                     List<FeedInstanceStatus> feedStatus = FeedHelper.
-                            getListing(feed, cluster.getName(), LocationType.DATA, nominalTime,nominalTime);
+                            getListing(feed, cluster.getName(), LocationType.DATA, nominalTime, nominalTime);
 
                     FeedInstanceStatus feedInstanceStatus = feedStatus.get(0);
 
@@ -200,13 +180,12 @@ public final class FeedSLAAlertService implements FalconService {
                             : feedInstanceStatus.getCreationTime();
                     Date createdTime = new Date(creationTime*1000);
 
-                    if(slaHighTime.before(createdTime)){
-                        store.updateSLAHighCandidate(bean.getFeedName(),bean.getClusterName(),nominalTime);
+                    if (slaHighTime.before(createdTime)){
+                        store.updateSLAHighCandidate(bean.getFeedName(), bean.getClusterName(), nominalTime);
                     }
 
-
                 } catch (FalconException e){
-                    LOG.error("Exception in FeedSLAALertService processSLAHighCandidates:" + e);
+                    LOG.error("Exception in FeedSLAALertService processSLAHighCandidates:" , e);
                 }
 
             }

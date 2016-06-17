@@ -18,8 +18,6 @@
 
 package org.apache.falcon.persistence;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 import javax.persistence.Basic;
@@ -41,7 +39,7 @@ import javax.validation.constraints.NotNull;
 @NamedQueries({
 @NamedQuery(name = PersistenceConstants.GET_FEED_ALERTS, query = "select OBJECT(a) from FeedSLAAlertBean a where a.feedName = :feedName"),
 @NamedQuery(name = PersistenceConstants.GET_ALL_FEED_ALERTS, query = "OBJECT(a) from PendingInstanceBean a "),
-@NamedQuery(name = PersistenceConstants.GET_SLA_HIGH_CANDIDATES,query = "select OBJECT(a) from FeedSLAAlertBean a where a.isSLALowMissed = 'T' and a.isSLAHighMissed = 'N' "),@NamedQuery(name = PersistenceConstants.UPDATE_SLA_HIGH, query = "update FeedSLAAlertBean a set a.isSLAHighMissed = 'T' where a.feedName = :feedName and a.clusterName = :clusterName and a.nominalTime = :nominalTime"),
+@NamedQuery(name = PersistenceConstants.GET_SLA_HIGH_CANDIDATES, query = "select OBJECT(a) from FeedSLAAlertBean a where a.isSLALowMissed = 'T' and a.isSLAHighMissed = 'N' "), @NamedQuery(name = PersistenceConstants.UPDATE_SLA_HIGH, query = "update FeedSLAAlertBean a set a.isSLAHighMissed = 'T' where a.feedName = :feedName and a.clusterName = :clusterName and a.nominalTime = :nominalTime"),
 })
 @Table(name = "FEED_SLA_ALERTS")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck

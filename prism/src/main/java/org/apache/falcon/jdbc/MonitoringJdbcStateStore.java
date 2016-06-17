@@ -18,7 +18,11 @@
 package org.apache.falcon.jdbc;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.falcon.persistence.*;
+import org.apache.falcon.persistence.MonitoredFeedsBean;
+import org.apache.falcon.persistence.FeedSLAAlertBean;
+import org.apache.falcon.persistence.PersistenceConstants;
+import org.apache.falcon.persistence.PendingInstanceBean;
+import org.apache.falcon.persistence.ResultNotFoundException;
 import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
@@ -78,7 +82,7 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public List<MonitoredFeedsBean> getAllMonitoredFeed() throws ResultNotFoundException{
+    public List<MonitoredFeedsBean> getAllMonitoredFeed() throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_FEEDS);
         List result = q.getResultList();
@@ -179,7 +183,7 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putSLALowCandidate(String feedName,String cluster,Date nominalTime,Boolean isSLALowMissed,
+    public void putSLALowCandidate(String feedName, String cluster, Date nominalTime, Boolean isSLALowMissed,
                                    Boolean isSLAHighMissed) {
         EntityManager entityManager = getEntityManager();
         FeedSLAAlertBean feedSLAAlertBean = new FeedSLAAlertBean();
@@ -193,19 +197,16 @@ public class MonitoringJdbcStateStore {
         commitAndCloseTransaction(entityManager);
     }
 
-    public void updateSLAHighCandidate(String feedName,String cluster,Date nominalTime) {
+    public void updateSLAHighCandidate(String feedName, String cluster, Date nominalTime) {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_SLA_HIGH);
-        q.setParameter("feedName",feedName);
-        q.setParameter("cluster",cluster);
-        q.setParameter("nominalTime",nominalTime);
+        q.setParameter("feedName", feedName);
+        q.setParameter("cluster", cluster);
+        q.setParameter("nominalTime", nominalTime);
         q.executeUpdate();
         commitAndCloseTransaction(entityManager);
     }
 
-    public void getSLALowCandidates() {
-
-    }
 
     public List<FeedSLAAlertBean> getSLAHighCandidates() {
         EntityManager entityManager = getEntityManager();
