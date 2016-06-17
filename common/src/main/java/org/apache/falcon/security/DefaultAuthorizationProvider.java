@@ -171,8 +171,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
                     authorizeAdminResource(authenticatedUGI, action);
                 }
             } else if ("entities".equals(resource) || "instance".equals(resource)) {
-                authorizeEntityResource(authenticatedUGI, entityName, entityType, action,
-                        "entities".equals(resource) && LIST_OPERATION.equals(action));
+                boolean entityTypeOptional = "entities".equals(resource) && LIST_OPERATION.equals(action);
+                authorizeEntityResource(authenticatedUGI, entityName, entityType, action, entityTypeOptional);
             } else if ("metadata".equals(resource)) {
                 authorizeMetadataResource(authenticatedUGI, action);
             }
