@@ -18,9 +18,7 @@
 package org.apache.falcon.service;
 
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +39,8 @@ import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.FeedSLAAlertBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.util.Pair;
+import org.apache.falcon.util.ReflectionUtils;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 /**
   *
   */
-public final class FeedSLAAlertService implements FalconService {
+public final class FeedSLAAlertService implements FalconService,FeedSLAAlert {
 
     private static final String NAME = "FeedSLAAlertService";
 
@@ -59,6 +59,8 @@ public final class FeedSLAAlertService implements FalconService {
     private Multimap<Pair, Date> feedInstancesToBeMonitored;
 
     private MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+
+    private Set<FeedSLAAlert> listeners = new LinkedHashSet<FeedSLAAlert>();
 
 /**
   * Permissions for storePath.
@@ -83,8 +85,22 @@ public final class FeedSLAAlertService implements FalconService {
 
     @Override
     public void init() throws FalconException {
+        String listenerClassNames = StartupProperties.get().
+                getProperty("feedAlert.listeners");
+        for (String listenerClassName : listenerClassNames.split(",")) {
+            listenerClassName = listenerClassName.trim();
+            if (listenerClassName.isEmpty()) {
+                continue;
+            }
+            FeedSLAAlert listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+            registerListener(listener);
+        }
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         executor.scheduleWithFixedDelay(new Monitor(), 0, 20, TimeUnit.SECONDS);
+    }
+
+    public void registerListener(FeedSLAAlert listener) {
+        listeners.add(listener);
     }
 
     @Override
@@ -182,6 +198,7 @@ public final class FeedSLAAlertService implements FalconService {
 
                     if (slaHighTime.before(createdTime)){
                         store.updateSLAHighCandidate(bean.getFeedName(), bean.getClusterName(), nominalTime);
+                        highSLAMissed(bean.getFeedName(), bean.getClusterName(), nominalTime);
                     }
 
                 } catch (FalconException e){
@@ -190,6 +207,11 @@ public final class FeedSLAAlertService implements FalconService {
 
             }
         }
-
+    }
+    @Override
+    public void highSLAMissed(String feedName , String clusterName, Date nominalTime) throws FalconException{
+        for (FeedSLAAlert listener : listeners) {
+            listener.highSLAMissed(feedName,clusterName,nominalTime);
+        }
     }
 }
