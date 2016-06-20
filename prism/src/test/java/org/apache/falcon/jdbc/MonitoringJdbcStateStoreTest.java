@@ -122,6 +122,15 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
 
     }
 
+    @Test
+    public void testputSLALowCandidate() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+        store.putSLALowCandidate("test-feed1","test-cluster",dateOne,Boolean.FALSE,Boolean.FALSE);
+        System.out.println(store.getParticularFeedAlertInstance("test-feed1","test-cluster",dateOne).getNominalTime());
+
+    }
+
     private void clear() {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
@@ -130,6 +139,9 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
             query.executeUpdate();
             query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
+            query = em.createNativeQuery("delete from FEED_SLA_ALERTS");
+            query.executeUpdate();
+
         } finally {
             em.getTransaction().commit();
             em.close();

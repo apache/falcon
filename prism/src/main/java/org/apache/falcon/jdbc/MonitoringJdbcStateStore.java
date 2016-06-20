@@ -183,6 +183,21 @@ public class MonitoringJdbcStateStore {
         }
     }
 
+    public FeedSLAAlertBean getParticularFeedAlertInstance(String feedName, String clusterName, Date nominalTime) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        TypedQuery<FeedSLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_FEED_ALERT_INSTANCE,
+                FeedSLAAlertBean.class);
+        q.setParameter("feedName", feedName);
+        q.setParameter("clusterName", clusterName);
+        q.setParameter("nominalTime", nominalTime);
+        try {
+            return q.getSingleResult();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
     public void putSLALowCandidate(String feedName, String cluster, Date nominalTime, Boolean isSLALowMissed,
                                    Boolean isSLAHighMissed) {
         EntityManager entityManager = getEntityManager();
