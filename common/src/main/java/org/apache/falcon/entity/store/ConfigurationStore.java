@@ -70,8 +70,8 @@ public final class ConfigurationStore implements FalconService {
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
-    private static final String LOAD_ENTITIES_THREADS = "falcon.default.threads.load.restore.entities";
-    private static final String TIMEOUT_MINS_LOAD_ENTITIES = "falcon.default.timeout.minutes";
+    private static final String LOAD_ENTITIES_THREADS = "config.store.num.threads.load.entities";
+    private static final String TIMEOUT_MINS_LOAD_ENTITIES = "config.store.start.timeout.minutes";
     private int numThreads;
     private int restoreTimeOutInMins;
     private final boolean shouldPersist;
