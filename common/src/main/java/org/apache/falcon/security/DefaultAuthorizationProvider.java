@@ -171,8 +171,11 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
                     authorizeAdminResource(authenticatedUGI, action);
                 }
             } else if ("entities".equals(resource) || "instance".equals(resource)) {
-                boolean entityTypeOptional = "entities".equals(resource) && LIST_OPERATION.equals(action);
-                authorizeEntityResource(authenticatedUGI, entityName, entityType, action, entityTypeOptional);
+                if ("entities".equals(resource) && LIST_OPERATION.equals(action)) {
+                    LOG.info("Skipping authorization for entity list operations");
+                } else {
+                    authorizeEntityResource(authenticatedUGI, entityName, entityType, action);
+                }
             } else if ("metadata".equals(resource)) {
                 authorizeMetadataResource(authenticatedUGI, action);
             }
@@ -296,16 +299,14 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
 
     protected void authorizeEntityResource(UserGroupInformation authenticatedUGI,
                                            String entityName, String entityType,
-                                           String action, boolean entityTypeOptional)
+                                           String action)
         throws AuthorizationException, EntityNotRegisteredException {
-        if (!entityTypeOptional) {
-            Validate.notEmpty(entityType, "Entity type cannot be empty or null");
-        }
+        Validate.notEmpty(entityType, "Entity type cannot be empty or null");
         LOG.debug("Authorizing authenticatedUser={} against entity/instance action={}, "
                 + "entity name={}, entity type={}",
                 authenticatedUGI.getShortUserName(), action, entityName, entityType);
 
-        if (entityType != null && entityName != null) { // lifecycle actions
+        if (entityName != null) { // lifecycle actions
             Entity entity = getEntity(entityName, entityType);
             authorizeEntity(entity.getName(), entity.getEntityType().name(),
                 entity.getACL(), action, authenticatedUGI);
