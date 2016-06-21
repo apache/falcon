@@ -18,7 +18,11 @@
 package org.apache.falcon.service;
 
 
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -48,9 +52,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-  *
+  * Service to know which all feeds have missed SLA.
   */
-public final class FeedSLAAlertService implements FalconService,FeedSLAAlert {
+public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
 
     private static final String NAME = "FeedSLAAlertService";
 
@@ -164,7 +168,6 @@ public final class FeedSLAAlertService implements FalconService,FeedSLAAlert {
                                 + pairDateEntry.getValue() + "missed SLA");
                 }
                 feedInstancesToBeMonitored.remove(pairDateEntry.getKey(), pairDateEntry.getValue());
-
             }
         } catch (FalconException e){
             LOG.error("Exception in FeedSLAALertService:", e);
@@ -200,6 +203,9 @@ public final class FeedSLAAlertService implements FalconService,FeedSLAAlert {
                         store.updateSLAHighCandidate(bean.getFeedName(), bean.getClusterName(), nominalTime);
                         highSLAMissed(bean.getFeedName(), bean.getClusterName(), nominalTime);
                     }
+                    if (slaHighTime.after(createdTime)){
+                        store.deleteFeedAlertInstance(bean.getFeedName(), bean.getClusterName(), nominalTime);
+                    }
 
                 } catch (FalconException e){
                     LOG.error("Exception in FeedSLAALertService processSLAHighCandidates:" , e);
@@ -211,7 +217,8 @@ public final class FeedSLAAlertService implements FalconService,FeedSLAAlert {
     @Override
     public void highSLAMissed(String feedName , String clusterName, Date nominalTime) throws FalconException{
         for (FeedSLAAlert listener : listeners) {
-            listener.highSLAMissed(feedName,clusterName,nominalTime);
+            listener.highSLAMissed(feedName, clusterName, nominalTime);
         }
+        store.deleteFeedAlertInstance(feedName, clusterName, nominalTime);
     }
 }

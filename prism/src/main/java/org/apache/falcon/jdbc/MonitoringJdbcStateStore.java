@@ -207,19 +207,40 @@ public class MonitoringJdbcStateStore {
         feedSLAAlertBean.setNominalTime(nominalTime);
         feedSLAAlertBean.setIsSLALowMissed(isSLALowMissed);
         feedSLAAlertBean.setIsSLAHighMissed(isSLAHighMissed);
-        beginTransaction(entityManager);
-        entityManager.persist(feedSLAAlertBean);
-        commitAndCloseTransaction(entityManager);
+        try {
+            beginTransaction(entityManager);
+            entityManager.persist(feedSLAAlertBean);
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
     }
 
-    public void updateSLAHighCandidate(String feedName, String cluster, Date nominalTime) {
+    public void updateSLAHighCandidate(String feedName, String clusterName, Date nominalTime) {
         EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_SLA_HIGH);
         q.setParameter("feedName", feedName);
-        q.setParameter("cluster", cluster);
+        q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
-        q.executeUpdate();
-        commitAndCloseTransaction(entityManager);
+        try{
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public void deleteFeedAlertInstance(String feedName, String clusterName, Date nominalTime){
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_FEED_ALERT_INSTANCE);
+        q.setParameter("feedName", feedName);
+        q.setParameter("clusterName", clusterName);
+        q.setParameter("nominalTime", nominalTime);
+        try{
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
     }
 
 
