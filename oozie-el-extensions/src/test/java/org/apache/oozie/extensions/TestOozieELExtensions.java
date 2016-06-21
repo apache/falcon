@@ -168,6 +168,8 @@ public class TestOozieELExtensions {
                 "*/US", "_DONE", },
             // With availability flag. All instances missing
             {"hdfs://localhost:8020/projects/falcon/staging/EMPTY_DIR_DONT_DELETE", "null", "_FINISH"},
+            // With availability flag and partitions. All instances missing
+            {"hdfs://localhost:8020/projects/falcon/staging/EMPTY_DIR_DONT_DELETE", "*", "_FINISH"},
             // No availability flag. One instance missing
             {"hdfs://localhost:8020/clicks/2009/09/02/09", "null", ""},
             // With availability flag. One instance missing.
