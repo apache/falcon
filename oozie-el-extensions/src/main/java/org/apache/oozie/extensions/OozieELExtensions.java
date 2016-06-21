@@ -100,7 +100,7 @@ public final class OozieELExtensions {
                     String emptyDir = (String) eval.getVariable(dataInName + ".empty-dir");
                     XLog.getLog(OozieELExtensions.class).debug("No instances could be resolved. Passing empty dir : "
                             + emptyDir);
-                    uristr = emptyDir;
+                    return emptyDir;
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to resolve instance range for " + dataInName, e);
