@@ -57,6 +57,7 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
                 Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 Process process = (Process) entity;
                 String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
+                pipeline = pipeline.replaceAll(" ", "-");
 
                 if ((message.getAction().equals("wf-instance-succeeded"))) {
                     Long timeTaken =  message.getExecutionTime() / 1000000000;
