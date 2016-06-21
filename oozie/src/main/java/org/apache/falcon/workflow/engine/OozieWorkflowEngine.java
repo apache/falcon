@@ -991,6 +991,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
                                                       Properties props, boolean isForced) throws FalconException {
+        String currentUser = CurrentUser.getUser();
+        String workflowUser;
+
         try {
             OozieClient client = OozieClientFactory.get(cluster);
             if (props == null) {
@@ -1015,7 +1018,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             // Get conf when workflow is launched.
             if (coordinatorAction.getExternalId() != null) {
                 WorkflowJob jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
-
+                workflowUser = jobInfo.getUser();
                 jobprops = OozieUtils.toProperties(jobInfo.getConf());
                 // Clear the rerun properties from existing configuration
                 jobprops.remove(OozieClient.RERUN_FAIL_NODES);
@@ -1024,8 +1027,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 jobprops.remove(OozieClient.BUNDLE_APP_PATH);
             } else {
                 jobprops = props;
+                workflowUser = currentUser;
             }
 
+            switchUser(workflowUser); // rerun workflow as user who owns workflow
             client.reRunCoord(coordinatorAction.getJobId(), RestConstants.JOB_COORD_SCOPE_ACTION,
                     Integer.toString(coordinatorAction.getActionNumber()), true, true, !isForced, jobprops);
             LOG.info("Rerun job {} on cluster {}", coordinatorAction.getId(), cluster);
@@ -1036,6 +1041,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
             throw new FalconException(e);
+        } finally {
+            switchUser(currentUser); // switch back to currentUser
         }
     }
 
