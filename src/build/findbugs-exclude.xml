@@ -76,6 +76,7 @@
 
     <Match>
         <Class name="org.apache.falcon.persistence.ExtensionJobsBean" />
+        <Class name="org.apache.falcon.persistence.ProcessInstanceInfoBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
     </Match>
 
