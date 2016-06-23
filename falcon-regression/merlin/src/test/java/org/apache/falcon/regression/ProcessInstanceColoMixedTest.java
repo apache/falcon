@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * Process instance mixed colo tests.
  */
-@Test(groups = { "distributed", "embedded" })
+@Test(groups = { "distributed", "embedded", "multiCluster" })
 public class ProcessInstanceColoMixedTest extends BaseTestClass {
 
     private final String baseTestHDFSDir = cleanAndGetTestDir();
