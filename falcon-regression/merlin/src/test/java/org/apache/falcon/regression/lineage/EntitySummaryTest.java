@@ -128,7 +128,7 @@ public class EntitySummaryTest extends BaseTestClass {
      * Get status of 7 feeds and 7 instances of each feed the call should give correct information,
      * instance info must be recent.
      */
-    @Test
+    @Test(groups = "multiCluster")
     public void getFeedSummary() throws Exception {
         //prepare feed template.
         bundles[0].setInputFeedPeriodicity(5, Frequency.TimeUnit.minutes);
