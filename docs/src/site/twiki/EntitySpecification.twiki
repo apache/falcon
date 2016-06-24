@@ -52,6 +52,11 @@ A registry interface specifies the interface for metadata catalog, such as Hive 
 Falcon uses this interface to register/de-register partitions for a given database and table. Also,
 uses this information to schedule data availability events based on partitions in the workflow engine.
 Although Hive metastore supports both RPC and HTTP, Falcon comes with an implementation for RPC over thrift.
+For Hive HA mode, make sure the uris are separated with comma and you only add protocol "thrift://" at the beginning.
+See below for an example of Hive HA mode:
+<verbatim>
+<interface type="registry" endpoint="thrift://c6402.ambari.apache.org:9083,c6403.ambari.apache.org:9083" version="0.11.0" />
+</verbatim>
 
 <verbatim>
 <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
