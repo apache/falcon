@@ -18,35 +18,24 @@
 package org.apache.falcon.service;
 
 
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import javax.persistence.EntityManager;
 
 import com.google.common.collect.Multimap;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.FeedInstanceStatus;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.FeedSLAAlertBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
-import org.apache.falcon.util.Pair;
+import org.apache.falcon.Pair;
+import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,21 +55,12 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
 
     private Set<FeedSLAAlert> listeners = new LinkedHashSet<FeedSLAAlert>();
 
-/**
-  * Permissions for storePath.
-  */
-    private static final FsPermission STORE_PERMISSION = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
-
-
     private static final FeedSLAAlertService SERVICE = new FeedSLAAlertService();
 
     public static FeedSLAAlertService get() {
         return SERVICE;
     }
 
-    private EntityManager getEntityManager() {
-        return FalconJPAService.get().getEntityManager();
-    }
 
     @Override
     public String getName() {
@@ -99,8 +79,12 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
             FeedSLAAlert listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
             registerListener(listener);
         }
+
+        String freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
+        int statusCheckFrequencySeconds = Integer.parseInt(freq);
+
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
-        executor.scheduleWithFixedDelay(new Monitor(), 0, 20, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(new Monitor(), 0, statusCheckFrequencySeconds + 10, TimeUnit.SECONDS);
     }
 
     public void registerListener(FeedSLAAlert listener) {
@@ -138,33 +122,26 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
             for(Map.Entry<Pair, Date> pairDateEntry : feedInstancesToBeMonitored.entries()) {
 
                 Pair pair = pairDateEntry.getKey();
-                Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) pair.getLeft());
+                Date nominalTime = pairDateEntry.getValue();
+                Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) pair.first);
 
-                Cluster cluster =  FeedHelper.getCluster(feed, (String)pair.getRight());
+                Cluster cluster =  FeedHelper.getCluster(feed, (String)pair.second);
+
+                Set<SchedulableEntityInstance> schedulableEntityInstances= FeedSLAMonitoringService.get().
+                        getFeedSLAMissPendingAlerts(feed.getName(), cluster.getName(), nominalTime,nominalTime);
+                if(schedulableEntityInstances.isEmpty()){
+                    store.deleteFeedAlertInstance(feed.getName(), cluster.getName(), nominalTime);
+                }
+                List<SchedulableEntityInstance> schedulableEntityList = new ArrayList<>(schedulableEntityInstances);
+                SchedulableEntityInstance schedulableEntityInstance = schedulableEntityList.get(0);
 
 
-                // Get the status of the feed instance from HDFS if it is available look
-                // for the time stamp wheather it missed the sla
-                //if its not available look if the instance has missed the SLA low mark
-                List<FeedInstanceStatus> feedStatus = FeedHelper.
-                        getListing(feed, cluster.getName(), LocationType.DATA, pairDateEntry.getValue(),
-                                pairDateEntry.getValue());
-                //Only one result would always be retured as start and end data is same.
-                FeedInstanceStatus feedInstanceStatus =  feedStatus.get(0);
-                Long creationTime =  feedInstanceStatus.getCreationTime() == 0L ? System.nanoTime()
-                        : feedInstanceStatus.getCreationTime();
-                Date createdTime =  new Date(creationTime*1000);
-                Frequency slaLow  = feed.getSla().getSlaLow();
-                ExpressionHelper evaluator = ExpressionHelper.get();
-                Long slaLowDuration = evaluator.evaluate(slaLow.toString(), Long.class);
-                Date slaLowTime = new Date(pairDateEntry.getValue().getTime() + slaLowDuration);
-
-                if (createdTime.after(slaLowTime)) {
-                    store.putSLALowCandidate(pair.getLeft().toString(), pair.getRight().toString(),
+                if (schedulableEntityInstance.getTags().contains(FeedSLAMonitoringService.get().tagWarn)) {
+                    store.putSLAAlertInstance(pair.first.toString(), pair.second.toString(),
                             pairDateEntry.getValue(), true, false);
                     //Mark in DB as SLA missed
-                    LOG.info("Feed :"+ pairDateEntry.getKey().getLeft()
-                                + "Cluster:" + pairDateEntry.getKey().getRight() + "Nominal Time:"
+                    LOG.info("Feed :"+ pairDateEntry.getKey().first
+                                + "Cluster:" + pairDateEntry.getKey().second + "Nominal Time:"
                                 + pairDateEntry.getValue() + "missed SLA");
                 }
                 feedInstancesToBeMonitored.remove(pairDateEntry.getKey(), pairDateEntry.getValue());
@@ -184,29 +161,18 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
                     Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) bean.getFeedName());
                     Cluster cluster =  FeedHelper.getCluster(feed, bean.getClusterName());
                     Date nominalTime = bean.getNominalTime();
-
-                    Frequency slaHigh = feed.getSla().getSlaHigh();
-                    ExpressionHelper evaluator = ExpressionHelper.get();
-                    Long slaHighDuration = evaluator.evaluate(slaHigh.toString(), Long.class);
-                    Date slaHighTime = new Date(nominalTime.getTime() + slaHighDuration);
-
-                    List<FeedInstanceStatus> feedStatus = FeedHelper.
-                            getListing(feed, cluster.getName(), LocationType.DATA, nominalTime, nominalTime);
-
-                    FeedInstanceStatus feedInstanceStatus = feedStatus.get(0);
-
-                    Long creationTime =  feedInstanceStatus.getCreationTime() == 0L ? System.nanoTime()
-                            : feedInstanceStatus.getCreationTime();
-                    Date createdTime = new Date(creationTime*1000);
-
-                    if (slaHighTime.before(createdTime)){
-                        store.updateSLAHighCandidate(bean.getFeedName(), bean.getClusterName(), nominalTime);
-                        highSLAMissed(bean.getFeedName(), bean.getClusterName(), nominalTime);
-                    }
-                    if (slaHighTime.after(createdTime)){
+                    Set<SchedulableEntityInstance> schedulableEntityInstances= FeedSLAMonitoringService.get().
+                            getFeedSLAMissPendingAlerts(feed.getName(),cluster.getName(), nominalTime,nominalTime);
+                    if(schedulableEntityInstances.isEmpty()){
                         store.deleteFeedAlertInstance(bean.getFeedName(), bean.getClusterName(), nominalTime);
                     }
+                    List<SchedulableEntityInstance> schedulableEntityList = new ArrayList<>(schedulableEntityInstances);
+                    SchedulableEntityInstance schedulableEntityInstance = schedulableEntityList.get(0);
 
+                    if (schedulableEntityInstance.getTags().contains(FeedSLAMonitoringService.get().tagCritical)){
+                        store.updateSLAAlertInstance(bean.getFeedName(), bean.getClusterName(), nominalTime);
+                        highSLAMissed(bean.getFeedName(), bean.getClusterName(), nominalTime);
+                    }
                 } catch (FalconException e){
                     LOG.error("Exception in FeedSLAALertService processSLAHighCandidates:" , e);
                 }

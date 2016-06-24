@@ -126,13 +126,13 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     public void testputSLALowCandidate() throws Exception{
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
-        store.putSLALowCandidate("test-feed1", "test-cluster", dateOne, Boolean.TRUE, Boolean.FALSE);
-        Assert.assertEquals(Boolean.TRUE, store.getParticularFeedAlertInstance("test-feed1",
+        store.putSLAAlertInstance("test-feed1", "test-cluster", dateOne, Boolean.TRUE, Boolean.FALSE);
+        Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
                 "test-cluster", dateOne).getIsSLALowMissed());
-        Assert.assertTrue(dateOne.equals(store.getParticularFeedAlertInstance("test-feed1",
+        Assert.assertTrue(dateOne.equals(store.getFeedAlertInstance("test-feed1",
                 "test-cluster", dateOne).getNominalTime()));
-        store.updateSLAHighCandidate("test-feed1", "test-cluster", dateOne);
-        Assert.assertEquals(Boolean.TRUE, store.getParticularFeedAlertInstance("test-feed1",
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne);
+        Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
                 "test-cluster", dateOne).getIsSLAHighMissed());
     }
 
@@ -141,9 +141,9 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
 
-        store.putSLALowCandidate("test-feed1", "test-cluster", dateOne, Boolean.TRUE, Boolean.FALSE);
-        store.updateSLAHighCandidate("test-feed1", "test-cluster", dateOne);
-        Assert.assertEquals(Boolean.TRUE, store.getParticularFeedAlertInstance("test-feed1",
+        store.putSLAAlertInstance("test-feed1", "test-cluster", dateOne, Boolean.TRUE, Boolean.FALSE);
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne);
+        Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
                 "test-cluster", dateOne).getIsSLAHighMissed());
     }
 

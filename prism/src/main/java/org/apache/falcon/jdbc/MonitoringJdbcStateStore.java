@@ -168,12 +168,13 @@ public class MonitoringJdbcStateStore {
         entityManager.close();
     }
 
-    public PendingInstanceBean getParticularPendingInstance(String feedName, String clusterName, Date nominalTime) {
+    public PendingInstanceBean getPendingInstance(String feedName, String clusterName, Date nominalTime) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         TypedQuery<PendingInstanceBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_PENDING_INSTANCE,
                             PendingInstanceBean.class);
         q.setParameter("feedName", feedName);
+
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
         try {
@@ -183,7 +184,7 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public FeedSLAAlertBean getParticularFeedAlertInstance(String feedName, String clusterName, Date nominalTime) {
+    public FeedSLAAlertBean getFeedAlertInstance(String feedName, String clusterName, Date nominalTime) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         TypedQuery<FeedSLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_FEED_ALERT_INSTANCE,
@@ -198,8 +199,8 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putSLALowCandidate(String feedName, String cluster, Date nominalTime, Boolean isSLALowMissed,
-                                   Boolean isSLAHighMissed) {
+    public void putSLAAlertInstance(String feedName, String cluster, Date nominalTime, Boolean isSLALowMissed,
+                                    Boolean isSLAHighMissed) {
         EntityManager entityManager = getEntityManager();
         FeedSLAAlertBean feedSLAAlertBean = new FeedSLAAlertBean();
         feedSLAAlertBean.setFeedName(feedName);
@@ -215,7 +216,7 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void updateSLAHighCandidate(String feedName, String clusterName, Date nominalTime) {
+    public void updateSLAAlertInstance(String feedName, String clusterName, Date nominalTime) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_SLA_HIGH);

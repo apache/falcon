@@ -68,6 +68,9 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
     private static final FeedSLAMonitoringService SERVICE = new FeedSLAMonitoringService();
 
+    public static final String tagCritical = "Missed SLA High";
+    public static final String tagWarn = "Missed SLA Low";
+
     private FeedSLAMonitoringService() {
 
     }
@@ -410,8 +413,6 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
     Set<Pair<Date, String>> getSLAStatus(Sla sla, Date start, Date end, List<Date> missingInstances)
         throws FalconException {
-        String tagCritical = "Missed SLA High";
-        String tagWarn = "Missed SLA Low";
         Date now = new Date();
         Frequency slaLow = sla.getSlaLow();
         Frequency slaHigh = sla.getSlaHigh();
