@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
   * Service to know which all feeds have missed SLA.
   */
-public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
+public final class FeedSLAAlertService implements FalconService, EntitySLAListener {
 
     private static final String NAME = "FeedSLAAlertService";
 
@@ -56,7 +56,7 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
 
     private MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
 
-    private Set<FeedSLAAlert> listeners = new LinkedHashSet<FeedSLAAlert>();
+    private Set<EntitySLAListener> listeners = new LinkedHashSet<EntitySLAListener>();
 
     private static final FeedSLAAlertService SERVICE = new FeedSLAAlertService();
 
@@ -81,7 +81,7 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
             if (listenerClassName.isEmpty()) {
                 continue;
             }
-            FeedSLAAlert listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+            EntitySLAListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
             registerListener(listener);
         }
 
@@ -92,7 +92,7 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
         executor.scheduleWithFixedDelay(new Monitor(), 0, statusCheckFrequencySeconds + 10, TimeUnit.SECONDS);
     }
 
-    public void registerListener(FeedSLAAlert listener) {
+    public void registerListener(EntitySLAListener listener) {
         listeners.add(listener);
     }
 
@@ -165,7 +165,7 @@ public final class FeedSLAAlertService implements FalconService, FeedSLAAlert {
 
     @Override
     public void highSLAMissed(String feedName , String clusterName, Date nominalTime) throws FalconException{
-        for (FeedSLAAlert listener : listeners) {
+        for (EntitySLAListener listener : listeners) {
             listener.highSLAMissed(feedName, clusterName, nominalTime);
         }
         store.deleteFeedAlertInstance(feedName, clusterName, nominalTime);

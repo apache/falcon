@@ -54,6 +54,7 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
     private static final String CLUSTER_NAME = "testCluster";
     private static final String FEED_NAME = "testFeed";
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+    private static final String TAG_CRITICAL = FeedSLAMonitoringService.get().TAG_CRITICAL;
 
     @Test
     public void testSLAStatus() throws FalconException {
@@ -75,10 +76,10 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
 
         Set<Pair<Date, String>> result = FeedSLAMonitoringService.get().getSLAStatus(sla, start, end, missingInstances);
         Set<Pair<Date, String>> expected = new HashSet<>();
-        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2014-05-05T00:00Z"), "Missed SLA High"));
-        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2014-05-06T00:00Z"), "Missed SLA High"));
-        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2014-05-07T00:00Z"), "Missed SLA High"));
-        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2015-05-05T00:00Z"), "Missed SLA High"));
+        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2014-05-05T00:00Z"), TAG_CRITICAL));
+        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2014-05-06T00:00Z"), TAG_CRITICAL));
+        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2014-05-07T00:00Z"), TAG_CRITICAL));
+        expected.add(new Pair<>(SchemaHelper.parseDateUTC("2015-05-05T00:00Z"), TAG_CRITICAL));
         Assert.assertEquals(result, expected);
     }
 

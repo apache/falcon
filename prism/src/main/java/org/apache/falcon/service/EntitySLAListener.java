@@ -24,6 +24,6 @@ import java.util.Date;
 /**
  * Interface for FeedSLAAlert to be used by Listeners.
  */
-public interface FeedSLAAlert {
+public interface EntitySLAListener {
     void highSLAMissed(String feedName , String clusterName, Date nominalTime) throws FalconException;
 }
