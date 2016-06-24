@@ -23,7 +23,7 @@ limitations under the License.
   <parent>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
-    <version>0.10-SNAPSHOT</version>
+    <version>0.11-SNAPSHOT</version>
   </parent>
   <artifactId>falcon-distro</artifactId>
   <description>Apache Falcon Distro</description>
@@ -52,6 +52,7 @@ limitations under the License.
                 <descriptor>../src/main/assemblies/src-package.xml</descriptor>
               </descriptors>
               <finalName>apache-falcon-distributed-${project.version}</finalName>
+              <tarLongFileMode>posix</tarLongFileMode>
             </configuration>
             <executions>
               <execution>
@@ -126,6 +127,7 @@ limitations under the License.
             <descriptor>../src/main/assemblies/src-package.xml</descriptor>
           </descriptors>
           <finalName>apache-falcon-${project.version}</finalName>
+          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>

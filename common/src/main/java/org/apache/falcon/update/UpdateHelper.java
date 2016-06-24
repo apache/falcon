@@ -21,6 +21,7 @@ package org.apache.falcon.update;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.ProcessHelper;
@@ -29,6 +30,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
@@ -164,6 +166,38 @@ public final class UpdateHelper {
             return true;
         }
 
+        return false;
+    }
+
+    public static boolean isDatasourceEntityUpdated(final Datasource oldEntity, final Datasource newEntity)
+        throws FalconException {
+        // ignore changes : colo, acl, description, tags
+        // can't change   : name, data source entity type
+
+        // major change that trigger bundle rewrite
+        // driver class name change but not driver jar as it is automatically picked up from share lib
+
+        if (!DatasourceHelper.isSameDriverClazz(oldEntity.getDriver(), newEntity.getDriver())) {
+            return true;
+        }
+
+        // interface endpoint, credential or driver update will trigger a bundle rewrite
+        for(org.apache.falcon.entity.v0.datasource.Interfacetype ifacetype
+                : org.apache.falcon.entity.v0.datasource.Interfacetype.values()) {
+            if (!DatasourceHelper.isSameInterface(oldEntity, newEntity, ifacetype)) {
+                return true;
+            }
+        }
+        // check default credential too
+        if (!DatasourceHelper.isSameCredentials(oldEntity.getInterfaces().getCredential(),
+                newEntity.getInterfaces().getCredential())) {
+            return true;
+        }
+
+        // any change in the properties will trigger a bundle rewrite
+        if (!DatasourceHelper.isSameProperties(oldEntity, newEntity)) {
+            return true;
+        }
         return false;
     }
 }

@@ -27,6 +27,7 @@ public enum HiveMirroringExtensionProperties {
     SOURCE_METASTORE_URI("sourceMetastoreUri", "Source Hive metastore uri", false),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "Source HS2 uri"),
     SOURCE_DATABASES("sourceDatabases", "List of databases to replicate"),
+    SOURCE_DATABASE("sourceDatabase", "Database to verify the setup connection", false),
     SOURCE_TABLES("sourceTables", "List of tables to replicate", false),
     SOURCE_STAGING_PATH("sourceStagingPath", "Location of source staging path", false),
     SOURCE_NN("sourceNN", "Source name node", false),
@@ -50,13 +51,13 @@ public enum HiveMirroringExtensionProperties {
     MAX_EVENTS("maxEvents", "Maximum events to replicate", false),
     MAX_MAPS("replicationMaxMaps", "Maximum number of maps used during replication", false),
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
-    MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication"),
+    MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
     CLUSTER_FOR_JOB_RUN("clusterForJobRun", "Cluster on which replication job runs", false),
     CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL("Job cluster kerberos principal",
             "Write EP of cluster on which replication job runs", false),
     CLUSTER_FOR_JOB_RUN_WRITE_EP("clusterForJobRunWriteEP", "Write EP of cluster on which replication job runs", false),
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
-    HIVE_MIRRORING_JOB_NAME("jobName", "Unique hive replication job name", false);
+    HIVE_MIRRORING_JOB_NAME("hiveJobName", "Unique hive replication job name", false);
 
     private final String name;
     private final String description;

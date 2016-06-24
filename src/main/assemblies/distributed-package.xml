@@ -337,6 +337,13 @@
             <outputDirectory>extensions/hive-mirroring</outputDirectory>
             <fileMode>0755</fileMode>
         </file>
+
+        <file>
+            <source>../examples/target/falcon-examples-${project.version}.jar</source>
+            <outputDirectory>examples/app/spark/lib</outputDirectory>
+            <destName>falcon-examples.jar</destName>
+            <fileMode>0644</fileMode>
+        </file>
     </files>
 </assembly>
     

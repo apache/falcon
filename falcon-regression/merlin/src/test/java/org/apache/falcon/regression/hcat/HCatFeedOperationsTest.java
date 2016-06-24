@@ -119,7 +119,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = {"singleCluster"})
+    @Test(groups = {"multiCluster"})
     public void submitFeedWhenTableDoesNotExist() throws Exception {
         Bundle.submitCluster(bundles[1]);
         feed = bundles[1].getInputFeedFromBundle();
@@ -159,7 +159,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void submitAndScheduleReplicationFeedWhenTableExistsOnSourceAndTarget() throws Exception {
         Bundle.submitCluster(bundles[0], bundles[1]);
         final String startDate = "2010-01-01T20:00Z";
@@ -192,7 +192,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void suspendAndResumeReplicationFeed() throws Exception {
 
         submitAndScheduleReplicationFeedWhenTableExistsOnSourceAndTarget();
@@ -215,7 +215,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test
+    @Test(groups = {"multiCluster"})
     public void deleteReplicationFeed() throws Exception {
         submitAndScheduleReplicationFeedWhenTableExistsOnSourceAndTarget();
 

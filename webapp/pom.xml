@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.11-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-webapp</artifactId>
     <description>Apache Falcon Web Application</description>
@@ -182,11 +182,13 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-metrics</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-rerun</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -387,6 +389,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+                            <excludeScope>provided</excludeScope>
                         </configuration>
                     </execution>
                     <execution>

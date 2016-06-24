@@ -828,13 +828,13 @@ be in lib folder inside the workflow path.
 The properties defined in the cluster and cluster properties(nameNode and jobTracker) will also
 be available for the workflow.
 
-There are 3 engines supported today.
+There are 4 engines supported today.
 
 ---++++ Oozie
 
 As part of oozie workflow engine support, users can embed a oozie workflow.
-Refer to oozie [[http://oozie.apache.org/docs/4.0.1/DG_Overview.html][workflow overview]] and
-[[http://oozie.apache.org/docs/4.0.1/WorkflowFunctionalSpec.html][workflow specification]] for details.
+Refer to oozie [[http://oozie.apache.org/docs/4.2.0/DG_Overview.html][workflow overview]] and
+[[http://oozie.apache.org/docs/4.2.0/WorkflowFunctionalSpec.html][workflow specification]] for details.
 
 Syntax:
 <verbatim>
@@ -896,6 +896,31 @@ This defines the workflow engine to be hive and the hive script is defined at
 
 Feeds with Hive table storage will send one more parameter apart from the general ones:
 <verbatim>$input_filter</verbatim>
+
+---++++ Spark
+Falcon also adds the Spark engine as part of Spark Integration which enables users to run the Java/Python Spark application as a process.
+When "spark" workflow engine is mentioned spark related parameters must be provided through <spark-attributes>
+Examples:
+<verbatim>
+<process name="spark-process">
+...
+    <workflow engine="spark" path="/resources/action">
+    <spark-attributes>
+          <master>local</master>
+          <name>Spark WordCount</name>
+          <class>org.examples.WordCount</class>
+          <jar>/resources/action/lib/spark-application.jar</jar>
+          <spark-opts>--num-executors 1 --driver-memory 512m</spark-opts>
+    </spark-attributes>
+...
+</process>
+</verbatim>
+
+This defines the workflow engine to be spark and Java/Python Spark application must be defined with "jar" option that need to be executed.
+There is flexibility to override the Spark master through process entity either to "yarn-client" or "yarn-cluster", if spark interface is already defined in cluster entity.
+Input and Output data to the Spark application will be set as argument when Spark workflow will be generated, if input and output feed entity is defined in the process entity.
+In the set of arguments, first argument will always correspond to input feed, second argument will always correspond to output feed and then user's provided argument will be set.
+
 
 ---+++ Retry
 Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.

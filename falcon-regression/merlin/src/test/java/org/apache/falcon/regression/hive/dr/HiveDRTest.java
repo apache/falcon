@@ -65,7 +65,7 @@ import static org.apache.falcon.regression.hive.dr.HiveObjectCreator.createVanil
 /**
  * Hive DR Testing.
  */
-@Test(groups = "embedded")
+@Test(groups = {"embedded", "multiCluster"})
 public class HiveDRTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(HiveDRTest.class);
     private static final String DB_NAME = "hdr_sdb1";

@@ -874,8 +874,6 @@ public final class FeedHelper {
         }
     }
 
-
-
     /**
      * Returns Datasource table name.
      *

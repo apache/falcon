@@ -53,6 +53,7 @@ config name: *.application.services
 config value: org.apache.falcon.extensions.ExtensionService
 </verbatim>
 
+ExtensionService should be added before ConfigurationStore in startup properties for application services configuration.
 For manual installation user is expected to update "extension.store.uri" property defined in startup properties with
 HDFS path where the extension artifacts will be copied to.
 Extension artifacts in addons/extensions are packaged in falcon. For manual installation once the Falcon Server is setup user is expected to copy the extension artifacts under {falcon-server-dir}/extensions to HDFS at "extension.store.uri" path defined in startup properties and then restart Falcon.
@@ -60,5 +61,5 @@ Extension artifacts in addons/extensions are packaged in falcon. For manual inst
 ---++ Migration
 Recipes framework and HDFS mirroring capability was added in Apache Falcon 0.6.0 release and it was client side logic. With 0.10 release its moved to server side and renamed as server side extensions. Client side recipes only had CLI support and expected certain pre steps to get it working. This is no longer required in 0.10 release as new CLI and REST API support has been provided.
 
-If user is migrating to 0.10 release and above then old Recipe setup and CLI's won't work. For manual installation user is expected to copy Extension artifacts to HDFS. Please refer "Packaging and installation" section above for more details.
+Migrating to 0.10 release and above is not backward compatible for Recipes. If user is migrating to 0.10 release and above then old Recipe setup and CLI's won't work. For manual installation user is expected to copy Extension artifacts to HDFS. Please refer "Packaging and installation" section above for more details.
 Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details on usage of CLI and REST API's for extension jobs and instances management.
