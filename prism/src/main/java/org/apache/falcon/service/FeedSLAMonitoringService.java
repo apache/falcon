@@ -68,8 +68,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
     private static final FeedSLAMonitoringService SERVICE = new FeedSLAMonitoringService();
 
-    public static final String tagCritical = "Missed SLA High";
-    public static final String tagWarn = "Missed SLA Low";
+    public static final String TAG_CRITICAL = "Missed-SLA-High";
+    public static final String TAG_WARN = "Missed-SLA-Low";
 
     private FeedSLAMonitoringService() {
 
@@ -426,9 +426,9 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                 Date slaCriticalTime = new Date(nominalTime.getTime() + slaHighDuration);
                 Date slaWarnTime = new Date(nominalTime.getTime() + slaLowDuration);
                 if (slaCriticalTime.before(now)) {
-                    result.add(new Pair<>(nominalTime, tagCritical));
+                    result.add(new Pair<>(nominalTime, TAG_CRITICAL));
                 } else if (slaWarnTime.before(now)) {
-                    result.add(new Pair<>(nominalTime, tagWarn));
+                    result.add(new Pair<>(nominalTime, TAG_WARN));
                 }
             }
         }
