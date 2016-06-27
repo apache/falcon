@@ -24,11 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.Map;
 import java.util.ArrayList;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -37,7 +34,6 @@ import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.PendingInstanceBean;
-import org.apache.falcon.Pair;
 import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
@@ -111,8 +107,7 @@ public final class FeedSLAAlertService implements FalconService, EntitySLAListen
     }
 
     void processSLACandidates(){
-        Multimap<Pair, Date> feedInstancesToBeMonitored = ArrayListMultimap.create();
-//Get all feeds instances to be monitored
+        //Get all feeds instances to be monitored
         List<PendingInstanceBean> pendingInstanceBeanList = store.getAllInstances();
         if (pendingInstanceBeanList.isEmpty()){
             return;
@@ -121,43 +116,37 @@ public final class FeedSLAAlertService implements FalconService, EntitySLAListen
         LOG.debug("In processSLACandidates :" + pendingInstanceBeanList.size());
         try{
             for (PendingInstanceBean pendingInstanceBean : pendingInstanceBeanList) {
-                Pair pair = new Pair(pendingInstanceBean.getFeedName(), pendingInstanceBean.getClusterName());
-                feedInstancesToBeMonitored.put(pair, pendingInstanceBean.getNominalTime());
-            }
 
-            for(Map.Entry<Pair, Date> pairDateEntry : feedInstancesToBeMonitored.entries()) {
+                String feedName = pendingInstanceBean.getFeedName();
+                String clusterName = pendingInstanceBean.getClusterName();
+                Date nominalTime = pendingInstanceBean.getNominalTime();
+                Feed feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
 
-                Pair pair = pairDateEntry.getKey();
-                Date nominalTime = pairDateEntry.getValue();
-                Feed feed = ConfigurationStore.get().get(EntityType.FEED, (String) pair.first);
-
-                Cluster cluster =  FeedHelper.getCluster(feed, (String)pair.second);
+                Cluster cluster =  FeedHelper.getCluster(feed, clusterName);
 
                 Set<SchedulableEntityInstance> schedulableEntityInstances= FeedSLAMonitoringService.get().
                         getFeedSLAMissPendingAlerts(feed.getName(), cluster.getName(), nominalTime, nominalTime);
                 if (schedulableEntityInstances.isEmpty()){
                     store.deleteFeedAlertInstance(feed.getName(), cluster.getName(), nominalTime);
+                    return;
                 }
                 List<SchedulableEntityInstance> schedulableEntityList = new ArrayList<>(schedulableEntityInstances);
                 SchedulableEntityInstance schedulableEntityInstance = schedulableEntityList.get(0);
 
 
                 if (schedulableEntityInstance.getTags().contains(FeedSLAMonitoringService.get().TAG_WARN)) {
-                    store.putSLAAlertInstance(pair.first.toString(), pair.second.toString(),
-                            pairDateEntry.getValue(), true, false);
+                    store.putSLAAlertInstance(feedName, clusterName, nominalTime, true, false);
                     //Mark in DB as SLA missed
-                    LOG.info("Feed :"+ pairDateEntry.getKey().first
-                                + "Cluster:" + pairDateEntry.getKey().second + "Nominal Time:"
-                                + pairDateEntry.getValue() + "missed SLALow");
+                    LOG.info("Feed :"+ feedName
+                                + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLALow");
                 } else if (schedulableEntityInstance.getTags().contains(FeedSLAMonitoringService.get().TAG_CRITICAL)){
-                    store.updateSLAAlertInstance(pair.first.toString(), pair.second.toString(), nominalTime);
-                    LOG.info("Feed :"+ pairDateEntry.getKey().first
-                            + "Cluster:" + pairDateEntry.getKey().second + "Nominal Time:"
-                            + pairDateEntry.getValue() + "missed SLAHigh");
-                    highSLAMissed(pair.first.toString(), pair.second.toString(), nominalTime);
+                    store.updateSLAAlertInstance(feedName, clusterName, nominalTime);
+                    LOG.info("Feed :"+ feedName
+                            + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLAHigh");
+                    highSLAMissed(feedName, clusterName, nominalTime);
                 }
             }
-        } catch (Exception e){
+        } catch (FalconException e){
             LOG.error("Exception in FeedSLAALertService:", e);
         }
 
