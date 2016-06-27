@@ -78,7 +78,7 @@ public final class DateUtil {
         activeTimeMask = (entityInUTC) ? ISO8601_UTC_MASK : ISO8601_TZ_MASK_WITHOUT_OFFSET + tz.substring(3);
     }
 
-    public static Date getNextMinute(Date time) throws Exception {
+    public static Date getNextMinute(Date time) {
         Calendar insCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         insCal.setTime(time);
         insCal.add(Calendar.MINUTE, 1);
