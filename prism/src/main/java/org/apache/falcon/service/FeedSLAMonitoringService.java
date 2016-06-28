@@ -40,7 +40,7 @@ import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
-import org.apache.falcon.persistence.MonitoredFeedsBean;
+import org.apache.falcon.persistence.MonitoredEntityBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.util.DateUtil;
@@ -125,7 +125,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     if (currentClusters.contains(cluster.getName())) {
                         if (FeedHelper.getSLA(cluster, feed) != null) {
                             LOG.debug("Adding feed:{} for monitoring", feed.getName());
-                            MONITORING_JDBC_STATE_STORE.putMonitoredFeed(feed.getName());
+                            MONITORING_JDBC_STATE_STORE.putMonitoredFeed(feed.getName(), EntityType.FEED.toString());
                         }
                     }
                 }
@@ -142,8 +142,9 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                 Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
                 for (Cluster cluster : feed.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName()) && FeedHelper.getSLA(cluster, feed) != null) {
-                        MONITORING_JDBC_STATE_STORE.deleteMonitoringFeed(feed.getName());
-                        MONITORING_JDBC_STATE_STORE.deletePendingInstances(feed.getName(), cluster.getName());
+                        MONITORING_JDBC_STATE_STORE.deleteMonitoringFeed(feed.getName(), EntityType.FEED.toString());
+                        MONITORING_JDBC_STATE_STORE.deletePendingInstances(feed.getName(), cluster.getName(),
+                                EntityType.FEED.toString());
                     }
                 }
             }
@@ -181,7 +182,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                 }
 
                 for (String clusterName : slaRemovedClusters) {
-                    MONITORING_JDBC_STATE_STORE.deletePendingInstances(newFeed.getName(), clusterName);
+                    MONITORING_JDBC_STATE_STORE.deletePendingInstances(newFeed.getName(), clusterName,
+                            EntityType.FEED.toString());
                 }
             }
         }
@@ -218,10 +220,12 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         throws FalconException {
         LOG.info("Removing {} feed's instance {} in cluster {} from pendingSLA", feedName,
                 clusterName, nominalTime);
-        List<Date> instances = (MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, clusterName));
+        List<Date> instances = (MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, clusterName,
+                EntityType.FEED.toString()));
         // Slas for feeds not having sla tag are not stored.
         if (CollectionUtils.isEmpty(instances)){
-            MONITORING_JDBC_STATE_STORE.deletePendingInstance(feedName, clusterName, nominalTime);
+            MONITORING_JDBC_STATE_STORE.deletePendingInstance(feedName, clusterName, nominalTime,
+                    EntityType.FEED.toString());
         }
     }
 
@@ -266,14 +270,15 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
     void addNewPendingFeedInstances(Date to) throws FalconException {
         Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
-        List<MonitoredFeedsBean> feedsBeanList = MONITORING_JDBC_STATE_STORE.getAllMonitoredFeed();
-        for(MonitoredFeedsBean monitoredFeedsBean : feedsBeanList) {
-            String feedName = monitoredFeedsBean.getFeedName();
+        List<MonitoredEntityBean> feedsBeanList = MONITORING_JDBC_STATE_STORE.getAllMonitoredFeed();
+        for(MonitoredEntityBean monitoredEntityBean : feedsBeanList) {
+            String feedName = monitoredEntityBean.getFeedName();
             Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
             for (Cluster feedCluster : feed.getClusters().getClusters()) {
                 if (currentClusters.contains(feedCluster.getName())) {
                     // get start of instances from the database
-                    Date nextInstanceTime = MONITORING_JDBC_STATE_STORE.getLastInstanceTime(feedName);
+                    Date nextInstanceTime = MONITORING_JDBC_STATE_STORE.getLastInstanceTime(feedName,
+                            EntityType.FEED.toString());
                     Pair<String, String> key = new Pair<>(feed.getName(), feedCluster.getName());
                     if (nextInstanceTime == null) {
                         nextInstanceTime = getInitialStartTime(feed, feedCluster.getName());
@@ -294,7 +299,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     }
 
                     for(Date date:instances){
-                        MONITORING_JDBC_STATE_STORE.putPendingInstances(feed.getName(), feedCluster.getName(), date);
+                        MONITORING_JDBC_STATE_STORE.putPendingInstances(feed.getName(), feedCluster.getName(), date,
+                                EntityType.FEED.toString());
                     }
                 }
             }
@@ -307,13 +313,13 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
      */
     private void checkPendingInstanceAvailability() throws FalconException {
         for(PendingInstanceBean pendingInstanceBean : MONITORING_JDBC_STATE_STORE.getAllInstances()){
-            for (Date date : MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getFeedName(),
-                    pendingInstanceBean.getClusterName())) {
-                boolean status = checkFeedInstanceAvailability(pendingInstanceBean.getFeedName(),
+            for (Date date : MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getEntityName(),
+                    pendingInstanceBean.getClusterName(), EntityType.FEED.toString())) {
+                boolean status = checkFeedInstanceAvailability(pendingInstanceBean.getEntityName(),
                         pendingInstanceBean.getClusterName(), date);
                 if (status) {
-                    MONITORING_JDBC_STATE_STORE.deletePendingInstance(pendingInstanceBean.getFeedName(),
-                            pendingInstanceBean.getClusterName(), date);
+                    MONITORING_JDBC_STATE_STORE.deletePendingInstance(pendingInstanceBean.getEntityName(),
+                            pendingInstanceBean.getClusterName(), date, EntityType.FEED.toString());
                 }
             }
         }
@@ -360,15 +366,15 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         throws FalconException {
         Set<SchedulableEntityInstance> result = new HashSet<>();
         for(PendingInstanceBean pendingInstanceBean : MONITORING_JDBC_STATE_STORE.getAllInstances()){
-            Pair<String, String> feedClusterPair = new Pair<>(pendingInstanceBean.getFeedName(),
+            Pair<String, String> feedClusterPair = new Pair<>(pendingInstanceBean.getEntityName(),
                     pendingInstanceBean.getClusterName());
             Feed feed = EntityUtil.getEntity(EntityType.FEED, feedClusterPair.first);
             Cluster cluster = FeedHelper.getCluster(feed, feedClusterPair.second);
             Sla sla = FeedHelper.getSLA(cluster, feed);
             if (sla != null) {
                 Set<Pair<Date, String>> slaStatus = getSLAStatus(sla, start, end,
-                    MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getFeedName(),
-                        pendingInstanceBean.getClusterName()));
+                    MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getEntityName(),
+                        pendingInstanceBean.getClusterName(), EntityType.FEED.toString()));
                 for (Pair<Date, String> status : slaStatus) {
                     SchedulableEntityInstance instance = new SchedulableEntityInstance(feedClusterPair.first,
                         feedClusterPair.second, status.first, EntityType.FEED);
@@ -395,7 +401,8 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
         Set<SchedulableEntityInstance> result = new HashSet<>();
         Pair<String, String> feedClusterPair = new Pair<>(feedName, clusterName);
-        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, clusterName);
+        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, clusterName,
+                EntityType.FEED.toString());
         Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
         Cluster cluster = FeedHelper.getCluster(feed, feedClusterPair.second);
         Sla sla = FeedHelper.getSLA(cluster, feed);

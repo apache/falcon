@@ -108,7 +108,7 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
     public static void processSLALowCandidates() throws FalconException, InterruptedException{
 
         Date dateOne =  new Date(System.currentTimeMillis()-100000);
-        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne);
+        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne, EntityType.FEED.toString());
         org.apache.falcon.entity.v0.feed.Clusters cluster = new org.apache.falcon.entity.v0.feed.Clusters();
         Cluster testCluster = new Cluster();
         testCluster.setName("test-cluster");
@@ -129,14 +129,14 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         FeedSLAAlertService.get().init();
         Thread.sleep(10*1000);
         Assert.assertTrue(monitoringJdbcStateStore.getFeedAlertInstance("test-feed", "test-cluster",
-                dateOne).getIsSLALowMissed());
+                dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
     }
 
     @Test(expectedExceptions = javax.persistence.NoResultException.class)
     public static void processSLAHighCandidates() throws FalconException, InterruptedException{
 
         Date dateOne =  new Date(System.currentTimeMillis()-130000);
-        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne);
+        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne, EntityType.FEED.toString());
         org.apache.falcon.entity.v0.feed.Clusters cluster = new org.apache.falcon.entity.v0.feed.Clusters();
         Cluster testCluster = new Cluster();
         testCluster.setName("test-cluster");
@@ -157,6 +157,6 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         FeedSLAAlertService.get().init();
         Thread.sleep(10*1000);
         Assert.assertTrue(monitoringJdbcStateStore.getFeedAlertInstance("test-feed", "test-cluster",
-                dateOne).getIsSLAHighMissed());
+                dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());
     }
 }

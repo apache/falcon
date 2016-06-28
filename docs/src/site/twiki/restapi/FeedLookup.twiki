@@ -24,12 +24,12 @@ GET http://localhost:15000/api/entities/lookup/feed?path=/data/project1/2014/10/
     "feeds":
     [
         {
-           "feedName": "My-Feed1",
+           "entityName": "My-Feed1",
            "locationType": "DATA",
            "clusterName": "My-cluster1"
         },
         {
-           "feedName": "My-Feed2",
+           "entityName": "My-Feed2",
            "locationType": "DATA",
            "clusterName": "My-cluster2"
         }
