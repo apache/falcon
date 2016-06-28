@@ -18,11 +18,12 @@
 package org.apache.falcon.jdbc;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.falcon.persistence.MonitoredFeedsBean;
-import org.apache.falcon.persistence.FeedSLAAlertBean;
-import org.apache.falcon.persistence.PersistenceConstants;
+
+import org.apache.falcon.persistence.MonitoredEntityBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
+import org.apache.falcon.persistence.PersistenceConstants;
 import org.apache.falcon.persistence.ResultNotFoundException;
+import org.apache.falcon.persistence.EntitySLAAlertBean;
 import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
@@ -42,23 +43,25 @@ public class MonitoringJdbcStateStore {
     }
 
 
-    public void putMonitoredFeed(String feedName){
+    public void putMonitoredFeed(String feedName, String entityType){
 
-        MonitoredFeedsBean monitoredFeedsBean = new MonitoredFeedsBean();
-        monitoredFeedsBean.setFeedName(feedName);
+        MonitoredEntityBean monitoredEntityBean = new MonitoredEntityBean();
+        monitoredEntityBean.setFeedName(feedName);
+        monitoredEntityBean.setEntityType(entityType);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
-            entityManager.persist(monitoredFeedsBean);
+            entityManager.persist(monitoredEntityBean);
         } finally {
             commitAndCloseTransaction(entityManager);
         }
     }
 
-    public MonitoredFeedsBean getMonitoredFeed(String feedName){
+    public MonitoredEntityBean getMonitoredFeed(String entityName, String entityType){
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_MONITERED_INSTANCE);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", entityName);
+        q.setParameter("entityType", entityType);
         List result = q.getResultList();
         try {
             if (result.isEmpty()) {
@@ -67,14 +70,15 @@ public class MonitoringJdbcStateStore {
         } finally {
             entityManager.close();
         }
-        return ((MonitoredFeedsBean)result.get(0));
+        return ((MonitoredEntityBean)result.get(0));
     }
 
-    public void deleteMonitoringFeed(String feedName) {
+    public void deleteMonitoringFeed(String entityName, String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_MONITORED_INSTANCES);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", entityName);
+        q.setParameter("entityType", entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -82,7 +86,7 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public List<MonitoredFeedsBean> getAllMonitoredFeed() throws ResultNotFoundException {
+    public List<MonitoredEntityBean> getAllMonitoredFeed() throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_FEEDS);
         List result = q.getResultList();
@@ -90,22 +94,24 @@ public class MonitoringJdbcStateStore {
         return result;
     }
 
-    public Date getLastInstanceTime(String feedName) throws ResultNotFoundException {
+    public Date getLastInstanceTime(String feedName , String entityType) throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_LATEST_INSTANCE_TIME, Date.class);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", feedName);
+        q.setParameter("entityType", entityType);
         Date result = (Date)q.getSingleResult();
         entityManager.close();
         return result;
     }
 
-    public void deletePendingInstance(String feedName, String clusterName , Date nominalTime){
+    public void deletePendingInstance(String feedName, String clusterName , Date nominalTime, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_PENDING_NOMINAL_INSTANCES);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", feedName);
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
+        q.setParameter("entityType", entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -113,12 +119,13 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void deletePendingInstances(String feedName, String clusterName){
+    public void deletePendingInstances(String feedName, String clusterName, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_INSTANCES_FOR_FEED);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", feedName);
         q.setParameter("clusterName", clusterName);
+        q.setParameter("entityType", entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -126,23 +133,25 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putPendingInstances(String feed, String clusterName, Date nominalTime){
+    public void putPendingInstances(String feed, String clusterName, Date nominalTime, String entityType){
         EntityManager entityManager = getEntityManager();
         PendingInstanceBean pendingInstanceBean = new PendingInstanceBean();
-        pendingInstanceBean.setFeedName(feed);
+        pendingInstanceBean.setEntityName(feed);
         pendingInstanceBean.setClusterName(clusterName);
         pendingInstanceBean.setNominalTime(nominalTime);
+        pendingInstanceBean.setEntityType(entityType);
 
         beginTransaction(entityManager);
         entityManager.persist(pendingInstanceBean);
         commitAndCloseTransaction(entityManager);
     }
 
-    public List<Date> getNominalInstances(String feedName, String clusterName) {
+    public List<Date> getNominalInstances(String feedName, String clusterName, String entityType) {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_DATE_FOR_PENDING_INSTANCES);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", feedName);
         q.setParameter("clusterName", clusterName);
+        q.setParameter("entityType", entityType);
         List result = q.getResultList();
         entityManager.close();
         return result;
@@ -168,7 +177,8 @@ public class MonitoringJdbcStateStore {
         entityManager.close();
     }
 
-    public PendingInstanceBean getPendingInstance(String feedName, String clusterName, Date nominalTime) {
+    public PendingInstanceBean getPendingInstance(String feedName, String clusterName, Date nominalTime,
+                                                  String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         TypedQuery<PendingInstanceBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_PENDING_INSTANCE,
@@ -177,6 +187,7 @@ public class MonitoringJdbcStateStore {
 
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
+        q.setParameter("entityType", entityType);
         try {
             return q.getSingleResult();
         } finally {
@@ -184,14 +195,16 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public FeedSLAAlertBean getFeedAlertInstance(String feedName, String clusterName, Date nominalTime) {
+    public EntitySLAAlertBean getFeedAlertInstance(String feedName, String clusterName, Date nominalTime,
+                                                   String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        TypedQuery<FeedSLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_FEED_ALERT_INSTANCE,
-                FeedSLAAlertBean.class);
-        q.setParameter("feedName", feedName);
+        TypedQuery<EntitySLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_FEED_ALERT_INSTANCE,
+                EntitySLAAlertBean.class);
+        q.setParameter("entityName", feedName);
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
+        q.setParameter("entityType", entityType);
         try {
             return q.getSingleResult();
         } finally {
@@ -199,18 +212,19 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putSLAAlertInstance(String feedName, String cluster, Date nominalTime, Boolean isSLALowMissed,
-                                    Boolean isSLAHighMissed) {
+    public void putSLAAlertInstance(String feedName, String cluster, String entityType, Date nominalTime,
+                                    Boolean isSLALowMissed, Boolean isSLAHighMissed) {
         EntityManager entityManager = getEntityManager();
-        FeedSLAAlertBean feedSLAAlertBean = new FeedSLAAlertBean();
-        feedSLAAlertBean.setFeedName(feedName);
-        feedSLAAlertBean.setClusterName(cluster);
-        feedSLAAlertBean.setNominalTime(nominalTime);
-        feedSLAAlertBean.setIsSLALowMissed(isSLALowMissed);
-        feedSLAAlertBean.setIsSLAHighMissed(isSLAHighMissed);
+        EntitySLAAlertBean entitySLAAlertBean = new EntitySLAAlertBean();
+        entitySLAAlertBean.setEntityName(feedName);
+        entitySLAAlertBean.setClusterName(cluster);
+        entitySLAAlertBean.setNominalTime(nominalTime);
+        entitySLAAlertBean.setIsSLALowMissed(isSLALowMissed);
+        entitySLAAlertBean.setIsSLAHighMissed(isSLAHighMissed);
+        entitySLAAlertBean.setEntityType(entityType);
         try {
             beginTransaction(entityManager);
-            entityManager.persist(feedSLAAlertBean);
+            entityManager.persist(entitySLAAlertBean);
         } finally {
             commitAndCloseTransaction(entityManager);
         }
@@ -220,7 +234,7 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_SLA_HIGH);
-        q.setParameter("feedName", feedName);
+        q.setParameter("entityName", feedName);
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
         try{
@@ -230,13 +244,14 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void deleteFeedAlertInstance(String feedName, String clusterName, Date nominalTime){
+    public void deleteFeedAlertInstance(String feedName, String clusterName, Date nominalTime, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_FEED_ALERT_INSTANCE);
         q.setParameter("feedName", feedName);
         q.setParameter("clusterName", clusterName);
         q.setParameter("nominalTime", nominalTime);
+        q.setParameter("entityType", entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -245,7 +260,7 @@ public class MonitoringJdbcStateStore {
     }
 
 
-    public List<FeedSLAAlertBean> getSLAHighCandidates() {
+    public List<EntitySLAAlertBean> getSLAHighCandidates() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_SLA_HIGH_CANDIDATES);

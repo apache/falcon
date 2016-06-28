@@ -36,15 +36,15 @@ import javax.validation.constraints.NotNull;
 @Entity
 @NamedQueries({
         @NamedQuery(name = PersistenceConstants.GET_MONITERED_INSTANCE, query = "select OBJECT(a) from "
-                + "MonitoredFeedsBean a where a.feedName = :feedName"),
-        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredFeedsBean "
-                + "a where a.feedName = :feedName"),
+                + "MonitoredEntityBean a where a.entityName = :entityName and a.entityType = :entityType"),
+        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredEntityBean "
+                + "a where a.entityName = :entityName and a.entityType = :entityType"),
         @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) "
-                + "from MonitoredFeedsBean a")
+                + "from MonitoredEntityBean a")
 })
 @Table(name="MONITORED_FEEDS")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
-public class MonitoredFeedsBean {
+public class MonitoredEntityBean {
     @NotNull
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
@@ -52,15 +52,28 @@ public class MonitoredFeedsBean {
 
     @Basic
     @NotNull
-    @Column(name = "feed_name")
-    private String feedName;
+    @Column(name = "entity_name")
+    private String entityName;
+
+    public String getEntityType() {
+        return entityType;
+    }
+
+    public void setEntityType(String entityType) {
+        this.entityType = entityType;
+    }
+
+    @Basic
+    @NotNull
+    @Column(name = "entity_type")
+    private String entityType;
 
     public String getFeedName() {
-        return feedName;
+        return entityName;
     }
 
     public void setFeedName(String feedName) {
-        this.feedName = feedName;
+        this.entityName = feedName;
     }
 
     public String getId() {

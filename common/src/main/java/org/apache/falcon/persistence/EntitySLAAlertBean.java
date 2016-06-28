@@ -37,16 +37,16 @@ import javax.validation.constraints.NotNull;
  * */
 @Entity
 @NamedQueries({
-@NamedQuery(name = PersistenceConstants.GET_FEED_ALERTS, query = "select OBJECT(a) from FeedSLAAlertBean a where a.feedName = :feedName"),
+@NamedQuery(name = PersistenceConstants.GET_FEED_ALERTS, query = "select OBJECT(a) from EntitySLAAlertBean a where a.entityName = :entityName and a.entityType = :entityType"),
 @NamedQuery(name = PersistenceConstants.GET_ALL_FEED_ALERTS, query = "OBJECT(a) from PendingInstanceBean a "),
-@NamedQuery(name = PersistenceConstants.GET_SLA_HIGH_CANDIDATES, query = "select OBJECT(a) from FeedSLAAlertBean a where a.isSLALowMissed = true and a.isSLAHighMissed = false "),
-    @NamedQuery(name = PersistenceConstants.UPDATE_SLA_HIGH, query = "update FeedSLAAlertBean a set a.isSLAHighMissed = true where a.feedName = :feedName and a.clusterName = :clusterName and a.nominalTime = :nominalTime"),
-@NamedQuery(name = PersistenceConstants.GET_FEED_ALERT_INSTANCE, query = "select OBJECT(a) from FeedSLAAlertBean a where a.feedName = :feedName and a.clusterName = :clusterName and a.nominalTime = :nominalTime "),
- @NamedQuery(name = PersistenceConstants.DELETE_FEED_ALERT_INSTANCE, query = "delete from FeedSLAAlertBean a where a.feedName = :feedName and a.clusterName = :clusterName and a.nominalTime = :nominalTime")
+@NamedQuery(name = PersistenceConstants.GET_SLA_HIGH_CANDIDATES, query = "select OBJECT(a) from EntitySLAAlertBean a where a.isSLALowMissed = true and a.isSLAHighMissed = false "),
+    @NamedQuery(name = PersistenceConstants.UPDATE_SLA_HIGH, query = "update EntitySLAAlertBean a set a.isSLAHighMissed = true where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime"),
+@NamedQuery(name = PersistenceConstants.GET_FEED_ALERT_INSTANCE, query = "select OBJECT(a) from EntitySLAAlertBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType"),
+ @NamedQuery(name = PersistenceConstants.DELETE_FEED_ALERT_INSTANCE, query = "delete from EntitySLAAlertBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType")
 })
 @Table(name = "FEED_SLA_ALERTS")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
-public class FeedSLAAlertBean {
+public class EntitySLAAlertBean {
     @NotNull
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
@@ -54,13 +54,26 @@ public class FeedSLAAlertBean {
 
     @Basic
     @NotNull
-    @Column(name = "feed_name")
-    private String feedName;
+    @Column(name = "entity_name")
+    private String entityName;
 
     @Basic
     @NotNull
     @Column(name = "cluster_name")
     private String clusterName;
+
+    public String getEntityType() {
+        return entityType;
+    }
+
+    public void setEntityType(String entityType) {
+        this.entityType = entityType;
+    }
+
+    @Basic
+    @NotNull
+    @Column(name = "entity_type")
+    private String entityType;
 
     @Basic
     @NotNull
@@ -108,12 +121,12 @@ public class FeedSLAAlertBean {
         this.clusterName = clusterName;
     }
 
-    public String getFeedName() {
-        return feedName;
+    public String getEntityName() {
+        return entityName;
     }
 
-    public void setFeedName(String feedName) {
-        this.feedName = feedName;
+    public void setEntityName(String entityName) {
+        this.entityName = entityName;
     }
 
     public Boolean getIsSLALowMissed() {

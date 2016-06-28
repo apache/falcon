@@ -26,8 +26,8 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
-        <class>org.apache.falcon.persistence.FeedSLAAlertBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -58,8 +58,8 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
-        <class>org.apache.falcon.persistence.FeedSLAAlertBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -88,9 +88,9 @@
 
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.FeedSLAAlertBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
