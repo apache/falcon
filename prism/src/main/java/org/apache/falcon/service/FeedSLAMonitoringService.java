@@ -28,9 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
-import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.FeedInstanceStatus;
+import org.apache.falcon.entity.*;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -308,16 +306,19 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
             String entityName = monitoredEntityBean.getFeedName();
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             Set<String> clusters =  EntityUtil.getClustersDefined(entity);
-
+            List <org.apache.falcon.entity.v0.cluster.Cluster> cluster = new ArrayList();
+            for(String string : clusters){
+                cluster.add(ClusterHelper.getCluster(string));
+            }
             
-            for (Cluster feedCluster : entity.getClusters().getClusters()) {
+            for (org.apache.falcon.entity.v0.cluster.Cluster feedCluster : cluster) {
                 if (currentClusters.contains(feedCluster.getName())) {
                     // get start of instances from the database
                     Date nextInstanceTime = MONITORING_JDBC_STATE_STORE.getLastInstanceTime(entityName,
                             EntityType.FEED.toString());
                     Pair<String, String> key = new Pair<>(entity.getName(), feedCluster.getName());
                     if (nextInstanceTime == null) {
-                        nextInstanceTime = getInitialStartTime(entity, feedCluster.getName());
+                        nextInstanceTime = getInitialStartTime(entity, feedCluster.getName(), entityType);
                     } else {
                         nextInstanceTime = new Date(nextInstanceTime.getTime() + ONE_MS);
                     }
@@ -326,7 +327,12 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =
                             EntityUtil.getEntity(EntityType.CLUSTER, feedCluster.getName());
                     nextInstanceTime = EntityUtil.getNextStartTime(entity, currentCluster, nextInstanceTime);
-                    Date endDate = FeedHelper.getClusterValidity(entity, currentCluster.getName()).getEnd();
+                    Date endDate;
+                    if(entityType.equals(EntityType.FEED.toString())){
+                        endDate =  FeedHelper.getClusterValidity((Feed) entity, currentCluster.getName()).getEnd();
+                    }else {
+                       endDate =  ProcessHelper.getClusterValidity((Process) entity, currentCluster.getName()).getEnd();
+                    }
                     while (nextInstanceTime.before(to) && nextInstanceTime.before(endDate)) {
                         LOG.debug("Adding instance={} for <feed,cluster>={}", nextInstanceTime, key);
                         instances.add(nextInstanceTime);
@@ -336,7 +342,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
                     for(Date date:instances){
                         MONITORING_JDBC_STATE_STORE.putPendingInstances(entity.getName(), feedCluster.getName(), date,
-                                EntityType.FEED.toString());
+                                entityType);
                     }
                 }
             }
@@ -362,11 +368,13 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     }
 
     // checks whether a given feed instance is available or not
-    private boolean checkFeedInstanceAvailability(String entityName, String clusterName, Date nominalTime, String entityType) throws
+    private boolean checkFeedInstanceAvailability(String entityName, String clusterName, Date nominalTime,
+                                                  String entityType) throws
         FalconException {
         Entity entity = EntityUtil.getEntity(entityType, entityName);
 
         try {
+            if(entityType.equals(EntityType.PROCESS.toString())){
             LOG.debug("Checking instance availability status for entity:{}, cluster:{}, instanceTime:{}", entity.getName(),
                     clusterName, nominalTime, entityType);
                 AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
@@ -377,6 +385,20 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                     return true;
                 }
                 return false;
+                }
+            if(entityType.equals(EntityType.FEED.toString())){
+                LOG.debug("Checking instance availability status for feed:{}, cluster:{}, instanceTime:{}", entity.getName(),
+                        clusterName, nominalTime);
+
+                FeedInstanceStatus.AvailabilityStatus status = FeedHelper.getFeedInstanceStatus((Feed) entity, clusterName,
+                        nominalTime);
+                if (status.equals(FeedInstanceStatus.AvailabilityStatus.AVAILABLE)
+                        || status.equals(FeedInstanceStatus.AvailabilityStatus.EMPTY)) {
+                    LOG.debug("Feed instance(feed:{}, cluster:{}, instanceTime:{}) is available.", entity.getName(),
+                            clusterName, nominalTime);
+                    return true;
+                }
+            }
         } catch (Throwable e) {
             LOG.error("Couldn't find status for Entity:{}, cluster:{}, entityType{}", entityName, clusterName, entityType);
         }
@@ -479,15 +501,28 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
     }
 
     @VisibleForTesting
-    Date getInitialStartTime(Feed feed, String clusterName) throws FalconException {
-        Sla sla = FeedHelper.getSLA(clusterName, feed);
-        if (sla == null) {
-            throw new IllegalStateException("InitialStartTime can not be determined as the feed: "
-                + feed.getName() + " and cluster: " + clusterName + " does not have any sla");
+    Date getInitialStartTime(Entity entity, String clusterName, String entityType) throws FalconException {
+        if(entityType.equals(EntityType.PROCESS.toString())){
+            Sla sla = FeedHelper.getSLA(clusterName,(Feed) entity);
+            if (sla == null) {
+                throw new IllegalStateException("InitialStartTime can not be determined as the feed: "
+                    + entity.getName() + " and cluster: " + clusterName + " does not have any sla");
+            }
+            Date startTime = FeedHelper.getFeedValidityStart((Feed) entity, clusterName);
+            Frequency slaLow = sla.getSlaLow();
+            Date slaTime = new Date(DateUtil.now().getTime() - DateUtil.getFrequencyInMillis(slaLow));
+            return startTime.before(slaTime) ? startTime : slaTime;
         }
-        Date startTime = FeedHelper.getFeedValidityStart(feed, clusterName);
-        Frequency slaLow = sla.getSlaLow();
-        Date slaTime = new Date(DateUtil.now().getTime() - DateUtil.getFrequencyInMillis(slaLow));
-        return startTime.before(slaTime) ? startTime : slaTime;
+        else{
+            org.apache.falcon.entity.v0.process.Sla sla = ProcessHelper.getSLA(clusterName,(Process)entity);
+            if (sla == null) {
+                throw new IllegalStateException("InitialStartTime can not be determined as the feed: "
+                        + entity.getName() + " and cluster: " + clusterName + " does not have any sla");
+            }
+            Date startTime = ProcessHelper.getProcessValidityStart((Process) entity, clusterName);
+            Frequency slaLow = sla.getShouldEndIn();
+            Date slaTime = new Date(DateUtil.now().getTime() - DateUtil.getFrequencyInMillis(slaLow));
+            return startTime.before(slaTime) ? startTime : slaTime;
+        }
     }
 }
