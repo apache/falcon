@@ -143,7 +143,7 @@ public final class FeedSLAAlertService implements FalconService, EntitySLAListen
                     store.updateSLAAlertInstance(feedName, clusterName, nominalTime);
                     LOG.info("Feed :"+ feedName
                             + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLAHigh");
-                    highSLAMissed(feedName, clusterName, nominalTime, EntityType.FEED);
+                    highSLAMissed(feedName, EntityType.FEED, clusterName, nominalTime);
                 }
             }
         } catch (FalconException e){
@@ -153,10 +153,10 @@ public final class FeedSLAAlertService implements FalconService, EntitySLAListen
     }
 
     @Override
-    public void highSLAMissed(String feedName , String clusterName, Date nominalTime, EntityType entityType)
+    public void highSLAMissed(String feedName, EntityType entityType, String clusterName, Date nominalTime)
         throws FalconException{
         for (EntitySLAListener listener : listeners) {
-            listener.highSLAMissed(feedName, clusterName, nominalTime, entityType);
+            listener.highSLAMissed(feedName, entityType, clusterName, nominalTime);
         }
         store.deleteFeedAlertInstance(feedName, clusterName, nominalTime);
     }
