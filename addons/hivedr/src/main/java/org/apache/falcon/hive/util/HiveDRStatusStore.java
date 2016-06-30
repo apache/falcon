@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -163,10 +164,11 @@ public class HiveDRStatusStore extends DRStatusStore {
     private DBReplicationStatus getDbReplicationStatus(String source, String target, String jobName,
                                                        String database) throws HiveReplicationException{
         DBReplicationStatus dbReplicationStatus = null;
+        Path statusDbDirPath = getStatusDbDirPath(database);
         Path statusDirPath = getStatusDirPath(database, jobName);
+
         // check if database name or jobName can contain chars not allowed by hdfs dir/file naming.
         // if yes, use md5 of the same for dir names. prefer to use actual db names for readability.
-
         try {
             if (fileSystem.exists(statusDirPath)) {
                 dbReplicationStatus = readStatusFile(statusDirPath);
@@ -176,6 +178,15 @@ public class HiveDRStatusStore extends DRStatusStore {
                 ReplicationStatus initDbStatus = new ReplicationStatus(source, target, jobName,
                         database, null, ReplicationStatus.Status.INIT, -1);
                 dbReplicationStatus = new DBReplicationStatus(initDbStatus);
+
+                // Create parent dir first with default status store permissions. FALCON-2057
+                if (!fileSystem.exists(statusDbDirPath)) {
+                    if (!FileSystem.mkdirs(fileSystem, statusDbDirPath, DEFAULT_STATUS_DIR_PERMISSION)) {
+                        String error = "mkdir failed for " + statusDbDirPath.toString();
+                        LOG.error(error);
+                        throw new HiveReplicationException(error);
+                    }
+                }
                 if (!FileSystem.mkdirs(fileSystem, statusDirPath, DEFAULT_STATUS_DIR_PERMISSION)) {
                     String error = "mkdir failed for " + statusDirPath.toString();
                     LOG.error(error);
@@ -197,7 +208,11 @@ public class HiveDRStatusStore extends DRStatusStore {
     }
 
     public Path getStatusDirPath(String database, String jobName) {
-        return new Path(DEFAULT_STORE_PATH + "/" + database.toLowerCase() + "/" + jobName);
+        return new Path(getStatusDbDirPath(database), jobName);
+    }
+
+    public Path getStatusDbDirPath(String dbName) {
+        return new Path(new Path(BASE_DEFAULT_STORE_PATH), dbName.toLowerCase());
     }
 
     private void writeStatusFile(DBReplicationStatus dbReplicationStatus) throws HiveReplicationException {
@@ -271,7 +286,7 @@ public class HiveDRStatusStore extends DRStatusStore {
     public void checkForReplicationConflict(String newSource, String jobName,
                                              String database, String table) throws HiveReplicationException {
         try {
-            Path globPath = new Path(DEFAULT_STORE_PATH + "/" + database.toLowerCase() + "/*/latest.json");
+            Path globPath = new Path(getStatusDbDirPath(database), "*" + File.separator + "latest.json");
             FileStatus[] files = fileSystem.globStatus(globPath);
             for(FileStatus file : files) {
                 DBReplicationStatus dbFileStatus = new DBReplicationStatus(IOUtils.toString(
