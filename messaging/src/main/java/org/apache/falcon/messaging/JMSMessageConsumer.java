@@ -92,8 +92,7 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
 
             topicSession = (TopicSession) connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic destination = topicSession.createTopic(topicName);
-            topicSubscriber = topicSession.createDurableSubscriber(destination, FALCON_CLIENT_ID,
-                    WorkflowNameBuilder.WorkflowName.getJMSFalconSelector(), false);
+            topicSubscriber = topicSession.createDurableSubscriber(destination, FALCON_CLIENT_ID);
             topicSubscriber.setMessageListener(this);
 
             connection.setExceptionListener(this);
