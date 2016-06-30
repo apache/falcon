@@ -166,7 +166,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             } else {
                 for (String clusterName : DeploymentUtil.getCurrentClusters()) {
                     instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(feedName,
-                            clusterName, start, end));
+                            clusterName, start, end, EntityType.FEED.toString()));
                 }
             }
         } catch (FalconException e) {

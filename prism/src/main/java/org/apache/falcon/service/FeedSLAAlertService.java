@@ -27,11 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.SchedulableEntityInstance;
@@ -117,18 +114,19 @@ public final class FeedSLAAlertService implements FalconService, EntitySLAListen
         try{
             for (PendingInstanceBean pendingInstanceBean : pendingInstanceBeanList) {
 
-                String feedName = pendingInstanceBean.getEntityName();
+                String entityName = pendingInstanceBean.getEntityName();
                 String clusterName = pendingInstanceBean.getClusterName();
                 Date nominalTime = pendingInstanceBean.getNominalTime();
-                Feed feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
+                String entityType = pendingInstanceBean.getEntityType();
 
-                Cluster cluster =  FeedHelper.getCluster(feed, clusterName);
+                org.apache.falcon.entity.v0.cluster.Cluster cluster = ClusterHelper.getCluster(clusterName);
 
                 Set<SchedulableEntityInstance> schedulableEntityInstances= FeedSLAMonitoringService.get().
-                        getFeedSLAMissPendingAlerts(feed.getName(), cluster.getName(), nominalTime, nominalTime);
+                        getFeedSLAMissPendingAlerts(entityName, cluster.getName(), nominalTime, nominalTime
+                                , entityType);
                 if (schedulableEntityInstances.isEmpty()){
-                    store.deleteFeedAlertInstance(feed.getName(), cluster.getName(), nominalTime,
-                            EntityType.FEED.toString());
+                    store.deleteFeedAlertInstance(entityName, cluster.getName(), nominalTime,
+                            entityType);
                     return;
                 }
                 List<SchedulableEntityInstance> schedulableEntityList = new ArrayList<>(schedulableEntityInstances);
@@ -136,16 +134,17 @@ public final class FeedSLAAlertService implements FalconService, EntitySLAListen
 
 
                 if (schedulableEntityInstance.getTags().contains(FeedSLAMonitoringService.get().TAG_WARN)) {
-                    store.putSLAAlertInstance(feedName, clusterName, EntityType.FEED.toString(),
+                    store.putSLAAlertInstance(entityName, clusterName, EntityType.FEED.toString(),
                             nominalTime, true, false);
                     //Mark in DB as SLA missed
-                    LOG.info("Feed :"+ feedName
+                    LOG.info("Feed :"+ entityName
                                 + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLALow");
                 } else if (schedulableEntityInstance.getTags().contains(FeedSLAMonitoringService.get().TAG_CRITICAL)){
-                    store.updateSLAAlertInstance(feedName, clusterName, nominalTime);
-                    LOG.info("Feed :"+ feedName
-                            + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLAHigh");
-                    highSLAMissed(feedName, clusterName, nominalTime, EntityType.FEED.toString());
+                    store.updateSLAAlertInstance(entityName, clusterName, nominalTime);
+                    LOG.info("Entity :"+ entityName
+                            + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "EntityType:"+ entityType
+                            + "missed SLAHigh");
+                    highSLAMissed(entityName, clusterName, nominalTime, EntityType.FEED.toString());
                 }
             }
         } catch (FalconException e){

@@ -110,14 +110,22 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         Date dateOne =  new Date(System.currentTimeMillis()-100000);
         monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne, EntityType.FEED.toString());
         org.apache.falcon.entity.v0.feed.Clusters cluster = new org.apache.falcon.entity.v0.feed.Clusters();
+        org.apache.falcon.entity.v0.cluster.Cluster cluster1 = new org.apache.falcon.entity.v0.cluster.Cluster();
+        cluster1.setName("test-cluster");
         Cluster testCluster = new Cluster();
         testCluster.setName("test-cluster");
         cluster.getClusters().add(testCluster);
         Feed mockEntity = new Feed();
         mockEntity.setName("test-feed");
         mockEntity.setClusters(cluster);
+        cluster1.setColo("test-cluster");
+
+
         if (ConfigurationStore.get().get(EntityType.FEED, mockEntity.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.FEED, mockEntity);
+        }
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, mockEntity.getClusters().toString()) == null) {
+            ConfigurationStore.get().publish(EntityType.CLUSTER, cluster1);
         }
         Sla sla = new Sla();
         Frequency frequencyLow = new Frequency("1", Frequency.TimeUnit.minutes);
