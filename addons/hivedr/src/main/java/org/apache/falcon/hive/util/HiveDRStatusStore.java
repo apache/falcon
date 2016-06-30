@@ -72,6 +72,8 @@ public class HiveDRStatusStore extends DRStatusStore {
         Path basePath = new Path(BASE_DEFAULT_STORE_PATH);
         FileUtils.validatePath(fileSystem, basePath);
 
+        // Current limitation is that only users who belong to DRStatusStore.storeGroup can submit HiveDR jobs.
+        // BaseDir for status store is created with permissions 770 so that all eligible users can access statusStore.
         Path storePath = new Path(DEFAULT_STORE_PATH);
         if (!fileSystem.exists(storePath)) {
             if (!FileSystem.mkdirs(fileSystem, storePath, DEFAULT_STORE_PERMISSION)) {
