@@ -103,9 +103,6 @@ Oozie workflow completes. Falcon listens to Oozie notification via JMS. You need
 explained below. Falcon post processing feature continues to only send user notifications so enabling Oozie
 JMS notification is important.
 
-*NOTE : If Oozie JMS notification is not enabled, the Falcon features such as failure retry, late data handling and metadata
-service will be disabled for all entities on the server.*
-
 ---+++Enable Oozie JMS notification
 
    * Please add/change the following properties in oozie-site.xml in the oozie installation dir.

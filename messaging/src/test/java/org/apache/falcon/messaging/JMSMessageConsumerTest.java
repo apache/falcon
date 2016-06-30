@@ -83,11 +83,6 @@ public class JMSMessageConsumerTest {
 
     public void sendMessages(String topic, WorkflowExecutionContext.Type type)
         throws JMSException, FalconException, IOException {
-        sendMessages(topic, type, true);
-    }
-
-    public void sendMessages(String topic, WorkflowExecutionContext.Type type, boolean isFalconWF)
-        throws JMSException, FalconException, IOException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);
         Connection connection = connectionFactory.createConnection();
         connection.start();
@@ -105,10 +100,10 @@ public class JMSMessageConsumerTest {
                 message = getMockFalconMessage(i, session);
                 break;
             case WORKFLOW_JOB:
-                message = getMockOozieMessage(i, session, isFalconWF);
+                message = getMockOozieMessage(i, session);
                 break;
             case COORDINATOR_ACTION:
-                message = getMockOozieCoordMessage(i, session, isFalconWF);
+                message = getMockOozieCoordMessage(i, session);
             default:
                 break;
             }
@@ -117,15 +112,10 @@ public class JMSMessageConsumerTest {
         }
     }
 
-    private Message getMockOozieMessage(int i, Session session, boolean isFalconWF)
-        throws FalconException, JMSException {
+    private Message getMockOozieMessage(int i, Session session) throws FalconException, JMSException {
         TextMessage message = session.createTextMessage();
         message.setStringProperty("appType", "WORKFLOW_JOB");
-        if (isFalconWF) {
-            message.setStringProperty("appName", "FALCON_PROCESS_DEFAULT_process1");
-        } else {
-            message.setStringProperty("appName", "OozieSampleShellWF");
-        }
+        message.setStringProperty("appName", "FALCON_PROCESS_DEFAULT_process1");
         message.setStringProperty("user", "falcon");
         switch(i % 4) {
         case 0:
@@ -152,15 +142,11 @@ public class JMSMessageConsumerTest {
         return message;
     }
 
-    private Message getMockOozieCoordMessage(int i, Session session, boolean isFalconWF)
+    private Message getMockOozieCoordMessage(int i, Session session)
         throws FalconException, JMSException {
         TextMessage message = session.createTextMessage();
         message.setStringProperty("appType", "COORDINATOR_ACTION");
-        if (isFalconWF) {
-            message.setStringProperty("appName", "FALCON_PROCESS_DEFAULT_process1");
-        } else {
-            message.setStringProperty("appName", "OozieSampleShellWF");
-        }
+        message.setStringProperty("appName", "FALCON_PROCESS_DEFAULT_process1");
         message.setStringProperty("user", "falcon");
         switch(i % 5) {
         case 0:
@@ -292,20 +278,4 @@ public class JMSMessageConsumerTest {
         broker.stop();
         subscriber.closeSubscriber();
     }
-
-    @Test
-    public void testJMSMessagesFromOozieForNonFalconWF() throws Exception {
-        sendMessages(TOPIC_NAME, WorkflowExecutionContext.Type.WORKFLOW_JOB, false /* isFalconWF */);
-
-        final BrokerView adminView = broker.getAdminView();
-        Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
-
-        Thread.sleep(100);
-        Mockito.verify(jobEndService, Mockito.never()).notifyStart(Mockito.any(WorkflowExecutionContext.class));
-        Mockito.verify(jobEndService, Mockito.never()).notifySuccess(Mockito.any(WorkflowExecutionContext.class));
-        Mockito.verify(jobEndService, Mockito.never()).notifySuspend(Mockito.any(WorkflowExecutionContext.class));
-        Mockito.verify(jobEndService, Mockito.never()).notifyWait(Mockito.any(WorkflowExecutionContext.class));
-        Mockito.verify(jobEndService, Mockito.never()).notifyFailure(Mockito.any(WorkflowExecutionContext.class));
-    }
-
 }
