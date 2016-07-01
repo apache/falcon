@@ -86,14 +86,14 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
 
     @Test
     public void testInsertRetrieveAndUpdate() throws Exception {
-        monitoringJdbcStateStore.putMonitoredFeed("test_feed1", EntityType.FEED.toString());
-        monitoringJdbcStateStore.putMonitoredFeed("test_feed2", EntityType.FEED.toString());
+        monitoringJdbcStateStore.putMonitoredEntity("test_feed1", EntityType.FEED.toString());
+        monitoringJdbcStateStore.putMonitoredEntity("test_feed2", EntityType.FEED.toString());
         Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredEntity("test_feed1",
                 EntityType.FEED.toString()).getFeedName());
         Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredFeed().size(), 2);
 
-        monitoringJdbcStateStore.deleteMonitoringFeed("test_feed1", EntityType.FEED.toString());
-        monitoringJdbcStateStore.deleteMonitoringFeed("test_feed2", EntityType.FEED.toString());
+        monitoringJdbcStateStore.deleteMonitoringEntity("test_feed1", EntityType.FEED.toString());
+        monitoringJdbcStateStore.deleteMonitoringEntity("test_feed2", EntityType.FEED.toString());
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
         Date dateTwo =  SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
         monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateOne, EntityType.FEED.toString());
@@ -111,8 +111,8 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     @Test
     public void testEmptyLatestInstance() throws Exception {
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
-        store.putMonitoredFeed("test-feed1", EntityType.FEED.toString());
-        store.putMonitoredFeed("test-feed2", EntityType.FEED.toString());
+        store.putMonitoredEntity("test-feed1", EntityType.FEED.toString());
+        store.putMonitoredEntity("test-feed2", EntityType.FEED.toString());
         Assert.assertNull(store.getLastInstanceTime("test-feed1", EntityType.FEED.toString()));
 
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");

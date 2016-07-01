@@ -218,7 +218,7 @@ public final class ProcessHelper {
             return processCluster.getValidity().getStart();
         } else {
             throw new FalconException("No matching cluster " + clusterName
-                    + "found for feed " + process.getName());
+                    + "found for process " + process.getName());
         }
     }
 }

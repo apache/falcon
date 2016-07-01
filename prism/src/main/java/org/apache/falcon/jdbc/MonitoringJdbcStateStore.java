@@ -34,7 +34,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
-* StateStore for MonitoringFeeds and PendingFeedInstances.
+* StateStore for MonitoringEntity and PendingEntityInstances.
 */
 
 public class MonitoringJdbcStateStore {
@@ -44,7 +44,7 @@ public class MonitoringJdbcStateStore {
     }
 
 
-    public void putMonitoredFeed(String entityName, String entityType) throws FalconException{
+    public void putMonitoredEntity(String entityName, String entityType) throws FalconException{
 
         MonitoredEntityBean monitoredEntityBean = new MonitoredEntityBean();
         monitoredEntityBean.setEntityName(entityName);
@@ -74,7 +74,7 @@ public class MonitoringJdbcStateStore {
         return ((MonitoredEntityBean)result.get(0));
     }
 
-    public void deleteMonitoringFeed(String entityName, String entityType) {
+    public void deleteMonitoringEntity(String entityName, String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_MONITORED_INSTANCES);
@@ -247,7 +247,7 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void deleteFeedAlertInstance(String entityName, String clusterName, Date nominalTime, String entityType){
+    public void deleteEntityAlertInstance(String entityName, String clusterName, Date nominalTime, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ENTITY_ALERT_INSTANCE);

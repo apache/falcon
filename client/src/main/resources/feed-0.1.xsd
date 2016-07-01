@@ -219,7 +219,7 @@
     <xs:complexType name="sla">
         <xs:annotation>
             <xs:documentation>
-                sla has two properties - slaLow and slaHigh. Both PRoLow and slaHigh
+                sla has two properties - slaLow and slaHigh. Both slaLow and slaHigh
                 are written using expressions like frequency. slaLow is intended to serve for alerting for feeds which
                 are in danger of missing their availability SLAs. slaHigh is intended to serve for reporting the feeds
                 which missed their SLAs. SLAs are relative to feed instance time.

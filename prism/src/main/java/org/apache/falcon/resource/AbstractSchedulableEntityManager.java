@@ -162,10 +162,10 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             Date end = (endStr == null) ? new Date() : EntityUtil.parseDateUTC(endStr);
 
             if (StringUtils.isBlank(feedName)) {
-                instances.addAll(EntitySLAMonitoringService.get().getFeedSLAMissPendingAlerts(start, end));
+                instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(start, end));
             } else {
                 for (String clusterName : DeploymentUtil.getCurrentClusters()) {
-                    instances.addAll(EntitySLAMonitoringService.get().getFeedSLAMissPendingAlerts(feedName,
+                    instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(feedName,
                             clusterName, start, end, EntityType.FEED.toString()));
                 }
             }

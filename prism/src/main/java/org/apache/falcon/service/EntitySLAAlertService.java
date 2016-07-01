@@ -121,10 +121,10 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                 org.apache.falcon.entity.v0.cluster.Cluster cluster = ClusterHelper.getCluster(clusterName);
 
                 Set<SchedulableEntityInstance> schedulableEntityInstances= EntitySLAMonitoringService.get().
-                        getFeedSLAMissPendingAlerts(entityName, cluster.getName(), nominalTime, nominalTime
+                        getEntitySLAMissPendingAlerts(entityName, cluster.getName(), nominalTime, nominalTime
                                 , entityType);
                 if (schedulableEntityInstances.isEmpty()){
-                    store.deleteFeedAlertInstance(entityName, cluster.getName(), nominalTime,
+                    store.deleteEntityAlertInstance(entityName, cluster.getName(), nominalTime,
                             entityType);
                     return;
                 }
@@ -157,7 +157,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                               ) throws FalconException {
         for (EntitySLAListener listener : listeners) {
             listener.highSLAMissed(entityName, clusterName, entityType, nominalTime);
-            store.deleteFeedAlertInstance(entityName, clusterName, nominalTime, entityType);
+            store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType);
         }
     }
 }

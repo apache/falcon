@@ -45,8 +45,14 @@ public class SLAMonitoringHandler implements WorkflowExecutionListener {
     @Override
     public void onSuccess(WorkflowExecutionContext context) throws FalconException {
         if (context.hasWorkflowSucceeded()) {
-            updateSLAMonitoring(context.getClusterName(), context.getOutputFeedNamesList(),
+            if (context.getEntityType().toString().equals(EntityType.FEED.toString())){
+                updateSLAMonitoring(context.getClusterName(), context.getOutputFeedNamesList(),
                     context.getOutputFeedInstancePathsList());
+            }
+            if (context.getEntityType().toString().equals(EntityType.PROCESS.toString())){
+                EntitySLAMonitoringService.get().updateProcessSLAMonitoring(context.getClusterName(),
+                        context.getEntityName(), context.getNominalTimeAsISO8601(), context.getEntityType());
+            }
         }
     }
 
