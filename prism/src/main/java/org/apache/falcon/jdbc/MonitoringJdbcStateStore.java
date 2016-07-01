@@ -19,6 +19,7 @@ package org.apache.falcon.jdbc;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import org.apache.falcon.FalconException;
 import org.apache.falcon.persistence.MonitoredEntityBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.persistence.PersistenceConstants;
@@ -43,10 +44,10 @@ public class MonitoringJdbcStateStore {
     }
 
 
-    public void putMonitoredFeed(String feedName, String entityType){
+    public void putMonitoredFeed(String entityName, String entityType) throws FalconException{
 
         MonitoredEntityBean monitoredEntityBean = new MonitoredEntityBean();
-        monitoredEntityBean.setFeedName(feedName);
+        monitoredEntityBean.setEntityName(entityName);
         monitoredEntityBean.setEntityType(entityType);
         EntityManager entityManager = getEntityManager();
         try {
@@ -57,11 +58,11 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public MonitoredEntityBean getMonitoredFeed(String entityName, String entityType){
+    public MonitoredEntityBean getMonitoredEntity(String entityName, String entityType){
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_MONITERED_INSTANCE);
-        q.setParameter("entityName", entityName);
-        q.setParameter("entityType", entityType);
+        q.setParameter(MonitoredEntityBean.ENTITYNAME, entityName);
+        q.setParameter(MonitoredEntityBean.ENTITYTYPE, entityType);
         List result = q.getResultList();
         try {
             if (result.isEmpty()) {
@@ -77,8 +78,8 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_MONITORED_INSTANCES);
-        q.setParameter("entityName", entityName);
-        q.setParameter("entityType", entityType);
+        q.setParameter(MonitoredEntityBean.ENTITYNAME, entityName);
+        q.setParameter(MonitoredEntityBean.ENTITYTYPE, entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -94,24 +95,24 @@ public class MonitoringJdbcStateStore {
         return result;
     }
 
-    public Date getLastInstanceTime(String feedName , String entityType) throws ResultNotFoundException {
+    public Date getLastInstanceTime(String entityName , String entityType) throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_LATEST_INSTANCE_TIME, Date.class);
-        q.setParameter("entityName", feedName);
-        q.setParameter("entityType", entityType);
+        q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
         Date result = (Date)q.getSingleResult();
         entityManager.close();
         return result;
     }
 
-    public void deletePendingInstance(String feedName, String clusterName , Date nominalTime, String entityType){
+    public void deletePendingInstance(String entityName, String clusterName , Date nominalTime, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_PENDING_NOMINAL_INSTANCES);
-        q.setParameter("entityName", feedName);
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("nominalTime", nominalTime);
-        q.setParameter("entityType", entityType);
+        q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
+        q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
+        q.setParameter(PendingInstanceBean.NOMINALTIME, nominalTime);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -119,13 +120,13 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void deletePendingInstances(String feedName, String clusterName, String entityType){
+    public void deletePendingInstances(String entityName, String clusterName, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_INSTANCES_FOR_FEED);
-        q.setParameter("entityName", feedName);
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("entityType", entityType);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_INSTANCES_FOR_ENTITY);
+        q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
+        q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -133,10 +134,11 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putPendingInstances(String feed, String clusterName, Date nominalTime, String entityType){
+    public void putPendingInstances(String entity, String clusterName, Date nominalTime, String entityType)
+        throws FalconException{
         EntityManager entityManager = getEntityManager();
         PendingInstanceBean pendingInstanceBean = new PendingInstanceBean();
-        pendingInstanceBean.setEntityName(feed);
+        pendingInstanceBean.setEntityName(entity);
         pendingInstanceBean.setClusterName(clusterName);
         pendingInstanceBean.setNominalTime(nominalTime);
         pendingInstanceBean.setEntityType(entityType);
@@ -146,12 +148,12 @@ public class MonitoringJdbcStateStore {
         commitAndCloseTransaction(entityManager);
     }
 
-    public List<Date> getNominalInstances(String feedName, String clusterName, String entityType) {
+    public List<Date> getNominalInstances(String entityName, String clusterName, String entityType) {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_DATE_FOR_PENDING_INSTANCES);
-        q.setParameter("entityName", feedName);
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("entityType", entityType);
+        q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
+        q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
         List result = q.getResultList();
         entityManager.close();
         return result;
@@ -177,17 +179,17 @@ public class MonitoringJdbcStateStore {
         entityManager.close();
     }
 
-    public PendingInstanceBean getPendingInstance(String feedName, String clusterName, Date nominalTime,
+    public PendingInstanceBean getPendingInstance(String entityName, String clusterName, Date nominalTime,
                                                   String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         TypedQuery<PendingInstanceBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_PENDING_INSTANCE,
                             PendingInstanceBean.class);
-        q.setParameter("feedName", feedName);
+        q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
 
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("nominalTime", nominalTime);
-        q.setParameter("entityType", entityType);
+        q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
+        q.setParameter(PendingInstanceBean.NOMINALTIME, nominalTime);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
         try {
             return q.getSingleResult();
         } finally {
@@ -195,16 +197,16 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public EntitySLAAlertBean getFeedAlertInstance(String feedName, String clusterName, Date nominalTime,
+    public EntitySLAAlertBean getFeedAlertInstance(String entityName, String clusterName, Date nominalTime,
                                                    String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        TypedQuery<EntitySLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.GET_FEED_ALERT_INSTANCE,
-                EntitySLAAlertBean.class);
-        q.setParameter("entityName", feedName);
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("nominalTime", nominalTime);
-        q.setParameter("entityType", entityType);
+        TypedQuery<EntitySLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.
+                GET_ENTITY_ALERT_INSTANCE, EntitySLAAlertBean.class);
+        q.setParameter(EntitySLAAlertBean.ENTITYNAME, entityName);
+        q.setParameter(EntitySLAAlertBean.CLUSTERNAME, clusterName);
+        q.setParameter(EntitySLAAlertBean.NOMINALTIME, nominalTime);
+        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType);
         try {
             return q.getSingleResult();
         } finally {
@@ -212,11 +214,11 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void putSLAAlertInstance(String feedName, String cluster, String entityType, Date nominalTime,
-                                    Boolean isSLALowMissed, Boolean isSLAHighMissed) {
+    public void putSLAAlertInstance(String entityName, String cluster, String entityType, Date nominalTime,
+                                    Boolean isSLALowMissed, Boolean isSLAHighMissed) throws FalconException{
         EntityManager entityManager = getEntityManager();
         EntitySLAAlertBean entitySLAAlertBean = new EntitySLAAlertBean();
-        entitySLAAlertBean.setEntityName(feedName);
+        entitySLAAlertBean.setEntityName(entityName);
         entitySLAAlertBean.setClusterName(cluster);
         entitySLAAlertBean.setNominalTime(nominalTime);
         entitySLAAlertBean.setIsSLALowMissed(isSLALowMissed);
@@ -230,13 +232,14 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void updateSLAAlertInstance(String feedName, String clusterName, Date nominalTime) {
+    public void updateSLAAlertInstance(String entityName, String clusterName, Date nominalTime, String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.UPDATE_SLA_HIGH);
-        q.setParameter("entityName", feedName);
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("nominalTime", nominalTime);
+        q.setParameter(EntitySLAAlertBean.ENTITYNAME, entityName);
+        q.setParameter(EntitySLAAlertBean.CLUSTERNAME, clusterName);
+        q.setParameter(EntitySLAAlertBean.NOMINALTIME, nominalTime);
+        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType);
         try{
             q.executeUpdate();
         } finally {
@@ -244,14 +247,14 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public void deleteFeedAlertInstance(String feedName, String clusterName, Date nominalTime, String entityType){
+    public void deleteFeedAlertInstance(String entityName, String clusterName, Date nominalTime, String entityType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_FEED_ALERT_INSTANCE);
-        q.setParameter("feedName", feedName);
-        q.setParameter("clusterName", clusterName);
-        q.setParameter("nominalTime", nominalTime);
-        q.setParameter("entityType", entityType);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ENTITY_ALERT_INSTANCE);
+        q.setParameter(EntitySLAAlertBean.ENTITYNAME, entityName);
+        q.setParameter(EntitySLAAlertBean.CLUSTERNAME, clusterName);
+        q.setParameter(EntitySLAAlertBean.NOMINALTIME, nominalTime);
+        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType);
         try{
             q.executeUpdate();
         } finally {

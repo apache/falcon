@@ -17,6 +17,9 @@
  */
 package org.apache.falcon.persistence;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
+
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -59,7 +62,8 @@ public class MonitoredEntityBean {
         return entityType;
     }
 
-    public void setEntityType(String entityType) {
+    public void setEntityType(String entityType) throws FalconException {
+        checkEntityType(entityType);
         this.entityType = entityType;
     }
 
@@ -72,7 +76,7 @@ public class MonitoredEntityBean {
         return entityName;
     }
 
-    public void setFeedName(String feedName) {
+    public void setEntityName(String feedName) {
         this.entityName = feedName;
     }
 
@@ -82,5 +86,18 @@ public class MonitoredEntityBean {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public static final String ENTITYNAME = "entityName";
+
+    public static final String ENTITYTYPE = "entityType";
+
+    void checkEntityType(String entityType)throws FalconException {
+        if (entityType.equals(EntityType.PROCESS.toString()) || entityType.equals(EntityType.FEED.toString())){
+            return;
+        } else {
+            throw new FalconException("EntityType"+ entityType
+                    + " is not valid,Feed and Process are the valid input type.");
+        }
     }
 }

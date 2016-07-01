@@ -196,9 +196,12 @@ public final class ProcessHelper {
         return cluster.getValidity();
     }
 
-    public static Sla getSLA(String clusterName, Process process) {
+    public static Sla getSLA(String clusterName, Process process) throws FalconException{
         Cluster cluster = getCluster(process, clusterName);
-        return cluster != null ? getSLA(cluster, process) : null;
+        if (cluster == null){
+            throw new FalconException("Invalid cluster: " + clusterName + " for process: " + process.getName());
+        }
+        return getSLA(cluster, process);
     }
 
     public static Sla getSLA(Cluster cluster, Process process) {
@@ -206,14 +209,13 @@ public final class ProcessHelper {
         if (clusterSla != null) {
             return clusterSla;
         }
-        final Sla processSla = process.getSla();
-        return processSla == null ? null : processSla;
+        return process.getSla();
     }
 
     public static Date getProcessValidityStart(Process process, String clusterName) throws FalconException {
-        Cluster feedCluster = getCluster(process, clusterName);
-        if (feedCluster != null) {
-            return feedCluster.getValidity().getStart();
+        Cluster processCluster = getCluster(process, clusterName);
+        if (processCluster != null) {
+            return processCluster.getValidity().getStart();
         } else {
             throw new FalconException("No matching cluster " + clusterName
                     + "found for feed " + process.getName());

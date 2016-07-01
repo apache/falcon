@@ -40,6 +40,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
@@ -67,23 +68,23 @@ import com.google.common.annotations.VisibleForTesting;
 /**
  * Service to monitor Feed SLAs.
  */
-public final class FeedSLAMonitoringService implements ConfigurationChangeListener, FalconService {
+public final class EntitySLAMonitoringService implements ConfigurationChangeListener, FalconService {
     private static final Logger LOG = LoggerFactory.getLogger("FeedSLA");
 
     private static final MonitoringJdbcStateStore MONITORING_JDBC_STATE_STORE = new MonitoringJdbcStateStore();
 
     private static final int ONE_MS = 1;
 
-    private static final FeedSLAMonitoringService SERVICE = new FeedSLAMonitoringService();
+    private static final EntitySLAMonitoringService SERVICE = new EntitySLAMonitoringService();
 
     public static final String TAG_CRITICAL = "Missed-SLA-High";
     public static final String TAG_WARN = "Missed-SLA-Low";
 
-    private FeedSLAMonitoringService() {
+    private EntitySLAMonitoringService() {
 
     }
 
-    public static FeedSLAMonitoringService get() {
+    public static EntitySLAMonitoringService get() {
         return SERVICE;
     }
 
@@ -141,7 +142,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
         }
         if (entity.getEntityType() == EntityType.PROCESS){
             Process process = (Process) entity;
-            if (process.getSla() != null){
+            if (process.getSla() != null || checkProcessClusterSLA(process)){
                 for (org.apache.falcon.entity.v0.process.Cluster  cluster : process.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName())) {
                         LOG.debug("Adding process:{} for monitoring", process.getName());
@@ -151,6 +152,17 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
                 }
             }
         }
+    }
+
+    public Boolean checkProcessClusterSLA(Process process){
+        Clusters clusters = process.getClusters();
+        for(org.apache.falcon.entity.v0.process.Cluster  cluster : clusters.getClusters()){
+            org.apache.falcon.entity.v0.process.Sla sla =  ProcessHelper.getSLA(cluster, process);
+            if (sla != null){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -230,7 +242,7 @@ public final class FeedSLAMonitoringService implements ConfigurationChangeListen
 
     @Override
     public String getName() {
-        return FeedSLAMonitoringService.class.getSimpleName();
+        return EntitySLAMonitoringService.class.getSimpleName();
     }
 
     @Override

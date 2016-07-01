@@ -17,6 +17,9 @@
  */
 package org.apache.falcon.persistence;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
+
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -38,7 +41,7 @@ import java.util.Date;
     @NamedQuery(name = PersistenceConstants.GET_LATEST_INSTANCE_TIME, query = "select max(a.nominalTime) from PendingInstanceBean a where a.entityName = :entityName and a.entityType = :entityType"),
     @NamedQuery(name = PersistenceConstants.GET_PENDING_INSTANCES, query = "select OBJECT(a) from PendingInstanceBean a where a.entityName = :entityName and a.entityType = :entityType"),
     @NamedQuery(name = PersistenceConstants.DELETE_PENDING_NOMINAL_INSTANCES , query = "delete from PendingInstanceBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType"),
-    @NamedQuery(name = PersistenceConstants.DELETE_ALL_INSTANCES_FOR_FEED, query = "delete from PendingInstanceBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.entityType = :entityType"),
+    @NamedQuery(name = PersistenceConstants.DELETE_ALL_INSTANCES_FOR_ENTITY, query = "delete from PendingInstanceBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.entityType = :entityType"),
     @NamedQuery(name = PersistenceConstants.GET_DATE_FOR_PENDING_INSTANCES , query = "select a.nominalTime from PendingInstanceBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.entityType = :entityType"),
     @NamedQuery(name= PersistenceConstants.GET_ALL_PENDING_INSTANCES , query = "select  OBJECT(a) from PendingInstanceBean a "),
     @NamedQuery(name= PersistenceConstants.GET_PENDING_INSTANCE , query = "select  OBJECT(a) from PendingInstanceBean a  where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType")
@@ -53,7 +56,7 @@ public class PendingInstanceBean {
 
     @Basic
     @NotNull
-    @Column(name = "feed_name")
+    @Column(name = "entity_name")
     private String entityName;
 
     @Basic
@@ -70,7 +73,8 @@ public class PendingInstanceBean {
         return entityType;
     }
 
-    public void setEntityType(String entityType) {
+    public void setEntityType(String entityType) throws FalconException {
+        checkEntityType(entityType);
         this.entityType = entityType;
     }
 
@@ -109,5 +113,22 @@ public class PendingInstanceBean {
 
     public void setEntityName(String entityName) {
         this.entityName = entityName;
+    }
+
+    public static final String ENTITYNAME = "entityName";
+
+    public static final String CLUSTERNAME = "clusterName";
+
+    public static final String NOMINALTIME = "nominalTime";
+
+    public static final String ENTITYTYPE = "entityType";
+
+    void checkEntityType(String entityType)throws FalconException {
+        if (entityType.equals(EntityType.PROCESS.toString()) || entityType.equals(EntityType.FEED.toString())){
+            return;
+        } else {
+            throw new FalconException("EntityType"+ entityType
+                    + " is not valid,Feed and Process are the valid input type.");
+        }
     }
 }

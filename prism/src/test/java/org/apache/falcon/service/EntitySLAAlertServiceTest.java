@@ -44,9 +44,9 @@ import java.io.File;
 import java.util.Date;
 
 /**
- * Test for FeedSLAMonitoringService.
+ * Test for EntitySLAMonitoringService.
  */
-public class FeedSLAAlertServiceTest extends AbstractTestBase {
+public class EntitySLAAlertServiceTest extends AbstractTestBase {
     private static final String DB_BASE_DIR = "target/test-data/persistancedb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
@@ -134,7 +134,7 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         sla.setSlaHigh(frequencyHigh);
         mockEntity.setSla(sla);
 
-        FeedSLAAlertService.get().init();
+        EntitySLAAlertService.get().init();
         Thread.sleep(10*1000);
         Assert.assertTrue(monitoringJdbcStateStore.getFeedAlertInstance("test-feed", "test-cluster",
                 dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
@@ -162,7 +162,7 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         sla.setSlaHigh(frequencyHigh);
         mockEntity.setSla(sla);
 
-        FeedSLAAlertService.get().init();
+        EntitySLAAlertService.get().init();
         Thread.sleep(10*1000);
         Assert.assertTrue(monitoringJdbcStateStore.getFeedAlertInstance("test-feed", "test-cluster",
                 dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());

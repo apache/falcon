@@ -88,7 +88,7 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     public void testInsertRetrieveAndUpdate() throws Exception {
         monitoringJdbcStateStore.putMonitoredFeed("test_feed1", EntityType.FEED.toString());
         monitoringJdbcStateStore.putMonitoredFeed("test_feed2", EntityType.FEED.toString());
-        Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredFeed("test_feed1",
+        Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredEntity("test_feed1",
                 EntityType.FEED.toString()).getFeedName());
         Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredFeed().size(), 2);
 
@@ -131,14 +131,15 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     public void testputSLALowCandidate() throws Exception{
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
-        store.putSLAAlertInstance("test-feed1", "test-cluster", "feed", dateOne, Boolean.TRUE, Boolean.FALSE);
+        store.putSLAAlertInstance("test-feed1", "test-cluster", EntityType.FEED.toString(),
+                dateOne, Boolean.TRUE, Boolean.FALSE);
         Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
-                "test-cluster", dateOne, "feed").getIsSLALowMissed());
+                "test-cluster", dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
         Assert.assertTrue(dateOne.equals(store.getFeedAlertInstance("test-feed1",
-                "test-cluster", dateOne, "feed").getNominalTime()));
-        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne);
+                "test-cluster", dateOne, EntityType.FEED.toString()).getNominalTime()));
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne, EntityType.FEED.toString());
         Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
-                "test-cluster", dateOne, "feed").getIsSLAHighMissed());
+                "test-cluster", dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());
     }
 
     @Test
@@ -146,10 +147,11 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
 
-        store.putSLAAlertInstance("test-feed1", "test-cluster", "feed", dateOne, Boolean.TRUE, Boolean.FALSE);
-        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne);
+        store.putSLAAlertInstance("test-feed1", "test-cluster", EntityType.FEED.toString(),
+                dateOne, Boolean.TRUE, Boolean.FALSE);
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne, EntityType.FEED.toString());
         Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
-                "test-cluster", dateOne, "feed").getIsSLAHighMissed());
+                "test-cluster", dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());
     }
 
     private void clear() {

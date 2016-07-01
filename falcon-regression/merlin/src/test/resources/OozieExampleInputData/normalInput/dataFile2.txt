@@ -98,8 +98,8 @@
 //		return this.msgs.get(ARG.FEED_NAME);
 //	}
 //
-//	public void setFeedName(String entityName) {
-//		this.msgs.put(ARG.FEED_NAME, entityName);
+//	public void setFeedName(String feedName) {
+//		this.msgs.put(ARG.FEED_NAME, feedName);
 //	}
 //
 //	public String getFeedInstancePath() {
