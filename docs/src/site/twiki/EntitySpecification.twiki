@@ -927,6 +927,29 @@ Input and Output data to the Spark application will be set as argument when Spar
 In the set of arguments, first argument will always correspond to input feed, second argument will always correspond to output feed and then user's provided argument will be set.
 
 
+For running the Spark SQL process entity, that read and write the data stored on Hive, the datanucleus jars under the $HIVE_HOME/lib directory and hive-site.xml
+under $SPARK_HOME/conf/ directory need to be available on the driver and all executors launched by the YARN cluster.
+The convenient way to do this is adding them through the --jars option and --file option of the spark-opts attribute.
+Example:
+<verbatim>
+<process name="spark-process">
+...
+    <workflow engine="spark" path="/resources/action">
+    <spark-attributes>
+        <master>local</master>
+        <name>Spark SQL</name>
+        <class>org.examples.SparkSQLProcessTable</class>
+        <jar>/resources/action/lib/spark-application.jar</jar>
+        <spark-opts>--num-executors 1 --driver-memory 512m --jars /usr/local/hive/lib/datanucleus-rdbms.jar,/usr/local/hive/lib/datanucleus-core.jar,/usr/local/hive/lib/datanucleus-api-jdo.jar --files /usr/local/spark/conf/hive-site.xml</spark-opts>
+    </spark-attributes>
+...
+</process>
+</verbatim>
+
+Input and Output to the Spark SQL application will be set as argument when Spark workflow will be generated, if input and output feed entity is defined in the process entity.
+If input feed is of table type, then input table partition, table name and database name will be set as input arguments. If output feed is of table type, then output table partition, table name and database name will be set as output arguments.
+Once input and output arguments is set, then user's provided argument will be set.
+
 ---+++ Retry
 Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.
 Syntax:
