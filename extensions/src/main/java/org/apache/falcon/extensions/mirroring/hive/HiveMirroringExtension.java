@@ -217,7 +217,7 @@ public class HiveMirroringExtension extends AbstractExtension {
         String replicationMaxMaps =
                 extensionProperties.getProperty(HiveMirroringExtensionProperties.MAX_MAPS.getName());
         if (StringUtils.isBlank(replicationMaxMaps)) {
-            additionalProperties.put(HiveMirroringExtensionProperties.MAX_MAPS.getName(), "5");
+            additionalProperties.put(HiveMirroringExtensionProperties.MAX_MAPS.getName(), "2");
         }
 
         String distcpMaxMaps = extensionProperties.getProperty(
