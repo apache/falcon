@@ -52,21 +52,16 @@
         <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
     </Match>
 
-    <!--<Match>-->
-        <!--<Class name="org.apache.falcon.persistence.PendingInstanceBean" />-->
-        <!--<Bug pattern="UWF_UNWRITTEN_FIELD" />-->
-    <!--</Match>-->
+    <Match>
+        <Class name="org.apache.falcon.persistence.FeedSLAAlertBean" />
+        <Bug pattern="UWF_UNWRITTEN_FIELD,NP_BOOLEAN_RETURN_NULL" />
+    </Match>
 
 
     <Match>
         <Class name="org.apache.falcon.persistence.MonitoredFeedsBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
     </Match>
-
-    <!--<Match>-->
-        <!--<Class name="org.apache.falcon.persistence.MonitoredFeedsBean" />-->
-        <!--<Bug pattern="UWF_UNWRITTEN_FIELD" />-->
-    <!--</Match>-->
 
     <Match>
         <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />

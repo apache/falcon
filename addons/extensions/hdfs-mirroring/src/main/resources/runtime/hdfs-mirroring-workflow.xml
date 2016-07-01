@@ -51,6 +51,10 @@
                     <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
                     <value>${sourceClusterFS},${targetClusterFS}</value>
                 </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceClusterFS},${targetClusterFS}</value>
+                </property>
             </configuration>
             <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>

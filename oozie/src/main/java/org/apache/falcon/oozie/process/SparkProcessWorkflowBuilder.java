@@ -46,6 +46,7 @@ import java.util.List;
  */
 public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
     private static final String ACTION_TEMPLATE = "/action/process/spark-action.xml";
+    private static final String FALCON_PREFIX = "falcon_";
 
     public SparkProcessWorkflowBuilder(Process entity) {
         super(entity);
@@ -155,6 +156,10 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             final String inputName = input.getName();
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
                 argList.add(0, "${" + inputName + "}");
+            } else if (storage.getType() == Storage.TYPE.TABLE) {
+                argList.add(0, "${" + FALCON_PREFIX+inputName+"_database" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+inputName+"_table" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+inputName+"_partition_filter_hive" + "}");
             }
             numInputFeed--;
         }
@@ -174,6 +179,10 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             final String outputName = output.getName();
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
                 argList.add(0, "${" + outputName + "}");
+            } else if (storage.getType() == Storage.TYPE.TABLE) {
+                argList.add(0, "${" + FALCON_PREFIX+outputName+"_database" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+outputName+"_table" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+outputName+"_partitions_hive" + "}");
             }
             numOutputFeed--;
         }

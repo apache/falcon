@@ -122,6 +122,31 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
 
     }
 
+    @Test
+    public void testputSLALowCandidate() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+        store.putSLAAlertInstance("test-feed1", "test-cluster", dateOne, Boolean.TRUE, Boolean.FALSE);
+        Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
+                "test-cluster", dateOne).getIsSLALowMissed());
+        Assert.assertTrue(dateOne.equals(store.getFeedAlertInstance("test-feed1",
+                "test-cluster", dateOne).getNominalTime()));
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne);
+        Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
+                "test-cluster", dateOne).getIsSLAHighMissed());
+    }
+
+    @Test
+    public void testupdateSLAHighCandidate() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+
+        store.putSLAAlertInstance("test-feed1", "test-cluster", dateOne, Boolean.TRUE, Boolean.FALSE);
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne);
+        Assert.assertEquals(Boolean.TRUE, store.getFeedAlertInstance("test-feed1",
+                "test-cluster", dateOne).getIsSLAHighMissed());
+    }
+
     private void clear() {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
@@ -130,6 +155,9 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
             query.executeUpdate();
             query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
+            query = em.createNativeQuery("delete from FEED_SLA_ALERTS");
+            query.executeUpdate();
+
         } finally {
             em.getTransaction().commit();
             em.close();
