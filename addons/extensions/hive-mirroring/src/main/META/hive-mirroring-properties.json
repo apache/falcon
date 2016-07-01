@@ -1,5 +1,5 @@
 {
-    "shortDescription":"This extension implements replicating hive metadata and data from one Hadoop cluster to another Hadoop cluster.",
+    "shortDescription": "This extension implements replicating hive metadata and data from one Hadoop cluster to another Hadoop cluster.",
     "properties":[
         {
             "propertyName":"jobName",
@@ -116,6 +116,12 @@
             "example":"/apps/hive/dr"
         },
         {
+            "propertyName":"sourceHive2KerberosPrincipal",
+            "required":true,
+            "description":"Required on secure clusters. Kerberos principal required to access hive servers ",
+            "example":"hive/_HOST@EXAMPLE.COM"
+        },
+        {
             "propertyName":"targetCluster",
             "required":true,
             "description":"target cluster for hive mirroring",
@@ -132,6 +138,12 @@
             "required":false,
             "description":"Staging path on target",
             "example":"/apps/hive/dr"
+        },
+        {
+            "propertyName":"targetHive2KerberosPrincipal",
+            "required":true,
+            "description":"Required on secure clusters. Kerberos principal required to access hive servers ",
+            "example":"hive/_HOST@EXAMPLE.COM"
         },
         {
             "propertyName":"maxEvents",

@@ -139,13 +139,18 @@ public class HiveMirroringExtension extends AbstractExtension {
         }
         additionalProperties.put(HiveMirroringExtensionProperties.CLUSTER_FOR_JOB_RUN_WRITE_EP.getName(),
                 ClusterHelper.getStorageUrl(jobCluster));
-        if (SecurityUtil.isSecurityEnabled()) {
+
+        // Check if job cluster is secure
+        String jobClusterKerberosPrincipal = ClusterHelper.getPropertyValue(jobCluster, SecurityUtil.NN_PRINCIPAL);
+        if (StringUtils.isNotBlank(jobClusterKerberosPrincipal)) {
             // Add -secure and update the resource name
             String resourceName = getName().toLowerCase() + SECURE_RESOURCE;
             additionalProperties.put(ExtensionProperties.RESOURCE_NAME.getName(), resourceName);
-            additionalProperties.put(HiveMirroringExtensionProperties.CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL.getName(),
-                    ClusterHelper.getPropertyValue(jobCluster, SecurityUtil.NN_PRINCIPAL));
+        } else {
+            jobClusterKerberosPrincipal = NOT_APPLICABLE;
         }
+        additionalProperties.put(HiveMirroringExtensionProperties.CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL.getName(),
+                jobClusterKerberosPrincipal);
 
         // Properties for src cluster
         String srcClusterName = extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_CLUSTER
@@ -165,20 +170,22 @@ public class HiveMirroringExtension extends AbstractExtension {
             additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_TABLES.getName(), ALL_TABLES);
         }
 
-        if (SecurityUtil.isSecurityEnabled()) {
-            String hive2Principal = extensionProperties.getProperty(HiveMirroringExtensionProperties
-                    .SOURCE_HIVE2_KERBEROS_PRINCIPAL.getName());
-            if (StringUtils.isBlank(hive2Principal)) {
-                throw new FalconException("Hive server2 kerberos principal for cluster " + srcCluster.getName()
-                        + "not passed for extension " + jobName);
-            }
-
-            additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
-                    ClusterHelper.getPropertyValue(srcCluster, SecurityUtil.NN_PRINCIPAL));
-            additionalProperties.put(
-                    HiveMirroringExtensionProperties.SOURCE_HIVE_METASTORE_KERBEROS_PRINCIPAL.getName(),
-                    ClusterHelper.getPropertyValue(srcCluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL));
+        // Check if source cluster is secure
+        String srcClusterKerberosPrincipal = ClusterHelper.getPropertyValue(srcCluster, SecurityUtil.NN_PRINCIPAL);
+        if (StringUtils.isBlank(srcClusterKerberosPrincipal)) {
+            srcClusterKerberosPrincipal = NOT_APPLICABLE;
         }
+
+        String srcHiveMetastorePrincipal = ClusterHelper.getPropertyValue(
+                srcCluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
+        if (StringUtils.isBlank(srcHiveMetastorePrincipal)) {
+            srcHiveMetastorePrincipal = NOT_APPLICABLE;
+        }
+        additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName(),
+                srcClusterKerberosPrincipal);
+        additionalProperties.put(
+                HiveMirroringExtensionProperties.SOURCE_HIVE_METASTORE_KERBEROS_PRINCIPAL.getName(),
+                srcHiveMetastorePrincipal);
 
         // Properties for target cluster
         String targetClusterName = extensionProperties.getProperty(HiveMirroringExtensionProperties.TARGET_CLUSTER
@@ -192,20 +199,23 @@ public class HiveMirroringExtension extends AbstractExtension {
         additionalProperties.put(HiveMirroringExtensionProperties.TARGET_NN.getName(),
                 ClusterHelper.getStorageUrl(targetCluster));
 
-        if (SecurityUtil.isSecurityEnabled()) {
-            String hive2Principal = extensionProperties.getProperty(HiveMirroringExtensionProperties
-                    .TARGET_HIVE2_KERBEROS_PRINCIPAL.getName());
-            if (StringUtils.isBlank(hive2Principal)) {
-                throw new FalconException("Hive server2 kerberos principal for cluster " + targetCluster.getName()
-                        + "not passed for extension " + jobName);
-            }
-
-            additionalProperties.put(HiveMirroringExtensionProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
-                    ClusterHelper.getPropertyValue(targetCluster, SecurityUtil.NN_PRINCIPAL));
-            additionalProperties.put(
-                    HiveMirroringExtensionProperties.TARGET_HIVE_METASTORE_KERBEROS_PRINCIPAL.getName(),
-                    ClusterHelper.getPropertyValue(targetCluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL));
+        // Check if target cluster is secure
+        String targetClusterKerberosPrincipal = ClusterHelper.getPropertyValue(
+                targetCluster, SecurityUtil.NN_PRINCIPAL);
+        if (StringUtils.isBlank(targetClusterKerberosPrincipal)) {
+            targetClusterKerberosPrincipal = NOT_APPLICABLE;
         }
+
+        String targetHiveMetastorePrincipal = ClusterHelper.getPropertyValue(targetCluster,
+                SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL);
+        if (StringUtils.isBlank(targetHiveMetastorePrincipal)) {
+            targetHiveMetastorePrincipal = NOT_APPLICABLE;
+        }
+        additionalProperties.put(HiveMirroringExtensionProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName(),
+                targetClusterKerberosPrincipal);
+        additionalProperties.put(
+                HiveMirroringExtensionProperties.TARGET_HIVE_METASTORE_KERBEROS_PRINCIPAL.getName(),
+                targetHiveMetastorePrincipal);
 
         // Misc properties
         // Add default properties if not passed
