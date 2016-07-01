@@ -53,8 +53,8 @@ public enum HiveMirroringExtensionProperties {
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
     MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
     CLUSTER_FOR_JOB_RUN("clusterForJobRun", "Cluster on which replication job runs", false),
-    CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL("Job cluster kerberos principal",
-            "Write EP of cluster on which replication job runs", false),
+    CLUSTER_FOR_JOB_NN_KERBEROS_PRINCIPAL("clusterForJobNNKerberosPrincipal", "Job cluster kerberos principal",
+            false),
     CLUSTER_FOR_JOB_RUN_WRITE_EP("clusterForJobRunWriteEP", "Write EP of cluster on which replication job runs", false),
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false),
     HIVE_MIRRORING_JOB_NAME("hiveJobName", "Unique hive replication job name", false);
