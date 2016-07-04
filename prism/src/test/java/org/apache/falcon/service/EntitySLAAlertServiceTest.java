@@ -172,8 +172,8 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
 
 
         Thread.sleep(10*1000);
-        System.out.println(monitoringJdbcStateStore.getEntityAlertInstance("test-process", "test-cluster", dateOne,
-                EntityType.PROCESS.name()));
+        Assert.assertTrue(monitoringJdbcStateStore.getEntityAlertInstance("test-process", "test-cluster", dateOne,
+                EntityType.PROCESS.name()).getIsSLAHighMissed());
 
     }
 

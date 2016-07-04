@@ -106,7 +106,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     void processSLACandidates(){
         //Get all feeds instances to be monitored
         List<PendingInstanceBean> pendingInstanceBeanList = store.getAllInstances();
-        if ( pendingInstanceBeanList == null || pendingInstanceBeanList.isEmpty()){
+        if (pendingInstanceBeanList == null || pendingInstanceBeanList.isEmpty()){
             return;
         }
 
