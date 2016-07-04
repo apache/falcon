@@ -197,8 +197,8 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public EntitySLAAlertBean getFeedAlertInstance(String entityName, String clusterName, Date nominalTime,
-                                                   String entityType) {
+    public EntitySLAAlertBean getEntityAlertInstance(String entityName, String clusterName, Date nominalTime,
+                                                     String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         TypedQuery<EntitySLAAlertBean> q = entityManager.createNamedQuery(PersistenceConstants.

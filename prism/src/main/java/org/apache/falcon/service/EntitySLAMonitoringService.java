@@ -625,7 +625,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         }
     }
 
-    public void updateProcessSLAMonitoring(String clusterName, String entityName, String date, String entityType) {
+    public void makeProcessInstanceAvailable(String clusterName, String entityName, String date, String entityType) {
         Date nominalTime = null;
         try {
             nominalTime = DateUtil.parseDateFalconTZ(date);
@@ -635,7 +635,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         if (nominalTime!= null){
             List<Date> instances = (MONITORING_JDBC_STATE_STORE.getNominalInstances(entityName, clusterName,
                 entityType));
-            if (CollectionUtils.isEmpty(instances)){
+            if (!CollectionUtils.isEmpty(instances)){
                 MONITORING_JDBC_STATE_STORE.deletePendingInstance(entityName, clusterName, nominalTime,
                     entityType);
             }

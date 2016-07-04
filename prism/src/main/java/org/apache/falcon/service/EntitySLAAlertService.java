@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.SchedulableEntityInstance;
@@ -105,7 +106,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     void processSLACandidates(){
         //Get all feeds instances to be monitored
         List<PendingInstanceBean> pendingInstanceBeanList = store.getAllInstances();
-        if (pendingInstanceBeanList.isEmpty()){
+        if ( pendingInstanceBeanList == null || pendingInstanceBeanList.isEmpty()){
             return;
         }
 
@@ -139,6 +140,10 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                     LOG.info("Feed :"+ entityName
                                 + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLALow");
                 } else if (schedulableEntityInstance.getTags().contains(EntitySLAMonitoringService.get().TAG_CRITICAL)){
+                    if (entityType.equals(EntityType.PROCESS.name())){
+                        store.putSLAAlertInstance(entityName, clusterName, entityType,
+                                nominalTime, true, false);
+                    }
                     store.updateSLAAlertInstance(entityName, clusterName, nominalTime, entityType);
                     LOG.info("Entity :"+ entityName
                             + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "EntityType:"+ entityType
