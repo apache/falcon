@@ -125,7 +125,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
         if (ConfigurationStore.get().get(EntityType.FEED, mockEntity.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.FEED, mockEntity);
         }
-        if (ConfigurationStore.get().get(EntityType.CLUSTER, mockEntity.getClusters().toString()) == null) {
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, cluster1.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.CLUSTER, cluster1);
         }
         Sla sla = new Sla();
@@ -162,7 +162,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
         if (ConfigurationStore.get().get(EntityType.PROCESS, process.getName()) == null){
             ConfigurationStore.get().publish(EntityType.PROCESS, process);
         }
-        if (ConfigurationStore.get().get(EntityType.CLUSTER, process.getClusters().toString()) == null) {
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, processCluster.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.CLUSTER, processCluster);
         }
         org.apache.falcon.entity.v0.process.Sla sla = new org.apache.falcon.entity.v0.process.Sla();
@@ -195,7 +195,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
         if (ConfigurationStore.get().get(EntityType.FEED, mockEntity.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.FEED, mockEntity);
         }
-        if (ConfigurationStore.get().get(EntityType.CLUSTER, mockEntity.getClusters().toString()) == null) {
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, cluster1.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.CLUSTER, cluster1);
         }
         Sla sla = new Sla();
