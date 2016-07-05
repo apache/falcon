@@ -160,8 +160,6 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         try {
             Query query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
-            query = em.createNativeQuery("delete from FEED_SLA_ALERTS");
-            query.executeUpdate();
             query = em.createNativeQuery("delete from MONITORED_ENTITY");
             query.executeUpdate();
             query = em.createNativeQuery("delete from ENTITY_SLA_ALERTS");
