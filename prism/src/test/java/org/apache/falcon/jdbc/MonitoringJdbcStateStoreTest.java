@@ -158,9 +158,7 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
         try {
-            Query query = em.createNativeQuery("delete from MONITORED_FEEDS");
-            query.executeUpdate();
-            query = em.createNativeQuery("delete from PENDING_INSTANCES");
+            Query query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
             query = em.createNativeQuery("delete from FEED_SLA_ALERTS");
             query.executeUpdate();
