@@ -86,7 +86,7 @@ public class Extension implements ExtensionBuilder {
 
         Map<String, String> extensionResources = store.getExtensionResources(name);
         /* Get the resources */
-        String extensionTemplate = getExtensionTemplate(store, extensionResources, resourceName);
+        String extensionTemplate = getExtensionTemplate(store, extensionResources, name);
         String wfPath = getWFPath(extensionResources, resourceName);
 
         /* Get Lib path */
