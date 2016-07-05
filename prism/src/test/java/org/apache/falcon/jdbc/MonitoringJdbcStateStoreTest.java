@@ -147,11 +147,11 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
 
-        store.putSLAAlertInstance("test-feed1", "test-cluster", EntityType.FEED.toString(),
+        store.putSLAAlertInstance("test-process", "test-cluster", EntityType.PROCESS.toString(),
                 dateOne, Boolean.TRUE, Boolean.FALSE);
-        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne, EntityType.FEED.toString());
-        Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-feed1",
-                "test-cluster", dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());
+        store.updateSLAAlertInstance("test-process", "test-cluster", dateOne, EntityType.PROCESS.toString());
+        Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-process",
+                "test-cluster", dateOne, EntityType.PROCESS.toString()).getIsSLAHighMissed());
     }
 
     private void clear() {
@@ -163,6 +163,10 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
             query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
             query = em.createNativeQuery("delete from FEED_SLA_ALERTS");
+            query.executeUpdate();
+            query = em.createNativeQuery("delete from MONITORED_ENTITY");
+            query.executeUpdate();
+            query = em.createNativeQuery("delete from ENTITY_SLA_ALERTS");
             query.executeUpdate();
 
         } finally {

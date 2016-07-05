@@ -47,7 +47,7 @@ import javax.validation.constraints.NotNull;
 @NamedQuery(name = PersistenceConstants.GET_ENTITY_ALERT_INSTANCE, query = "select OBJECT(a) from EntitySLAAlertBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType"),
  @NamedQuery(name = PersistenceConstants.DELETE_ENTITY_ALERT_INSTANCE, query = "delete from EntitySLAAlertBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType")
 })
-@Table(name = "FEED_SLA_ALERTS")
+@Table(name = "ENTITY_SLA_ALERTS")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class EntitySLAAlertBean {
     @NotNull

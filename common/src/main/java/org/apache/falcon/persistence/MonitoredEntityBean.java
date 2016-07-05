@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
         @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) "
                 + "from MonitoredEntityBean a")
 })
-@Table(name="MONITORED_FEEDS")
+@Table(name="MONITORED_ENTITY")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class MonitoredEntityBean {
     @NotNull
