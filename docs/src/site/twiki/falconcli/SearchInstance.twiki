@@ -1,0 +1,17 @@
+---+++Search
+
+[[CommonCLI][Common CLI Options]]
+
+Search option via CLI can be used to get instances that meet search criteria, e.g. nominal time, instance status, entity name subsequence, entity tag, etc.
+Instance name and status are listed in the output. More instance properties will be added to the output in the future (e.g. log url, running time).
+Example usage include: search of instances of all entities with the same tag; search of all current running instances.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -search
+
+Optional Args : -type <<[feed|process|datasource],[feed|process|datasource]>>
+-nameseq <<namesubsequence>> -tagkeys <<tagkeyword1,tagkeyword2>>
+-instanceStatus <<status>> -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+-orderBy <<field>> -offset 0 -numResults 10
+
+<a href="../restapi/InstanceSearch.html">Optional params and examples described here.</a>

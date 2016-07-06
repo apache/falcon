@@ -133,6 +133,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
             ParseException, InterruptedException {
         // submit cluster and feeds
         submitClusterAndFeeds();
+
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
         assertStatus(result);
         createData(INPUT_FEED_NAME, CLUSTER_NAME, SCHEDULE_TIME, INPUT_FILE_NAME);
@@ -194,7 +195,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Process process = getEntity(EntityType.PROCESS, PROCESS_NAME);
         setDummyProperty(process);
         String processXml = process.toString();
-
         File file = new File("target/newprocess.xml");
         file.createNewFile();
         FileWriter fw = new FileWriter(file.getAbsoluteFile());
@@ -207,9 +207,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         result = falconUnitClient.touch(EntityType.PROCESS.name(), PROCESS_NAME, null, true, null);
         assertStatus(result);
 
-        process = getEntity(EntityType.PROCESS,
-                PROCESS_NAME);
-        Assert.assertEquals(process.toString(), processXml);
+        Process process2 = getEntity(EntityType.PROCESS, PROCESS_NAME);
+        Assert.assertEquals(process2.toString(), process.toString());
         file.delete();
     }
 

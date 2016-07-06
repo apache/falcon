@@ -1,0 +1,15 @@
+---+++Schedule
+
+[[CommonCLI][Common CLI Options]]
+
+Schedule an extension job.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -schedule -jobName <<extension-job-name>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionSchedule.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -schedule -jobName sales-monthly

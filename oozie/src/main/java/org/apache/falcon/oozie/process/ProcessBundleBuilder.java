@@ -20,6 +20,7 @@ package org.apache.falcon.oozie.process;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.v0.EntityType;
@@ -65,12 +66,13 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
                     properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
                     properties.put(inName + ".initial-instance",
                         SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
-                    properties.put(inName + ".done-flag", "notused");
+                    String doneFlag = feed.getAvailabilityFlag();
+                    properties.put(inName + ".done-flag", (doneFlag == null)? "" : doneFlag);
 
                     String locPath = FeedHelper.createStorage(cluster.getName(), feed)
                         .getUriTemplate(LocationType.DATA).replace('$', '%');
                     properties.put(inName + ".uri-template", locPath);
-
+                    properties.put(inName + ".empty-dir", ClusterHelper.getEmptyDir(cluster));
                     properties.put(inName + ".start-instance", in.getStart());
                     properties.put(inName + ".end-instance", in.getEnd());
                 }

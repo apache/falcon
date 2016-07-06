@@ -471,4 +471,5 @@ public abstract class AbstractFalconClient {
     // RESUME CHECKSTYLE CHECK ParameterNumberCheck
     public abstract FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
                                                               String colo, String doAsUser);
+
 }

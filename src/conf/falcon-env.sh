@@ -53,3 +53,6 @@
 
 # Where do you want to expand the war file. By Default it is in /server/webapp dir under the base install dir.
 #export FALCON_EXPANDED_WEBAPP_DIR=
+
+# Any additional classpath elements to be added to the Falcon server/client classpath
+#export FALCON_EXTRA_CLASS_PATH=

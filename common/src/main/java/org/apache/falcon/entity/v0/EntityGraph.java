@@ -200,6 +200,15 @@ public final class EntityGraph implements ConfigurationChangeListener {
                 feedEdges.add(dbNode);
                 dbEdges.add(feedNode);
             }
+            if (FeedHelper.isExportEnabled(cluster)) {
+                Node dbNode = new Node(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
+                if (!nodeEdges.containsKey(dbNode)) {
+                    nodeEdges.put(dbNode, new HashSet<Node>());
+                }
+                Set<Node> dbEdges = nodeEdges.get(dbNode);
+                feedEdges.add(dbNode);
+                dbEdges.add(feedNode);
+            }
         }
         return nodeEdges;
     }

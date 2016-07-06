@@ -26,7 +26,7 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.service.FeedSLAMonitoringService;
+import org.apache.falcon.service.EntitySLAMonitoringService;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowExecutionListener;
 import org.apache.hadoop.fs.Path;
@@ -45,8 +45,14 @@ public class SLAMonitoringHandler implements WorkflowExecutionListener {
     @Override
     public void onSuccess(WorkflowExecutionContext context) throws FalconException {
         if (context.hasWorkflowSucceeded()) {
-            updateSLAMonitoring(context.getClusterName(), context.getOutputFeedNamesList(),
+            if (context.getEntityType().toString().equals(EntityType.FEED.name())){
+                updateSLAMonitoring(context.getClusterName(), context.getOutputFeedNamesList(),
                     context.getOutputFeedInstancePathsList());
+            }
+            if (context.getEntityType().toString().equals(EntityType.PROCESS.name())){
+                EntitySLAMonitoringService.get().makeProcessInstanceAvailable(context.getClusterName(),
+                        context.getEntityName(), context.getNominalTimeAsISO8601(), context.getEntityType());
+            }
         }
     }
 
@@ -60,7 +66,8 @@ public class SLAMonitoringHandler implements WorkflowExecutionListener {
                 String templatePath = new Path(storage.getUriTemplate(LocationType.DATA)).toUri().getPath();
                 Date date = FeedHelper.getDate(templatePath, new Path(outputFeedInstancePathsList[index]),
                     EntityUtil.getTimeZone(feed));
-                FeedSLAMonitoringService.get().makeFeedInstanceAvailable(outputFeedNamesList[index], clusterName, date);
+                EntitySLAMonitoringService.get().makeFeedInstanceAvailable(outputFeedNamesList[index],
+                        clusterName, date);
             }
         }
     }

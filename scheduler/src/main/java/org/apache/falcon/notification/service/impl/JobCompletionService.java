@@ -139,7 +139,7 @@ public class JobCompletionService implements FalconNotificationService, Workflow
 
     @Override
     public void onSuspend(WorkflowExecutionContext context) throws FalconException {
-        // Do nothing
+        onEnd(context, WorkflowJob.Status.SUSPENDED);
     }
 
     @Override

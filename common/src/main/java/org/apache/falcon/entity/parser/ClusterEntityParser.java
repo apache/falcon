@@ -94,6 +94,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateRegistryInterface(cluster);
         validateLocations(cluster);
         validateProperties(cluster);
+        validateSparkMasterInterface(cluster);
     }
 
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
@@ -151,7 +152,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         LOG.info("Validating execute interface: {}", executeUrl);
 
         try {
-            HadoopClientFactory.get().validateJobClient(executeUrl);
+            String rmPrincipal = ClusterHelper.getPropertyValue(cluster, SecurityUtil.RM_PRINCIPAL);
+            HadoopClientFactory.get().validateJobClient(executeUrl, rmPrincipal);
         } catch (IOException e) {
             throw new ValidationException("Invalid Execute server or port: " + executeUrl, e);
         }
@@ -231,6 +233,18 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         }
     }
 
+    protected void validateSparkMasterInterface(Cluster cluster) throws ValidationException {
+        final String sparkMasterEndPoint = ClusterHelper.getSparkMasterEndPoint(cluster);
+        LOG.info("Validating spark interface: {}", sparkMasterEndPoint);
+        if (StringUtils.isNotEmpty(sparkMasterEndPoint)) {
+            if (!("yarn-cluster".equalsIgnoreCase(sparkMasterEndPoint)
+                    || "yarn-client".equalsIgnoreCase(sparkMasterEndPoint)
+                    || "local".equalsIgnoreCase(sparkMasterEndPoint))) {
+                throw new ValidationException("Invalid Spark Interface End Point:" + sparkMasterEndPoint);
+            }
+        }
+    }
+
     /**
      * Validate ACL if authorization is enabled.
      *
@@ -301,6 +315,10 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                     "falcon/workflows/feed", HadoopClientFactory.ALL_PERMISSION);
             createStagingSubdirs(fs, cluster, stagingLocation,
                     "falcon/workflows/process", HadoopClientFactory.ALL_PERMISSION);
+
+            // Create empty dirs for optional input
+            createStagingSubdirs(fs, cluster, stagingLocation,
+                    ClusterHelper.EMPTY_DIR_NAME, HadoopClientFactory.READ_ONLY_PERMISSION);
         }
     }
 

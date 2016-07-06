@@ -18,47 +18,25 @@
 
 package org.apache.falcon.client;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.security.SecureRandom;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.LifeCycle;
-import org.apache.falcon.cli.FalconCLI;
-import org.apache.falcon.cli.FalconMetadataCLI;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.metadata.RelationshipType;
-import org.apache.falcon.recipe.RecipeTool;
-import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionInstanceList;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -71,11 +49,28 @@ import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.security.SecureRandom;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Client API to submit and manage Falcon Entities (Cluster, Feed, Process) jobs
@@ -100,6 +95,7 @@ public class FalconClient extends AbstractFalconClient {
     public static final String FORCE = "force";
     public static final String SHOW_SCHEDULER = "showScheduler";
     public static final String ENTITY_NAME = "name";
+    public static final String ENTITY_TYPE = "type";
     public static final String SKIP_DRYRUN = "skipDryRun";
     public static final String FILTER_BY = "filterBy";
     public static final String ORDER_BY = "orderBy";
@@ -109,6 +105,7 @@ public class FalconClient extends AbstractFalconClient {
     public static final String START = "start";
     public static final String END = "end";
     public static final String INSTANCE_TIME = "instanceTime";
+    public static final String INSTANCE_STATUS = "instanceStatus";
     public static final String PROPERTIES = "properties";
     private static final String FIELDS = "fields";
     private static final String NAME_SUBSEQUENCE = "nameseq";
@@ -152,7 +149,7 @@ public class FalconClient extends AbstractFalconClient {
      * Create a Falcon client instance.
      *
      * @param falconUrl of the server to which client interacts
-     * @throws FalconCLIException - If unable to initialize SSL Props
+     * @ - If unable to initialize SSL Props
      */
     public FalconClient(String falconUrl) {
         this(falconUrl, new Properties());
@@ -163,7 +160,7 @@ public class FalconClient extends AbstractFalconClient {
      *
      * @param falconUrl of the server to which client interacts
      * @param properties client properties
-     * @throws FalconCLIException - If unable to initialize SSL Props
+     * @ - If unable to initialize SSL Props
      */
     public FalconClient(String falconUrl, Properties properties)  {
         try {
@@ -238,6 +235,7 @@ public class FalconClient extends AbstractFalconClient {
         VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML),
         SUBMIT("api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML),
         UPDATE("api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML),
+        UPDATEDEPENDENTS("api/entities/updateClusterDependents/", HttpMethod.POST, MediaType.TEXT_XML),
         SUBMITANDSCHEDULE("api/entities/submitAndSchedule/", HttpMethod.POST, MediaType.TEXT_XML),
         SCHEDULE("api/entities/schedule/", HttpMethod.POST, MediaType.TEXT_XML),
         SUSPEND("api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML),
@@ -301,7 +299,8 @@ public class FalconClient extends AbstractFalconClient {
         PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DEPENDENCY("api/instance/dependencies/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         TRIAGE("api/instance/triage/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        SEARCH("api/instance/search/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -317,13 +316,44 @@ public class FalconClient extends AbstractFalconClient {
     protected static enum AdminOperations {
 
         STACK("api/admin/stack", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        VERSION("api/admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        VERSION("api/admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        SAFEMODE("api/admin/setSafeMode", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
         private String mimeType;
 
         AdminOperations(String path, String method, String mimeType) {
+            this.path = path;
+            this.method = method;
+            this.mimeType = mimeType;
+        }
+    }
+
+    /**
+     * Methods allowed on Extension Resources.
+     */
+    protected static enum ExtensionOperations {
+
+        ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
+        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        INSTANCES("api/extension/instances", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        SUBMIT("api/extension/submit", HttpMethod.POST, MediaType.TEXT_XML),
+        SUBMIT_AND_SCHEDULE("api/extension/submitAndSchedule", HttpMethod.POST, MediaType.TEXT_XML),
+        UPDATE("api/extension/update", HttpMethod.POST, MediaType.TEXT_XML),
+        VALIDATE("api/extension/validate", HttpMethod.POST, MediaType.TEXT_XML),
+        SCHEDULE("api/extension/schedule", HttpMethod.POST, MediaType.TEXT_XML),
+        SUSPEND("api/extension/suspend", HttpMethod.POST, MediaType.TEXT_XML),
+        RESUME("api/extension/resume", HttpMethod.POST, MediaType.TEXT_XML),
+        DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML);
+
+        private String path;
+        private String method;
+        private String mimeType;
+
+        ExtensionOperations(String path, String method, String mimeType) {
             this.path = path;
             this.method = method;
             this.mimeType = mimeType;
@@ -393,6 +423,14 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path, entityType, entityName)
             .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
             .call(operation, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult updateClusterDependents(String clusterName, Boolean skipDryRun,
+                                             String doAsUser)  {
+        ClientResponse clientResponse = new ResourceBuilder().path(Entities.UPDATEDEPENDENTS.path, clusterName)
+                .addQueryParam(SKIP_DRYRUN, skipDryRun).addQueryParam(DO_AS_OPT, doAsUser)
+                .call(Entities.UPDATEDEPENDENTS);
         return getResponse(APIResult.class, clientResponse);
     }
 
@@ -539,12 +577,30 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(InstancesSummaryResult.class, clientResponse);
     }
 
+
     public FeedInstanceResult getFeedListing(String type, String entity, String start,
                                      String end, String colo, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.KILL.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(USER, doAsUser).call(Instances.LISTING);
         return getResponse(FeedInstanceResult.class, clientResponse);
+    }
+
+    public InstancesResult searchInstances(String type, String nameSubsequence, String tagKeywords,
+                                           String start, String end, String status, String orderBy,
+                                           Integer offset, Integer numResults)  {
+        ClientResponse clientResponse = new ResourceBuilder().path(Instances.SEARCH.path)
+                .addQueryParam(ENTITY_TYPE, type)
+                .addQueryParam(NAME_SUBSEQUENCE, nameSubsequence)
+                .addQueryParam(TAG_KEYWORDS, tagKeywords)
+                .addQueryParam(START, start)
+                .addQueryParam(END, end)
+                .addQueryParam(INSTANCE_STATUS, status)
+                .addQueryParam(ORDER_BY, orderBy)
+                .addQueryParam(OFFSET, offset)
+                .addQueryParam(NUM_RESULTS, numResults)
+                .call(Instances.SEARCH);
+        return getResponse(InstancesResult.class, clientResponse);
     }
 
     public InstancesResult killInstances(String type, String entity, String start,
@@ -651,7 +707,15 @@ public class FalconClient extends AbstractFalconClient {
         return clientResponse.getStatus();
     }
 
-    public String getDimensionList(String dimensionType, String cluster, String doAsUser) {
+    public ClientResponse setSafemode(String safemode, String doAsUser)  {
+        AdminOperations job =  AdminOperations.SAFEMODE;
+        ClientResponse clientResponse = new ResourceBuilder().path(job.path).path(safemode)
+                .addQueryParam(DO_AS_OPT, doAsUser).call(job);
+        printClientResponse(clientResponse);
+        return clientResponse;
+    }
+
+    public String getDimensionList(String dimensionType, String cluster, String doAsUser)  {
         return sendMetadataDiscoveryRequest(MetadataOperations.LIST, dimensionType, null, cluster, doAsUser);
     }
 
@@ -664,7 +728,7 @@ public class FalconClient extends AbstractFalconClient {
     public LineageGraphResult getEntityLineageGraph(String pipelineName, String doAsUser) {
         MetadataOperations operation = MetadataOperations.LINEAGE;
         ClientResponse clientResponse = new ResourceBuilder().path(operation.path).addQueryParam(DO_AS_OPT, doAsUser)
-            .addQueryParam(FalconMetadataCLI.PIPELINE_OPT, pipelineName).call(operation);
+            .addQueryParam(FalconCLIConstants.PIPELINE_OPT, pipelineName).call(operation);
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(LineageGraphResult.class);
@@ -695,8 +759,7 @@ public class FalconClient extends AbstractFalconClient {
         return stream;
     }
 
-    private <T extends APIResult> T getResponse(Class<T> clazz,
-                                                ClientResponse clientResponse) {
+    private <T> T getResponse(Class<T> clazz, ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(clazz);
@@ -778,6 +841,12 @@ public class FalconClient extends AbstractFalconClient {
                 .method(operation.method, ClientResponse.class);
         }
 
+        public ClientResponse call(ExtensionOperations operation) {
+            return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(operation.mimeType).type(MediaType.TEXT_XML)
+                    .method(operation.method, ClientResponse.class);
+        }
+
         public ClientResponse call(Entities operation, InputStream entityStream) {
             return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)
@@ -788,6 +857,12 @@ public class FalconClient extends AbstractFalconClient {
             return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)
                 .method(operation.method, ClientResponse.class, entityStream);
+        }
+
+        public ClientResponse call(ExtensionOperations operation, InputStream entityStream) {
+            return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(operation.mimeType).type(MediaType.TEXT_XML)
+                    .method(operation.method, ClientResponse.class, entityStream);
         }
     }
 
@@ -856,18 +931,18 @@ public class FalconClient extends AbstractFalconClient {
         WebResource resource = service.path(operation.path)
                 .path(schedEntityName)
                 .path(RelationshipType.REPLICATION_METRICS.getName())
-                .path(FalconMetadataCLI.LIST_OPT);
+                .path(FalconCLIConstants.LIST_OPT);
 
         if (StringUtils.isNotEmpty(schedEntityName)) {
-            resource = resource.queryParam(FalconCLI.TYPE_OPT, schedEntityType);
+            resource = resource.queryParam(FalconCLIConstants.TYPE_OPT, schedEntityType);
         }
 
         if (numResults != null) {
-            resource = resource.queryParam(FalconCLI.NUM_RESULTS_OPT, numResults.toString());
+            resource = resource.queryParam(FalconCLIConstants.NUM_RESULTS_OPT, numResults.toString());
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         ClientResponse clientResponse = resource
@@ -892,14 +967,14 @@ public class FalconClient extends AbstractFalconClient {
         case LIST:
             resource = service.path(operation.path)
                     .path(dimensionType)
-                    .path(FalconMetadataCLI.LIST_OPT);
+                    .path(FalconCLIConstants.LIST_OPT);
             break;
 
         case RELATIONS:
             resource = service.path(operation.path)
                     .path(dimensionType)
                     .path(dimensionName)
-                    .path(FalconMetadataCLI.RELATIONS_OPT);
+                    .path(FalconCLIConstants.RELATIONS_OPT);
             break;
 
         default:
@@ -907,11 +982,11 @@ public class FalconClient extends AbstractFalconClient {
         }
 
         if (!StringUtils.isEmpty(cluster)) {
-            resource = resource.queryParam(FalconMetadataCLI.CLUSTER_OPT, cluster);
+            resource = resource.queryParam(FalconCLIConstants.CLUSTER_OPT, cluster);
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         ClientResponse clientResponse = resource
@@ -942,74 +1017,153 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    private String getRecipePath(String recipePropertiesFile) {
-        String recipePath = null;
-        if (StringUtils.isNotBlank(recipePropertiesFile)) {
-            File file = new File(recipePropertiesFile);
-            if (file.exists()) {
-                recipePath = file.getAbsoluteFile().getParentFile().getAbsolutePath();
-            }
-        } else {
-            recipePath = clientProperties.getProperty("falcon.recipe.path");
-        }
-
-        return recipePath;
+    public String enumerateExtensions()  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.ENUMERATE.path)
+                .call(ExtensionOperations.ENUMERATE);
+        return getResponse(String.class, clientResponse);
     }
 
-    public APIResult submitRecipe(String recipeName, String recipeToolClassName,
-                                  final String recipeOperation, String recipePropertiesFile, Boolean skipDryRun,
-                                  final String doAsUser) {
-        String recipePath = getRecipePath(recipePropertiesFile);
+    public String getExtensionDefinition(final String extensionName)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.DEFINITION.path, extensionName)
+                .call(ExtensionOperations.DEFINITION);
+        return getResponse(String.class, clientResponse);
+    }
 
-        if (StringUtils.isEmpty(recipePath)) {
-            throw new FalconCLIException("falcon.recipe.path is not set in client.properties or properties "
-                    + " file is not provided");
+    public String getExtensionDescription(final String extensionName)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.DESCRIBE.path, extensionName)
+                .call(ExtensionOperations.DESCRIBE);
+        return getResponse(String.class, clientResponse);
+    }
+
+    public APIResult submitExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
+        InputStream entityStream = getServletInputStream(filePath);
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.SUBMIT.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.SUBMIT, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult submitAndScheduleExtensionJob(final String extensionName, final String filePath,
+                                                   final String doAsUser)  {
+        InputStream entityStream = getServletInputStream(filePath);
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.SUBMIT_AND_SCHEDULE.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.SUBMIT_AND_SCHEDULE, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult updateExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
+        InputStream entityStream = getServletInputStream(filePath);
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.UPDATE.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.UPDATE, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult validateExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
+        InputStream entityStream = getServletInputStream(filePath);
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.VALIDATE.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.VALIDATE, entityStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult scheduleExtensionJob(final String jobName, final String doAsUser)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.SCHEDULE.path, jobName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.SCHEDULE);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult suspendExtensionJob(final String jobName, final String doAsUser)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.SUSPEND.path, jobName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.SUSPEND);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult resumeExtensionJob(final String jobName, final String doAsUser)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.RESUME.path, jobName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.RESUME);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult deleteExtensionJob(final String jobName, final String doAsUser)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.DELETE.path, jobName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.DELETE);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public ExtensionJobList listExtensionJob(final String extensionName, final String doAsUser,
+                                             final String sortOrder, final String offset,
+                                             final String numResults, final String fields)  {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.LIST.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .addQueryParam(FIELDS, fields)
+                .addQueryParam(SORT_ORDER, sortOrder)
+                .addQueryParam(OFFSET, offset)
+                .addQueryParam(NUM_RESULTS, numResults)
+                .call(ExtensionOperations.LIST);
+        return getResponse(ExtensionJobList.class, clientResponse);
+    }
+
+    public ExtensionInstanceList listExtensionInstance(final String jobName, final String doAsUser, final String fields,
+                                                       final String start, final String end, final String status,
+                                                       final String orderBy, final String sortOrder,
+                                                       final String offset, final String numResults) {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.INSTANCES.path, jobName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .addQueryParam(FIELDS, fields)
+                .addQueryParam(START, start)
+                .addQueryParam(END, end)
+                .addQueryParam(INSTANCE_STATUS, status)
+                .addQueryParam(ORDER_BY, orderBy)
+                .addQueryParam(SORT_ORDER, sortOrder)
+                .addQueryParam(OFFSET, offset)
+                .addQueryParam(NUM_RESULTS, numResults)
+                .call(ExtensionOperations.INSTANCES);
+        return getResponse(ExtensionInstanceList.class, clientResponse);
+    }
+
+    private String sendExtensionRequest(final ExtensionOperations operation,
+                                        final String extensionName)  {
+        WebResource resource;
+        switch (operation) {
+        case ENUMERATE:
+            resource = service.path(operation.path);
+            break;
+
+        case DESCRIBE:
+        case DEFINITION:
+            resource = service.path(operation.path).path(extensionName);
+            break;
+
+        default:
+            throw new FalconCLIException("Invalid extension client Operation " + operation.toString());
         }
 
-        String templateFilePath = recipePath + File.separator + recipeName + TEMPLATE_SUFFIX;
-        File file = new File(templateFilePath);
-        if (!file.exists()) {
-            throw new FalconCLIException("Recipe template file does not exist : " + templateFilePath);
-        }
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(operation.mimeType).type(operation.mimeType)
+                .method(operation.method, ClientResponse.class);
 
-        String propertiesFilePath = recipePath + File.separator + recipeName + PROPERTIES_SUFFIX;
-        file = new File(propertiesFilePath);
-        if (!file.exists()) {
-            throw new FalconCLIException("Recipe properties file does not exist : " + propertiesFilePath);
-        }
-
-        String processFile;
-        try {
-            String prefix =  "falcon-recipe" + "-" + System.currentTimeMillis();
-            File tmpPath = new File("/tmp");
-            if (!tmpPath.exists()) {
-                if (!tmpPath.mkdir()) {
-                    throw new FalconCLIException("Creating directory failed: " + tmpPath.getAbsolutePath());
-                }
-            }
-            File f = File.createTempFile(prefix, ".xml", tmpPath);
-            f.deleteOnExit();
-
-            processFile = f.getAbsolutePath();
-            String[] args = {
-                "-" + RecipeToolArgs.RECIPE_FILE_ARG.getName(), templateFilePath,
-                "-" + RecipeToolArgs.RECIPE_PROPERTIES_FILE_ARG.getName(), propertiesFilePath,
-                "-" + RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG.getName(), processFile,
-                "-" + RecipeToolArgs.RECIPE_OPERATION_ARG.getName(), recipeOperation,
-            };
-
-            if (recipeToolClassName != null) {
-                Class<?> clz = Class.forName(recipeToolClassName);
-                Method method = clz.getMethod("main", String[].class);
-                method.invoke(null, args);
-            } else {
-                RecipeTool.main(args);
-            }
-            validate(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser);
-            return submitAndSchedule(EntityType.PROCESS.toString(), processFile, skipDryRun, doAsUser, null);
-        } catch (Exception e) {
-            throw new FalconCLIException(e.getMessage(), e);
-        }
+        checkIfSuccessful(clientResponse);
+        return clientResponse.getEntity(String.class);
     }
 
     private String sendMetadataLineageRequest(MetadataOperations job, String id,

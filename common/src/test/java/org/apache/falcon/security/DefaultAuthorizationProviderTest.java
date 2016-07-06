@@ -315,7 +315,7 @@ public class DefaultAuthorizationProviderTest {
                 "admin", realUser, new String[]{"admin", });
 
         DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
-        provider.authorizeResource("entities", "list", null, "primary-cluster", proxyUgi);
+        provider.authorizeResource("instance", "list", null, "sample-process", proxyUgi);
         Assert.fail("Bad entity type");
     }
 
@@ -328,7 +328,7 @@ public class DefaultAuthorizationProviderTest {
                 "admin", realUser, new String[]{"admin", });
 
         DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
-        provider.authorizeResource("entities", "list", "clusterz", "primary-cluster", proxyUgi);
+        provider.authorizeResource("instance", "list", "processz", "sample-process", proxyUgi);
         Assert.fail("Bad entity type");
     }
 

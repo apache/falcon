@@ -30,7 +30,13 @@ like HDInsight Hadoop clusters and Azure Machine Learning.
 Usage
 ---------
 
-Falcon reads Azure Service Bus credentials from conf/startup.properties when it starts.
+1. ADFProviderService is not enabled by default. Please make sure it is enabled in conf/startup.properties:
+
+*.application.services= ...
+                        org.apache.falcon.service.ProxyUserService,\
+                        org.apache.falcon.adfservice.ADFProviderService
+
+2. Falcon reads Azure Service Bus credentials from conf/startup.properties when it starts.
 So, the credential needs to be added before starting Falcon,
 and Falcon needs to be restarted if there is any change in the credential.
 

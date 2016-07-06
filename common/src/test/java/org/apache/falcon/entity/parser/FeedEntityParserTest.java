@@ -35,11 +35,11 @@ import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Partitions;
 import org.apache.falcon.entity.v0.feed.Property;
@@ -87,11 +87,13 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
                 .getResourceAsStream(CLUSTER_XML));
         cluster.setName("testCluster");
+        cluster.setVersion(0);
         store.publish(EntityType.CLUSTER, cluster);
 
         cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
                 .getResourceAsStream(CLUSTER_XML));
         cluster.setName("backupCluster");
+        cluster.setVersion(1);
         store.publish(EntityType.CLUSTER, cluster);
 
         LifecyclePolicyMap.get().init();
@@ -123,11 +125,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals(feed.getSla().getSlaHigh().toString(), "hours(3)");
         assertEquals(feed.getSla().getSlaLow().toString(), "hours(2)");
         assertEquals(feed.getGroups(), "online,bi");
+        Assert.assertEquals(feed.getVersion(), 0);
 
         assertEquals(feed.getClusters().getClusters().get(0).getName(),
                 "testCluster");
         assertEquals(feed.getClusters().getClusters().get(0).getSla().getSlaLow().toString(), "hours(3)");
         assertEquals(feed.getClusters().getClusters().get(0).getSla().getSlaHigh().toString(), "hours(4)");
+        assertEquals(feed.getClusters().getClusters().get(0).getVersion(), 0);
+        assertEquals(feed.getClusters().getClusters().get(1).getVersion(), 1);
 
         assertEquals(feed.getClusters().getClusters().get(0).getType(),
                 ClusterType.SOURCE);
@@ -633,6 +638,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
                 .getResourceAsStream(("/config/cluster/cluster-no-registry.xml")));
         cluster.setName("badTestCluster");
+        cluster.setVersion(0);
         ConfigurationStore.get().publish(EntityType.CLUSTER, cluster);
 
 
@@ -971,7 +977,8 @@ public class FeedEntityParserTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    // disable this test due to its validation of dummy s3 url no longer supported by latest hdfs (2.7.2 or above)
+    @Test (enabled = false)
     public void testValidateACLForArchiveReplication() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
@@ -1213,9 +1220,9 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void testExportFeedSqoopExcludeFields() throws Exception {
 
         storeEntity(EntityType.CLUSTER, "testCluster");
-        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-exclude-fields-0.1.xml");
+        InputStream feedStream = this.getClass().getResourceAsStream("/config/feed/feed-export-fields-0.1.xml");
         Feed feed = parser.parseAndValidate(feedStream);
-        Assert.fail("An exception should have been thrown: Feed Export policy not yet implement Field exclusion.");
+        Assert.fail("An exception should have been thrown: Feed Export policy does not require Fields specification.");
     }
 
     @Test (expectedExceptions = ValidationException.class)

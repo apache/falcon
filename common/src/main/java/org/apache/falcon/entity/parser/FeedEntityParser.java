@@ -97,6 +97,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 cluster.getValidity().setEnd(DateUtil.NEVER);
             }
 
+            // set Cluster version
+            int clusterVersion = ClusterHelper.getCluster(cluster.getName()).getVersion();
+            if (cluster.getVersion() > 0 && cluster.getVersion() > clusterVersion) {
+                throw new ValidationException("Feed should not set cluster to a version that does not exist");
+            } else {
+                cluster.setVersion(clusterVersion);
+            }
+
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);
@@ -110,7 +118,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (FeedHelper.isExportEnabled(cluster)) {
                 validateEntityExists(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
                 validateFeedExportArgs(cluster);
-                validateFeedExportFieldExcludes(cluster);
+                validateFeedExportFields(cluster);
             }
         }
 
@@ -709,10 +717,16 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateFeedExportFieldExcludes(Cluster feedCluster) throws FalconException {
-        if (FeedHelper.isFieldExcludes(feedCluster.getExport().getTarget())) {
-            throw new ValidationException(String.format("Field excludes are not supported "
-                    + "currently in Feed import policy"));
+    /**
+     * Export infers the target fields from the destination. There is no need to enumerate or exclude the fields
+     * in the feed entity definition.
+     *
+     * @param feedCluster feed's cluster
+     * @throws FalconException
+     */
+    private void validateFeedExportFields(Cluster feedCluster) throws FalconException {
+        if (feedCluster.getExport().getTarget().getFields() != null) {
+            throw new ValidationException(String.format("Feed Export does not expect Fields specification"));
         }
     }
 

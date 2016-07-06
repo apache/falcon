@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
@@ -67,10 +66,12 @@ public class EventUtils {
     private String jobNN = null;
     private String jobNNKerberosPrincipal = null;
     private String targetHiveServer2Uri = null;
+    private String sourceStagingPath = null;
     private String targetStagingPath = null;
     private String targetNN = null;
     private String targetNNKerberosPrincipal = null;
-    private String fullyQualifiedTargetStagingPath = null;
+    private String sourceStagingUri = null;
+    private String targetStagingUri = null;
     private List<Path> sourceCleanUpList = null;
     private List<Path> targetCleanUpList = null;
     private static final Logger LOG = LoggerFactory.getLogger(EventUtils.class);
@@ -93,15 +94,15 @@ public class EventUtils {
         sourceDatabase = conf.get(HiveDRArgs.SOURCE_DATABASE.getName());
         sourceNN = conf.get(HiveDRArgs.SOURCE_NN.getName());
         sourceNNKerberosPrincipal = conf.get(HiveDRArgs.SOURCE_NN_KERBEROS_PRINCIPAL.getName());
+        sourceStagingPath = conf.get(HiveDRArgs.SOURCE_STAGING_PATH.getName());
         jobNN = conf.get(HiveDRArgs.JOB_CLUSTER_NN.getName());
         jobNNKerberosPrincipal = conf.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL.getName());
         targetHiveServer2Uri = conf.get(HiveDRArgs.TARGET_HS2_URI.getName());
-        targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName())
-                + File.separator + conf.get(HiveDRArgs.JOB_NAME.getName());
+        targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName());
         targetNN = conf.get(HiveDRArgs.TARGET_NN.getName());
         targetNNKerberosPrincipal = conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName());
-        sourceCleanUpList = new ArrayList<Path>();
-        targetCleanUpList = new ArrayList<Path>();
+        sourceCleanUpList = new ArrayList<>();
+        targetCleanUpList = new ArrayList<>();
         countersMap = new HashMap<>();
     }
 
@@ -139,7 +140,8 @@ public class EventUtils {
 
     public void initializeFS() throws IOException {
         LOG.info("Initializing staging directory");
-        fullyQualifiedTargetStagingPath = new Path(targetNN, targetStagingPath).toString();
+        sourceStagingUri = new Path(sourceNN, sourceStagingPath).toString();
+        targetStagingUri = new Path(targetNN, targetStagingPath).toString();
         sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
         jobFileSystem = FileSystem.get(FileUtils.getConfiguration(jobNN, jobNNKerberosPrincipal));
         targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
@@ -164,7 +166,7 @@ public class EventUtils {
     }
 
     public void processEvents(String event) throws Exception {
-        listReplicationStatus = new ArrayList<ReplicationStatus>();
+        listReplicationStatus = new ArrayList<>();
         String[] eventSplit = event.split(DelimiterUtils.FIELD_DELIM);
         String dbName = new String(Base64.decodeBase64(eventSplit[0]), "UTF-8");
         String tableName = new String(Base64.decodeBase64(eventSplit[1]), "UTF-8");
@@ -177,7 +179,7 @@ public class EventUtils {
                 LOG.info("Process the export statements for db {} table {}", dbName, tableName);
                 processCommands(exportEventStr, dbName, tableName, sourceStatement, sourceCleanUpList, false);
                 if (!sourceCleanUpList.isEmpty()) {
-                    invokeCopy(sourceCleanUpList);
+                    invokeCopy();
                 }
             }
         } else if (conf.get(HiveDRArgs.EXECUTION_STAGE.getName())
@@ -198,7 +200,7 @@ public class EventUtils {
                                  List<Path> cleanUpList, boolean isImportStatements)
         throws SQLException, HiveReplicationException, IOException {
         String[] commandList = eventStr.split(DelimiterUtils.NEWLINE_DELIM);
-        List<Command> deserializeCommand = new ArrayList<Command>();
+        List<Command> deserializeCommand = new ArrayList<>();
         for (String command : commandList) {
             Command cmd = ReplicationUtils.deserializeCommand(command);
             deserializeCommand.add(cmd);
@@ -264,7 +266,7 @@ public class EventUtils {
     }
 
     private static List<Path> getCleanUpPaths(List<String> cleanupLocations) {
-        List<Path> cleanupLocationPaths = new ArrayList<Path>();
+        List<Path> cleanupLocationPaths = new ArrayList<>();
         for (String cleanupLocation : cleanupLocations) {
             cleanupLocationPaths.add(new Path(cleanupLocation));
         }
@@ -310,11 +312,11 @@ public class EventUtils {
         }
     }
 
-    public void invokeCopy(List<Path> srcStagingPaths) throws Exception {
-        DistCpOptions options = getDistCpOptions(srcStagingPaths);
+    public void invokeCopy() throws Exception {
+        DistCpOptions options = getDistCpOptions();
         DistCp distCp = new DistCp(conf, options);
-        LOG.info("Started DistCp with source Path: {} \ttarget path: {}", StringUtils.join(srcStagingPaths.toArray()),
-                fullyQualifiedTargetStagingPath);
+        LOG.info("Started DistCp with source Path: {} \ttarget path: {}", sourceStagingUri, targetStagingUri);
+
         Job distcpJob = distCp.execute();
         LOG.info("Distp Hadoop job: {}", distcpJob.getJobID().toString());
         LOG.info("Completed DistCp");
@@ -323,27 +325,21 @@ public class EventUtils {
         }
     }
 
-    public DistCpOptions getDistCpOptions(List<Path> srcStagingPaths) {
-        /*
-         * Add the fully qualified sourceNameNode to srcStagingPath uris. This will
-         * ensure DistCp will succeed when the job is run on target cluster.
-         */
-        List<Path> fullyQualifiedSrcStagingPaths = new ArrayList<Path>();
-        for (Path srcPath : srcStagingPaths) {
-            fullyQualifiedSrcStagingPaths.add(new Path(sourceNN, srcPath.toString()));
+    public DistCpOptions getDistCpOptions() {
+        // DistCpOptions expects the first argument to be a file OR a list of Paths
+        List<Path> sourceUris=new ArrayList<>();
+        sourceUris.add(new Path(sourceStagingUri));
+        DistCpOptions distcpOptions = new DistCpOptions(sourceUris, new Path(targetStagingUri));
+
+        // setSyncFolder(true) ensures directory structure is maintained when source is copied to target
+        distcpOptions.setSyncFolder(true);
+        // skipCRCCheck if TDE is enabled.
+        if (Boolean.parseBoolean(conf.get(HiveDRArgs.TDE_ENCRYPTION_ENABLED.getName()))) {
+            distcpOptions.setSkipCRC(true);
         }
-        fullyQualifiedSrcStagingPaths.toArray(new Path[fullyQualifiedSrcStagingPaths.size()]);
-
-        DistCpOptions distcpOptions = new DistCpOptions(fullyQualifiedSrcStagingPaths,
-                new Path(fullyQualifiedTargetStagingPath));
-        /* setSyncFolder to false to retain dir structure as in source at the target. If set to true all files will be
-        copied to the same staging sir at target resulting in DuplicateFileException in DistCp.
-        */
-
-        distcpOptions.setSyncFolder(false);
         distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAX_MAPS.getName())));
-        distcpOptions.setMapBandwidth(Integer.valueOf(conf.get(HiveDRArgs.DISTCP_MAP_BANDWIDTH.getName())));
+        distcpOptions.setMaxMaps(Integer.parseInt(conf.get(HiveDRArgs.DISTCP_MAX_MAPS.getName())));
+        distcpOptions.setMapBandwidth(Integer.parseInt(conf.get(HiveDRArgs.DISTCP_MAP_BANDWIDTH.getName())));
         return distcpOptions;
     }
 
@@ -351,8 +347,8 @@ public class EventUtils {
         return countersMap.get(counterKey);
     }
 
-    public boolean isCountersMapEmtpy() {
-        return countersMap.size() == 0 ? true : false;
+    public boolean isCountersMapEmpty() {
+        return countersMap.size() == 0;
     }
 
     public void cleanEventsDirectory() throws IOException {

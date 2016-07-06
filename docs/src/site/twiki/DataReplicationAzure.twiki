@@ -1,0 +1,61 @@
+---+ Data Replication between On-premise Hadoop Clusters and Azure Cloud
+
+---++ Overview
+Falcon provides an easy way to replicate data between on-premise Hadoop clusters and Azure cloud.
+With this feature, users would be able to build a hybrid data pipeline,
+e.g. processing sensitive data on-premises for privacy and compliance reasons
+while leverage cloud for elastic scale and online services (e.g. Azure machine learning) with non-sensitive data.
+
+---++ Use Case
+1. Copy data from on-premise Hadoop clusters to Azure cloud
+2. Copy data from Azure cloud to on-premise Hadoop clusters
+3. Copy data within Azure cloud (i.e. from one Azure location to another).
+
+---++ Usage
+---+++ Set Up Azure Blob Credentials
+To move data to/from Azure blobs, we need to add Azure blob credentials in HDFS.
+This can be done by adding the credential property through Ambari HDFS configs, and HDFS needs to be restarted after adding the credential.
+You can also add the credential property to core-site.xml directly, but make sure you restart HDFS from command line instead of Ambari.
+Otherwise, Ambari will take the previous HDFS configuration without your Azure blob credentials.
+<verbatim>
+<property>
+      <name>fs.azure.account.key.{AZURE_BLOB_ACCOUNT_NAME}.blob.core.windows.net</name>
+      <value>{AZURE_BLOB_ACCOUNT_KEY}</value>
+</property>
+</verbatim>
+
+To verify you set up Azure credential properly, you can check if you are able to access Azure blob through HDFS, e.g.
+<verbatim>
+hadoop fs ­ls wasb://{AZURE_BLOB_CONTAINER}@{AZURE_BLOB_ACCOUNT_NAME}.blob.core.windows.net/
+</verbatim>
+
+---+++ Replication Feed
+[[EntitySpecification][Falcon replication feed]] can be used for data replication to/from Azure cloud.
+You can specify WASB (i.e. Windows Azure Storage Blob) url in source or target locations.
+See below for an example of data replication from Hadoop cluster to Azure blob.
+Note that the clusters for the source and the target need to be different.
+Analogously, if you want to copy data from Azure blob, you can add Azure blob location to the source.
+<verbatim>
+<?xml version="1.0" encoding="UTF-8"?>
+<feed name="AzureReplication" xmlns="uri:falcon:feed:0.1">
+    <frequency>months(1)</frequency>
+    <clusters>
+        <cluster name="SampleCluster1" type="source">
+            <validity start="2010-06-01T00:00Z" end="2010-06-02T00:00Z"/>
+            <retention limit="days(90)" action="delete"/>
+        </cluster>
+        <cluster name="SampleCluster2" type="target">
+            <validity start="2010-06-01T00:00Z" end="2010-06-02T00:00Z"/>
+            <retention limit="days(90)" action="delete"/>
+            <locations>
+                <location type="data" path="wasb://replication-test@mystorage.blob.core.windows.net/replicated-${YEAR}-${MONTH}"/>
+            </locations>
+        </cluster>
+    </clusters>
+    <locations>
+        <location type="data" path="/apps/falcon/demo/data-${YEAR}-${MONTH}" />
+    </locations>
+    <ACL owner="ambari-qa" group="users" permission="0755"/>
+    <schema location="hcat" provider="hcat"/>
+</feed>
+</verbatim>

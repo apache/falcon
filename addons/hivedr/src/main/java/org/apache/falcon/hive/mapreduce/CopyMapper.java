@@ -75,7 +75,7 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
         // In case of export stage, populate custom counters
         if (context.getConfiguration().get(HiveDRArgs.EXECUTION_STAGE.getName())
                 .equalsIgnoreCase(HiveDRUtils.ExecutionStage.EXPORT.name())
-                && !eventUtils.isCountersMapEmtpy()) {
+                && !eventUtils.isCountersMapEmpty()) {
             context.getCounter(ReplicationJobCountersList.BYTESCOPIED).increment(
                     eventUtils.getCounterValue(ReplicationJobCountersList.BYTESCOPIED.getName()));
             context.getCounter(ReplicationJobCountersList.COPY).increment(
