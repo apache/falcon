@@ -27,7 +27,7 @@ You can enable native scheduler by making changes to __$FALCON_HOME/conf/startup
 *.application.services=org.apache.falcon.security.AuthenticationInitializationService,\
                         org.apache.falcon.workflow.WorkflowJobEndNotificationService, \
                         org.apache.falcon.service.ProcessSubscriberService,\
-                        org.apache.falcon.service.FeedSLAMonitoringService,\
+                        org.apache.falcon.service.EntitySLAMonitoringService,\
                         org.apache.falcon.service.LifecyclePolicyMap,\
                         org.apache.falcon.service.FalconJPAService,\
                         org.apache.falcon.entity.store.ConfigurationStore,\

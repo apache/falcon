@@ -204,8 +204,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="cluster" name="cluster" maxOccurs="unbounded" minOccurs="1">
-            </xs:element>
+            <xs:element type="cluster" name="cluster" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -218,6 +217,7 @@
         </xs:annotation>
         <xs:sequence>
             <xs:element type="validity" name="validity"/>
+            <xs:element type="sla" name="sla" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="xs:int" name="version" use="optional" default="0"/>
