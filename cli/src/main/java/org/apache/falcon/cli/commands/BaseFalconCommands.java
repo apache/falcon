@@ -20,7 +20,7 @@ package org.apache.falcon.cli.commands;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.cli.FalconCLIRuntimeException;
+import org.apache.falcon.client.AbstractFalconClient;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.springframework.shell.core.ExecutionProcessor;
@@ -30,18 +30,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import static org.apache.falcon.cli.FalconCLI.CURRENT_COLO;
+import static org.apache.falcon.cli.FalconCLI.FALCON_URL;
+
 /**
  * Common code for all falcon command classes.
  */
 public class BaseFalconCommands implements ExecutionProcessor {
-    private static final String FALCON_URL = "FALCON_URL";
     private static final String FALCON_URL_PROPERTY = "falcon.url";
     private static final String DO_AS = "DO_AS";
     private static final String DO_AS_PROPERTY = "do.as";
     private static final String CLIENT_PROPERTIES = "/client.properties";
+    protected static final String FALCON_URL_ABSENT = "Failed to get falcon url from environment or client properties";
     private static Properties clientProperties;
     private static Properties backupProperties = new Properties();
-    private static FalconClient client;
+    private static AbstractFalconClient client;
 
     protected static Properties getClientProperties() {
         if (clientProperties == null) {
@@ -54,7 +57,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
                     try {
                         prop.load(inputStream);
                     } catch (IOException e) {
-                        throw new FalconCLIRuntimeException(e);
+                        throw new FalconCLIException(e);
                     }
                 }
             } finally {
@@ -65,7 +68,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
                 prop.setProperty(FALCON_URL_PROPERTY, urlOverride);
             }
             if (prop.getProperty(FALCON_URL_PROPERTY) == null) {
-                throw new FalconCLIRuntimeException("Failed to get falcon url from environment or client properties");
+                throw new FalconCLIException(FALCON_URL_ABSENT);
             }
             String doAsOverride = System.getenv(DO_AS);
             if (doAsOverride != null) {
@@ -81,7 +84,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
         Properties props;
         try {
             props = getClientProperties();
-        } catch (FalconCLIRuntimeException e) {
+        } catch (FalconCLIException e) {
             props = backupProperties;
         }
         if (StringUtils.isBlank(value)) {
@@ -93,16 +96,27 @@ public class BaseFalconCommands implements ExecutionProcessor {
         client = null;
     }
 
-    public static FalconClient getFalconClient() {
+    public static AbstractFalconClient getFalconClient() {
         if (client == null) {
-            try {
-                client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY),
-                        getClientProperties());
-            } catch (FalconCLIException e) {
-                throw new FalconCLIRuntimeException(e.getMessage(), e.getCause());
-            }
+            client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY), getClientProperties());
         }
         return client;
+    }
+
+    public static void setFalconClient(AbstractFalconClient abstractFalconClient) {
+        client = abstractFalconClient;
+    }
+
+    protected String getColo(String colo) {
+        if (colo == null) {
+            Properties prop = getClientProperties();
+            colo = prop.getProperty(CURRENT_COLO, "*");
+        }
+        return colo;
+    }
+
+    protected String getDoAs() {
+        return getClientProperties().getProperty(DO_AS_PROPERTY);
     }
 
     @Override
