@@ -246,6 +246,7 @@ public class FalconStateStoreDBCLI {
         args.add("org.apache.falcon.persistence.PendingInstanceBean");
         args.add("org.apache.falcon.persistence.MonitoredFeedsBean");
         args.add("org.apache.falcon.persistence.FeedSLAAlertBean");
+        args.add("org.apache.falcon.persistence.BacklogMetricBean");
         return args.toArray(new String[args.size()]);
     }
 

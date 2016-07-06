@@ -61,4 +61,6 @@ public final class PersistenceConstants {
     public static final String UPDATE_SLA_HIGH = "UPDATE_SLA_HIGH";
     public static final String GET_FEED_ALERT_INSTANCE = "GET_FEED_ALERT_INSTANCE";
     public static final String DELETE_FEED_ALERT_INSTANCE = "DELETE_FEED_ALERT_INSTANCE";
+    public static final String DELETE_BACKLOG_METRIC_INSTANCE = "DELETE_BACKLOG_METRIC_INSTANCE";
+    public static final String GET_ALL_BACKLOG_INSTANCES = "GET_ALL_BACKLOG_INSTANCES";
 }
