@@ -91,8 +91,6 @@ import static org.apache.falcon.cli.FalconInstanceCLI.TYPE_OPT;
 import static org.apache.falcon.cli.FalconInstanceCLI.TYPE_OPT_DESCRIPTION;
 import static org.apache.falcon.cli.FalconInstanceCLI.getLifeCycle;
 
-import org.springframework.stereotype.Component;
-
 /**
  * Instance commands.
  */
