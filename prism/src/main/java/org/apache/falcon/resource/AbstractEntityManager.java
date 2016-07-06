@@ -25,6 +25,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.lock.MemoryLocks;
@@ -172,6 +173,9 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             for (String cluster : clusters) {
                 try{
                     Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                    if(type.equals(EntityType.PROCESS)){
+                        EntityUtil.getEntity(EntityType.PROCESS,entity.getName());
+                    }
                     colos.add(clusterEntity.getColo());
                 } catch (EntityNotRegisteredException e){
                     LOG.warn(e.getMessage(), e);
