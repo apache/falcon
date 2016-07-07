@@ -44,19 +44,18 @@
                         <mergepolicy>snapshot</mergepolicy>
                     </extract>
                     <fields>
-                        <excludes>
+                        <includes>
                             <field>id</field>
                             <field>name</field>
-                        </excludes>
+                        </includes>
                     </fields>
                 </source>
                 <arguments>
-                    <argument name="--split-by" value="id"/>
                     <argument name="--num-mappers" value="2"/>
                 </arguments>
             </import>
             <locations>
-                <location type="data" path="/projects/falcon/clicks/${MONTH}/click1"/>
+                <location type="data" path="/projects/falcon/clicks/${INVALID}"/>
                 <location type="stats" path="/projects/falcon/clicksStats"/>
                 <location type="meta" path="/projects/falcon/clicksMetaData"/>
             </locations>
@@ -64,7 +63,7 @@
     </clusters>
 
     <locations>
-        <location type="data" path="/projects/falcon/clicks/${MONTH}/click1"/>
+        <location type="data" path="/projects/falcon/clicks/${INVALID}"/>
         <location type="stats" path="/projects/falcon/clicksStats"/>
         <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>
