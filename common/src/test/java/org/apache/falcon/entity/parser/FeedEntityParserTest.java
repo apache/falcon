@@ -1160,7 +1160,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Assert.fail("ValidationException should have been thrown");
     }
 
-    @Test (expectedExceptions = {ValidationException.class, FalconException.class})
+    @Test (expectedExceptions = {ValidationException.class})
     public void testImportFeedWithNoTimePartition() throws Exception {
 
         InputStream feedStream = this.getClass()
@@ -1169,7 +1169,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Assert.fail("ValidationException should have been thrown");
     }
 
-    @Test (expectedExceptions = {ValidationException.class, FalconException.class})
+    @Test (expectedExceptions = {ValidationException.class})
     public void testImportFeedWithInvalidTimePartition() throws Exception {
 
         InputStream feedStream = this.getClass()

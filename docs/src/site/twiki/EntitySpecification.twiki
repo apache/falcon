@@ -334,6 +334,9 @@ The snapshot layout creates a snapshot of the data on HDFS using the feed's loca
 to specify the projection columns. Feed import from database underneath uses sqoop to achieve the task. Any advanced
 Sqoop options can be specified via the arguments.
 
+The feed's data storage location should include some combination of timepartition if import policy is associated with it.
+Please see ImportExport documentation for more details.
+
 ---+++ Late Arrival
 
 <verbatim>
