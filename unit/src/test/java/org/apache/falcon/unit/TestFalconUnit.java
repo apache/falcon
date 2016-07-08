@@ -19,7 +19,6 @@ package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -83,7 +82,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
-    public void testRetention() throws IOException, FalconCLIException, FalconException,
+    public void testRetention() throws IOException, FalconException,
             ParseException, InterruptedException {
         // submit with default props
         submitCluster();
@@ -129,7 +128,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
-    public void testDelete() throws IOException, FalconCLIException, FalconException,
+    public void testDelete() throws IOException, FalconException,
             ParseException, InterruptedException {
         // submit cluster and feeds
         submitClusterAndFeeds();
@@ -162,7 +161,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
-    public void testValidate() throws IOException, FalconCLIException, FalconException {
+    public void testValidate() throws IOException, FalconException {
         submitClusterAndFeeds();
         APIResult result = getClient().validate(EntityType.PROCESS.name(),
                 getAbsolutePath(PROCESS), true, null);
@@ -177,7 +176,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
-    public void testUpdateAndTouch() throws IOException, FalconCLIException, FalconException, ParseException,
+    public void testUpdateAndTouch() throws IOException, FalconException, ParseException,
             InterruptedException {
         submitClusterAndFeeds();
         APIResult result = submitProcess(getAbsolutePath(PROCESS), PROCESS_APP_PATH);
@@ -212,7 +211,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         file.delete();
     }
 
-    private void submitClusterAndFeeds() throws IOException, FalconCLIException {
+    private void submitClusterAndFeeds() throws IOException {
         // submit with default props
         submitCluster();
         // submitting feeds
