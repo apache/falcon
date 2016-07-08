@@ -27,6 +27,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.FileSystemStorage;
 import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
 
 /**
  * Parser that parses feed entity definition.
@@ -637,7 +639,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     + "but it doesn't contain location type - data in cluster " + cluster.getName());
             }
 
+            // storage location needs to have time partition if import or export is enabled.
+            if (FeedHelper.isImportEnabled(cluster) || FeedHelper.isExportEnabled(cluster)) {
+                if (!matchStoragePathPattern(dataLocation.getPath())) {
+                    throw new ValidationException(String.format("Feed %s with Import/Export policy "
+                            + "needs to have time partition in the storage location path", feed.getName()));
+                }
+            }
         }
+    }
+
+    private boolean matchStoragePathPattern(String feedBasePath) {
+        Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
+        return matcher.find();
     }
 
     /**
