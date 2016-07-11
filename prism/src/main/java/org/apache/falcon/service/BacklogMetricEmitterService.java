@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -163,7 +164,7 @@ public final class BacklogMetricEmitterService implements FalconService,
             List<MetricInfo> metrics = entityBacklogs.get(entity);
             synchronized (metrics) {
                 Date date = SchemaHelper.parseDateUTC(context.getNominalTimeAsISO8601());
-                backlogMetricStore.deleteMonitoringFeed(entity.getName(), context.getClusterName(),
+                backlogMetricStore.deleteMetricInstance(entity.getName(), context.getClusterName(),
                         date, entity.getEntityType());
                 metrics.remove(new MetricInfo(DATE_FORMAT.get().format(date), context.getClusterName()));
                 if (metrics.isEmpty()) {
@@ -242,8 +243,9 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            long backlog = 0;
+
             MetricInfo metricInfo = null;
+            HashMap<String, Long> backLogsCluster = new HashMap<>();
             synchronized (metrics) {
                 long currentTime = System.currentTimeMillis();
                 Iterator iter = metrics.iterator();
@@ -251,20 +253,28 @@ public final class BacklogMetricEmitterService implements FalconService,
                     try {
                         metricInfo = (MetricInfo) iter.next();
                         long time = DATE_FORMAT.get().parse(metricInfo.getNominalTime()).getTime();
+                        long backlog = backLogsCluster.containsKey(metricInfo.getCluster())
+                                ? backLogsCluster.get(metricInfo.getCluster()) : 0;
                         backlog += (currentTime - time);
+                        backLogsCluster.put(metricInfo.getCluster(), backlog);
                     } catch (ParseException e) {
                         LOG.error("Unable to parse nominal time" + metricInfo.getNominalTime());
                     }
                 }
+
             }
             org.apache.falcon.entity.v0.process.Process process = (Process) entityObj;
 
-            String metricName = METRIC_PREFIX + METRIC_SEPARATOR + metricInfo.getCluster() + METRIC_SEPARATOR
-                    + process.getPipelines() + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
-                    + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
-                    + "backlogInMins";
-            backlog = backlog / (60 * 1000); // Converting to minutes
-            metricNotificationService.publish(metricName, backlog);
+            if (backLogsCluster != null && !backLogsCluster.isEmpty()) {
+                for (String clusterName : backLogsCluster.keySet()) {
+                    String metricName = METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
+                            + process.getPipelines() + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
+                            + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
+                            + "backlogInMins";
+                    Long backlog = backLogsCluster.get(clusterName) / (60 * 1000); // Converting to minutes
+                    metricNotificationService.publish(metricName, backlog);
+                }
+            }
         }
     }
 
@@ -294,7 +304,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
-                                        backlogMetricStore.deleteMonitoringFeed(entity.getName(),
+                                        backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
                                         iterator.remove();
                                     }

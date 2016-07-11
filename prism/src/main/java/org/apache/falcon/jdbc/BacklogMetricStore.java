@@ -61,7 +61,7 @@ public class BacklogMetricStore {
         }
     }
 
-    public synchronized void deleteMonitoringFeed(String entityName, String cluster, Date nominalTime,
+    public synchronized void deleteMetricInstance(String entityName, String cluster, Date nominalTime,
                                                   EntityType entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
