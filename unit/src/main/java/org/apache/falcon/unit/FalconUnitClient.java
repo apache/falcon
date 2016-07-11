@@ -391,14 +391,16 @@ public class FalconUnitClient extends AbstractFalconClient {
     public TriageResult triage(String name, String entityName, String start, String colo) {
         return null;
     }
-
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @Override
-    public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer numResults, String doAsUser) {
+    public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
+                                               String filterBy, String orderBy, String sortOrder, Integer offset, Integer numResults, String doAsUser) {
         return null;
     }
-
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
     @Override
-    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end, String colo, String doAsUser) {
+    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
+                                                     String colo, String doAsUser) {
         return null;
     }
 
