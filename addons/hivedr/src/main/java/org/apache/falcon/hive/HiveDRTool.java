@@ -136,6 +136,13 @@ public class HiveDRTool extends Configured implements Tool {
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
+        // Update the source staging path
+        inputOptions.setSourceStagingPath();
+        inputOptions.setTargetStagingPath();
+
+        LOG.info("srcStaginPath: {}", inputOptions.getSourceStagingPath());
+        LOG.info("tgtStaginPath: {}", inputOptions.getTargetStagingPath());
+
         Configuration sourceConf = FileUtils.getConfiguration(inputOptions.getSourceWriteEP(),
                 inputOptions.getSourceNNKerberosPrincipal());
         sourceClusterFS = FileSystem.get(sourceConf);
@@ -271,8 +278,8 @@ public class HiveDRTool extends Configured implements Tool {
     private String sourceEvents() throws Exception {
         MetaStoreEventSourcer defaultSourcer = null;
         String inputFilename = null;
-        String lastEventsIdFile = FileUtils.DEFAULT_EVENT_STORE_PATH +File.separator+inputOptions.getJobName()+"/"
-                +inputOptions.getJobName()+".id";
+        String lastEventsIdFile = FileUtils.DEFAULT_EVENT_STORE_PATH + File.separator
+                + inputOptions.getJobName() + File.separator + inputOptions.getJobName() + ".id";
         Map<String, Long> lastEventsIdMap = getLastDBTableEvents(new Path(lastEventsIdFile));
         try {
             HCatClient sourceMetastoreClient = HiveMetastoreUtils.initializeHiveMetaStoreClient(

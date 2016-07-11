@@ -1,0 +1,8 @@
+---+++Definition
+
+[[CommonCLI][Common CLI Options]]
+
+Definition of an extension. Outputs a JSON document describing the extension invocation parameters.
+
+Usage:
+$FALCON_HOME/bin/falcon extension ­definition ­name <extension­name>

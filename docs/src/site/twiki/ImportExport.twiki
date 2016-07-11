@@ -108,6 +108,9 @@ where {lib-dir} value varies in oozie deployments.
       since the frequency of the Feed is hour(1) and the Feed instances are deleted after 90 days because of the
       retention policy.
 
+      The feed's data location should have some combination of time partitions (like ${YEAR}, ${MONTH}, {$DAY},
+      ${HOUR}, ${MINUTE} etc) if import or export policy is associated. 
+
 
       <verbatim>
 

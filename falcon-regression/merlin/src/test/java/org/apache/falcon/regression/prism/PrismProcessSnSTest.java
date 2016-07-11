@@ -80,7 +80,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
      * Submit and schedule process2 on cluster2. Check that process2 is running and process1 is
      * not running on cluster2.
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "embedded", "multiCluster"})
     public void testProcessSnSOnBothColos() throws Exception {
         //schedule both bundles
         bundles[0].submitAndScheduleProcess();
@@ -100,7 +100,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
      * on cluster2. Submit process2 but schedule process1 once more. Check that process1 is running
      * on cluster1 but not on cluster2.
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "embedded", "multiCluster"})
     public void testProcessSnSForSubmittedProcessOnBothColos() throws Exception {
         //schedule both bundles
         bundles[0].submitProcess(true);
@@ -122,7 +122,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
      * once more and check that it is still running on cluster1 but process2 isn't running on
      * cluster2.
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "embedded", "multiCluster"})
     public void testProcessSnSForSubmittedProcessOnBothColosUsingColoHelper()
         throws Exception {
         bundles[0].submitProcess(true);
@@ -228,7 +228,7 @@ public class PrismProcessSnSTest extends BaseTestClass {
      * running. Delete both of them. Submit and schedule them once more. Check that they are
      * running again.
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "embedded", "multiCluster"})
     public void testSnSDeletedProcessOnBothColos() throws Exception {
         //schedule both bundles
         final String cluster1Running = cluster1.getClusterHelper().getColoName() + "/RUNNING";

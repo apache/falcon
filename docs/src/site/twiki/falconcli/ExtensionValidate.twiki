@@ -1,0 +1,15 @@
+---+++Validate
+
+[[CommonCLI][Common CLI Options]]
+
+Validate the input for extension job submission.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -validate -extensionName <<extension-name>> -file <<path-to-file>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionValidate.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -validate -extensionName hdfs-mirroring -file /data/hdfs-mirroring-para.txt

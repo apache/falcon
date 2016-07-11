@@ -24,16 +24,15 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfaces;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.Clusters;
-import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Clusters;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.HiveTestUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hive.hcatalog.api.HCatClient;
 import org.apache.hive.hcatalog.common.HCatException;
@@ -42,13 +41,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.TimeZone;
 
 
@@ -116,8 +114,6 @@ public class CatalogStorageIT {
         feed.setTable(table);
 
         storage = new CatalogStorage(cluster, table);
-        Configuration configuration = HiveCatalogService.createHiveConf(new Configuration(), storage.getCatalogUrl());
-        storage.setConf(configuration);
     }
 
 

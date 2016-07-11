@@ -1,4 +1,4 @@
----++  GET /api/entities/list/:entity-type?fields=:fields
+---++  GET /api/entities/list/{:entity-type}
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -8,7 +8,7 @@
 Get list of the entities.
 
 ---++ Parameters
-   * :entity-type Comma-separated entity types. Can be empty. Valid entity types are cluster, feed or process.
+   * :entity-type <optional param> Comma-separated entity types. Valid entity types are cluster, feed or process.
    * fields <optional param> Fields of entity that the user wants to view, separated by commas.
       * Valid options are STATUS, TAGS, PIPELINES, CLUSTERS.
    * nameseq <optional param> Subsequence of entity name. Not case sensitive.
@@ -38,27 +38,6 @@ Total number of results and a list of entities.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/list/feed
-</verbatim>
----+++ Result
-<verbatim>
-{
-    "totalResults":"2”,
-    "entity": [
-        {
-            "name": "SampleOutput",
-            "type": "feed"
-        },
-        {
-            "name": "SampleInput",
-            "type": "feed"
-        }
-    ]
-}
-</verbatim>
-
----+++ Rest Call
-<verbatim>
 GET http://localhost:15000/api/entities/list
 </verbatim>
 ---+++ Result
@@ -81,6 +60,27 @@ GET http://localhost:15000/api/entities/list
         {
             "name"  : "SampleProcess1",
             "type"  : "process"
+        }
+    ]
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/list/feed
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "totalResults":"2”,
+    "entity": [
+        {
+            "name": "SampleOutput",
+            "type": "feed"
+        },
+        {
+            "name": "SampleInput",
+            "type": "feed"
         }
     ]
 }

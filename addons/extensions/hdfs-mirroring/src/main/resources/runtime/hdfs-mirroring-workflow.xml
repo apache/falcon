@@ -1,0 +1,86 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-dr-fs-workflow'>
+    <start to='dr-replication'/>
+    <!-- Replication action -->
+    <action name="dr-replication">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.oozie.libpath</name>
+                    <value>${wf:conf("falcon.libpath")}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceClusterFS},${targetClusterFS}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceClusterFS},${targetClusterFS}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-maxMaps</arg>
+            <arg>${distcpMaxMaps}</arg>
+            <arg>-mapBandwidth</arg>
+            <arg>${distcpMapBandwidth}</arg>
+            <arg>-sourcePaths</arg>
+            <arg>${sourceDir}</arg>
+            <arg>-targetPath</arg>
+            <arg>${targetClusterFS}${targetDir}</arg>
+            <arg>-falconFeedStorageType</arg>
+            <arg>FILESYSTEM</arg>
+            <arg>-availabilityFlag</arg>
+            <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
+            <arg>-counterLogDir</arg>
+            <arg>${logDir}/job-${nominalTime}/${srcClusterName == 'NA' ? '' : srcClusterName}</arg>
+        </java>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>
+            Workflow action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

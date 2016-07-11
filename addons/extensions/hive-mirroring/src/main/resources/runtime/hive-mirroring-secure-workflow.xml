@@ -1,0 +1,363 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-dr-hive-workflow'>
+    <credentials>
+        <credential name='hive_src_credentials' type='hcat'>
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${sourceMetastoreUri}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${sourceHiveMetastoreKerberosPrincipal}</value>
+            </property>
+        </credential>
+        <credential name='hive_tgt_credentials' type='hcat'>
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${targetMetastoreUri}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${targetHiveMetastoreKerberosPrincipal}</value>
+            </property>
+        </credential>
+        <credential name="hive2_src_credentials" type="hive2">
+            <property>
+                <name>hive2.server.principal</name>
+                <value>${sourceHive2KerberosPrincipal}</value>
+            </property>
+            <property>
+                <name>hive2.jdbc.url</name>
+                <value>jdbc:${sourceHiveServer2Uri}/${sourceDatabase}</value>
+            </property>
+        </credential>
+        <credential name="hive2_tgt_credentials" type="hive2">
+            <property>
+                <name>hive2.server.principal</name>
+                <value>${targetHive2KerberosPrincipal}</value>
+            </property>
+            <property>
+                <name>hive2.jdbc.url</name>
+                <value>jdbc:${targetHiveServer2Uri}/${sourceDatabase}</value>
+            </property>
+        </credential>
+    </credentials>
+    <start to='last-event'/>
+    <action name="last-event" cred="hive_tgt_credentials">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp,hive,hive2,hcatalog</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-sourceCluster</arg>
+            <arg>${sourceCluster}</arg>
+            <arg>-sourceMetastoreUri</arg>
+            <arg>${sourceMetastoreUri}</arg>
+            <arg>-sourceHiveServer2Uri</arg>
+            <arg>${sourceHiveServer2Uri}</arg>
+            <arg>-sourceDatabases</arg>
+            <arg>${sourceDatabases}</arg>
+            <arg>-sourceTables</arg>
+            <arg>${sourceTables}</arg>
+            <arg>-sourceStagingPath</arg>
+            <arg>${sourceStagingPath}</arg>
+            <arg>-sourceNN</arg>
+            <arg>${sourceNN}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceHiveMetastoreKerberosPrincipal</arg>
+            <arg>${sourceHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-sourceHive2KerberosPrincipal</arg>
+            <arg>${sourceHive2KerberosPrincipal}</arg>
+            <arg>-targetCluster</arg>
+            <arg>${targetCluster}</arg>
+            <arg>-targetMetastoreUri</arg>
+            <arg>${targetMetastoreUri}</arg>
+            <arg>-targetHiveServer2Uri</arg>
+            <arg>${targetHiveServer2Uri}</arg>
+            <arg>-targetStagingPath</arg>
+            <arg>${targetStagingPath}</arg>
+            <arg>-targetNN</arg>
+            <arg>${targetNN}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetHiveMetastoreKerberosPrincipal</arg>
+            <arg>${targetHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-targetHive2KerberosPrincipal</arg>
+            <arg>${targetHive2KerberosPrincipal}</arg>
+            <arg>-maxEvents</arg>
+            <arg>${maxEvents}</arg>
+            <arg>-clusterForJobRun</arg>
+            <arg>${clusterForJobRun}</arg>
+            <arg>-clusterForJobRunWriteEP</arg>
+            <arg>${clusterForJobRunWriteEP}</arg>
+            <arg>-clusterForJobNNKerberosPrincipal</arg>
+            <arg>${clusterForJobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
+            <arg>-hiveJobName</arg>
+            <arg>${hiveJobName}</arg>
+            <arg>-sourceDatabase</arg>
+            <arg>${sourceDatabase}</arg>
+            <arg>-executionStage</arg>
+            <arg>lastevents</arg>
+        </java>
+        <ok to="export-dr-replication"/>
+        <error to="fail"/>
+    </action>
+    <!-- Export Replication action -->
+    <action name="export-dr-replication" cred="hive_src_credentials,hive2_src_credentials">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp,hive,hive2,hcatalog</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-replicationMaxMaps</arg>
+            <arg>${replicationMaxMaps}</arg>
+            <arg>-distcpMaxMaps</arg>
+            <arg>${distcpMaxMaps}</arg>
+            <arg>-sourceCluster</arg>
+            <arg>${sourceCluster}</arg>
+            <arg>-sourceMetastoreUri</arg>
+            <arg>${sourceMetastoreUri}</arg>
+            <arg>-sourceHiveServer2Uri</arg>
+            <arg>${sourceHiveServer2Uri}</arg>
+            <arg>-sourceDatabases</arg>
+            <arg>${sourceDatabases}</arg>
+            <arg>-sourceTables</arg>
+            <arg>${sourceTables}</arg>
+            <arg>-sourceStagingPath</arg>
+            <arg>${sourceStagingPath}</arg>
+            <arg>-sourceNN</arg>
+            <arg>${sourceNN}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceHiveMetastoreKerberosPrincipal</arg>
+            <arg>${sourceHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-sourceHive2KerberosPrincipal</arg>
+            <arg>${sourceHive2KerberosPrincipal}</arg>
+            <arg>-targetCluster</arg>
+            <arg>${targetCluster}</arg>
+            <arg>-targetMetastoreUri</arg>
+            <arg>${targetMetastoreUri}</arg>
+            <arg>-targetHiveServer2Uri</arg>
+            <arg>${targetHiveServer2Uri}</arg>
+            <arg>-targetStagingPath</arg>
+            <arg>${targetStagingPath}</arg>
+            <arg>-targetNN</arg>
+            <arg>${targetNN}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetHiveMetastoreKerberosPrincipal</arg>
+            <arg>${targetHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-targetHive2KerberosPrincipal</arg>
+            <arg>${targetHive2KerberosPrincipal}</arg>
+            <arg>-maxEvents</arg>
+            <arg>${maxEvents}</arg>
+            <arg>-distcpMapBandwidth</arg>
+            <arg>${distcpMapBandwidth}</arg>
+            <arg>-clusterForJobRun</arg>
+            <arg>${clusterForJobRun}</arg>
+            <arg>-clusterForJobRunWriteEP</arg>
+            <arg>${clusterForJobRunWriteEP}</arg>
+            <arg>-clusterForJobNNKerberosPrincipal</arg>
+            <arg>${clusterForJobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
+            <arg>-hiveJobName</arg>
+            <arg>${hiveJobName}</arg>
+            <arg>-sourceDatabase</arg>
+            <arg>${sourceDatabase}</arg>
+            <arg>-executionStage</arg>
+            <arg>export</arg>
+            <arg>-counterLogDir</arg>
+            <arg>${logDir}/job-${nominalTime}/${srcClusterName == 'NA' ? '' : srcClusterName}/</arg>
+        </java>
+        <ok to="import-dr-replication"/>
+        <error to="fail"/>
+    </action>
+    <!-- Import Replication action -->
+    <action name="import-dr-replication" cred="hive_tgt_credentials,hive2_tgt_credentials">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp,hive,hive2,hcatalog</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-replicationMaxMaps</arg>
+            <arg>${replicationMaxMaps}</arg>
+            <arg>-distcpMaxMaps</arg>
+            <arg>${distcpMaxMaps}</arg>
+            <arg>-sourceCluster</arg>
+            <arg>${sourceCluster}</arg>
+            <arg>-sourceMetastoreUri</arg>
+            <arg>${sourceMetastoreUri}</arg>
+            <arg>-sourceHiveServer2Uri</arg>
+            <arg>${sourceHiveServer2Uri}</arg>
+            <arg>-sourceDatabases</arg>
+            <arg>${sourceDatabases}</arg>
+            <arg>-sourceTables</arg>
+            <arg>${sourceTables}</arg>
+            <arg>-sourceStagingPath</arg>
+            <arg>${sourceStagingPath}</arg>
+            <arg>-sourceNN</arg>
+            <arg>${sourceNN}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceHiveMetastoreKerberosPrincipal</arg>
+            <arg>${sourceHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-sourceHive2KerberosPrincipal</arg>
+            <arg>${sourceHive2KerberosPrincipal}</arg>
+            <arg>-targetCluster</arg>
+            <arg>${targetCluster}</arg>
+            <arg>-targetMetastoreUri</arg>
+            <arg>${targetMetastoreUri}</arg>
+            <arg>-targetHiveServer2Uri</arg>
+            <arg>${targetHiveServer2Uri}</arg>
+            <arg>-targetStagingPath</arg>
+            <arg>${targetStagingPath}</arg>
+            <arg>-targetNN</arg>
+            <arg>${targetNN}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetHiveMetastoreKerberosPrincipal</arg>
+            <arg>${targetHiveMetastoreKerberosPrincipal}</arg>
+            <arg>-targetHive2KerberosPrincipal</arg>
+            <arg>${targetHive2KerberosPrincipal}</arg>
+            <arg>-maxEvents</arg>
+            <arg>${maxEvents}</arg>
+            <arg>-distcpMapBandwidth</arg>
+            <arg>${distcpMapBandwidth}</arg>
+            <arg>-clusterForJobRun</arg>
+            <arg>${clusterForJobRun}</arg>
+            <arg>-clusterForJobRunWriteEP</arg>
+            <arg>${clusterForJobRunWriteEP}</arg>
+            <arg>-clusterForJobNNKerberosPrincipal</arg>
+            <arg>${clusterForJobNNKerberosPrincipal}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
+            <arg>-hiveJobName</arg>
+            <arg>${hiveJobName}</arg>
+            <arg>-sourceDatabase</arg>
+            <arg>${sourceDatabase}</arg>
+            <arg>-executionStage</arg>
+            <arg>import</arg>
+        </java>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>
+            Workflow action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

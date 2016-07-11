@@ -1,0 +1,15 @@
+---+++Update
+
+[[CommonCLI][Common CLI Options]]
+
+Update an extension entity. Note that we require all the entity names to remain the same. Future work will allow different entity names.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -update -extensionName <<extension-name>> -file <<path-to-file>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionUpdate.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -update -extensionName hdfs-mirroring -file /data/hdfs-mirroring-para.txt

@@ -181,7 +181,7 @@ public class InstancesResult extends APIResult {
                     + (this.sourceCluster == null ? "" : ", source-cluster:"
                     + this.sourceCluster)
                     + (this.cluster == null ? "" : ", cluster:"
-                    + this.cluster) + "}";
+                    + this.cluster) + "}\n";
         }
     }
 

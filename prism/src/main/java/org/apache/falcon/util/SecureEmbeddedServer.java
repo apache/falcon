@@ -48,6 +48,13 @@ public class SecureEmbeddedServer extends EmbeddedServer {
         connector.setPassword(properties.getProperty("password",
                 System.getProperty("password", "falcon-prism-passwd")));
         connector.setWantClientAuth(true);
+
+        // this is to enable large header sizes when Kerberos is enabled with AD
+        final Integer bufferSize = Integer.valueOf(StartupProperties.get().getProperty(
+                "falcon.jetty.request.buffer.size", "16192"));
+        connector.setHeaderBufferSize(bufferSize);
+        connector.setRequestBufferSize(bufferSize);
+
         return connector;
     }
 }

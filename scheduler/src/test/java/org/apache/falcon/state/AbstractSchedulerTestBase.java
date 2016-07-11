@@ -18,7 +18,7 @@
 package org.apache.falcon.state;
 
 import org.apache.falcon.entity.AbstractTestBase;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;

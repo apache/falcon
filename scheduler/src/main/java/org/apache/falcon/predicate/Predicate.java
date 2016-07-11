@@ -163,6 +163,7 @@ public class Predicate implements Serializable {
      * @return
      */
     public static Predicate createDataPredicate(List<Path> paths) {
+        Collections.sort(paths);
         return new Predicate(TYPE.DATA)
                 .addClause("path", StringUtils.join(paths, ","));
     }

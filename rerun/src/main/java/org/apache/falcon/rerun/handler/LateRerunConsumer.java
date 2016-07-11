@@ -25,9 +25,10 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.workflow.LateDataHandler;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
+import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.LateDataHandler;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
@@ -58,9 +59,9 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
                                LaterunEvent message, String entityType, String entityName) {
         try {
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
-                    || jobStatus.equals("SUSPENDED")) {
+                    || jobStatus.equals("SUSPENDED") || StartupProperties.isServerInSafeMode()) {
                 LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
-                        + "job status is running: {}", message.getWfId());
+                        + "job status is {} for : {}", jobStatus, message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
@@ -84,7 +85,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             if (StringUtils.isBlank(id)) {
                 id = message.getWfId();
             }
-            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, false);
+            handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, true);
             LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
                     message.getWfId(), message.getClusterName());
         } catch (Exception e) {

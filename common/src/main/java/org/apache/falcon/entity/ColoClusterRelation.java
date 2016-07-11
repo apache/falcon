@@ -79,7 +79,8 @@ public final class ColoClusterRelation implements ConfigurationChangeListener {
         if (oldEntity.getEntityType() != EntityType.CLUSTER) {
             return;
         }
-        throw new FalconException("change shouldn't be supported on cluster!");
+        onRemove(oldEntity);
+        onAdd(newEntity);
     }
 
     @Override

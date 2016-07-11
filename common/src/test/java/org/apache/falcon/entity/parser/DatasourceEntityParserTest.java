@@ -76,6 +76,7 @@ public class DatasourceEntityParserTest extends AbstractTestBase {
         Assert.assertEquals("test-hsql-db", databaseEntity.getName());
         Assert.assertEquals("hsql", databaseEntity.getType().value());
         Assert.assertEquals("org.hsqldb.jdbcDriver", databaseEntity.getDriver().getClazz());
+        Assert.assertEquals(datasource.getVersion(), 0);
     }
 
     @Test
