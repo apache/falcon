@@ -36,6 +36,7 @@ public class CatalogStorageTest {
         String table = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
         CatalogStorage storage = new CatalogStorage(CatalogStorage.CATALOG_URL, table);
         Assert.assertEquals(Storage.TYPE.TABLE, storage.getType());
+        Assert.assertNotNull(storage.getConf());
     }
 
     @Test
@@ -160,7 +161,7 @@ public class CatalogStorageTest {
         String uriTemplate = "thrift://localhost:49083/clicksdb/clicks/ds=${YEAR}-${MONTH}-${DAY};region=us";
 
         CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
-
+        Assert.assertNotNull(table.getConf());
         Assert.assertEquals(uriTemplate, table.getUriTemplate());
         Assert.assertEquals(uriTemplate, table.getUriTemplate(LocationType.DATA));
         Assert.assertEquals(table.getUriTemplate(), table.getUriTemplate(LocationType.DATA));
@@ -172,7 +173,7 @@ public class CatalogStorageTest {
         String uriTemplate = "${hcatNode}/clicksdb/clicks/ds=${YEAR}-${MONTH}-${DAY};region=us";
 
         CatalogStorage table = new CatalogStorage(CatalogStorage.CATALOG_URL, tableUri);
-
+        Assert.assertNotNull(table.getConf());
         Assert.assertEquals(uriTemplate, table.getUriTemplate());
         Assert.assertEquals(uriTemplate, table.getUriTemplate(LocationType.DATA));
         Assert.assertEquals(table.getUriTemplate(), table.getUriTemplate(LocationType.DATA));
@@ -183,9 +184,9 @@ public class CatalogStorageTest {
         final String catalogUrl = "thrift://localhost:49083";
         String tableUri = "catalog:clicksdb:clicks#ds=20130918;region=us";
         String partitionFilter = "(ds='20130918';region='us')";
-
         CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
         Assert.assertEquals(table.toPartitionFilter(), partitionFilter);
+        Assert.assertNotNull(table.getConf());
     }
 
     @Test
@@ -193,9 +194,9 @@ public class CatalogStorageTest {
         final String catalogUrl = "thrift://localhost:49083";
         String tableUri = "catalog:clicksdb:clicks#ds=20130918;region=us";
         String partitionPath = "ds=20130918/region=us";
-
         CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
         Assert.assertEquals(table.toPartitionAsPath(), partitionPath);
+        Assert.assertNotNull(table.getConf());
     }
 
     @Test
@@ -209,5 +210,6 @@ public class CatalogStorageTest {
         Assert.assertEquals(1, storage.getPartitions().size());
         Assert.assertEquals("2012-04-21-00", storage.getPartitionValue("ds"));
         Assert.assertTrue(storage.hasPartition("ds"));
+        Assert.assertNotNull(storage.getConf());
     }
 }

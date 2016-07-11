@@ -358,13 +358,20 @@ public class FileSystemStorage extends Configured implements Storage {
 
     private FileStatus[] findFilesForFeed(FileSystem fs, String feedBasePath) throws IOException {
         Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
+        boolean regexMatchFound = false;
         while (matcher.find()) {
+            regexMatchFound = true;
             String var = feedBasePath.substring(matcher.start(), matcher.end());
             feedBasePath = feedBasePath.replaceAll(Pattern.quote(var), "*");
             matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         }
-        LOG.info("Searching for {}", feedBasePath);
-        return fs.globStatus(new Path(feedBasePath));
+        if (regexMatchFound) {
+            LOG.info("Searching for {}", feedBasePath);
+            return fs.globStatus(new Path(feedBasePath));
+        } else {
+            LOG.info("Ignoring static path {}", feedBasePath);
+            return null;
+        }
     }
 
     private boolean isDateInRange(Date date, Date start) {

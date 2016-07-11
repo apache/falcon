@@ -80,7 +80,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex clusterVertex = addVertex(clusterEntity.getName(), RelationshipType.CLUSTER_ENTITY);
 
         addUserRelation(clusterVertex);
-        addColoRelation(clusterEntity.getColo(), clusterVertex);
+        addColoRelation(clusterEntity.getColo(), clusterVertex, RelationshipLabel.CLUSTER_COLO);
         addDataClassification(clusterEntity.getTags(), clusterVertex);
     }
 
@@ -111,7 +111,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex dsVertex = addVertex(dsEntity.getName(), RelationshipType.DATASOURCE_ENTITY);
 
         addUserRelation(dsVertex);
-        addColoRelation(dsEntity.getColo(), dsVertex);
+        addColoRelation(dsEntity.getColo(), dsVertex, RelationshipLabel.DATASOURCE_COLO);
         addDataClassification(dsEntity.getTags(), dsVertex);
     }
 
@@ -120,7 +120,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         EntityType entityType = oldEntity.getEntityType();
         switch (entityType) {
         case CLUSTER:
-            // a cluster cannot be updated
+            updateClusterEntity((Cluster) oldEntity, (Cluster) newEntity);
             break;
         case PROCESS:
             updateProcessEntity((Process) oldEntity, (Process) newEntity);
@@ -128,12 +128,56 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         case FEED:
             updateFeedEntity((Feed) oldEntity, (Feed) newEntity);
             break;
+        case DATASOURCE:
+            updateDatasourceEntity((Datasource) oldEntity, (Datasource) newEntity);
+            break;
         default:
             throw new IllegalArgumentException("Invalid EntityType " + entityType);
         }
     }
 
+    private void updateDatasourceEntity(Datasource oldDatasource, Datasource newDatasouce) {
+        LOG.info("Updating Datasource entity: {}", newDatasouce.getName());
 
+        Vertex dsEntityVertex = findVertex(oldDatasource.getName(), RelationshipType.DATASOURCE_ENTITY);
+        if (dsEntityVertex == null) {
+            LOG.error("Illegal State: Datasource entity vertex must exist for {}", oldDatasource.getName());
+            throw new IllegalStateException(oldDatasource.getName() + " entity vertex must exist.");
+        }
+        updateColoEdge(oldDatasource.getColo(), newDatasouce.getColo(), dsEntityVertex,
+                RelationshipLabel.DATASOURCE_COLO);
+        updateDataClassification(oldDatasource.getTags(), newDatasouce.getTags(), dsEntityVertex);
+    }
+
+    private void updateClusterEntity(Cluster oldCluster, Cluster newCluster) {
+        LOG.info("Updating Cluster entity: {}", newCluster.getName());
+        Vertex clusterEntityVertex = findVertex(oldCluster.getName(), RelationshipType.CLUSTER_ENTITY);
+        if (clusterEntityVertex == null) {
+            LOG.error("Illegal State: Cluster entity vertex must exist for {}", oldCluster.getName());
+            throw new IllegalStateException(oldCluster.getName() + " entity vertex must exist.");
+        }
+        updateColoEdge(oldCluster.getColo(), newCluster.getColo(), clusterEntityVertex,
+                RelationshipLabel.CLUSTER_COLO);
+        updateDataClassification(oldCluster.getTags(), newCluster.getTags(), clusterEntityVertex);
+    }
+
+    private void updateColoEdge(String oldColo, String newColo, Vertex clusterEntityVertex,
+                                RelationshipLabel relLabel) {
+        if (areSame(oldColo, newColo)) {
+            return;
+        }
+
+        Vertex oldColoVertex = findVertex(oldColo, RelationshipType.COLO);
+        if (oldColoVertex != null) {
+            removeEdge(clusterEntityVertex, oldColoVertex, relLabel.getName());
+        }
+        Vertex newColoVertex = findVertex(newColo, RelationshipType.COLO);
+        if (newColoVertex == null) {
+            newColoVertex = addVertex(newColo, RelationshipType.COLO);
+        }
+
+        addEdge(clusterEntityVertex, newColoVertex, relLabel.getName());
+    }
 
     public void updateFeedEntity(Feed oldFeed, Feed newFeed) {
         LOG.info("Updating feed entity: {}", newFeed.getName());
@@ -185,9 +229,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         updateProcessOutputs(oldProcess.getOutputs(), newProcess.getOutputs(), processEntityVertex);
     }
 
-    public void addColoRelation(String colo, Vertex fromVertex) {
+    public void addColoRelation(String colo, Vertex fromVertex, RelationshipLabel relLabel) {
         Vertex coloVertex = addVertex(colo, RelationshipType.COLO);
-        addEdge(fromVertex, coloVertex, RelationshipLabel.CLUSTER_COLO.getName());
+        addEdge(fromVertex, coloVertex, relLabel.getName());
     }
 
     public void addRelationToCluster(Vertex fromVertex, String clusterName, RelationshipLabel edgeLabel) {

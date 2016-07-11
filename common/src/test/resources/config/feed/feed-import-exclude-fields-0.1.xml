@@ -56,7 +56,7 @@
                 </arguments>
             </import>
             <locations>
-                <location type="data" path="/projects/falcon/clicks"/>
+                <location type="data" path="/projects/falcon/clicks/${MONTH}/click1"/>
                 <location type="stats" path="/projects/falcon/clicksStats"/>
                 <location type="meta" path="/projects/falcon/clicksMetaData"/>
             </locations>
@@ -64,7 +64,7 @@
     </clusters>
 
     <locations>
-        <location type="data" path="/projects/falcon/clicks"/>
+        <location type="data" path="/projects/falcon/clicks/${MONTH}/click1"/>
         <location type="stats" path="/projects/falcon/clicksStats"/>
         <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>

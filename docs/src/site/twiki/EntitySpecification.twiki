@@ -52,6 +52,11 @@ A registry interface specifies the interface for metadata catalog, such as Hive 
 Falcon uses this interface to register/de-register partitions for a given database and table. Also,
 uses this information to schedule data availability events based on partitions in the workflow engine.
 Although Hive metastore supports both RPC and HTTP, Falcon comes with an implementation for RPC over thrift.
+For Hive HA mode, make sure the uris are separated with comma and you only add protocol "thrift://" at the beginning.
+See below for an example of Hive HA mode:
+<verbatim>
+<interface type="registry" endpoint="thrift://c6402.ambari.apache.org:9083,c6403.ambari.apache.org:9083" version="0.11.0" />
+</verbatim>
 
 <verbatim>
 <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
@@ -328,6 +333,9 @@ method feature implementation is in progress. The mergeplocy determines how the 
 The snapshot layout creates a snapshot of the data on HDFS using the feed's location specification. Fields is used
 to specify the projection columns. Feed import from database underneath uses sqoop to achieve the task. Any advanced
 Sqoop options can be specified via the arguments.
+
+The feed's data storage location should include some combination of timepartition if import policy is associated with it.
+Please see ImportExport documentation for more details.
 
 ---+++ Late Arrival
 
@@ -682,8 +690,7 @@ Example workflow configuration:
 
 
 ---+++ Optional Inputs
-User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are
-mentioned as optional. If they are present it considers them otherwise continue with the compulsory ones.
+User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are mentioned as optional. If they are present it considers them otherwise continues with the mandatory ones. If some instances of the optional feed are present for the given data window, those are considered and passed on to the process. While checking for presence of an feed instance, Falcon looks for __availabilityFlag__ in the directory, if specified in the feed definition. If no __availabilityFlag__ is specified, presence of the instance directory is treated as indication of availability of data.
 Example:
 <verbatim>
 <feed name="feed1">
@@ -829,13 +836,13 @@ be in lib folder inside the workflow path.
 The properties defined in the cluster and cluster properties(nameNode and jobTracker) will also
 be available for the workflow.
 
-There are 3 engines supported today.
+There are 4 engines supported today.
 
 ---++++ Oozie
 
 As part of oozie workflow engine support, users can embed a oozie workflow.
-Refer to oozie [[http://oozie.apache.org/docs/4.0.1/DG_Overview.html][workflow overview]] and
-[[http://oozie.apache.org/docs/4.0.1/WorkflowFunctionalSpec.html][workflow specification]] for details.
+Refer to oozie [[http://oozie.apache.org/docs/4.2.0/DG_Overview.html][workflow overview]] and
+[[http://oozie.apache.org/docs/4.2.0/WorkflowFunctionalSpec.html][workflow specification]] for details.
 
 Syntax:
 <verbatim>
@@ -898,6 +905,54 @@ This defines the workflow engine to be hive and the hive script is defined at
 Feeds with Hive table storage will send one more parameter apart from the general ones:
 <verbatim>$input_filter</verbatim>
 
+---++++ Spark
+Falcon also adds the Spark engine as part of Spark Integration which enables users to run the Java/Python Spark application as a process.
+When "spark" workflow engine is mentioned spark related parameters must be provided through <spark-attributes>
+Examples:
+<verbatim>
+<process name="spark-process">
+...
+    <workflow engine="spark" path="/resources/action">
+    <spark-attributes>
+          <master>local</master>
+          <name>Spark WordCount</name>
+          <class>org.examples.WordCount</class>
+          <jar>/resources/action/lib/spark-application.jar</jar>
+          <spark-opts>--num-executors 1 --driver-memory 512m</spark-opts>
+    </spark-attributes>
+...
+</process>
+</verbatim>
+
+This defines the workflow engine to be spark and Java/Python Spark application must be defined with "jar" option that need to be executed.
+There is flexibility to override the Spark master through process entity either to "yarn-client" or "yarn-cluster", if spark interface is already defined in cluster entity.
+Input and Output data to the Spark application will be set as argument when Spark workflow will be generated, if input and output feed entity is defined in the process entity.
+In the set of arguments, first argument will always correspond to input feed, second argument will always correspond to output feed and then user's provided argument will be set.
+
+
+For running the Spark SQL process entity, that read and write the data stored on Hive, the datanucleus jars under the $HIVE_HOME/lib directory and hive-site.xml
+under $SPARK_HOME/conf/ directory need to be available on the driver and all executors launched by the YARN cluster.
+The convenient way to do this is adding them through the --jars option and --file option of the spark-opts attribute.
+Example:
+<verbatim>
+<process name="spark-process">
+...
+    <workflow engine="spark" path="/resources/action">
+    <spark-attributes>
+        <master>local</master>
+        <name>Spark SQL</name>
+        <class>org.examples.SparkSQLProcessTable</class>
+        <jar>/resources/action/lib/spark-application.jar</jar>
+        <spark-opts>--num-executors 1 --driver-memory 512m --jars /usr/local/hive/lib/datanucleus-rdbms.jar,/usr/local/hive/lib/datanucleus-core.jar,/usr/local/hive/lib/datanucleus-api-jdo.jar --files /usr/local/spark/conf/hive-site.xml</spark-opts>
+    </spark-attributes>
+...
+</process>
+</verbatim>
+
+Input and Output to the Spark SQL application will be set as argument when Spark workflow will be generated, if input and output feed entity is defined in the process entity.
+If input feed is of table type, then input table partition, table name and database name will be set as input arguments. If output feed is of table type, then output table partition, table name and database name will be set as output arguments.
+Once input and output arguments is set, then user's provided argument will be set.
+
 ---+++ Retry
 Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.
 Syntax:
@@ -923,10 +978,10 @@ The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential ba
 
 To enable retries for instances for feeds, user will have to set the following properties in runtime.properties
 <verbatim>
-falcon.recipe.retry.policy=periodic
-falcon.recipe.retry.delay=minutes(30)
-falcon.recipe.retry.attempts=3
-falcon.recipe.retry.onTimeout=false
+falcon.retry.policy=periodic
+falcon.retry.delay=minutes(30)
+falcon.retry.attempts=3
+falcon.retry.onTimeout=false
 <verbatim>
 ---+++ Late data
 Late data handling defines how the late data should be handled. Each feed is defined with a late cut-off value which specifies the time till which late data is valid. For example, late cut-off of hours(6) means that data for nth hour can get delayed by upto 6 hours. Late data specification in process defines how this late data is handled.

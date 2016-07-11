@@ -26,6 +26,8 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
+import org.apache.falcon.entity.v0.process.Validity;
+import  org.apache.falcon.entity.v0.process.Sla;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.resource.SchedulableEntityInstance;
@@ -184,5 +186,39 @@ public final class ProcessHelper {
             }
         }
         return result;
+    }
+
+    public static Validity getClusterValidity(Process process, String clusterName) throws FalconException {
+        org.apache.falcon.entity.v0.process.Cluster cluster = getCluster(process, clusterName);
+        if (cluster == null) {
+            throw new FalconException("Invalid cluster: " + clusterName + " for process: " + process.getName());
+        }
+        return cluster.getValidity();
+    }
+
+    public static Sla getSLA(String clusterName, Process process) throws FalconException{
+        Cluster cluster = getCluster(process, clusterName);
+        if (cluster == null){
+            throw new FalconException("Invalid cluster: " + clusterName + " for process: " + process.getName());
+        }
+        return getSLA(cluster, process);
+    }
+
+    public static Sla getSLA(Cluster cluster, Process process) {
+        final Sla clusterSla = cluster.getSla();
+        if (clusterSla != null) {
+            return clusterSla;
+        }
+        return process.getSla();
+    }
+
+    public static Date getProcessValidityStart(Process process, String clusterName) throws FalconException {
+        Cluster processCluster = getCluster(process, clusterName);
+        if (processCluster != null) {
+            return processCluster.getValidity().getStart();
+        } else {
+            throw new FalconException("No matching cluster " + clusterName
+                    + "found for process " + process.getName());
+        }
     }
 }

@@ -19,8 +19,8 @@
 <start to="hdfscommands"/>
 <action name="hdfscommands">
          <fs>
-            <delete path='${nameNode}/noinput/nooutput/test'/>
-            <mkdir path='${nameNode}/noinput/nooutput/test'/>
+            <delete path='${nameNode}/tmp/falcon-regression/noinput/nooutput/test'/>
+            <mkdir path='${nameNode}/tmp/falcon-regression/noinput/nooutput/test'/>
 	 </fs>
 	<ok to="end"/> 
        <error to="fail"/>

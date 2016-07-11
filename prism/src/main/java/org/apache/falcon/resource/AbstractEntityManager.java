@@ -39,15 +39,24 @@ import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityIntegrityChecker;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.entity.v0.feed.Clusters;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.resource.EntityList.EntityElement;
+import org.apache.falcon.resource.metadata.AbstractMetadataResource;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.DefaultAuthorizationProvider;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +81,7 @@ import java.util.Set;
 /**
  * A base class for managing Entity operations.
  */
-public abstract class AbstractEntityManager {
+public abstract class AbstractEntityManager extends AbstractMetadataResource {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
     private static MemoryLocks memoryLocks = MemoryLocks.getInstance();
     protected static final String DO_AS_PARAM = "doAs";
@@ -161,8 +170,15 @@ public abstract class AbstractEntityManager {
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
             for (String cluster : clusters) {
-                Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
-                colos.add(clusterEntity.getColo());
+                try{
+                    Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                    colos.add(clusterEntity.getColo());
+                } catch (EntityNotRegisteredException e){
+                    LOG.warn(e.getMessage(), e);
+                }
+            }
+            if (colos.isEmpty()) {
+                throw new EntityNotRegisteredException(entity.getName()  + " (" + type + ") not found");
             }
             return colos;
         } catch (FalconException e) {
@@ -218,8 +234,9 @@ public abstract class AbstractEntityManager {
             Entity entity = deserializeEntity(inputStream, entityType);
             validate(entity);
 
-            //Validate that the entity can be scheduled in the cluster
-            if (entity.getEntityType().isSchedulable()) {
+            // Validate that the entity can be scheduled in the cluster.
+            // Perform dryrun only if falcon is not in safemode.
+            if (entity.getEntityType().isSchedulable() && !StartupProperties.isServerInSafeMode()) {
                 Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
                 for (String cluster : clusters) {
                     try {
@@ -258,6 +275,7 @@ public abstract class AbstractEntityManager {
             String removedFromEngine = "";
             try {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
+                verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.DELETE);
 
                 canRemove(entityObj);
                 obtainEntityLocks(entityObj, "delete", tokenList);
@@ -296,37 +314,63 @@ public abstract class AbstractEntityManager {
     protected APIResult update(InputStream inputStream, String type, String entityName,
                                String colo, Boolean skipDryRun) {
         checkColo(colo);
+        try {
+            EntityType entityType = EntityType.getEnum(type);
+            Entity entity = deserializeEntity(inputStream, entityType);
+            verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.UPDATE);
+            return update(entity, type, entityName, skipDryRun);
+        } catch (FalconException e) {
+            LOG.error("Update failed", e);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected APIResult update(Entity newEntity, String type, String entityName, Boolean skipDryRun) {
         List<Entity> tokenList = new ArrayList<>();
         try {
             EntityType entityType = EntityType.getEnum(type);
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
-            Entity newEntity = deserializeEntity(inputStream, entityType);
             // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
             decorateEntityWithACL(newEntity);
             validate(newEntity);
 
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
-
             obtainEntityLocks(oldEntity, "update", tokenList);
 
             StringBuilder result = new StringBuilder("Updated successfully");
-            //Update in workflow engine
-            if (!DeploymentUtil.isPrism()) {
-                Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
-                Set<String> newClusters = EntityUtil.getClustersDefinedInColos(newEntity);
-                newClusters.retainAll(oldClusters); //common clusters for update
-                oldClusters.removeAll(newClusters); //deleted clusters
-
-                for (String cluster : newClusters) {
-                    result.append(getWorkflowEngine(oldEntity).update(oldEntity, newEntity, cluster, skipDryRun));
+            switch(entityType) {
+            case CLUSTER:
+                configStore.update(entityType, newEntity);
+                break;
+            case DATASOURCE:
+                configStore.update(entityType, newEntity);
+                // check always if dependant feeds are already upgraded and upgrade accordingly
+                if (entityType.equals(EntityType.DATASOURCE)) {
+                    ConfigurationStore.get().cleanupUpdateInit();
+                    releaseEntityLocks(entityName, tokenList);
+                    updateDatasourceDependents(entityName, skipDryRun);
                 }
-                for (String cluster : oldClusters) {
-                    getWorkflowEngine(oldEntity).delete(oldEntity, cluster);
+                break;
+            case FEED:
+            case PROCESS:
+                if (!DeploymentUtil.isPrism()) {
+                    Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
+                    Set<String> newClusters = EntityUtil.getClustersDefinedInColos(newEntity);
+                    newClusters.retainAll(oldClusters); //common clusters for update
+                    oldClusters.removeAll(newClusters); //deleted clusters
+                    for (String cluster : newClusters) {
+                        result.append(getWorkflowEngine(oldEntity).update(oldEntity, newEntity, cluster, skipDryRun));
+                    }
+                    for (String cluster : oldClusters) {
+                        getWorkflowEngine(oldEntity).delete(oldEntity, cluster);
+                    }
                 }
+                configStore.update(entityType, newEntity);
+                break;
+            default:
+                throw FalconWebException.newAPIException("Unknown entity type in update : " + entityType);
             }
-
-            configStore.update(entityType, newEntity);
             return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
         } catch (Throwable e) {
             LOG.error("Update failed", e);
@@ -335,6 +379,176 @@ public abstract class AbstractEntityManager {
             ConfigurationStore.get().cleanupUpdateInit();
             releaseEntityLocks(entityName, tokenList);
         }
+    }
+
+    /**
+     * check if the data source entity dependent feeds are upgraded or not by checking against the data source entity
+     * version and upgrade feeds accordingly.
+     *
+     * @param datasourceName Name of the data source entity
+     * @param skipDryRun Skip dry run during update if set to true
+     * @return APIResult
+     *
+     */
+
+    public APIResult updateDatasourceDependents(String datasourceName, Boolean skipDryRun) {
+        try {
+            Datasource datasource = EntityUtil.getEntity(EntityType.DATASOURCE, datasourceName);
+            StringBuilder result = new StringBuilder(String.format("Updating feed entities "
+                    + "dependent on datasource : %s ", datasource.getName()));
+
+            // get data source dependent entities and check the version referenced is same
+            Pair<String, EntityType>[] dependentEntities = EntityIntegrityChecker.referencedBy(datasource);
+            if (dependentEntities == null) {
+                return new APIResult(APIResult.Status.SUCCEEDED, String.format("Datasource %s has "
+                        + "no dependent entities", datasourceName));
+            }
+            for (Pair<String, EntityType> depEntity : dependentEntities) {
+                Entity entity = EntityUtil.getEntity(depEntity.second, depEntity.first);
+                if (entity.getEntityType() != EntityType.FEED) {
+                    throw FalconWebException.newAPIException("Datasource dependents should be FEEDS, but"
+                        + "encountered type : " + entity.getEntityType());
+                }
+                Feed newFeed = (Feed) entity.copy();
+                for (org.apache.falcon.entity.v0.feed.Cluster feedCluster
+                        : newFeed.getClusters().getClusters()) {
+                    if (feedCluster.getType() == ClusterType.SOURCE) {
+                        boolean updatedFeed = isUpdateFeedDatasourceVersion(feedCluster, datasource, newFeed);
+                        if (updatedFeed) {
+                            // rewrite the dependent feed and update it on the store
+                            result.append(getWorkflowEngine(entity).update(entity, newFeed,
+                                    feedCluster.getName(), skipDryRun));
+                            updateEntityInConfigStore(entity, newFeed);
+                        }
+                    }
+                }
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
+        } catch (FalconException e) {
+            LOG.error("Update failed", e);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private boolean isUpdateFeedDatasourceVersion(org.apache.falcon.entity.v0.feed.Cluster feedCluster,
+        Datasource datasource, Feed feed) throws FalconException {
+        org.apache.falcon.entity.v0.feed.Datasource updateFeedImp = incFeedDatasourceVersion(datasource,
+                feed, feedCluster.getImport() != null ? feedCluster.getImport().getSource() : null);
+        org.apache.falcon.entity.v0.feed.Datasource updateFeedExp = incFeedDatasourceVersion(datasource,
+                feed, feedCluster.getExport() != null ? feedCluster.getExport().getTarget() : null);
+        return ((updateFeedImp != null) || (updateFeedExp != null));
+    }
+
+    private  org.apache.falcon.entity.v0.feed.Datasource  incFeedDatasourceVersion(Datasource datasource,
+        Feed feed, org.apache.falcon.entity.v0.feed.Datasource depDatasource) throws FalconException {
+        if ((depDatasource != null) && (datasource.getName().equals(depDatasource.getName()))) {
+            if (depDatasource.getVersion() < datasource.getVersion()) {
+                LOG.info(String.format("Updating since Feed '%s' referenced datasource '%s' "
+                        + "version '%d' < datasource entity version in store '%d'", feed.getName(),
+                        depDatasource.getName(), depDatasource.getVersion(), datasource.getVersion()));
+                depDatasource.setVersion(depDatasource.getVersion()+1);
+                return depDatasource;
+            } else if (depDatasource.getVersion() > datasource.getVersion()) {
+                throw new FalconException(String.format("Feed '%s' datasource '%s' version '%d' > datasource "
+                        + "entity version in store '%d'", feed.getName(), depDatasource.getName(),
+                        depDatasource.getVersion(), datasource.getVersion()));
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Updates scheduled dependent entities of a cluster.
+     *
+     * @param clusterName   Name of cluster
+     * @param colo colo
+     * @param skipDryRun Skip dry run during update if set to true
+     * @return APIResult
+     */
+    public APIResult updateClusterDependents(String clusterName, String colo, Boolean skipDryRun) {
+        checkColo(colo);
+        try {
+            verifySuperUser();
+            Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+            verifySafemodeOperation(cluster, EntityUtil.ENTITY_OPERATION.UPDATE_CLUSTER_DEPENDENTS);
+            int clusterVersion = cluster.getVersion();
+            StringBuilder result = new StringBuilder("Updating entities dependent on cluster \n");
+            // get dependent entities. check if cluster version changed. if yes, update dependent entities
+            Pair<String, EntityType>[] dependentEntities = EntityIntegrityChecker.referencedBy(cluster);
+            if (dependentEntities == null) {
+                // nothing to update
+                return new APIResult(APIResult.Status.SUCCEEDED, "Cluster "
+                        + clusterName + " has no dependent entities");
+            }
+            for (Pair<String, EntityType> depEntity : dependentEntities) {
+                Entity entity = EntityUtil.getEntity(depEntity.second, depEntity.first);
+                switch (entity.getEntityType()) {
+                case FEED:
+                    Feed newFeedEntity = (Feed) entity.copy();
+                    Clusters feedClusters = newFeedEntity.getClusters();
+                    if (feedClusters != null) {
+                        boolean requireUpdate = false;
+                        for(org.apache.falcon.entity.v0.feed.Cluster feedCluster : feedClusters.getClusters()) {
+                            if (feedCluster.getName().equals(clusterName)
+                                    && feedCluster.getVersion() != clusterVersion) {
+                                // update feed cluster entity
+                                feedCluster.setVersion(clusterVersion);
+                                requireUpdate = true;
+                            }
+                        }
+                        if (requireUpdate) {
+                            result.append(getWorkflowEngine(entity).update(entity, newFeedEntity,
+                                    cluster.getName(), skipDryRun));
+                            updateEntityInConfigStore(entity, newFeedEntity);
+                        }
+                    }
+                    break;
+                case PROCESS:
+                    Process newProcessEntity = (Process) entity.copy();
+                    org.apache.falcon.entity.v0.process.Clusters processClusters = newProcessEntity.getClusters();
+                    if (processClusters != null) {
+                        boolean requireUpdate = false;
+                        for(org.apache.falcon.entity.v0.process.Cluster procCluster : processClusters.getClusters()) {
+                            if (procCluster.getName().equals(clusterName)
+                                    && procCluster.getVersion() != clusterVersion) {
+                                // update feed cluster entity
+                                procCluster.setVersion(clusterVersion);
+                                requireUpdate = true;
+                            }
+                        }
+                        if (requireUpdate) {
+                            result.append(getWorkflowEngine(entity).update(entity, newProcessEntity,
+                                    cluster.getName(), skipDryRun));
+                            updateEntityInConfigStore(entity, newProcessEntity);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
+        } catch (Exception e) {
+            LOG.error("Update failed", e);
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void updateEntityInConfigStore(Entity oldEntity, Entity newEntity) {
+        List<Entity> tokenList = new ArrayList<>();
+        try {
+            configStore.initiateUpdate(newEntity);
+            obtainEntityLocks(oldEntity, "update", tokenList);
+            configStore.update(newEntity.getEntityType(), newEntity);
+        } catch (Throwable e) {
+            LOG.error("Update failed", e);
+            throw FalconWebException.newAPIException(e);
+        } finally {
+            ConfigurationStore.get().cleanupUpdateInit();
+            releaseEntityLocks(oldEntity.getName(), tokenList);
+        }
+
     }
 
     private void obtainEntityLocks(Entity entity, String command, List<Entity> tokenList)
@@ -375,14 +589,14 @@ public abstract class AbstractEntityManager {
 
     }
 
-    private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException {
+    private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException, IOException {
         if (oldEntity.getEntityType() != newEntity.getEntityType() || !oldEntity.equals(newEntity)) {
             throw new FalconException(
                     oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString());
         }
 
         if (oldEntity.getEntityType() == EntityType.CLUSTER) {
-            throw new FalconException("Update not supported for clusters");
+            verifySuperUser();
         }
 
         String[] props = oldEntity.getEntityType().getImmutableProperties();
@@ -400,7 +614,7 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    private void canRemove(Entity entity) throws FalconException {
+    protected void canRemove(Entity entity) throws FalconException {
         Pair<String, EntityType>[] referencedBy = EntityIntegrityChecker.referencedBy(entity);
         if (referencedBy != null && referencedBy.length > 0) {
             StringBuilder messages = new StringBuilder();
@@ -415,9 +629,61 @@ public abstract class AbstractEntityManager {
 
     protected Entity submitInternal(InputStream inputStream, String type, String doAsUser)
         throws FalconException, IOException {
-
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(inputStream, entityType);
+        verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.SUBMIT);
+        submitInternal(entity, doAsUser);
+        return entity;
+    }
+
+    protected void verifySafemodeOperation(Entity entity, EntityUtil.ENTITY_OPERATION operation) {
+        // if Falcon not in safemode, allow everything except cluster update
+        if (!StartupProperties.isServerInSafeMode()) {
+            if (operation.equals(EntityUtil.ENTITY_OPERATION.UPDATE)
+                    && entity.getEntityType().equals(EntityType.CLUSTER)) {
+                LOG.error("Entity operation {} is only allowed on cluster entities during safemode",
+                        operation.name());
+                throw FalconWebException.newAPIException("Entity operation " + operation.name()
+                        + " is only allowed on cluster entities during safemode");
+            }
+            return;
+        }
+
+        switch (operation) {
+        case UPDATE:
+            if (entity.getEntityType().equals(EntityType.CLUSTER)) {
+                return;
+            } else {
+                LOG.error("Entity operation {} is only allowed on cluster entities during safemode",
+                        operation.name());
+                throw FalconWebException.newAPIException("Entity operation " + operation.name()
+                        + " is only allowed on cluster entities during safemode");
+            }
+        case SUSPEND:
+            if (entity.getEntityType().equals(EntityType.CLUSTER)) {
+                LOG.error("Entity operation {} is not allowed on cluster entity",
+                        operation.name());
+                throw FalconWebException.newAPIException("Entity operation " + operation.name()
+                        + " is not allowed on cluster entity");
+            } else {
+                return;
+            }
+        case SCHEDULE:
+        case UPDATE_CLUSTER_DEPENDENTS:
+        case SUBMIT_AND_SCHEDULE:
+        case DELETE:
+        case RESUME:
+        case TOUCH:
+        case SUBMIT:
+        default:
+            LOG.error("Entity operation {} is not allowed during safemode", operation.name());
+            throw FalconWebException.newAPIException("Entity operation "
+                    + operation.name() + " not allowed during safemode");
+        }
+    }
+
+    protected synchronized void submitInternal(Entity entity, String doAsUser) throws IOException, FalconException {
+        EntityType entityType = entity.getEntityType();
         List<Entity> tokenList = new ArrayList<>();
         // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
         decorateEntityWithACL(entity);
@@ -431,7 +697,7 @@ public abstract class AbstractEntityManager {
         Entity existingEntity = configStore.get(entityType, entity.getName());
         if (existingEntity != null) {
             if (EntityUtil.equals(existingEntity, entity)) {
-                return existingEntity;
+                return;
             }
 
             throw new EntityAlreadyExistsException(
@@ -442,8 +708,7 @@ public abstract class AbstractEntityManager {
         SecurityUtil.tryProxy(entity, doAsUser); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
-        LOG.info("Submit successful: ({}): {}", type, entity.getName());
-        return entity;
+        LOG.info("Submit successful: ({}): {}", entityType, entity.getName());
     }
 
     /**
@@ -514,7 +779,7 @@ public abstract class AbstractEntityManager {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void validate(Entity entity) throws FalconException {
+    protected void validate(Entity entity) throws FalconException {
         EntityParser entityParser = EntityParserFactory.getParser(entity.getEntityType());
         entityParser.validate(entity);
     }
@@ -615,14 +880,47 @@ public abstract class AbstractEntityManager {
                                     String filterType, String filterTags, String filterBy,
                                     String orderBy, String sortOrder, Integer offset,
                                     Integer resultsPerPage, final String doAsUser) {
+        return getEntityList(fieldStr, nameSubsequence, tagKeywords, filterType, filterTags, filterBy,
+                orderBy, sortOrder, offset, resultsPerPage, doAsUser, false);
+    }
 
+
+    public EntityList getEntityList(String fieldStr, String nameSubsequence, String tagKeywords,
+                                    String filterType, String filterTags, String filterBy,
+                                    String orderBy, String sortOrder, Integer offset,
+                                    Integer resultsPerPage, final String doAsUser, boolean isReturnAll) {
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toUpperCase().split(",")));
         Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
-        for (String  key : filterByFieldsValues.keySet()) {
+        for (String key : filterByFieldsValues.keySet()) {
             if (!key.toUpperCase().equals("NAME") && !key.toUpperCase().equals("CLUSTER")) {
                 fields.add(key.toUpperCase());
             }
         }
+        try {
+            // get filtered entities
+            List<Entity> entities = getEntityList(
+                    nameSubsequence, tagKeywords, filterType, filterTags, filterBy, doAsUser);
+
+            // sort entities and pagination
+            List<Entity> entitiesReturn = sortEntitiesPagination(
+                    entities, orderBy, sortOrder, offset, resultsPerPage, isReturnAll);
+
+            // add total number of results
+            EntityList entityList = entitiesReturn.size() == 0
+                    ? new EntityList(new Entity[]{}, 0)
+                    : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
+            return entityList;
+        } catch (Exception e) {
+            LOG.error("Failed to get entity list", e);
+            throw FalconWebException.newAPIException(e);
+        }
+    }
+
+    public List<Entity> getEntityList(String nameSubsequence, String tagKeywords,
+                                      String filterType, String filterTags, String filterBy, final String doAsUser)
+        throws FalconException, IOException {
+
+        Map<String, List<String>> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         validateEntityFilterByClause(filterByFieldsValues);
         if (StringUtils.isNotEmpty(filterTags)) {
             filterByFieldsValues.put(EntityList.EntityFilterByFields.TAGS.name(), Arrays.asList(filterTags));
@@ -630,43 +928,36 @@ public abstract class AbstractEntityManager {
 
         // get filtered entities
         List<Entity> entities = new ArrayList<Entity>();
-        try {
-            if (StringUtils.isEmpty(filterType)) {
-                // return entities of all types if no entity type specified
-                for (EntityType entityType : EntityType.values()) {
-                    entities.addAll(getFilteredEntities(
-                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
-                }
-            } else {
-                String[] types = filterType.split(",");
-                for (String type : types) {
-                    EntityType entityType = EntityType.getEnum(type);
-                    entities.addAll(getFilteredEntities(
-                            entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
-                }
+        if (StringUtils.isEmpty(filterType)) {
+            // return entities of all types if no entity type specified
+            for (EntityType entityType : EntityType.values()) {
+                entities.addAll(getFilteredEntities(
+                        entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
             }
-        } catch (Exception e) {
-            LOG.error("Failed to get entity list", e);
-            throw FalconWebException.newAPIException(e);
+        } else {
+            String[] types = filterType.split(",");
+            for (String type : types) {
+                EntityType entityType = EntityType.getEnum(type);
+                entities.addAll(getFilteredEntities(
+                        entityType, nameSubsequence, tagKeywords, filterByFieldsValues, "", "", "", doAsUser));
+            }
         }
 
-        // sort entities and pagination
-        List<Entity> entitiesReturn = sortEntitiesPagination(entities, orderBy, sortOrder, offset, resultsPerPage);
-
-        // add total number of results
-        EntityList entityList = entitiesReturn.size() == 0
-                ? new EntityList(new Entity[]{}, 0)
-                : new EntityList(buildEntityElements(new HashSet<String>(fields), entitiesReturn), entities.size());
-        return entityList;
+        return entities;
     }
 
     protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
                                                   Integer offset, Integer resultsPerPage) {
+        return sortEntitiesPagination(entities, orderBy, sortOrder, offset, resultsPerPage, false);
+    }
+
+    protected List<Entity> sortEntitiesPagination(List<Entity> entities, String orderBy, String sortOrder,
+                                                  Integer offset, Integer resultsPerPage, boolean isReturnAll) {
         // sort entities
         entities = sortEntities(entities, orderBy, sortOrder);
 
         // pagination
-        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
+        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage, isReturnAll);
         List<Entity> entitiesReturn = new ArrayList<Entity>();
         if (pageCount > 0) {
             entitiesReturn.addAll(entities.subList(offset, (offset + pageCount)));
@@ -1007,13 +1298,17 @@ public abstract class AbstractEntityManager {
     }
 
     protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults) {
+        return getRequiredNumberOfResults(arraySize, offset, numresults, false);
+    }
+
+    protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults, boolean isReturnAll) {
         /* Get a subset of elements based on offset and count. When returning subset of elements,
               elements[offset] is included. Size 10, offset 10, return empty list.
               Size 10, offset 5, count 3, return elements[5,6,7].
               Size 10, offset 5, count >= 5, return elements[5,6,7,8,9]
               return elements starting from elements[offset] until the end OR offset+numResults*/
 
-        if (numresults < 1) {
+        if (!isReturnAll && numresults < 1) {
             LOG.error("Value for param numResults should be > than 0  : {}", numresults);
             throw FalconWebException.newAPIException("Value for param numResults should be > than 0  : " + numresults);
         }
@@ -1026,13 +1321,13 @@ public abstract class AbstractEntityManager {
         }
 
         int retLen = arraySize - offset;
-        if (retLen > numresults) {
+        if (!isReturnAll && retLen > numresults) {
             retLen = numresults;
         }
         return retLen;
     }
 
-    private EntityElement[] buildEntityElements(HashSet<String> fields, List<Entity> entities) {
+    protected EntityElement[] buildEntityElements(HashSet<String> fields, List<Entity> entities) {
         EntityElement[] elements = new EntityElement[entities.size()];
         int elementIndex = 0;
         for (Entity entity : entities) {
@@ -1041,7 +1336,7 @@ public abstract class AbstractEntityManager {
         return elements;
     }
 
-    private EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
+    protected EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
         EntityElement elem = new EntityElement();
         elem.type = entity.getEntityType().toString();
         elem.name = entity.getName();
@@ -1173,5 +1468,14 @@ public abstract class AbstractEntityManager {
             }
         }
         return false;
+    }
+
+    private void verifySuperUser() throws FalconException, IOException {
+        final UserGroupInformation authenticatedUGI = CurrentUser.getAuthenticatedUGI();
+        DefaultAuthorizationProvider authorizationProvider = new DefaultAuthorizationProvider();
+        if (!authorizationProvider.isSuperUser(authenticatedUGI)) {
+            throw new FalconException("Permission denied : "
+                    + "Cluster entity update can only be performed by superuser.");
+        }
     }
 }

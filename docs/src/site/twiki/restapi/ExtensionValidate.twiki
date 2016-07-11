@@ -1,0 +1,38 @@
+---++  POST api/extension/validate/:extension-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Validate the input for extension job submission.
+
+---++ Parameters
+   * :extension-name Name of the extension.
+   * doAs <optional> Impersonate the user.
+
+---++ Results
+Result of validation.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/extensions/validate/hdfs-mirroring
+jobName=sales-monthly
+jobClustername=primaryCluster
+jobClusterValidityStart=2015-03-13T00:00Z
+jobClusterValidityEnd=2016-12-30T00:00Z
+jobFrequency=minutes(5)
+sourceDir=/user/hrt_qa/dr/test/primaryCluster/input
+sourceCluster=primaryCluster
+targetDir=/user/hrt_qa/dr/test/backupCluster/input
+targetCluster=backupCluster
+</verbatim>
+---+++ Result
+<verbatim>
+{
+  "requestId": "e5cc8230-f356-4566-9b65-536abdff8aa3",
+  "message": "Validated successfully",
+  "status": "SUCCEEDED"
+}
+</verbatim>

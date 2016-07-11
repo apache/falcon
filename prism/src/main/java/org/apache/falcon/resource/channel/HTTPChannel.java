@@ -24,6 +24,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.proxy.BufferedRequest;
 import org.apache.falcon.security.CurrentUser;
@@ -170,8 +171,20 @@ public class HTTPChannel extends AbstractChannel {
                     String annotationClass = paramAnnotation.annotationType().getName();
 
                     if (annotationClass.equals(QueryParam.class.getName())) {
-                        queryString.append(getAnnotationValue(paramAnnotation, "value")).
-                                append('=').append(arg).append("&");
+                        if (args[index] instanceof List){
+                            List lifecycle = (List) args[index];
+
+                            if (lifecycle.size() > 0 && lifecycle.get(0) instanceof LifeCycle) {
+                                List<LifeCycle> lifecycles = lifecycle;
+                                for (LifeCycle l : lifecycles) {
+                                    queryString.append(getAnnotationValue(paramAnnotation, "value")).append("=")
+                                            .append(l.name()).append("&");
+                                }
+                            }
+                        }else{
+                            queryString.append(getAnnotationValue(paramAnnotation, "value")).
+                                    append('=').append(arg).append("&");
+                        }
                     } else if (annotationClass.equals(PathParam.class.getName())) {
                         pathValue = pathValue.replace("{"
                                 + getAnnotationValue(paramAnnotation, "value") + "}", arg);

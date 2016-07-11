@@ -11,7 +11,8 @@ CLI options are classified into :
    * <a href="#Instance_Management_Commands">Instance Management Commands</a>
    * <a href="#Metadata_Commands">Metadata Commands</a>
    * <a href="#Admin_Commands">Admin commands</a>
-   * <a href="#Recipe_Commands">Recipe commands</a>
+   * <a href="#Extension_Artifacts_Commands">Extension artifacts commands</a>
+   * <a href="#Extension_Commands">Extension commands</a>
 
 
 
@@ -68,7 +69,8 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 | [[ContinueInstance][Continue]]                 | Continue the failed workflow instances          |
 | [[RerunInstance][Rerun]]                       | Rerun instances of specified process            |
 | [[ResumeInstance][Resume]]                     | Resume instance of specified process from suspended state   |
-| [[StatusInstance][Status]]                     | Gets the status of entity                       |
+| [[SearchInstance][Search]]                     | Search instances                                |
+| [[StatusInstance][Status]]                     | Gets the status of instances                    |
 | [[ListInstance][List]]                         | Gets single or multiple instances               |
 | [[SummaryInstance][Summary]]                   | Gets consolidated status of the instances between the specified time period    |
 | [[RunningInstance][Running]]                   | Gets running instances of the mentioned process |
@@ -100,13 +102,29 @@ $FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.x
 |[[HelpAdmin][Help]]                             | Return help options                             |
 |[[VersionAdmin][Version]]                       | Return current falcon version                   |
 |[[StatusAdmin][Status]]                         | Return the status of falcon                     |
+|[[SafemodeAdmin][SetSafeMode]]                  | Set/unset Falcon Server in safemode             |
 
 -----------
 
----++Recipe Commands
+---++Extension Artifacts Management Commands
 
 | *Command*                                      | *Description*                                   |
-|[[SubmitRecipe][Submit]]                        | Submit the specified Recipe                     |
+|[[EnumerateExtension][Enumerate]]               | Return all the extensions supported             |
+|[[DescribeExtension][Describe]]                 | Return description of an extension              |
+|[[DefineExtension][Definition]]                 | Return the definition of an extension           |
 
+-----------
 
+---++Extension Job Management Commands
 
+| *Command*                                         | *Description*                                   |
+|[[ExtensionList][List]]                            | List jobs generated from an extension           |
+|[[ExtensionInstances][Instances]]                  | List instances of an extension job              |
+|[[ExtensionValidate][Validate]]                    | Validate an extension job                       |
+|[[ExtensionSubmit][Submit]]                        | Submit an extension job                         |
+|[[ExtensionUpdate][Update]]                        | Update an extension job                         |
+|[[ExtensionSubmitAndSchedule][SubmitAndSchedule]]  | Submit and schedule an extension job            |
+|[[ExtensionSchedule][Schedule]]                    | Schedule an extension job                       |
+|[[ExtensionSuspend][Suspend]]                      | Suspend an extension job                        |
+|[[ExtensionResume][Resume]]                        | Resume an extension job                         |
+|[[ExtensionDelete][Delete]]                        | Delete an extension job                         |

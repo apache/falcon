@@ -21,16 +21,23 @@ package org.apache.falcon.update;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.FeedEntityParser;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.entity.v0.datasource.Credential;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
@@ -50,6 +57,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -81,6 +90,8 @@ public class UpdateHelperTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "impressionFeed");
         storeEntity(EntityType.FEED, "imp-click-join1");
         storeEntity(EntityType.FEED, "imp-click-join2");
+        storeEntity(EntityType.DATASOURCE, "datasource1");
+        storeEntity(EntityType.DATASOURCE, "datasource2");
     }
 
     private void prepare(Process process) throws IOException, FalconException {
@@ -299,6 +310,102 @@ public class UpdateHelperTest extends AbstractTestBase {
         // The Process should be updated when late processing is added.
         // Pre-processing needs to be added to the workflow
         Assert.assertTrue(UpdateHelper.isEntityUpdated(newProcess, newerProcess, cluster, procPath));
+    }
+
+    @Test
+    public void testIsClusterEntityUpdated() throws Exception {
+        Unmarshaller unmarshaller = EntityType.CLUSTER.getUnmarshaller();
+
+        String cluster = "testCluster";
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        Cluster newClusterEntity = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+        newClusterEntity.setName(cluster);
+        Assert.assertNotNull(newClusterEntity);
+
+        // Tags, ACL, description update should not update bundle/workflow for dependent entities
+        ACL acl = new ACL();
+        acl.setOwner("Test");
+        acl.setGroup("testGroup");
+        acl.setPermission("*");
+        newClusterEntity.setACL(acl);
+        newClusterEntity.setDescription("New Description");
+        newClusterEntity.setTags("test=val,test2=val2");
+        Assert.assertFalse(UpdateHelper.isClusterEntityUpdated(clusterEntity, newClusterEntity));
+
+        // Changing colo should trigger update
+        newClusterEntity.setColo("NewColoValue");
+        Assert.assertTrue(UpdateHelper.isClusterEntityUpdated(clusterEntity, newClusterEntity));
+
+
+        // Updating an interface should trigger update bundle/workflow for dependent entities
+        Interface writeInterface = ClusterHelper.getInterface(newClusterEntity, Interfacetype.WRITE);
+        newClusterEntity.getInterfaces().getInterfaces().remove(writeInterface);
+        Assert.assertNotNull(writeInterface);
+        writeInterface.setEndpoint("hdfs://test.host.name:8020");
+        writeInterface.setType(Interfacetype.WRITE);
+        writeInterface.setVersion("2.2.0");
+        newClusterEntity.getInterfaces().getInterfaces().add(writeInterface);
+        Assert.assertTrue(UpdateHelper.isClusterEntityUpdated(clusterEntity, newClusterEntity));
+
+        // Updating a property should trigger update bundle/workflow for dependent entities
+        newClusterEntity = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+        newClusterEntity.setName(cluster);
+        Assert.assertNotNull(newClusterEntity);
+        org.apache.falcon.entity.v0.cluster.Property property = new org.apache.falcon.entity.v0.cluster.Property();
+        property.setName("testName");
+        property.setValue("testValue");
+        newClusterEntity.getProperties().getProperties().add(property);
+        Assert.assertTrue(UpdateHelper.isClusterEntityUpdated(clusterEntity, newClusterEntity));
+
+        // Updating a location should trigger update bundle/workflow for dependent entities
+        newClusterEntity = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+        newClusterEntity.setName(cluster);
+        Assert.assertNotNull(newClusterEntity);
+        org.apache.falcon.entity.v0.cluster.Location stagingLocation =
+                ClusterHelper.getLocation(newClusterEntity, ClusterLocationType.STAGING);
+        Assert.assertNotNull(stagingLocation);
+        newClusterEntity.getInterfaces().getInterfaces().remove(stagingLocation);
+        stagingLocation.setPath("/test/path/here");
+        newClusterEntity.getLocations().getLocations().add(stagingLocation);
+        Assert.assertTrue(UpdateHelper.isClusterEntityUpdated(clusterEntity, newClusterEntity));
+    }
+
+    @Test
+    public void testIsDatasourceEntityUpdated() throws Exception {
+        Unmarshaller unmarshaller = EntityType.DATASOURCE.getUnmarshaller();
+
+        String datasource = "datasource1";
+        Datasource datasourceEntity = ConfigurationStore.get().get(EntityType.DATASOURCE, datasource);
+        Datasource newDatasourceEntity = getNewDatasource(unmarshaller, datasource);
+        Assert.assertNotNull(newDatasourceEntity);
+
+        // Tags, ACL, description, colo update should not update bundle/workflow for dependent entities
+        org.apache.falcon.entity.v0.datasource.ACL acl = new org.apache.falcon.entity.v0.datasource.ACL();
+        acl.setOwner("Test");
+        acl.setGroup("testGroup");
+        acl.setPermission("*");
+        newDatasourceEntity.setACL(acl);
+        newDatasourceEntity.setDescription("New Description");
+        newDatasourceEntity.setTags("test=val,test2=val2");
+        newDatasourceEntity.setColo("newColo2");
+        Assert.assertFalse(UpdateHelper.isDatasourceEntityUpdated(datasourceEntity, newDatasourceEntity));
+
+        // Changing read or write endpoint should trigger rewrite
+        newDatasourceEntity.getInterfaces().getInterfaces().get(0).setEndpoint("jdbc:hsqldb:localhost2/db1");
+        Assert.assertTrue(UpdateHelper.isDatasourceEntityUpdated(datasourceEntity, newDatasourceEntity));
+
+        // change credential type or value should trigger
+        newDatasourceEntity = getNewDatasource(unmarshaller, datasource);
+        Credential cred = newDatasourceEntity.getInterfaces().getInterfaces().get(0).getCredential();
+        cred.setPasswordText("blah");
+        Assert.assertTrue(UpdateHelper.isDatasourceEntityUpdated(datasourceEntity, newDatasourceEntity));
+    }
+
+    private Datasource getNewDatasource(Unmarshaller unmarshaller, String datasource) throws JAXBException {
+        Datasource newDatasourceEntity = (Datasource) unmarshaller.unmarshal(this.getClass()
+                .getResource(DATASOURCE_XML));
+        newDatasourceEntity.setName(datasource);
+        return newDatasourceEntity;
     }
 
     private static Location getLocation(Feed feed, LocationType type, String cluster) {

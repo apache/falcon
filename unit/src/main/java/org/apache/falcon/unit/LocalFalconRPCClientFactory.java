@@ -17,10 +17,6 @@
  */
 package org.apache.falcon.unit;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.ApplicationClientProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.CancelDelegationTokenRequest;
@@ -45,6 +41,8 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetContainersRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetContainersResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetDelegationTokenRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetDelegationTokenResponse;
+import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesRequest;
+import org.apache.hadoop.yarn.api.protocolrecords.GetLabelsToNodesResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNodesToLabelsRequest;
@@ -70,6 +68,10 @@ import org.apache.hadoop.yarn.api.protocolrecords.SubmitApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.factories.RpcClientFactory;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
 
 /**
  * A Dummy implementation of RpcClientFactory that does not do RPC.
@@ -174,6 +176,12 @@ public final class LocalFalconRPCClientFactory implements RpcClientFactory {
 
         @Override
         public GetNodesToLabelsResponse getNodeToLabels(GetNodesToLabelsRequest getNodesToLabelsRequest)
+            throws YarnException, IOException {
+            return null;
+        }
+
+        @Override
+        public GetLabelsToNodesResponse getLabelsToNodes(GetLabelsToNodesRequest getLabelsToNodesRequest)
             throws YarnException, IOException {
             return null;
         }

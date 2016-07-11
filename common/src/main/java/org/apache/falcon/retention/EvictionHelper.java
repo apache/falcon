@@ -40,11 +40,14 @@ public final class EvictionHelper {
     private EvictionHelper(){}
 
     public static Pair<Date, Date> getDateRange(String period) throws ELException {
-        Long duration = (Long) EVALUATOR.evaluate("${" + period + "}",
-                Long.class, RESOLVER, RESOLVER);
+        Long duration = evalExpressionToMilliSeconds(period);
         Date end = new Date();
         Date start = new Date(end.getTime() - duration);
         return Pair.of(start, end);
+    }
+
+    public static Long evalExpressionToMilliSeconds(String period) throws ELException {
+        return (Long) EVALUATOR.evaluate("${" + period + "}", Long.class, RESOLVER, RESOLVER);
     }
 
 }

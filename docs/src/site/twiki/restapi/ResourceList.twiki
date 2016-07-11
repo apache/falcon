@@ -6,6 +6,8 @@
    * <a href="#REST_Call_on_Admin_Resource">REST Call on Admin Resource</a>
    * <a href="#REST_Call_on_Lineage_Graph">REST Call on Lineage Graph Resource</a>
    * <a href="#REST_Call_on_Metadata_Resource">REST Call on Metadata Resource</a>
+   * <a href="#REST_Call_on_Extension_Artifact">REST Call on Extension artifact</a>
+   * <a href="#REST_Call_on_Extension_Job Management">REST Call on Extension Job Management</a>
 
 ---++ Authentication
 
@@ -37,6 +39,7 @@ The current version of the rest api's documentation is also hosted on the Falcon
 | GET         | [[AdminStack][api/admin/stack]]                | Get stack of the server                     |
 | GET         | [[AdminVersion][api/admin/version]]            | Get version of the server                   |
 | GET         | [[AdminConfig][api/admin/config/:config-type]] | Get configuration information of the server |
+| GET         | [[AdminSafemode][api/admin/setSafeMode/:mode]] | Set safemode to true/false in falcon server |
 
 ---++ REST Call on Entity Resource
 
@@ -51,7 +54,7 @@ The current version of the rest api's documentation is also hosted on the Falcon
 | DELETE      | [[EntityDelete][api/entities/delete/:entity-type/:entity-name]]             | Delete the entity                  |
 | GET         | [[EntityStatus][api/entities/status/:entity-type/:entity-name]]             | Get the status of the entity       |
 | GET         | [[EntityDefinition][api/entities/definition/:entity-type/:entity-name]]     | Get the definition of the entity   |
-| GET         | [[EntityList][api/entities/list/:entity-type]]                              | Get the list of entities           |
+| GET         | [[EntityList][api/entities/list/{:entity-type}]]                            | Get the list of entities           |
 | GET         | [[EntitySummary][api/entities/summary/:entity-type/:cluster]]               | Get instance summary of all entities |
 | GET         | [[EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity |
 | GET         | [[FeedSLA][api/entities/sla-alert/:entity-type]]                            | Get pending feed instances which missed sla |
@@ -88,6 +91,28 @@ The current version of the rest api's documentation is also hosted on the Falcon
 
 ---++ REST Call on Metadata Discovery Resource
 
-| *Call Type* | *Resource*                                                                                     | *Description*                                                                 |
-| GET         | [[MetadataList][api/metadata/discovery/:dimension-type/list]]                                  | list of dimensions  |
-| GET         | [MetadataRelations][api/metadata/discovery/:dimension-type/:dimension-name/relations]]         | Return all relations of a dimension |
+| *Call Type* | *Resource*                                                                                     | *Description*                       |
+| GET         | [[MetadataList][api/metadata/discovery/:dimension-type/list]]                                  | list of dimensions                  |
+| GET         | [[MetadataRelations][api/metadata/discovery/:dimension-type/:dimension-name/relations]]        | Return all relations of a dimension |
+
+---++ REST Call on Extension Artifact
+
+| *Call Type* | *Resource*                                                        | *Description*                                                          |
+| GET         | [[ExtensionEnumeration][api/extension/enumerate]]                 | List all the extensions supported                                      |
+| GET         | [[ExtensionDescription][api/extension/describe/:extension­name]]  | Return the README of the specified extension                           |
+| GET         | [[ExtensionDefinition][api/extension/definition/:extension­name]] | Return a JSON document describing the extension invocation parameters  |
+
+
+---++ REST Call on Extension Job Management
+
+| *Call Type* | *Resource*                                                                       | *Description*                                                          |
+| GET         | [[ExtensionList][api/extension/list/:extension­name]]                            | List jobs generated from an extension                                  |
+| GET         | [[ExtensionInstances][api/extension/instances/:job-name]]                        | List instances of an extension job                                     |
+| POST        | [[ExtensionValidate][api/extension/validate/:extension­name]]                    | Validate an extension job                                              |
+| POST        | [[ExtensionSubmit][api/extension/submit/:extension­name]]                        | Submit an extension job                                                |
+| POST        | [[ExtensionUpdate][api/extension/update/:extension­name]]                        | Update an extension job                                                |
+| POST        | [[ExtensionSubmitAndSchedule][api/extension/submitAndSchedule/:extension­name]]  | Submit and schedule an extension job                                   |
+| POST        | [[ExtensionSchedule][api/extension/schedule/:job-name]]                          | Schedule an extension job                                              |
+| POST        | [[ExtensionSuspend][api/extension/suspend/:job-name]]                            | Suspend an extension job                                               |
+| POST        | [[ExtensionResume][api/extension/resume/:job-name]]                              | Resume an extension job                                                |
+| POST        | [[ExtensionDelete][api/extension/delete/:job-name]]                              | Delete an extension job                                                |

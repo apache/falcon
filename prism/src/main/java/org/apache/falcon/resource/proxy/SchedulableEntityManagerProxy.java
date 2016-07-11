@@ -18,25 +18,6 @@
 
 package org.apache.falcon.resource.proxy;
 
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
@@ -57,6 +38,24 @@ import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.util.DeploymentUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A proxy implementation of the schedulable entity operations.
@@ -135,7 +134,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
             @Override
             protected SchedulableEntityInstanceResult doExecute(String colo) throws FalconException {
-                return getEntityManager(colo).invoke("getFeedSLAMissPendingAlerts", entityType, entityName,
+                return getEntityManager(colo).invoke("getEntitySLAMissPendingAlerts", entityType, entityName,
                         start, end, colo);
             }
         }.execute();
@@ -374,6 +373,55 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         // update only if all are updated
         if (!embeddedMode && result) {
             results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo, skipDryRun));
+        }
+
+        return consolidateResult(results, APIResult.class);
+    }
+
+    /**
+     * Updates the dependent entities of a cluster in workflow engine.
+     * @param clusterName Name of cluster.
+     * @param ignore colo.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
+    @POST
+    @Path("updateClusterDependents/{clusterName}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "updateClusterDependents")
+    @Override
+    public APIResult updateClusterDependents(
+            @Dimension("entityName") @PathParam("clusterName") final String clusterName,
+            @Dimension("colo") @QueryParam("colo") String ignore,
+            @QueryParam("skipDryRun") final Boolean skipDryRun) {
+
+        final Set<String> allColos = getApplicableColos("cluster", clusterName);
+        Map<String, APIResult> results = new HashMap<String, APIResult>();
+        boolean result = true;
+
+        if (!allColos.isEmpty()) {
+            results.put(FALCON_TAG + "/updateClusterDependents", new EntityProxy("cluster", clusterName) {
+                @Override
+                protected Set<String> getColosToApply() {
+                    return allColos;
+                }
+
+                @Override
+                protected APIResult doExecute(String colo) throws FalconException {
+                    return getConfigSyncChannel(colo).invoke("updateClusterDependents", clusterName,
+                            colo, skipDryRun);
+                }
+            }.execute());
+        }
+
+        for (APIResult apiResult : results.values()) {
+            if (apiResult.getStatus() != APIResult.Status.SUCCEEDED) {
+                result = false;
+            }
+        }
+        // update only if all are updated
+        if (!embeddedMode && result) {
+            results.put(PRISM_TAG, super.updateClusterDependents(clusterName, currentColo, skipDryRun));
         }
 
         return consolidateResult(results, APIResult.class);
@@ -659,7 +707,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     /**
      * Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity.
      * @param type Valid options are feed or process.
-     * @param cluster Show entities that belong to this cluster.
+     * @param clusterName Show entities that belong to this cluster.
      * @param startStr <optional param> Show entity summaries from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
      *                 By default, it is set to (end - 2 days).
      * @param endStr <optional param> Show entity summary up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
@@ -690,20 +738,40 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Override
     public EntitySummaryResult getEntitySummary(
             @Dimension("type") @PathParam("type") final String type,
-            @Dimension("cluster") @QueryParam("cluster") final String cluster,
-            @DefaultValue("") @QueryParam("start") String startStr,
-            @DefaultValue("") @QueryParam("end") String endStr,
+            @Dimension("cluster") @QueryParam("cluster") final String clusterName,
+            @DefaultValue("") @QueryParam("start") final String startStr,
+            @DefaultValue("") @QueryParam("end") final String endStr,
             @DefaultValue("") @QueryParam("fields") final String entityFields,
             @DefaultValue("") @QueryParam("filterBy") final String entityFilter,
             @DefaultValue("") @QueryParam("tags") final String entityTags,
             @DefaultValue("") @QueryParam("orderBy") final String entityOrderBy,
-            @DefaultValue("asc") @QueryParam("sortOrder") String entitySortOrder,
+            @DefaultValue("asc") @QueryParam("sortOrder") final String entitySortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer entityOffset,
             @DefaultValue("10") @QueryParam("numResults") final Integer numEntities,
             @DefaultValue("7") @QueryParam("numInstances") final Integer numInstanceResults,
             @DefaultValue("") @QueryParam("doAs") final String doAsUser) {
-        return super.getEntitySummary(type, cluster, startStr, endStr, entityFields, entityFilter,
-                entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults, doAsUser);
+        final String entityName = null;
+        return new EntityProxy<EntitySummaryResult>(type, null, EntitySummaryResult.class) {
+            @Override
+            protected Set<String> getColosToApply() {
+                Set<String> result = new HashSet<>();
+                try {
+                    Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+                    result.add(cluster.getColo());
+                } catch (FalconException e) {
+                    // ignore, just return blank result
+                }
+                return result;
+            }
+
+            @Override
+            protected EntitySummaryResult doExecute(String colo) throws FalconException {
+                EntitySummaryResult es = getEntityManager(colo).invoke("getEntitySummary", type, clusterName, startStr,
+                    endStr, entityFields, entityFilter, entityTags, entityOrderBy, entitySortOrder, entityOffset,
+                    numEntities, numInstanceResults, doAsUser);
+                return es;
+            }
+        }.execute();
     }
 
     /**

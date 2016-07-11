@@ -46,6 +46,8 @@ public final class OozieUtils {
     public static final JAXBContext BUNDLE_JAXB_CONTEXT;
     public static final JAXBContext CONFIG_JAXB_CONTEXT;
     protected static final JAXBContext HIVE_ACTION_JAXB_CONTEXT;
+    protected static final JAXBContext SQOOP_ACTION_JAXB_CONTEXT;
+    protected static final JAXBContext SPARK_ACTION_JAXB_CONTEXT;
 
     static {
         try {
@@ -56,6 +58,10 @@ public final class OozieUtils {
             CONFIG_JAXB_CONTEXT = JAXBContext.newInstance(CONFIGURATION.class);
             HIVE_ACTION_JAXB_CONTEXT = JAXBContext.newInstance(
                 org.apache.falcon.oozie.hive.ACTION.class.getPackage().getName());
+            SQOOP_ACTION_JAXB_CONTEXT = JAXBContext.newInstance(
+                    org.apache.falcon.oozie.sqoop.ACTION.class.getPackage().getName());
+            SPARK_ACTION_JAXB_CONTEXT = JAXBContext.newInstance(
+                    org.apache.falcon.oozie.spark.ACTION.class.getPackage().getName());
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to create JAXB context", e);
         }
@@ -95,6 +101,55 @@ public final class OozieUtils {
             wfAction.setAny(((Document) hiveActionDOM.getNode()).getDocumentElement());
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to marshall hive action.", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JAXBElement<org.apache.falcon.oozie.sqoop.ACTION> unMarshalSqoopAction(
+        org.apache.falcon.oozie.workflow.ACTION wfAction) {
+        try {
+            Unmarshaller unmarshaller = SQOOP_ACTION_JAXB_CONTEXT.createUnmarshaller();
+            unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
+            return (JAXBElement<org.apache.falcon.oozie.sqoop.ACTION>)
+                    unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to unmarshall sqoop action.", e);
+        }
+    }
+
+    public static  void marshalSqoopAction(org.apache.falcon.oozie.workflow.ACTION wfAction,
+                                          JAXBElement<org.apache.falcon.oozie.sqoop.ACTION> actionjaxbElement) {
+        try {
+            DOMResult hiveActionDOM = new DOMResult();
+            Marshaller marshaller = SQOOP_ACTION_JAXB_CONTEXT.createMarshaller();
+            marshaller.marshal(actionjaxbElement, hiveActionDOM);
+            wfAction.setAny(((Document) hiveActionDOM.getNode()).getDocumentElement());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to marshall sqoop action.", e);
+        }
+    }
+
+    public static JAXBElement<org.apache.falcon.oozie.spark.ACTION> unMarshalSparkAction(
+            org.apache.falcon.oozie.workflow.ACTION wfAction) {
+        try {
+            Unmarshaller unmarshaller = SPARK_ACTION_JAXB_CONTEXT.createUnmarshaller();
+            unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
+            return (JAXBElement<org.apache.falcon.oozie.spark.ACTION>)
+                    unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to unmarshall spark action.", e);
+        }
+    }
+
+    public static  void marshalSparkAction(org.apache.falcon.oozie.workflow.ACTION wfAction,
+                                          JAXBElement<org.apache.falcon.oozie.spark.ACTION> actionjaxbElement) {
+        try {
+            DOMResult sparkActionDOM = new DOMResult();
+            Marshaller marshaller = SPARK_ACTION_JAXB_CONTEXT.createMarshaller();
+            marshaller.marshal(actionjaxbElement, sparkActionDOM);
+            wfAction.setAny(((Document) sparkActionDOM.getNode()).getDocumentElement());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to marshall spark action.", e);
         }
     }
 }

@@ -27,6 +27,8 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.exception.StateStoreException;
 import org.apache.falcon.execution.ExecutionInstance;
 import org.apache.falcon.execution.ProcessExecutionInstance;
+import org.apache.falcon.persistence.EntityBean;
+import org.apache.falcon.persistence.InstanceBean;
 import org.apache.falcon.predicate.Predicate;
 import org.apache.falcon.state.EntityID;
 import org.apache.falcon.state.EntityState;
@@ -57,7 +59,7 @@ public final class BeanMapperUtil {
      * @param entityState
      * @return
      */
-    public static EntityBean convertToEntityBean(EntityState entityState) {
+    public static EntityBean convertToEntityBean(EntityState entityState) throws IOException {
         EntityBean entityBean = new EntityBean();
         Entity entity = entityState.getEntity();
         String id = new EntityID(entity).getKey();
@@ -65,6 +67,10 @@ public final class BeanMapperUtil {
         entityBean.setName(entity.getName());
         entityBean.setState(entityState.getCurrentState().toString());
         entityBean.setType(entity.getEntityType().toString());
+        if (entityState.getProperties() != null && !entityState.getProperties().isEmpty()) {
+            byte[] props = getProperties(entityState);
+            entityBean.setProperties(props);
+        }
         return entityBean;
     }
 
@@ -74,11 +80,26 @@ public final class BeanMapperUtil {
      * @return
      * @throws StateStoreException
      */
-    public static EntityState convertToEntityState(EntityBean entityBean) throws StateStoreException {
+    public static EntityState convertToEntityState(EntityBean entityBean) throws StateStoreException, IOException {
         try {
             Entity entity = EntityUtil.getEntity(entityBean.getType(), entityBean.getName());
             EntityState entityState = new EntityState(entity);
             entityState.setCurrentState(EntityState.STATE.valueOf(entityBean.getState()));
+            byte[] result = entityBean.getProperties();
+            if (result != null && result.length != 0) {
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(result);
+                ObjectInputStream in = null;
+                Properties properties = null;
+                try {
+                    in = new ObjectInputStream(byteArrayInputStream);
+                    properties = (Properties) in.readObject();
+                } catch (ClassNotFoundException e) {
+                    throw new IOException(e);
+                } finally {
+                    IOUtils.closeQuietly(in);
+                }
+                entityState.setProperties(properties);
+            }
             return entityState;
         } catch (FalconException e) {
             throw new StateStoreException(e);
@@ -92,7 +113,7 @@ public final class BeanMapperUtil {
      * @throws StateStoreException
      */
     public static Collection<EntityState> convertToEntityState(Collection<EntityBean> entityBeans)
-        throws StateStoreException {
+        throws StateStoreException, IOException {
         List<EntityState> entityStates = new ArrayList<>();
         if (entityBeans != null && !entityBeans.isEmpty()) {
             for (EntityBean entityBean : entityBeans) {
@@ -298,6 +319,18 @@ public final class BeanMapperUtil {
         try {
             out = new ObjectOutputStream(byteArrayOutputStream);
             out.writeObject(instanceState.getInstance().getProperties());
+            return byteArrayOutputStream.toByteArray();
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+    }
+
+    public static byte [] getProperties(EntityState entityState) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(byteArrayOutputStream);
+            out.writeObject(entityState.getProperties());
             return byteArrayOutputStream.toByteArray();
         } finally {
             IOUtils.closeQuietly(out);
