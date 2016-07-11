@@ -25,7 +25,9 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-
+import static org.apache.falcon.FalconCLIConstants.NAME_OPT;
+import static org.apache.falcon.FalconCLIConstants.PIPELINE_OPT;
+import static org.apache.falcon.FalconCLIConstants.RELATIONS_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.CLUSTER_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.CLUSTER_OPT_DESCRIPTION;
 import static org.apache.falcon.cli.FalconMetadataCLI.DIRECTION_OPT;
@@ -42,15 +44,12 @@ import static org.apache.falcon.cli.FalconMetadataCLI.LINEAGE_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.LINEAGE_OPT_DESCRIPTION;
 import static org.apache.falcon.cli.FalconMetadataCLI.LIST_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.LIST_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconMetadataCLI.NAME_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.NAME_OPT_DESCRIPTION;
 import static org.apache.falcon.cli.FalconMetadataCLI.NUM_RESULTS_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.NUM_RESULTS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconMetadataCLI.PIPELINE_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.PIPELINE_OPT_DESCRIPTION;
 import static org.apache.falcon.cli.FalconMetadataCLI.PROCESS_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.PROCESS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconMetadataCLI.RELATIONS_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.RELATIONS_OPT_DESCRIPTION;
 import static org.apache.falcon.cli.FalconMetadataCLI.TYPE_OPT;
 import static org.apache.falcon.cli.FalconMetadataCLI.TYPE_OPT_DESCRIPTION;
