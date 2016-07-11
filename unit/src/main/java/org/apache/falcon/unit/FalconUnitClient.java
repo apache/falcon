@@ -372,7 +372,8 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName, String start, String end, String colo) {
+    public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
+                                                                       String start, String end, String colo) {
         return null;
     }
 

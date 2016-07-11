@@ -64,7 +64,7 @@ public abstract class AbstractMetadataResource {
     private void checkIfMetadataMappingServiceIsEnabled() {
         if (service == null) {
             throw FalconWebException.newMetadataResourceException(
-                    "Lineage " + MetadataMappingService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
+                    MetadataMappingService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
     }
 }

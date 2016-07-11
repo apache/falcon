@@ -88,6 +88,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     private static final String FEED_XML = "/config/feed/feed-0.1.xml";
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     private static final String PIG_PROCESS_XML = "/config/process/pig-process-0.1.xml";
+    private static final String SPARK_PROCESS_XML = "/config/process/spark-process-0.1.xml";
 
     private String hdfsUrl;
     private FileSystem fs;
@@ -322,6 +323,126 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertHCatCredentials(parentWorkflow, wfPath);
 
         ConfigurationStore.get().remove(EntityType.PROCESS, process.getName());
+    }
+
+    @Test
+    public void testSparkSQLProcess() throws Exception {
+        URL resource = this.getClass().getResource("/config/feed/hive-table-feed.xml");
+        Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, inFeed);
+
+        resource = this.getClass().getResource("/config/feed/hive-table-feed-out.xml");
+        Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, outFeed);
+
+        resource = this.getClass().getResource("/config/process/spark-sql-process.xml");
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.PROCESS, process);
+
+        prepare(process);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+        builder.build(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+        HashMap<String, String> props = getCoordProperties(coord);
+        HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
+
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyBrokerProperties(cluster, wfProps);
+
+        // verify table and hive props
+        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process);
+        expected.putAll(ClusterHelper.getHiveProperties(cluster));
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            if (expected.containsKey(entry.getKey())) {
+                Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
+            }
+        }
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
+        testParentWorkflow(process, parentWorkflow);
+
+        ACTION sparkNode = getAction(parentWorkflow, "user-action");
+
+        JAXBElement<org.apache.falcon.oozie.spark.ACTION> actionJaxbElement =
+                OozieUtils.unMarshalSparkAction(sparkNode);
+        org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
+
+        assertEquals(sparkAction.getMaster(), "local");
+        assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/falcon-examples.jar");
+
+        Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
+        List<String> argsList = sparkAction.getArg();
+
+        Input input = process.getInputs().getInputs().get(0);
+        Output output = process.getOutputs().getOutputs().get(0);
+
+        assertEquals(argsList.get(0), "${falcon_"+input.getName()+"_partition_filter_hive}");
+        assertEquals(argsList.get(1), "${falcon_"+input.getName()+"_table}");
+        assertEquals(argsList.get(2), "${falcon_"+input.getName()+"_database}");
+        assertEquals(argsList.get(3), "${falcon_"+output.getName()+"_partitions_hive}");
+        assertEquals(argsList.get(4), "${falcon_"+output.getName()+"_table}");
+        assertEquals(argsList.get(5), "${falcon_"+output.getName()+"_database}");
+
+        ConfigurationStore.get().remove(EntityType.PROCESS, process.getName());
+    }
+
+    @Test
+    public void testSparkProcess() throws Exception {
+
+        URL resource = this.getClass().getResource(SPARK_PROCESS_XML);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.PROCESS, process);
+        Assert.assertEquals("spark", process.getWorkflow().getEngine().value());
+
+        prepare(process);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+        builder.build(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+        HashMap<String, String> props = getCoordProperties(coord);
+        HashMap<String, String> wfProps = getWorkflowProperties(fs, coord);
+
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, wfProps);
+        verifyBrokerProperties(cluster, wfProps);
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
+        testParentWorkflow(process, parentWorkflow);
+
+        ACTION sparkNode = getAction(parentWorkflow, "user-action");
+
+        JAXBElement<org.apache.falcon.oozie.spark.ACTION> actionJaxbElement =
+                OozieUtils.unMarshalSparkAction(sparkNode);
+        org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
+        assertEquals(sparkAction.getMaster(), "local");
+        assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/spark-wordcount.jar");
+        List<String> argsList = sparkAction.getArg();
+        Input input = process.getInputs().getInputs().get(0);
+        Output output = process.getOutputs().getOutputs().get(0);
+        assertEquals(argsList.get(0), "${"+input.getName().toString()+"}");
+        assertEquals(argsList.get(argsList.size()-1), "${"+output.getName().toString()+"}");
     }
 
     @Test (dataProvider = "secureOptions")

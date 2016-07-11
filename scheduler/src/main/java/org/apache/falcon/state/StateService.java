@@ -21,10 +21,13 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.execution.ExecutionInstance;
+import org.apache.falcon.execution.ProcessExecutionInstance;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
 
 /**
  * A service that fetches state from state store, handles state transitions of entities and instances,
@@ -62,14 +65,18 @@ public final class StateService {
      * @param handler
      * @throws FalconException
      */
-    public void handleStateChange(Entity entity, EntityState.EVENT event, EntityStateChangeHandler handler)
-        throws FalconException {
+    public void handleStateChange(Entity entity, EntityState.EVENT event, EntityStateChangeHandler handler,
+                                  Properties props) throws FalconException {
         EntityID id = new EntityID(entity);
         if (!stateStore.entityExists(id)) {
             // New entity
             if (event == EntityState.EVENT.SUBMIT) {
                 callbackHandler(entity, EntityState.EVENT.SUBMIT, handler);
-                stateStore.putEntity(new EntityState(entity));
+                EntityState entityState = new EntityState(entity);
+                if (props != null && !props.isEmpty()) {
+                    entityState.setProperties(props);
+                }
+                stateStore.putEntity(entityState);
                 LOG.debug("Entity {} submitted due to event {}.", id, event.name());
             } else {
                 throw new FalconException("Entity " + id + " does not exist in state store.");
@@ -88,6 +95,11 @@ public final class StateService {
                         entityState.getCurrentState(), event.name());
             }
         }
+    }
+
+    public void handleStateChange(Entity entity, EntityState.EVENT event,
+                                  EntityStateChangeHandler handler) throws FalconException {
+        handleStateChange(entity, event, handler, null);
     }
 
     // Invokes the right method on the state change handler
@@ -133,6 +145,7 @@ public final class StateService {
             if (event == InstanceState.EVENT.TRIGGER) {
                 callbackHandler(instance, InstanceState.EVENT.TRIGGER, handler);
                 stateStore.putExecutionInstance(new InstanceState(instance));
+                ((ProcessExecutionInstance) instance).registerForNotifications(false);
                 LOG.debug("Instance {} triggered due to event {}.", id, event.name());
             } else if (event == InstanceState.EVENT.EXTERNAL_TRIGGER) {
                 callbackHandler(instance, InstanceState.EVENT.EXTERNAL_TRIGGER, handler);

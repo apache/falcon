@@ -35,6 +35,7 @@ import org.apache.falcon.state.store.AbstractStateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -203,10 +204,11 @@ public final class FalconExecutionService implements FalconService, EntityStateC
      * Schedules an entity.
      *
      * @param entity
+     * @param properties
      * @throws FalconException
      */
-    public void schedule(Entity entity) throws FalconException {
-        StateService.get().handleStateChange(entity, EntityState.EVENT.SCHEDULE, this);
+    public void schedule(Entity entity, Properties properties) throws FalconException {
+        StateService.get().handleStateChange(entity, EntityState.EVENT.SCHEDULE, this, properties);
     }
 
     /**
@@ -255,5 +257,15 @@ public final class FalconExecutionService implements FalconService, EntityStateC
         } else {
             throw new FalconException("Entity executor for entity cluster key : " + id.getKey() + " does not exist.");
         }
+    }
+
+    /**
+     * Schedules an entity.
+     *
+     * @param entity
+     * @throws FalconException
+     */
+    public void schedule(Process entity) throws FalconException {
+        schedule(entity, null);
     }
 }

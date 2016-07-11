@@ -1,0 +1,97 @@
+---++  GET /api/instance/search
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get the list of instances that meet search criteria.
+
+---++ Parameters
+   * :type <optional param> Comma-separated entity types. Valid entity types are feed, process or datasource.
+   * nameseq <optional param> Subsequence of entity name. Not case sensitive.
+      * The entity name needs to contain all the characters in the subsequence in the same order.
+      * Example 1: "sample1" will match the entity named "SampleFeed1-2".
+      * Example 2: "mhs" will match the entity named "New-My-Hourly-Summary".
+   * tagkeys <optional param> Keywords in tags, separated by comma. Not case sensitive.
+      * The returned entities will have tags that match all the tag keywords.
+   * instanceStatus <optional param> Valid options are RUNNING, SUCCEEDED, FAILED, WAITING, SUSPENDED, KILLED, TIMEOUT.
+   * start <optional param> Show instances from this nominal time. Format: yyyy-MM-dd'T'HH:mm'Z'.
+      * By default, it is set to (end - (10 * entityFrequency)).
+   * end <optional param> Show instances up to this nominal time. Format: yyyy-MM-dd'T'HH:mm'Z'.
+      * Default is set to now.
+   * orderBy <optional param> Field by which results should be ordered. Sorted by descending order.
+      * If not specified, instances of the same entity will be listed together in the result.
+      * Current valid option: status. Coming soon: sorting by name, nominal time, running time.
+   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+   * numResults <optional param> Number of results to show per request, used for pagination.
+      * Only integers > 0 are valid. Default is 10.
+   * doAs <optional query param> allows the current user to impersonate the user passed in doAs.
+
+---++ Results
+A list of instances.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/search?nameseq=usbill&start=2012-04-03T00:00Z
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+	 “name":"SampleUSHealthBill”,
+	 “type":"FEED”,
+	 “tags”: {"tag":["related=ushealthcare","department=billingDepartment"]},
+            “nominalTime": "2012-04-03T07:00Z"
+            "cluster": "primary-cluster",
+            "status": "SUCCEEDED",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "endTime": "2013-10-21T14:40:26-07:00",
+        }
+    ],
+    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "message": "Instances Search Results",
+    "status": "SUCCEEDED”
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/search?nameseq=samplebill&tagkeys=billing,healthcare&start=2012-04-03T00:00Z&instanceStatus=succeeded&orderBy=nominalTime&offset=2&numResults=2
+</verbatim>
+---+++ Result
+<verbatim>
+ {
+    "instances": [
+        {
+	 "name":"SampleHealthBill",
+	 "type":"PROCESS",
+	 "tags”: {"tag":["related=healthcare","department=billingDepartment"]},
+            “nominalTime": "2012-04-03T08:00Z"
+            "cluster": "primary-cluster",
+            "status": "SUCCEEDED",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
+            "startTime": "2013-10-21T14:41:56-07:00",
+            "endTime": "2013-10-21T14:42:26-07:00",
+        },
+        {
+	 "name":"SampleUSHealthBill",
+	 "type":"FEED”,
+	 "tags": {"tag":["related=ushealthcare","department=billingDepartment"]},
+            “nominalTime": "2012-04-03T07:00Z"
+            "cluster": "primary-cluster",
+            "status": "SUCCEEDED",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "endTime": "2013-10-21T14:40:26-07:00",
+        },
+    ],
+
+    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "message": "Instances Search Results",
+    "status": "SUCCEEDED”
+}
+</verbatim>

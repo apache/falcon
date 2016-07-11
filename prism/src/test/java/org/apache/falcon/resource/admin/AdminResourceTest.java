@@ -38,20 +38,34 @@ public class AdminResourceTest {
 
     @Test
     public void testAdminVersion() throws Exception {
+        checkProperty("authentication", "simple");
+        StartupProperties.get().setProperty("falcon.authentication.type", "kerberos");
+        checkProperty("authentication", "kerberos");
+        StartupProperties.get().setProperty("falcon.authentication.type", "simple");
+    }
+
+    @Test
+    public void testSetSafemode() throws Exception {
+        checkProperty(AdminResource.SAFEMODE, "false");
+
+        AdminResource resource = new AdminResource();
+        String safemode = resource.setSafeMode("true");
+        Assert.assertEquals(safemode, "true");
+        Assert.assertTrue(StartupProperties.doesSafemodeFileExist());
+        checkProperty(AdminResource.SAFEMODE, "true");
+
+        safemode = resource.setSafeMode("false");
+        Assert.assertEquals(safemode, "false");
+        Assert.assertFalse(StartupProperties.doesSafemodeFileExist());
+        checkProperty(AdminResource.SAFEMODE, "false");
+    }
+
+    private void checkProperty(String propertyName, String expectedVal) {
         AdminResource resource = new AdminResource();
         AdminResource.PropertyList propertyList = resource.getVersion();
         for(AdminResource.Property property : propertyList.properties) {
-            if (property.key.equalsIgnoreCase("authentication")) {
-                Assert.assertEquals(property.value, "simple");
-            }
-        }
-
-        StartupProperties.get().setProperty("falcon.authentication.type", "kerberos");
-        resource = new AdminResource();
-        propertyList = resource.getVersion();
-        for(AdminResource.Property property : propertyList.properties) {
-            if (property.key.equalsIgnoreCase("authentication")) {
-                Assert.assertEquals(property.value, "kerberos");
+            if (property.key.equalsIgnoreCase(propertyName)) {
+                Assert.assertEquals(property.value, expectedVal);
             }
         }
     }

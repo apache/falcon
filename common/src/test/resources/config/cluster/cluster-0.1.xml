@@ -31,6 +31,7 @@
                    version="5.1.6"/>
         <interface type="registry" endpoint="http://localhost:48080/templeton/v1"
                    version="0.11.0"/>
+        <interface type="spark" endpoint="http://localhost:7070" version="1.6.1"/>
     </interfaces>
     <locations>
         <location name="staging" path="/projects/falcon/staging"/>

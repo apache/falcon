@@ -27,6 +27,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.FileSystemStorage;
 import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
 
 /**
  * Parser that parses feed entity definition.
@@ -97,6 +99,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 cluster.getValidity().setEnd(DateUtil.NEVER);
             }
 
+            // set Cluster version
+            int clusterVersion = ClusterHelper.getCluster(cluster.getName()).getVersion();
+            if (cluster.getVersion() > 0 && cluster.getVersion() > clusterVersion) {
+                throw new ValidationException("Feed should not set cluster to a version that does not exist");
+            } else {
+                cluster.setVersion(clusterVersion);
+            }
+
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
             validateClusterHasRegistry(feed, cluster);
@@ -110,7 +120,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (FeedHelper.isExportEnabled(cluster)) {
                 validateEntityExists(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
                 validateFeedExportArgs(cluster);
-                validateFeedExportFieldExcludes(cluster);
+                validateFeedExportFields(cluster);
             }
         }
 
@@ -629,7 +639,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     + "but it doesn't contain location type - data in cluster " + cluster.getName());
             }
 
+            // storage location needs to have time partition if import or export is enabled.
+            if (FeedHelper.isImportEnabled(cluster) || FeedHelper.isExportEnabled(cluster)) {
+                if (!matchStoragePathPattern(dataLocation.getPath())) {
+                    throw new ValidationException(String.format("Feed %s with Import/Export policy "
+                            + "needs to have time partition in the storage location path", feed.getName()));
+                }
+            }
         }
+    }
+
+    private boolean matchStoragePathPattern(String feedBasePath) {
+        Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
+        return matcher.find();
     }
 
     /**
@@ -709,10 +731,16 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateFeedExportFieldExcludes(Cluster feedCluster) throws FalconException {
-        if (FeedHelper.isFieldExcludes(feedCluster.getExport().getTarget())) {
-            throw new ValidationException(String.format("Field excludes are not supported "
-                    + "currently in Feed import policy"));
+    /**
+     * Export infers the target fields from the destination. There is no need to enumerate or exclude the fields
+     * in the feed entity definition.
+     *
+     * @param feedCluster feed's cluster
+     * @throws FalconException
+     */
+    private void validateFeedExportFields(Cluster feedCluster) throws FalconException {
+        if (feedCluster.getExport().getTarget().getFields() != null) {
+            throw new ValidationException(String.format("Feed Export does not expect Fields specification"));
         }
     }
 

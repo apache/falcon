@@ -50,7 +50,7 @@ import java.util.List;
 /**
  * Hdfs recipe test.
  */
-@Test(groups = "embedded")
+@Test(groups = {"embedded", "multiCluster"})
 public class HdfsRecipeTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(HdfsRecipeTest.class);
     private final ColoHelper cluster = servers.get(0);

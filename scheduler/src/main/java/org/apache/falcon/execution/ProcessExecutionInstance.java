@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.notification.service.NotificationServicesRegistry;
 import org.apache.falcon.notification.service.event.DataEvent;
 import org.apache.falcon.notification.service.event.Event;
@@ -41,14 +42,18 @@ import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
+import org.apache.falcon.workflow.engine.FalconWorkflowEngine;
 import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 
 /**
@@ -59,12 +64,14 @@ import java.util.List;
 public class ProcessExecutionInstance extends ExecutionInstance {
     private static final Logger LOG = LoggerFactory.getLogger(ProcessExecutionInstance.class);
     private final Process process;
-    private List<Predicate> awaitedPredicates = new ArrayList<>();
+    private List<Predicate> awaitedPredicates = Collections.synchronizedList(new ArrayList<Predicate>());
     private DAGEngine dagEngine = null;
-    private boolean hasTimedOut = false;
+    protected boolean hasTimedOut = false;
     private InstanceID id;
     private int instanceSequence;
+    private boolean areDataPredicatesEmpty;
     private final FalconExecutionService executionService = FalconExecutionService.get();
+    private final ExpressionHelper expressionHelper = ExpressionHelper.get();
 
     /**
      * Constructor.
@@ -81,7 +88,7 @@ public class ProcessExecutionInstance extends ExecutionInstance {
         this.id = new InstanceID(process, cluster, getInstanceTime());
         computeInstanceSequence();
         dagEngine = DAGEngineFactory.getDAGEngine(cluster);
-        registerForNotifications(false);
+        areDataPredicatesEmpty = true;
     }
 
     /**
@@ -110,7 +117,7 @@ public class ProcessExecutionInstance extends ExecutionInstance {
 
     // Currently, registers for only data notifications to ensure gating conditions are met.
     // Can be extended to register for other notifications.
-    private void registerForNotifications(boolean isResume) throws FalconException {
+    public void registerForNotifications(boolean isResume) throws FalconException {
         if (process.getInputs() == null) {
             return;
         }
@@ -120,14 +127,40 @@ public class ProcessExecutionInstance extends ExecutionInstance {
                 continue;
             }
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
-            List<Path> paths = new ArrayList<>();
+            String startTimeExp = input.getStart();
+            String endTimeExp = input.getEnd();
+            DateTime processInstanceTime = getInstanceTime();
+            expressionHelper.setReferenceDate(new Date(processInstanceTime.getMillis()));
+
+            Date startTime = expressionHelper.evaluate(startTimeExp, Date.class);
+            Date endTime = expressionHelper.evaluate(endTimeExp, Date.class);
+
             for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
+                org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                        EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
+                if (!EntityUtil.responsibleFor(clusterEntity.getColo())) {
+                    continue;
+                }
+                List<Path> paths = new ArrayList<>();
                 List<Location> locations = FeedHelper.getLocations(cluster, feed);
                 for (Location loc : locations) {
                     if (loc.getType() != LocationType.DATA) {
                         continue;
                     }
-                    paths.add(new Path(loc.getPath()));
+                    List<Date> instanceTimes = EntityUtil.getEntityInstanceTimes(feed, cluster.getName(),
+                            startTime, endTime);
+                    for (Date instanceTime : instanceTimes) {
+                        String path = EntityUtil.evaluateDependentPath(loc.getPath(), instanceTime);
+                        if (feed.getAvailabilityFlag() != null && !feed.getAvailabilityFlag().isEmpty()) {
+                            if (!path.endsWith("/")) {
+                                path = path + "/";
+                            }
+                            path = path + feed.getAvailabilityFlag();
+                        }
+                        if (!paths.contains(new Path(path))) {
+                            paths.add(new Path(path));
+                        }
+                    }
                 }
 
                 Predicate predicate = Predicate.createDataPredicate(paths);
@@ -135,21 +168,19 @@ public class ProcessExecutionInstance extends ExecutionInstance {
                 if (isResume && !awaitedPredicates.contains(predicate)) {
                     continue;
                 }
-                // TODO : Revisit this once the Data Notification Service has been built
-                // TODO Very IMP :  Need to change the polling frequency
+                addDataPredicate(predicate);
                 DataAvailabilityService.DataRequestBuilder requestBuilder =
                         (DataAvailabilityService.DataRequestBuilder)
                                 NotificationServicesRegistry.getService(NotificationServicesRegistry.SERVICE.DATA)
                                         .createRequestBuilder(executionService, getId());
                 requestBuilder.setLocations(paths)
                         .setCluster(cluster.getName())
-                        .setPollingFrequencyInMillis(100)
+                        .setPollingFrequencyInMillis(SchedulerUtil.getPollingFrequencyinMillis(process.getFrequency()))
                         .setTimeoutInMillis(getTimeOutInMillis())
                         .setLocations(paths);
                 NotificationServicesRegistry.register(requestBuilder.build());
-                LOG.info("Registered for a data notification for process {} for data location {}",
-                        process.getName(), StringUtils.join(paths, ","));
-                awaitedPredicates.add(predicate);
+                LOG.info("Registered for a data notification for process {} of instance time {} for data location {}",
+                        process.getName(), getInstanceTime(), StringUtils.join(paths, ","));
             }
         }
     }
@@ -168,22 +199,26 @@ public class ProcessExecutionInstance extends ExecutionInstance {
         case DATA_AVAILABLE:
             // Data has not become available and the wait time has passed
             if (((DataEvent) event).getStatus() == DataEvent.STATUS.UNAVAILABLE) {
-                if (getTimeOutInMillis() <= (System.currentTimeMillis() - getCreationTime().getMillis())) {
-                    hasTimedOut = true;
-                }
-            } else {
-                // If the event matches any of the awaited predicates, remove the predicate of the awaited list
-                Predicate toRemove = null;
-                for (Predicate predicate : awaitedPredicates) {
-                    if (predicate.evaluate(Predicate.getPredicate(event))) {
-                        toRemove = predicate;
-                        break;
-                    }
-                }
-                if (toRemove != null) {
-                    awaitedPredicates.remove(toRemove);
+                hasTimedOut = true;
+            }
+            // If the event matches any of the awaited predicates, remove the predicate of the awaited list
+            Predicate toRemove = null;
+            synchronized (awaitedPredicates) {
+            Iterator<Predicate> iterator = awaitedPredicates.iterator();
+            while (iterator.hasNext()) {
+                Predicate predicate = iterator.next();
+                if (predicate.evaluate(Predicate.getPredicate(event))) {
+                    toRemove = predicate;
+                    break;
                 }
             }
+            if (toRemove != null) {
+                awaitedPredicates.remove(toRemove);
+            }
+            if (awaitedPredicates.size() == 0) {
+                areDataPredicatesEmpty = true;
+            }
+        }
             break;
         default:
         }
@@ -198,13 +233,16 @@ public class ProcessExecutionInstance extends ExecutionInstance {
         if (awaitedPredicates.isEmpty()) {
             return true;
         } else {
-            // If it is waiting to be scheduled, it is in ready.
-            for (Predicate predicate : awaitedPredicates) {
-                if (!predicate.getType().equals(Predicate.TYPE.JOB_COMPLETION)) {
-                    return false;
+            synchronized (awaitedPredicates) {
+                Iterator<Predicate> iterator = awaitedPredicates.iterator();
+                while (iterator.hasNext()) {
+                    Predicate predicate = iterator.next();
+                    if (!predicate.getType().equals(Predicate.TYPE.JOB_COMPLETION)) {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
         }
     }
 
@@ -269,7 +307,10 @@ public class ProcessExecutionInstance extends ExecutionInstance {
     public void resume() throws FalconException {
         // Was already scheduled on the DAGEngine, so resume on DAGEngine if suspended
         if (getExternalID() != null) {
-            dagEngine.resume(this);
+            if (getProperties() == null) {
+                setProperties(new Properties());
+            }
+            getProperties().setProperty(FalconWorkflowEngine.FALCON_RESUME, "true");
         } else if (awaitedPredicates != null && !awaitedPredicates.isEmpty()) {
             // Evaluate any remaining predicates
             registerForNotifications(true);
@@ -332,5 +373,16 @@ public class ProcessExecutionInstance extends ExecutionInstance {
 
     public void rerun() throws FalconException {
         registerForNotifications(false);
+    }
+
+    public boolean areDataAwaitingPredicatesEmpty() {
+        return areDataPredicatesEmpty;
+    }
+
+    protected synchronized void addDataPredicate(Predicate predicate) {
+        synchronized (awaitedPredicates) {
+            awaitedPredicates.add(predicate);
+            areDataPredicatesEmpty = false;
+        }
     }
 }

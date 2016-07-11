@@ -18,6 +18,8 @@
 
 package org.apache.falcon.metadata;
 
+import org.apache.falcon.entity.v0.EntityType;
+
 /**
  * Enumerates Relationship types.
  */
@@ -63,5 +65,17 @@ public enum RelationshipType {
         }
 
         throw new IllegalArgumentException("No constant with value " + value + " found");
+    }
+
+    public static RelationshipType fromSchedulableEntityType(String type) {
+        EntityType entityType = EntityType.getEnum(type);
+        switch (entityType) {
+        case FEED:
+            return RelationshipType.FEED_ENTITY;
+        case PROCESS:
+            return RelationshipType.PROCESS_ENTITY;
+        default:
+            throw new IllegalArgumentException("Invalid schedulable entity type: " + entityType.name());
+        }
     }
 }

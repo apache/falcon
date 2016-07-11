@@ -24,7 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.hive.exception.HiveReplicationException;
+import org.apache.falcon.hive.util.FileUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -63,18 +63,29 @@ public class HiveDROptions {
     }
 
     public List<String> getSourceDatabases() {
-        return Arrays.asList(context.get(HiveDRArgs.SOURCE_DATABASE).trim().split(","));
+        return Arrays.asList(context.get(HiveDRArgs.SOURCE_DATABASES).trim().split(","));
     }
 
     public List<String> getSourceTables() {
-        return Arrays.asList(context.get(HiveDRArgs.SOURCE_TABLE).trim().split(","));
+        return Arrays.asList(context.get(HiveDRArgs.SOURCE_TABLES).trim().split(","));
     }
 
-    public String getSourceStagingPath() throws HiveReplicationException {
-        if (StringUtils.isNotEmpty(context.get(HiveDRArgs.SOURCE_STAGING_PATH))) {
-            return context.get(HiveDRArgs.SOURCE_STAGING_PATH) + File.separator + getJobName();
+    public String getSourceStagingPath() {
+        return context.get(HiveDRArgs.SOURCE_STAGING_PATH);
+    }
+
+
+    public void setSourceStagingPath() {
+        String stagingPath = context.get(HiveDRArgs.SOURCE_STAGING_PATH);
+        String srcStagingPath;
+        if ("NA".equalsIgnoreCase(stagingPath)) {
+            stagingPath = StringUtils.removeEnd(FileUtils.DEFAULT_EVENT_STORE_PATH, File.separator);
+            srcStagingPath = stagingPath + File.separator + getJobName();
+        } else {
+            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
+            srcStagingPath = stagingPath + File.separator + getJobName();
         }
-        throw new HiveReplicationException("Source StagingPath cannot be empty");
+        context.put(HiveDRArgs.SOURCE_STAGING_PATH, srcStagingPath);
     }
 
     public String getSourceWriteEP() {
@@ -100,15 +111,26 @@ public class HiveDROptions {
     public String getTargetMetastoreKerberosPrincipal() {
         return context.get(HiveDRArgs.TARGET_HIVE_METASTORE_KERBEROS_PRINCIPAL);
     }
+
     public String getTargetHive2KerberosPrincipal() {
         return context.get(HiveDRArgs.TARGET_HIVE2_KERBEROS_PRINCIPAL);
     }
 
-    public String getTargetStagingPath() throws HiveReplicationException {
-        if (StringUtils.isNotEmpty(context.get(HiveDRArgs.TARGET_STAGING_PATH))) {
-            return context.get(HiveDRArgs.TARGET_STAGING_PATH) + File.separator + getJobName();
+    public String getTargetStagingPath() {
+        return context.get(HiveDRArgs.TARGET_STAGING_PATH);
+    }
+
+    public void setTargetStagingPath() {
+        String stagingPath = context.get(HiveDRArgs.TARGET_STAGING_PATH);
+        String targetStagingPath;
+        if ("NA".equalsIgnoreCase(stagingPath)) {
+            stagingPath = StringUtils.removeEnd(FileUtils.DEFAULT_EVENT_STORE_PATH, File.separator);
+            targetStagingPath = stagingPath + File.separator + getJobName();
+        } else {
+            stagingPath = StringUtils.removeEnd(stagingPath, File.separator);
+            targetStagingPath = stagingPath + File.separator + getJobName();
         }
-        throw new HiveReplicationException("Target StagingPath cannot be empty");
+        context.put(HiveDRArgs.TARGET_STAGING_PATH, targetStagingPath);
     }
 
     public String getReplicationMaxMaps() {
@@ -120,7 +142,7 @@ public class HiveDROptions {
     }
 
     public int getMaxEvents() {
-        return Integer.valueOf(context.get(HiveDRArgs.MAX_EVENTS));
+        return Integer.parseInt(context.get(HiveDRArgs.MAX_EVENTS));
     }
 
     public boolean shouldKeepHistory() {
@@ -135,14 +157,6 @@ public class HiveDROptions {
         return context.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL);
     }
 
-    public void setSourceStagingDir(String path) {
-        context.put(HiveDRArgs.SOURCE_STAGING_PATH, path);
-    }
-
-    public void setTargetStagingDir(String path) {
-        context.put(HiveDRArgs.TARGET_STAGING_PATH, path);
-    }
-
     public String getExecutionStage() {
         return context.get(HiveDRArgs.EXECUTION_STAGE);
     }
@@ -152,7 +166,7 @@ public class HiveDROptions {
     }
 
     public static HiveDROptions create(String[] args) throws ParseException {
-        Map<HiveDRArgs, String> options = new HashMap<HiveDRArgs, String>();
+        Map<HiveDRArgs, String> options = new HashMap<>();
 
         CommandLine cmd = getCommand(args);
         for (HiveDRArgs arg : HiveDRArgs.values()) {

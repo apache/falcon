@@ -2,13 +2,15 @@
 
 [[CommonCLI][Common CLI Options]]
 
-Update operation allows an already submitted/scheduled entity to be updated. Cluster and datasource updates are
-currently not allowed.
+Update operation allows an already submitted/scheduled entity to be updated and put it into the archive.Archive path is defined in startup.properties in variable "config.store.uri". Datasource updates are currently not allowed.
 
 Usage:
-$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update -file <<path_to_file>>
+$FALCON_HOME/bin/falcon entity  -type [cluster|feed|process] -name <<name>> -update -file <<path_to_file>>
 
 Optional Arg : -skipDryRun. When this argument is specified, Falcon skips oozie dryrun.
 
 Example:
 $FALCON_HOME/bin/falcon entity -type process -name hourly-reports-generator -update -file /process/definition.xml
+
+Note: When a cluster entity is updated, the dependent feed and process bundle+coordinators are updated in the
+workflow engine. Hence, only a falcon superuser who has ability to impersonate other users can update a cluster entity.

@@ -18,24 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconException;
-import org.apache.falcon.client.FalconCLIException;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.state.AbstractSchedulerTestBase;
-import org.apache.falcon.state.store.service.FalconJPAService;
-import org.apache.falcon.unit.FalconUnitTestBase;
-import org.apache.falcon.util.StartupProperties;
-import org.apache.falcon.util.StateStoreProperties;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FsShell;
-import org.apache.hadoop.fs.LocalFileSystem;
-import org.apache.hadoop.fs.Path;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -47,6 +29,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.service.FalconJPAService;
+import org.apache.falcon.state.AbstractSchedulerTestBase;
+import org.apache.falcon.unit.FalconUnitTestBase;
+import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FsShell;
+import org.apache.hadoop.fs.LocalFileSystem;
+import org.apache.hadoop.fs.Path;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+
 /**
  * Base class for tests using Native Scheduler.
  */
@@ -57,6 +56,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
     private static final String IT_RUN_MODE = "it.run.mode";
 
     public static final String PROCESS_TEMPLATE = "/local-process-noinputs-template.xml";
+    public static final String PROCESS_TEMPLATE_NOLATE_DATA = "/process-nolatedata-template.xml";
     public static final String PROCESS_NAME = "processName";
     protected static final String START_INSTANCE = "2012-04-20T00:00Z";
     private static FalconJPAService falconJPAService = FalconJPAService.get();
@@ -93,26 +93,28 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
                 "org.apache.falcon.state.store.jdbc.JDBCStateStore");
     }
 
-    protected void submitProcess(Map<String, String> overlay) throws IOException, FalconCLIException {
+    protected void submitProcess(Map<String, String> overlay) throws IOException {
         String tmpFile = TestContext.overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
         APIResult result = submit(EntityType.PROCESS, tmpFile);
         assertStatus(result);
     }
 
     protected void scheduleProcess(String processName, String cluster,
-                                   String startTime, int noOfInstances) throws FalconCLIException {
+                                   String startTime, int noOfInstances) {
         APIResult result = falconUnitClient.schedule(EntityType.PROCESS, processName, startTime, noOfInstances,
                 cluster, true, null);
         assertStatus(result);
     }
 
     protected void setupProcessExecution(UnitTestContext context,
-                                         Map<String, String> overlay, int numInstances) throws Exception {
+                                         Map<String, String> overlay, int numInstances,
+                                         String processTemplate) throws Exception {
         String colo = overlay.get(COLO);
         String cluster = overlay.get(CLUSTER);
         submitCluster(colo, cluster, null);
+        submitFeeds(overlay);
         context.prepare();
-        submitProcess(overlay);
+        submitProcess(processTemplate, overlay);
 
         String processName = overlay.get(PROCESS_NAME);
         scheduleProcess(processName, cluster, START_INSTANCE, numInstances);
@@ -134,7 +136,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
         localFS.delete(new Path(DB_BASE_DIR), true);
     }
 
-    protected void submitCluster(UnitTestContext context) throws IOException, FalconCLIException {
+    protected void submitCluster(UnitTestContext context) throws IOException {
         String mode = System.getProperty(IT_RUN_MODE);
         if (StringUtils.isNotEmpty(mode) && mode.toLowerCase().equals(LOCAL_MODE)) {
             submitCluster(context.colo, context.clusterName, null);
@@ -147,14 +149,13 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
         }
     }
 
-    protected APIResult submitFeed(String template, Map<String, String> overlay) throws IOException,
-            FalconCLIException {
+    protected APIResult submitFeed(String template, Map<String, String> overlay) throws IOException {
         String tmpFile = TestContext.overlayParametersOverTemplate(template, overlay);
         APIResult result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
         return result;
     }
 
-    protected void submitFeeds(Map<String, String> overlay) throws IOException, FalconCLIException {
+    protected void submitFeeds(Map<String, String> overlay) throws IOException {
         String tmpFile = TestContext.overlayParametersOverTemplate(UnitTestContext.FEED_TEMPLATE1, overlay);
         APIResult result = falconUnitClient.submit(EntityType.FEED.name(), tmpFile, null);
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
@@ -169,7 +170,7 @@ public class AbstractSchedulerManagerJerseyIT extends FalconUnitTestBase {
         Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
 
-    protected void scheduleProcess(UnitTestContext context) throws FalconCLIException, IOException, FalconException {
+    protected void scheduleProcess(UnitTestContext context) throws IOException, FalconException {
         String scheduleTime = START_INSTANCE;
         APIResult result = scheduleProcess(context.getProcessName(), scheduleTime, 1, context.getClusterName(),
                 getAbsolutePath(SLEEP_WORKFLOW), true, "");

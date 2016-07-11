@@ -150,6 +150,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void schedule(Entity entity, Boolean skipDryRun, Map<String, String> suppliedProps) throws FalconException {
+        if (StartupProperties.isServerInSafeMode()) {
+            throwSafemodeException("SCHEDULE");
+        }
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -181,6 +184,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private void throwSafemodeException(String operation) throws FalconException {
+        String error = "Workflow Engine does not allow " + operation + " opeartion when Falcon server is in safemode";
+        LOG.error(error);
+        throw new FalconException(error);
+    }
+
     /**
      * Prepare the staging and logs dir for this entity with default permissions.
      *
@@ -204,6 +213,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public void dryRun(Entity entity, String clusterName, Boolean skipDryRun) throws FalconException {
+        if (StartupProperties.isServerInSafeMode()) {
+            throwSafemodeException("DRYRUN");
+        }
         OozieEntityBuilder builder = OozieEntityBuilder.get(entity);
         Path buildPath = new Path("/tmp", "falcon" + entity.getName() + System.currentTimeMillis());
         Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
@@ -413,6 +425,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String doBundleAction(Entity entity, BundleAction action) throws FalconException {
+        if (StartupProperties.isServerInSafeMode() && !action.equals(BundleAction.SUSPEND)) {
+            throwSafemodeException(action.name());
+        }
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         String result = null;
         for (String cluster : clusters) {
@@ -637,6 +652,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        if (StartupProperties.isServerInSafeMode()
+                && (action.equals(JobAction.RERUN) || action.equals(JobAction.RESUME))) {
+            throwSafemodeException(action.name());
+        }
         return doJobAction(action, entity, start, end, props, lifeCycles, null);
     }
 
@@ -873,7 +892,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     if (wfJob!=null) {
                         newInstance.startTime = wfJob.getStartTime();
                         newInstance.endTime = wfJob.getEndTime();
-                        newInstance.logFile = wfJob.getConsoleUrl();
+                        newInstance.logFile = getConsoleUrl(cluster, coordinatorAction.getId());
                         populateInstanceActions(cluster, wfJob, newInstance);
                         newInstance.status = WorkflowStatus.valueOf(mapActionStatus(wfJob.getStatus().name()));
                         instanceList.add(newInstance);
@@ -893,7 +912,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             status = jobInfo.getStatus().name();
             instance.startTime = jobInfo.getStartTime();
             instance.endTime = jobInfo.getEndTime();
-            instance.logFile = jobInfo.getConsoleUrl();
+            instance.logFile = getConsoleUrl(cluster, coordinatorAction.getId());
             instance.runId = jobInfo.getRun();
         }
 
@@ -963,6 +982,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.error("Job status not defined in Instance status: {}", status);
             instance.status = WorkflowStatus.UNDEFINED;
         }
+    }
+
+    // This method is required as the console URL returned by Oozie for Coord Action is NULL
+    private String getConsoleUrl(String cluster, String actionId) throws FalconException {
+        return OozieClientFactory.get(cluster).getOozieUrl() + "?job=" + actionId;
     }
 
     public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
@@ -1255,7 +1279,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.debug("Going to update! : {} for cluster {}, bundle: {}",
                     newEntity.toShortString(), cluster, bundle.getId());
             result.append(updateInternal(oldEntity, newEntity, clusterEntity, bundle,
-                    CurrentUser.getUser(), skipDryRun)).append("\n");
+                    bundle.getUser(), skipDryRun)).append("\n");
             LOG.info("Entity update complete: {} for cluster {}, bundle: {}", newEntity.toShortString(), cluster,
                 bundle.getId());
         }
@@ -1415,34 +1439,39 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private String updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob oldBundle,
-        String user, Boolean skipDryRun) throws FalconException {
+                                  String user, Boolean skipDryRun) throws FalconException {
+        String currentUser = CurrentUser.getUser();
+        switchUser(user);
+
         String clusterName = cluster.getName();
 
         Date effectiveTime = getEffectiveTime(cluster, newEntity);
         LOG.info("Effective time " + effectiveTime);
+        try {
+            //Validate that new entity can be scheduled
+            dryRunForUpdate(cluster, newEntity, effectiveTime, skipDryRun);
 
-        //Validate that new entity can be scheduled
-        dryRunForUpdate(cluster, newEntity, effectiveTime, skipDryRun);
+            boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
 
-        boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
+            //Set end times for old coords
+            updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
+            //schedule new entity
+            String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime);
+            BundleJob newBundle = null;
+            if (newJobId != null) {
+                newBundle = getBundleInfo(clusterName, newJobId);
+            }
 
-        //Set end times for old coords
-        updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime, newEntity);
-
-        //schedule new entity
-        String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
-        BundleJob newBundle = null;
-        if (newJobId != null) {
-            newBundle = getBundleInfo(clusterName, newJobId);
+            //Sometimes updateCoords() resumes the suspended coords. So, if already suspended, resume now
+            //Also suspend new bundle
+            if (suspended) {
+                doBundleAction(newEntity, BundleAction.SUSPEND, cluster.getName());
+            }
+            return getUpdateString(newEntity, effectiveTime, oldBundle, newBundle);
+        } finally {
+            // Switch back to current user in case of exception.
+            switchUser(currentUser);
         }
-
-        //Sometimes updateCoords() resumes the suspended coords. So, if already suspended, resume now
-        //Also suspend new bundle
-        if (suspended) {
-            doBundleAction(newEntity, BundleAction.SUSPEND, cluster.getName());
-        }
-
-        return getUpdateString(newEntity, effectiveTime, oldBundle, newBundle);
     }
 
     private Date getEffectiveTime(Cluster cluster, Entity newEntity) {
@@ -1465,27 +1494,19 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private String scheduleForUpdate(Entity entity, Cluster cluster, Date startDate, String user)
-        throws FalconException {
+    private String scheduleForUpdate(Entity entity, Cluster cluster, Date startDate) throws FalconException {
         Entity clone = entity.copy();
-
-        String currentUser = CurrentUser.getUser();
-        switchUser(user);
-        try {
-            EntityUtil.setStartDate(clone, cluster.getName(), startDate);
-            Path buildPath = EntityUtil.getNewStagingPath(cluster, clone);
-            OozieEntityBuilder builder = OozieEntityBuilder.get(clone);
-            Properties properties = builder.build(cluster, buildPath);
-            if (properties != null) {
-                LOG.info("Scheduling {} on cluster {} with props {}", entity.toShortString(), cluster.getName(),
+        EntityUtil.setStartDate(clone, cluster.getName(), startDate);
+        Path buildPath = EntityUtil.getNewStagingPath(cluster, clone);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(clone);
+        Properties properties = builder.build(cluster, buildPath);
+        if (properties != null) {
+            LOG.info("Scheduling {} on cluster {} with props {}", entity.toShortString(), cluster.getName(),
                     properties);
-                return scheduleEntity(cluster.getName(), properties, entity);
-            } else {
-                LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
-                return null;
-            }
-        } finally {
-            switchUser(currentUser);
+            return scheduleEntity(cluster.getName(), properties, entity);
+        } else {
+            LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
+            return null;
         }
     }
 

@@ -27,9 +27,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
+import org.apache.falcon.util.StartupProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.falcon.util.StartupProperties;
 
 /**
  * Driver for running Falcon as a standalone server with embedded jetty server.
@@ -38,6 +38,8 @@ public final class FalconServer {
     private static final Logger LOG = LoggerFactory.getLogger(FalconServer.class);
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
+    private static final String SAFE_MODE = "setsafemode";
+
     private static EmbeddedServer server;
     private static BrokerService broker;
 
@@ -56,6 +58,10 @@ public final class FalconServer {
         options.addOption(opt);
 
         opt = new Option(APP_PORT, true, "Application Port");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(SAFE_MODE, true, "Application mode, start safemode if true");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -88,6 +94,16 @@ public final class FalconServer {
             appPath = cmd.getOptionValue(APP_PATH);
         }
 
+        if (cmd.hasOption(SAFE_MODE)) {
+            validateSafemode(cmd.getOptionValue(SAFE_MODE));
+            boolean isSafeMode = Boolean.parseBoolean(cmd.getOptionValue(SAFE_MODE));
+            if (isSafeMode) {
+                StartupProperties.createSafemodeFile();
+            } else {
+                StartupProperties.deleteSafemodeFile();
+            }
+        }
+
         final String enableTLSFlag = StartupProperties.get().getProperty("falcon.enableTLS");
         final int appPort = getApplicationPort(cmd, enableTLSFlag);
         final boolean enableTLS = isTLSEnabled(enableTLSFlag, appPort);
@@ -100,6 +116,12 @@ public final class FalconServer {
         LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
         server.start();
+    }
+
+    private static void validateSafemode(String isSafeMode) throws Exception {
+        if (!("true".equals(isSafeMode) || "false".equals(isSafeMode))) {
+            throw new Exception("Invalid value for argument safemode. Allowed values are \"true\" or \"false\"");
+        }
     }
 
     private static int getApplicationPort(CommandLine cmd, String enableTLSFlag) {

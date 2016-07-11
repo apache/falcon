@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.replication;
 
+import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.commons.cli.CommandLine;
 import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.fs.Path;
@@ -32,6 +33,8 @@ import java.util.List;
  */
 public class FeedReplicatorTest {
 
+    private String defaultPath = "jail://FeedReplicatorTest:00/tmp";
+
     @Test
     public void testArguments() throws Exception {
         /*
@@ -42,21 +45,26 @@ public class FeedReplicatorTest {
          * <arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
          * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
          */
+
+        // creates jailed cluster in which DistCpOtions command can be tested.
+        EmbeddedCluster cluster =  EmbeddedCluster.newCluster("FeedReplicatorTest");
+
         final String[] args = {
             "true",
             "-maxMaps", "3",
             "-mapBandwidth", "4",
-            "-sourcePaths", "hdfs://localhost:8020/tmp/",
-            "-targetPath", "hdfs://localhost1:8020/tmp/",
+            "-sourcePaths", defaultPath,
+            "-targetPath", defaultPath,
             "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
         };
 
         FeedReplicator replicator = new FeedReplicator();
         CommandLine cmd = replicator.getCommand(args);
+        replicator.setConf(cluster.getConf());
         DistCpOptions options = replicator.getDistCpOptions(cmd);
 
         List<Path> srcPaths = new ArrayList<Path>();
-        srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
+        srcPaths.add(new Path(defaultPath));
         validateMandatoryArguments(options, srcPaths, true);
         Assert.assertTrue(options.shouldDeleteMissing());
     }
@@ -82,8 +90,8 @@ public class FeedReplicatorTest {
             "true",
             "-maxMaps", "3",
             "-mapBandwidth", "4",
-            "-sourcePaths", "hdfs://localhost:8020/tmp/",
-            "-targetPath", "hdfs://localhost1:8020/tmp/",
+            "-sourcePaths", defaultPath,
+            "-targetPath", defaultPath,
             "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
             "-overwrite", "true",
             "-ignoreErrors", "false",
@@ -99,7 +107,7 @@ public class FeedReplicatorTest {
         DistCpOptions options = replicator.getDistCpOptions(cmd);
 
         List<Path> srcPaths = new ArrayList<Path>();
-        srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
+        srcPaths.add(new Path(defaultPath));
         validateMandatoryArguments(options, srcPaths, false);
         validateOptionalArguments(options);
     }
@@ -108,7 +116,7 @@ public class FeedReplicatorTest {
         Assert.assertEquals(options.getMaxMaps(), 3);
         Assert.assertEquals(options.getMapBandwidth(), 4);
         Assert.assertEquals(options.getSourcePaths(), srcPaths);
-        Assert.assertEquals(options.getTargetPath(), new Path("hdfs://localhost1:8020/tmp/"));
+        Assert.assertEquals(options.getTargetPath(), new Path(defaultPath));
         Assert.assertEquals(options.shouldSyncFolder(), shouldSyncFolder);
     }
 

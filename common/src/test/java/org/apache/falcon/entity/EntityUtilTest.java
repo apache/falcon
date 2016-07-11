@@ -450,4 +450,25 @@ public class EntityUtilTest extends AbstractTestBase {
         // Ensure latest is returned.
         Assert.assertEquals(EntityUtil.getLatestStagingPath(cluster, process).getName(), md5 + "_1436357052992");
     }
+
+    @Test
+    public void testIsClusterUsedByEntity() throws Exception {
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+        Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(FEED_XML));
+        org.apache.falcon.entity.v0.cluster.Cluster cluster =
+                (org.apache.falcon.entity.v0.cluster.Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(
+                        getClass().getResourceAsStream(CLUSTER_XML));
+
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(cluster, "testCluster"));
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(feed, "testCluster"));
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(feed, "backupCluster"));
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(process, "testCluster"));
+
+        Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(cluster, "fakeCluster"));
+        Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(feed, "fakeCluster"));
+        Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(process, "fakeCluster"));
+    }
+
 }

@@ -20,12 +20,17 @@ package org.apache.falcon.update;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.DatasourceHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
@@ -70,6 +75,10 @@ public final class UpdateHelper {
 
         case PROCESS:
             return !EntityUtil.equals(oldView, newView, PROCESS_FIELDS);
+
+        case CLUSTER:
+            return isClusterEntityUpdated((org.apache.falcon.entity.v0.cluster.Cluster) oldEntity,
+                    (org.apache.falcon.entity.v0.cluster.Cluster) newEntity);
 
         default:
         }
@@ -128,5 +137,67 @@ public final class UpdateHelper {
             LOG.debug(affectedEntity.toShortString());
             throw new FalconException("Don't know what to do. Unexpected scenario");
         }
+    }
+
+    public static boolean isClusterEntityUpdated(final org.apache.falcon.entity.v0.cluster.Cluster oldEntity,
+                                                        final org.apache.falcon.entity.v0.cluster.Cluster newEntity) {
+        /*
+         * Name should not be updated.
+         * interface, locations, properties, colo : Update bundle/coord for dependent entities.
+         * Description, tags, ACL : no need to update bundle/coord for dependent entities.
+         */
+        if (!oldEntity.getColo().equals(newEntity.getColo())) {
+            return true;
+        }
+
+        for(Interfacetype interfacetype : Interfacetype.values()) {
+            if (!ClusterHelper.matchInterface(oldEntity, newEntity, interfacetype)) {
+                return true;
+            }
+        }
+
+        for(ClusterLocationType locationType : ClusterLocationType.values()) {
+            if (!ClusterHelper.matchLocations(oldEntity, newEntity, locationType)) {
+                return true;
+            }
+        }
+
+        if (!ClusterHelper.matchProperties(oldEntity, newEntity)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isDatasourceEntityUpdated(final Datasource oldEntity, final Datasource newEntity)
+        throws FalconException {
+        // ignore changes : colo, acl, description, tags
+        // can't change   : name, data source entity type
+
+        // major change that trigger bundle rewrite
+        // driver class name change but not driver jar as it is automatically picked up from share lib
+
+        if (!DatasourceHelper.isSameDriverClazz(oldEntity.getDriver(), newEntity.getDriver())) {
+            return true;
+        }
+
+        // interface endpoint, credential or driver update will trigger a bundle rewrite
+        for(org.apache.falcon.entity.v0.datasource.Interfacetype ifacetype
+                : org.apache.falcon.entity.v0.datasource.Interfacetype.values()) {
+            if (!DatasourceHelper.isSameInterface(oldEntity, newEntity, ifacetype)) {
+                return true;
+            }
+        }
+        // check default credential too
+        if (!DatasourceHelper.isSameCredentials(oldEntity.getInterfaces().getCredential(),
+                newEntity.getInterfaces().getCredential())) {
+            return true;
+        }
+
+        // any change in the properties will trigger a bundle rewrite
+        if (!DatasourceHelper.isSameProperties(oldEntity, newEntity)) {
+            return true;
+        }
+        return false;
     }
 }

@@ -20,8 +20,10 @@ $git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 ---+++Step 2 - Build Falcon
 
 <verbatim>
-$cd falcon
-$export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
+$ cd falcon
+$ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify"
+$ mvn clean install 
+
 </verbatim>
 It builds and installs the package into the local repository, for use as a dependency in other projects locally.
 
@@ -75,6 +77,8 @@ $src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 >> ex. src/bin/package.sh 2.5.0 4.0.0
 >> Falcon package is available in <<falcon home>>/target/apache-falcon-<<version>>-bin.tar.gz
 >> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
+>> __IMPORTANT:  You need to download the je-5.0.73 version from http://download.oracle.com/otn/berkeley-db/je-5.0.73.zip and extract je-5.0.73 under the Falcon webapp directory or provision an HBase cluster for use as Falcon graphdb backend DB.
+    Depending on the Graphdb backend choice, update the startup.properties appropriately.__
 </verbatim>
 
 *NOTE:* If you have a separate Apache Oozie installation, you will need to follow some additional steps:
