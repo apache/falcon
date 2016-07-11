@@ -102,7 +102,7 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
     public void testBacklogEmitter() throws Exception {
         backlogMetricEmitterService.init();
         storeEntity(EntityType.PROCESS, "entity1");
-        backlogMetricEmitterService.highSLAMissed("entity1", EntityType.PROCESS, "cluster1",
+        backlogMetricEmitterService.highSLAMissed("entity1",  "cluster1", EntityType.PROCESS,
                 BacklogMetricEmitterService.DATE_FORMAT.get().parse("2016-06-30T00-00Z"));
         Thread.sleep(10);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);

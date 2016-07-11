@@ -23,12 +23,14 @@ package org.apache.falcon.cli.commands;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
 
 /**
  * Connection Commands.
  */
+@Component
 public class FalconConnectionCommands extends BaseFalconCommands {
 
     @CliCommand(value = "get", help = "get properties")

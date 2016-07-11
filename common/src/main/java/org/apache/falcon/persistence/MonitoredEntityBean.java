@@ -17,6 +17,9 @@
  */
 package org.apache.falcon.persistence;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
+
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -36,15 +39,15 @@ import javax.validation.constraints.NotNull;
 @Entity
 @NamedQueries({
         @NamedQuery(name = PersistenceConstants.GET_MONITERED_INSTANCE, query = "select OBJECT(a) from "
-                + "MonitoredFeedsBean a where a.feedName = :feedName"),
-        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredFeedsBean "
-                + "a where a.feedName = :feedName"),
+                + "MonitoredEntityBean a where a.entityName = :entityName and a.entityType = :entityType"),
+        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredEntityBean "
+                + "a where a.entityName = :entityName and a.entityType = :entityType"),
         @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) "
-                + "from MonitoredFeedsBean a")
+                + "from MonitoredEntityBean a")
 })
-@Table(name="MONITORED_FEEDS")
+@Table(name="MONITORED_ENTITY")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
-public class MonitoredFeedsBean {
+public class MonitoredEntityBean {
     @NotNull
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
@@ -52,15 +55,29 @@ public class MonitoredFeedsBean {
 
     @Basic
     @NotNull
-    @Column(name = "feed_name")
-    private String feedName;
+    @Column(name = "entity_name")
+    private String entityName;
 
-    public String getFeedName() {
-        return feedName;
+    public String getEntityType() {
+        return entityType;
     }
 
-    public void setFeedName(String feedName) {
-        this.feedName = feedName;
+    public void setEntityType(String entityType) throws FalconException {
+        checkEntityType(entityType);
+        this.entityType = entityType;
+    }
+
+    @Basic
+    @NotNull
+    @Column(name = "entity_type")
+    private String entityType;
+
+    public String getFeedName() {
+        return entityName;
+    }
+
+    public void setEntityName(String feedName) {
+        this.entityName = feedName;
     }
 
     public String getId() {
@@ -69,5 +86,18 @@ public class MonitoredFeedsBean {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public static final String ENTITYNAME = "entityName";
+
+    public static final String ENTITYTYPE = "entityType";
+
+    void checkEntityType(String entityType)throws FalconException {
+        if (entityType.equals(EntityType.PROCESS.toString()) || entityType.equals(EntityType.FEED.toString())){
+            return;
+        } else {
+            throw new FalconException("EntityType"+ entityType
+                    + " is not valid,Feed and Process are the valid input type.");
+        }
     }
 }

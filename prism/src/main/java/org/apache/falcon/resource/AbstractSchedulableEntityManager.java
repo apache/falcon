@@ -31,7 +31,7 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.UnschedulableEntityException;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.monitors.Dimension;
-import org.apache.falcon.service.FeedSLAMonitoringService;
+import org.apache.falcon.service.EntitySLAMonitoringService;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -162,11 +162,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             Date end = (endStr == null) ? new Date() : EntityUtil.parseDateUTC(endStr);
 
             if (StringUtils.isBlank(feedName)) {
-                instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(start, end));
+                instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(start, end));
             } else {
                 for (String clusterName : DeploymentUtil.getCurrentClusters()) {
-                    instances.addAll(FeedSLAMonitoringService.get().getFeedSLAMissPendingAlerts(feedName,
-                            clusterName, start, end));
+                    instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(feedName,
+                            clusterName, start, end, EntityType.FEED.toString()));
                 }
             }
         } catch (FalconException e) {

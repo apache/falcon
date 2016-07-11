@@ -74,7 +74,7 @@ public class FalconAdminCLI extends FalconCLI {
     }
 
     public int adminCommand(CommandLine commandLine, FalconClient client,
-                             String falconUrl) throws FalconCLIException, IOException {
+                             String falconUrl) throws IOException {
         String result;
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {

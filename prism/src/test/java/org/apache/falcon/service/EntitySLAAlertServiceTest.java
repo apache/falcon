@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.StateStoreProperties;
@@ -44,9 +45,9 @@ import java.io.File;
 import java.util.Date;
 
 /**
- * Test for FeedSLAMonitoringService.
+ * Test for EntitySLAMonitoringService.
  */
-public class FeedSLAAlertServiceTest extends AbstractTestBase {
+public class EntitySLAAlertServiceTest extends AbstractTestBase {
     private static final String DB_BASE_DIR = "target/test-data/persistancedb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
@@ -91,11 +92,11 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
         try {
-            Query query = em.createNativeQuery("delete from MONITORED_FEEDS");
+            Query query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
-            query = em.createNativeQuery("delete from PENDING_INSTANCES");
+            query = em.createNativeQuery("delete from MONITORED_ENTITY");
             query.executeUpdate();
-            query = em.createNativeQuery("delete from FEED_SLA_ALERTS");
+            query = em.createNativeQuery("delete from ENTITY_SLA_ALERTS");
             query.executeUpdate();
 
         } finally {
@@ -108,16 +109,24 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
     public static void processSLALowCandidates() throws FalconException, InterruptedException{
 
         Date dateOne =  new Date(System.currentTimeMillis()-100000);
-        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne);
+        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne, EntityType.FEED.toString());
         org.apache.falcon.entity.v0.feed.Clusters cluster = new org.apache.falcon.entity.v0.feed.Clusters();
+        org.apache.falcon.entity.v0.cluster.Cluster cluster1 = new org.apache.falcon.entity.v0.cluster.Cluster();
+        cluster1.setName("test-cluster");
         Cluster testCluster = new Cluster();
         testCluster.setName("test-cluster");
         cluster.getClusters().add(testCluster);
         Feed mockEntity = new Feed();
         mockEntity.setName("test-feed");
         mockEntity.setClusters(cluster);
+        cluster1.setColo("test-cluster");
+
+
         if (ConfigurationStore.get().get(EntityType.FEED, mockEntity.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.FEED, mockEntity);
+        }
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, cluster1.getName()) == null) {
+            ConfigurationStore.get().publish(EntityType.CLUSTER, cluster1);
         }
         Sla sla = new Sla();
         Frequency frequencyLow = new Frequency("1", Frequency.TimeUnit.minutes);
@@ -126,26 +135,68 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         sla.setSlaHigh(frequencyHigh);
         mockEntity.setSla(sla);
 
-        FeedSLAAlertService.get().init();
+        EntitySLAAlertService.get().init();
         Thread.sleep(10*1000);
-        Assert.assertTrue(monitoringJdbcStateStore.getFeedAlertInstance("test-feed", "test-cluster",
-                dateOne).getIsSLALowMissed());
+        Assert.assertTrue(monitoringJdbcStateStore.getEntityAlertInstance("test-feed", "test-cluster",
+                dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
+    }
+
+    @Test
+    public static void processSLACandidateProcess() throws FalconException, InterruptedException{
+        Date dateOne =  new Date(System.currentTimeMillis()-130000);
+
+        monitoringJdbcStateStore.putPendingInstances("test-process", "test-cluster", dateOne,
+                EntityType.PROCESS.name());
+        EntitySLAAlertService.get().init();
+        org.apache.falcon.entity.v0.process.Clusters cluster = new org.apache.falcon.entity.v0.process.Clusters();
+        org.apache.falcon.entity.v0.cluster.Cluster processCluster = new org.apache.falcon.entity.v0.cluster.Cluster();
+        processCluster.setName("test-cluster");
+        org.apache.falcon.entity.v0.process.Cluster testCluster = new org.apache.falcon.entity.v0.process.Cluster();
+        testCluster.setName("test-cluster");
+        cluster.getClusters().add(testCluster);
+        Process process =  new Process();
+        process.setName("test-process");
+        process.setClusters(cluster);
+        processCluster.setColo("test-cluster");
+
+        if (ConfigurationStore.get().get(EntityType.PROCESS, process.getName()) == null){
+            ConfigurationStore.get().publish(EntityType.PROCESS, process);
+        }
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, processCluster.getName()) == null) {
+            ConfigurationStore.get().publish(EntityType.CLUSTER, processCluster);
+        }
+        org.apache.falcon.entity.v0.process.Sla sla = new org.apache.falcon.entity.v0.process.Sla();
+        Frequency processFrequency = new Frequency("1", Frequency.TimeUnit.minutes);
+        sla.setShouldEndIn(processFrequency);
+        process.setSla(sla);
+
+
+        Thread.sleep(10*1000);
+        Assert.assertTrue(monitoringJdbcStateStore.getEntityAlertInstance("test-process", "test-cluster", dateOne,
+                EntityType.PROCESS.name()).getIsSLAHighMissed());
+
     }
 
     @Test(expectedExceptions = javax.persistence.NoResultException.class)
     public static void processSLAHighCandidates() throws FalconException, InterruptedException{
 
         Date dateOne =  new Date(System.currentTimeMillis()-130000);
-        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne);
+        monitoringJdbcStateStore.putPendingInstances("test-feed", "test-cluster", dateOne, EntityType.FEED.toString());
         org.apache.falcon.entity.v0.feed.Clusters cluster = new org.apache.falcon.entity.v0.feed.Clusters();
+        org.apache.falcon.entity.v0.cluster.Cluster cluster1 = new org.apache.falcon.entity.v0.cluster.Cluster();
+        cluster1.setName("test-cluster");
         Cluster testCluster = new Cluster();
         testCluster.setName("test-cluster");
         cluster.getClusters().add(testCluster);
         Feed mockEntity = new Feed();
         mockEntity.setName("test-feed");
         mockEntity.setClusters(cluster);
+        cluster1.setColo("test-cluster");
         if (ConfigurationStore.get().get(EntityType.FEED, mockEntity.getName()) == null) {
             ConfigurationStore.get().publish(EntityType.FEED, mockEntity);
+        }
+        if (ConfigurationStore.get().get(EntityType.CLUSTER, cluster1.getName()) == null) {
+            ConfigurationStore.get().publish(EntityType.CLUSTER, cluster1);
         }
         Sla sla = new Sla();
         Frequency frequencyLow = new Frequency("1", Frequency.TimeUnit.minutes);
@@ -154,9 +205,9 @@ public class FeedSLAAlertServiceTest extends AbstractTestBase {
         sla.setSlaHigh(frequencyHigh);
         mockEntity.setSla(sla);
 
-        FeedSLAAlertService.get().init();
+        EntitySLAAlertService.get().init();
         Thread.sleep(10*1000);
-        Assert.assertTrue(monitoringJdbcStateStore.getFeedAlertInstance("test-feed", "test-cluster",
-                dateOne).getIsSLAHighMissed());
+        Assert.assertTrue(monitoringJdbcStateStore.getEntityAlertInstance("test-feed", "test-cluster",
+                dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());
     }
 }

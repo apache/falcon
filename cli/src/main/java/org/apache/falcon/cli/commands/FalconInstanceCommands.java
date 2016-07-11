@@ -18,9 +18,12 @@
 
 package org.apache.falcon.cli.commands;
 
+import org.springframework.stereotype.Component;
+
 /**
  * Instance commands.
  */
+@Component
 public class FalconInstanceCommands extends BaseFalconCommands {
 
 }

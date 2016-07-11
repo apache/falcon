@@ -97,8 +97,9 @@ public final class BacklogMetricEmitterService implements FalconService,
     private static ConcurrentHashMap<Entity, List<MetricInfo>> entityBacklogs = new ConcurrentHashMap<>();
 
     @Override
-    public void highSLAMissed(String entityName, EntityType entityType, String clusterName,
-                              Date nominalTime) throws FalconException {
+    public void highSLAMissed(String entityName, String clusterName, EntityType entityType, Date nominalTime)
+            throws FalconException {
+
         if (entityType != EntityType.PROCESS) {
             return;
         }
