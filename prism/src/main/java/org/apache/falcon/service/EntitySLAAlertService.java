@@ -69,13 +69,15 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     public void init() throws FalconException {
         String listenerClassNames = StartupProperties.get().
                 getProperty("feedAlert.listeners");
-        for (String listenerClassName : listenerClassNames.split(",")) {
-            listenerClassName = listenerClassName.trim();
-            if (listenerClassName.isEmpty()) {
-                continue;
+        if (listenerClassNames != null && !listenerClassNames.isEmpty()) {
+            for (String listenerClassName : listenerClassNames.split(",")) {
+                listenerClassName = listenerClassName.trim();
+                if (listenerClassName.isEmpty()) {
+                    continue;
+                }
+                EntitySLAListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+                registerListener(listener);
             }
-            EntitySLAListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
-            registerListener(listener);
         }
 
         String freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
@@ -105,7 +107,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
 
     void processSLACandidates(){
         //Get all feeds instances to be monitored
-        List<PendingInstanceBean> pendingInstanceBeanList = store.getAllInstances();
+        List<PendingInstanceBean> pendingInstanceBeanList = store.getAllPendingInstances();
         if (pendingInstanceBeanList == null || pendingInstanceBeanList.isEmpty()){
             return;
         }
@@ -152,7 +154,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                 }
             }
         } catch (FalconException e){
-            LOG.error("Exception in FeedSLAALertService:", e);
+            LOG.error("Exception in EntitySLAALertService:", e);
         }
 
     }
@@ -160,6 +162,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     @Override
     public void highSLAMissed(String entityName, String clusterName, String entityType , Date nominalTime
                               ) throws FalconException {
+        LOG.debug("Listners called...");
         for (EntitySLAListener listener : listeners) {
             listener.highSLAMissed(entityName, clusterName, entityType, nominalTime);
             store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType);

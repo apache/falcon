@@ -90,7 +90,7 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         monitoringJdbcStateStore.putMonitoredEntity("test_feed2", EntityType.FEED.toString());
         Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredEntity("test_feed1",
                 EntityType.FEED.toString()).getFeedName());
-        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredFeed().size(), 2);
+        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredEntity().size(), 2);
 
         monitoringJdbcStateStore.deleteMonitoringEntity("test_feed1", EntityType.FEED.toString());
         monitoringJdbcStateStore.deleteMonitoringEntity("test_feed2", EntityType.FEED.toString());
