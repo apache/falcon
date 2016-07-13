@@ -65,6 +65,7 @@ public final class BacklogMetricEmitterService implements FalconService,
     private static final String BACKLOG_METRIC_EMIT_INTERVAL = "falcon.backlog.metricservice.emit.interval.millisecs";
     private static final String BACKLOG_METRIC_RECHECK_INTERVAL = "falcon.backlog.metricservice."
             + "recheck.interval.millisecs";
+    private static final String DEFAULT_PIPELINE = "DEFAULT";
 
     private static final Logger LOG = LoggerFactory.getLogger(BacklogMetricEmitterService.class);
 
@@ -267,12 +268,25 @@ public final class BacklogMetricEmitterService implements FalconService,
 
             if (backLogsCluster != null && !backLogsCluster.isEmpty()) {
                 for (String clusterName : backLogsCluster.keySet()) {
-                    String metricName = METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
-                            + process.getPipelines() + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
-                            + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
-                            + "backlogInMins";
+                    String pipelinesStr = process.getPipelines();
+                    String metricName;
                     Long backlog = backLogsCluster.get(clusterName) / (60 * 1000); // Converting to minutes
-                    metricNotificationService.publish(metricName, backlog);
+                    if (pipelinesStr != null && !pipelinesStr.isEmpty()) {
+                        String[] pipelines = pipelinesStr.split(",");
+                        for (String pipeline : pipelines) {
+                            metricName = METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
+                                    + pipeline + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
+                                    + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
+                                    + "backlogInMins";
+                            metricNotificationService.publish(metricName, backlog);
+                        }
+                    } else {
+                        metricName = METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
+                                + DEFAULT_PIPELINE + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
+                                + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
+                                + "backlogInMins";
+                        metricNotificationService.publish(metricName, backlog);
+                    }
                 }
             }
         }
