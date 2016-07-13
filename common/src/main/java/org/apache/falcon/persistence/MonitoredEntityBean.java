@@ -42,7 +42,9 @@ import javax.validation.constraints.NotNull;
                 + "MonitoredEntityBean a where a.entityName = :entityName and a.entityType = :entityType"),
         @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredEntityBean "
                 + "a where a.entityName = :entityName and a.entityType = :entityType"),
-        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_FEEDS, query = "select OBJECT(a) "
+        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_ENTITY_FOR_TYPE, query = "select OBJECT(a) "
+                + "from MonitoredEntityBean a where a.entityType = :entityType"),
+        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_ENTITY, query = "select OBJECT(a) "
                 + "from MonitoredEntityBean a")
 })
 @Table(name="MONITORED_ENTITY")

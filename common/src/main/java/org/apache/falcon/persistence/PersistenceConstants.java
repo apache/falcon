@@ -26,7 +26,7 @@ public final class PersistenceConstants {
     }
     public static final String GET_MONITERED_INSTANCE = "GET_MONITERED_INSTANCE";
     public static final String DELETE_MONITORED_INSTANCES = "DELETE_MONITORED_INSTANCES";
-    public static final String GET_ALL_MONITORING_FEEDS = "GET_ALL_MONITORING_FEEDS";
+    public static final String GET_ALL_MONITORING_ENTITY_FOR_TYPE = "GET_ALL_MONITORING_ENTITY_FOR_TYPE";
     public static final String GET_PENDING_INSTANCES = "GET_PENDING_INSTANCES";
     public static final String GET_PENDING_INSTANCE = "GET_PENDING_INSTANCE";
     public static final String DELETE_PENDING_NOMINAL_INSTANCES = "DELETE_PENDING_NOMINAL_INSTANCES";
@@ -61,4 +61,5 @@ public final class PersistenceConstants {
     public static final String UPDATE_SLA_HIGH = "UPDATE_SLA_HIGH";
     public static final String GET_ENTITY_ALERT_INSTANCE = "GET_ENTITY_ALERT_INSTANCE";
     public static final String DELETE_ENTITY_ALERT_INSTANCE = "DELETE_ENTITY_ALERT_INSTANCE";
+    public static final String GET_ALL_MONITORING_ENTITY = "GET_ALL_MONITORING_ENTITY";
 }
