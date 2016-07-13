@@ -87,9 +87,18 @@ public class MonitoringJdbcStateStore {
         }
     }
 
-    public List<MonitoredEntityBean> getAllMonitoredFeed() throws ResultNotFoundException {
+    public List<MonitoredEntityBean> getAllMonitoredEntity() throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
-        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_FEEDS);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_ENTITY);
+        List result = q.getResultList();
+        entityManager.close();
+        return result;
+    }
+
+    public List<MonitoredEntityBean> getAllMonitoredEntityForEntity(String entityType) throws ResultNotFoundException {
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_ENTITY_FOR_TYPE);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
         List result = q.getResultList();
         entityManager.close();
         return result;
@@ -159,7 +168,7 @@ public class MonitoringJdbcStateStore {
         return result;
     }
 
-    public List<PendingInstanceBean> getAllInstances(){
+    public List<PendingInstanceBean> getAllPendingInstances(){
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PENDING_INSTANCES);
         List result = q.getResultList();

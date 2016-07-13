@@ -54,7 +54,7 @@ Trunk
     FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
 
 
-Proposed Release Version: 0.9
+Release Version: 0.9
   TASKS:
     FALCON-1778 Check licenses and copyright information (Pallavi Rao)
 
