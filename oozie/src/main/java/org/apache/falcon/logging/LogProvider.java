@@ -113,7 +113,7 @@ public final class LogProvider {
                         + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
                         + formattedRunId + "/*");
         FileStatus[] actions = fs.globStatus(actionPaths);
-        if (actions.length > 0) {
+        if (actions != null && actions.length > 0) {
             InstanceAction[] instanceActions = new InstanceAction[actions.length - 1];
             instance.actions = instanceActions;
             int i = 0;
@@ -140,8 +140,8 @@ public final class LogProvider {
     }
 
     private String getActionName(String fileName) {
-        return fileName.replaceAll("_SUCCEEDED[.]log", "").replaceAll(
-                "_FAILED[.]log", "");
+        return fileName.replaceAll("_SUCCEEDED\\.log", "").replaceAll(
+                "_FAILED\\.log", "");
     }
 
     private String getActionStatus(String fileName) {
