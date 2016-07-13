@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.jdbc.BacklogMetricStore;
 import org.apache.falcon.metrics.MetricNotificationService;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.MetricInfo;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -313,6 +314,12 @@ public final class BacklogMetricEmitterService implements FalconService,
                                 Date nominalTime;
                                 try {
                                     nominalTime = DATE_FORMAT.get().parse(nominalTimeStr);
+                                    if (entity.getACL().getOwner() != null && !entity.getACL().getOwner().isEmpty()) {
+                                        CurrentUser.authenticate(entity.getACL().getOwner());
+                                    } else {
+                                        CurrentUser.authenticate(System.getProperty("user.name"));
+                                    }
+
                                     InstancesResult status = wfEngine.getStatus(entity, nominalTime,
                                             nominalTime, null, null);
                                     if (status.getInstances().length > 0
