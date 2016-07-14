@@ -1239,9 +1239,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private boolean isCoordApplicable(String appName, List<LifeCycle> lifeCycles) {
-        for (LifeCycle lifeCycle : lifeCycles) {
-            if (appName.contains(lifeCycle.getTag().name())) {
-                return true;
+        if (lifeCycles != null && !lifeCycles.isEmpty()) {
+            for (LifeCycle lifeCycle : lifeCycles) {
+                if (appName.contains(lifeCycle.getTag().name())) {
+                    return true;
+                }
             }
         }
         return false;
