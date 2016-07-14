@@ -344,7 +344,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                         }
                     }
                 }
-            } catch (FalconException e) {
+            } catch (Throwable e) {
                 LOG.error("Error while checking backlog metrics" + e);
             }
         }
