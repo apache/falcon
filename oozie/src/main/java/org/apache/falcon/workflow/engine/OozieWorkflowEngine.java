@@ -694,9 +694,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 if (action.equals(JobAction.STATUS) && Boolean.TRUE.equals(allAttempts)) {
                     try {
                         performAction(cluster, action, coordinatorAction, props, instance, isForced);
-                        if (instance.getRunId() > 0) {
-                            instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
-                        } else {
+                        instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
+                        if (instanceList.isEmpty()) {
                             instanceList.add(instance);
                         }
                     } catch (FalconException e) {
@@ -883,8 +882,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private List<InstancesResult.Instance> getAllInstances(String cluster, CoordinatorAction coordinatorAction,
                                                            String nominalTimeStr) throws FalconException {
         List<InstancesResult.Instance> instanceList = new ArrayList<>();
-        if (StringUtils.isNotBlank(coordinatorAction.getExternalId())) {
-            List<WorkflowJob> workflowJobList = getWfsForCoordAction(cluster, coordinatorAction.getExternalId());
+        if (StringUtils.isNotBlank(coordinatorAction.getId())) {
+            List<WorkflowJob> workflowJobList = getWfsForCoordAction(cluster, coordinatorAction.getId());
             if (workflowJobList != null && workflowJobList.size()>0) {
                 for (WorkflowJob workflowJob : workflowJobList) {
                     InstancesResult.Instance newInstance = new InstancesResult.Instance(cluster, nominalTimeStr, null);
