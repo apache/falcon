@@ -695,7 +695,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     try {
                         performAction(cluster, action, coordinatorAction, props, instance, isForced);
                         instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
-                        if (instanceList.isEmpty()) {
+                        // Happens when the action is in READY/WAITING, when no workflow is kicked off yet.
+                        if (instanceList.isEmpty() || StringUtils.isBlank(coordinatorAction.getExternalId())) {
                             instanceList.add(instance);
                         }
                     } catch (FalconException e) {
@@ -891,7 +892,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     if (wfJob!=null) {
                         newInstance.startTime = wfJob.getStartTime();
                         newInstance.endTime = wfJob.getEndTime();
-                        newInstance.logFile = getConsoleUrl(cluster, coordinatorAction.getId());
+                        newInstance.logFile = wfJob.getConsoleUrl();
                         populateInstanceActions(cluster, wfJob, newInstance);
                         newInstance.status = WorkflowStatus.valueOf(mapActionStatus(wfJob.getStatus().name()));
                         instanceList.add(newInstance);
@@ -911,7 +912,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             status = jobInfo.getStatus().name();
             instance.startTime = jobInfo.getStartTime();
             instance.endTime = jobInfo.getEndTime();
-            instance.logFile = getConsoleUrl(cluster, coordinatorAction.getId());
+            instance.logFile = jobInfo.getConsoleUrl();
             instance.runId = jobInfo.getRun();
         }
 
@@ -981,11 +982,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.error("Job status not defined in Instance status: {}", status);
             instance.status = WorkflowStatus.UNDEFINED;
         }
-    }
-
-    // This method is required as the console URL returned by Oozie for Coord Action is NULL
-    private String getConsoleUrl(String cluster, String actionId) throws FalconException {
-        return OozieClientFactory.get(cluster).getOozieUrl() + "?job=" + actionId;
     }
 
     public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
