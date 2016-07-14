@@ -169,13 +169,18 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
-            for (String cluster : clusters) {
-                try{
+            try{
+                // Fix for Falcon-1749
+                EntityType entitytype =  EntityType.getEnum(type);
+                if (entitytype == EntityType.PROCESS || entitytype == EntityType.FEED){
+                    EntityUtil.getEntity(entitytype, entity.getName());
+                }
+                for (String cluster : clusters) {
                     Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
                     colos.add(clusterEntity.getColo());
-                } catch (EntityNotRegisteredException e){
-                    LOG.warn(e.getMessage(), e);
                 }
+            }catch (EntityNotRegisteredException e){
+                LOG.warn(e.getMessage(), e);
             }
             if (colos.isEmpty()) {
                 throw new EntityNotRegisteredException(entity.getName()  + " (" + type + ") not found");
