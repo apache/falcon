@@ -196,7 +196,6 @@ public final class BacklogMetricEmitterService implements FalconService,
         // Do Nothing
     }
 
-
     /**
      * Service which executes backlog evaluation and publishing metrics to Graphite parallel for entities.
      */
@@ -319,12 +318,21 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     } else {
                                         CurrentUser.authenticate(System.getProperty("user.name"));
                                     }
-
+                                    if (!wfEngine.isActive(entity)) {
+                                        LOG.info("Entity of name {} was deleted so removing instance of "
+                                                + "nominaltime {} ", entity.getName(), nominalTimeStr);
+                                        backlogMetricStore.deleteMetricInstance(entity.getName(),
+                                                metricInfo.getCluster(), nominalTime, entity.getEntityType());
+                                        iterator.remove();
+                                        continue;
+                                    }
                                     InstancesResult status = wfEngine.getStatus(entity, nominalTime,
                                             nominalTime, null, null);
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
+                                        LOG.debug("Instance of nominaltime {} of entity {} was succeeded, removing " +
+                                                "from backlog entries", nominalTimeStr, entity.getName());
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
                                         iterator.remove();
