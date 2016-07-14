@@ -173,6 +173,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             for (String cluster : clusters) {
                 try{
                     Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                    // Fix for Falcon-1749
                     if(type.equals(EntityType.PROCESS)){
                         EntityUtil.getEntity(EntityType.PROCESS,entity.getName());
                     }
