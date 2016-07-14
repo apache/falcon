@@ -204,6 +204,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
+            LOG.debug("BacklogMetricEmitter running for entities");
             executor = new ScheduledThreadPoolExecutor(10);
             List<Future> futures = new ArrayList<>();
             try {
@@ -300,6 +301,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
+            LOG.debug("BacklogCheckService running for entities");
             try {
                 AbstractWorkflowEngine wfEngine = getWorkflowEngine();
                 for (Entity entity : entityBacklogs.keySet()) {
