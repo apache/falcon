@@ -145,7 +145,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                 List<MetricInfo> metricsInDB = entry.getValue();
                 List<MetricInfo> metricInfoList = Collections.synchronizedList(metricsInDB);
                 entityBacklogs.put(entry.getKey(), metricInfoList);
-                LOG.debug("Backlog of entity " + entry.getKey().getName() + "for instances " + metricInfoList);
+                LOG.debug("Backlog of entity " + entry.getKey().getName() + " for instances " + metricInfoList);
             }
         }
     }
@@ -318,7 +318,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     } else {
                                         CurrentUser.authenticate(System.getProperty("user.name"));
                                     }
-                                    if (!wfEngine.isActive(entity)) {
+                                    if (wfEngine.isMissing(entity)) {
                                         LOG.info("Entity of name {} was deleted so removing instance of "
                                                 + "nominaltime {} ", entity.getName(), nominalTimeStr);
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),

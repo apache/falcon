@@ -128,6 +128,11 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
+    public boolean isMissing(Entity entity) throws FalconException {
+        return !STATE_STORE.entityExists(new EntityID(entity));
+    }
+
+    @Override
     public String suspend(Entity entity) throws FalconException {
         EXECUTION_SERVICE.suspend(entity);
         return "SUCCESS";
