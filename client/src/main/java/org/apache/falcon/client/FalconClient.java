@@ -470,7 +470,7 @@ public class FalconClient extends AbstractFalconClient {
         checkIfSuccessful(clientResponse);
 
         EntityList result = clientResponse.getEntity(EntityList.class);
-        if (result == null || result.getElements() == null) {
+        if (result == null) {
             return new EntityList();
         }
         return result;
