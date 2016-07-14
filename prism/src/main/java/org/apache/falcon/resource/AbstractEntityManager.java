@@ -25,7 +25,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
-import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.lock.MemoryLocks;
@@ -170,17 +169,18 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
-            for (String cluster : clusters) {
-                try{
-                    Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
-                    // Fix for Falcon-1749
-                    if(type.equals(EntityType.PROCESS)){
-                        EntityUtil.getEntity(EntityType.PROCESS,entity.getName());
-                    }
-                    colos.add(clusterEntity.getColo());
-                } catch (EntityNotRegisteredException e){
-                    LOG.warn(e.getMessage(), e);
+            try{
+                // Fix for Falcon-1749
+                EntityType entitytype =  EntityType.getEnum(type);
+                if (entitytype == EntityType.PROCESS || entitytype == EntityType.FEED){
+                    EntityUtil.getEntity(entitytype, entity.getName());
                 }
+                for (String cluster : clusters) {
+                    Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                    colos.add(clusterEntity.getColo());
+                }
+            }catch (EntityNotRegisteredException e){
+                LOG.warn(e.getMessage(), e);
             }
             if (colos.isEmpty()) {
                 throw new EntityNotRegisteredException(entity.getName()  + " (" + type + ") not found");
