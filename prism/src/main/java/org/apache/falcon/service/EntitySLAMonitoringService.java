@@ -50,6 +50,7 @@ import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -442,7 +443,11 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                                                     String entityType) throws
         FalconException {
         Entity entity = EntityUtil.getEntity(entityType, entityName);
-
+        if (entity.getACL().getOwner() != null && !entity.getACL().getOwner().isEmpty()) {
+            CurrentUser.authenticate(entity.getACL().getOwner());
+        } else {
+            CurrentUser.authenticate(System.getProperty("user.name"));
+        }
         try {
             if (entityType.equals(EntityType.PROCESS.toString())){
                 LOG.debug("Checking instance availability status for entity:{}, cluster:{}, "
