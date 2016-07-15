@@ -29,7 +29,6 @@ import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
-import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -150,26 +149,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 }
 
             case IMPORT:
-                DatasourceType dsType = EntityUtil.getImportDatasourceType(cluster, feed);
-                if ((dsType == DatasourceType.MYSQL)
-                    || (dsType == DatasourceType.ORACLE)
-                    || (dsType == DatasourceType.HSQL)) {
-                    return new DatabaseImportWorkflowBuilder(feed);
-                } else {
-                    LOG.info("Import policy not implemented for DataSourceType : " + dsType);
-                }
-                break;
+                return new DatabaseImportWorkflowBuilder(feed);
 
             case EXPORT:
-                dsType = EntityUtil.getExportDatasourceType(cluster, feed);
-                if ((dsType == DatasourceType.MYSQL)
-                        || (dsType == DatasourceType.ORACLE)
-                        || (dsType == DatasourceType.HSQL)) {
-                    return new DatabaseExportWorkflowBuilder(feed);
-                } else {
-                    LOG.info("Export policy not implemented for DataSourceType : " + dsType);
-                }
-                break;
+                return new DatabaseExportWorkflowBuilder(feed);
 
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
