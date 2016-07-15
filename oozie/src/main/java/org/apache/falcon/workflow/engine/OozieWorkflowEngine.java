@@ -1603,6 +1603,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             } else if (jobId.endsWith("-B")) {
                 BundleJob bundle = client.getBundleJobInfo(jobId);
                 return bundle.getStatus().name();
+            } else if (jobId.contains("-C@")) {
+                return client.getCoordActionInfo(jobId).getStatus().name();
             }
             throw new IllegalArgumentException("Unhandled jobs id: " + jobId);
         } catch (Exception e) {
