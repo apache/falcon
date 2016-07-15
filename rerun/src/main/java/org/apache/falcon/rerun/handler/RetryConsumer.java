@@ -59,9 +59,9 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
                     (message.getRunId() + 1), message.getAttempts(), message.getEntityName(), message.getInstance(),
                     message.getWfId(), SchemaHelper.formatDateUTC(new Date(System.currentTimeMillis())));
             // Use coord action id for rerun if available
-            String id = message.getParentId();
-            if (StringUtils.isBlank(id)) {
-                id = message.getWfId();
+            String id = message.getWfId();
+            if (!id.contains("-C@") && StringUtils.isNotBlank(message.getParentId())) {
+                id = message.getParentId();
             }
             handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, false);
         } catch (Exception e) {
