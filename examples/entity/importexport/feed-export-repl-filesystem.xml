@@ -33,7 +33,7 @@
             <export>
                   <target name="mysql-db" tableName="simple_export_filesystem">
                       <load type="allowinsert"/>
-				  </target>	
+                  </target>    
                   <arguments>
                        <argument name="--update-key" value="id"/>
                   </arguments>

@@ -33,13 +33,13 @@
             <export>
                   <target name="mysql-db" tableName="db_processed_data">
                       <load type="allowinsert"/>
-				  	  <!--fields>
-					    <includes>
-						  <field>id</field>
-						  <field>name</field>
-					    </includes>
-				      </fields-->
-				  </target>	
+                        <!--fields>
+                        <includes>
+                          <field>id</field>
+                          <field>name</field>
+                        </includes>
+                      </fields-->
+                  </target>    
                   <arguments>
                        <argument name="--update-key" value="id"/>
                   </arguments>
@@ -47,7 +47,7 @@
         </cluster>
     </clusters>
     
-	<table uri="catalog:default:hcat_raw_data#year=${YEAR};month=${MONTH};day=${DAY};hour=${HOUR};minute=${MINUTE}"/>
+    <table uri="catalog:default:hcat_raw_data#year=${YEAR};month=${MONTH};day=${DAY};hour=${HOUR};minute=${MINUTE}"/>
 
     <ACL owner="ambari-qa" group="users" permission="0755"/>
     <schema location="/none" provider="none"/>

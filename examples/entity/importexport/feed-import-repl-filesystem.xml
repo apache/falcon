@@ -31,32 +31,32 @@
             <validity start="2016-01-01T00:00Z" end="2017-03-31T00:00Z"/>
             <retention limit="days(90)" action="delete"/>
             <import> 
-            	<source name="mysql-db" tableName="mysql_raw_data">
-					<extract type="full">
-						<mergepolicy>snapshot</mergepolicy>
-					</extract>	
-                	<fields>
-                   		<includes>
-                     		<field>id</field>
-                     		<field>name</field>
-                   		</includes>
-                	</fields>
-				</source>
-            	<arguments>
-               		<argument name="--split-by" value="id"/>
-	            	<argument name="--num-mappers" value="2"/>
+                <source name="mysql-db" tableName="mysql_raw_data">
+                    <extract type="full">
+                        <mergepolicy>snapshot</mergepolicy>
+                    </extract>    
+                    <fields>
+                           <includes>
+                             <field>id</field>
+                             <field>name</field>
+                           </includes>
+                    </fields>
+                </source>
+                <arguments>
+                       <argument name="--split-by" value="id"/>
+                    <argument name="--num-mappers" value="2"/>
                 </arguments>
             </import>
         </cluster>
         <cluster name="backupCluster" type="target">
             <validity start="2016-01-01T00:00Z" end="2017-03-31T00:00Z"/>
             <retention limit="days(90)" action="delete"/>
-    		<locations>
-        		<location type="data" path="/user/ambari-qa/falcon/demo/backup/feed-import-filesystem/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}"/>
-        		<location type="stats" path="/none"/>
-        		<location type="meta" path="/none"/>
-    		</locations>
-		</cluster>
+            <locations>
+                <location type="data" path="/user/ambari-qa/falcon/demo/backup/feed-import-filesystem/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}"/>
+                <location type="stats" path="/none"/>
+                <location type="meta" path="/none"/>
+            </locations>
+        </cluster>
     </clusters>
     
     <locations>

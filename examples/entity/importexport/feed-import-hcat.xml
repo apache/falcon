@@ -31,27 +31,27 @@
             <validity start="2016-01-01T00:00Z" end="2016-03-31T00:00Z"/>
             <retention limit="days(90)" action="delete"/>
             <import> 
-            	<source name="mysql-db" tableName="mysql_raw_data">
-					<extract type="full">
-						<mergepolicy>snapshot</mergepolicy>
-					</extract>	
-                	<fields>
-                   		<includes>
-                     		<field>id</field>
-                     		<field>name</field>
-                   		</includes>
-                	</fields>
-				</source>
-            	<arguments>
-               		<argument name="--split-by" value="id"/>
-	            	<argument name="--num-mappers" value="2"/>
+                <source name="mysql-db" tableName="mysql_raw_data">
+                    <extract type="full">
+                        <mergepolicy>snapshot</mergepolicy>
+                    </extract>    
+                    <fields>
+                           <includes>
+                             <field>id</field>
+                             <field>name</field>
+                           </includes>
+                    </fields>
+                </source>
+                <arguments>
+                       <argument name="--split-by" value="id"/>
+                    <argument name="--num-mappers" value="2"/>
                 </arguments>
             </import>
         </cluster>
     </clusters>
     
-	<!--<table uri="catalog:default:hcat_raw_data#year=${YEAR};month=${MONTH};day=${DAY};hour=${HOUR};minute=${MINUTE}"/>-->
-	<table uri="catalog:default:hcat_raw_data#year=BLAH"/>
+    <!--<table uri="catalog:default:hcat_raw_data#year=${YEAR};month=${MONTH};day=${DAY};hour=${HOUR};minute=${MINUTE}"/>-->
+    <table uri="catalog:default:hcat_raw_data#year=BLAH"/>
     
     <ACL owner="ambari-qa" group="users" permission="0755"/>
     <schema location="/none" provider="none"/>

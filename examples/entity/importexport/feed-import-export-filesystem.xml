@@ -31,26 +31,26 @@
             <validity start="2016-01-01T00:00Z" end="2016-03-31T00:00Z"/>
             <retention limit="days(90)" action="delete"/>
             <import> 
-            	<source name="mysql-db" tableName="simple">
-					<extract type="full">
-						<mergepolicy>snapshot</mergepolicy>
-					</extract>	
-                	<fields>
-                   		<includes>
-                     		<field>id</field>
-                     		<field>name</field>
-                   		</includes>
-                	</fields>
-				</source>
-            	<arguments>
-               		<argument name="--split-by" value="id"/>
-	            	<argument name="--num-mappers" value="2"/>
+                <source name="mysql-db" tableName="simple">
+                    <extract type="full">
+                        <mergepolicy>snapshot</mergepolicy>
+                    </extract>    
+                    <fields>
+                           <includes>
+                             <field>id</field>
+                             <field>name</field>
+                           </includes>
+                    </fields>
+                </source>
+                <arguments>
+                       <argument name="--split-by" value="id"/>
+                    <argument name="--num-mappers" value="2"/>
                 </arguments>
             </import>
             <export>
                   <target name="mysql-db" tableName="simple_export">
                       <load type="allowinsert"/>
-				  </target>	
+                  </target>    
                   <arguments>
                        <argument name="--update-key" value="id"/>
                   </arguments>
