@@ -561,9 +561,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-export.hql")));
         Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-import.hql")));
 
-        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf")));
-        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-source-hive-site.xml")));
-        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-target-hive-site.xml")));
 
         HashMap<String, String> props = getCoordProperties(coord);
 
@@ -626,11 +623,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private void assertReplicationHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
         FileSystem fs = trgMiniDFS.getFileSystem();
 
-        Path hiveConfPath = new Path(wfPath, "conf/falcon-source-hive-site.xml");
-        Assert.assertTrue(fs.exists(hiveConfPath));
 
-        hiveConfPath = new Path(wfPath, "conf/falcon-target-hive-site.xml");
-        Assert.assertTrue(fs.exists(hiveConfPath));
 
         boolean isSecurityEnabled = SecurityUtil.isSecurityEnabled();
         if (isSecurityEnabled) {
@@ -651,7 +644,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             }
 
             if ("recordsize".equals(actionName)) {
-                Assert.assertEquals(action.getJava().getJobXml(), "${wf:appPath()}/conf/falcon-source-hive-site.xml");
                 if (isSecurityEnabled) {
                     Assert.assertNotNull(action.getCred());
                     Assert.assertEquals(action.getCred(), "falconSourceHiveAuth");

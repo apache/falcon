@@ -26,7 +26,6 @@
         <prepare>
             <delete path="${distcpSourcePaths}"/>
         </prepare>
-        <job-xml>${wf:appPath()}/conf/falcon-source-hive-site.xml</job-xml>
         <configuration>
             <property>
                 <name>mapred.job.queue.name</name>
