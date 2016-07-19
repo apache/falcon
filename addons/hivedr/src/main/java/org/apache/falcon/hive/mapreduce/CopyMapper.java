@@ -28,10 +28,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Map class for Hive DR.
@@ -40,6 +42,7 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CopyMapper.class);
     private EventUtils eventUtils;
+    ScheduledThreadPoolExecutor timer;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -54,15 +57,22 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     @Override
     protected void map(LongWritable key, Text value,
-                       Context context) throws IOException, InterruptedException {
+                       final Context context) throws IOException, InterruptedException {
         LOG.debug("Processing Event value: {}", value.toString());
-
+        timer = new ScheduledThreadPoolExecutor(1);
+        timer.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                System.out.println("Hive DR copy mapper progress heart beat");
+                context.progress();
+            }
+        }, 0, 30, TimeUnit.SECONDS);
         try {
             eventUtils.processEvents(value.toString());
         } catch (Exception e) {
             LOG.error("Exception in processing events:", e);
             throw new IOException(e);
         } finally {
+            timer.shutdownNow();
             cleanup(context);
         }
         List<ReplicationStatus> replicationStatusList = eventUtils.getListReplicationStatus();
