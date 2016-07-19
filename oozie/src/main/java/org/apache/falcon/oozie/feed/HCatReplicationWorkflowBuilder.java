@@ -167,7 +167,6 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
             if (PREPROCESS_ACTION_NAME.equals(actionName)) {
 
                 // add reference to hive-site conf to each action
-                //action.getJava().setJobXml("${wf:appPath()}/conf/falcon-source-hive-site.xml");
 
                 if (isSecurityEnabled) { // add a reference to credential in the action
                     action.setCred(SOURCE_HIVE_CREDENTIAL_NAME);
