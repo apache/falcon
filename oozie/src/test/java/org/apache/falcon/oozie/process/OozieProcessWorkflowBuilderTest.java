@@ -372,6 +372,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
+        assertEquals(process.getWorkflow().getLib(), "/resources/action/lib/falcon-examples.jar");
 
         ACTION sparkNode = getAction(parentWorkflow, "user-action");
 
@@ -380,7 +381,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
 
         assertEquals(sparkAction.getMaster(), "local");
-        assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/falcon-examples.jar");
+        assertEquals(sparkAction.getJar(), "falcon-examples.jar");
 
         Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
         List<String> argsList = sparkAction.getArg();
@@ -430,6 +431,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
+        assertEquals(process.getWorkflow().getLib(), "/resources/action/lib/spark-wordcount.jar");
 
         ACTION sparkNode = getAction(parentWorkflow, "user-action");
 
@@ -437,7 +439,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 OozieUtils.unMarshalSparkAction(sparkNode);
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
         assertEquals(sparkAction.getMaster(), "local");
-        assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/spark-wordcount.jar");
+        assertEquals(sparkAction.getJar(), "spark-wordcount.jar");
         List<String> argsList = sparkAction.getArg();
         Input input = process.getInputs().getInputs().get(0);
         Output output = process.getOutputs().getOutputs().get(0);

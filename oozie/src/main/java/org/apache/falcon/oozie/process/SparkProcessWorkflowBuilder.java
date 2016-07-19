@@ -30,12 +30,10 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.spark.CONFIGURATION.Property;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.util.OozieUtils;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import javax.xml.bind.JAXBElement;
@@ -59,7 +57,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
 
         String sparkMasterURL = entity.getSparkAttributes().getMaster();
-        String sparkFilePath = entity.getSparkAttributes().getJar();
+        Path sparkJarFilePath = new Path(entity.getSparkAttributes().getJar());
         String sparkJobName = entity.getSparkAttributes().getName();
         String sparkOpts = entity.getSparkAttributes().getSparkOpts();
         String sparkClassName = entity.getSparkAttributes().getClazz();
@@ -94,18 +92,28 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         addOutputFeedsAsArgument(argList, cluster);
         addInputFeedsAsArgument(argList, cluster);
 
-        sparkAction.setJar(addUri(sparkFilePath, cluster));
-
-        setSparkLibFileToWorkflowLib(sparkFilePath, entity);
+        // In Oozie spark action, value for jar is either Java jar file path or Python file path.
+        validateSparkJarFilePath(sparkJarFilePath);
+        sparkAction.setJar(sparkJarFilePath.getName());
+        setSparkLibFileToWorkflowLib(sparkJarFilePath.toString(), entity);
         propagateEntityProperties(sparkAction);
 
         OozieUtils.marshalSparkAction(action, actionJaxbElement);
         return action;
     }
 
-    private void setSparkLibFileToWorkflowLib(String sparkFile, Process entity) {
+    private void setSparkLibFileToWorkflowLib(String sparkJarFilePath, Process entity) {
         if (StringUtils.isEmpty(entity.getWorkflow().getLib())) {
-            entity.getWorkflow().setLib(sparkFile);
+            entity.getWorkflow().setLib(sparkJarFilePath);
+        } else {
+            String workflowLib = entity.getWorkflow().getLib() + "," + sparkJarFilePath;
+            entity.getWorkflow().setLib(workflowLib);
+        }
+    }
+
+    private void validateSparkJarFilePath(Path sparkJarFilePath) throws FalconException {
+        if (!sparkJarFilePath.isAbsolute()) {
+            throw new FalconException("Spark jar file path must be absolute:"+sparkJarFilePath);
         }
     }
 
@@ -186,16 +194,6 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             }
             numOutputFeed--;
         }
-    }
-
-    private String addUri(String jarFile, Cluster cluster) throws FalconException {
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
-        Path jarFilePath = new Path(jarFile);
-        if (jarFilePath.isAbsoluteAndSchemeAuthorityNull()) {
-            return fs.makeQualified(jarFilePath).toString();
-        }
-        return jarFile;
     }
 
     private String getClusterEntitySparkMaster(Cluster cluster) {
