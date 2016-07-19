@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<!--
+ A feed representing Hourly customer email data retained for 90 days
+ -->
+<feed description="Raw customer email feed" name="netezza-feed-import-filesystem" xmlns="uri:falcon:feed:0.1">
+    <tags>externalSystem=USWestEmailServers,classification=secure</tags>
+    <groups>DataImportPipeline</groups>
+    <frequency>minutes(10)</frequency>
+    <late-arrival cut-off="hours(4)"/>
+    <clusters>
+        <cluster name="primaryCluster" type="source">
+            <validity start="2016-04-10T00:00Z" end="2017-03-31T00:00Z"/>
+            <retention limit="days(90)" action="delete"/>
+            <import> 
+                <source name="netezza-db" tableName="db_raw_data">
+                    <extract type="full">
+                        <mergepolicy>snapshot</mergepolicy>
+                    </extract>    
+                    <fields>
+                           <includes>
+                             <field>id</field>
+                             <field>name</field>
+                           </includes>
+                    </fields>
+                </source>
+                <arguments>
+                    <argument name="--split-by" value="id"/>
+                    <argument name="--num-mappers" value="2"/>
+                </arguments>
+            </import>
+        </cluster>
+    </clusters>
+    
+    <locations>
+        <location type="data" path="/user/ambari-qa/falcon/demo/primary/netezza-feed-import-filesystem/${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}"/>
+        <location type="stats" path="/none"/>
+        <location type="meta" path="/none"/>
+    </locations>
+    
+    <ACL owner="ambari-qa" group="users" permission="0755"/>
+    <schema location="/none" provider="none"/>
+
+   <lifecycle>
+        <retention-stage>
+            <frequency>days(1)</frequency>
+            <queue>default</queue>
+            <priority>LOW</priority>
+           <properties>
+                <property name="retention.policy.agebaseddelete.limit" value="hours(12)"></property>
+            </properties>
+        </retention-stage>
+    </lifecycle>
+</feed>

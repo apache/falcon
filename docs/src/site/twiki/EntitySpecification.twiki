@@ -117,6 +117,14 @@ Following are the tags defined in a datasource.xml:
  name="test-hsql-db" xmlns="uri:falcon:datasource:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
 
+---+++ Datasource Types
+
+Falcon currently supports relational databases as data sources (both source and target). The following relational
+databases are supported
+   * MySQL, HSQL, Postgres, Oracle, Teradata, Netezza, DB2
+   * Generic - generic jdbc data source. This will require specifying a driver classname and jar file in the
+       datasource entity specification. Please see samples in the examples dir.
+
 The colo specifies the colo to which the datasource belongs to and name is the name of the datasource which has to
 be unique.
 

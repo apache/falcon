@@ -95,13 +95,16 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
         Map<String, String> extraArgs = getArguments(cluster);
         StringBuilder sqoopArgs = new StringBuilder();
         StringBuilder sqoopOptions = new StringBuilder();
-        buildDriverArgs(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
-        buildConnectArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
-        buildTableArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
-        Datasource datasource = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(
-            FeedHelper.getCluster(entity, cluster.getName())));
-        ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions, datasource)
+
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
+        Datasource datasource = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
+        ImportExportCommon.buildDriverArgs(sqoopArgs, datasource).append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildConnectArg(sqoopArgs, DatasourceHelper.getReadOnlyEndpoint(datasource))
             .append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildTableArg(sqoopArgs, FeedHelper.getImportDataSourceTableName(feedCluster))
+            .append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions,
+            DatasourceHelper.getReadPasswordInfo(datasource)).append(ImportExportCommon.ARG_SEPARATOR);
         buildNumMappers(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
         buildArguments(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
         buildTargetArg(sqoopArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
@@ -110,28 +113,6 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
         return sqoopCmd.append("import").append(ImportExportCommon.ARG_SEPARATOR)
             .append(sqoopOptions).append(ImportExportCommon.ARG_SEPARATOR)
             .append(sqoopArgs).toString();
-    }
-
-    private StringBuilder buildDriverArgs(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        Datasource db = DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster));
-        if ((db.getDriver() != null) && (db.getDriver().getClazz() != null)) {
-            builder.append("--driver").append(ImportExportCommon.ARG_SEPARATOR).append(db.getDriver().getClazz());
-        }
-        return builder;
-    }
-
-    private StringBuilder buildConnectArg(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--connect").append(ImportExportCommon.ARG_SEPARATOR)
-            .append(DatasourceHelper.getReadOnlyEndpoint(
-                DatasourceHelper.getDatasource(FeedHelper.getImportDatasourceName(feedCluster))));
-    }
-
-    private StringBuilder buildTableArg(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
-            .append(FeedHelper.getImportDataSourceTableName(feedCluster));
     }
 
     private StringBuilder buildTargetArg(StringBuilder builder, Feed feed, Cluster cluster)
