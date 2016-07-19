@@ -48,7 +48,45 @@ public class FalconCLI {
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
-    private static final String FALCON_URL = "FALCON_URL";
+    public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
+    public static final String DEBUG_OPTION = "debug";
+    public static final String URL_OPTION = "url";
+    public static final String FALCON_URL = "FALCON_URL";
+
+    public static final String ADMIN_CMD = "admin";
+    public static final String HELP_CMD = "help";
+    public static final String METADATA_CMD = "metadata";
+    public static final String ENTITY_CMD = "entity";
+    public static final String INSTANCE_CMD = "instance";
+    public static final String RECIPE_CMD = "recipe";
+
+    public static final String TYPE_OPT = "type";
+    public static final String COLO_OPT = "colo";
+    public static final String CLUSTER_OPT = "cluster";
+    public static final String FEED_OPT = "feed";
+    public static final String PROCESS_OPT = "process";
+    public static final String ENTITY_NAME_OPT = "name";
+    public static final String FILE_PATH_OPT = "file";
+    public static final String VERSION_OPT = "version";
+    public static final String SCHEDULE_OPT = "schedule";
+    public static final String SUSPEND_OPT = "suspend";
+    public static final String RESUME_OPT = "resume";
+    public static final String STATUS_OPT = "status";
+    public static final String SUMMARY_OPT = "summary";
+    public static final String DEPENDENCY_OPT = "dependency";
+    public static final String LIST_OPT = "list";
+    public static final String SKIPDRYRUN_OPT = "skipDryRun";
+    public static final String FILTER_BY_OPT = "filterBy";
+    public static final String ORDER_BY_OPT = "orderBy";
+    public static final String SORT_ORDER_OPT = "sortOrder";
+    public static final String OFFSET_OPT = "offset";
+    public static final String NUM_RESULTS_OPT = "numResults";
+    public static final String START_OPT = "start";
+    public static final String END_OPT = "end";
+    public static final String CURRENT_COLO = "current.colo";
+    public static final String CLIENT_PROPERTIES = "/client.properties";
+    public static final String DO_AS_OPT = "doAs";
+
     private final Properties clientProperties;
 
     public FalconCLI() throws Exception {
@@ -155,8 +193,7 @@ public class FalconCLI {
         }
     }
 
-    protected Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName)
-        throws FalconCLIException {
+    protected Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName) {
         Integer integer = defaultVal;
         if (optionValue != null) {
             try {
@@ -169,7 +206,7 @@ public class FalconCLI {
         return integer;
     }
 
-    protected void validateEntityTypeForSummary(String type) throws FalconCLIException {
+    public static void validateEntityTypeForSummary(String type) {
         EntityType entityType = EntityType.getEnum(type);
         if (!entityType.isSchedulable()) {
             throw new FalconCLIException("Invalid entity type " + entityType
@@ -177,13 +214,13 @@ public class FalconCLI {
         }
     }
 
-    protected void validateNotEmpty(String paramVal, String paramName) throws FalconCLIException {
+    protected void validateNotEmpty(String paramVal, String paramName) {
         if (StringUtils.isBlank(paramVal)) {
             throw new FalconCLIException("Missing argument : " + paramName);
         }
     }
 
-    protected void validateSortOrder(String sortOrder) throws FalconCLIException {
+    protected void validateSortOrder(String sortOrder) {
         if (!StringUtils.isBlank(sortOrder)) {
             if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
                 throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
@@ -192,7 +229,7 @@ public class FalconCLI {
         }
     }
 
-    protected String getColo(String colo) throws FalconCLIException, IOException {
+    protected String getColo(String colo) throws IOException {
         if (colo == null) {
             Properties prop = getClientProperties();
             colo = prop.getProperty(FalconCLIConstants.CURRENT_COLO, "*");
@@ -200,7 +237,7 @@ public class FalconCLI {
         return colo;
     }
 
-    protected void validateFilterBy(String filterBy, String filterType) throws FalconCLIException {
+    public static void validateFilterBy(String filterBy, String filterType) {
         if (StringUtils.isEmpty(filterBy)) {
             return;
         }
@@ -223,7 +260,7 @@ public class FalconCLI {
         }
     }
 
-    protected void validateOrderBy(String orderBy, String action) throws FalconCLIException {
+    public static void validateOrderBy(String orderBy, String action) {
         if (StringUtils.isBlank(orderBy)) {
             return;
         }
@@ -245,7 +282,8 @@ public class FalconCLI {
         throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
     }
 
-    protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {
+
+    protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);
         if (url == null) {
             url = System.getenv(FALCON_URL);

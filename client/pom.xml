@@ -78,7 +78,9 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -117,7 +119,6 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <excludeScope>provided</excludeScope>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
                         </configuration>
                     </execution>
@@ -148,6 +149,14 @@
                             <version>0.6.3</version>
                         </plugin>
                     </plugins>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
         </plugins>

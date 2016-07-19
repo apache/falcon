@@ -169,13 +169,18 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
-            for (String cluster : clusters) {
-                try{
+            try{
+                // Fix for Falcon-1749
+                EntityType entitytype =  EntityType.getEnum(type);
+                if (entitytype == EntityType.PROCESS || entitytype == EntityType.FEED){
+                    EntityUtil.getEntity(entitytype, entity.getName());
+                }
+                for (String cluster : clusters) {
                     Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
                     colos.add(clusterEntity.getColo());
-                } catch (EntityNotRegisteredException e){
-                    LOG.warn(e.getMessage(), e);
                 }
+            }catch (EntityNotRegisteredException e){
+                LOG.warn(e.getMessage(), e);
             }
             if (colos.isEmpty()) {
                 throw new EntityNotRegisteredException(entity.getName()  + " (" + type + ") not found");
@@ -319,7 +324,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
             Entity entity = deserializeEntity(inputStream, entityType);
             verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.UPDATE);
             return update(entity, type, entityName, skipDryRun);
-        } catch (IOException | FalconException e) {
+        } catch (FalconException e) {
             LOG.error("Update failed", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -562,17 +567,15 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
 
         //now obtain locks for all dependent entities if any.
         Set<Entity> affectedEntities = EntityGraph.get().getDependents(entity);
-        if (affectedEntities != null) {
-            for (Entity e : affectedEntities) {
-                if (memoryLocks.acquireLock(e, command)) {
-                    tokenList.add(e);
-                    LOG.debug("{} on entity {} has acquired lock on {}", command, entity, e);
-                } else {
-                    LOG.error("Error while trying to acquire lock on {}. Releasing already obtained locks",
-                            e.toShortString());
-                    throw new FalconException("There are multiple update commands running for dependent entity "
-                            + e.toShortString());
-                }
+        for (Entity e : affectedEntities) {
+            if (memoryLocks.acquireLock(e, command)) {
+                tokenList.add(e);
+                LOG.debug("{} on entity {} has acquired lock on {}", command, entity, e);
+            } else {
+                LOG.error("Error while trying to acquire lock on {}. Releasing already obtained locks",
+                        e.toShortString());
+                throw new FalconException("There are multiple update commands running for dependent entity "
+                        + e.toShortString());
             }
         }
     }
@@ -756,7 +759,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     }
 
     protected Entity deserializeEntity(InputStream xmlStream, EntityType entityType)
-        throws IOException, FalconException {
+        throws FalconException {
 
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         if (xmlStream.markSupported()) {

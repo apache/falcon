@@ -1161,6 +1161,24 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Assert.fail("ValidationException should have been thrown");
     }
 
+    @Test (expectedExceptions = {ValidationException.class})
+    public void testImportFeedWithNoTimePartition() throws Exception {
+
+        InputStream feedStream = this.getClass()
+                .getResourceAsStream("/config/feed/feed-import-no-timepartition-0.1.xml");
+        parser.parseAndValidate(feedStream);
+        Assert.fail("ValidationException should have been thrown");
+    }
+
+    @Test (expectedExceptions = {ValidationException.class})
+    public void testImportFeedWithInvalidTimePartition() throws Exception {
+
+        InputStream feedStream = this.getClass()
+                .getResourceAsStream("/config/feed/feed-import-invalid-storage-path-0.1.xml");
+        parser.parseAndValidate(feedStream);
+        Assert.fail("ValidationException should have been thrown");
+    }
+
     public void testValidateEmailNotification() throws Exception {
         Feed feedNotification = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
                 (FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));

@@ -17,10 +17,25 @@
  */
 package org.apache.falcon.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.regex.Pattern;
+import javax.ws.rs.core.MediaType;
+
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Cluster;
@@ -50,22 +65,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import javax.ws.rs.core.MediaType;
-import java.io.File;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.regex.Pattern;
 
 /**
  * Test class for Entity REST APIs.
@@ -430,7 +429,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
         submitCluster(context);
     }
 
-    public void testNotFoundStatus() throws FalconException, IOException, FalconCLIException {
+    public void testNotFoundStatus() throws FalconException, IOException {
         String feed1 = "f1" + System.currentTimeMillis();
         try {
             falconUnitClient.getStatus(EntityType.FEED, feed1, null, null, false);
@@ -440,7 +439,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
         }
     }
 
-    public void testVersion() throws FalconException, IOException, FalconCLIException {
+    public void testVersion() throws FalconException, IOException {
         String json = falconUnitClient.getVersion(null);
         String buildVersion = BuildProperties.get().getProperty("build.version");
         String deployMode = DeploymentProperties.get().getProperty("deploy.mode");
@@ -630,7 +629,7 @@ public class EntityManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(feed.getName(), context.overlay.get("inputFeedName"));
     }
 
-    public void testInvalidGetEntityDefinition() throws FalconException, IOException, FalconCLIException {
+    public void testInvalidGetEntityDefinition() throws FalconException, IOException {
         try {
             falconUnitClient.getDefinition(EntityType.PROCESS.name(), "sample1", null);
             Assert.fail("Exception should be Thrown");

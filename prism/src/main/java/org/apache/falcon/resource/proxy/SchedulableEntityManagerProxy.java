@@ -134,7 +134,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
             @Override
             protected SchedulableEntityInstanceResult doExecute(String colo) throws FalconException {
-                return getEntityManager(colo).invoke("getFeedSLAMissPendingAlerts", entityType, entityName,
+                return getEntityManager(colo).invoke("getEntitySLAMissPendingAlerts", entityType, entityName,
                         start, end, colo);
             }
         }.execute();

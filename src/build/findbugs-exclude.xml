@@ -53,13 +53,13 @@
     </Match>
 
     <Match>
-        <Class name="org.apache.falcon.persistence.FeedSLAAlertBean" />
+        <Class name="org.apache.falcon.persistence.EntitySLAAlertBean" />
         <Bug pattern="UWF_UNWRITTEN_FIELD,NP_BOOLEAN_RETURN_NULL" />
     </Match>
 
 
     <Match>
-        <Class name="org.apache.falcon.persistence.MonitoredFeedsBean" />
+        <Class name="org.apache.falcon.persistence.MonitoredEntityBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
     </Match>
 

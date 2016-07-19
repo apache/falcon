@@ -18,7 +18,6 @@
 package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.EntityType;
 
 import java.util.Date;
 
@@ -26,6 +25,6 @@ import java.util.Date;
  * Interface for FeedSLAAlert to be used by Listeners.
  */
 public interface EntitySLAListener {
-    void highSLAMissed(String enityName, EntityType entityType, String clusterName, Date nominalTime)
+    void highSLAMissed(String entityName, String clusterName, String entityType, Date nominalTime)
         throws FalconException;
 }

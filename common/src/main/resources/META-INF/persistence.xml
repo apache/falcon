@@ -26,8 +26,8 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
-        <class>org.apache.falcon.persistence.FeedSLAAlertBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -37,7 +37,7 @@
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
-                org.apache.falcon.persistence.MonitoredFeedsBean;org.apache.falcon.persistence.FeedSLAAlertBean)"></property>
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -58,8 +58,8 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
-        <class>org.apache.falcon.persistence.FeedSLAAlertBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -69,7 +69,7 @@
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
-                org.apache.falcon.persistence.MonitoredFeedsBean;org.apache.falcon.persistence.FeedSLAAlertBean)"></property>
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -88,9 +88,9 @@
 
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.FeedSLAAlertBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -100,7 +100,7 @@
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
-                org.apache.falcon.persistence.MonitoredFeedsBean;org.apache.falcon.persistence.FeedSLAAlertBean)"></property>
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>

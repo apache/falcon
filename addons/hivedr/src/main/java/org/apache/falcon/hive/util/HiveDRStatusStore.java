@@ -49,7 +49,10 @@ public class HiveDRStatusStore extends DRStatusStore {
     private static final Logger LOG = LoggerFactory.getLogger(DRStatusStore.class);
     private FileSystem fileSystem;
 
-    private static final String DEFAULT_STORE_PATH = BASE_DEFAULT_STORE_PATH + "hiveReplicationStatusStore/";
+    private static final String DEFAULT_STORE_PATH = StringUtils.removeEnd
+            (DRStatusStore.BASE_DEFAULT_STORE_PATH,  File.separator) + File.separator
+            + "hiveReplicationStatusStore" + File.separator;
+
     private static final FsPermission DEFAULT_STATUS_DIR_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 

@@ -273,10 +273,10 @@ public class EntityGraphTest extends AbstractTestBase {
 
         store.remove(EntityType.PROCESS, process.getName());
         entities = graph.getDependents(cluster);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
 
         entities = graph.getDependents(process);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
     }
 
     @Test
@@ -355,7 +355,7 @@ public class EntityGraphTest extends AbstractTestBase {
         Assert.assertTrue(entities.contains(f3));
 
         entities = graph.getDependents(p2);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
 
         entities = graph.getDependents(f1);
         Assert.assertEquals(entities.size(), 2);
@@ -363,7 +363,7 @@ public class EntityGraphTest extends AbstractTestBase {
         Assert.assertTrue(entities.contains(cluster));
 
         entities = graph.getDependents(f2);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
 
         entities = graph.getDependents(f3);
         Assert.assertEquals(entities.size(), 2);

@@ -68,18 +68,6 @@ case $type in
     for i in `ls ${BASEDIR}/server/webapp`; do
       FALCONCPPATH="${FALCONCPPATH}:${i}/WEB-INF/lib/*"
     done
-    # In future we should refactor the CP directories between server and client
-    HADOOPDIR=`which hadoop`
-    if [ "$HADOOP_HOME" != "" ]; then
-      echo "Hadoop home is set, adding libraries from '${HADOOP_HOME}/bin/hadoop classpath' into falcon classpath"
-      FALCONCPPATH="${FALCONCPPATH}:`${HADOOP_HOME}/bin/hadoop classpath`"
-    elif [ "$HADOOPDIR" != "" ]; then
-      echo "Hadoop is installed, adding hadoop classpath to falcon classpath"
-      FALCONCPPATH="${FALCONCPPATH}:`hadoop classpath`"
-    else
-      echo "Could not find installed hadoop and HADOOP_HOME is not set."
-      echo "Please make sure either HADOOP_HOME is set or hadoop is in the PATH"
-    fi
     FALCON_OPTS="$FALCON_OPTS $FALCON_CLIENT_OPTS $FALCON_CLIENT_HEAP"
   ;;
   server)

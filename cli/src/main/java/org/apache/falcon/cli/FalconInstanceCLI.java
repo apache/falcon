@@ -190,7 +190,7 @@ public class FalconInstanceCLI extends FalconCLI {
         return instanceOptions;
     }
 
-    public void instanceCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException, IOException {
+    public void instanceCommand(CommandLine commandLine, FalconClient client) throws IOException {
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -307,7 +307,7 @@ public class FalconInstanceCLI extends FalconCLI {
 
     private void validateInstanceCommands(Set<String> optionsList,
                                           String entity, String type,
-                                          String colo) throws FalconCLIException {
+                                          String colo) {
 
         validateNotEmpty(entity, FalconCLIConstants.ENTITY_NAME_OPT);
         validateNotEmpty(type, FalconCLIConstants.TYPE_OPT);
@@ -338,7 +338,7 @@ public class FalconInstanceCLI extends FalconCLI {
         }
     }
 
-    private List<LifeCycle> getLifeCycle(String lifeCycleValue) throws FalconCLIException {
+    private List<LifeCycle> getLifeCycle(String lifeCycleValue) {
 
         if (lifeCycleValue != null) {
             String[] lifeCycleValues = lifeCycleValue.split(",");
