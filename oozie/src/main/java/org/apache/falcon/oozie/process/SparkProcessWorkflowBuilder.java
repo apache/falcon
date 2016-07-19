@@ -94,19 +94,19 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
 
         // In Oozie spark action, value for jar is either Java jar file path or Python file path.
         validateSparkJarFilePath(sparkJarFilePath);
-        sparkAction.setJar(getSparkJarFileName(sparkJarFilePath));
-        setSparkLibFileToWorkflowLib(sparkJarFilePath, entity);
+        sparkAction.setJar(sparkJarFilePath.getName());
+        setSparkLibFileToWorkflowLib(sparkJarFilePath.toString(), entity);
         propagateEntityProperties(sparkAction);
 
         OozieUtils.marshalSparkAction(action, actionJaxbElement);
         return action;
     }
 
-    private void setSparkLibFileToWorkflowLib(Path sparkJarFilePath, Process entity) {
+    private void setSparkLibFileToWorkflowLib(String sparkJarFilePath, Process entity) {
         if (StringUtils.isEmpty(entity.getWorkflow().getLib())) {
-            entity.getWorkflow().setLib(sparkJarFilePath.toString());
+            entity.getWorkflow().setLib(sparkJarFilePath);
         } else {
-            String workflowLib = entity.getWorkflow().getLib() + "," + sparkJarFilePath.toString();
+            String workflowLib = entity.getWorkflow().getLib() + "," + sparkJarFilePath;
             entity.getWorkflow().setLib(workflowLib);
         }
     }
@@ -115,10 +115,6 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         if (!sparkJarFilePath.isAbsolute()) {
             throw new FalconException("Spark jar file path must be absolute:"+sparkJarFilePath);
         }
-    }
-
-    private String getSparkJarFileName(Path sparkJarFilePath) {
-        return sparkJarFilePath.getName();
     }
 
     private void addPrepareDeleteOutputPath(org.apache.falcon.oozie.spark.ACTION sparkAction) throws FalconException {
