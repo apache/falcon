@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.datasource.Credential;
 import org.apache.falcon.entity.v0.datasource.Credentialtype;
 import org.apache.falcon.entity.v0.datasource.Datasource;
+import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.sqoop.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
@@ -60,9 +61,8 @@ public final class ImportExportCommon {
     private ImportExportCommon() {
     }
 
-    static StringBuilder buildUserPasswordArg(StringBuilder builder, StringBuilder sqoopOpts, Datasource db)
+    static StringBuilder buildUserPasswordArg(StringBuilder builder, StringBuilder sqoopOpts, Credential cred)
         throws FalconException {
-        Credential cred = DatasourceHelper.getReadPasswordInfo(db);
         builder.append("--username").append(ARG_SEPARATOR)
                 .append(cred.getUserName())
                 .append(ARG_SEPARATOR);
@@ -111,4 +111,22 @@ public final class ImportExportCommon {
         return Splitter.on(";").withKeyValueSeparator("=").split(partitionStr);
     }
 
+    public static StringBuilder buildDriverArgs(StringBuilder builder, Datasource db)
+        throws FalconException {
+        if ((db.getType() == DatasourceType.GENERIC) && (db.getDriver() != null)
+                && (db.getDriver().getClazz() != null)) {
+            builder.append("--driver").append(ImportExportCommon.ARG_SEPARATOR).append(db.getDriver().getClazz());
+        }
+        return builder;
+    }
+
+    public static StringBuilder buildConnectArg(StringBuilder builder, String endPoint) throws FalconException {
+        return builder.append("--connect").append(ImportExportCommon.ARG_SEPARATOR)
+                .append(endPoint);
+    }
+
+    public static StringBuilder buildTableArg(StringBuilder builder, String tableName) throws FalconException {
+        return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
+                .append(tableName);
+    }
 }

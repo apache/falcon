@@ -232,6 +232,11 @@
             <xs:enumeration value="mysql"/>
             <xs:enumeration value="oracle"/>
             <xs:enumeration value="hsql"/>
+            <xs:enumeration value="postgres"/>
+            <xs:enumeration value="db2"/>
+            <xs:enumeration value="netezza"/>
+            <xs:enumeration value="teradata"/>
+            <xs:enumeration value="generic"/>
         </xs:restriction>
     </xs:simpleType>
 
