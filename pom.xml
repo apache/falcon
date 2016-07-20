@@ -217,6 +217,7 @@
                                 <exclude>**/db1.script</exclude>
                                 <exclude>**/credential_provider.jceks</exclude>
                                 <exclude>**/*.json</exclude>
+                                <exclude>**/falcon-cli-hist.log</exclude>
                             </excludes>
                         </configuration>
                         <executions>
