@@ -104,9 +104,9 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
         ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions,
             DatasourceHelper.getWritePasswordInfo(datasource)).append(ImportExportCommon.ARG_SEPARATOR);
         buildNumMappers(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
-        buildArguments(sqoopArgs, extraArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
         buildLoadType(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
         buildExportArg(sqoopArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
+        buildArguments(sqoopArgs, extraArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
 
         StringBuilder sqoopCmd = new StringBuilder();
         return sqoopCmd.append("export").append(ImportExportCommon.ARG_SEPARATOR)
@@ -144,14 +144,14 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
 
     private StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs, Feed feed,
         Cluster cluster) throws FalconException {
+
         Storage.TYPE feedStorageType = FeedHelper.getStorageType(feed, cluster);
-        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
-            if ((feedStorageType == Storage.TYPE.TABLE) && (e.getKey().equals("--update-key"))) {
-                continue;
-            }
-            builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
-                .append(ImportExportCommon.ARG_SEPARATOR);
+        if ((feedStorageType == Storage.TYPE.TABLE) && (extraArgs.containsKey("--update-key"))) {
+            extraArgs.remove("--update-key");
         }
+        ImportExportCommon.handleVerbose(builder, extraArgs);
+        ImportExportCommon.buildArguments(builder, extraArgs);
+        ImportExportCommon.handleDirectMode(builder, extraArgs);
         return builder;
     }
 

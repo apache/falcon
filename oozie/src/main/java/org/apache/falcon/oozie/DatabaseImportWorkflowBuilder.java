@@ -134,46 +134,56 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
                     FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME));
     }
 
+//    private StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
+//        throws FalconException {
+//        handleVerbose(builder, extraArgs);
+//        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
+//            if (!e.getKey().startsWith("--direct")) {
+//                builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
+//                        .append(ImportExportCommon.ARG_SEPARATOR);
+//            }
+//        }
+//        handleDirectMode(builder, extraArgs);
+//        return builder;
+//    }
+
     private StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
         throws FalconException {
-        handleVerbose(builder, extraArgs);
-        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
-            if (!extraArgs.containsKey("--direct")) {
-                builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
-                        .append(ImportExportCommon.ARG_SEPARATOR);
-            }
-        }
-        handleDirectMode(builder, extraArgs);
+        ImportExportCommon.handleVerbose(builder, extraArgs);
+        ImportExportCommon.buildArguments(builder, extraArgs);
+        ImportExportCommon.handleDirectMode(builder, extraArgs);
         return builder;
     }
 
-    private StringBuilder handleVerbose(StringBuilder builder, Map<String, String> extraArgs)
-        throws FalconException {
-        if ((extraArgs.containsKey("--verbose")) && (extraArgs.get("--verbose").equalsIgnoreCase("TRUE"))) {
-            builder.append("--verbose").append(ImportExportCommon.ARG_SEPARATOR);
-        }
-        return builder;
-    }
+//    private StringBuilder handleVerbose(StringBuilder builder, Map<String, String> extraArgs)
+//        throws FalconException {
+//        if ((extraArgs.containsKey("--verbose")) && (extraArgs.get("--verbose").equalsIgnoreCase("TRUE"))) {
+//            builder.append("--verbose").append(ImportExportCommon.ARG_SEPARATOR);
+//            extraArgs.remove("--verbose");
+//        }
+//        return builder;
+//    }
 
-    private StringBuilder handleDirectMode(StringBuilder builder, Map<String, String> extraArgs)
-        throws FalconException {
-        if ((extraArgs.containsKey("--direct")) && (extraArgs.get("--direct").equalsIgnoreCase("true"))) {
-            builder.append("--direct").append(ImportExportCommon.ARG_SEPARATOR);
-        }
-        boolean first = true;
-        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
-            if (e.getKey().startsWith("--direct.")) {
-                if (first) {
-                    builder.append("--").append(ImportExportCommon.ARG_SEPARATOR);
-                    first = false;
-                }
-                builder.append(e.getKey().split("\\.")[1]).append(ImportExportCommon.ARG_SEPARATOR)
-                    .append(e.getValue()).append(ImportExportCommon.ARG_SEPARATOR);
 
-            }
-        }
-        return builder;
-    }
+//    private StringBuilder handleDirectMode(StringBuilder builder, Map<String, String> extraArgs)
+//        throws FalconException {
+//        if ((extraArgs.containsKey("--direct")) && (extraArgs.get("--direct").equalsIgnoreCase("true"))) {
+//            builder.append("--direct").append(ImportExportCommon.ARG_SEPARATOR);
+//        }
+//        boolean first = true;
+//        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
+//            if (e.getKey().startsWith("--direct.")) {
+//                if (first) {
+//                    builder.append("--").append(ImportExportCommon.ARG_SEPARATOR);
+//                    first = false;
+//                }
+//                builder.append("--").append(e.getKey().split("\\.")[1]).append(ImportExportCommon.ARG_SEPARATOR)
+//                    .append(e.getValue()).append(ImportExportCommon.ARG_SEPARATOR);
+//
+//            }
+//        }
+//        return builder;
+//    }
 
     /**
      *

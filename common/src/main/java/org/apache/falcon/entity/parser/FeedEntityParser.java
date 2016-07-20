@@ -33,18 +33,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.ACL;
-import org.apache.falcon.entity.v0.feed.Extract;
-import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Location;
-import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.MergeType;
-import org.apache.falcon.entity.v0.feed.Properties;
-import org.apache.falcon.entity.v0.feed.Property;
-import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -718,15 +707,26 @@ public class FeedEntityParser extends EntityParser<Feed> {
      */
     private void validateFeedExportArgs(Cluster feedCluster) throws FalconException {
         Map<String, String> args = FeedHelper.getExportArguments(feedCluster);
-        Map<String, String> validArgs = new HashMap<>();
-        validArgs.put("--num-mappers", "");
-        validArgs.put("--update-key" , "");
-        validArgs.put("--input-null-string", "");
-        validArgs.put("--input-null-non-string", "");
+        Set<String> validArgs = new HashSet<>();
+        validArgs.add("--num-mappers");
+        validArgs.add("--update-key");
+        validArgs.add("--input-null-string");
+        validArgs.add("--input-null-non-string");
+        validArgs.add("--export");
+        validArgs.add("--verbose");
+        validArgs.add("--direct");
 
         for(Map.Entry<String, String> e : args.entrySet()) {
-            if (!validArgs.containsKey(e.getKey())) {
+            String argName = e.getKey();
+            if (argName.contains(".")) {
+                argName = argName.split("\\.")[0];
+            }
+            if (!validArgs.contains(argName)) {
                 throw new ValidationException(String.format("Feed export argument %s is invalid.", e.getKey()));
+            } else if ((FeedHelper.getExportLoadMethod(feedCluster).getType() == LoadMethod.ALLOWINSERT) &&
+                (argName.equalsIgnoreCase("--direct"))) {
+                throw new ValidationException(String.format("Feed export argument %s "
+                    + "is invalid with loadType allowinsert.", e.getKey()));
             }
         }
     }
