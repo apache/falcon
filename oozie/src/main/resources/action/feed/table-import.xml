@@ -20,7 +20,6 @@
     <hive xmlns="uri:oozie:hive-action:0.2">
         <job-tracker>${falconTargetJobTracker}</job-tracker>
         <name-node>${falconTargetNameNode}</name-node>
-        <job-xml>${wf:appPath()}/conf/falcon-target-hive-site.xml</job-xml>
         <configuration>
             <property>
                 <name>mapred.job.queue.name</name>
