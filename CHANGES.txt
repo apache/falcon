@@ -1,57 +1,6 @@
 Apache Falcon Change log
-Trunk
-  TASKS:
-  INCOMPATIBLE CHANGES
-  NEW FEATURES
-    FALCON-1627 Provider integration with Azure Data Factory pipelines (Ying Zheng, Venkat Ranganathan, Sowmya Ramesh)
-   
-    FALCON-1664 Add Postgres support for native scheduler(Deepak Barr via Pragya Mittal)
-
-    FALCON-1495 In instance status list, show all runs for instances when requested by user(Narayan Periwal via Ajay Yadava)
-
-    FALCON-1230 Data based notification Service to notify execution instances when data becomes available(Pavan Kumar Kolamuri via Ajay Yadava)
-
-  IMPROVEMENTS
-    FALCON-1584 Falcon allows invalid hadoop queue name for schedulable feed entities (Venkatesan Ramachandran via Balu Vellanki)
-
-    FALCON-1774 Falcon to honour PRISM_URL env var (Praveen Adlakha) 
-
-    FALCON-1721 Checkstyle doesn't extend parent.
-    
-    FALCON-1818 Minor doc update for tar package locations after FALCON-1751 (Deepak Barr)
-
-    FALCON-1729 Database ingest to support password alias via keystore file (Venkatesan Ramachandran via Balu Vellanki)
-
-    FALCON-1751 Support assembly:single mojo(Ruoyu Wang via Ajay Yadava)
-
-    FALCON-763 Support feed listing for CatalogStorage (Balu Vellanki)
-
-    FALCON-1764 Remove temporary folder "localhost" created during tests(Praveen Adlakha via Ajay Yadava)
-
-    FALCON-1756 Remove PID files on service stop(Deepak Barr via Ajay Yadava)
-
-    FALCON-1771 Tool to merge pull requests (Ajay Yadava)
-
-    FALCON-1770 Update README file (Ajay Yadava)
-
-  BUG FIXES
-    FALCON-1842 Falcon build failed in Jenkins at OozieFeedWorkflowBuilderTest (Balu Vellanki)
-
-    FALCON-887 Support for multiple lib paths in falcon process (Sowmya Ramesh)
-
-    FALCON-1795 Kill api not killing waiting/ready instances
-   
-    FALCON-1804 Non-SLA feed throws NullPointerException.
-    
-    FALCON-1806 Update documentation for Import and Export. (Venkatesan Ramachandran via Balu Vellanki)
-
-    FALCON-1787 Ooozie pig-action.xml requires hive sharelib for HCatalog use(Sowmya Ramesh via Ajay Yadava)
-
-    FALCON-1792 Upgrade hadoop.version to 2.6.2 (Venkatesan Ramachandran via Peeyush Bishnoi)
-
-    FALCON-1796 [HOTFIX] Incorrect parent pom in distro module(Ajay Yadava)
-
-    FALCON-1779 Fix rat-check failure in trunk (Ajay Yadava)
+For changes in releases after 0.9, please refer to "release-docs" or
+https://github.com/apache/falcon/tree/master/release-docs/
 
 
 Release Version: 0.9
