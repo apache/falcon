@@ -325,6 +325,21 @@ public class TestContext extends AbstractTestContext {
         return response.getEntity(ExtensionInstanceList.class);
     }
 
+    public void waitForInstancesToStart(String entityType, String entityName, long timeout) {
+        long mustEnd = System.currentTimeMillis() + timeout;
+        WebResource resource = this.service.path("api/instance/running/" + entityType + "/" + entityName);
+        InstancesResult instancesResult;
+        while (System.currentTimeMillis() < mustEnd) {
+            ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                    .method(HttpMethod.GET, ClientResponse.class);
+            instancesResult = response.getEntity(InstancesResult.class);
+            if (instancesResult.getInstances() != null && instancesResult.getInstances().length > 0) {
+                break;
+            }
+        }
+    }
+
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
         return submitAndSchedule(template, overlay, entityType, null, "", null);
