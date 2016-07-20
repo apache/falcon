@@ -22,15 +22,18 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 
 import javax.xml.bind.JAXBElement;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -60,6 +63,15 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
         //Add pre-processing
         if (shouldPreProcess()) {
             ACTION action = getPreProcessingAction(false, Tag.REPLICATION);
+            Properties hiveConf = HiveUtil.getHiveCredentials(src);
+            for (Map.Entry<Object, Object> e : hiveConf.entrySet()) {
+                CONFIGURATION.Property prop = new CONFIGURATION.Property();
+                prop.setName((String) e.getKey());
+                prop.setValue((String) e.getValue());
+                LOG.info("Adding config to replication hive preprocessing action : key = {}  value = {}",
+                        e.getKey(), e.getValue());
+                action.getJava().getConfiguration().getProperty().add(prop);
+            }
             addHDFSServersConfig(action, src, target);
             addTransition(action, EXPORT_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(action);
@@ -72,6 +84,16 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
             OozieUtils.unMarshalHiveAction(export);
         org.apache.falcon.oozie.hive.ACTION hiveExportAction = exportActionJaxbElement.getValue();
         addHDFSServersConfig(hiveExportAction, src, target);
+        Properties hiveConf = HiveUtil.getHiveCredentials(src);
+        for (Map.Entry<Object, Object> e : hiveConf.entrySet()) {
+            org.apache.falcon.oozie.hive.CONFIGURATION.Property prop =
+                    new org.apache.falcon.oozie.hive.CONFIGURATION.Property();
+            prop.setName((String) e.getKey());
+            prop.setValue((String) e.getValue());
+            LOG.info("Adding config to replication hive export action : key = {}  value = {}",
+                    e.getKey(), e.getValue());
+            hiveExportAction.getConfiguration().getProperty().add(prop);
+        }
         OozieUtils.marshalHiveAction(export, exportActionJaxbElement);
         addTransition(export, REPLICATION_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(export);
@@ -89,6 +111,16 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
             OozieUtils.unMarshalHiveAction(importAction);
         org.apache.falcon.oozie.hive.ACTION hiveImportAction = importActionJaxbElement.getValue();
         addHDFSServersConfig(hiveImportAction, src, target);
+        Properties hiveConf2 = HiveUtil.getHiveCredentials(target);
+        for (Map.Entry<Object, Object> e : hiveConf2.entrySet()) {
+            org.apache.falcon.oozie.hive.CONFIGURATION.Property prop =
+                    new org.apache.falcon.oozie.hive.CONFIGURATION.Property();
+            prop.setName((String) e.getKey());
+            prop.setValue((String) e.getValue());
+            LOG.info("Adding config to replication hive import action : key = {}  value = {}",
+                    e.getKey(), e.getValue());
+            hiveImportAction.getConfiguration().getProperty().add(prop);
+        }
         OozieUtils.marshalHiveAction(importAction, importActionJaxbElement);
         addTransition(importAction, CLEANUP_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
         workflow.getDecisionOrForkOrJoin().add(importAction);
@@ -133,8 +165,8 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
                 (org.apache.falcon.oozie.workflow.ACTION) object;
             String actionName = action.getName();
             if (PREPROCESS_ACTION_NAME.equals(actionName)) {
+
                 // add reference to hive-site conf to each action
-                action.getJava().setJobXml("${wf:appPath()}/conf/falcon-source-hive-site.xml");
 
                 if (isSecurityEnabled) { // add a reference to credential in the action
                     action.setCred(SOURCE_HIVE_CREDENTIAL_NAME);
