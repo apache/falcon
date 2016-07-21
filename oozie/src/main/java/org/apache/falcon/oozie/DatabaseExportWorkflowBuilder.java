@@ -96,6 +96,7 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
 
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         Datasource datasource = DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(feedCluster));
+        ImportExportCommon.buildConnectionManagerArg(sqoopArgs, datasource);
         ImportExportCommon.buildDriverArgs(sqoopArgs, datasource).append(ImportExportCommon.ARG_SEPARATOR);
         ImportExportCommon.buildConnectArg(sqoopArgs, DatasourceHelper.getWriteEndpoint(datasource))
             .append(ImportExportCommon.ARG_SEPARATOR);
