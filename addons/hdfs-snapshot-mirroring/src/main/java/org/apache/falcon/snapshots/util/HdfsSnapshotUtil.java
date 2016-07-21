@@ -63,8 +63,8 @@ public final class HdfsSnapshotUtil {
     }
 
     public static String parseKerberosPrincipal(String principal) {
-        if (StringUtils.isEmpty(principal) ||
-                principal.equals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL)) {
+        if (StringUtils.isEmpty(principal)
+                || principal.equals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL)) {
             return null;
         }
         return principal;
