@@ -129,4 +129,45 @@ public final class ImportExportCommon {
         return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(tableName);
     }
+
+    public static StringBuilder buildArguments(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        handleVerbose(builder, extraArgs);
+        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
+            if (!e.getKey().startsWith("--direct")) {
+                builder.append(e.getKey()).append(ImportExportCommon.ARG_SEPARATOR).append(e.getValue())
+                        .append(ImportExportCommon.ARG_SEPARATOR);
+            }
+        }
+        return builder;
+    }
+
+    public static StringBuilder handleVerbose(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        if ((extraArgs.containsKey("--verbose")) && (extraArgs.get("--verbose").equalsIgnoreCase("TRUE"))) {
+            builder.append("--verbose").append(ImportExportCommon.ARG_SEPARATOR);
+            extraArgs.remove("--verbose");
+        }
+        return builder;
+    }
+
+    public static StringBuilder handleDirectMode(StringBuilder builder, Map<String, String> extraArgs)
+            throws FalconException {
+        if ((extraArgs.containsKey("--direct")) && (extraArgs.get("--direct").equalsIgnoreCase("true"))) {
+            builder.append("--direct").append(ImportExportCommon.ARG_SEPARATOR);
+        }
+        boolean first = true;
+        for(Map.Entry<String, String> e : extraArgs.entrySet()) {
+            if (e.getKey().startsWith("--direct.")) {
+                if (first) {
+                    builder.append("--").append(ImportExportCommon.ARG_SEPARATOR);
+                    first = false;
+                }
+                builder.append("--").append(e.getKey().split("\\.")[1]).append(ImportExportCommon.ARG_SEPARATOR)
+                        .append(e.getValue()).append(ImportExportCommon.ARG_SEPARATOR);
+
+            }
+        }
+        return builder;
+    }
 }
