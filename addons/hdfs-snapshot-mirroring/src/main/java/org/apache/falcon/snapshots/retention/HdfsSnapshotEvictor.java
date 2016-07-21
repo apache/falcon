@@ -60,8 +60,10 @@ public class HdfsSnapshotEvictor extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
         CommandLine cmd = getCommand(args);
-        DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd);
-        DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd);
+        DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd,
+                new Configuration(getConf()));
+        DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd,
+                new Configuration(getConf()));
 
         String sourceDir = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_DIR.getName());
         String targetDir = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_DIR.getName());

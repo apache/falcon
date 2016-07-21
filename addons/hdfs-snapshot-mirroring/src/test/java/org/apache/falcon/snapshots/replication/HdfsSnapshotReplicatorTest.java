@@ -25,7 +25,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
-import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -72,6 +72,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
 
     @BeforeClass
     public void init() throws Exception {
+        this.setConf(new Configuration());
         baseDir = Files.createTempDirectory("test_snapshot-replication").toFile().getAbsoluteFile();
         miniDFSCluster = MiniHdfsClusterUtil.initMiniDfs(MiniHdfsClusterUtil.SNAPSHOT_REPL_TEST_PORT, baseDir);
         miniDfs = miniDFSCluster.getFileSystem();
@@ -100,14 +101,13 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
 
     @Test
     public void replicationTest() throws Exception {
-        Configuration sourceConf = ClusterHelper.getConfiguration(sourceCluster);
-        this.setConf(sourceConf);
-        Configuration targetConf = ClusterHelper.getConfiguration(targetCluster);
         sourceStorageUrl = ClusterHelper.getStorageUrl(sourceCluster);
         targetStorageUrl = ClusterHelper.getStorageUrl(targetCluster);
 
-        DistributedFileSystem sourceFs = HadoopClientFactory.get().createDistributedProxiedFileSystem(sourceConf);
-        DistributedFileSystem targetFs = HadoopClientFactory.get().createDistributedProxiedFileSystem(targetConf);
+        DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd,
+                new Configuration(getConf()));
+        DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd,
+                new Configuration(getConf()));
 
         // create dir1, create snapshot, invoke copy, check file in target, create snapshot on target
         Path dir1 = new Path(sourceDir, "dir1");
