@@ -129,4 +129,12 @@ public final class ImportExportCommon {
         return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(tableName);
     }
+
+    public static void buildConnectionManagerArg(StringBuilder sqoopArgs, Datasource datasource) {
+        Map<String, String> dsProps = DatasourceHelper.getDatasourceProperties(datasource);
+        if (dsProps.containsKey("connection-manager")) {
+            sqoopArgs.append("--connection-manager").append(ImportExportCommon.ARG_SEPARATOR)
+                .append(dsProps.get("connection-manager")).append(ImportExportCommon.ARG_SEPARATOR);
+        }
+    }
 }

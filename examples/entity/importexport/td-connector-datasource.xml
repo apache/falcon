@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<datasource colo="west-coast" description="Teradata database on west coast" type="teradata" name="td-db" xmlns="uri:falcon:datasource:0.1">
+<datasource colo="west-coast" description="Teradata database on west coast" type="teradata" name="td-db-connector" xmlns="uri:falcon:datasource:0.1">
     <tags>owner=foobar@ambari.apache.org, consumer=phoe@ambari.apache.org</tags>
     <interfaces>
  
@@ -37,9 +37,7 @@
     </driver>
 
     <properties>
-        <property name="connection-manager" value="org.apache.sqoop.manager.GenericJdbcManager"/>
+        <property name="connection-manager" value="org.apache.sqoop.teradata.TeradataConnManager"/>
     </properties>
-
-
 </datasource>
 
