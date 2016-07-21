@@ -19,6 +19,7 @@
 package org.apache.falcon.snapshots.util;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
@@ -37,29 +38,33 @@ public final class HdfsSnapshotUtil {
 
     private HdfsSnapshotUtil() {}
 
-    public static DistributedFileSystem getSourceFileSystem(CommandLine cmd) throws FalconException {
+    public static DistributedFileSystem getSourceFileSystem(CommandLine cmd,
+                                                            Configuration conf) throws FalconException {
         String sourceStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_NN.getName());
         String sourceExecuteEndpoint = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName());
         String sourcePrincipal = parseKerberosPrincipal(cmd.getOptionValue(
                 HdfsSnapshotMirrorProperties.SOURCE_NN_KERBEROS_PRINCIPAL.getName()));
-        Configuration sourceConf = ClusterHelper.getConfiguration(sourceStorageUrl,
+
+        Configuration sourceConf = ClusterHelper.getConfiguration(conf, sourceStorageUrl,
                 sourceExecuteEndpoint, sourcePrincipal);
         return HadoopClientFactory.get().createDistributedProxiedFileSystem(sourceConf);
     }
 
-    public static DistributedFileSystem getTargetFileSystem(CommandLine cmd) throws FalconException {
+    public static DistributedFileSystem getTargetFileSystem(CommandLine cmd,
+                                                            Configuration conf) throws FalconException {
         String targetStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_NN.getName());
         String taregtExecuteEndpoint = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_EXEC_URL.getName());
         String targetPrincipal = parseKerberosPrincipal(cmd.getOptionValue(
                 HdfsSnapshotMirrorProperties.TARGET_NN_KERBEROS_PRINCIPAL.getName()));
 
-        Configuration targetConf = ClusterHelper.getConfiguration(targetStorageUrl,
+        Configuration targetConf = ClusterHelper.getConfiguration(conf, targetStorageUrl,
                 taregtExecuteEndpoint, targetPrincipal);
         return HadoopClientFactory.get().createDistributedProxiedFileSystem(targetConf);
     }
 
     public static String parseKerberosPrincipal(String principal) {
-        if (principal.equals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL)) {
+        if (StringUtils.isEmpty(principal) ||
+                principal.equals(HdfsSnapshotMirroringExtension.EMPTY_KERBEROS_PRINCIPAL)) {
             return null;
         }
         return principal;

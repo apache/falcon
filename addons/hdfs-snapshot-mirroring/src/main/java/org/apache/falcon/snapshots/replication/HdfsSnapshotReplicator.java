@@ -73,8 +73,12 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
         String sourceStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.SOURCE_NN.getName());
         String targetStorageUrl = cmd.getOptionValue(HdfsSnapshotMirrorProperties.TARGET_NN.getName());
 
-        DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd);
-        DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd);
+        // Always add to getConf() so that configuration set by oozie action is
+        // available when creating DistributedFileSystem.
+        DistributedFileSystem sourceFs = HdfsSnapshotUtil.getSourceFileSystem(cmd,
+                new Configuration(getConf()));
+        DistributedFileSystem targetFs = HdfsSnapshotUtil.getTargetFileSystem(cmd,
+                new Configuration(getConf()));
 
         String currentSnapshotName = HdfsSnapshotUtil.SNAPSHOT_PREFIX
                 + cmd.getOptionValue(HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName())
