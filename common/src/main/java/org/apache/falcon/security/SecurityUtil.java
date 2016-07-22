@@ -115,6 +115,16 @@ public final class SecurityUtil {
                 "falcon.security.authorization.enabled", "false"));
     }
 
+    /**
+     * Checks if CSRF filter is enabled in the configuration.
+     *
+     * @return true if falcon.security.csrf.enabled is enabled, false otherwise
+     */
+    public static boolean isCSRFFilterEnabled() {
+        return Boolean.valueOf(StartupProperties.get().getProperty(
+                "falcon.security.csrf.enabled", "false"));
+    }
+
     public static AuthorizationProvider getAuthorizationProvider() throws FalconException {
         String providerClassName = StartupProperties.get().getProperty(
                 "falcon.security.authorization.provider",
