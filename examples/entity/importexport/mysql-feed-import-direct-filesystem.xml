@@ -27,7 +27,7 @@
                     <argument name="--split-by" value="id"/>
                     <argument name="--num-mappers" value="2"/>
                     <argument name="--direct" value="true"/>
-                    <argument name="--direct.default-character-set" value="latin1"/>
+                    <argument name="connectorExtraArgs" value="--default-character-set=latin1"/>
                     <argument name="--verbose" value="true"/>
                 </arguments>
             </import>

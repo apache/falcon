@@ -33,7 +33,19 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.*;
+import org.apache.falcon.entity.v0.feed.ACL;
+import org.apache.falcon.entity.v0.feed.Extract;
+import org.apache.falcon.entity.v0.feed.ExtractMethod;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.LoadMethod;
+import org.apache.falcon.entity.v0.feed.MergeType;
+import org.apache.falcon.entity.v0.feed.Properties;
+import org.apache.falcon.entity.v0.feed.Property;
+import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -49,7 +61,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -715,6 +726,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validArgs.add("--export");
         validArgs.add("--verbose");
         validArgs.add("--direct");
+        validArgs.add("connectorextraargs");
 
         for(Map.Entry<String, String> e : args.entrySet()) {
             String argName = e.getKey();
@@ -723,8 +735,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
             if (!validArgs.contains(argName)) {
                 throw new ValidationException(String.format("Feed export argument %s is invalid.", e.getKey()));
-            } else if ((FeedHelper.getExportLoadMethod(feedCluster).getType() == LoadMethod.ALLOWINSERT) &&
-                (argName.equalsIgnoreCase("--direct"))) {
+            } else if ((FeedHelper.getExportLoadMethod(feedCluster).getType() == LoadMethod.ALLOWINSERT)
+                && (argName.equalsIgnoreCase("--direct"))) {
                 throw new ValidationException(String.format("Feed export argument %s "
                     + "is invalid with loadType allowinsert.", e.getKey()));
             }

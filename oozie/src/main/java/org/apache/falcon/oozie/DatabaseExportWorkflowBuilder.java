@@ -149,9 +149,10 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
         if ((feedStorageType == Storage.TYPE.TABLE) && (extraArgs.containsKey("--update-key"))) {
             extraArgs.remove("--update-key");
         }
-        ImportExportCommon.handleVerbose(builder, extraArgs);
+        ImportExportCommon.addVerboseOption(builder, extraArgs);
+        ImportExportCommon.addDirectModeOption(builder, extraArgs);
         ImportExportCommon.buildArguments(builder, extraArgs);
-        ImportExportCommon.handleDirectMode(builder, extraArgs);
+        ImportExportCommon.addConnectorArgs(builder, extraArgs);
         return builder;
     }
 

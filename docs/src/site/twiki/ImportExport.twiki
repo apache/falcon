@@ -220,6 +220,17 @@ where {lib-dir} value varies in oozie deployments.
      The arguments section enables to pass in any extra arguments needed for fine control on the underlying implementation --
      in this case, Sqoop.
 
+     Direct Mode and Verbose options can be passed via the arguments. The connector arguments can be passed using
+     ConnectorExtraArgs param as below:
+
+     <verbatim>
+                   <arguments>
+                         <argument name="--direct" value="true"/>
+                         <argument name="connectorExtraArgs" value="--default-character-set=latin1"/>
+                         <argument name="--verbose" value="true"/>
+                     </arguments>
+     </verbatim>
+
    * *Export policy*
      The export, like import, uses the datasource for connecting to the database. Load type specifies whether to insert
      or only update data onto the external table. Fields option behaves the same way as in import policy.
