@@ -40,6 +40,7 @@ import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.FileStatus;
@@ -62,6 +63,9 @@ import java.util.Set;
  */
 public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Process> {
 
+    private static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
+            getProperty("falcon.disable.postprocessing");
+
     private static final Set<String> FALCON_PROCESS_HIVE_ACTIONS = new HashSet<String>(
         Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, USER_ACTION_NAME, }));
 
@@ -83,20 +87,26 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
             wfApp.getDecisionOrForkOrJoin().add(preProcessAction);
             startAction = PREPROCESS_ACTION_NAME;
         }
-
         //Add user action
         ACTION userAction = getUserAction(cluster, buildPath);
-        addTransition(userAction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(userAction);
 
-        //Add post-processing
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(success);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            addTransition(userAction, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            wfApp.getDecisionOrForkOrJoin().add(userAction);
 
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(fail);
+        }else{
+            addTransition(userAction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            wfApp.getDecisionOrForkOrJoin().add(userAction);
+
+            //Add post-processing
+            ACTION success = getSuccessPostProcessAction();
+            addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            wfApp.getDecisionOrForkOrJoin().add(success);
+
+            ACTION fail = getFailPostProcessAction();
+            addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+            wfApp.getDecisionOrForkOrJoin().add(fail);
+        }
 
         decorateWorkflow(wfApp, wfName, startAction);
 

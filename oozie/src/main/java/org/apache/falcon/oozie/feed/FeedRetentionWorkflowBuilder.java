@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
@@ -40,6 +41,9 @@ import java.util.Properties;
  * Builds feed retention workflow.
  */
 public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Feed> {
+
+    private static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
+            getProperty("falcon.disable.postprocessing");
     private static final String EVICTION_ACTION_TEMPLATE = "/action/feed/eviction-action.xml";
 
     private static final String EVICTION_ACTION_NAME = "eviction";
@@ -51,20 +55,26 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
         WORKFLOWAPP workflow = new WORKFLOWAPP();
         String wfName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
-
         //Add eviction action
         ACTION eviction = unmarshalAction(EVICTION_ACTION_TEMPLATE);
-        addTransition(eviction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(eviction);
 
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
 
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            addTransition(eviction, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(eviction);
+        }else{
+            addTransition(eviction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(eviction);
+
+            //Add post-processing actions
+            ACTION success = getSuccessPostProcessAction();
+            addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(success);
+
+            ACTION fail = getFailPostProcessAction();
+            addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(fail);
+        }
 
         decorateWorkflow(workflow, wfName, EVICTION_ACTION_NAME);
         addLibExtensionsToWorkflow(cluster, workflow, Tag.RETENTION);

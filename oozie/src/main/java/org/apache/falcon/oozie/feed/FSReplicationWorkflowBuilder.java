@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 
 import java.util.Arrays;
@@ -34,6 +35,8 @@ import java.util.Properties;
  * Builds replication workflow for filesystem based feed.
  */
 public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder{
+    private static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
+            getProperty("falcon.disable.postprocessing");
     public FSReplicationWorkflowBuilder(Feed entity) {
         super(entity);
     }
@@ -59,20 +62,24 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         addAdditionalReplicationProperties(replication);
         enableCounters(replication);
         enableTDE(replication);
-        addTransition(replication, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(replication);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            addTransition(replication, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(replication);
+        }else {
+            addTransition(replication, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(replication);
 
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addHDFSServersConfig(success, src, target);
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
+            //Add post-processing actions
+            ACTION success = getSuccessPostProcessAction();
+            addHDFSServersConfig(success, src, target);
+            addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(success);
 
-        ACTION fail = getFailPostProcessAction();
-        addHDFSServersConfig(fail, src, target);
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
-
+            ACTION fail = getFailPostProcessAction();
+            addHDFSServersConfig(fail, src, target);
+            addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(fail);
+        }
         decorateWorkflow(workflow, wfName, start);
         return workflow;
     }
