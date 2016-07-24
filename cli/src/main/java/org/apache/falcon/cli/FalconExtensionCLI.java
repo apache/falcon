@@ -27,7 +27,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.resource.ExtensionInstanceList;

@@ -370,6 +370,7 @@
         <module>falcon-ui</module>
         <module>build-tools</module>
         <module>client</module>
+        <module>shell</module>
         <module>cli</module>
         <module>metrics</module>
         <module>titan</module>

@@ -17,7 +17,7 @@
  */
 
 
-package org.apache.falcon.cli.commands;
+package org.apache.falcon.shell.commands;
 
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +36,7 @@ public class FalconConnectionCommands extends BaseFalconCommands {
     @CliCommand(value = "get", help = "get properties")
     public String getParameter(@CliOption(key = {"", "key"}, mandatory = false, help = "<key>") final String key) {
         if (StringUtils.isBlank(key)) {
-            return getClientProperties().toString();
+            return BaseFalconCommands.getClientProperties().toString();
         }
         return getClientProperties().getProperty(key);
     }

@@ -40,7 +40,7 @@ public class FalconConnectionCommandsTest extends FalconCLITest {
         };
     }
 
-    @Test(dataProvider = "params-commands")
+//    @Test(dataProvider = "params-commands")
     public void testGetAndSetParams(String command, Object result, Throwable throwable) throws Throwable {
         execute(command, result, throwable);
     }
