@@ -42,14 +42,14 @@ public final class FileUtils {
 
     private FileUtils() {}
 
-    public static Configuration getConfiguration(final String writeEP,
-                                                 final String nnKerberosPrincipal) throws IOException {
-        Configuration conf = HiveDRUtils.getDefaultConf();
-        conf.set("fs.defaultFS", writeEP);
+    public static Configuration getConfiguration(Configuration conf,
+                                final String writeEP, final String nnKerberosPrincipal) throws IOException {
+        Configuration newConf = new Configuration(conf);
+        newConf.set("fs.defaultFS", writeEP);
         if (StringUtils.isNotEmpty(nnKerberosPrincipal)) {
-            conf.set("dfs.namenode.kerberos.principal", nnKerberosPrincipal);
+            newConf.set("dfs.namenode.kerberos.principal", nnKerberosPrincipal);
         }
-        return conf;
+        return newConf;
     }
 
     public static void validatePath(final FileSystem fileSystem, final Path basePath) throws IOException {
