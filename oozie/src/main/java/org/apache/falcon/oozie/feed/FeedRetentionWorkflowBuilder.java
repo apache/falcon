@@ -30,7 +30,6 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
-import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
@@ -41,9 +40,6 @@ import java.util.Properties;
  * Builds feed retention workflow.
  */
 public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Feed> {
-
-    private static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
-            getProperty("falcon.disable.postprocessing");
     private static final String EVICTION_ACTION_TEMPLATE = "/action/feed/eviction-action.xml";
 
     private static final String EVICTION_ACTION_NAME = "eviction";

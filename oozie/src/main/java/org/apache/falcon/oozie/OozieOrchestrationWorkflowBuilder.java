@@ -79,6 +79,8 @@ import java.util.Set;
  */
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+    public static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
+            getProperty("falcon.disable.postprocessing");
 
     protected static final String USER_ACTION_NAME = "user-action";
     protected static final String PREPROCESS_ACTION_NAME = "pre-processing";

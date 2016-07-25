@@ -20,6 +20,7 @@ package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.logging.JobLogMover;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowExecutionListener;
 
@@ -27,25 +28,35 @@ import org.apache.falcon.workflow.WorkflowExecutionListener;
  * Moves Falcon logs.
  */
 public class LogMoverService implements WorkflowExecutionListener{
+    public static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
+                getProperty("falcon.disable.postprocessing");
 
     @Override
     public void onSuccess(WorkflowExecutionContext context) throws FalconException{
-        new JobLogMover().secureRun(context);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            new JobLogMover().secureRun(context);
+        }
     }
 
     @Override
     public void onFailure(WorkflowExecutionContext context) throws FalconException{
-        new JobLogMover().secureRun(context);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            new JobLogMover().secureRun(context);
+        }
     }
 
     @Override
     public void onStart(WorkflowExecutionContext context) throws FalconException{
-        new JobLogMover().secureRun(context);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            new JobLogMover().secureRun(context);
+        }
     }
 
     @Override
     public void onSuspend(WorkflowExecutionContext context) throws FalconException{
-        new JobLogMover().secureRun(context);
+        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+            new JobLogMover().secureRun(context);
+        }
     }
 
     @Override

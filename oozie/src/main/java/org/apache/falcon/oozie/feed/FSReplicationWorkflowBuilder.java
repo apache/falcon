@@ -25,7 +25,6 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
-import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 
 import java.util.Arrays;
@@ -35,8 +34,6 @@ import java.util.Properties;
  * Builds replication workflow for filesystem based feed.
  */
 public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder{
-    private static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
-            getProperty("falcon.disable.postprocessing");
     public FSReplicationWorkflowBuilder(Feed entity) {
         super(entity);
     }

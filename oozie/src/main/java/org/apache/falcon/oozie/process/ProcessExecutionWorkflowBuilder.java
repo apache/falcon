@@ -40,7 +40,6 @@ import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
-import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.FileStatus;
@@ -62,9 +61,6 @@ import java.util.Set;
  * Base class for building orchestration workflow for process.
  */
 public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Process> {
-
-    private static final String DISABLE_POSTPROCESSING = RuntimeProperties.get().
-            getProperty("falcon.disable.postprocessing");
 
     private static final Set<String> FALCON_PROCESS_HIVE_ACTIONS = new HashSet<String>(
         Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, USER_ACTION_NAME, }));
