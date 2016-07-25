@@ -27,5 +27,5 @@ import java.util.Date;
  */
 public interface EntitySLAListener {
     void highSLAMissed(String entityName, String clusterName, EntityType entityType, Date nominalTime)
-            throws FalconException;
+        throws FalconException;
 }
