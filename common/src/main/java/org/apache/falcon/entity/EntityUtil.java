@@ -462,6 +462,18 @@ public final class EntityUtil {
         return insCal.getTime();
     }
 
+    public static Date getNextInstanceTimeWithDelay(Date instanceTime, Frequency delay, TimeZone tz) {
+        if (tz == null) {
+            tz = TimeZone.getTimeZone("UTC");
+        }
+        Calendar insCal = Calendar.getInstance(tz);
+        insCal.setTime(instanceTime);
+        final int delayAmount = delay.getFrequencyAsInt();
+        insCal.add(delay.getTimeUnit().getCalendarUnit(), delayAmount);
+
+        return insCal.getTime();
+    }
+
     public static String md5(Entity entity) throws FalconException {
         return new String(Hex.encodeHex(DigestUtils.md5(stringOf(entity))));
     }
