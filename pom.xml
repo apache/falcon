@@ -756,12 +756,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.vividsolutions</groupId>
-                <artifactId>jts</artifactId>
-                <version>1.13</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-hadoop-dependencies</artifactId>
                 <version>${project.version}</version>
