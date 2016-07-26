@@ -1,12 +1,13 @@
 # Apache Falcon Changelog
 
-## Release 0.10 - 2016-07-19
+## Release 0.10 - 2016-07-26
 
 ### INCOMPATIBLE CHANGES:
 
 | JIRA | Summary | Priority | Component | Reporter | Contributor |
 |:---- |:---- | :--- |:---- |:---- |:---- |
 | [FALCON-1926](https://issues.apache.org/jira/browse/FALCON-1926) | Filter out effectively non-falcon related JMS messages from Oozie |  Major | messaging | Venkatesan Ramachandran | Venkatesan Ramachandran |
+| [FALCON-1858](https://issues.apache.org/jira/browse/FALCON-1858) | Support HBase as a storage backend for Falcon Titan graphDB |  Major | . | Ying Zheng | Venkat Ranganathan |
 | [FALCON-1852](https://issues.apache.org/jira/browse/FALCON-1852) | Optional Input for a process not truly optional |  Major | . | Pallavi Rao | Pallavi Rao |
 | [FALCON-1844](https://issues.apache.org/jira/browse/FALCON-1844) | Falcon feed replication leaves behind old files when a feed instance is re-run |  Major | . | Pallavi Rao | Pallavi Rao |
 | [FALCON-1835](https://issues.apache.org/jira/browse/FALCON-1835) | Falcon should do coord rerun rather than workflow rerun to ensure concurrency |  Major | . | Pallavi Rao | Pallavi Rao |
@@ -20,7 +21,6 @@
 | [FALCON-1919](https://issues.apache.org/jira/browse/FALCON-1919) | Provide user the option to store sensitive information with Hadoop credential provider |  Major | . | Ying Zheng | Ying Zheng |
 | [FALCON-1865](https://issues.apache.org/jira/browse/FALCON-1865) | Persist Feed sla data to database |  Major | . | Ajay Yadava | Praveen Adlakha |
 | [FALCON-1861](https://issues.apache.org/jira/browse/FALCON-1861) | Support HDFS Snapshot based replication in Falcon |  Major | replication | Balu Vellanki | Balu Vellanki |
-| [FALCON-1858](https://issues.apache.org/jira/browse/FALCON-1858) | Support HBase as a storage backend for Falcon Titan graphDB |  Major | . | Ying Zheng | Venkat Ranganathan |
 | [FALCON-1763](https://issues.apache.org/jira/browse/FALCON-1763) | Create a spark execution engine for Falcon |  Major | . | Venkat Ranganathan | Peeyush Bishnoi |
 | [FALCON-1627](https://issues.apache.org/jira/browse/FALCON-1627) | Provider integration with Azure Data Factory pipelines |  Major | . | Venkat Ranganathan | Ying Zheng |
 | [FALCON-1623](https://issues.apache.org/jira/browse/FALCON-1623) | Implement Safe Mode in Falcon |  Major | . | sandeep samudrala | Balu Vellanki |
@@ -54,7 +54,14 @@
 
 | JIRA | Summary | Priority | Component | Reporter | Contributor |
 |:---- |:---- | :--- |:---- |:---- |:---- |
+| [FALCON-2100](https://issues.apache.org/jira/browse/FALCON-2100) | Remove dependency on com.vividsolutions.jts |  Major | . | Balu Vellanki | Balu Vellanki |
+| [FALCON-2090](https://issues.apache.org/jira/browse/FALCON-2090) | HDFS Snapshot failed with UnknownHostException when scheduling in HA Mode |  Critical | replication | Murali Ramasami | Balu Vellanki |
+| [FALCON-2088](https://issues.apache.org/jira/browse/FALCON-2088) | Entity submission fails with EntityNotRegisteredException in distributed mode |  Blocker | feed, prism, process | Pragya Mittal | Praveen Adlakha |
+| [FALCON-2084](https://issues.apache.org/jira/browse/FALCON-2084) | HCatReplicationTest are failing in secure mode |  Critical | replication | Murali Ramasami | Venkat Ranganathan |
+| [FALCON-2081](https://issues.apache.org/jira/browse/FALCON-2081) | ExtensionManagerIT fails occassionally |  Blocker | tests | Balu Vellanki | Balu Vellanki |
 | [FALCON-2076](https://issues.apache.org/jira/browse/FALCON-2076) | Server fails to start since extension.store.uri is not defined in startup.properties |  Major | prism | Pragya Mittal | Balu Vellanki |
+| [FALCON-2075](https://issues.apache.org/jira/browse/FALCON-2075) | Falcon HiveDR tasks do not report progress and can get killed |  Critical | . | Venkat Ranganathan | Venkat Ranganathan |
+| [FALCON-2071](https://issues.apache.org/jira/browse/FALCON-2071) | Falcon Spark SQL failing with Yarn Client Mode |  Critical | process | Murali Ramasami | Peeyush Bishnoi |
 | [FALCON-2061](https://issues.apache.org/jira/browse/FALCON-2061) | Falcon CLI shows hadoop classpath loading info in the console |  Major | client | Murali Ramasami | Balu Vellanki |
 | [FALCON-2060](https://issues.apache.org/jira/browse/FALCON-2060) | Retry does not happen if instance timedout |  Major | . | Pragya Mittal | Pallavi Rao |
 | [FALCON-2058](https://issues.apache.org/jira/browse/FALCON-2058) | s3 tests with dummy url no longer compatible with latest HDFS |  Major | . | Ying Zheng | Ying Zheng |
@@ -147,7 +154,6 @@
 | [FALCON-1784](https://issues.apache.org/jira/browse/FALCON-1784) | Add regression test for for FALCON-1647 |  Major | merlin | Paul Isaychuk | Paul Isaychuk |
 | [FALCON-1783](https://issues.apache.org/jira/browse/FALCON-1783) | Fix ProcessUpdateTest and SearchApiTest to use prism |  Major | merlin | Paul Isaychuk | Paul Isaychuk |
 | [FALCON-1766](https://issues.apache.org/jira/browse/FALCON-1766) | Add CLI metrics check for HiveDR, HDFS and feed replication |  Major | merlin | Paul Isaychuk | Paul Isaychuk |
-| [FALCON-1749](https://issues.apache.org/jira/browse/FALCON-1749) | Instance status does not show instances if entity is deleted from one of the colos |  Major | prism, scheduler | Pragya Mittal | Praveen Adlakha |
 | [FALCON-1743](https://issues.apache.org/jira/browse/FALCON-1743) | Entity summary does not work via prism |  Major | client | Pragya Mittal | Ajay Yadava |
 | [FALCON-1724](https://issues.apache.org/jira/browse/FALCON-1724) | Falcon CLI.twiki in docs folder is not pointed by index page |  Major | . | Praveen Adlakha | Praveen Adlakha |
 | [FALCON-1721](https://issues.apache.org/jira/browse/FALCON-1721) | Move checkstyle artifacts under parent |  Major | . | Shwetha G S | sandeep samudrala |
@@ -159,6 +165,7 @@
 
 | JIRA | Summary | Priority | Component | Reporter | Contributor |
 |:---- |:---- | :--- |:---- |:---- |:---- |
+| [FALCON-2099](https://issues.apache.org/jira/browse/FALCON-2099) | Update Installation-steps.txt and NOTICE.txt for 0.10 release |  Major | ease | Balu Vellanki | Balu Vellanki |
 | [FALCON-2000](https://issues.apache.org/jira/browse/FALCON-2000) | Create branch 0.10 |  Major | general | Balu Vellanki | Balu Vellanki |
 | [FALCON-1996](https://issues.apache.org/jira/browse/FALCON-1996) | Upgrade falcon POM for 0.10 release |  Major | build-tools | Balu Vellanki | Balu Vellanki |
 | [FALCON-1993](https://issues.apache.org/jira/browse/FALCON-1993) | Update JIRA fix versions |  Major | general | Balu Vellanki | Balu Vellanki |
@@ -199,6 +206,7 @@
 
 | JIRA | Summary | Priority | Component | Reporter | Contributor |
 |:---- |:---- | :--- |:---- |:---- |:---- |
+| [FALCON-2063](https://issues.apache.org/jira/browse/FALCON-2063) | Add change log for 0.10 |  Major | . | Ajay Yadava | Ajay Yadava |
 | [FALCON-1765](https://issues.apache.org/jira/browse/FALCON-1765) | Move to github pull request model |  Major | . | Ajay Yadava | Ajay Yadava |
 | [FALCON-2008](https://issues.apache.org/jira/browse/FALCON-2008) | Add documentation for Graphite Notification Plugin |  Major | . | Praveen Adlakha | Praveen Adlakha |
 | [FALCON-1948](https://issues.apache.org/jira/browse/FALCON-1948) | Document steps to configure Oozie for Falcon |  Major | docs | Venkatesan Ramachandran | Venkatesan Ramachandran |
