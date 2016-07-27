@@ -20,7 +20,7 @@ package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.logging.JobLogMover;
-import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowExecutionListener;
 
@@ -28,7 +28,7 @@ import org.apache.falcon.workflow.WorkflowExecutionListener;
  * Moves Falcon logs.
  */
 public class LogMoverService implements WorkflowExecutionListener{
-    public static final String ENABLE_POSTPROCESSING = RuntimeProperties.get().
+    public static final String ENABLE_POSTPROCESSING = StartupProperties.get().
                 getProperty("falcon.postprocessing.enable");
 
     @Override
