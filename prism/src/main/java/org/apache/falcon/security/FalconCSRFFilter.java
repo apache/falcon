@@ -18,7 +18,6 @@
 
 package org.apache.falcon.security;
 
-import org.apache.hadoop.security.http.RestCsrfPreventionFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
