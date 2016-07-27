@@ -142,9 +142,9 @@ public class EventUtils {
         LOG.info("Initializing staging directory");
         sourceStagingUri = new Path(sourceNN, sourceStagingPath).toString();
         targetStagingUri = new Path(targetNN, targetStagingPath).toString();
-        sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(sourceNN, sourceNNKerberosPrincipal));
-        jobFileSystem = FileSystem.get(FileUtils.getConfiguration(jobNN, jobNNKerberosPrincipal));
-        targetFileSystem = FileSystem.get(FileUtils.getConfiguration(targetNN, targetNNKerberosPrincipal));
+        sourceFileSystem = FileSystem.get(FileUtils.getConfiguration(conf, sourceNN, sourceNNKerberosPrincipal));
+        jobFileSystem = FileSystem.get(FileUtils.getConfiguration(conf, jobNN, jobNNKerberosPrincipal));
+        targetFileSystem = FileSystem.get(FileUtils.getConfiguration(conf, targetNN, targetNNKerberosPrincipal));
     }
 
     private String readEvents(Path eventFileName) throws IOException {
