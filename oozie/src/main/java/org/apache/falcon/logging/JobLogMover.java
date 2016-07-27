@@ -69,7 +69,7 @@ public class JobLogMover {
         return conf == null ? new Configuration(): conf;
     }
 
-    public void secureRun(WorkflowExecutionContext context){
+    public void moveLog(WorkflowExecutionContext context){
         if (UserGroupInformation.isSecurityEnabled()) {
             LOG.info("Unable to move logs as security is enabled.");
             return;

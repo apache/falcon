@@ -59,7 +59,7 @@ public class FalconPostProcessing extends Configured implements Tool {
 
         // JobLogMover doesn't throw exception, a failed log mover will not fail the user workflow
         LOG.info("Moving logs {}", context);
-        new JobLogMover().secureRun(context);
+        new JobLogMover().moveLog(context);
 
         return 0;
     }

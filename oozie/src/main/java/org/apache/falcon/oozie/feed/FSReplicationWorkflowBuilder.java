@@ -59,7 +59,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         addAdditionalReplicationProperties(replication);
         enableCounters(replication);
         enableTDE(replication);
-        if (Boolean.parseBoolean(DISABLE_POSTPROCESSING)){
+        if (!Boolean.parseBoolean(ENABLE_POSTPROCESSING)){
             addTransition(replication, OK_ACTION_NAME, FAIL_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(replication);
         }else {

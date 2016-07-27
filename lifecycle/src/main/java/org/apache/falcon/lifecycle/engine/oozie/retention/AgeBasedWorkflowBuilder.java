@@ -60,7 +60,7 @@ public final class AgeBasedWorkflowBuilder {
         //Add eviction action
         ACTION eviction = OozieBuilderUtils.unmarshalAction(EVICTION_ACTION_TEMPLATE);
 
-        if (Boolean.parseBoolean(OozieBuilderUtils.DISABLE_POSTPROCESSING)){
+        if (Boolean.parseBoolean(OozieBuilderUtils.ENABLE_POSTPROCESSING)){
             OozieBuilderUtils.addTransition(eviction, OozieBuilderUtils.OK_ACTION_NAME,
                     OozieBuilderUtils.FAIL_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(eviction);
