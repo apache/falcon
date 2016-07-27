@@ -21,7 +21,6 @@ package org.apache.falcon.security;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +34,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.classification.InterfaceAudience.Public;
 import org.apache.hadoop.classification.InterfaceStability.Evolving;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,44 +52,42 @@ public class RestCsrfPreventionFilter implements Filter {
     public static final String HEADER_DEFAULT = "X-XSRF-HEADER";
     static final String METHODS_TO_IGNORE_DEFAULT = "GET,OPTIONS,HEAD,TRACE";
     public static final String CSRF_ERROR_MESSAGE = "Missing Required Header for CSRF Vulnerability Protection";
-    private String headerName = "X-XSRF-HEADER";
-    private Set<String> methodsToIgnore = null;
-    private Set<Pattern> browserUserAgents;
+    protected String headerName = "X-XSRF-HEADER";
+    protected Set<String> methodsToIgnore = null;
+    protected Set<Pattern> browserUserAgents;
 
     public RestCsrfPreventionFilter() {
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
         String customHeader = filterConfig.getInitParameter(CUSTOM_HEADER_PARAM);
-        if(customHeader != null) {
+        if (customHeader != null) {
             this.headerName = customHeader;
         }
 
         String customMethodsToIgnore = filterConfig.getInitParameter(CUSTOM_METHODS_TO_IGNORE_PARAM);
-        if(customMethodsToIgnore != null) {
+        if (customMethodsToIgnore != null) {
             this.parseMethodsToIgnore(customMethodsToIgnore);
         } else {
             this.parseMethodsToIgnore(METHODS_TO_IGNORE_DEFAULT);
         }
 
         String agents = filterConfig.getInitParameter(BROWSER_USER_AGENT_PARAM);
-        if(agents == null) {
+        if (agents == null) {
             agents = BROWSER_USER_AGENTS_DEFAULT;
         }
 
         this.parseBrowserUserAgents(agents);
-        LOG.info("Adding cross-site request forgery (CSRF) protection, headerName = {}, methodsToIgnore = {}, " +
-                "browserUserAgents = {}", new Object[]{this.headerName, this.methodsToIgnore, this.browserUserAgents});
     }
 
     void parseBrowserUserAgents(String userAgents) {
         String[] agentsArray = userAgents.split(",");
         this.browserUserAgents = new HashSet();
-        String[] arr$ = agentsArray;
-        int len$ = agentsArray.length;
+        String[] arr = agentsArray;
+        int len = agentsArray.length;
 
-        for(int i$ = 0; i$ < len$; ++i$) {
-            String patternString = arr$[i$];
+        for (int i = 0; i < len; ++i) {
+            String patternString = arr[i];
             this.browserUserAgents.add(Pattern.compile(patternString));
         }
 
@@ -101,25 +97,25 @@ public class RestCsrfPreventionFilter implements Filter {
         String[] methods = mti.split(",");
         this.methodsToIgnore = new HashSet();
 
-        for(int i = 0; i < methods.length; ++i) {
+        for (int i = 0; i < methods.length; ++i) {
             this.methodsToIgnore.add(methods[i]);
         }
 
     }
 
     protected boolean isBrowser(String userAgent) {
-        if(userAgent == null) {
+        if (userAgent == null) {
             return false;
         } else {
-            Iterator i$ = this.browserUserAgents.iterator();
+            Iterator iterator = this.browserUserAgents.iterator();
 
             Matcher matcher;
             do {
-                if(!i$.hasNext()) {
+                if (!iterator.hasNext()) {
                     return false;
                 }
 
-                Pattern pattern = (Pattern)i$.next();
+                Pattern pattern = (Pattern)iterator.next();
                 matcher = pattern.matcher(userAgent);
             } while(!matcher.matches());
 
@@ -129,7 +125,7 @@ public class RestCsrfPreventionFilter implements Filter {
 
     public void handleHttpInteraction(RestCsrfPreventionFilter.HttpInteraction httpInteraction)
         throws IOException, ServletException {
-        if(this.isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
+        if (this.isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
                 && !this.methodsToIgnore.contains(httpInteraction.getMethod())
                 && httpInteraction.getHeader(this.headerName) == null) {
             httpInteraction.sendError(HttpServletResponse.SC_FORBIDDEN, CSRF_ERROR_MESSAGE);
@@ -178,6 +174,9 @@ public class RestCsrfPreventionFilter implements Filter {
         }
     }
 
+    /**
+     * Interface for HttpInteraction.
+     */
     public interface HttpInteraction {
         String getHeader(String var1);
 

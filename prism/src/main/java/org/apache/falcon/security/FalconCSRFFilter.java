@@ -18,6 +18,7 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.util.StartupProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * CSRF filter before processing the request.
@@ -34,14 +36,34 @@ import java.io.IOException;
 public class FalconCSRFFilter extends RestCsrfPreventionFilter {
     private static final Logger LOG = LoggerFactory.getLogger(FalconCSRFFilter.class);
 
+    public static final String CSRF_PROP_KEY_PREFIX = "falcon.security.csrf.";
+    public static final String CSRF_PROP_KEY_CUSTOMER_HEADER = "header";
+    public static final String CSRF_PROP_KEY_BROWSER_USER_AGENT = "browser";
+
     private boolean isCSRFFilterEnabled;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        super.init(filterConfig);
         isCSRFFilterEnabled = SecurityUtil.isCSRFFilterEnabled();
         if (isCSRFFilterEnabled) {
-            LOG.info("Falcon is running with CSRF filter enabled");
+            super.init(filterConfig);
+
+            // add additional property: custom header
+            Properties configProperties = StartupProperties.get();
+            String customHeader = configProperties.getProperty(CSRF_PROP_KEY_PREFIX + CSRF_PROP_KEY_CUSTOMER_HEADER);
+            if (customHeader != null) {
+                super.headerName = customHeader;
+            }
+
+            // add additional property: browser user agent
+            String browerAgents = configProperties.getProperty(CSRF_PROP_KEY_PREFIX + CSRF_PROP_KEY_BROWSER_USER_AGENT);
+            if (browerAgents != null) {
+                super.parseBrowserUserAgents(browerAgents);
+            }
+
+            LOG.info("Adding cross-site request forgery (CSRF) protection, headerName = {},"
+                            + "methodsToIgnore = {}, " + "browserUserAgents = {}",
+                    new Object[]{super.headerName, super.methodsToIgnore, super.browserUserAgents});
         } else {
             LOG.info("CSRF filter is not enabled.");
         }
