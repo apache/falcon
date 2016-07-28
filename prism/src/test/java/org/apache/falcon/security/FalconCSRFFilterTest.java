@@ -35,6 +35,8 @@ import javax.ws.rs.HttpMethod;
  * Test for FalconCSRFFilter using mock objects.
  */
 public class FalconCSRFFilterTest {
+    private static final String FALCON_CSRF_HEADER_DEFAULT = "FALCON-CSRF-FILTER";
+
     @Mock
     private HttpServletRequest mockRequest;
 
@@ -120,7 +122,7 @@ public class FalconCSRFFilterTest {
 
     private void mockHeader(String userAgent, String customHeader) {
         Mockito.when(mockRequest.getHeader(RestCsrfPreventionFilter.HEADER_USER_AGENT)).thenReturn(userAgent);
-        Mockito.when(mockRequest.getHeader(RestCsrfPreventionFilter.HEADER_DEFAULT)).thenReturn(customHeader);
+        Mockito.when(mockRequest.getHeader(FALCON_CSRF_HEADER_DEFAULT)).thenReturn(customHeader);
     }
 
     private void mockRunFilter() throws Exception {

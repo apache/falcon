@@ -315,10 +315,15 @@ Administrative groups are determined by the configuration:
 Cross-Site Request Forgery (CSRF) is an attack that forces an end user to execute unwanted actions on a web application in which they're currently authenticated.
 Falcon provides an option to prevent CSRF with Hadoop CSRF filter for REST APIs. By default, Falcon CSRF filter is disabled.
 To enable the support for CSRF prevention, set falcon.security.csrf.enabled to true in the startup configuration.
+We also provide options to configure custom header and browser user agents.
 
 <verbatim>
 # CSRF filter enabled flag: false (default) | true
 *.falcon.security.csrf.enabled=true
+# Custom header for CSRF filter
+*.falcon.security.csrf.header=FALCON-CSRF-FILTER
+# Browser user agents to be filtered
+*.falcon.security.csrf.browser=^Mozilla.*,^Opera.*
 </verbatim>
 
 
