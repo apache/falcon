@@ -37,6 +37,7 @@ import java.io.IOException;
 /**
  * Test class for Process Instance REST API.
  */
+@Test (enabled = false)
 public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
