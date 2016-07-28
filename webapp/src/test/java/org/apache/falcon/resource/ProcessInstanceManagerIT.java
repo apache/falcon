@@ -72,7 +72,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         OozieTestUtils.waitForProcessWFtoStart(context);
     }
 
-    //@Test
+    @Test (enabled = false)
     public void testGetRunningInstances() throws Exception {
         TestContext context = new TestContext();
         schedule(context);
@@ -87,7 +87,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
-    //@Test
+    @Test (enabled = false)
     public void testGetRunningInstancesPagination()  throws Exception {
         TestContext context = new TestContext();
         schedule(context, 4);
@@ -118,7 +118,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(processInstance.getStatus(), status);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testGetInstanceStatus() throws Exception {
         UnitTestContext context = new UnitTestContext();
         schedule(context);
@@ -132,7 +132,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.RUNNING);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testGetInstanceStatusPagination() throws Exception {
         UnitTestContext context = new UnitTestContext();
         schedule(context);
@@ -147,7 +147,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.RUNNING);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testKillInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         schedule(context);
@@ -173,7 +173,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.KILLED);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testReRunInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         schedule(context);
@@ -202,7 +202,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.RUNNING);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSuspendInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         schedule(context);
@@ -221,7 +221,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         Assert.assertEquals(response.getInstances()[0].getStatus(), WorkflowStatus.SUSPENDED);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testResumesInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         schedule(context);
