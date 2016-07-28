@@ -28,6 +28,7 @@ import java.util.Map;
 /**
  * Tests for Instance operations using Falcon Native Scheduler.
  */
+@Test (enabled = false)
 public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
 
 
