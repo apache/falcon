@@ -86,10 +86,9 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         //Add user action
         ACTION userAction = getUserAction(cluster, buildPath);
 
-        if (!Boolean.parseBoolean(ENABLE_POSTPROCESSING)){
+        if (!isPostProcessingEnabled()){
             addTransition(userAction, OK_ACTION_NAME, FAIL_ACTION_NAME);
             wfApp.getDecisionOrForkOrJoin().add(userAction);
-
         }else{
             addTransition(userAction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
             wfApp.getDecisionOrForkOrJoin().add(userAction);

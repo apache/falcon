@@ -132,6 +132,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         return get(entity, cluster, lifecycle, Scheduler.OOZIE);
     }
 
+    public Boolean isPostProcessingEnabled(){
+        return Boolean.parseBoolean(ENABLE_POSTPROCESSING);
+    }
+
     public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle,
                                                         Scheduler scheduler)
         throws FalconException {

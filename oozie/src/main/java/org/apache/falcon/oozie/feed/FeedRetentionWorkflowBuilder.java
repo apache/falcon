@@ -55,7 +55,7 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
         ACTION eviction = unmarshalAction(EVICTION_ACTION_TEMPLATE);
 
 
-        if (!Boolean.parseBoolean(ENABLE_POSTPROCESSING)){
+        if (!isPostProcessingEnabled()){
             addTransition(eviction, OK_ACTION_NAME, FAIL_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(eviction);
         }else{

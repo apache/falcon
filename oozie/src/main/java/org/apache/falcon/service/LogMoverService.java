@@ -20,32 +20,67 @@ package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.logging.JobLogMover;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowExecutionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Moves Falcon logs.
  */
-public class LogMoverService implements WorkflowExecutionListener{
+public class LogMoverService extends ThreadPoolExecutor implements WorkflowExecutionListener  {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LogMoverService.class);
+
     public static final String ENABLE_POSTPROCESSING = StartupProperties.get().
-                getProperty("falcon.postprocessing.enable");
+            getProperty("falcon.postprocessing.enable");
+
+    public LogMoverService(int corePoolSize, int maximumPoolSize,
+                           long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue){
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+    }
+
+    private BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<Runnable>(50);
+
+    public int getThreadCount() {
+        try{
+            threadCount = Integer.parseInt(RuntimeProperties.get().getProperty("falcon.logMoveService.threadCount"));
+        }catch (NumberFormatException  e){
+           LOG.error("Exception in LogMoverService", e);
+           return 50;
+        }
+        return threadCount;
+    }
+
+    private int threadCount;
+
+
+
+    ExecutorService executorService = new ThreadPoolExecutor(20,getThreadCount(),120, TimeUnit.SECONDS,blockingQueue);
+
 
     @Override
     public void onSuccess(WorkflowExecutionContext context) throws FalconException{
-        if (!Boolean.parseBoolean(ENABLE_POSTPROCESSING)){
-            new JobLogMover().moveLog(context);
-        }
+        onEnd(context);
     }
 
     @Override
     public void onFailure(WorkflowExecutionContext context) throws FalconException{
-        onSuccess(context);
+        onEnd(context);
     }
 
     @Override
     public void onStart(WorkflowExecutionContext context) throws FalconException{
-       //Do Nothin
+       //Do Nothing
     }
 
     @Override
@@ -57,4 +92,24 @@ public class LogMoverService implements WorkflowExecutionListener{
     public void onWait(WorkflowExecutionContext context) throws FalconException{
         //DO Nothing
     }
+
+    private void onEnd(WorkflowExecutionContext context){
+        if (!Boolean.parseBoolean(ENABLE_POSTPROCESSING)){
+            executorService.execute(new LogMover(context));
+        }
+    }
+
+
+    class LogMover implements Runnable {
+
+        private WorkflowExecutionContext context ;
+        public LogMover (@Nonnull WorkflowExecutionContext context){
+            this.context = context;
+        }
+        @Override
+        public void run(){
+            new JobLogMover().moveLog(context);
+        }
+    }
+
 }
