@@ -41,7 +41,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         super.setup();
     }
 
-    @Test
+    @Test (enabled = false)
     public void testProcessInstanceExecution() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -65,7 +65,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
 
     }
 
-    @Test
+    @Test (enabled = false)
     public void testKillAndRerunInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -99,7 +99,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
 
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSuspendResumeInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -129,7 +129,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
                 START_INSTANCE, InstancesResult.WorkflowStatus.RUNNING);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testListInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -150,7 +150,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         Assert.assertEquals(result.getInstances()[2].getInstance(), START_INSTANCE);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testInstanceSummary() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -174,7 +174,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         Assert.assertEquals(result.getInstancesSummary()[0].getSummaryMap().get("READY").longValue(), 1L);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testProcessWithInputs() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
