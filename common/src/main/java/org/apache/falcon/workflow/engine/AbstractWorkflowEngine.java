@@ -72,6 +72,8 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isCompleted(Entity entity) throws FalconException;
 
+    public abstract boolean isMissing(Entity entity) throws FalconException;
+
     public abstract InstancesResult getRunningInstances(Entity entity,
                                                         List<LifeCycle> lifeCycles) throws FalconException;
 
