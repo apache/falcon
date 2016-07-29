@@ -78,6 +78,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.testng.Assert.assertTrue;
+
 /**
  * Tests for Oozie workflow definition for feed replication & retention.
  */
@@ -90,6 +92,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private Cluster alphaTrgCluster;
     private Cluster betaTrgCluster;
     private Feed feed;
+    private Feed postFeed;
     private Feed tableFeed;
     private Feed fsReplFeed;
     private Feed lifecycleRetentionFeed;
@@ -99,6 +102,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private static final String SRC_CLUSTER_PATH = "/feed/src-cluster.xml";
     private static final String TRG_CLUSTER_PATH = "/feed/trg-cluster.xml";
     private static final String FEED = "/feed/feed.xml";
+    private static final String POST_FEED = "/feed/fs-post-processing-feed.xml";
     private static final String TABLE_FEED = "/feed/table-replication-feed.xml";
     private static final String FS_REPLICATION_FEED = "/feed/fs-replication-feed.xml";
     private static final String FS_RETENTION_LIFECYCLE_FEED = "/feed/fs-retention-lifecycle-feed.xml";
@@ -133,6 +137,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         betaTrgCluster = (Cluster) storeEntity(EntityType.CLUSTER, "/feed/trg-cluster-beta.xml", trgHdfsUrl);
 
         feed = (Feed) storeEntity(EntityType.FEED, FEED);
+        postFeed = (Feed) storeEntity(EntityType.FEED, POST_FEED);
         fsReplFeed = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED);
         fsReplFeedCounter = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED_COUNTER);
         tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED);
@@ -258,6 +263,54 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP tgtCoord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
         // Assert target coord frequency
         Assert.assertEquals(tgtCoord.getFrequency(), expectedFrequency);
+    }
+
+    @Test(priority = 20)
+    //Run this test as last as it plays around with the startup property
+    public void testPostProcessing() throws Exception{
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
+        OozieEntityBuilder builder = OozieEntityBuilder.get(postFeed);
+        Path bundlePath = new Path("/projects/falcon/");
+        builder.build(trgCluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
+        List<COORDINATOR> coords = bundle.getCoordinator();
+        COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
+
+        WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
+
+        Boolean userAction = false;
+        Boolean postProcessing = true;
+
+        coord = getCoordinator(trgMiniDFS, coords.get(1).getAppPath());
+
+        for(Object action : workflow.getDecisionOrForkOrJoin()){
+            if (action instanceof ACTION && ((ACTION)action).getName().equals("eviction")){
+                userAction = true;
+            }
+            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
+                postProcessing = true;
+            }
+
+        }
+        assertTrue(userAction);
+        assertTrue(postProcessing);
+
+        workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
+
+        userAction = false;
+        postProcessing = true;
+
+        for(Object action : workflow.getDecisionOrForkOrJoin()){
+            if (action instanceof ACTION && ((ACTION)action).getName().equals("replication")){
+                userAction = true;
+            }
+            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
+                postProcessing = true;
+            }
+
+        }
+        assertTrue(userAction);
+        assertTrue(postProcessing);
     }
 
     @Test

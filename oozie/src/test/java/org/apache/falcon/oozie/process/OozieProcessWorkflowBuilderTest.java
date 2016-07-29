@@ -89,6 +89,8 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     private static final String PIG_PROCESS_XML = "/config/process/pig-process-0.1.xml";
     private static final String SPARK_PROCESS_XML = "/config/process/spark-process-0.1.xml";
+    private static final String POST_PROCEES_XML = "/config/process/post-processing-process.xml";
+    private static final String FEED_POST_XML = "/config/feed/feed-post-processing-0.1.xml";
 
     private String hdfsUrl;
     private FileSystem fs;
@@ -114,6 +116,8 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "clicksummary", FEED_XML);
         storeEntity(EntityType.PROCESS, "clicksummary", PROCESS_XML);
         storeEntity(EntityType.PROCESS, "pig-process", PIG_PROCESS_XML);
+        storeEntity(EntityType.PROCESS, "post-process", POST_PROCEES_XML);
+
 
         ConfigurationStore store = ConfigurationStore.get();
         cluster = store.get(EntityType.CLUSTER, "corp");
@@ -783,6 +787,38 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertAction(parentWorkflow, "succeeded-post-processing", true);
         assertAction(parentWorkflow, "failed-post-processing", true);
         assertAction(parentWorkflow, "user-action", false);
+    }
+
+    @Test (priority = 99)
+    //Run it last as we are changing the startup properties.
+    public void testPostProcessingProcess() throws Exception {
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "post-process");
+
+        OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+        builder.build(cluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP workflowapp = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
+
+        Boolean userAction = false;
+        Boolean postProcessing = true;
+
+        for(Object action : workflowapp.getDecisionOrForkOrJoin()){
+            if (action instanceof ACTION && ((ACTION)action).getName().equals("user-action")){
+                userAction = true;
+            }
+            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
+                postProcessing = true;
+            }
+
+        }
+        assertTrue(userAction);
+        assertTrue(postProcessing);
     }
 
     @AfterMethod

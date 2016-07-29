@@ -1,0 +1,57 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<feed description="post-processing" name="post-processing" xmlns="uri:falcon:feed:0.1"
+>
+
+    <groups>online,bi</groups>
+
+    <frequency>minutes(20)</frequency>
+    <timezone>UTC</timezone>
+
+    <late-arrival cut-off="minutes(3)"/>
+    <clusters>
+        <cluster name="corp1" type="source" delay="minutes(40)">
+            <validity start="2010-01-01T00:00Z" end="2020-01-01T02:00Z"/>
+            <retention limit="minutes(5)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+        </cluster>
+        <cluster name="corp2" type="target">
+            <validity start="2010-01-01T00:00Z" end="2020-01-01T02:00Z"/>
+            <retention limit="minutes(7)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+        </cluster>
+    </clusters>
+
+    <locations>
+        <location type="data"
+                  path="/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
+        <location type="stats" path="/projects/falcon/clicksStats"/>
+        <location type="meta" path="/projects/falcon/clicksMetaData"/>
+    </locations>
+
+    <ACL owner="testuser-ut-user" group="group" permission="0x755"/>
+    <schema location="/schema/clicks" provider="protobuf"/>
+
+    <properties>
+        <property name="field3" value="value3"/>
+        <property name="field2" value="value2"/>
+        <property name="order"  value="FIFO" />
+        <property name="parallel"  value="2" />
+        <property name="field4" value="value2"/>
+    </properties>
+</feed>
