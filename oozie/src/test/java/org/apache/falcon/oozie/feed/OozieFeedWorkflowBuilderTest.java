@@ -265,8 +265,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(tgtCoord.getFrequency(), expectedFrequency);
     }
 
-    @Test(priority = 20)
-    //Run this test as last as it plays around with the startup property
+    @Test
     public void testPostProcessing() throws Exception{
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
         OozieEntityBuilder builder = OozieEntityBuilder.get(postFeed);
@@ -288,7 +287,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 userAction = true;
             }
             if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
-                postProcessing = true;
+                postProcessing = false;
             }
 
         }
@@ -305,12 +304,13 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 userAction = true;
             }
             if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
-                postProcessing = true;
+                postProcessing = false;
             }
 
         }
         assertTrue(userAction);
         assertTrue(postProcessing);
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
     @Test

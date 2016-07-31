@@ -789,8 +789,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertAction(parentWorkflow, "user-action", false);
     }
 
-    @Test (priority = 99)
-    //Run it last as we are changing the startup properties.
+    @Test
     public void testPostProcessingProcess() throws Exception {
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "post-process");
@@ -813,12 +812,13 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 userAction = true;
             }
             if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
-                postProcessing = true;
+                postProcessing = false;
             }
 
         }
         assertTrue(userAction);
         assertTrue(postProcessing);
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
     @AfterMethod

@@ -79,7 +79,12 @@ import java.util.Set;
  */
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
-    public static final String ENABLE_POSTPROCESSING = StartupProperties.get().
+
+    public String getENABLE_POSTPROCESSING() {
+        return ENABLE_POSTPROCESSING;
+    }
+
+    public String ENABLE_POSTPROCESSING = StartupProperties.get().
             getProperty("falcon.postprocessing.enable");
 
     protected static final String USER_ACTION_NAME = "user-action";
@@ -133,7 +138,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     }
 
     public Boolean isPostProcessingEnabled(){
-        return Boolean.parseBoolean(ENABLE_POSTPROCESSING);
+        return Boolean.parseBoolean(getENABLE_POSTPROCESSING());
     }
 
     public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle,
