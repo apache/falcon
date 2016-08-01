@@ -136,13 +136,6 @@ public class HiveDRTool extends Configured implements Tool {
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
-        // Update the source staging path
-        inputOptions.setSourceStagingPath();
-        inputOptions.setTargetStagingPath();
-
-        LOG.info("srcStaginPath: {}", inputOptions.getSourceStagingPath());
-        LOG.info("tgtStaginPath: {}", inputOptions.getTargetStagingPath());
-
         Configuration sourceConf = FileUtils.getConfiguration(getConf(), inputOptions.getSourceWriteEP(),
                 inputOptions.getSourceNNKerberosPrincipal());
         sourceClusterFS = FileSystem.get(sourceConf);
@@ -155,6 +148,14 @@ public class HiveDRTool extends Configured implements Tool {
 
         // init DR status store
         drStore = new HiveDRStatusStore(targetClusterFS);
+
+        // Update the source staging path after initing DR status store
+        inputOptions.setSourceStagingPath();
+        inputOptions.setTargetStagingPath();
+
+        LOG.info("srcStaginPath: {}", inputOptions.getSourceStagingPath());
+        LOG.info("tgtStaginPath: {}", inputOptions.getTargetStagingPath());
+
         eventSoucerUtil = new EventSourcerUtils(jobConf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
     }
 
@@ -310,7 +311,7 @@ public class HiveDRTool extends Configured implements Tool {
     }
 
     private Map<String, Long> getLastDBTableEvents(Path lastEventIdFile) throws Exception {
-        Map<String, Long> lastEventsIdMap = new HashMap<String, Long>();
+        Map<String, Long> lastEventsIdMap = new HashMap<>();
         BufferedReader in = new BufferedReader(new InputStreamReader(jobFS.open(lastEventIdFile)));
         try {
             String line;
