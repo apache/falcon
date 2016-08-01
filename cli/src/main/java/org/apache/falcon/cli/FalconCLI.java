@@ -48,17 +48,9 @@ public class FalconCLI {
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
-    public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
     public static final String DEBUG_OPTION = "debug";
     public static final String URL_OPTION = "url";
     public static final String FALCON_URL = "FALCON_URL";
-
-    public static final String ADMIN_CMD = "admin";
-    public static final String HELP_CMD = "help";
-    public static final String METADATA_CMD = "metadata";
-    public static final String ENTITY_CMD = "entity";
-    public static final String INSTANCE_CMD = "instance";
-    public static final String RECIPE_CMD = "recipe";
 
     public static final String TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
@@ -281,7 +273,6 @@ public class FalconCLI {
         }
         throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
     }
-
 
     protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);

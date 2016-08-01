@@ -619,7 +619,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     }
 
     protected Entity submitInternal(InputStream inputStream, String type, String doAsUser)
-        throws IOException, FalconException {
+        throws FalconException, IOException {
         EntityType entityType = EntityType.getEnum(type);
         Entity entity = deserializeEntity(inputStream, entityType);
         verifySafemodeOperation(entity, EntityUtil.ENTITY_OPERATION.SUBMIT);
