@@ -133,9 +133,9 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
         Properties additionalProperties = new Properties();
 
         // Add default properties if not passed
-        String distcpMaxMaps = extensionProperties.getProperty(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName());
+        String distcpMaxMaps = extensionProperties.getProperty(HdfsSnapshotMirrorProperties.MAX_MAPS.getName());
         if (StringUtils.isBlank(distcpMaxMaps)) {
-            additionalProperties.put(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(), "1");
+            additionalProperties.put(HdfsSnapshotMirrorProperties.MAX_MAPS.getName(), "1");
         }
 
         String distcpMapBandwidth = extensionProperties.getProperty(
@@ -223,6 +223,8 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
             throw new FalconException("Cluster entity "
                     + ExtensionProperties.CLUSTER_NAME.getName() + " not found");
         }
+
+        addAdditionalDistCPProperties(extensionProperties, additionalProperties);
         return additionalProperties;
     }
 

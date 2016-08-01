@@ -48,8 +48,8 @@ public enum HdfsSnapshotMirrorProperties {
     TARGET_SNAPSHOT_RETENTION_NUMBER("targetSnapshotRetentionNumber",
             "Number of latest target snapshots to retain on source", true),
 
-    DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during distcp", false),
-    MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
+    MAX_MAPS("maxMaps", "Maximum number of maps used during distcp", false),
+    MAP_BANDWIDTH_IN_MB("mapBandwidth", "Bandwidth in MB/s used by each mapper during replication", false),
 
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Is TDE encryption enabled on source and target", false),
     SNAPSHOT_JOB_NAME("snapshotJobName", "Name of snapshot based mirror job", false);

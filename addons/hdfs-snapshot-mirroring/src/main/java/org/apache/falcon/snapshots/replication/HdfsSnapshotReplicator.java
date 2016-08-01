@@ -28,6 +28,8 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
+import org.apache.falcon.util.DistCPOptionsUtil;
+import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -138,17 +140,14 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
     private DistCpOptions getDistCpOptions(String sourceStorageUrl, String targetStorageUrl,
                                            DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
                                            String sourceDir, String targetDir,
-                                           String currentSnapshotName) throws FalconException {
+                                           String currentSnapshotName) throws FalconException, IOException {
 
-        List<Path> sourceUris=new ArrayList<Path>();
+        List<Path> sourceUris = new ArrayList<>();
         sourceUris.add(new Path(getStagingUri(sourceStorageUrl, sourceDir)));
 
-        DistCpOptions distcpOptions = new DistCpOptions(sourceUris,
-                new Path(getStagingUri(targetStorageUrl, targetDir)));
 
-        // Settings needed for Snapshot distCp.
-        distcpOptions.setSyncFolder(true);
-        distcpOptions.setDeleteMissing(true);
+        DistCpOptions distcpOptions = DistCPOptionsUtil.getDistCpOptions(cmd, sourceUris,
+                new Path(getStagingUri(targetStorageUrl, targetDir)), true, null);
 
         // Use snapshot diff if two snapshots exist. Else treat it as simple distCp.
         // get latest replicated snapshot.
@@ -157,24 +156,14 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
             distcpOptions.setUseDiff(true, replicatedSnapshotName, currentSnapshotName);
         }
 
-        if (Boolean.valueOf(cmd.getOptionValue(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName()))) {
-            // skipCRCCheck and update enabled
-            distcpOptions.setSkipCRC(true);
-        }
-
-        distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(
-                Integer.parseInt(cmd.getOptionValue(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName())));
-        distcpOptions.setMapBandwidth(
-                Integer.parseInt(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName())));
         return distcpOptions;
     }
 
     private String findLatestReplicatedSnapshot(DistributedFileSystem sourceFs, DistributedFileSystem targetFs,
-            String sourceDir, String targetDir) throws FalconException {
+                                                String sourceDir, String targetDir) throws FalconException {
         try {
             FileStatus[] sourceSnapshots = sourceFs.listStatus(new Path(getSnapshotDir(sourceDir)));
-            Set<String> sourceSnapshotNames = new HashSet<String>();
+            Set<String> sourceSnapshotNames = new HashSet<>();
             for (FileStatus snapshot : sourceSnapshots) {
                 sourceSnapshotNames.add(snapshot.getPath().getName());
             }
@@ -190,8 +179,8 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
                 });
 
                 // get most recent snapshot name that exists in source.
-                for (int i = 0; i < targetSnapshots.length; i++) {
-                    String name = targetSnapshots[i].getPath().getName();
+                for (FileStatus targetSnapshot : targetSnapshots) {
+                    String name = targetSnapshot.getPath().getName();
                     if (sourceSnapshotNames.contains(name)) {
                         return name;
                     }
@@ -219,7 +208,7 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
     protected CommandLine getCommand(String[] args) throws FalconException {
         Options options = new Options();
 
-        Option opt = new Option(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(),
+        Option opt = new Option(HdfsSnapshotMirrorProperties.MAX_MAPS.getName(),
                 true, "max number of maps to use for distcp");
         opt.setRequired(true);
         options.addOption(opt);
@@ -270,11 +259,75 @@ public class HdfsSnapshotReplicator extends Configured implements Tool {
         opt.setRequired(true);
         options.addOption(opt);
 
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName(), true, "option to force overwrite");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), true, "abort on error");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName(), true, "skip checksums");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), true,
+                "remove deleted files - should there be files in the target directory that"
+                        + "were removed from the source directory"
+        );
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName(), true,
+                "preserve block size");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER.getName(), true,
+                "preserve replication count");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName(), true,
+                "preserve permissions");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getName(), true,
+                "preserve user");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getName(), true,
+                "preserve group");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE.getName(), true,
+                "preserve checksum type");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), true,
+                "preserve ACL");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), true,
+                "preserve XATTR");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_TIMES.getName(), true,
+                "preserve access and modification times");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         try {
             return new GnuParser().parse(options, args);
         } catch (ParseException pe) {
             LOG.info("Unabel to parse commad line arguments for HdfsSnapshotReplicator " + pe.getMessage());
-            throw  new FalconException(pe.getMessage());
+            throw new FalconException(pe.getMessage());
         }
     }
 
