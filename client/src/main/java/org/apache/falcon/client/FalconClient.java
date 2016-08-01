@@ -759,8 +759,7 @@ public class FalconClient extends AbstractFalconClient {
         return stream;
     }
 
-    private <T> T getResponse(Class<T> clazz,
-                                                ClientResponse clientResponse) {
+    private <T> T getResponse(Class<T> clazz, ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(clazz);
