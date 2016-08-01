@@ -40,6 +40,7 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.admin.AdminResource;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
@@ -383,6 +384,33 @@ public class FalconUnitClient extends AbstractFalconClient {
     @Override
     public EntityList getDependency(String entityType, String entityName, String doAs) {
         return null;
+    }
+
+    @Override
+    public TriageResult triage(String name, String entityName, String start, String colo) {
+        return null;
+    }
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
+                                               String filterBy, String orderBy, String sortOrder, Integer offset, Integer numResults, String doAsUser) {
+        return null;
+    }
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
+                                                     String colo, String doAsUser) {
+        return null;
+    }
+
+    @Override
+    public int getStatus(String doAsUser) {
+        return 200;
+    }
+
+    @Override
+    public String getThreadDump(String doAs) {
+        return "";
     }
 
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {

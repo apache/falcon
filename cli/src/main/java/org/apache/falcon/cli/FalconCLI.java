@@ -282,7 +282,6 @@ public class FalconCLI {
         throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
     }
 
-
     protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);
         if (url == null) {
