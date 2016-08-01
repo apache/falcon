@@ -36,7 +36,11 @@ import java.util.Set;
  */
 public class FalconAdminCLI extends FalconCLI {
 
-    private static final String STACK_OPTION = "stack";
+    public static final String STACK_OPTION = "stack";
+    public static final String STATUS_OPT_DESCRIPTION = "show the current system status";
+    public static final String VERSION_OPT_DESCRIPTION = "show Falcon server build version";
+    public static final String STACK_OPTION_DESCRIPTION = "show the thread stack dump";
+    public static final String DO_AS_OPT_DESCRIPTION = "doAs user";
 
     public FalconAdminCLI() throws Exception {
         super();
@@ -73,8 +77,7 @@ public class FalconAdminCLI extends FalconCLI {
         return adminOptions;
     }
 
-    public int adminCommand(CommandLine commandLine, FalconClient client,
-                             String falconUrl) throws IOException {
+    public int adminCommand(CommandLine commandLine, FalconClient client, String falconUrl) throws IOException {
         String result;
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {

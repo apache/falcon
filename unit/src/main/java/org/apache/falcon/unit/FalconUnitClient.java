@@ -39,7 +39,9 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.admin.AdminResource;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
@@ -382,6 +384,73 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public EntityList getDependency(String entityType, String entityName, String doAs) {
+        return null;
+    }
+
+    @Override
+    public TriageResult triage(String name, String entityName, String start, String colo) {
+        return null;
+    }
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
+                                               String filterBy, String orderBy, String sortOrder, Integer offset, Integer numResults, String doAsUser) {
+        return null;
+    }
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
+                                                     String colo, String doAsUser) {
+        return null;
+    }
+
+    @Override
+    public int getStatus(String doAsUser) {
+        return 200;
+    }
+
+    @Override
+    public String getThreadDump(String doAs) {
+        return "";
+    }
+
+    @Override
+    public LineageGraphResult getEntityLineageGraph(String pipeline, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getDimensionList(String dimensionType, String cluster, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName, Integer numResults, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getDimensionRelations(String dimensionType, String dimensionName, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertex(String id, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertices(String key, String value, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertexEdges(String id, String direction, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getEdge(String id, String doAs) {
         return null;
     }
 

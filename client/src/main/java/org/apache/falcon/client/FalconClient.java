@@ -540,7 +540,6 @@ public class FalconClient extends AbstractFalconClient {
             .addQueryParam(DO_AS_OPT, doAsUser).call(operation);
         return getResponse(APIResult.class, clientResponse);
     }
-
     public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
                                       String filterBy, String orderBy, String sortOrder,
                                       Integer offset, Integer numResults, String doAsUser) {
@@ -551,7 +550,6 @@ public class FalconClient extends AbstractFalconClient {
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(USER, doAsUser).call(Instances.RUNNING);
         return getResponse(InstancesResult.class, clientResponse);
     }
-
     @Override
     public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
                                                 List<LifeCycle> lifeCycles, String filterBy, String orderBy,
@@ -759,8 +757,7 @@ public class FalconClient extends AbstractFalconClient {
         return stream;
     }
 
-    private <T> T getResponse(Class<T> clazz,
-                                                ClientResponse clientResponse) {
+    private <T> T getResponse(Class<T> clazz, ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(clazz);
