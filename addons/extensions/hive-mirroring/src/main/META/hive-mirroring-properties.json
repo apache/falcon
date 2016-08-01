@@ -94,8 +94,14 @@
         {
             "propertyName":"sourceHiveServer2Uri",
             "required":true,
-            "description":"Hive2 server end point",
+            "description":"Hive2 server end point. If Zookeeper discovery mode is enabled zookeeper_ensemble is expected",
             "example":"hive2://localhost:10000"
+        },
+        {
+            "propertyName":"sourceHiveServer2ExtraOpts",
+            "required":false,
+            "description":"Extra opts required when SSL is enbaled, Http mode and when zookeeper discovery is used",
+            "example":"serviceDiscoveryMode=zooKeeper; zooKeeperNamespace=<hiveserver2_namespace>"
         },
         {
             "propertyName":"sourceDatabases",
@@ -130,8 +136,14 @@
         {
             "propertyName":"targetHiveServer2Uri",
             "required":true,
-            "description":"Hive2 server end point",
+            "description":"Hive2 server end point. If Zookeeper discovery mode is enabled zookeeper_ensemble is expected",
             "example":"hive2://localhost:10000"
+        },
+        {
+            "propertyName":"targetHiveServer2ExtraOpts",
+            "required":false,
+            "description":"Extra opts required when SSL is enbaled, Http mode and when zookeeper discovery is used",
+            "example":"serviceDiscoveryMode=zooKeeper; zooKeeperNamespace=<hiveserver2_namespace>"
         },
         {
             "propertyName":"targetStagingPath",
