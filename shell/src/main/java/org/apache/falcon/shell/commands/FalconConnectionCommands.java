@@ -36,9 +36,9 @@ public class FalconConnectionCommands extends BaseFalconCommands {
     @CliCommand(value = "get", help = "get properties")
     public String getParameter(@CliOption(key = {"", "key"}, mandatory = false, help = "<key>") final String key) {
         if (StringUtils.isBlank(key)) {
-            return BaseFalconCommands.getClientProperties().toString();
+            return BaseFalconCommands.getShellProperties().toString();
         }
-        return getClientProperties().getProperty(key);
+        return getShellProperties().getProperty(key);
     }
 
     @CliCommand(value = "set", help = "set properties")

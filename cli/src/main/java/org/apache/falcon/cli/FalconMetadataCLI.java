@@ -84,6 +84,7 @@ import static org.apache.falcon.ValidationUtil.validateId;
 import static org.apache.falcon.ValidationUtil.validateScheduleEntity;
 import static org.apache.falcon.ValidationUtil.validateVertexEdgesCommand;
 import static org.apache.falcon.ValidationUtil.validateVerticesCommand;
+import static org.apache.falcon.ValidationUtil.validatePipelineName;
 
 
 
@@ -232,9 +233,5 @@ public class FalconMetadataCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    public static void validatePipelineName(String pipeline) {
-        if (StringUtils.isEmpty(pipeline)) {
-            throw new FalconCLIException("Invalid value for pipeline");
-        }
-    }
+
 }

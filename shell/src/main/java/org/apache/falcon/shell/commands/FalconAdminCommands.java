@@ -40,7 +40,7 @@ public class FalconAdminCommands extends BaseFalconCommands {
     public String status(
     ) {
         int status = getFalconClient().getStatus(getDoAs());
-        String url = getClientProperties().getProperty(BaseFalconCommands.FALCON_URL_PROPERTY);
+        String url = getShellProperties().getProperty(BaseFalconCommands.FALCON_URL_PROPERTY);
         if (status != 200) {
             throw new RuntimeException("Falcon server is not fully operational (on "
                     + url + "). "

@@ -106,10 +106,8 @@ import static org.apache.falcon.client.FalconCLIConstants.SHOWSCHEDULER_OPT_DESC
 import static org.apache.falcon.client.FalconCLIConstants.DEBUG_OPTION;
 import static org.apache.falcon.client.FalconCLIConstants.DEBUG_OPTION_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.NAMESEQ_OPT_DESCRIPTION;
-
-
-
-
+import static org.apache.falcon.ValidationUtil.validateNotEmpty;
+import static org.apache.falcon.ValidationUtil.validateSortOrder;
 
 
 /**
@@ -376,8 +374,6 @@ public class FalconEntityCLI extends FalconCLI {
             throw new FalconCLIException("Invalid argument : " + FalconCLIConstants.COLO_OPT);
         }
     }
-
-
 
     private Date parseDateString(String time) {
         if (time != null && !time.isEmpty()) {

@@ -105,6 +105,8 @@ import static org.apache.falcon.client.FalconCLIConstants.INSTANCE_TIME_OPT_DESC
 import static org.apache.falcon.client.FalconCLIConstants.ALL_ATTEMPTS;
 import static org.apache.falcon.client.FalconCLIConstants.ALL_ATTEMPTS_DESCRIPTION;
 import static org.apache.falcon.ValidationUtil.getLifeCycle;
+import static org.apache.falcon.ValidationUtil.validateSortOrder;
+import static org.apache.falcon.ValidationUtil.validateNotEmpty;
 
 
 /**

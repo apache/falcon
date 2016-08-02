@@ -40,24 +40,24 @@ public class BaseFalconCommands implements ExecutionProcessor {
     protected static final String FALCON_URL_PROPERTY = "falcon.url";
     private static final String DO_AS = "DO_AS";
     private static final String DO_AS_PROPERTY = "do.as";
-    private static final String CLIENT_PROPERTIES = "/shell.properties";
+    private static final String SHELL_PROPERTIES = "/shell.properties";
     protected static final String FALCON_URL_ABSENT = "Failed to get falcon url from environment or client properties";
     private static Properties clientProperties;
     private static Properties backupProperties = new Properties();
     private static AbstractFalconClient client;
 
     static {
-        clientProperties = getClientProperties();
+        clientProperties = getShellProperties();
     }
 
 
-    public static Properties getClientProperties() {
+    public static Properties getShellProperties() {
         if (clientProperties == null) {
             InputStream inputStream = null;
             Properties prop = new Properties(System.getProperties());
             prop.putAll(backupProperties);
             try {
-                inputStream = BaseFalconCommands.class.getResourceAsStream(CLIENT_PROPERTIES);
+                inputStream = BaseFalconCommands.class.getResourceAsStream(SHELL_PROPERTIES);
                 if (inputStream != null) {
                     try {
                         prop.load(inputStream);
@@ -88,7 +88,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
     static void setClientProperty(String key, String value) {
         Properties props;
         try {
-            props = getClientProperties();
+            props = getShellProperties();
         } catch (FalconCLIException e) {
             props = backupProperties;
         }
@@ -103,7 +103,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
 
     public static AbstractFalconClient getFalconClient() {
         if (client == null) {
-            client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY), getClientProperties());
+            client = new FalconClient(getShellProperties().getProperty(FALCON_URL_PROPERTY), getShellProperties());
         }
         return client;
     }
@@ -114,14 +114,14 @@ public class BaseFalconCommands implements ExecutionProcessor {
 
     protected String getColo(String colo) {
         if (colo == null) {
-            Properties prop = getClientProperties();
+            Properties prop = getShellProperties();
             colo = prop.getProperty(CURRENT_COLO, "*");
         }
         return colo;
     }
 
     protected String getDoAs() {
-        return getClientProperties().getProperty(DO_AS_PROPERTY);
+        return getShellProperties().getProperty(DO_AS_PROPERTY);
     }
 
     @Override

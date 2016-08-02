@@ -36,6 +36,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 import static org.apache.falcon.client.FalconCLIConstants.FALCON_URL;
 
+
 /**
  * Falcon Command Line Interface - wraps the RESTful API.
  */
@@ -161,21 +162,6 @@ public class FalconCLI {
             }
         }
         return integer;
-    }
-
-    protected void validateNotEmpty(String paramVal, String paramName) {
-        if (StringUtils.isBlank(paramVal)) {
-            throw new FalconCLIException("Missing argument : " + paramName);
-        }
-    }
-
-    protected void validateSortOrder(String sortOrder) {
-        if (!StringUtils.isBlank(sortOrder)) {
-            if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
-                throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
-                        + sortOrder);
-            }
-        }
     }
 
     protected String getColo(String colo) throws IOException {

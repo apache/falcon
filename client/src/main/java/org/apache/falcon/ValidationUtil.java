@@ -75,7 +75,7 @@ public final class ValidationUtil {
     }
 
     public static void validateFilterBy(String filterBy, String filterType) {
-        if (StringUtils.isEmpty(filterBy)) {
+        if (StringUtils.isBlank(filterBy)) {
             return;
         }
         String[] filterSplits = filterBy.split(",");
@@ -122,13 +122,13 @@ public final class ValidationUtil {
     }
 
     public static void validateDimensionName(String dimensionName, String action) {
-        if (StringUtils.isEmpty(dimensionName)) {
+        if (StringUtils.isBlank(dimensionName)) {
             throw new FalconCLIException("Dimension ID cannot be empty or null for action " + action);
         }
     }
 
     public static void validateDimensionType(String dimensionType) {
-        if (StringUtils.isEmpty(dimensionType)
+        if (StringUtils.isBlank(dimensionType)
                 ||  dimensionType.contains("INSTANCE")) {
             throw new FalconCLIException("Invalid value provided for queryParam \"type\" " + dimensionType);
         }
@@ -172,6 +172,27 @@ public final class ValidationUtil {
 
         if (value == null || value.length() == 0) {
             throw new FalconCLIException("Missing argument: value");
+        }
+    }
+
+    public static void validatePipelineName(String pipeline) {
+        if (StringUtils.isBlank(pipeline)) {
+            throw new FalconCLIException("Invalid value for pipeline");
+        }
+    }
+
+    public static void validateNotEmpty(String paramVal, String paramName) {
+        if (StringUtils.isBlank(paramVal)) {
+            throw new FalconCLIException("Missing argument : " + paramName);
+        }
+    }
+
+    public static void validateSortOrder(String sortOrder) {
+        if (!StringUtils.isBlank(sortOrder)) {
+            if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
+                throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
+                        + sortOrder);
+            }
         }
     }
 

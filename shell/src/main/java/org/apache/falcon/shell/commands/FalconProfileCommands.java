@@ -42,15 +42,14 @@ public class FalconProfileCommands extends BaseFalconCommands{
     public static final String SET_PROFILE = "updateProfile";
     public static final String SET_HELP = "update falcon.url with new url";
     public static final String PROFILE = "profile";
-    private static final String CLIENT_PROPERTIES = "/shell.properties";
+    private static final String SHELL_PROPERTIES = "/shell.properties";
+    private static  Properties prop = new Properties();
 
-    @CliCommand(value = LIST_PROFILE , help = LIST_HELP)
-    public String listProfile() {
-        StringBuilder stringBuilder = new StringBuilder();
-        Properties prop = new Properties();
+    static {
         InputStream inputStream = null;
+        //Need new properties as clientProperties has the system properties as well
         try {
-            inputStream = BaseFalconCommands.class.getResourceAsStream(CLIENT_PROPERTIES);
+            inputStream = BaseFalconCommands.class.getResourceAsStream(SHELL_PROPERTIES);
             if (inputStream != null) {
                 try {
                     prop.load(inputStream);
@@ -61,6 +60,11 @@ public class FalconProfileCommands extends BaseFalconCommands{
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
+    }
+
+    @CliCommand(value = LIST_PROFILE , help = LIST_HELP)
+    public String listProfile() {
+        StringBuilder stringBuilder = new StringBuilder();
 
         Enumeration e =  prop.propertyNames();
         while(e.hasMoreElements()){
@@ -73,7 +77,10 @@ public class FalconProfileCommands extends BaseFalconCommands{
     @CliCommand(value = SET_PROFILE , help = SET_HELP)
     public String setProfile(@CliOption(key = {PROFILE}, mandatory = true, help = "key")
         @Nonnull final String key){
-        setClientProperty(FALCON_URL_PROPERTY, PROFILE);
-        return FALCON_URL_PROPERTY +"="+ PROFILE;
+        Properties properties =  getShellProperties();
+        String profile = prop.getProperty(key);
+        properties.setProperty(FALCON_URL_PROPERTY, profile);
+        setClientProperty(FALCON_URL_PROPERTY, profile);
+        return FALCON_URL_PROPERTY +"="+profile;
     }
 }
