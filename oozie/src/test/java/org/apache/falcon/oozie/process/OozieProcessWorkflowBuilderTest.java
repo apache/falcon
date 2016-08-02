@@ -78,6 +78,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -89,8 +90,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     private static final String PIG_PROCESS_XML = "/config/process/pig-process-0.1.xml";
     private static final String SPARK_PROCESS_XML = "/config/process/spark-process-0.1.xml";
-    private static final String POST_PROCEES_XML = "/config/process/post-processing-process.xml";
-    private static final String FEED_POST_XML = "/config/feed/feed-post-processing-0.1.xml";
+    private static final String POST_PROCEES_XML = "/config/process/pig-process-0.1.xml";
 
     private String hdfsUrl;
     private FileSystem fs;
@@ -804,20 +804,20 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP workflowapp = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
 
-        Boolean userAction = false;
-        Boolean postProcessing = true;
+        Boolean foudUserAction = false;
+        Boolean foundpostProcessing =false;
 
         for(Object action : workflowapp.getDecisionOrForkOrJoin()){
             if (action instanceof ACTION && ((ACTION)action).getName().equals("user-action")){
-                userAction = true;
+                foudUserAction = true;
             }
             if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
-                postProcessing = false;
+                foundpostProcessing = true;
             }
 
         }
-        assertTrue(userAction);
-        assertTrue(postProcessing);
+        assertTrue(foudUserAction);
+        assertFalse(foundpostProcessing);
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 

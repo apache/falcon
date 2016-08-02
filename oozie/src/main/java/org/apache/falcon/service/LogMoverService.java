@@ -27,11 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 /**
@@ -47,7 +47,6 @@ public class LogMoverService implements WorkflowExecutionListener  {
     private BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(50);
     private ExecutorService executorService = new ThreadPoolExecutor(20, getThreadCount(), 120,
             TimeUnit.SECONDS, blockingQueue);
-
     public int getThreadCount() {
         try{
             return Integer.parseInt(StartupProperties.get().getProperty("falcon.logMoveService.threadCount"));

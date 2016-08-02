@@ -77,7 +77,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Iterator;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -92,7 +94,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private Cluster alphaTrgCluster;
     private Cluster betaTrgCluster;
     private Feed feed;
-    private Feed postFeed;
     private Feed tableFeed;
     private Feed fsReplFeed;
     private Feed lifecycleRetentionFeed;
@@ -102,7 +103,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private static final String SRC_CLUSTER_PATH = "/feed/src-cluster.xml";
     private static final String TRG_CLUSTER_PATH = "/feed/trg-cluster.xml";
     private static final String FEED = "/feed/feed.xml";
-    private static final String POST_FEED = "/feed/fs-post-processing-feed.xml";
     private static final String TABLE_FEED = "/feed/table-replication-feed.xml";
     private static final String FS_REPLICATION_FEED = "/feed/fs-replication-feed.xml";
     private static final String FS_RETENTION_LIFECYCLE_FEED = "/feed/fs-retention-lifecycle-feed.xml";
@@ -137,7 +137,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         betaTrgCluster = (Cluster) storeEntity(EntityType.CLUSTER, "/feed/trg-cluster-beta.xml", trgHdfsUrl);
 
         feed = (Feed) storeEntity(EntityType.FEED, FEED);
-        postFeed = (Feed) storeEntity(EntityType.FEED, POST_FEED);
         fsReplFeed = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED);
         fsReplFeedCounter = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED_COUNTER);
         tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED);
@@ -268,7 +267,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     @Test
     public void testPostProcessing() throws Exception{
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
-        OozieEntityBuilder builder = OozieEntityBuilder.get(postFeed);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(feed);
         Path bundlePath = new Path("/projects/falcon/");
         builder.build(trgCluster, bundlePath);
         BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
@@ -277,39 +276,30 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
 
-        Boolean userAction = false;
-        Boolean postProcessing = true;
+        Boolean foundUserAction = false;
+        Boolean foundPostProcessing = false;
+        Iterator<COORDINATOR> coordIterator = coords.iterator();
 
-        coord = getCoordinator(trgMiniDFS, coords.get(1).getAppPath());
-
-        for(Object action : workflow.getDecisionOrForkOrJoin()){
-            if (action instanceof ACTION && ((ACTION)action).getName().equals("eviction")){
-                userAction = true;
+        while(coordIterator.hasNext()){
+            COORDINATORAPP coord1 = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
+            WORKFLOWAPP workflow1 = getWorkflowapp(trgMiniDFS.getFileSystem(), coord1);
+            Iterator<Object> workflowIterator = workflow1.getDecisionOrForkOrJoin().iterator();
+            while (workflowIterator.hasNext()){
+                Object object = workflowIterator.next();
+                if (ACTION.class.isAssignableFrom(object.getClass())){
+                    ACTION action = (ACTION) object;
+                    if (action.getName().equals("eviction") || action.getName().equals("replication")){
+                        foundUserAction = true;
+                    }
+                    if (action.getName().contains("post")){
+                        foundPostProcessing = true;
+                    }
+                }
             }
-            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
-                postProcessing = false;
-            }
-
         }
-        assertTrue(userAction);
-        assertTrue(postProcessing);
 
-        workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
-
-        userAction = false;
-        postProcessing = true;
-
-        for(Object action : workflow.getDecisionOrForkOrJoin()){
-            if (action instanceof ACTION && ((ACTION)action).getName().equals("replication")){
-                userAction = true;
-            }
-            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
-                postProcessing = false;
-            }
-
-        }
-        assertTrue(userAction);
-        assertTrue(postProcessing);
+        assertTrue(foundUserAction);
+        assertFalse(foundPostProcessing);
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
@@ -750,6 +740,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Configuration conf = fs.getConf();
         conf.set("fs.permissions.umask-mode", umask);
 
+        OozieEntityBuilder feedBuilder = OozieEntityBuilder.get(feed);
+        Path bundlePath = new Path("/projects/falcon/");
+        feedBuilder.build(trgCluster, bundlePath);
+
         // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
         setUmaskInFsConf(srcCluster, umask);
 
@@ -812,6 +806,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
     @Test (dataProvider = "secureOptions")
     public void testRetentionCoordsForTable(String secureOption) throws Exception {
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
         final String umask = "000";
