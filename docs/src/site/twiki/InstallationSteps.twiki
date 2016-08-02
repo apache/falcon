@@ -27,16 +27,15 @@ $ mvn clean install
 </verbatim>
 It builds and installs the package into the local repository, for use as a dependency in other projects locally.
 
-[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of Hadoop]
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 
-*NOTE:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
-[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of Oozie. Oozie versions
->= 4 are supported]
-NOTE: Falcon builds with JDK 1.7/1.8 using -noverify option
-      To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this Hive >= 1.2.0
-      and Oozie >= 4.2.0 should be available.
+*Note 1:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+          Falcon build with JDK 1.7 using -noverify option
 
-
+*Note 2:* To compile Falcon with addon extensions, append additional profiles to build command using syntax -P<<profile1,profile2>>
+          For Hive Mirroring extension, use profile"hivedr". Hive >= 1.2.0 and Oozie >= 4.2.0 is required
+          For HDFS Snapshot mirroring extension, use profile "hdfs-snapshot-mirroring". Hadoop >= 2.7.0 is required
+          For ADF integration, use profile "adf"
 
 ---+++Step 3 - Package and Deploy Falcon
 
