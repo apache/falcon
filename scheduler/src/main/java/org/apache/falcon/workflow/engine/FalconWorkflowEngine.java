@@ -108,12 +108,17 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public boolean isActive(Entity entity) throws FalconException {
-        EntityID id = new EntityID(entity);
-        // Ideally state store should have all entities, but, check anyway.
-        if (STATE_STORE.entityExists(id)) {
-            return STATE_STORE.getEntity(id).getCurrentState() != EntityState.STATE.SUBMITTED;
+        try {
+            EntityID id = new EntityID(entity);
+            // Ideally state store should have all entities, but, check anyway.
+            if (STATE_STORE.entityExists(id)) {
+                return STATE_STORE.getEntity(id).getCurrentState() != EntityState.STATE.SUBMITTED;
+            }
+            return false;
+        } catch (NullPointerException npe) {
+            // FalconJPAService is not always used, so catch NPE and return false
+            return false;
         }
-        return false;
     }
 
     @Override
