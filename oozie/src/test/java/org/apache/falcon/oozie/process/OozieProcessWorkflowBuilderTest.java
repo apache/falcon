@@ -90,7 +90,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     private static final String PIG_PROCESS_XML = "/config/process/pig-process-0.1.xml";
     private static final String SPARK_PROCESS_XML = "/config/process/spark-process-0.1.xml";
-    private static final String POST_PROCEES_XML = "/config/process/pig-process-0.1.xml";
 
     private String hdfsUrl;
     private FileSystem fs;
@@ -116,7 +115,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "clicksummary", FEED_XML);
         storeEntity(EntityType.PROCESS, "clicksummary", PROCESS_XML);
         storeEntity(EntityType.PROCESS, "pig-process", PIG_PROCESS_XML);
-        storeEntity(EntityType.PROCESS, "post-process", POST_PROCEES_XML);
 
 
         ConfigurationStore store = ConfigurationStore.get();
@@ -792,7 +790,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     @Test
     public void testPostProcessingProcess() throws Exception {
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
-        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "post-process");
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "pig-process");
 
         OozieEntityBuilder builder = OozieEntityBuilder.get(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
