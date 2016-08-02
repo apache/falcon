@@ -54,7 +54,8 @@
 
 | JIRA | Summary | Priority | Component | Reporter | Contributor |
 |:---- |:---- | :--- |:---- |:---- |:---- |
-| [FALCON-2104](https://issues.apache.org/jira/browse/FALCON-2104) | Loss of data in GraphDB when upgrading Falcon from 0.9 to 0.10. |  Blocker | . | Balu Vellanki | Balu Vellanki |
+| [FALCON-2107](https://issues.apache.org/jira/browse/FALCON-2107) | NPE in FalconWorkflowEngine::isActive() method |  Blocker | . | Balu Vellanki | Balu Vellanki |
+| [FALCON-2104](https://issues.apache.org/jira/browse/FALCON-2104) | Loss of data in GraphDB when upgrading Falcon from 0.9 to 0.10 |  Blocker | . | Balu Vellanki | Balu Vellanki |
 | [FALCON-2100](https://issues.apache.org/jira/browse/FALCON-2100) | Remove dependency on com.vividsolutions.jts |  Major | . | Balu Vellanki | Balu Vellanki |
 | [FALCON-2090](https://issues.apache.org/jira/browse/FALCON-2090) | HDFS Snapshot failed with UnknownHostException when scheduling in HA Mode |  Critical | replication | Murali Ramasami | Balu Vellanki |
 | [FALCON-2088](https://issues.apache.org/jira/browse/FALCON-2088) | Entity submission fails with EntityNotRegisteredException in distributed mode |  Blocker | feed, prism, process | Pragya Mittal | Praveen Adlakha |
