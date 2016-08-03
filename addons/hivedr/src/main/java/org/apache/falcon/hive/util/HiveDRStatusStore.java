@@ -49,8 +49,8 @@ public class HiveDRStatusStore extends DRStatusStore {
     private static final Logger LOG = LoggerFactory.getLogger(DRStatusStore.class);
     private FileSystem fileSystem;
 
-    private static final String DEFAULT_STORE_PATH = StringUtils.removeEnd
-            (DRStatusStore.BASE_DEFAULT_STORE_PATH,  File.separator) + File.separator
+    private static final String DEFAULT_STORE_PATH = StringUtils.removeEnd(
+            DRStatusStore.BASE_DEFAULT_STORE_PATH, File.separator) + File.separator
             + "hiveReplicationStatusStore" + File.separator;
 
     private static final FsPermission DEFAULT_STATUS_DIR_PERMISSION =
@@ -90,10 +90,10 @@ public class HiveDRStatusStore extends DRStatusStore {
         }
     }
 
-     /**
-        get all DB updated by the job. get all current table statuses for the DB merge the latest repl
-        status with prev table repl statuses. If all statuses are success, store the status as success
-        with largest eventId for the DB else store status as failure for the DB and lowest eventId.
+    /**
+     * get all DB updated by the job. get all current table statuses for the DB merge the latest repl
+     * status with prev table repl statuses. If all statuses are success, store the status as success
+     * with largest eventId for the DB else store status as failure for the DB and lowest eventId.
      */
     @Override
     public void updateReplicationStatus(String jobName, List<ReplicationStatus> statusList)
@@ -161,13 +161,13 @@ public class HiveDRStatusStore extends DRStatusStore {
             }
         } catch (IOException e) {
             throw new HiveReplicationException("Failed to delete status for Job "
-                    + jobName + " and DB "+ database, e);
+                    + jobName + " and DB " + database, e);
         }
 
     }
 
     private DBReplicationStatus getDbReplicationStatus(String source, String target, String jobName,
-                                                       String database) throws HiveReplicationException{
+                                                       String database) throws HiveReplicationException {
         DBReplicationStatus dbReplicationStatus = null;
         Path statusDbDirPath = getStatusDbDirPath(database);
         Path statusDirPath = getStatusDirPath(database, jobName);
@@ -253,7 +253,7 @@ public class HiveDRStatusStore extends DRStatusStore {
             while (fileIterator.hasNext()) {
                 fileList.add(fileIterator.next().getPath().toString());
             }
-            if (fileList.size() > (numFiles+1)) {
+            if (fileList.size() > (numFiles + 1)) {
                 // delete some files, as long as they are older than the time.
                 Collections.sort(fileList);
                 for (String file : fileList.subList(0, (fileList.size() - numFiles + 1))) {
@@ -289,11 +289,11 @@ public class HiveDRStatusStore extends DRStatusStore {
     }
 
     public void checkForReplicationConflict(String newSource, String jobName,
-                                             String database, String table) throws HiveReplicationException {
+                                            String database, String table) throws HiveReplicationException {
         try {
             Path globPath = new Path(getStatusDbDirPath(database), "*" + File.separator + "latest.json");
             FileStatus[] files = fileSystem.globStatus(globPath);
-            for(FileStatus file : files) {
+            for (FileStatus file : files) {
                 DBReplicationStatus dbFileStatus = new DBReplicationStatus(IOUtils.toString(
                         fileSystem.open(file.getPath())));
                 ReplicationStatus existingJob = dbFileStatus.getDatabaseStatus();
@@ -319,7 +319,7 @@ public class HiveDRStatusStore extends DRStatusStore {
                 allowed as long as the target tables are different. For example, job1 can replicate db1.table1 and
                 job2 can replicate db1.table2.  Both jobs cannot replicate to same table.
                  */
-                for(Map.Entry<String, ReplicationStatus> entry : dbFileStatus.getTableStatuses().entrySet()) {
+                for (Map.Entry<String, ReplicationStatus> entry : dbFileStatus.getTableStatuses().entrySet()) {
                     if (table.equals(entry.getKey())) {
                         throw new HiveReplicationException("Two different jobs are trying to replicate to same table "
                                 + entry.getKey() + ". New job = " + jobName
