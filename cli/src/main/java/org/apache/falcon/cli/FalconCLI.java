@@ -24,21 +24,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.cliParser.CLIParser;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.resource.EntityList;
-import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.resource.InstancesSummaryResult;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import static org.apache.falcon.client.FalconCLIConstants.FALCON_URL;
+
 
 /**
  * Falcon Command Line Interface - wraps the RESTful API.
@@ -47,45 +44,6 @@ public class FalconCLI {
 
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
-
-    public static final String ENV_FALCON_DEBUG = "FALCON_DEBUG";
-    public static final String DEBUG_OPTION = "debug";
-    public static final String URL_OPTION = "url";
-    public static final String FALCON_URL = "FALCON_URL";
-
-    public static final String ADMIN_CMD = "admin";
-    public static final String HELP_CMD = "help";
-    public static final String METADATA_CMD = "metadata";
-    public static final String ENTITY_CMD = "entity";
-    public static final String INSTANCE_CMD = "instance";
-    public static final String RECIPE_CMD = "recipe";
-
-    public static final String TYPE_OPT = "type";
-    public static final String COLO_OPT = "colo";
-    public static final String CLUSTER_OPT = "cluster";
-    public static final String FEED_OPT = "feed";
-    public static final String PROCESS_OPT = "process";
-    public static final String ENTITY_NAME_OPT = "name";
-    public static final String FILE_PATH_OPT = "file";
-    public static final String VERSION_OPT = "version";
-    public static final String SCHEDULE_OPT = "schedule";
-    public static final String SUSPEND_OPT = "suspend";
-    public static final String RESUME_OPT = "resume";
-    public static final String STATUS_OPT = "status";
-    public static final String SUMMARY_OPT = "summary";
-    public static final String DEPENDENCY_OPT = "dependency";
-    public static final String LIST_OPT = "list";
-    public static final String SKIPDRYRUN_OPT = "skipDryRun";
-    public static final String FILTER_BY_OPT = "filterBy";
-    public static final String ORDER_BY_OPT = "orderBy";
-    public static final String SORT_ORDER_OPT = "sortOrder";
-    public static final String OFFSET_OPT = "offset";
-    public static final String NUM_RESULTS_OPT = "numResults";
-    public static final String START_OPT = "start";
-    public static final String END_OPT = "end";
-    public static final String CURRENT_COLO = "current.colo";
-    public static final String CLIENT_PROPERTIES = "/client.properties";
-    public static final String DO_AS_OPT = "doAs";
 
     private final Properties clientProperties;
 
@@ -206,29 +164,6 @@ public class FalconCLI {
         return integer;
     }
 
-    public static void validateEntityTypeForSummary(String type) {
-        EntityType entityType = EntityType.getEnum(type);
-        if (!entityType.isSchedulable()) {
-            throw new FalconCLIException("Invalid entity type " + entityType
-                    + " for EntitySummary API. Valid options are feed or process");
-        }
-    }
-
-    protected void validateNotEmpty(String paramVal, String paramName) {
-        if (StringUtils.isBlank(paramVal)) {
-            throw new FalconCLIException("Missing argument : " + paramName);
-        }
-    }
-
-    protected void validateSortOrder(String sortOrder) {
-        if (!StringUtils.isBlank(sortOrder)) {
-            if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
-                throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
-                        + sortOrder);
-            }
-        }
-    }
-
     protected String getColo(String colo) throws IOException {
         if (colo == null) {
             Properties prop = getClientProperties();
@@ -236,52 +171,6 @@ public class FalconCLI {
         }
         return colo;
     }
-
-    public static void validateFilterBy(String filterBy, String filterType) {
-        if (StringUtils.isEmpty(filterBy)) {
-            return;
-        }
-        String[] filterSplits = filterBy.split(",");
-        for (String s : filterSplits) {
-            String[] tempKeyVal = s.split(":", 2);
-            try {
-                if (filterType.equals("entity")) {
-                    EntityList.EntityFilterByFields.valueOf(tempKeyVal[0].toUpperCase());
-                } else if (filterType.equals("instance")) {
-                    InstancesResult.InstanceFilterFields.valueOf(tempKeyVal[0].toUpperCase());
-                }else if (filterType.equals("summary")) {
-                    InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(tempKeyVal[0].toUpperCase());
-                } else {
-                    throw new IllegalArgumentException("Invalid API call: filterType is not valid");
-                }
-            } catch (IllegalArgumentException ie) {
-                throw new FalconCLIException("Invalid filterBy argument : " + tempKeyVal[0] + " in : " + s);
-            }
-        }
-    }
-
-    public static void validateOrderBy(String orderBy, String action) {
-        if (StringUtils.isBlank(orderBy)) {
-            return;
-        }
-        if (action.equals("instance")) {
-            if (Arrays.asList(new String[]{"status", "cluster", "starttime", "endtime"})
-                .contains(orderBy.toLowerCase())) {
-                return;
-            }
-        } else if (action.equals("entity")) {
-            if (Arrays.asList(new String[] {"type", "name"}).contains(orderBy.toLowerCase())) {
-                return;
-            }
-        } else if (action.equals("summary")) {
-            if (Arrays.asList(new String[]{"cluster"})
-                    .contains(orderBy.toLowerCase())) {
-                return;
-            }
-        }
-        throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
-    }
-
 
     protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);
