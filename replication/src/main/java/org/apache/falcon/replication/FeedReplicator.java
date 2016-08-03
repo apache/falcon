@@ -30,6 +30,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.job.JobCountersHandler;
 import org.apache.falcon.job.JobType;
 import org.apache.falcon.job.JobCounters;
+import org.apache.falcon.util.DistCPOptionsUtil;
 import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -57,6 +58,7 @@ public class FeedReplicator extends Configured implements Tool {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeedReplicator.class);
     private static final String IGNORE = "IGNORE";
+    private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new FeedReplicator(), args);
@@ -177,7 +179,41 @@ public class FeedReplicator extends Configured implements Tool {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_USER.getName(), true,
+                "preserve user");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_GROUP.getName(), true,
+                "preserve group");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE.getName(), true,
+                "preserve checksum type");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), true,
+                "preserve ACL");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_XATTR.getName(), true,
+                "preserve XATTR");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_TIMES.getName(), true,
+                "preserve access and modification times");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         opt = new Option("counterLogDir", true, "log directory to store job counter file");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(TDE_ENCRYPTION_ENABLED, true, "TDE encryption enabled");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -190,61 +226,7 @@ public class FeedReplicator extends Configured implements Tool {
         String targetPathString = cmd.getOptionValue("targetPath").trim();
         Path targetPath = new Path(targetPathString);
 
-        DistCpOptions distcpOptions = new DistCpOptions(srcPaths, targetPath);
-        distcpOptions.setBlocking(true);
-        distcpOptions.setMaxMaps(Integer.parseInt(cmd.getOptionValue("maxMaps")));
-        distcpOptions.setMapBandwidth(Integer.parseInt(cmd.getOptionValue("mapBandwidth")));
-
-        String overwrite = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_OVERWRITE.getName());
-        if (StringUtils.isNotEmpty(overwrite) && overwrite.equalsIgnoreCase(Boolean.TRUE.toString())) {
-            distcpOptions.setOverwrite(Boolean.parseBoolean(overwrite));
-        } else {
-            distcpOptions.setSyncFolder(true);
-        }
-
-        String ignoreErrors = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName());
-        if (StringUtils.isNotEmpty(ignoreErrors)) {
-            distcpOptions.setIgnoreFailures(Boolean.parseBoolean(ignoreErrors));
-        }
-
-        String skipChecksum = cmd.getOptionValue(ReplicationDistCpOption.DISTCP_OPTION_SKIP_CHECKSUM.getName());
-        if (StringUtils.isNotEmpty(skipChecksum)) {
-            distcpOptions.setSkipCRC(Boolean.parseBoolean(skipChecksum));
-        }
-
-        // Removing deleted files by default - FALCON-1844
-        String removeDeletedFiles = cmd.getOptionValue(
-                ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), "true");
-        boolean deleteMissing = Boolean.parseBoolean(removeDeletedFiles);
-        distcpOptions.setDeleteMissing(deleteMissing);
-        if (deleteMissing) {
-            // DistCP will fail with InvalidInputException if deleteMissing is set to true and
-            // if targetPath does not exist. Create targetPath to avoid failures.
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(targetPath.toUri(), getConf());
-            if (!fs.exists(targetPath)) {
-                fs.mkdirs(targetPath);
-            }
-        }
-
-        String preserveBlockSize = cmd.getOptionValue(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName());
-        if (preserveBlockSize != null && Boolean.parseBoolean(preserveBlockSize)) {
-            distcpOptions.preserve(DistCpOptions.FileAttribute.BLOCKSIZE);
-        }
-
-        String preserveReplicationCount = cmd.getOptionValue(ReplicationDistCpOption
-                .DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER.getName());
-        if (preserveReplicationCount != null && Boolean.parseBoolean(preserveReplicationCount)) {
-            distcpOptions.preserve(DistCpOptions.FileAttribute.REPLICATION);
-        }
-
-        String preservePermission = cmd.getOptionValue(
-                ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_PERMISSIONS.getName());
-        if (preservePermission != null && Boolean.parseBoolean(preservePermission)) {
-            distcpOptions.preserve(DistCpOptions.FileAttribute.PERMISSION);
-        }
-
-        return distcpOptions;
+        return DistCPOptionsUtil.getDistCpOptions(cmd, srcPaths, targetPath, false, getConf());
     }
 
     private List<Path> getPaths(String[] paths) {

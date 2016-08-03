@@ -63,6 +63,32 @@
             <arg>${distcpMaxMaps}</arg>
             <arg>-mapBandwidth</arg>
             <arg>${distcpMapBandwidth}</arg>
+            <arg>-overwrite</arg>
+            <arg>${overwrite}</arg>
+            <arg>-ignoreErrors</arg>
+            <arg>${ignoreErrors}</arg>
+            <arg>-skipChecksum</arg>
+            <arg>${skipChecksum}</arg>
+            <arg>-removeDeletedFiles</arg>
+            <arg>${removeDeletedFiles}</arg>
+            <arg>-preserveBlockSize</arg>
+            <arg>${preserveBlockSize}</arg>
+            <arg>-preserveReplicationNumber</arg>
+            <arg>${preserveReplicationNumber}</arg>
+            <arg>-preservePermission</arg>
+            <arg>${preservePermission}</arg>
+            <arg>-preserveUser</arg>
+            <arg>${preserveUser}</arg>
+            <arg>-preserveGroup</arg>
+            <arg>${preserveGroup}</arg>
+            <arg>-preserveChecksumType</arg>
+            <arg>${preserveChecksumType}</arg>
+            <arg>-preserveAcl</arg>
+            <arg>${preserveAcl}</arg>
+            <arg>-preserveXattr</arg>
+            <arg>${preserveXattr}</arg>
+            <arg>-preserveTimes</arg>
+            <arg>${preserveTimes}</arg>
             <arg>-sourcePaths</arg>
             <arg>${sourceDir}</arg>
             <arg>-targetPath</arg>
@@ -71,6 +97,8 @@
             <arg>FILESYSTEM</arg>
             <arg>-availabilityFlag</arg>
             <arg>${availabilityFlag == 'NA' ? "NA" : availabilityFlag}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
             <arg>-counterLogDir</arg>
             <arg>${logDir}/job-${nominalTime}/${srcClusterName == 'NA' ? '' : srcClusterName}</arg>
         </java>
