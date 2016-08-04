@@ -270,6 +270,16 @@
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
+
+        <fileSet>
+            <directory>../</directory>
+            <outputDirectory>extensions/mirroring</outputDirectory>
+            <excludes>
+                <exclude>*/**</exclude>
+            </excludes>
+            <fileMode>0770</fileMode>
+            <directoryMode>0770</directoryMode>
+        </fileSet>
     </fileSets>
 
     <files>

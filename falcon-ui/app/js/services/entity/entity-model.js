@@ -302,7 +302,7 @@
           workflow: {
             _name: "hdfs-dr-workflow",
             _engine: "oozie",
-            _path: "/apps/data-mirroring/workflows/hdfs-replication-workflow.xml",
+            _path: "/apps/falcon/extensions/hdfs-mirroring/resources/runtime/hdfs-mirroring-workflow.xml",
             _lib: ""
           },
           retry: {
@@ -434,7 +434,7 @@
           workflow: {
             _name: "falcon-dr-hive-workflow",
             _engine: "oozie",
-            _path: "/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml",
+            _path: "/apps/falcon/extensions/hive-mirroring/resources/runtime/hive-mirroring-workflow.xml",
             _lib: ""
           },
           retry: {

@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Utility class to handle Hive events for data-mirroring.
+ * Utility class to handle Hive events for hive-mirroring.
  */
 public class EventUtils {
     private static final String DRIVER_NAME = "org.apache.hive.jdbc.HiveDriver";
