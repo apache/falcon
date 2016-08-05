@@ -80,6 +80,13 @@ import java.util.Set;
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
 
+    public String getEnablePostProcessing() {
+        return enablePostprocessing;
+    }
+
+    private String enablePostprocessing = StartupProperties.get().
+            getProperty("falcon.postprocessing.enable");
+
     protected static final String USER_ACTION_NAME = "user-action";
     protected static final String PREPROCESS_ACTION_NAME = "pre-processing";
     protected static final String SUCCESS_POSTPROCESS_ACTION_NAME = "succeeded-post-processing";
@@ -128,6 +135,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster,
                                                         Tag lifecycle) throws FalconException {
         return get(entity, cluster, lifecycle, Scheduler.OOZIE);
+    }
+
+    public Boolean isPostProcessingEnabled(){
+        return Boolean.parseBoolean(getEnablePostProcessing());
     }
 
     public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle,
@@ -217,6 +228,25 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         kill.setName(FAIL_ACTION_NAME);
         kill.setMessage("Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]");
         wf.getDecisionOrForkOrJoin().add(kill);
+    }
+
+    protected void addPostProcessing(WORKFLOWAPP workflow, ACTION action) throws FalconException{
+        if (!isPostProcessingEnabled()){
+            addTransition(action, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(action);
+        }else{
+            addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(action);
+
+            //Add post-processing actions
+            ACTION success = getSuccessPostProcessAction();
+            addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(success);
+
+            ACTION fail = getFailPostProcessAction();
+            addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(fail);
+        }
     }
 
     protected ACTION getSuccessPostProcessAction() throws FalconException {

@@ -102,6 +102,8 @@ public final class OozieBuilderUtils {
     public static final String ENTITY_PATH = "ENTITY_PATH";
     public static final String ENTITY_NAME = "ENTITY_NAME";
     public static final String IGNORE = "IGNORE";
+    public static final String ENABLE_POSTPROCESSING = StartupProperties.get().
+            getProperty("falcon.postprocessing.enable");
 
 
     static {
