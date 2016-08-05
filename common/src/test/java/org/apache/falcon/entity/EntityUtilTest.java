@@ -471,4 +471,12 @@ public class EntityUtilTest extends AbstractTestBase {
         Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(process, "fakeCluster"));
     }
 
+    @Test
+    public void testGetNextInstanceTimeWithDelay() throws Exception {
+        Date date = getDate("2016-08-10 03:00 UTC");
+        Frequency delay = new Frequency("hours(2)");
+        Date nextInstanceWithDelay = EntityUtil.getNextInstanceTimeWithDelay(date, delay, TimeZone.getTimeZone("UTC"));
+        Assert.assertEquals(nextInstanceWithDelay, getDate("2016-08-10 05:00 UTC"));
+    }
+
 }
