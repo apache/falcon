@@ -84,7 +84,13 @@ public class FeedReplicatorTest {
          * <arg>-removeDeletedFiles</arg><arg>true</arg>
          * <arg>-preserveBlockSize</arg><arg>false</arg>
          * <arg>-preserveReplicationCount</arg><arg>true</arg>
-         * <arg>-preserveBlockSize</arg><arg>false</arg>
+         * <arg>-preservePermission</arg><arg>false</arg>
+         * <arg>-preserveUser</arg><arg>true</arg>
+         * <arg>-preserveGroup</arg><arg>false</arg>
+         * <arg>-preserveChecksumType</arg><arg>false</arg>
+         * <arg>-preserveAcl</arg><arg>true</arg>
+         * <arg>-preserveXattr</arg><arg>false</arg>
+         * <arg>-preserveTimes</arg><arg>false</arg>
          */
         final String[] optionalArgs = {
             "true",
@@ -100,6 +106,12 @@ public class FeedReplicatorTest {
             "-preserveBlockSize", "false",
             "-preserveReplicationNumber", "true",
             "-preservePermission", "false",
+            "-preserveUser", "true",
+            "-preserveGroup", "false",
+            "-preserveChecksumType", "false",
+            "-preserveAcl", "true",
+            "-preserveXattr", "false",
+            "-preserveTimes", "false",
         };
 
         FeedReplicator replicator = new FeedReplicator();
@@ -128,5 +140,11 @@ public class FeedReplicatorTest {
         Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.BLOCKSIZE));
         Assert.assertTrue(options.shouldPreserve(DistCpOptions.FileAttribute.REPLICATION));
         Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.PERMISSION));
+        Assert.assertTrue(options.shouldPreserve(DistCpOptions.FileAttribute.USER));
+        Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.GROUP));
+        Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.CHECKSUMTYPE));
+        Assert.assertTrue(options.shouldPreserve(DistCpOptions.FileAttribute.ACL));
+        Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.XATTR));
+        Assert.assertFalse(options.shouldPreserve(DistCpOptions.FileAttribute.TIMES));
     }
 }

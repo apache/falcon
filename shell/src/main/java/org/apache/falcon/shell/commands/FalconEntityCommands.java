@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.cli.commands;
+package org.apache.falcon.shell.commands;
 
+import org.apache.falcon.ValidationUtil;
 import org.apache.falcon.ResponseHelper;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.EntityList;
@@ -29,82 +30,78 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 
-import static org.apache.falcon.FalconCLIConstants.DEFINITION_OPT;
-import static org.apache.falcon.FalconCLIConstants .DELETE_OPT;
-import static org.apache.falcon.FalconCLIConstants .LOOKUP_OPT;
-import static org.apache.falcon.FalconCLIConstants.SLA_MISS_ALERT_OPT;
-import static org.apache.falcon.FalconCLIConstants.SUBMIT_OPT;
-import static org.apache.falcon.FalconCLIConstants.UPDATE_OPT;
-import static org.apache.falcon.cli.FalconCLI.validateEntityTypeForSummary;
-import static org.apache.falcon.cli.FalconCLI.validateFilterBy;
-import static org.apache.falcon.cli.FalconCLI.validateOrderBy;
-import static org.apache.falcon.cli.FalconEntityCLI.CLUSTER_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.CLUSTER_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.COLO_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.COLO_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.DEFINITION_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.DELETE_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.DEPENDENCY_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.DEPENDENCY_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.END_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.END_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.ENTITY_NAME_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.ENTITY_NAME_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.FIELDS_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.FIELDS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.FILE_PATH_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.FILE_PATH_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.FILTER_BY_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.FILTER_BY_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.LIST_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.LIST_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.LOOKUP_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.NAMESEQ_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.NAMESEQ_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.NUM_INSTANCES_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.NUM_INSTANCES_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.NUM_RESULTS_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.NUM_RESULTS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.OFFSET_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.OFFSET_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.ORDER_BY_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.ORDER_BY_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.PATH_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.PATH_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.PROPS_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.PROPS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.RESUME_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.RESUME_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SCHEDULE_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SCHEDULE_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SHOWSCHEDULER_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SHOWSCHEDULER_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SKIPDRYRUN_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SKIPDRYRUN_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SLA_MISS_ALERT_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SORT_ORDER_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SORT_ORDER_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.START_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.START_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.STATUS_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.STATUS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SUBMIT_AND_SCHEDULE_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SUBMIT_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SUMMARY_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SUMMARY_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.SUSPEND_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.SUSPEND_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.TAGKEYS_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.TAGKEYS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.TAGS_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.TAGS_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.TYPE_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.TYPE_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.UPDATE_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.VALIDATE_OPT;
-import static org.apache.falcon.cli.FalconEntityCLI.VALIDATE_OPT_DESCRIPTION;
-import static org.apache.falcon.cli.FalconEntityCLI.validateEntityFields;
+import static org.apache.falcon.client.FalconCLIConstants.DEFINITION_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.DELETE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.LOOKUP_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SLA_MISS_ALERT_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SUBMIT_ONLY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.UPDATE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.CLUSTER_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.CLUSTER_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.COLO_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.COLO_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DEFINITION_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DELETE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DEPENDENCY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.DEPENDENCY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.END_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.END_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.ENTITY_NAME_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.ENTITY_NAME_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.FIELDS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.FIELDS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.FILE_PATH_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.FILE_PATH_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.FILTER_BY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.FILTER_BY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.LIST_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.LIST_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.LOOKUP_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.NAMESEQ_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.NAMESEQ_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.NUM_INSTANCES_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.NUM_INSTANCES_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.NUM_RESULTS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.NUM_RESULTS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.OFFSET_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.OFFSET_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.ORDER_BY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.ORDER_BY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.PATH_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.PATH_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.PROPS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.PROPS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.RESUME_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.RESUME_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SCHEDULE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SCHEDULE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SHOWSCHEDULER_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SHOWSCHEDULER_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SKIPDRYRUN_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SKIPDRYRUN_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SLA_MISS_ALERT_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SORT_ORDER_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SORT_ORDER_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.START_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.START_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.STATUS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.STATUS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SUBMIT_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SUMMARY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SUMMARY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SUSPEND_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SUSPEND_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.TAGKEYS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.TAGKEYS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.TAGS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.TAGS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.TYPE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.TYPE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.UPDATE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.VALIDATE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.VALIDATE_OPT_DESCRIPTION;
 
 /**
  * Entity Commands.
@@ -128,14 +125,16 @@ public class FalconEntityCommands extends BaseFalconCommands {
                 .getFeedSlaMissPendingAlerts(entityType.name().toLowerCase(), entityName, start, end, getColo(colo));
         return ResponseHelper.getString(response);
     }
-
-    @CliCommand(value = ENTITY_COMMAND_PREFIX + SUBMIT_OPT, help = SUBMIT_OPT_DESCRIPTION)
+    //The command here is submitOnly in place of submit as it conflicts with submitAndSchedule and tab feature will not
+    //work of shell
+    @CliCommand(value = ENTITY_COMMAND_PREFIX + SUBMIT_ONLY_OPT, help = SUBMIT_OPT_DESCRIPTION)
     public String submit(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {FILE_PATH_OPT}, mandatory = true, help = FILE_PATH_OPT_DESCRIPTION) final File filePath
     ) {
 
-        return getFalconClient().submit(entityType.name().toLowerCase(), filePath.getPath(), getDoAs()).getMessage();
+        return getFalconClient().submit(entityType.name().toLowerCase(), filePath.getPath(),
+                getDoAs()).getMessage();
     }
 
     @CliCommand(value = ENTITY_COMMAND_PREFIX + LOOKUP_OPT, help = LOOKUP_OPT_DESCRIPTION)
@@ -203,7 +202,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
             @CliOption(key = {PROPS_OPT}, mandatory = false, help = PROPS_OPT_DESCRIPTION) final String properties
     ) {
 
-        return getFalconClient().schedule(entityType, entityName, colo, skipDryRun, getDoAs(), properties).getMessage();
+        return getFalconClient().schedule(entityType, entityName, colo, skipDryRun, getDoAs(),
+                properties).getMessage();
     }
 
     @CliCommand(value = ENTITY_COMMAND_PREFIX + SUSPEND_OPT, help = SUSPEND_OPT_DESCRIPTION)
@@ -247,7 +247,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
                     help = SHOWSCHEDULER_OPT_DESCRIPTION) final boolean showScheduler
     ) {
 
-        return getFalconClient().getStatus(entityType, entityName, colo, getDoAs(), showScheduler).getMessage();
+        return getFalconClient().getStatus(entityType, entityName, colo, getDoAs(),
+                showScheduler).getMessage();
     }
 
     @CliCommand(value = ENTITY_COMMAND_PREFIX + DEFINITION_OPT, help = DEFINITION_OPT_DESCRIPTION)
@@ -256,7 +257,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION) String entityName
     ) {
 
-        return getFalconClient().getDefinition(entityType.name().toLowerCase(), entityName, getDoAs()).toString();
+        return getFalconClient().getDefinition(entityType.name().toLowerCase(),
+                entityName, getDoAs()).toString();
     }
 
     @CliCommand(value = ENTITY_COMMAND_PREFIX + DEPENDENCY_OPT, help = DEPENDENCY_OPT_DESCRIPTION)
@@ -265,7 +267,8 @@ public class FalconEntityCommands extends BaseFalconCommands {
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION) String entityName
     ) {
 
-        return getFalconClient().getDependency(entityType.name().toLowerCase(), entityName, getDoAs()).toString();
+        return getFalconClient().getDependency(entityType.name().toLowerCase(), entityName,
+                getDoAs()).toString();
     }
 
     // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -287,11 +290,12 @@ public class FalconEntityCommands extends BaseFalconCommands {
                     help = NUM_RESULTS_OPT_DESCRIPTION) final Integer numResults
 
     ) {
-        validateEntityFields(fields);
-        validateOrderBy(orderBy, ENTITY_PREFIX);
-        validateFilterBy(filterBy, ENTITY_PREFIX);
-        EntityList entityList = getFalconClient().getEntityList(entityType.name().toLowerCase(), fields,
-                nameSubsequence, tagKeywords, filterBy, filterTags, orderBy, sortOrder, offset, numResults, getDoAs());
+        ValidationUtil.validateEntityFields(fields);
+        ValidationUtil.validateOrderBy(orderBy, ENTITY_PREFIX);
+        ValidationUtil.validateFilterBy(filterBy, ENTITY_PREFIX);
+        EntityList entityList = getFalconClient().getEntityList(entityType.name().toLowerCase(),
+                fields, nameSubsequence, tagKeywords, filterBy, filterTags, orderBy, sortOrder, offset,
+                numResults, getDoAs());
         return entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
     }
 
@@ -314,10 +318,10 @@ public class FalconEntityCommands extends BaseFalconCommands {
                     help = NUM_INSTANCES_OPT_DESCRIPTION) final Integer numInstances
 
     ) {
-        validateEntityTypeForSummary(entityType.name().toLowerCase());
-        validateEntityFields(fields);
-        validateFilterBy(filterBy, ENTITY_PREFIX);
-        validateOrderBy(orderBy, ENTITY_PREFIX);
+        ValidationUtil.validateEntityTypeForSummary(entityType.name().toLowerCase());
+        ValidationUtil.validateEntityFields(fields);
+        ValidationUtil.validateFilterBy(filterBy, ENTITY_PREFIX);
+        ValidationUtil.validateOrderBy(orderBy, ENTITY_PREFIX);
         return ResponseHelper.getString(getFalconClient().getEntitySummary(
                 entityType.name().toLowerCase(), cluster, start, end, fields, filterBy, filterTags,
                 orderBy, sortOrder, offset, numResults, numInstances, getDoAs()));

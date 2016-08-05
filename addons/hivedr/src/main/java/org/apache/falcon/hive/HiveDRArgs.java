@@ -30,6 +30,7 @@ public enum HiveDRArgs {
     SOURCE_CLUSTER("sourceCluster", "source cluster"),
     SOURCE_METASTORE_URI("sourceMetastoreUri", "source meta store uri"),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
+    SOURCE_HS2_URI_EXTRA_OPTS("sourceHiveServer2ExtraOpts", "source HS2 extra opts", false),
     SOURCE_DATABASES("sourceDatabases", "comma source databases"),
     SOURCE_DATABASE("sourceDatabase", "First source database"),
     SOURCE_TABLES("sourceTables", "comma source tables"),
@@ -47,6 +48,7 @@ public enum HiveDRArgs {
     // target meta store details
     TARGET_METASTORE_URI("targetMetastoreUri", "source meta store uri"),
     TARGET_HS2_URI("targetHiveServer2Uri", "source meta store uri"),
+    TARGET_HS2_URI_EXTRA_OPTS("targetHiveServer2ExtraOpts", "target HS2 extra opts", false),
 
     TARGET_STAGING_PATH("targetStagingPath", "source staging path for data", false),
 

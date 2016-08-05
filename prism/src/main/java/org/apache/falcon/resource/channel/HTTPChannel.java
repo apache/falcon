@@ -46,6 +46,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -138,8 +139,8 @@ public class HTTPChannel extends AbstractChannel {
                 if (incomingRequest != null) {
                     incomingRequest.getInputStream().reset();
                 }
-            } catch (Exception ignore) {
-                // nothing to be done;
+            } catch (IOException e) {
+                LOG.error("Error in HTTPChannel", e);
             }
         }
     }

@@ -26,15 +26,15 @@
   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-    <context:component-scan base-package="org.apache.falcon.cli"/>
+    <context:component-scan base-package="org.apache.falcon.shell"/>
 
     <bean id="falconConnectionCommands"
-          class="org.apache.falcon.cli.commands.FalconConnectionCommands">
+          class="org.apache.falcon.shell.commands.FalconConnectionCommands">
     </bean>
     <bean id="falconEntityCommands"
-          class="org.apache.falcon.cli.commands.FalconEntityCommands">
+          class="org.apache.falcon.shell.commands.FalconEntityCommands">
     </bean>
     <bean id="falconInstanceCommands"
-          class="org.apache.falcon.cli.commands.FalconInstanceCommands">
+          class="org.apache.falcon.shell.commands.FalconInstanceCommands">
     </bean>
 </beans>

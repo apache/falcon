@@ -150,7 +150,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                     LOG.info("Entity :"+ entityName
                             + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "EntityType:"+ entityType
                             + "missed SLAHigh");
-                    highSLAMissed(entityName, clusterName, entityType, nominalTime);
+                    highSLAMissed(entityName, clusterName, EntityType.valueOf(entityType), nominalTime);
                 }
             }
         } catch (FalconException e){
@@ -160,12 +160,12 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     }
 
     @Override
-    public void highSLAMissed(String entityName, String clusterName, String entityType , Date nominalTime
+    public void highSLAMissed(String entityName, String clusterName, EntityType entityType , Date nominalTime
                               ) throws FalconException {
         LOG.debug("Listners called...");
         for (EntitySLAListener listener : listeners) {
             listener.highSLAMissed(entityName, clusterName, entityType, nominalTime);
-            store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType);
+            store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType.name());
         }
     }
 }

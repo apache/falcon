@@ -23,7 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.EntityType;
@@ -34,6 +34,60 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.apache.falcon.client.FalconCLIConstants.DISCOVERY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.DISCOVERY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.LINEAGE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.LINEAGE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.PIPELINE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.PIPELINE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.LIST_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.LIST_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.RELATIONS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.RELATIONS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.URL_OPTION;
+import static org.apache.falcon.client.FalconCLIConstants.URL_OPTION_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.TYPE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.TYPE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.NAME_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.NAME_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DEBUG_OPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DEBUG_OPTION_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DIRECTION_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.DIRECTION_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.VALUE_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.VALUE_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.KEY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.KEY_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.ID_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.ID_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.EDGE_CMD_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.EDGE_CMD;
+import static org.apache.falcon.client.FalconCLIConstants.VERTEX_EDGES_CMD_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.VERTEX_EDGES_CMD;
+import static org.apache.falcon.client.FalconCLIConstants.VERTICES_CMD_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.VERTICES_CMD;
+import static org.apache.falcon.client.FalconCLIConstants.VERTEX_CMD_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.VERTEX_CMD;
+import static org.apache.falcon.client.FalconCLIConstants.NUM_RESULTS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.NUM_RESULTS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.PROCESS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.PROCESS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.FEED_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.FEED_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.CLUSTER_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.CLUSTER_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.DO_AS_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.DO_AS_DESCRIPTION;
+import static org.apache.falcon.ValidationUtil.validateDimensionName;
+import static org.apache.falcon.ValidationUtil.validateDimensionType;
+import static org.apache.falcon.ValidationUtil.validateId;
+import static org.apache.falcon.ValidationUtil.validateScheduleEntity;
+import static org.apache.falcon.ValidationUtil.validateVertexEdgesCommand;
+import static org.apache.falcon.ValidationUtil.validateVerticesCommand;
+import static org.apache.falcon.ValidationUtil.validatePipelineName;
+
+
+
 /**
  * Metadata extension to Falcon Command Line Interface - wraps the RESTful API for Metadata.
  */
@@ -41,21 +95,6 @@ public class FalconMetadataCLI extends FalconCLI {
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
-    // Discovery Commands
-    public static final String DISCOVERY_OPT = "discovery";
-    public static final String LIST_OPT = "list";
-    public static final String URL_OPTION = "url";
-
-    // Lineage Commands
-    public static final String LINEAGE_OPT = "lineage";
-    public static final String VERTEX_CMD = "vertex";
-    public static final String VERTICES_CMD = "vertices";
-    public static final String VERTEX_EDGES_CMD = "edges";
-    public static final String EDGE_CMD = "edge";
-    public static final String ID_OPT = "id";
-    public static final String KEY_OPT = "key";
-    public static final String VALUE_OPT = "value";
-    public static final String DIRECTION_OPT = "direction";
 
     public FalconMetadataCLI() throws Exception {
         super();
@@ -65,29 +104,27 @@ public class FalconMetadataCLI extends FalconCLI {
         Options metadataOptions = new Options();
 
         OptionGroup group = new OptionGroup();
-        Option discovery = new Option(DISCOVERY_OPT, false, "Discover falcon metadata relations");
-        Option lineage = new Option(LINEAGE_OPT, false, "Get falcon metadata lineage information");
+        Option discovery = new Option(DISCOVERY_OPT, false, DISCOVERY_OPT_DESCRIPTION);
+        Option lineage = new Option(LINEAGE_OPT, false, LINEAGE_OPT_DESCRIPTION);
         group.addOption(discovery);
         group.addOption(lineage);
-        Option pipeline = new Option(FalconCLIConstants.PIPELINE_OPT, true,
-                "Get lineage graph for the entities in a pipeline");
+        Option pipeline = new Option(PIPELINE_OPT, true, PIPELINE_OPT_DESCRIPTION);
         metadataOptions.addOptionGroup(group);
 
         // Add discovery options
 
-        Option list = new Option(LIST_OPT, false, "List all dimensions");
-        Option relations = new Option(FalconCLIConstants.RELATIONS_OPT, false, "List all relations for a dimension");
+        Option list = new Option(LIST_OPT, false, LIST_OPT_DESCRIPTION);
+        Option relations = new Option(RELATIONS_OPT, false, RELATIONS_OPT_DESCRIPTION);
         metadataOptions.addOption(list);
         metadataOptions.addOption(relations);
 
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
-        Option type = new Option(FalconCLIConstants.TYPE_OPT, true, "Dimension type");
-        Option name = new Option(FalconCLIConstants.NAME_OPT, true, "Dimension name");
-        Option cluster = new Option(FalconCLIConstants.CLUSTER_OPT, true, "Cluster name");
-        Option feed = new Option(FalconCLIConstants.FEED_OPT, true, "Feed Entity name");
-        Option process = new Option(FalconCLIConstants.PROCESS_OPT, true, "Process Entity name");
-        Option numResults = new Option(FalconCLIConstants.NUM_RESULTS_OPT, true,
-                "Number of results to return per request");
+        Option url = new Option(URL_OPTION, true, URL_OPTION_DESCRIPTION);
+        Option type = new Option(TYPE_OPT, true, TYPE_OPT_DESCRIPTION);
+        Option name = new Option(NAME_OPT, true, NAME_OPT_DESCRIPTION);
+        Option cluster = new Option(CLUSTER_OPT, true, CLUSTER_OPT_DESCRIPTION);
+        Option feed = new Option(FEED_OPT, true, FEED_OPT_DESCRIPTION);
+        Option process = new Option(PROCESS_OPT, true, PROCESS_OPT_DESCRIPTION);
+        Option numResults = new Option(NUM_RESULTS_OPT, true, NUM_RESULTS_OPT_DESCRIPTION);
 
         // Add lineage options
         metadataOptions.addOption(pipeline);
@@ -100,16 +137,15 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(process);
         metadataOptions.addOption(numResults);
 
-        Option vertex = new Option(VERTEX_CMD, false, "show the vertices");
-        Option vertices = new Option(VERTICES_CMD, false, "show the vertices");
-        Option vertexEdges = new Option(VERTEX_EDGES_CMD, false, "show the edges for a given vertex");
-        Option edges = new Option(EDGE_CMD, false, "show the edges");
-        Option id = new Option(ID_OPT, true, "vertex or edge id");
-        Option key = new Option(KEY_OPT, true, "key property");
-        Option value = new Option(VALUE_OPT, true, "value property");
-        Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
-        Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
-                "Use debug mode to see debugging statements on stdout");
+        Option vertex = new Option(VERTEX_CMD, false, VERTEX_CMD_DESCRIPTION);
+        Option vertices = new Option(VERTICES_CMD, false, VERTICES_CMD_DESCRIPTION);
+        Option vertexEdges = new Option(VERTEX_EDGES_CMD, false, VERTEX_EDGES_CMD_DESCRIPTION);
+        Option edges = new Option(EDGE_CMD, false, EDGE_CMD_DESCRIPTION);
+        Option id = new Option(ID_OPT, true, ID_OPT_DESCRIPTION);
+        Option key = new Option(KEY_OPT, true, KEY_OPT_DESCRIPTION);
+        Option value = new Option(VALUE_OPT, true, VALUE_OPT_DESCRIPTION);
+        Option direction = new Option(DIRECTION_OPT, true, DIRECTION_OPT_DESCRIPTION);
+        Option debug = new Option(DEBUG_OPTION, false, DEBUG_OPTION_DESCRIPTION);
 
         metadataOptions.addOption(vertex);
         metadataOptions.addOption(vertices);
@@ -121,7 +157,8 @@ public class FalconMetadataCLI extends FalconCLI {
         metadataOptions.addOption(direction);
         metadataOptions.addOption(debug);
 
-        Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
+        Option doAs = new Option(DO_AS_OPT, true, DO_AS_DESCRIPTION);
+
         metadataOptions.addOption(doAs);
 
         return metadataOptions;
@@ -196,63 +233,5 @@ public class FalconMetadataCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private void validatePipelineName(String pipeline) {
-        if (StringUtils.isEmpty(pipeline)) {
-            throw new FalconCLIException("Invalid value for pipeline");
-        }
-    }
 
-    private void validateDimensionType(String dimensionType) {
-        if (StringUtils.isEmpty(dimensionType)
-                ||  dimensionType.contains("INSTANCE")) {
-            throw new FalconCLIException("Invalid value provided for queryParam \"type\" " + dimensionType);
-        }
-        try {
-            RelationshipType.valueOf(dimensionType);
-        } catch (IllegalArgumentException iae) {
-            throw new FalconCLIException("Invalid value provided for queryParam \"type\" " + dimensionType);
-        }
-    }
-
-    private void validateDimensionName(String dimensionName, String action) {
-        if (StringUtils.isEmpty(dimensionName)) {
-            throw new FalconCLIException("Dimension ID cannot be empty or null for action " + action);
-        }
-    }
-
-    private void validateScheduleEntity(String schedEntityType, String schedEntityName) {
-        if (StringUtils.isBlank(schedEntityType)) {
-            throw new FalconCLIException("Entity must be schedulable type : -feed/process");
-        }
-
-        if (StringUtils.isBlank(schedEntityName)) {
-            throw new FalconCLIException("Entity name is missing");
-        }
-    }
-
-    private void validateId(String id) {
-        if (id == null || id.length() == 0) {
-            throw new FalconCLIException("Missing argument: id");
-        }
-    }
-
-    private void validateVerticesCommand(String key, String value) {
-        if (key == null || key.length() == 0) {
-            throw new FalconCLIException("Missing argument: key");
-        }
-
-        if (value == null || value.length() == 0) {
-            throw new FalconCLIException("Missing argument: value");
-        }
-    }
-
-    private void validateVertexEdgesCommand(String id, String direction) {
-        if (id == null || id.length() == 0) {
-            throw new FalconCLIException("Missing argument: id");
-        }
-
-        if (direction == null || direction.length() == 0) {
-            throw new FalconCLIException("Missing argument: direction");
-        }
-    }
 }

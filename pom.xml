@@ -370,6 +370,7 @@
         <module>falcon-ui</module>
         <module>build-tools</module>
         <module>client</module>
+        <module>shell</module>
         <module>cli</module>
         <module>metrics</module>
         <module>titan</module>
@@ -753,12 +754,6 @@
                 <groupId>com.thinkaurelius.titan</groupId>
                 <artifactId>titan-es</artifactId>
                 <version>${titan.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.vividsolutions</groupId>
-                <artifactId>jts</artifactId>
-                <version>1.13</version>
             </dependency>
 
             <dependency>

@@ -272,6 +272,24 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 || isBundleInState(bundles, BundleStatus.KILLED));
     }
 
+    @Override
+    public boolean isMissing(Entity entity) throws FalconException {
+        List<String> bundlesToRemove = new ArrayList<>();
+        Map<String, BundleJob> bundles = findLatestBundle(entity);
+        for (Map.Entry<String, BundleJob> clusterBundle : bundles.entrySet()) {
+            if (clusterBundle.getValue() == MISSING) { // There is no active bundle for this cluster
+                bundlesToRemove.add(clusterBundle.getKey());
+            }
+        }
+        for (String bundleToRemove : bundlesToRemove) {
+            bundles.remove(bundleToRemove);
+        }
+        if (bundles.size() == 0) {
+            return true;
+        }
+        return false;
+    }
+
     private enum BundleStatus {
         ACTIVE, RUNNING, SUSPENDED, FAILED, KILLED, SUCCEEDED
     }
@@ -1216,9 +1234,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private boolean isCoordApplicable(String appName, List<LifeCycle> lifeCycles) {
-        for (LifeCycle lifeCycle : lifeCycles) {
-            if (appName.contains(lifeCycle.getTag().name())) {
-                return true;
+        if (lifeCycles != null && !lifeCycles.isEmpty()) {
+            for (LifeCycle lifeCycle : lifeCycles) {
+                if (appName.contains(lifeCycle.getTag().name())) {
+                    return true;
+                }
             }
         }
         return false;

@@ -31,8 +31,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Unit tests for org.apache.falcon.extensions.ExtensionManager.
+ * IT tests for org.apache.falcon.extensions.ExtensionManager.
  */
+@Test (enabled = false)
 public class ExtensionManagerIT extends AbstractTestExtensionStore {
     private static final String HDFS_MIRRORING_PROPERTY_TEMPLATE = "/hdfs-mirroring-property-template.txt";
     private static final String JOB_NAME_1 = "hdfs-mirroring-job-1";
@@ -57,7 +58,7 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
         TestContext.deleteEntitiesFromStore();
     }
 
-    @Test
+    @Test (enabled = false)
     public void testTrustedExtensionJob() throws Exception {
         Map<String, String> overlay = context.getUniqueOverlay();
         String endTime = context.getProcessEndTime();

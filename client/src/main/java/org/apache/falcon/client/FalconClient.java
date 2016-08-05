@@ -26,7 +26,6 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.falcon.FalconCLIConstants;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
@@ -540,7 +539,6 @@ public class FalconClient extends AbstractFalconClient {
             .addQueryParam(DO_AS_OPT, doAsUser).call(operation);
         return getResponse(APIResult.class, clientResponse);
     }
-
     public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
                                       String filterBy, String orderBy, String sortOrder,
                                       Integer offset, Integer numResults, String doAsUser) {
@@ -551,7 +549,6 @@ public class FalconClient extends AbstractFalconClient {
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(USER, doAsUser).call(Instances.RUNNING);
         return getResponse(InstancesResult.class, clientResponse);
     }
-
     @Override
     public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
                                                 List<LifeCycle> lifeCycles, String filterBy, String orderBy,
@@ -759,8 +756,7 @@ public class FalconClient extends AbstractFalconClient {
         return stream;
     }
 
-    private <T> T getResponse(Class<T> clazz,
-                                                ClientResponse clientResponse) {
+    private <T> T getResponse(Class<T> clazz, ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(clazz);

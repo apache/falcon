@@ -399,6 +399,13 @@ permission indicates the permission.
         <property name="preserveBlockSize" value="true"/>
         <property name="preserveReplicationNumber" value="true"/>
         <property name="preservePermission" value="true"/>
+        <property name="preserveUser" value="true"/>
+        <property name="preserveGroup" value="false"/>
+        <property name="preserveChecksumType" value="true"/>
+        <property name="preserveAcl" value="true"/>
+        <property name="preserveXattr" value="true"/>
+        <property name="preserveTimes" value="true"/>
+        <property name="tdeEncryptionEnabled" value="false"/>
         <property name="order" value="LIFO"/>
     </properties>
 </verbatim>
@@ -414,7 +421,10 @@ used by each mapper during replication. "overwrite" represents overwrite destina
 bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
 destination but not in source during replication. "preserveBlockSize" represents preserving block size during
 replication. "preserveReplicationNumber" represents preserving replication number during replication.
-"preservePermission" represents preserving permission during
+"preservePermission" represents preserving permission during replication. "preserveUser" represents preserving user during replication.
+"preserveGroup" represents preserving group during replication. "preserveChecksumType" represents preserving checksum type during replication.
+"preserveAcl" represents preserving ACL during replication. "preserveXattr" represents preserving Xattr during replication.
+"preserveTimes" represents preserving access and modification times during replication. "tdeEncryptionEnabled" if TDE is enabled.
 
 
 ---+++ Lifecycle

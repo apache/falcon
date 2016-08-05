@@ -28,7 +28,9 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -460,4 +462,34 @@ public abstract class AbstractFalconClient {
     public abstract FeedLookupResult reverseLookUp(String entityType, String path, String doAs);
 
     public abstract EntityList getDependency(String entityType, String entityName, String doAs);
+
+    public abstract TriageResult triage(String name, String entityName, String start, String colo);
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public abstract InstancesResult getRunningInstances(String type, String entity, String colo,
+                                                        List<LifeCycle> lifeCycles,
+                                                        String filterBy, String orderBy, String sortOrder,
+                                                        Integer offset, Integer numResults, String doAsUser);
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
+    public abstract FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
+                                                              String colo, String doAsUser);
+    public abstract int getStatus(String doAsUser);
+
+    public abstract String getThreadDump(String doAs);
+
+    public abstract LineageGraphResult getEntityLineageGraph(String pipeline, String doAs);
+
+    public abstract String getDimensionList(String dimensionType, String cluster, String doAs);
+
+    public abstract String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName,
+                                                              Integer numResults, String doAs);
+
+    public abstract String getDimensionRelations(String dimensionType, String dimensionName, String doAs);
+
+    public abstract String getVertex(String id, String doAs);
+
+    public abstract String getVertices(String key, String value, String doAs);
+
+    public abstract String getVertexEdges(String id, String direction, String doAs);
+
+    public abstract String getEdge(String id, String doAs);
 }
