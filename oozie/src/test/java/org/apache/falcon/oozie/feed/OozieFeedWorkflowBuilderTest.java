@@ -77,6 +77,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Iterator;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests for Oozie workflow definition for feed replication & retention.
@@ -258,6 +262,45 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP tgtCoord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
         // Assert target coord frequency
         Assert.assertEquals(tgtCoord.getFrequency(), expectedFrequency);
+    }
+
+    @Test
+    public void testPostProcessing() throws Exception{
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
+        OozieEntityBuilder builder = OozieEntityBuilder.get(feed);
+        Path bundlePath = new Path("/projects/falcon/");
+        builder.build(trgCluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
+        List<COORDINATOR> coords = bundle.getCoordinator();
+        COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
+
+        WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
+
+        Boolean foundUserAction = false;
+        Boolean foundPostProcessing = false;
+        Iterator<COORDINATOR> coordIterator = coords.iterator();
+
+        while(coordIterator.hasNext()){
+            COORDINATORAPP coord1 = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
+            WORKFLOWAPP workflow1 = getWorkflowapp(trgMiniDFS.getFileSystem(), coord1);
+            Iterator<Object> workflowIterator = workflow1.getDecisionOrForkOrJoin().iterator();
+            while (workflowIterator.hasNext()){
+                Object object = workflowIterator.next();
+                if (ACTION.class.isAssignableFrom(object.getClass())){
+                    ACTION action = (ACTION) object;
+                    if (action.getName().equals("eviction") || action.getName().equals("replication")){
+                        foundUserAction = true;
+                    }
+                    if (action.getName().contains("post")){
+                        foundPostProcessing = true;
+                    }
+                }
+            }
+        }
+
+        assertTrue(foundUserAction);
+        assertFalse(foundPostProcessing);
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
     @Test
@@ -697,6 +740,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Configuration conf = fs.getConf();
         conf.set("fs.permissions.umask-mode", umask);
 
+        OozieEntityBuilder feedBuilder = OozieEntityBuilder.get(feed);
+        Path bundlePath = new Path("/projects/falcon/");
+        feedBuilder.build(trgCluster, bundlePath);
+
         // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
         setUmaskInFsConf(srcCluster, umask);
 
@@ -759,6 +806,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
     @Test (dataProvider = "secureOptions")
     public void testRetentionCoordsForTable(String secureOption) throws Exception {
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
         final String umask = "000";
