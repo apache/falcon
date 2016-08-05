@@ -241,10 +241,12 @@ MIT license. For details, see docs/license/jasmine-LICENSE.txt
 This product bundles entypo icons which is available under a
 CC BY-SA license and Font is available under SIL license.
 For details, see docs/license/entypo-icons-LICENSE.txt and
-docs/license/entypo-font-LICENSE.txt
+docs/license/entypo-font-LICENSE.txt. (Entypo pictograms by Daniel 
+Bruce - www.entypo.com)
 
-This product bundles Cabin font under SIL license. For details see
-docs/license/cabin-font-LICENSE.txt
+This product bundles Cabin webfont [regular, italic & bold] under SIL 
+license. For details see docs/license/cabin-font-LICENSE.txt.
+(www.impallari.com & www.ikern.com)
 
 This product bundles normalize v3.0.1 which is available under 
 MIT license.  For details see docs/license/normalize-LICENSE.txt
