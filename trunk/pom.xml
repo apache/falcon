@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-website</artifactId>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.11-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache Falcon</name>
@@ -254,7 +254,7 @@
             <email>sowmya_kr@apache.org</email>
             <timezone>-08:00</timezone>
             <roles>
-                <role>committer</role>
+                <role>PPMC</role>
             </roles>
             <organization>Hortonworks</organization>
         </developer>

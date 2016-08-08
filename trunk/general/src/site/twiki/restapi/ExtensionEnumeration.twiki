@@ -1,0 +1,38 @@
+---++  GET api/extension/enumerate
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get list of the supported extensions.
+
+---++ Parameters
+None
+
+---++ Results
+Total number of results and a list of extension server extensions supported.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/extension/enumerate
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "totalResults":"2”,
+    “extensions”: [
+        {
+            “name”: “Hdfs­mirroring”
+            “type”: “Trusted/Provided extension”
+            “description”: “This extension implements replicating arbitrary directories on HDFS from one Hadoop cluster to another Hadoop cluster.”
+        },
+        {
+            “name”: “Hive­mirroring”
+            “type”: “Trusted/Provided extension”
+            “description”: “This extension implements replicating hive metadata and data from one Hadoop cluster to another Hadoop cluster.”
+        }
+    ]
+}
+</verbatim>

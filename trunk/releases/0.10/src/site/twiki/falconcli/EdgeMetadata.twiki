@@ -1,0 +1,11 @@
+---+++ Edge
+
+[[CommonCLI][Common CLI Options]]
+
+Get the edge with the specified id.
+
+Usage:
+$FALCON_HOME/bin/falcon metadata -edge -id <<id>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -edge -id Q9n-Q-5g

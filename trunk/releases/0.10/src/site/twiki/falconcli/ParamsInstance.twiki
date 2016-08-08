@@ -1,0 +1,8 @@
+---+++Params
+
+[[CommonCLI][Common CLI Options]]
+
+Displays the workflow params of a given instance. Where start time is considered as nominal time of that instance and end time won't be considered.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -start "yyyy-MM-dd'T'HH:mm'Z'"

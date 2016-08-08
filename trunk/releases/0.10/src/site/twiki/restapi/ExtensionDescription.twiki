@@ -1,0 +1,24 @@
+---++  GET api/extension/describe/:extension­name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Description of an extension.
+
+---++ Parameters
+   * :extension­name Name of the extension.
+
+---++ Results
+Outputs the README of the specified extension.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/extension/describe/hdfs­mirroring
+</verbatim>
+---+++ Result
+<verbatim>
+<README file of the specified extension>
+</verbatim>

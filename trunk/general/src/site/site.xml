@@ -27,7 +27,7 @@
     </skin>
 
     <bannerLeft>
-        <name>Falcon</name>
+        <name>Apache Falcon</name>
         <src>./images/falcon-logo.png</src>
         <href>http://falcon.apache.org/index.html</href>
         <width>200px</width>
@@ -64,6 +64,7 @@
             <item name="Architecture" href="./FalconDocumentation.html"/>
             <item name="Installation" href="./InstallationSteps.html"/>
             <item name="On Boarding" href="./OnBoarding.html"/>
+            <item name="Migrate to 0.10" href="./MigrationInstructions.html"/>
             <item name="Operability" href="./Operability.html"/>
             <item name="Entity Specification" href="./EntitySpecification.html"/>
             <item name="Client (Falcon CLI)" href="./falconcli/FalconCLI.html"/>
@@ -83,6 +84,7 @@
                     <item href="./restapi/EntitySummary.html" name="Get instance summary of all entities" />
                     <item href="./restapi/EntityDependencies.html" name="Get the dependencies of the entity" />
                     <item href="./restapi/FeedLookup.html" name="Get feed for given path" />
+                    <item href="./restapi/FeedSLA.html" name="Get feed instances which missed SLA" />
                 </item>
                 <item name="Feed/Process Instances" href="./restapi/ResourceList.html" collapse="true">
                     <item  href="./restapi/InstanceRunning.html" name="List of running instances. " />
@@ -95,9 +97,12 @@
                     <item  href="./restapi/InstanceRerun.html" name="Rerun a given instance " />
                     <item  href="./restapi/InstanceLogs.html" name="Get logs of a given instance " />
                     <item  href="./restapi/InstanceSummary.html" name="Return summary of instances for an entity " />
+                    <item  href="./restapi/InstanceDependency.html" name="Return dependent instances of an instance " />
+                    <item  href="./restapi/Triage.html" name="Triage a given instance " />
                 </item>
                 <item name="Admin Resource" href="./restapi/ResourceList.html" collapse="true">
                     <item name="Stack Trace" href="./restapi/AdminStack.html" />
+                    <item name="Falcon Safemode" href="./restapi/AdminSafemode.html" />
                     <item name="Version" href="./restapi/AdminVersion.html" />
                     <item name="Configuration" href="./restapi/AdminConfig.html" />
                 </item>
@@ -114,9 +119,26 @@
                 </item>
                 <item name="Metadata Resource" href="./restapi/ResourceList.html" collapse="true">
                     <item href="./restapi/MetadataList.html" name="List of dimensions" />
+                    <item href="./restapi/MetadataRelations.html" name="List relations of a dimension" />
+                </item>
+                <item name="Falcon Extensions" href="./restapi/ResourceList.html" collapse="true">
+                    <item href="./restapi/ExtensionEnumeration.html" name="Enumerate Falcon Extensions" />
+                    <item href="./restapi/ExtensionDescription.html" name="Describe an Extension" />
+                    <item href="./restapi/ExtensionDefinition.html" name="Get JSON Extension properties" />
+                    <item href="./restapi/ExtensionList.html" name="List Extension jobs" />
+                    <item href="./restapi/ExtensionInstances.html" name="List Instances of Extension job" />
+                    <item href="./restapi/ExtensionValidate.html" name="Validate Extension Job" />
+                    <item href="./restapi/ExtensionSubmit.html" name="Submit Extension Job" />
+                    <item href="./restapi/ExtensionSubmitAndSchedule.html" name="Submit and schedule extension job" />
+                    <item href="./restapi/ExtensionUpdate.html" name="Update Extension Job" />
+                    <item href="./restapi/ExtensionSchedule.html" name="Schedule Extension Job" />
+                    <item href="./restapi/ExtensionSuspend.html" name="Suspend Extension Job" />
+                    <item href="./restapi/ExtensionResume.html" name="Resume Extension Job" />
+                    <item href="./restapi/ExtensionDelete.html" name="Delete Extension Job" />
                 </item>
             </item>
             <item name="Hive Integration" href="./HiveIntegration.html"/>
+            <item name="Server side Extensions" href="./Extensions.html"/>
             <item name="Security" href="./Security.html"/>
         </menu>
 
@@ -136,6 +158,7 @@
         </menu>
 
         <menu name="Releases">
+            <item name="0.10" href="http://www.apache.org/dyn/closer.lua/falcon/0.10"/>
             <item name="0.9" href="http://www.apache.org/dyn/closer.lua/falcon/0.9"/>
             <item name="0.8" href="http://www.apache.org/dyn/closer.lua/falcon/0.8"/>
             <item name="0.7" href="http://www.apache.org/dyn/closer.lua/falcon/0.7"/>
@@ -149,7 +172,8 @@
 
         <menu name="Documentation">
             <!-- current points to latest release -->
-            <item name="0.9 (Current)" href="./0.9/index.html"/>
+            <item name="0.10 (Current)" href="./0.10/index.html"/>
+            <item name="0.9" href="./0.9/index.html"/>
             <item name="0.8" href="./0.8/index.html"/>
             <item name="0.7" href="./0.7/index.html"/>
             <item name="0.6.1" href="./0.6.1/index.html"/>
@@ -167,7 +191,7 @@
         </menu>
 
         <footer>
-            Â© 2011-2014 The Apache Software Foundation. Apache Falcon, Falcon, Apache, the Apache feather logo,
+            Â© 2011-2016 The Apache Software Foundation. Apache Falcon, Falcon, Apache, the Apache feather logo,
             and the Apache Falcon project logo are trademarks of The Apache Software Foundation.
         </footer>
     </body>

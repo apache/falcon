@@ -1,0 +1,16 @@
+---+++List
+
+[[CommonCLI][Common CLI Options]]
+
+List jobs generated from an extension.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -list -extensionName <<extension-name>>
+
+Optional Args : -doAs <<user-name>>
+-sortOrder <<sortOrder>> -offset <<offset-number>> -numResults <<number-of-results>> -fields <<field1,field2>>
+
+<a href="../restapi/ExtensionList.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -list -extensionName hdfs-mirroring -offset 0 -numResults 10
