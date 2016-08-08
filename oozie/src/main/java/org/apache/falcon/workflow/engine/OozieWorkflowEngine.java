@@ -1413,7 +1413,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
             //calculate next start time based on delay.
             endTime = (delay == null) ? endTime
-                    : EntityUtil.getNextStartTime(coord.getStartTime(), delay, EntityUtil.getTimeZone(entity), endTime);
+                    : EntityUtil.getNextInstanceTimeWithDelay(endTime, delay, EntityUtil.getTimeZone(entity));
             LOG.debug("Updating endtime of coord {} to {} on cluster {}",
                     coord.getId(), SchemaHelper.formatDateUTC(endTime), cluster);
 
