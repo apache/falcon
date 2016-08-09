@@ -4,3 +4,10 @@ Copyright 2011-2016 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
+
+*****************
+CC BY-SA 3.0
+*****************
+
+The following binary components are provided under CC BY-SA 3.0
+  entypo-icon (Entypo pictograms by Daniel Bruce - www.entypo.com)
