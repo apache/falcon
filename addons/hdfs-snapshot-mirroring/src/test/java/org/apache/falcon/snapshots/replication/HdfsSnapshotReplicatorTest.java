@@ -25,6 +25,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirrorProperties;
+import org.apache.falcon.util.ReplicationDistCpOption;
 import org.apache.falcon.snapshots.util.HdfsSnapshotUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -57,7 +58,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
 
     private FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
 
-    private String[] args = {"--" + HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(), "1",
+    private String[] args = {"--" + HdfsSnapshotMirrorProperties.MAX_MAPS.getName(), "1",
         "--" + HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName(), "100",
         "--" + HdfsSnapshotMirrorProperties.SOURCE_NN.getName(), "hdfs://localhost:54136",
         "--" + HdfsSnapshotMirrorProperties.SOURCE_EXEC_URL.getName(), "localhost:8021",
@@ -67,6 +68,8 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         "/apps/falcon/snapshot-replication/sourceDir/",
         "--" + HdfsSnapshotMirrorProperties.TARGET_SNAPSHOT_DIR.getName(),
         "/apps/falcon/snapshot-replication/targetDir/",
+        "--" + ReplicationDistCpOption.DISTCP_OPTION_IGNORE_ERRORS.getName(), "false",
+        "--" + ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_ACL.getName(), "false",
         "--" + HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(), "false",
         "--" + HdfsSnapshotMirrorProperties.SNAPSHOT_JOB_NAME.getName(), "snapshotJobName", };
 
@@ -87,7 +90,7 @@ public class HdfsSnapshotReplicatorTest extends HdfsSnapshotReplicator {
         miniDfs.allowSnapshot(targetDir);
 
         cmd = getCommand(args);
-        Assert.assertEquals(cmd.getOptionValue(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName()), "1");
+        Assert.assertEquals(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAX_MAPS.getName()), "1");
         Assert.assertEquals(cmd.getOptionValue(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName()), "100");
 
     }

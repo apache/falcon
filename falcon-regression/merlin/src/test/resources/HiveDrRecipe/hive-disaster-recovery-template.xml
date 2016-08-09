@@ -38,7 +38,7 @@
     </properties>
 
     <workflow name="##workflow.name##" engine="oozie"
-              path="/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml" lib="##workflow.lib.path##"/>
+              path="/apps/falcon/extensions/hive-mirroring/resources/runtime/hive-mirroring-workflow.xml" lib="##workflow.lib.path##"/>
     <retry policy="##retry.policy##" delay="##retry.delay##" attempts="3"/>
     <notification type="##falcon.recipe.notification.type##" to="##falcon.recipe.notification.receivers##"/>
     <ACL/>

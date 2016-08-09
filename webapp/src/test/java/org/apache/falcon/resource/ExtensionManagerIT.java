@@ -58,7 +58,7 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
         TestContext.deleteEntitiesFromStore();
     }
 
-    @Test
+    @Test (enabled = false)
     public void testTrustedExtensionJob() throws Exception {
         Map<String, String> overlay = context.getUniqueOverlay();
         String endTime = context.getProcessEndTime();

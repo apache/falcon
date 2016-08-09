@@ -129,9 +129,16 @@
             <artifactId>jettison</artifactId>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.oozie</groupId>
             <artifactId>oozie-core</artifactId>
+            <exclusions>
+              <exclusion>
+                <groupId>c3p0</groupId>
+                <artifactId>c3p0</artifactId>
+              </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

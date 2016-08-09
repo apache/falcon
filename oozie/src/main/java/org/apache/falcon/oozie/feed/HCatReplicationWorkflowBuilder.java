@@ -127,20 +127,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
 
         //Add cleanup action
         ACTION cleanup = unmarshalAction(CLEANUP_ACTION_TEMPLATE);
-        addTransition(cleanup, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(cleanup);
-
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addHDFSServersConfig(success, src, target);
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addHDFSServersConfig(fail, src, target);
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
-
+        addPostProcessing(workflow, cleanup);
         decorateWorkflow(workflow, wfName, start);
         setupHiveCredentials(src, target, workflow);
         return workflow;

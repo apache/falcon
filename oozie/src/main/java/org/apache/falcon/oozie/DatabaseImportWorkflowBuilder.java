@@ -69,18 +69,7 @@ public class DatabaseImportWorkflowBuilder extends ImportWorkflowBuilder {
         ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath, sqoopImport);
         OozieUtils.marshalSqoopAction(action, actionJaxbElement);
 
-        addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(action);
-
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
-
+        addPostProcessing(workflow, action);
         decorateWorkflow(workflow, workflow.getName(), IMPORT_ACTION_NAME);
         addLibExtensionsToWorkflow(cluster, workflow, Tag.IMPORT);
 

@@ -115,14 +115,13 @@ public class HiveMirroringExtension extends AbstractExtension {
     }
 
     @Override
-    public Properties getAdditionalProperties(final Properties extensionProperties) throws FalconException {
+    public Properties getAdditionalProperties(final Properties extensionProperties)
+        throws FalconException {
         Properties additionalProperties = new Properties();
-
         String jobName = extensionProperties.getProperty(ExtensionProperties.JOB_NAME.getName());
         // Add job name as Hive DR job
         additionalProperties.put(HiveMirroringExtensionProperties.HIVE_MIRRORING_JOB_NAME.getName(),
                 jobName);
-
         // Get the first source DB
         additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_DATABASE.getName(),
                 extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_DATABASES
@@ -235,28 +234,31 @@ public class HiveMirroringExtension extends AbstractExtension {
         if (StringUtils.isBlank(distcpMaxMaps)) {
             additionalProperties.put(HiveMirroringExtensionProperties.DISTCP_MAX_MAPS.getName(), "1");
         }
-
         String distcpMapBandwidth = extensionProperties.getProperty(
                 HiveMirroringExtensionProperties.MAP_BANDWIDTH_IN_MB.getName());
         if (StringUtils.isBlank(distcpMapBandwidth)) {
             additionalProperties.put(HiveMirroringExtensionProperties.MAP_BANDWIDTH_IN_MB.getName(), "100");
         }
-
         if (StringUtils.isBlank(
                 extensionProperties.getProperty(HiveMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName()))) {
             additionalProperties.put(HiveMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName(), "false");
         }
-
         if (StringUtils.isBlank(
                 extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_STAGING_PATH.getName()))) {
             additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_STAGING_PATH.getName(), NOT_APPLICABLE);
         }
-
         if (StringUtils.isBlank(
                 extensionProperties.getProperty(HiveMirroringExtensionProperties.TARGET_STAGING_PATH.getName()))) {
             additionalProperties.put(HiveMirroringExtensionProperties.TARGET_STAGING_PATH.getName(), NOT_APPLICABLE);
         }
-
+        if (StringUtils.isBlank(
+                extensionProperties.getProperty(HiveMirroringExtensionProperties.SOURCE_HS2_EXTRA_OPTS.getName()))) {
+            additionalProperties.put(HiveMirroringExtensionProperties.SOURCE_HS2_EXTRA_OPTS.getName(), NOT_APPLICABLE);
+        }
+        if (StringUtils.isBlank(
+                extensionProperties.getProperty(HiveMirroringExtensionProperties.TARGET_HS2_EXTRA_OPTS.getName()))) {
+            additionalProperties.put(HiveMirroringExtensionProperties.TARGET_HS2_EXTRA_OPTS.getName(), NOT_APPLICABLE);
+        }
         return additionalProperties;
     }
 }

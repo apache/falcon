@@ -16,14 +16,31 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.cli.commands;
+package org.apache.falcon.shell.skel;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.shell.plugin.support.DefaultHistoryFileNameProvider;
 import org.springframework.stereotype.Component;
 
 /**
- * Instance commands.
+ * The Class FalconHistoryFileProvider.
  */
 @Component
-public class FalconInstanceCommands extends BaseFalconCommands {
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class FalconHistoryFileProvider extends DefaultHistoryFileNameProvider {
 
+    public String getHistoryFileName() {
+        return "falcon-cli-hist.log";
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.shell.plugin.support.DefaultHistoryFileNameProvider#name()
+     */
+    @Override
+    public String getProviderName() {
+        return "falcon client history provider";
+    }
 }

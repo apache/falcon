@@ -28,9 +28,10 @@ public enum HdfsMirroringExtensionProperties {
     TARGET_DIR("targetDir", "Location on target cluster for replication"),
     TARGET_CLUSTER("targetCluster", "Target cluster"),
     TARGET_CLUSTER_FS_WRITE_ENDPOINT("targetClusterFS", "Target cluster end point", false),
-    MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during replication", false),
-    MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication",
-            false);
+    DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during replication", false),
+    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication",
+            false),
+    TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false);
 
     private final String name;
     private final String description;

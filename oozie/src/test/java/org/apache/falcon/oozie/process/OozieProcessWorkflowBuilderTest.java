@@ -78,6 +78,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -114,6 +115,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "clicksummary", FEED_XML);
         storeEntity(EntityType.PROCESS, "clicksummary", PROCESS_XML);
         storeEntity(EntityType.PROCESS, "pig-process", PIG_PROCESS_XML);
+
 
         ConfigurationStore store = ConfigurationStore.get();
         cluster = store.get(EntityType.CLUSTER, "corp");
@@ -783,6 +785,38 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertAction(parentWorkflow, "succeeded-post-processing", true);
         assertAction(parentWorkflow, "failed-post-processing", true);
         assertAction(parentWorkflow, "user-action", false);
+    }
+
+    @Test
+    public void testPostProcessingProcess() throws Exception {
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "pig-process");
+
+        OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+        builder.build(cluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP workflowapp = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
+
+        Boolean foudUserAction = false;
+        Boolean foundpostProcessing =false;
+
+        for(Object action : workflowapp.getDecisionOrForkOrJoin()){
+            if (action instanceof ACTION && ((ACTION)action).getName().equals("user-action")){
+                foudUserAction = true;
+            }
+            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
+                foundpostProcessing = true;
+            }
+
+        }
+        assertTrue(foudUserAction);
+        assertFalse(foundpostProcessing);
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
     @AfterMethod

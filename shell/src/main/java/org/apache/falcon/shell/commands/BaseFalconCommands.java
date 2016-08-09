@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.cli.commands;
+package org.apache.falcon.shell.commands;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,29 +30,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static org.apache.falcon.cli.FalconCLI.CURRENT_COLO;
-import static org.apache.falcon.cli.FalconCLI.FALCON_URL;
+import static org.apache.falcon.client.FalconCLIConstants.CURRENT_COLO;
+import static org.apache.falcon.client.FalconCLIConstants.FALCON_URL;
 
 /**
  * Common code for all falcon command classes.
  */
 public class BaseFalconCommands implements ExecutionProcessor {
-    private static final String FALCON_URL_PROPERTY = "falcon.url";
+    protected static final String FALCON_URL_PROPERTY = "falcon.url";
     private static final String DO_AS = "DO_AS";
     private static final String DO_AS_PROPERTY = "do.as";
-    private static final String CLIENT_PROPERTIES = "/client.properties";
+    private static final String SHELL_PROPERTIES = "/shell.properties";
     protected static final String FALCON_URL_ABSENT = "Failed to get falcon url from environment or client properties";
     private static Properties clientProperties;
     private static Properties backupProperties = new Properties();
     private static AbstractFalconClient client;
 
-    protected static Properties getClientProperties() {
+    static {
+        clientProperties = getShellProperties();
+    }
+
+
+    public static Properties getShellProperties() {
         if (clientProperties == null) {
             InputStream inputStream = null;
             Properties prop = new Properties(System.getProperties());
             prop.putAll(backupProperties);
             try {
-                inputStream = BaseFalconCommands.class.getResourceAsStream(CLIENT_PROPERTIES);
+                inputStream = BaseFalconCommands.class.getResourceAsStream(SHELL_PROPERTIES);
                 if (inputStream != null) {
                     try {
                         prop.load(inputStream);
@@ -83,7 +88,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
     static void setClientProperty(String key, String value) {
         Properties props;
         try {
-            props = getClientProperties();
+            props = getShellProperties();
         } catch (FalconCLIException e) {
             props = backupProperties;
         }
@@ -98,7 +103,7 @@ public class BaseFalconCommands implements ExecutionProcessor {
 
     public static AbstractFalconClient getFalconClient() {
         if (client == null) {
-            client = new FalconClient(getClientProperties().getProperty(FALCON_URL_PROPERTY), getClientProperties());
+            client = new FalconClient(getShellProperties().getProperty(FALCON_URL_PROPERTY), getShellProperties());
         }
         return client;
     }
@@ -109,14 +114,14 @@ public class BaseFalconCommands implements ExecutionProcessor {
 
     protected String getColo(String colo) {
         if (colo == null) {
-            Properties prop = getClientProperties();
+            Properties prop = getShellProperties();
             colo = prop.getProperty(CURRENT_COLO, "*");
         }
         return colo;
     }
 
     protected String getDoAs() {
-        return getClientProperties().getProperty(DO_AS_PROPERTY);
+        return getShellProperties().getProperty(DO_AS_PROPERTY);
     }
 
     @Override
