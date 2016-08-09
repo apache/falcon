@@ -1,7 +1,12 @@
 Apache Falcon Change log
-For changes in releases after 0.9, please refer to "release-docs" or
+
+Future Release Version: 0.11
+For changes in releases after 0.10, please refer to "release-docs" or
 https://github.com/apache/falcon/tree/master/release-docs/
 
+Release Version: 0.10
+For changes in release 0.10, please refer to "release-docs" or
+https://github.com/apache/falcon/blob/0.10/release-docs/0.10/CHANGES.0.10.md
 
 Release Version: 0.9
   TASKS:
