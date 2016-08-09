@@ -50,7 +50,8 @@ public final class DistCPOptionsUtil {
         distcpOptions.setMapBandwidth(Integer.parseInt(cmd.getOptionValue("mapBandwidth")));
 
         String tdeEncryptionEnabled = cmd.getOptionValue(TDE_ENCRYPTION_ENABLED);
-        if (StringUtils.isNotBlank(tdeEncryptionEnabled) && tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
+        if (StringUtils.isNotBlank(tdeEncryptionEnabled)
+                && tdeEncryptionEnabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
             distcpOptions.setSyncFolder(true);
             distcpOptions.setSkipCRC(true);
         } else {
