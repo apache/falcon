@@ -1,6 +1,6 @@
 Apache Falcon Change log
 
-Future Release Version: 0.11
+Future Releases:
 For changes in releases after 0.10, please refer to "release-docs" or
 https://github.com/apache/falcon/tree/master/release-docs/
 
