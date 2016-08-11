@@ -61,6 +61,8 @@ import java.util.TimeZone;
 public class FileSystemStorageTest {
 
     private static final String USER = FalconTestUtil.TEST_USER_1;
+    private static final String TEST_FEED_LISTING = "TestFeedListing";
+    private static final String TEST_FEED_INSTANCE_LISTING = "TestFeedInstanceListing";
 
     @BeforeClass
     public void setUp() {
@@ -425,7 +427,7 @@ public class FileSystemStorageTest {
     @Test (dataProvider = "testListingDataProvider")
     public void testListing(String availabilityFlag, Frequency frequency, TimeZone timeZone,
                             Date start, Date end) throws Exception {
-        EmbeddedCluster cluster = EmbeddedCluster.newCluster("TestFeedListing", false);
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster(TEST_FEED_LISTING, false);
         FileSystem fs = cluster.getFileSystem();
         ConfigurationStore.get().publish(EntityType.CLUSTER, cluster.getCluster());
         try {
@@ -434,7 +436,7 @@ public class FileSystemStorageTest {
             FileSystemStorage fileSystemStorage = new FileSystemStorage(cluster.getFileSystem().
                     getUri().toString(), feed.getLocations());
             List<FeedInstanceStatus> actual = fileSystemStorage.
-                    getListing(feed, "TestFeedListing", LocationType.DATA, start, end);
+                    getListing(feed, TEST_FEED_LISTING, LocationType.DATA, start, end);
             Assert.assertEquals(actual, expected, "Feed instance Listings doesn't match");
         } finally {
             ConfigurationStore.get().remove(EntityType.CLUSTER, cluster.getCluster().getName());
@@ -444,18 +446,18 @@ public class FileSystemStorageTest {
     @Test (dataProvider = "testListingDataProvider")
     public void testInstanceListing(String availabilityFlag, Frequency frequency, TimeZone timeZone,
                                     Date start, Date end) throws Exception {
-        EmbeddedCluster firstCluster = EmbeddedCluster.newCluster("TestFeedListing", false);
+        EmbeddedCluster firstCluster = EmbeddedCluster.newCluster(TEST_FEED_LISTING, false);
         FileSystem fs = firstCluster.getFileSystem();
         ConfigurationStore.get().publish(EntityType.CLUSTER, firstCluster.getCluster());
 
 
-        EmbeddedCluster secondCluster = EmbeddedCluster.newCluster("TestFeedInstanceListing", false);
+        EmbeddedCluster secondCluster = EmbeddedCluster.newCluster(TEST_FEED_INSTANCE_LISTING, false);
         ConfigurationStore.get().publish(EntityType.CLUSTER, secondCluster.getCluster());
 
         try {
             Feed feed = getFeed(availabilityFlag, frequency, timeZone);
             Cluster cluster = new Cluster();
-            cluster.setName("TestFeedInstanceListing");
+            cluster.setName(TEST_FEED_INSTANCE_LISTING);
             feed.getClusters().getClusters().add(cluster);
             Validity validity = new Validity();
             cluster.setValidity(validity);
@@ -484,7 +486,7 @@ public class FileSystemStorageTest {
     @SuppressWarnings("MagicConstant")
     private List<FeedInstanceStatus> prepareData(FileSystem fs, Feed feed,
                                                  Date start, Date end) throws Exception {
-        fs.delete(new Path("/TestFeedListing"), true);
+        fs.delete(new Path("/" + TEST_FEED_LISTING), true);
         Random random = new Random();
         List<FeedInstanceStatus> instances = new ArrayList<FeedInstanceStatus>();
         String basePath = feed.getLocations().getLocations().get(0).getPath();
@@ -565,12 +567,12 @@ public class FileSystemStorageTest {
         feed.setLocations(new Locations());
         Location dataLocation = new Location();
         feed.getLocations().getLocations().add(dataLocation);
-        dataLocation.setPath("/TestFeedListing/data/${YEAR}/${MONTH}/${DAY}"
+        dataLocation.setPath("/" + TEST_FEED_LISTING + "/data/${YEAR}/${MONTH}/${DAY}"
                 + (frequency.getTimeUnit() == Frequency.TimeUnit.hours ? "/${HOUR}" : "") + "/MORE");
         dataLocation.setType(LocationType.DATA);
         feed.setClusters(new Clusters());
         Cluster cluster = new Cluster();
-        cluster.setName("TestFeedListing");
+        cluster.setName(TEST_FEED_LISTING);
         feed.getClusters().getClusters().add(cluster);
         Validity validity = new Validity();
         cluster.setValidity(validity);
