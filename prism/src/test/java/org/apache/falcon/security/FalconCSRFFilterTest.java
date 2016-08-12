@@ -57,6 +57,7 @@ public class FalconCSRFFilterTest {
     @Test
     public void testCSRFEnabledAllowedMethodFromBrowser() throws Exception {
         StartupProperties.get().setProperty("falcon.security.csrf.enabled", "true");
+        StartupProperties.get().setProperty("falcon.security.csrf.header", FALCON_CSRF_HEADER_DEFAULT);
         mockHeader("Mozilla/5.0", null);
         mockGetMethod();
         mockRunFilter();
@@ -67,6 +68,7 @@ public class FalconCSRFFilterTest {
     @Test
     public void testCSRFEnabledNoCustomHeaderFromBrowser() throws Exception {
         StartupProperties.get().setProperty("falcon.security.csrf.enabled", "true");
+        StartupProperties.get().setProperty("falcon.security.csrf.header", FALCON_CSRF_HEADER_DEFAULT);
         mockHeader("Mozilla/5.0", null);
         mockDeleteMethod();
         mockRunFilter();
@@ -77,6 +79,7 @@ public class FalconCSRFFilterTest {
     @Test
     public void testCSRFEnabledIncludeCustomHeaderFromBrowser() throws Exception {
         StartupProperties.get().setProperty("falcon.security.csrf.enabled", "true");
+        StartupProperties.get().setProperty("falcon.security.csrf.header", FALCON_CSRF_HEADER_DEFAULT);
         mockHeader("Mozilla/5.0", "");
         mockDeleteMethod();
         mockRunFilter();
@@ -87,6 +90,7 @@ public class FalconCSRFFilterTest {
     @Test
     public void testCSRFEnabledAllowNonBrowserInteractionWithoutHeader() throws Exception {
         StartupProperties.get().setProperty("falcon.security.csrf.enabled", "true");
+        StartupProperties.get().setProperty("falcon.security.csrf.header", FALCON_CSRF_HEADER_DEFAULT);
         mockHeader(null, null);
         mockDeleteMethod();
         mockRunFilter();
@@ -97,6 +101,7 @@ public class FalconCSRFFilterTest {
     @Test
     public void testCSRFDisabledAllowAnyMethodFromBrowser() throws Exception {
         StartupProperties.get().setProperty("falcon.security.csrf.enabled", "false");
+        StartupProperties.get().setProperty("falcon.security.csrf.header", FALCON_CSRF_HEADER_DEFAULT);
         mockHeader("Mozilla/5.0", null);
         mockDeleteMethod();
         mockRunFilter();
