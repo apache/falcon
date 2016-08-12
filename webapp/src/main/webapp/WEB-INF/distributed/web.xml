@@ -41,6 +41,15 @@
     </filter>
 
     <filter>
+        <filter-name>csrf</filter-name>
+        <filter-class>org.apache.falcon.security.FalconCSRFFilter</filter-class>
+        <init-param>
+            <param-name>methods-to-ignore</param-name>
+            <param-value>GET</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
         <filter-name>authorization</filter-name>
         <filter-class>org.apache.falcon.security.FalconAuthorizationFilter</filter-class>
     </filter>
@@ -62,6 +71,11 @@
 
     <filter-mapping>
         <filter-name>authentication</filter-name>
+        <servlet-name>FalconRESTApi</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>csrf</filter-name>
         <servlet-name>FalconRESTApi</servlet-name>
     </filter-mapping>
 
