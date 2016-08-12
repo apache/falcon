@@ -91,17 +91,14 @@ public class HdfsMirroringExtension extends AbstractExtension {
                     throw new FalconException(e);
                 }
                 String authority = pathUri.getAuthority();
+                StringBuilder srcpath = new StringBuilder();
                 if (authority == null) {
-                    StringBuilder srcpath = new StringBuilder(srcClusterEndPoint);
-                    srcpath.append(path.trim());
-                    srcpath.append(COMMA_SEPARATOR);
-                    absoluteSrcPaths.append(srcpath);
-                } else {
-                    StringBuilder srcpath = new StringBuilder();
-                    srcpath.append(path.trim());
-                    srcpath.append(COMMA_SEPARATOR);
-                    absoluteSrcPaths.append(srcpath);
+                    srcpath.append(srcClusterEndPoint);
                 }
+
+                srcpath.append(path.trim());
+                srcpath.append(COMMA_SEPARATOR);
+                absoluteSrcPaths.append(srcpath);
             }
         }
         additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
