@@ -496,7 +496,7 @@ public class FileSystemStorageTest {
             Date dataStart = EntityUtil.getNextStartTime(cluster.getValidity().getStart(),
                     feed.getFrequency(), tz, new Date(start.getTime()));
             String clusterLocationPath = null;
-            if(cluster.getLocations() != null && cluster.getLocations().getLocations().get(0).getPath() != null) {
+            if (cluster.getLocations() != null && cluster.getLocations().getLocations().get(0).getPath() != null) {
                 basePath = clusterLocationPath == null ? basePath : clusterLocationPath;
             }
             Date dataEnd = new Date(end.getTime());

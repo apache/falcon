@@ -819,7 +819,8 @@ public final class FeedHelper {
                 allInstances.add(instance);
             }
         }
-        FeedInstanceResult.Instance[] resultInstances = allInstances.toArray(new FeedInstanceResult.Instance[allInstances.size()]);
+        FeedInstanceResult.Instance[] resultInstances = allInstances.toArray(
+                new FeedInstanceResult.Instance[allInstances.size()]);
         result.setInstances(resultInstances);
         return result;
     }
