@@ -48,6 +48,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
     protected static final String REPLICATION_ACTION_NAME = "replication";
     private static final String MR_MAX_MAPS = "maxMaps";
     private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
+    private static final String MR_MAP_MEMORY = "mapMemory";
     private static final String REPLICATION_JOB_COUNTER = "job.counter";
     private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
@@ -96,6 +97,9 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         if (props.getProperty(MR_MAP_BANDWIDTH) == null) { // set default if user has not overridden
             props.put(MR_MAP_BANDWIDTH, getDefaultMapBandwidth());
         }
+        if (props.getProperty(MR_MAP_MEMORY) == null) { // set default memory if user has not overridden
+            props.put(MR_MAP_MEMORY, getDefaultMapMemory());
+        }
 
         return props;
     }
@@ -143,6 +147,10 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
 
     private String getDefaultMapBandwidth() {
         return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
+    }
+
+    private String getDefaultMapMemory() {
+        return RuntimeProperties.get().getProperty("falcon.feed.workflow.mapreduce.map.memory.mb", "512");
     }
 
     private boolean isTDEEnabled() {

@@ -39,6 +39,7 @@
             </property>
         </configuration>
         <main-class>org.apache.falcon.retention.FeedEvictor</main-class>
+        <arg>-Dmapreduce.map.memory.mb={mapMemory}</arg>
         <arg>-feedBasePath</arg>
         <arg>${feedDataPath}</arg>
         <arg>-falconFeedStorageType</arg>

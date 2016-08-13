@@ -55,5 +55,6 @@
         <property name="maxMaps" value="33" />
         <property name="mapBandwidth" value="2" />
         <property name="job.counter" value="true" />
+        <property name="mapMemory" value="1024" />
     </properties>
 </feed>

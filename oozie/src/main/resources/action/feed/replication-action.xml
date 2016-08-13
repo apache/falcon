@@ -41,11 +41,16 @@
                 <name>oozie.launcher.oozie.libpath</name>
                 <value>${wf:conf("falcon.libpath")}</value>
             </property>
+            <property>
+                <name>oozie.launcher.mapreduce.map.memory.mb</name>
+                <value>${mapMemory}</value>
+            </property>
         </configuration>
         <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
         <arg>-Dfalcon.include.path=${sourceRelativePaths}</arg>
         <arg>-Dmapred.job.queue.name=${queueName}</arg>
         <arg>-Dmapred.job.priority=${jobPriority}</arg>
+        <arg>-Dmapreduce.map.memory.mb=${mapMemory}</arg>
         <arg>-maxMaps</arg>
         <arg>${maxMaps}</arg>
         <arg>-mapBandwidth</arg>

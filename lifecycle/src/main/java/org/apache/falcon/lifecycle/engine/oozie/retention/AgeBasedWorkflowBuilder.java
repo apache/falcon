@@ -29,6 +29,7 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.RetentionStage;
 import org.apache.falcon.lifecycle.engine.oozie.utils.OozieBuilderUtils;
 import org.apache.falcon.lifecycle.retention.AgeBasedDelete;
@@ -96,6 +97,10 @@ public final class AgeBasedWorkflowBuilder {
         }
         if (StringUtils.isNotBlank(retentionStage.getPriority())) {
             props.put(OozieBuilderUtils.MR_JOB_PRIORITY, retentionStage.getPriority());
+        }
+
+        for (Property retentionStageProperty : retentionStage.getProperties().getProperties()) {
+            props.put(retentionStageProperty.getName(), retentionStageProperty.getValue());
         }
 
         if (EntityUtil.isTableStorageType(cluster, feed)) {

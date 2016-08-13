@@ -200,6 +200,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("queueName"), "retention");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
+        Assert.assertEquals(wfProps.get("mapMemory"), "1024");
     }
 
     @Test
@@ -392,6 +393,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("jobPriority"), "NORMAL");
         Assert.assertEquals(wfProps.get("maxMaps"), "5");
         Assert.assertEquals(wfProps.get("mapBandwidth"), "100");
+        Assert.assertEquals(wfProps.get("mapMemory"), "1024");
 
         assertLibExtensions(coord, "replication");
         WORKFLOWAPP wf = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
@@ -501,9 +503,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         JAVA replication = replicationActionNode.getJava();
         List<String> args = replication.getArg();
         if (args.contains("-counterLogDir")) {
-            Assert.assertEquals(args.size(), 17);
+            Assert.assertEquals(args.size(), 18);
         } else {
-            Assert.assertEquals(args.size(), 15);
+            Assert.assertEquals(args.size(), 16);
         }
 
         HashMap<String, String> props = getCoordProperties(coord);

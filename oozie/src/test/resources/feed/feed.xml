@@ -53,5 +53,6 @@
         <property name="order"  value="FIFO" />
         <property name="parallel"  value="2" />
         <property name="field4" value="value2"/>
+        <property name="mapMemory" value="1024" />
     </properties>
 </feed>
