@@ -26,10 +26,11 @@ public final class PersistenceConstants {
     }
     public static final String GET_MONITERED_INSTANCE = "GET_MONITERED_INSTANCE";
     public static final String DELETE_MONITORED_INSTANCES = "DELETE_MONITORED_INSTANCES";
-    public static final String GET_ALL_MONITORING_FEEDS = "GET_ALL_MONITORING_FEEDS";
+    public static final String GET_ALL_MONITORING_ENTITY_FOR_TYPE = "GET_ALL_MONITORING_ENTITY_FOR_TYPE";
     public static final String GET_PENDING_INSTANCES = "GET_PENDING_INSTANCES";
+    public static final String GET_PENDING_INSTANCE = "GET_PENDING_INSTANCE";
     public static final String DELETE_PENDING_NOMINAL_INSTANCES = "DELETE_PENDING_NOMINAL_INSTANCES";
-    public static final String DELETE_ALL_INSTANCES_FOR_FEED = "DELETE_ALL_INSTANCES_FOR_FEED";
+    public static final String DELETE_ALL_INSTANCES_FOR_ENTITY = "DELETE_ALL_INSTANCES_FOR_ENTITY";
     public static final String GET_DATE_FOR_PENDING_INSTANCES = "GET_DATE_FOR_PENDING_INSTANCES";
     public static final String GET_ALL_PENDING_INSTANCES = "GET_ALL_PENDING_INSTANCES";
     public static final String GET_ENTITY = "GET_ENTITY";
@@ -54,4 +55,13 @@ public final class PersistenceConstants {
     public static final String DELETE_INSTANCES_TABLE = "DELETE_INSTANCES_TABLE";
     public static final String GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE = "GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE";
     public static final String GET_LATEST_INSTANCE_TIME = "GET_LATEST_INSTANCE_TIME";
+    public static final String GET_ENTITY_ALERTS = "GET_ENTITY_ALERTS";
+    public static final String GET_ALL_ENTITY_ALERTS = "GET_ALL_ENTITY_ALERTS";
+    public static final String GET_SLA_HIGH_CANDIDATES = "GET_SLA_HIGH_CANDIDATES";
+    public static final String UPDATE_SLA_HIGH = "UPDATE_SLA_HIGH";
+    public static final String GET_ENTITY_ALERT_INSTANCE = "GET_ENTITY_ALERT_INSTANCE";
+    public static final String DELETE_ENTITY_ALERT_INSTANCE = "DELETE_ENTITY_ALERT_INSTANCE";
+    public static final String DELETE_BACKLOG_METRIC_INSTANCE = "DELETE_BACKLOG_METRIC_INSTANCE";
+    public static final String GET_ALL_BACKLOG_INSTANCES = "GET_ALL_BACKLOG_INSTANCES";
+    public static final String GET_ALL_MONITORING_ENTITY = "GET_ALL_MONITORING_ENTITY";
 }

@@ -41,10 +41,12 @@ a. Building falcon from the source release
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
-*Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
-        Falcon build with JDK 1.7 using -noverify option
-        To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this
-        Hive >= 1.2.0 and Oozie >= 4.2.0 should be available.
+*Note 1:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+          Falcon build with JDK 1.7 using -noverify option
+*Note 2:* To compile Falcon with addon extensions, append additional profiles to build command using syntax -P<<profile1,profile2>>
+          For Hive Mirroring extension, use profile"hivedr". Hive >= 1.2.0 and Oozie >= 4.2.0 is required
+          For HDFS Snapshot mirroring extension, use profile "hdfs-snapshot-mirroring". Hadoop >= 2.7.0 is required
+          For ADF integration, use profile "adf"
 
 
 b. Building falcon from the source repository
@@ -55,10 +57,12 @@ b. Building falcon from the source repository
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
-*Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
-        Falcon build with JDK 1.7 using -noverify option
-        To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this
-        Hive >= 1.2.0 and Oozie >= 4.2.0 should be available.
+*Note 1:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+          Falcon build with JDK 1.7 using -noverify option
+*Note 2:* To compile Falcon with addon extensions, append additional profiles to build command using syntax -P<<profile1,profile2>>
+          For Hive Mirroring extension, use profile"hivedr". Hive >= 1.2.0 and Oozie >= 4.2.0 is required
+          For HDFS Snapshot mirroring extension, use profile "hdfs-snapshot-mirroring". Hadoop >= 2.7.0 is required
+          For ADF integration, use profile "adf"
 
 
 2. Deploying Falcon
@@ -118,8 +122,8 @@ c. Using Falcon
 ~~~~~~~~~~~~~~~
 
 * bin/falcon admin -version
-  Falcon server build version: {Version:"0.3-SNAPSHOT-rd7e2be9afa2a5dc96acd1ec9e325f39c6b2f17f7",Mode:"embedded"}
-
+Falcon server build version: {"properties":[{"key":"Version","value":"0.10-rbe02edf0d5b10af27bbac694e536bef30885c00e"},
+{"key":"Mode","value":"embedded"},{"key":"authentication","value":"simple"},{"key":"safemode","value":"false"}]}
 * bin/falcon help
   (for more details about falcon cli usage)
 

@@ -24,21 +24,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.cliParser.CLIParser;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.resource.EntityList;
-import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.resource.InstancesSummaryResult;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import static org.apache.falcon.client.FalconCLIConstants.FALCON_URL;
+
 
 /**
  * Falcon Command Line Interface - wraps the RESTful API.
@@ -48,7 +45,6 @@ public class FalconCLI {
     public static final AtomicReference<PrintStream> ERR = new AtomicReference<PrintStream>(System.err);
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
-    private static final String FALCON_URL = "FALCON_URL";
     private final Properties clientProperties;
 
     public FalconCLI() throws Exception {
@@ -155,8 +151,7 @@ public class FalconCLI {
         }
     }
 
-    protected Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName)
-        throws FalconCLIException {
+    protected Integer parseIntegerInput(String optionValue, Integer defaultVal, String optionName) {
         Integer integer = defaultVal;
         if (optionValue != null) {
             try {
@@ -169,30 +164,7 @@ public class FalconCLI {
         return integer;
     }
 
-    protected void validateEntityTypeForSummary(String type) throws FalconCLIException {
-        EntityType entityType = EntityType.getEnum(type);
-        if (!entityType.isSchedulable()) {
-            throw new FalconCLIException("Invalid entity type " + entityType
-                    + " for EntitySummary API. Valid options are feed or process");
-        }
-    }
-
-    protected void validateNotEmpty(String paramVal, String paramName) throws FalconCLIException {
-        if (StringUtils.isBlank(paramVal)) {
-            throw new FalconCLIException("Missing argument : " + paramName);
-        }
-    }
-
-    protected void validateSortOrder(String sortOrder) throws FalconCLIException {
-        if (!StringUtils.isBlank(sortOrder)) {
-            if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
-                throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
-                        + sortOrder);
-            }
-        }
-    }
-
-    protected String getColo(String colo) throws FalconCLIException, IOException {
+    protected String getColo(String colo) throws IOException {
         if (colo == null) {
             Properties prop = getClientProperties();
             colo = prop.getProperty(FalconCLIConstants.CURRENT_COLO, "*");
@@ -200,52 +172,7 @@ public class FalconCLI {
         return colo;
     }
 
-    protected void validateFilterBy(String filterBy, String filterType) throws FalconCLIException {
-        if (StringUtils.isEmpty(filterBy)) {
-            return;
-        }
-        String[] filterSplits = filterBy.split(",");
-        for (String s : filterSplits) {
-            String[] tempKeyVal = s.split(":", 2);
-            try {
-                if (filterType.equals("entity")) {
-                    EntityList.EntityFilterByFields.valueOf(tempKeyVal[0].toUpperCase());
-                } else if (filterType.equals("instance")) {
-                    InstancesResult.InstanceFilterFields.valueOf(tempKeyVal[0].toUpperCase());
-                }else if (filterType.equals("summary")) {
-                    InstancesSummaryResult.InstanceSummaryFilterFields.valueOf(tempKeyVal[0].toUpperCase());
-                } else {
-                    throw new IllegalArgumentException("Invalid API call: filterType is not valid");
-                }
-            } catch (IllegalArgumentException ie) {
-                throw new FalconCLIException("Invalid filterBy argument : " + tempKeyVal[0] + " in : " + s);
-            }
-        }
-    }
-
-    protected void validateOrderBy(String orderBy, String action) throws FalconCLIException {
-        if (StringUtils.isBlank(orderBy)) {
-            return;
-        }
-        if (action.equals("instance")) {
-            if (Arrays.asList(new String[]{"status", "cluster", "starttime", "endtime"})
-                .contains(orderBy.toLowerCase())) {
-                return;
-            }
-        } else if (action.equals("entity")) {
-            if (Arrays.asList(new String[] {"type", "name"}).contains(orderBy.toLowerCase())) {
-                return;
-            }
-        } else if (action.equals("summary")) {
-            if (Arrays.asList(new String[]{"cluster"})
-                    .contains(orderBy.toLowerCase())) {
-                return;
-            }
-        }
-        throw new FalconCLIException("Invalid orderBy argument : " + orderBy);
-    }
-
-    protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {
+    protected String getFalconEndpoint(CommandLine commandLine) throws IOException {
         String url = commandLine.getOptionValue(FalconCLIConstants.URL_OPTION);
         if (url == null) {
             url = System.getenv(FALCON_URL);

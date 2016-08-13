@@ -25,6 +25,7 @@ import javax.persistence.Query;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
@@ -85,51 +86,85 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
 
     @Test
     public void testInsertRetrieveAndUpdate() throws Exception {
-        monitoringJdbcStateStore.putMonitoredFeed("test_feed1");
-        monitoringJdbcStateStore.putMonitoredFeed("test_feed2");
-        Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredFeed("test_feed1").getFeedName());
-        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredFeed().size(), 2);
+        monitoringJdbcStateStore.putMonitoredEntity("test_feed1", EntityType.FEED.toString());
+        monitoringJdbcStateStore.putMonitoredEntity("test_feed2", EntityType.FEED.toString());
+        Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredEntity("test_feed1",
+                EntityType.FEED.toString()).getFeedName());
+        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredEntity().size(), 2);
 
-        monitoringJdbcStateStore.deleteMonitoringFeed("test_feed1");
-        monitoringJdbcStateStore.deleteMonitoringFeed("test_feed2");
+        monitoringJdbcStateStore.deleteMonitoringEntity("test_feed1", EntityType.FEED.toString());
+        monitoringJdbcStateStore.deleteMonitoringEntity("test_feed2", EntityType.FEED.toString());
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
         Date dateTwo =  SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
-        monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateOne);
-        monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateTwo);
+        monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateOne, EntityType.FEED.toString());
+        monitoringJdbcStateStore.putPendingInstances("test_feed1", "test_cluster", dateTwo, EntityType.FEED.toString());
 
-        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 2);
-        monitoringJdbcStateStore.deletePendingInstance("test_feed1", "test_cluster", dateOne);
-        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster").size(), 1);
-        monitoringJdbcStateStore.deletePendingInstances("test_feed1", "test_cluster");
+        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster",
+                EntityType.FEED.toString()).size(), 2);
+        monitoringJdbcStateStore.deletePendingInstance("test_feed1", "test_cluster", dateOne,
+                EntityType.FEED.toString());
+        Assert.assertEquals(monitoringJdbcStateStore.getNominalInstances("test_feed1", "test_cluster",
+                EntityType.FEED.toString()).size(), 1);
+        monitoringJdbcStateStore.deletePendingInstances("test_feed1", "test_cluster", EntityType.FEED.toString());
     }
 
     @Test
     public void testEmptyLatestInstance() throws Exception {
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
-        store.putMonitoredFeed("test-feed1");
-        store.putMonitoredFeed("test-feed2");
-        Assert.assertNull(store.getLastInstanceTime("test-feed1"));
+        store.putMonitoredEntity("test-feed1", EntityType.FEED.toString());
+        store.putMonitoredEntity("test-feed2", EntityType.FEED.toString());
+        Assert.assertNull(store.getLastInstanceTime("test-feed1", EntityType.FEED.toString()));
 
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
         Date dateTwo =  SchemaHelper.parseDateUTC("2015-11-20T01:00Z");
 
-        store.putPendingInstances("test-feed1", "test_cluster", dateTwo);
-        store.putPendingInstances("test-feed1", "test_cluster", dateOne);
-        store.putPendingInstances("test-feed2", "test_cluster", dateOne);
+        store.putPendingInstances("test-feed1", "test_cluster", dateTwo, EntityType.FEED.toString());
+        store.putPendingInstances("test-feed1", "test_cluster", dateOne, EntityType.FEED.toString());
+        store.putPendingInstances("test-feed2", "test_cluster", dateOne, EntityType.FEED.toString());
 
-        Assert.assertTrue(dateTwo.equals(store.getLastInstanceTime("test-feed1")));
-        Assert.assertTrue(dateOne.equals(store.getLastInstanceTime("test-feed2")));
+        Assert.assertTrue(dateTwo.equals(store.getLastInstanceTime("test-feed1", EntityType.FEED.toString())));
+        Assert.assertTrue(dateOne.equals(store.getLastInstanceTime("test-feed2", EntityType.FEED.toString())));
 
+    }
+
+    @Test
+    public void testputSLALowCandidate() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+        store.putSLAAlertInstance("test-feed1", "test-cluster", EntityType.FEED.toString(),
+                dateOne, Boolean.TRUE, Boolean.FALSE);
+        Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-feed1",
+                "test-cluster", dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
+        Assert.assertTrue(dateOne.equals(store.getEntityAlertInstance("test-feed1",
+                "test-cluster", dateOne, EntityType.FEED.toString()).getNominalTime()));
+        store.updateSLAAlertInstance("test-feed1", "test-cluster", dateOne, EntityType.FEED.toString());
+        Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-feed1",
+                "test-cluster", dateOne, EntityType.FEED.toString()).getIsSLAHighMissed());
+    }
+
+    @Test
+    public void testupdateSLAHighCandidate() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
+
+        store.putSLAAlertInstance("test-process", "test-cluster", EntityType.PROCESS.toString(),
+                dateOne, Boolean.TRUE, Boolean.FALSE);
+        store.updateSLAAlertInstance("test-process", "test-cluster", dateOne, EntityType.PROCESS.toString());
+        Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-process",
+                "test-cluster", dateOne, EntityType.PROCESS.toString()).getIsSLAHighMissed());
     }
 
     private void clear() {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
         try {
-            Query query = em.createNativeQuery("delete from MONITORED_FEEDS");
+            Query query = em.createNativeQuery("delete from PENDING_INSTANCES");
             query.executeUpdate();
-            query = em.createNativeQuery("delete from PENDING_INSTANCES");
+            query = em.createNativeQuery("delete from MONITORED_ENTITY");
             query.executeUpdate();
+            query = em.createNativeQuery("delete from ENTITY_SLA_ALERTS");
+            query.executeUpdate();
+
         } finally {
             em.getTransaction().commit();
             em.close();

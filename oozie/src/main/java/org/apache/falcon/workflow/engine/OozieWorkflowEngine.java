@@ -272,6 +272,24 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 || isBundleInState(bundles, BundleStatus.KILLED));
     }
 
+    @Override
+    public boolean isMissing(Entity entity) throws FalconException {
+        List<String> bundlesToRemove = new ArrayList<>();
+        Map<String, BundleJob> bundles = findLatestBundle(entity);
+        for (Map.Entry<String, BundleJob> clusterBundle : bundles.entrySet()) {
+            if (clusterBundle.getValue() == MISSING) { // There is no active bundle for this cluster
+                bundlesToRemove.add(clusterBundle.getKey());
+            }
+        }
+        for (String bundleToRemove : bundlesToRemove) {
+            bundles.remove(bundleToRemove);
+        }
+        if (bundles.size() == 0) {
+            return true;
+        }
+        return false;
+    }
+
     private enum BundleStatus {
         ACTIVE, RUNNING, SUSPENDED, FAILED, KILLED, SUCCEEDED
     }
@@ -694,9 +712,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 if (action.equals(JobAction.STATUS) && Boolean.TRUE.equals(allAttempts)) {
                     try {
                         performAction(cluster, action, coordinatorAction, props, instance, isForced);
-                        if (instance.getRunId() > 0) {
-                            instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
-                        } else {
+                        instanceList = getAllInstances(cluster, coordinatorAction, nominalTimeStr);
+                        // Happens when the action is in READY/WAITING, when no workflow is kicked off yet.
+                        if (instanceList.isEmpty() || StringUtils.isBlank(coordinatorAction.getExternalId())) {
                             instanceList.add(instance);
                         }
                     } catch (FalconException e) {
@@ -883,8 +901,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private List<InstancesResult.Instance> getAllInstances(String cluster, CoordinatorAction coordinatorAction,
                                                            String nominalTimeStr) throws FalconException {
         List<InstancesResult.Instance> instanceList = new ArrayList<>();
-        if (StringUtils.isNotBlank(coordinatorAction.getExternalId())) {
-            List<WorkflowJob> workflowJobList = getWfsForCoordAction(cluster, coordinatorAction.getExternalId());
+        if (StringUtils.isNotBlank(coordinatorAction.getId())) {
+            List<WorkflowJob> workflowJobList = getWfsForCoordAction(cluster, coordinatorAction.getId());
             if (workflowJobList != null && workflowJobList.size()>0) {
                 for (WorkflowJob workflowJob : workflowJobList) {
                     InstancesResult.Instance newInstance = new InstancesResult.Instance(cluster, nominalTimeStr, null);
@@ -892,7 +910,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     if (wfJob!=null) {
                         newInstance.startTime = wfJob.getStartTime();
                         newInstance.endTime = wfJob.getEndTime();
-                        newInstance.logFile = getConsoleUrl(cluster, coordinatorAction.getId());
+                        newInstance.logFile = wfJob.getConsoleUrl();
                         populateInstanceActions(cluster, wfJob, newInstance);
                         newInstance.status = WorkflowStatus.valueOf(mapActionStatus(wfJob.getStatus().name()));
                         instanceList.add(newInstance);
@@ -912,7 +930,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             status = jobInfo.getStatus().name();
             instance.startTime = jobInfo.getStartTime();
             instance.endTime = jobInfo.getEndTime();
-            instance.logFile = getConsoleUrl(cluster, coordinatorAction.getId());
+            instance.logFile = jobInfo.getConsoleUrl();
             instance.runId = jobInfo.getRun();
         }
 
@@ -982,11 +1000,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.error("Job status not defined in Instance status: {}", status);
             instance.status = WorkflowStatus.UNDEFINED;
         }
-    }
-
-    // This method is required as the console URL returned by Oozie for Coord Action is NULL
-    private String getConsoleUrl(String cluster, String actionId) throws FalconException {
-        return OozieClientFactory.get(cluster).getOozieUrl() + "?job=" + actionId;
     }
 
     public CoordinatorAction.Status reRunCoordAction(String cluster, CoordinatorAction coordinatorAction,
@@ -1221,9 +1234,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private boolean isCoordApplicable(String appName, List<LifeCycle> lifeCycles) {
-        for (LifeCycle lifeCycle : lifeCycles) {
-            if (appName.contains(lifeCycle.getTag().name())) {
-                return true;
+        if (lifeCycles != null && !lifeCycles.isEmpty()) {
+            for (LifeCycle lifeCycle : lifeCycles) {
+                if (appName.contains(lifeCycle.getTag().name())) {
+                    return true;
+                }
             }
         }
         return false;
@@ -1398,7 +1413,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
             //calculate next start time based on delay.
             endTime = (delay == null) ? endTime
-                    : EntityUtil.getNextStartTime(coord.getStartTime(), delay, EntityUtil.getTimeZone(entity), endTime);
+                    : EntityUtil.getNextInstanceTimeWithDelay(endTime, delay, EntityUtil.getTimeZone(entity));
             LOG.debug("Updating endtime of coord {} to {} on cluster {}",
                     coord.getId(), SchemaHelper.formatDateUTC(endTime), cluster);
 
@@ -1608,6 +1623,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             } else if (jobId.endsWith("-B")) {
                 BundleJob bundle = client.getBundleJobInfo(jobId);
                 return bundle.getStatus().name();
+            } else if (jobId.contains("-C@")) {
+                return client.getCoordActionInfo(jobId).getStatus().name();
             }
             throw new IllegalArgumentException("Unhandled jobs id: " + jobId);
         } catch (Exception e) {

@@ -1,5 +1,5 @@
 {
-    "shortDescription":"This extension implements replicating hive metadata and data from one Hadoop cluster to another Hadoop cluster.",
+    "shortDescription": "This extension implements replicating hive metadata and data from one Hadoop cluster to another Hadoop cluster.",
     "properties":[
         {
             "propertyName":"jobName",
@@ -94,8 +94,14 @@
         {
             "propertyName":"sourceHiveServer2Uri",
             "required":true,
-            "description":"Hive2 server end point",
+            "description":"Hive2 server end point. If Zookeeper discovery mode is enabled zookeeper_ensemble is expected",
             "example":"hive2://localhost:10000"
+        },
+        {
+            "propertyName":"sourceHiveServer2ExtraOpts",
+            "required":false,
+            "description":"Extra opts required when SSL is enbaled, Http mode and when zookeeper discovery is used",
+            "example":"serviceDiscoveryMode=zooKeeper; zooKeeperNamespace=<hiveserver2_namespace>"
         },
         {
             "propertyName":"sourceDatabases",
@@ -116,6 +122,12 @@
             "example":"/apps/hive/dr"
         },
         {
+            "propertyName":"sourceHive2KerberosPrincipal",
+            "required":true,
+            "description":"Required on secure clusters. Kerberos principal required to access hive servers ",
+            "example":"hive/_HOST@EXAMPLE.COM"
+        },
+        {
             "propertyName":"targetCluster",
             "required":true,
             "description":"target cluster for hive mirroring",
@@ -124,14 +136,26 @@
         {
             "propertyName":"targetHiveServer2Uri",
             "required":true,
-            "description":"Hive2 server end point",
+            "description":"Hive2 server end point. If Zookeeper discovery mode is enabled zookeeper_ensemble is expected",
             "example":"hive2://localhost:10000"
+        },
+        {
+            "propertyName":"targetHiveServer2ExtraOpts",
+            "required":false,
+            "description":"Extra opts required when SSL is enbaled, Http mode and when zookeeper discovery is used",
+            "example":"serviceDiscoveryMode=zooKeeper; zooKeeperNamespace=<hiveserver2_namespace>"
         },
         {
             "propertyName":"targetStagingPath",
             "required":false,
             "description":"Staging path on target",
             "example":"/apps/hive/dr"
+        },
+        {
+            "propertyName":"targetHive2KerberosPrincipal",
+            "required":true,
+            "description":"Required on secure clusters. Kerberos principal required to access hive servers ",
+            "example":"hive/_HOST@EXAMPLE.COM"
         },
         {
             "propertyName":"maxEvents",

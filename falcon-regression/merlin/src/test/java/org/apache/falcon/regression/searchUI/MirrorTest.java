@@ -56,7 +56,7 @@ import java.sql.Connection;
 import java.util.Arrays;
 
 /** UI tests for Mirror Setup Wizard. */
-@Test(groups = "search-ui")
+@Test(groups = {"search-ui", "multiCluster"})
 public class MirrorTest extends BaseUITestClass {
     private static final Logger LOGGER = Logger.getLogger(MirrorTest.class);
     private final String baseTestDir = cleanAndGetTestDir();

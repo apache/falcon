@@ -27,7 +27,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.resource.ExtensionInstanceList;
@@ -57,7 +57,7 @@ public class FalconExtensionCLI {
     public FalconExtensionCLI() {
     }
 
-    public void extensionCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
+    public void extensionCommand(CommandLine commandLine, FalconClient client) {
         Set<String> optionsList = new HashSet<>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -207,8 +207,7 @@ public class FalconExtensionCLI {
         return extensionOptions;
     }
 
-    private void validateRequiredParameter(final String parameter, final String parameterName)
-        throws FalconCLIException {
+    private void validateRequiredParameter(final String parameter, final String parameterName) {
         if (StringUtils.isBlank(parameter)) {
             throw new FalconCLIException("The parameter " + parameterName + " cannot be null or empty");
         }

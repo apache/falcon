@@ -52,6 +52,11 @@ A registry interface specifies the interface for metadata catalog, such as Hive 
 Falcon uses this interface to register/de-register partitions for a given database and table. Also,
 uses this information to schedule data availability events based on partitions in the workflow engine.
 Although Hive metastore supports both RPC and HTTP, Falcon comes with an implementation for RPC over thrift.
+For Hive HA mode, make sure the uris are separated with comma and you only add protocol "thrift://" at the beginning.
+See below for an example of Hive HA mode:
+<verbatim>
+<interface type="registry" endpoint="thrift://c6402.ambari.apache.org:9083,c6403.ambari.apache.org:9083" version="0.11.0" />
+</verbatim>
 
 <verbatim>
 <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
@@ -111,6 +116,14 @@ Following are the tags defined in a datasource.xml:
 <datasource colo="west-coast" description="Customer database on west coast" type="mysql"
  name="test-hsql-db" xmlns="uri:falcon:datasource:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
+
+---+++ Datasource Types
+
+Falcon currently supports relational databases as data sources (both source and target). The following relational
+databases are supported
+   * MySQL, HSQL, Postgres, Oracle, Teradata, Netezza, DB2
+   * Generic - generic jdbc data source. This will require specifying a driver classname and jar file in the
+       datasource entity specification. Please see samples in the examples dir.
 
 The colo specifies the colo to which the datasource belongs to and name is the name of the datasource which has to
 be unique.
@@ -329,6 +342,9 @@ The snapshot layout creates a snapshot of the data on HDFS using the feed's loca
 to specify the projection columns. Feed import from database underneath uses sqoop to achieve the task. Any advanced
 Sqoop options can be specified via the arguments.
 
+The feed's data storage location should include some combination of timepartition if import policy is associated with it.
+Please see ImportExport documentation for more details.
+
 ---+++ Late Arrival
 
 <verbatim>
@@ -383,6 +399,13 @@ permission indicates the permission.
         <property name="preserveBlockSize" value="true"/>
         <property name="preserveReplicationNumber" value="true"/>
         <property name="preservePermission" value="true"/>
+        <property name="preserveUser" value="true"/>
+        <property name="preserveGroup" value="false"/>
+        <property name="preserveChecksumType" value="true"/>
+        <property name="preserveAcl" value="true"/>
+        <property name="preserveXattr" value="true"/>
+        <property name="preserveTimes" value="true"/>
+        <property name="tdeEncryptionEnabled" value="false"/>
         <property name="order" value="LIFO"/>
     </properties>
 </verbatim>
@@ -398,7 +421,10 @@ used by each mapper during replication. "overwrite" represents overwrite destina
 bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
 destination but not in source during replication. "preserveBlockSize" represents preserving block size during
 replication. "preserveReplicationNumber" represents preserving replication number during replication.
-"preservePermission" represents preserving permission during
+"preservePermission" represents preserving permission during replication. "preserveUser" represents preserving user during replication.
+"preserveGroup" represents preserving group during replication. "preserveChecksumType" represents preserving checksum type during replication.
+"preserveAcl" represents preserving ACL during replication. "preserveXattr" represents preserving Xattr during replication.
+"preserveTimes" represents preserving access and modification times during replication. "tdeEncryptionEnabled" if TDE is enabled.
 
 
 ---+++ Lifecycle
@@ -921,6 +947,29 @@ There is flexibility to override the Spark master through process entity either 
 Input and Output data to the Spark application will be set as argument when Spark workflow will be generated, if input and output feed entity is defined in the process entity.
 In the set of arguments, first argument will always correspond to input feed, second argument will always correspond to output feed and then user's provided argument will be set.
 
+
+For running the Spark SQL process entity, that read and write the data stored on Hive, the datanucleus jars under the $HIVE_HOME/lib directory and hive-site.xml
+under $SPARK_HOME/conf/ directory need to be available on the driver and all executors launched by the YARN cluster.
+The convenient way to do this is adding them through the --jars option and --file option of the spark-opts attribute.
+Example:
+<verbatim>
+<process name="spark-process">
+...
+    <workflow engine="spark" path="/resources/action">
+    <spark-attributes>
+        <master>local</master>
+        <name>Spark SQL</name>
+        <class>org.examples.SparkSQLProcessTable</class>
+        <jar>/resources/action/lib/spark-application.jar</jar>
+        <spark-opts>--num-executors 1 --driver-memory 512m --jars /usr/local/hive/lib/datanucleus-rdbms.jar,/usr/local/hive/lib/datanucleus-core.jar,/usr/local/hive/lib/datanucleus-api-jdo.jar --files /usr/local/spark/conf/hive-site.xml</spark-opts>
+    </spark-attributes>
+...
+</process>
+</verbatim>
+
+Input and Output to the Spark SQL application will be set as argument when Spark workflow will be generated, if input and output feed entity is defined in the process entity.
+If input feed is of table type, then input table partition, table name and database name will be set as input arguments. If output feed is of table type, then output table partition, table name and database name will be set as output arguments.
+Once input and output arguments is set, then user's provided argument will be set.
 
 ---+++ Retry
 Retry policy defines how the workflow failures should be handled. Three retry policies are defined: periodic, exp-backoff(exponential backoff) and final. Depending on the delay and number of attempts, the workflow is re-tried after specific intervals. If user sets the onTimeout attribute to "true", retries will happen for TIMED_OUT instances.

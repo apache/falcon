@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
@@ -66,6 +67,19 @@ public class JobLogMover {
             LOG.warn("Cannot get Oozie configuration.  Returning default");
         }
         return conf == null ? new Configuration(): conf;
+    }
+
+    public void moveLog(WorkflowExecutionContext context){
+        if (UserGroupInformation.isSecurityEnabled()) {
+            LOG.info("Unable to move logs as security is enabled.");
+            return;
+        }
+        try {
+            run(context);
+        } catch (Exception ignored) {
+            // Mask exception, a failed log mover will not fail the user workflow
+            LOG.error("Exception in job log mover:", ignored);
+        }
     }
 
     public int run(WorkflowExecutionContext context) {

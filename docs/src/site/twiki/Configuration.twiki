@@ -317,6 +317,20 @@ su - $OOZIE_USER
 Where $OOZIE_USER is the Oozie user. For example, oozie.
 </verbatim>
 
+---+++Disabling Falcon Post Processing
+Falcon post processing performs two tasks:
+They send user notifications to Active mq.
+It moves oozie executor logs once the workflow finishes.
+
+If post processing is failing because of any reason user mind end up having a backlog in the pipeline thats why it has been made optional.
+
+To disable post processing set the following property to false in startup.properties :
+<verbatim>
+*.falcon.postprocessing.enable=false
+*.workflow.execution.listeners=org.apache.falcon.service.LogMoverService
+</verbatim>
+*NOTE : Please make sure Oozie JMS Notifications are enabled as logMoverService depends on the Oozie JMS Notification.*
+
 
 ---+++Enabling Falcon Native Scheudler
 You can either choose to schedule entities using Oozie's coordinator or using Falcon's native scheduler. To be able to

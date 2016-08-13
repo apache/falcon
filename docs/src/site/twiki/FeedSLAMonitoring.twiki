@@ -6,7 +6,7 @@ Feed SLA monitoring service requires FalconJPAService to be up.Following are the
 In startup.properties :
 
 *.application.services= org.apache.falcon.state.store.service.FalconJPAService,
-                        org.apache.falcon.service.FeedSLAMonitoringService
+                        org.apache.falcon.service.EntitySLAMonitoringService
 
 These properties are required for FalconJPAService in statestore.properties:
 

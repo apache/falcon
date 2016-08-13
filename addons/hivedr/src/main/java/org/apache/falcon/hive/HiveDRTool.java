@@ -136,25 +136,26 @@ public class HiveDRTool extends Configured implements Tool {
         inputOptions = parseOptions(args);
         LOG.info("Input Options: {}", inputOptions);
 
-        // Update the source staging path
+        Configuration sourceConf = FileUtils.getConfiguration(getConf(), inputOptions.getSourceWriteEP(),
+                inputOptions.getSourceNNKerberosPrincipal());
+        sourceClusterFS = FileSystem.get(sourceConf);
+        Configuration targetConf = FileUtils.getConfiguration(getConf(), inputOptions.getTargetWriteEP(),
+                inputOptions.getTargetNNKerberosPrincipal());
+        targetClusterFS = FileSystem.get(targetConf);
+        jobConf = FileUtils.getConfiguration(getConf(), inputOptions.getJobClusterWriteEP(),
+                inputOptions.getJobClusterNNPrincipal());
+        jobFS = FileSystem.get(jobConf);
+
+        // init DR status store
+        drStore = new HiveDRStatusStore(targetClusterFS);
+
+        // Update the source staging path after initing DR status store
         inputOptions.setSourceStagingPath();
         inputOptions.setTargetStagingPath();
 
         LOG.info("srcStaginPath: {}", inputOptions.getSourceStagingPath());
         LOG.info("tgtStaginPath: {}", inputOptions.getTargetStagingPath());
 
-        Configuration sourceConf = FileUtils.getConfiguration(inputOptions.getSourceWriteEP(),
-                inputOptions.getSourceNNKerberosPrincipal());
-        sourceClusterFS = FileSystem.get(sourceConf);
-        Configuration targetConf = FileUtils.getConfiguration(inputOptions.getTargetWriteEP(),
-                inputOptions.getTargetNNKerberosPrincipal());
-        targetClusterFS = FileSystem.get(targetConf);
-        jobConf = FileUtils.getConfiguration(inputOptions.getJobClusterWriteEP(),
-                inputOptions.getJobClusterNNPrincipal());
-        jobFS = FileSystem.get(jobConf);
-
-        // init DR status store
-        drStore = new HiveDRStatusStore(targetClusterFS);
         eventSoucerUtil = new EventSourcerUtils(jobConf, inputOptions.shouldKeepHistory(), inputOptions.getJobName());
     }
 
@@ -310,7 +311,7 @@ public class HiveDRTool extends Configured implements Tool {
     }
 
     private Map<String, Long> getLastDBTableEvents(Path lastEventIdFile) throws Exception {
-        Map<String, Long> lastEventsIdMap = new HashMap<String, Long>();
+        Map<String, Long> lastEventsIdMap = new HashMap<>();
         BufferedReader in = new BufferedReader(new InputStreamReader(jobFS.open(lastEventIdFile)));
         try {
             String line;

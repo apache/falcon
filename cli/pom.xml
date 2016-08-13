@@ -39,6 +39,16 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -169,7 +179,6 @@
                             <include>commons-codec:*</include>
                             <include>commons-io:*</include>
                             <include>jline:*</include>
-                            <include>org.slf4j:*</include>
                             <include>log4j:*</include>
                             <include>com.sun.jersey:*</include>
                             <include>org.springframework:*</include>

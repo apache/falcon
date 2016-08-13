@@ -18,10 +18,12 @@
 
 package org.apache.falcon.extensions;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
 import org.apache.falcon.extensions.mirroring.hdfsSnapshot.HdfsSnapshotMirroringExtension;
 import org.apache.falcon.extensions.mirroring.hive.HiveMirroringExtension;
+import org.apache.falcon.util.ReplicationDistCpOption;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,5 +59,15 @@ public abstract class AbstractExtension {
     public abstract void validate(final Properties extensionProperties) throws FalconException;
 
     public abstract Properties getAdditionalProperties(final Properties extensionProperties) throws FalconException;
+
+    public static void addAdditionalDistCPProperties(final Properties extensionProperties,
+                                                      final Properties additionalProperties) {
+        for (ReplicationDistCpOption distcpOption : ReplicationDistCpOption.values()) {
+            if (StringUtils.isBlank(
+                    extensionProperties.getProperty(distcpOption.getName()))) {
+                additionalProperties.put(distcpOption.getName(), "false");
+            }
+        }
+    }
 }
 

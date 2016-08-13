@@ -26,7 +26,9 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
+        <class>org.apache.falcon.persistence.BacklogMetricBean</class>
 
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
@@ -36,7 +38,7 @@
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
-                org.apache.falcon.persistence.MonitoredFeedsBean)"></property>
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -47,6 +49,7 @@
             <property name="openjpa.jdbc.DBDictionary" value="TimestampTypeName=TIMESTAMP"/>
             <property name="openjpa.RuntimeUnenhancedClasses" value="unsupported"/>
             <property name="openjpa.Log" value="log4j"/>
+            <property name="openjpa.DynamicEnhancementAgent" value="true"/>
         </properties>
     </persistence-unit>
 
@@ -56,8 +59,9 @@
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
-
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
+        <class>org.apache.falcon.persistence.BacklogMetricBean</class>
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
 
@@ -66,7 +70,7 @@
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
-                org.apache.falcon.persistence.MonitoredFeedsBean)"></property>
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean)"></property>
 
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
@@ -85,9 +89,10 @@
 
         <class>org.apache.falcon.persistence.EntityBean</class>
         <class>org.apache.falcon.persistence.InstanceBean</class>
-        <class>org.apache.falcon.persistence.MonitoredFeedsBean</class>
+        <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
-
+        <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
+        <class>org.apache.falcon.persistence.BacklogMetricBean</class>
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
 
@@ -96,8 +101,8 @@
             <property name="openjpa.MetaDataFactory"
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
-                org.apache.falcon.persistence.MonitoredFeedsBean)"></property>
-
+                org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean;
+                org.apache.falcon.persistence.BacklogMetricBean)"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>

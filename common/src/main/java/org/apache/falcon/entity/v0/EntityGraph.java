@@ -56,9 +56,9 @@ public final class EntityGraph implements ConfigurationChangeListener {
 
     public Set<Entity> getDependents(Entity entity) throws FalconException {
         Node entityNode = new Node(entity.getEntityType(), entity.getName());
+        Set<Entity> dependents = new HashSet<Entity>();
         if (graph.containsKey(entityNode)) {
             ConfigurationStore store = ConfigurationStore.get();
-            Set<Entity> dependents = new HashSet<Entity>();
             for (Node node : graph.get(entityNode)) {
                 Entity dependentEntity = store.get(node.type, node.name);
                 if (dependentEntity != null) {
@@ -67,10 +67,10 @@ public final class EntityGraph implements ConfigurationChangeListener {
                     LOG.error("Dependent entity {} was not found in configuration store.", node);
                 }
             }
-            return dependents;
         } else {
-            return null;
+            LOG.error("Entity node {} not found in entity graph.", entityNode);
         }
+        return dependents;
     }
 
     @Override

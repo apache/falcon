@@ -1287,4 +1287,11 @@ public final class FeedHelper {
         }
         return null;
     }
+
+    public static List<FeedInstanceStatus> getListing(Feed feed, String clusterName, LocationType locationType,
+                                                      Date start, Date end) throws FalconException{
+        Storage storage= createStorage(clusterName, feed);
+        return storage.getListing(feed, clusterName, locationType, start, end);
+    }
+
 }

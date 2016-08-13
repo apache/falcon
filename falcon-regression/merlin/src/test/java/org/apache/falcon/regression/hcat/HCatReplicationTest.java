@@ -64,7 +64,7 @@ import java.util.Map;
 /**
  * Tests for replication with hcat.
  */
-@Test(groups = "embedded")
+@Test(groups = {"embedded", "multiCluster"})
 public class HCatReplicationTest extends BaseTestClass {
 
     private static final Logger LOGGER = Logger.getLogger(HCatReplicationTest.class);

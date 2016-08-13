@@ -26,8 +26,13 @@ import java.io.InputStream;
 
 /**
  * Exception thrown by FalconClient.
+ * This was converted to RuntimeException in FALCON-1609.
+ * Reasons:
+ *  Ultimate goal of switching from current CLI to spring shell based CLI
+ *  Spring Shell doesn't work well with unchecked Exceptions
+ *  The exception currently only gets surfaced in CLI, and in code existing catch clauses will still work.
  */
-public class FalconCLIException extends Exception {
+public class FalconCLIException extends RuntimeException{
 
     private static final int MB = 1024 * 1024;
 

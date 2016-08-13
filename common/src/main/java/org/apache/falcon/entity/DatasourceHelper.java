@@ -412,7 +412,7 @@ public final class DatasourceHelper {
      returns data store properties
      */
 
-    private static Map<String, String> getDatasourceProperties(final Datasource datasource) {
+    public static Map<String, String> getDatasourceProperties(final Datasource datasource) {
         Map<String, String> returnProps = new HashMap<String, String>();
         if (datasource.getProperties() != null) {
             for (Property prop : datasource.getProperties().getProperties()) {
