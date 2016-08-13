@@ -80,6 +80,9 @@ public abstract class AbstractWorkflowEngine {
     public abstract InstancesResult killInstances(Entity entity, Date start, Date end, Properties props,
                                                   List<LifeCycle> lifeCycles) throws FalconException;
 
+    public abstract InstancesResult ignoreInstances(Entity entity, Date start, Date end, Properties props,
+                                                    List<LifeCycle> lifeCycles) throws FalconException;
+
     public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
                                                    List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException;
 
@@ -111,7 +114,8 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isNotificationEnabled(String cluster, String jobID) throws FalconException;
 
-    public abstract Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException;
+    public abstract Boolean isWorkflowKilledByUser(String cluster, String jobId,
+                                                   String parentId) throws FalconException;
 
 
     /**
