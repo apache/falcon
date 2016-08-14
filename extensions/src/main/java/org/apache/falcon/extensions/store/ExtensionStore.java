@@ -151,7 +151,7 @@ public final class ExtensionStore {
 
             for (FileStatus fileStatus : files) {
                 if (fileStatus.getPath().getName().equalsIgnoreCase(LIBS_DIR)) {
-                        libsPath = Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath());
+                    libsPath = Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath());
                     break;
                 }
             }
