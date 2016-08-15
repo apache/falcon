@@ -189,6 +189,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertLibExtensions(coord, "retention");
         HashMap<String, String> props = getCoordProperties(coord);
         Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
+        Assert.assertEquals(props.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(17)}");
         Assert.assertEquals(coord.getEnd(), endTime);
         Assert.assertEquals(coord.getTimezone(), "UTC");
@@ -197,7 +198,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("feedNames"), lifecycleRetentionFeed.getName());
         Assert.assertTrue(StringUtils.equals(wfProps.get("entityType"), EntityType.FEED.name()));
         Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
-        Assert.assertEquals(wfProps.get("queueName"), "retention");
+        Assert.assertEquals(wfProps.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
     }
