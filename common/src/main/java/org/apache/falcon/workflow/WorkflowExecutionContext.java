@@ -304,11 +304,11 @@ public class WorkflowExecutionContext {
     }
 
     public int getWorkflowRunId() {
-        return Integer.parseInt(getValue(WorkflowExecutionArgs.RUN_ID));
+        return Integer.parseInt(getValue(WorkflowExecutionArgs.RUN_ID, "0"));
     }
 
     public String getWorkflowRunIdString() {
-        return String.valueOf(Integer.parseInt(getValue(WorkflowExecutionArgs.RUN_ID)));
+        return String.valueOf(Integer.parseInt(getValue(WorkflowExecutionArgs.RUN_ID, "0")));
     }
 
     public String getWorkflowUser() {

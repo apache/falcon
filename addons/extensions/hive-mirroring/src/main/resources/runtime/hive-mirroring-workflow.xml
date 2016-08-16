@@ -46,18 +46,16 @@
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
-            <arg>-falconLibPath</arg>
-            <arg>${wf:conf("falcon.libpath")}</arg>
             <arg>-sourceCluster</arg>
             <arg>${sourceCluster}</arg>
             <arg>-sourceMetastoreUri</arg>
             <arg>${sourceMetastoreUri}</arg>
             <arg>-sourceHiveServer2Uri</arg>
             <arg>${sourceHiveServer2Uri}</arg>
-            <arg>-sourceDatabase</arg>
-            <arg>${sourceDatabase}</arg>
-            <arg>-sourceTable</arg>
-            <arg>${sourceTable}</arg>
+            <arg>-sourceDatabases</arg>
+            <arg>${sourceDatabases}</arg>
+            <arg>-sourceTables</arg>
+            <arg>${sourceTables}</arg>
             <arg>-sourceStagingPath</arg>
             <arg>${sourceStagingPath}</arg>
             <arg>-sourceNN</arg>
@@ -80,8 +78,10 @@
             <arg>${clusterForJobRunWriteEP}</arg>
             <arg>-tdeEncryptionEnabled</arg>
             <arg>${tdeEncryptionEnabled}</arg>
-            <arg>-jobName</arg>
-            <arg>${jobName}-${nominalTime}</arg>
+            <arg>-hiveJobName</arg>
+            <arg>${hiveJobName}</arg>
+            <arg>-sourceDatabase</arg>
+            <arg>${sourceDatabase}</arg>
             <arg>-executionStage</arg>
             <arg>lastevents</arg>
         </java>
@@ -118,8 +118,6 @@
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
-            <arg>-falconLibPath</arg>
-            <arg>${wf:conf("falcon.libpath")}</arg>
             <arg>-replicationMaxMaps</arg>
             <arg>${replicationMaxMaps}</arg>
             <arg>-distcpMaxMaps</arg>
@@ -130,10 +128,10 @@
             <arg>${sourceMetastoreUri}</arg>
             <arg>-sourceHiveServer2Uri</arg>
             <arg>${sourceHiveServer2Uri}</arg>
-            <arg>-sourceDatabase</arg>
-            <arg>${sourceDatabase}</arg>
-            <arg>-sourceTable</arg>
-            <arg>${sourceTable}</arg>
+            <arg>-sourceDatabases</arg>
+            <arg>${sourceDatabases}</arg>
+            <arg>-sourceTables</arg>
+            <arg>${sourceTables}</arg>
             <arg>-sourceStagingPath</arg>
             <arg>${sourceStagingPath}</arg>
             <arg>-sourceNN</arg>
@@ -158,8 +156,10 @@
             <arg>${clusterForJobRunWriteEP}</arg>
             <arg>-tdeEncryptionEnabled</arg>
             <arg>${tdeEncryptionEnabled}</arg>
-            <arg>-jobName</arg>
-            <arg>${jobName}-${nominalTime}</arg>
+            <arg>-hiveJobName</arg>
+            <arg>${hiveJobName}</arg>
+            <arg>-sourceDatabase</arg>
+            <arg>${sourceDatabase}</arg>
             <arg>-executionStage</arg>
             <arg>export</arg>
             <arg>-counterLogDir</arg>
@@ -198,8 +198,6 @@
             <main-class>org.apache.falcon.hive.HiveDRTool</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
-            <arg>-falconLibPath</arg>
-            <arg>${wf:conf("falcon.libpath")}</arg>
             <arg>-replicationMaxMaps</arg>
             <arg>${replicationMaxMaps}</arg>
             <arg>-distcpMaxMaps</arg>
@@ -210,10 +208,10 @@
             <arg>${sourceMetastoreUri}</arg>
             <arg>-sourceHiveServer2Uri</arg>
             <arg>${sourceHiveServer2Uri}</arg>
-            <arg>-sourceDatabase</arg>
-            <arg>${sourceDatabase}</arg>
-            <arg>-sourceTable</arg>
-            <arg>${sourceTable}</arg>
+            <arg>-sourceDatabases</arg>
+            <arg>${sourceDatabases}</arg>
+            <arg>-sourceTables</arg>
+            <arg>${sourceTables}</arg>
             <arg>-sourceStagingPath</arg>
             <arg>${sourceStagingPath}</arg>
             <arg>-sourceNN</arg>
@@ -238,8 +236,10 @@
             <arg>${clusterForJobRunWriteEP}</arg>
             <arg>-tdeEncryptionEnabled</arg>
             <arg>${tdeEncryptionEnabled}</arg>
-            <arg>-jobName</arg>
-            <arg>${jobName}-${nominalTime}</arg>
+            <arg>-hiveJobName</arg>
+            <arg>${hiveJobName}</arg>
+            <arg>-sourceDatabase</arg>
+            <arg>${sourceDatabase}</arg>
             <arg>-executionStage</arg>
             <arg>import</arg>
         </java>

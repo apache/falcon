@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.10</version>
     </parent>
     <artifactId>falcon-scheduler</artifactId>
     <description>Apache Falcon Scheduler Module</description>
@@ -75,6 +75,18 @@
 	    <groupId>org.quartz-scheduler</groupId>
 	    <artifactId>quartz</artifactId>
 	    <version>${quartz.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>c3p0</groupId>
+                <artifactId>c3p0</artifactId>
+              </exclusion>
+            </exclusions>
+	</dependency>
+
+	<dependency>
+	    <groupId>com.mchange</groupId>
+	    <artifactId>c3p0</artifactId>
+	    <version>${c3p0.version}</version>
 	</dependency>
 
         <dependency>

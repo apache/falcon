@@ -305,6 +305,13 @@
         </file>
 
         <file>
+            <source>../examples/target/falcon-examples-${project.version}.jar</source>
+            <outputDirectory>examples/app/spark/lib</outputDirectory>
+            <destName>falcon-examples.jar</destName>
+            <fileMode>0644</fileMode>
+        </file>
+
+        <file>
             <source>../webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>

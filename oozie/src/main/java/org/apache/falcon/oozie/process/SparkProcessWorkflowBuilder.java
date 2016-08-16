@@ -30,12 +30,10 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.spark.CONFIGURATION.Property;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.util.OozieUtils;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import javax.xml.bind.JAXBElement;
@@ -46,6 +44,7 @@ import java.util.List;
  */
 public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
     private static final String ACTION_TEMPLATE = "/action/process/spark-action.xml";
+    private static final String FALCON_PREFIX = "falcon_";
 
     public SparkProcessWorkflowBuilder(Process entity) {
         super(entity);
@@ -58,7 +57,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
 
         String sparkMasterURL = entity.getSparkAttributes().getMaster();
-        String sparkFilePath = entity.getSparkAttributes().getJar();
+        Path sparkJarFilePath = new Path(entity.getSparkAttributes().getJar());
         String sparkJobName = entity.getSparkAttributes().getName();
         String sparkOpts = entity.getSparkAttributes().getSparkOpts();
         String sparkClassName = entity.getSparkAttributes().getClazz();
@@ -89,21 +88,32 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             argList.addAll(sparkArgs);
         }
 
-        addInputFeedsAsArgument(argList, cluster);
+        //Adding output first so that final order must have input and then output followed by user's arguments.
         addOutputFeedsAsArgument(argList, cluster);
+        addInputFeedsAsArgument(argList, cluster);
 
-        sparkAction.setJar(addUri(sparkFilePath, cluster));
-
-        setSparkLibFileToWorkflowLib(sparkFilePath, entity);
+        // In Oozie spark action, value for jar is either Java jar file path or Python file path.
+        validateSparkJarFilePath(sparkJarFilePath);
+        sparkAction.setJar(sparkJarFilePath.getName());
+        setSparkLibFileToWorkflowLib(sparkJarFilePath.toString(), entity);
         propagateEntityProperties(sparkAction);
 
         OozieUtils.marshalSparkAction(action, actionJaxbElement);
         return action;
     }
 
-    private void setSparkLibFileToWorkflowLib(String sparkFile, Process entity) {
+    private void setSparkLibFileToWorkflowLib(String sparkJarFilePath, Process entity) {
         if (StringUtils.isEmpty(entity.getWorkflow().getLib())) {
-            entity.getWorkflow().setLib(sparkFile);
+            entity.getWorkflow().setLib(sparkJarFilePath);
+        } else {
+            String workflowLib = entity.getWorkflow().getLib() + "," + sparkJarFilePath;
+            entity.getWorkflow().setLib(workflowLib);
+        }
+    }
+
+    private void validateSparkJarFilePath(Path sparkJarFilePath) throws FalconException {
+        if (!sparkJarFilePath.isAbsolute()) {
+            throw new FalconException("Spark jar file path must be absolute:"+sparkJarFilePath);
         }
     }
 
@@ -145,6 +155,7 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             return;
         }
 
+        //Adding to the 0th index and getting the args shifted as arguments are added to get the desired effect.
         int numInputFeed = entity.getInputs().getInputs().size();
         while (numInputFeed > 0) {
             Input input = entity.getInputs().getInputs().get(numInputFeed-1);
@@ -153,6 +164,10 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             final String inputName = input.getName();
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
                 argList.add(0, "${" + inputName + "}");
+            } else if (storage.getType() == Storage.TYPE.TABLE) {
+                argList.add(0, "${" + FALCON_PREFIX+inputName+"_database" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+inputName+"_table" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+inputName+"_partition_filter_hive" + "}");
             }
             numInputFeed--;
         }
@@ -163,24 +178,22 @@ public class SparkProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder
             return;
         }
 
-        for(Output output : entity.getOutputs().getOutputs()) {
+        //Adding to the 0th index and getting the args shifted as arguments are added to get the desired effect.
+        int numOutputFeed = entity.getOutputs().getOutputs().size();
+        while (numOutputFeed > 0) {
+            Output output = entity.getOutputs().getOutputs().get(numOutputFeed-1);
             Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
             final String outputName = output.getName();
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
-                argList.add(argList.size(), "${" + outputName + "}");
+                argList.add(0, "${" + outputName + "}");
+            } else if (storage.getType() == Storage.TYPE.TABLE) {
+                argList.add(0, "${" + FALCON_PREFIX+outputName+"_database" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+outputName+"_table" + "}");
+                argList.add(0, "${" + FALCON_PREFIX+outputName+"_partitions_hive" + "}");
             }
+            numOutputFeed--;
         }
-    }
-
-    private String addUri(String jarFile, Cluster cluster) throws FalconException {
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
-        Path jarFilePath = new Path(jarFile);
-        if (jarFilePath.isAbsoluteAndSchemeAuthorityNull()) {
-            return fs.makeQualified(jarFilePath).toString();
-        }
-        return jarFile;
     }
 
     private String getClusterEntitySparkMaster(Cluster cluster) {

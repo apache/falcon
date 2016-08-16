@@ -30,8 +30,9 @@ public enum HiveDRArgs {
     SOURCE_CLUSTER("sourceCluster", "source cluster"),
     SOURCE_METASTORE_URI("sourceMetastoreUri", "source meta store uri"),
     SOURCE_HS2_URI("sourceHiveServer2Uri", "source HS2 uri"),
-    SOURCE_DATABASE("sourceDatabase", "comma source databases"),
-    SOURCE_TABLE("sourceTable", "comma source tables"),
+    SOURCE_DATABASES("sourceDatabases", "comma source databases"),
+    SOURCE_DATABASE("sourceDatabase", "First source database"),
+    SOURCE_TABLES("sourceTables", "comma source tables"),
     SOURCE_STAGING_PATH("sourceStagingPath", "source staging path for data", false),
 
     // source hadoop endpoints
@@ -70,7 +71,7 @@ public enum HiveDRArgs {
     // Map Bandwidth
     DISTCP_MAP_BANDWIDTH("distcpMapBandwidth", "map bandwidth in mb", false),
 
-    JOB_NAME("jobName", "unique job name"),
+    JOB_NAME("hiveJobName", "unique job name"),
 
     CLUSTER_FOR_JOB_RUN("clusterForJobRun", "cluster where job runs"),
     JOB_CLUSTER_NN("clusterForJobRunWriteEP", "write end point of cluster where job runs"),

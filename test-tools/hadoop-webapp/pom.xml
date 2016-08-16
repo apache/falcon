@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.10</version>
         <relativePath>../..</relativePath>
     </parent>
     <artifactId>falcon-hadoop-webapp</artifactId>

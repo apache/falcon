@@ -223,3 +223,8 @@ under ${user.dir}/logs/ directory.
 
 Users may also extend the Falcon Audit plugin to send audits to systems like Apache Argus, etc. by
 extending org.apache.falcon.plugin.AuditingPlugin interface.
+
+
+---++ Metrics Collection In Graphite
+
+Falcon has support to send metrics to graphite more details regarding this can be found on [[GraphiteMetricCollection][Graphite Metric Collection]]

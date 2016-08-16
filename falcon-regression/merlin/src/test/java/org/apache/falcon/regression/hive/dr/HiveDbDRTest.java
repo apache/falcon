@@ -59,7 +59,7 @@ import static org.apache.falcon.regression.hive.dr.HiveObjectCreator.createVanil
 /**
  * Hive DR Testing for Hive database replication.
  */
-@Test(groups = "embedded")
+@Test(groups = {"embedded", "multiCluster"})
 public class HiveDbDRTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(HiveDbDRTest.class);
     private final ColoHelper cluster = servers.get(0);

@@ -75,9 +75,8 @@ public final class ClusterHelper {
         return conf;
     }
 
-    public static Configuration getConfiguration(String storageUrl, String executeEndPoint,
-                                                 String kerberosPrincipal) {
-        Configuration conf = new Configuration();
+    public static Configuration getConfiguration(Configuration conf, String storageUrl,
+                                                 String executeEndPoint, String kerberosPrincipal) {
         conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
         conf.set(HadoopClientFactory.MR_JT_ADDRESS_KEY, executeEndPoint);
         conf.set(HadoopClientFactory.YARN_RM_ADDRESS_KEY, executeEndPoint);

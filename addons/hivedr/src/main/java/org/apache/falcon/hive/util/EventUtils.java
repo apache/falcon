@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
@@ -95,17 +94,15 @@ public class EventUtils {
         sourceDatabase = conf.get(HiveDRArgs.SOURCE_DATABASE.getName());
         sourceNN = conf.get(HiveDRArgs.SOURCE_NN.getName());
         sourceNNKerberosPrincipal = conf.get(HiveDRArgs.SOURCE_NN_KERBEROS_PRINCIPAL.getName());
-        sourceStagingPath = conf.get(HiveDRArgs.SOURCE_STAGING_PATH.getName())
-                + File.separator + conf.get(HiveDRArgs.JOB_NAME.getName());
+        sourceStagingPath = conf.get(HiveDRArgs.SOURCE_STAGING_PATH.getName());
         jobNN = conf.get(HiveDRArgs.JOB_CLUSTER_NN.getName());
         jobNNKerberosPrincipal = conf.get(HiveDRArgs.JOB_CLUSTER_NN_KERBEROS_PRINCIPAL.getName());
         targetHiveServer2Uri = conf.get(HiveDRArgs.TARGET_HS2_URI.getName());
-        targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName())
-                + File.separator + conf.get(HiveDRArgs.JOB_NAME.getName());
+        targetStagingPath = conf.get(HiveDRArgs.TARGET_STAGING_PATH.getName());
         targetNN = conf.get(HiveDRArgs.TARGET_NN.getName());
         targetNNKerberosPrincipal = conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName());
-        sourceCleanUpList = new ArrayList<Path>();
-        targetCleanUpList = new ArrayList<Path>();
+        sourceCleanUpList = new ArrayList<>();
+        targetCleanUpList = new ArrayList<>();
         countersMap = new HashMap<>();
     }
 
@@ -169,7 +166,7 @@ public class EventUtils {
     }
 
     public void processEvents(String event) throws Exception {
-        listReplicationStatus = new ArrayList<ReplicationStatus>();
+        listReplicationStatus = new ArrayList<>();
         String[] eventSplit = event.split(DelimiterUtils.FIELD_DELIM);
         String dbName = new String(Base64.decodeBase64(eventSplit[0]), "UTF-8");
         String tableName = new String(Base64.decodeBase64(eventSplit[1]), "UTF-8");
@@ -203,7 +200,7 @@ public class EventUtils {
                                  List<Path> cleanUpList, boolean isImportStatements)
         throws SQLException, HiveReplicationException, IOException {
         String[] commandList = eventStr.split(DelimiterUtils.NEWLINE_DELIM);
-        List<Command> deserializeCommand = new ArrayList<Command>();
+        List<Command> deserializeCommand = new ArrayList<>();
         for (String command : commandList) {
             Command cmd = ReplicationUtils.deserializeCommand(command);
             deserializeCommand.add(cmd);
@@ -269,7 +266,7 @@ public class EventUtils {
     }
 
     private static List<Path> getCleanUpPaths(List<String> cleanupLocations) {
-        List<Path> cleanupLocationPaths = new ArrayList<Path>();
+        List<Path> cleanupLocationPaths = new ArrayList<>();
         for (String cleanupLocation : cleanupLocations) {
             cleanupLocationPaths.add(new Path(cleanupLocation));
         }
@@ -330,7 +327,7 @@ public class EventUtils {
 
     public DistCpOptions getDistCpOptions() {
         // DistCpOptions expects the first argument to be a file OR a list of Paths
-        List<Path> sourceUris=new ArrayList<Path>();
+        List<Path> sourceUris=new ArrayList<>();
         sourceUris.add(new Path(sourceStagingUri));
         DistCpOptions distcpOptions = new DistCpOptions(sourceUris, new Path(targetStagingUri));
 
@@ -350,8 +347,8 @@ public class EventUtils {
         return countersMap.get(counterKey);
     }
 
-    public boolean isCountersMapEmtpy() {
-        return countersMap.size() == 0 ? true : false;
+    public boolean isCountersMapEmpty() {
+        return countersMap.size() == 0;
     }
 
     public void cleanEventsDirectory() throws IOException {

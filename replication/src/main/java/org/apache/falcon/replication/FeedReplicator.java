@@ -184,12 +184,13 @@ public class FeedReplicator extends Configured implements Tool {
         return new GnuParser().parse(options, args);
     }
 
-    protected DistCpOptions getDistCpOptions(CommandLine cmd) {
+    protected DistCpOptions getDistCpOptions(CommandLine cmd) throws FalconException, IOException {
         String[] paths = cmd.getOptionValue("sourcePaths").trim().split(",");
         List<Path> srcPaths = getPaths(paths);
-        String trgPath = cmd.getOptionValue("targetPath").trim();
+        String targetPathString = cmd.getOptionValue("targetPath").trim();
+        Path targetPath = new Path(targetPathString);
 
-        DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(trgPath));
+        DistCpOptions distcpOptions = new DistCpOptions(srcPaths, targetPath);
         distcpOptions.setBlocking(true);
         distcpOptions.setMaxMaps(Integer.parseInt(cmd.getOptionValue("maxMaps")));
         distcpOptions.setMapBandwidth(Integer.parseInt(cmd.getOptionValue("mapBandwidth")));
@@ -214,8 +215,16 @@ public class FeedReplicator extends Configured implements Tool {
         // Removing deleted files by default - FALCON-1844
         String removeDeletedFiles = cmd.getOptionValue(
                 ReplicationDistCpOption.DISTCP_OPTION_REMOVE_DELETED_FILES.getName(), "true");
-        distcpOptions.setDeleteMissing(Boolean.parseBoolean(removeDeletedFiles));
-
+        boolean deleteMissing = Boolean.parseBoolean(removeDeletedFiles);
+        distcpOptions.setDeleteMissing(deleteMissing);
+        if (deleteMissing) {
+            // DistCP will fail with InvalidInputException if deleteMissing is set to true and
+            // if targetPath does not exist. Create targetPath to avoid failures.
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(targetPath.toUri(), getConf());
+            if (!fs.exists(targetPath)) {
+                fs.mkdirs(targetPath);
+            }
+        }
 
         String preserveBlockSize = cmd.getOptionValue(
                 ReplicationDistCpOption.DISTCP_OPTION_PRESERVE_BLOCK_SIZE.getName());
