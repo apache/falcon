@@ -1116,7 +1116,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         } else if (CoordinatorAction.Status.KILLED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.KILLED.name();
         } else if (CoordinatorAction.Status.IGNORED.toString().equals(status)) {
-            return InstancesResult.WorkflowStatus.KILLEDIGNORED.name();
+            return InstancesResult.WorkflowStatus.KILLED_OR_IGNORED.name();
         } else if (CoordinatorAction.Status.TIMEDOUT.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.FAILED.name();
         } else if (WorkflowJob.Status.PREP.toString().equals(status)) {
@@ -1816,12 +1816,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public Boolean isWorkflowKilledByUser(String cluster, String jobId, String parentId) throws FalconException {
+    public Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException {
         // In case of a kill being issued from falcon api, the state will be moved to IGNORE
         // In case of a failure, the Oozie action has an errorCode.
         // In case of no errorCode in any of the actions would mean its killed by user
         try {
             OozieClient oozieClient = OozieClientFactory.get(cluster);
+            String parentId = oozieClient.getJobInfo(jobId).getParentId();
             if (oozieClient.getCoordActionInfo(parentId).getStatus().equals(CoordinatorAction.Status.IGNORED)) {
                 return true;
             }

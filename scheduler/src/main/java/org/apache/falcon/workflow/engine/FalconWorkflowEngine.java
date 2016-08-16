@@ -573,7 +573,7 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public Boolean isWorkflowKilledByUser(String cluster, String jobId, String parentId) throws FalconException {
+    public Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException {
         throw new UnsupportedOperationException("Not yet Implemented");
     }
 
