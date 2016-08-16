@@ -392,6 +392,7 @@ permission indicates the permission.
         <property name="parallel" value="3"/>
         <property name="maxMaps" value="8"/>
         <property name="mapBandwidth" value="1"/>
+        <property name="mapMemory" value="512"/>
         <property name="overwrite" value="true"/>
         <property name="ignoreErrors" value="false"/>
         <property name="skipChecksum" value="false"/>
@@ -416,7 +417,8 @@ waiting for the feed instance, parallel decides the concurrent replication insta
 order decides the execution order for replication instances like FIFO, LIFO and LAST_ONLY.
 DistCp options can be passed as custom properties, which will be propagated to the DistCp tool. "maxMaps" represents
 the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s
-used by each mapper during replication. "overwrite" represents overwrite destination during replication.
+used by each mapper during replication. "mapMemory" represents the mapreduce map memory in mb to be specified to the
+respective replication and retention jobs.  "overwrite" represents overwrite destination during replication.
 "ignoreErrors" represents ignore failures not causing the job to fail during replication. "skipChecksum" represents
 bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
 destination but not in source during replication. "preserveBlockSize" represents preserving block size during
