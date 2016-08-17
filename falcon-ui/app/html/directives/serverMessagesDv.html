@@ -20,7 +20,7 @@
 
 <div class="messagesArrow notifs" ng-show="server.responses.queue.length > 0"></div>
 <div class="messages notifs">
-
+  <div ng-if="showClose" class='notif-close'><button type='button' class='close' ng-click="close()">&times;</button></div>
   <div ng-show="server.responses.showAll" ng-repeat="message in server.responses.queue | reverse" class="message"
       ng-class="{ 'color-warning' : message.type === 'warning' || message.type === 'cancel',
                     'color-success' : message.type === 'success',

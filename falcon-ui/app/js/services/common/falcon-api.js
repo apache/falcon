@@ -24,17 +24,16 @@
     function ($http, X2jsService, $location, $rootScope, $cookieStore, $timeout) {
 
       var Falcon = {},
-        NUMBER_OF_ENTITIES = 10,
+        NUMBER_OF_ENTITIES = 20,
         NUMBER_OF_INSTANCES = 11; // 10 + 1 for next page
 
-      function buildURI(uri) {
+      function buildURI(uri, noUser) {
         if ($rootScope.ambariView()) {
           uri = uri.substring(2);
           uri = $rootScope.serviceURI + uri;
-        } else {
-          if(!$rootScope.secureMode){
-            uri = add_user(uri);
-          }
+        }
+        if(!$rootScope.secureMode && !noUser){
+          uri = add_user(uri);
         }
         console.log(uri);
         return uri;
@@ -70,47 +69,33 @@
       Falcon.responses.isVisible = false;
 
       Falcon.hide = function () {
-        Falcon.hideTimeout = $timeout(function () {
-          $(".notifs").fadeOut(300);
-        }, 5000);
+        $rootScope.$emit('hideNotifications', {'delay' : 'slow'});
       };
 
       Falcon.responses.unreaded = 0;
       Falcon.notify = function (showAll) {
-        $(".notifs").stop();
-        $timeout.cancel(Falcon.hideTimeout);
-
         if (showAll) {
           Falcon.responses.unreaded = 0;
           if (Falcon.responses.isVisible) {
             Falcon.responses.isVisible = false;
-            $(".notifs").fadeOut(300);
+            $rootScope.$emit('hideNotifications');
           } else {
             Falcon.responses.isVisible = true;
-            $(".notifs").hide();
-            $(".notifs").fadeIn(300);
+            $rootScope.$emit('showNotifications');
           }
           Falcon.responses.showAll = true;
         } else {
           Falcon.responses.unreaded++;
           Falcon.responses.isVisible = false;
-          $(".notifs").stop();
-          $(".notifs").hide();
-          $(".notifs").fadeIn(300);
-          $(".notifs").fadeOut(300);
-          $(".notifs").fadeIn(300);
-          $(".notifs").fadeOut(300);
-          $(".notifs").fadeIn(300);
+          $rootScope.$emit('flashNotifications');
           Falcon.hide();
           Falcon.responses.showAll = false;
         }
       };
 
       Falcon.hideNotifs = function () {
-        $(".notifs").stop();
-        $timeout.cancel(Falcon.hideTimeout);
+        $rootScope.$emit('hideNotifications');
         Falcon.responses.isVisible = false;
-        $(".notifs").fadeOut(300);
         Falcon.responses.queue.forEach(function(notifMsg) {
           notifMsg.readed = true;
         });
@@ -156,6 +141,15 @@
               type: "error",
               status: messageObject.status,
               message: messageObject.message,
+              requestId: messageObject.requestId,
+              readed: false
+            };
+          } else if (messageObject.errorCode !== undefined) {
+            var response = {
+              success: false,
+              type: "error",
+              status: "error",
+              message: messageObject.errorMessage,
               requestId: messageObject.requestId,
               readed: false
             };
@@ -248,7 +242,7 @@
       //-------------METHODS-----------------------------//
 
       Falcon.getServerConfig = function () {
-        return $http.get('../api/admin/version?user.name=falcon');
+        return $http.get(buildURI('../api/admin/version?user.name=falcon', true));
       };
 
       Falcon.getServerStack = function () {
@@ -256,11 +250,15 @@
       };
 
       Falcon.clearUser = function () {
-        return $http.get('../api/admin/clearuser?user.name=falcon');
+        return $http.get(buildURI('../api/admin/clearuser?user.name=falcon', true));
       };
 
       Falcon.getCurrentUser = function () {
-        return $http.get('../api/admin/getuser');
+        return $http.get(buildURI('../api/admin/getuser', true));
+      };
+
+      Falcon.getRuntimeConfig = function (currentUser) {
+        return $http.get(buildURI('../api/admin/config/runtime?user.name=' + currentUser, true));
       };
 
       Falcon.postValidateEntity = function (xml, type) {
@@ -293,6 +291,10 @@
 
       Falcon.getEntityDefinition = function (type, name) {
         return $http.get(buildURI('../api/entities/definition/' + type + '/' + name), {headers: {'Accept': 'text/plain'}});
+      };
+
+      Falcon.getEntityStatus = function (type, name) {
+        return $http.get(buildURI('../api/entities/status/' + type + '/' + name));
       };
 
       Falcon.searchEntities = function (name, tags, entityType, offset, order) {
@@ -402,6 +404,23 @@
       //----------------------------------------------//
       Falcon.postSubmitRecipe = function (recipe) {
         return $http.post(buildURI('../api/entities/prepareAndSubmitRecipe'), recipe, {headers: {'Content-Type': 'text/plain'}});
+      };
+
+      //----Extension APIs-----//
+      Falcon.getExtensionDefinition = function (type) {
+        return $http.get(buildURI('../api/extension/definition/' + type), {headers: {'Accept': 'text/plain'}});
+      };
+
+      Falcon.postValidateExtension = function (extension, type) {
+        return $http.post(buildURI('../api/extension/validate/' + type), extension, {headers: {'Content-Type': 'text/plain'}});
+      };
+
+      Falcon.postSubmitExtension = function (extension, type) {
+        return $http.post(buildURI('../api/extension/submit/' + type), extension, {headers: {'Content-Type': 'text/plain'}});
+      };
+
+      Falcon.postUpdateExtension = function (extension, type) {
+        return $http.post(buildURI('../api/extension/update/' + type), extension, {headers: {'Content-Type': 'text/plain'}});
       };
 
       return Falcon;

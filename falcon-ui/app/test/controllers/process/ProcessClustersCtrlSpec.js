@@ -21,9 +21,9 @@
   var controller;
 
   describe('ProcessClustersCtrl', function () {
-    beforeEach(module('app.controllers.process'));
+    beforeEach(module('app.controllers.process', 'dateHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper) {
       scope = $rootScope.$new();
       scope.process = {};
       controller = $controller('ProcessClustersCtrl', {
@@ -36,7 +36,7 @@
       it('Should add date format', function() {
         scope.init();
 
-        expect(scope.dateFormat).toBe('MM/dd/yyyy');
+        expect(scope.dateFormat).not.toBe(null);
       });
     });
 
@@ -52,7 +52,7 @@
 
         scope.openDatePicker(eventMock, container);
 
-        expect(scope.dateFormat).toBe('MM/dd/yyyy');
+        expect(scope.dateFormat).not.toBe(null);
       });
     });
 

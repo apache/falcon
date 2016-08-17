@@ -34,8 +34,9 @@
       scope: {
         validationMessage: "@"
       },
+      require : '^form',
       restrict: 'A',
-      link: function (scope, element) {
+      link: function (scope, element, attrs, formCtrl) {
 
         var lastOne = 0,
           stringLabel,
@@ -89,21 +90,28 @@
 
           if (element[0].type === "select-one") {
             element.bind('change', function () {
-              scope.messageSwitcher.show = false;
-              angular.element(stringLabel).hide();
+                  scope.messageSwitcher.show = false;
+                  angular.element(stringLabel).hide();
             });
           } else {
             element.bind('keyup', checkNameInList);
             element.bind('blur', function () {
-              if (element[0].value.length === 0) {
-                element.parent().addClass("showMessage showValidationStyle validationMessageParent");
-                scope.messageSwitcher.show = true;
-                angular.element(stringLabel).html(messageObject.empty).removeClass('valid');
-              }
+                if (element[0].value.length === 0) {
+                  element.parent().addClass("showMessage showValidationStyle validationMessageParent");
+                  scope.messageSwitcher.show = true;
+                  angular.element(stringLabel).html(messageObject.empty).removeClass('valid');
+                }else if (element.hasClass('ng-invalid-pattern')) {
+                  scope.messageSwitcher.show = true;
+                  angular.element(stringLabel).html(messageObject.patternInvalid).removeClass('valid');
+                  element.removeClass('empty');
+                  element.parent().addClass("showMessage showValidationStyle validationMessageParent");
+                }
             });
             element.bind('focus', function () {
               element.removeClass('empty');
             });
+
+
           }
         }
         function normalize() {
@@ -135,6 +143,17 @@
         }, function () {
           if (element[0].value.length === 0) {
             element.addClass('empty');
+          }
+        });
+
+        scope.$watch(function () {
+          return formCtrl.$submitted;
+        }, function () {
+          if (formCtrl.$submitted === true && element.hasClass('ng-invalid-pattern')) {
+            scope.messageSwitcher.show = true;
+            angular.element(stringLabel).html(messageObject.patternInvalid).removeClass('valid');
+            element.removeClass('empty');
+            element.parent().addClass("showMessage showValidationStyle validationMessageParent");
           }
         });
       }
@@ -208,10 +227,10 @@
 
           element.bind('keyup', prepare);
           element.bind('blur', function () {
-            if (valLength === 0 && required) {
-              element.removeClass('empty');
-              angular.element(stringLabel).html(messageObject.empty).removeClass('hidden');
-              element.parent().addClass("showMessage showValidationStyle validationMessageParent");
+              if (valLength === 0 && required) {
+                element.removeClass('empty');
+                angular.element(stringLabel).html(messageObject.empty).removeClass('hidden');
+                element.parent().addClass("showMessage showValidationStyle validationMessageParent");
             }
           });
         }

@@ -21,15 +21,20 @@
 
   module.factory('EntityModel', ["X2jsService", "$cookieStore", function(X2jsService, $cookieStore) {
 
-    var EntityModel = {}, userName;
+    var EntityModel = {};
 
     EntityModel.json = null;
     EntityModel.detailsPageModel = null;
+
+    EntityModel.getUserNameFromCookie = function() {
+      return $cookieStore.get('userToken')?$cookieStore.get('userToken').user:"";
+    };
 
     EntityModel.identifyType = function(json) {
       if(json && json.feed) { EntityModel.type = "feed"; }
       else if(json && json.cluster) { EntityModel.type = "cluster"; }
       else if(json && json.process) { EntityModel.type = "process"; }
+      else if(json && json.datasource) { EntityModel.type = "datasource"; }
       else { EntityModel.type = 'Type not recognized'; }
     };
 
@@ -38,11 +43,6 @@
       return EntityModel.identifyType(EntityModel.json);
     };
 
-    if($cookieStore.get('userToken')){
-      userName = $cookieStore.get('userToken').user;
-    } else {
-      userName = "";
-    }
 
     EntityModel.defaultValues = {
       cluster: {
@@ -52,31 +52,37 @@
             interface:[
               {
                 _type:"readonly",
-                _endpoint:"hftp://sandbox.hortonworks.com:50070",
+                _endpoint:"hftp://<hostname>:50070",
                 _version:"2.2.0"
               },
               {
                 _type:"write",
-                _endpoint:"hdfs://sandbox.hortonworks.com:8020",
+                _endpoint:"hdfs://<hostname>:8020",
                 _version:"2.2.0"
 
               },
               {
                 _type:"execute",
-                _endpoint:"sandbox.hortonworks.com:8050",
+                _endpoint:"<hostname>:8050",
                 _version:"2.2.0"
 
               },
               {
                 _type:"workflow",
-                _endpoint:"http://sandbox.hortonworks.com:11000/oozie/",
+                _endpoint:"http://<hostname>:11000/oozie/",
                 _version:"4.0.0"
 
               },
               {
                 _type:"messaging",
-                _endpoint:"tcp://sandbox.hortonworks.com:61616?daemon=true",
+                _endpoint:"tcp://<hostname>:61616?daemon=true",
                 _version:"5.1.6"
+
+              },
+              {
+                _type:"registry",
+                _endpoint:"thrift://<hostname>:9083",
+                _version:"0.11.0"
 
               }
             ]
@@ -84,13 +90,12 @@
           locations:{
             location:[
               {_name: "staging", _path: ""},
-              {_name: "temp", _path: ""},
-              {_name: "working", _path: ""},
-              {"_name":"","_path":""} //>> to compare
+              {_name: "temp", _path: "/tmp"},
+              {_name: "working", _path: ""}
             ]
           },
           ACL: {
-            _owner: userName,
+            _owner: EntityModel.getUserNameFromCookie(),
             _group: "users",
             _permission: "0x755"
           },
@@ -107,13 +112,10 @@
       },
       MirrorUIModel: {
         name: undefined,
-        tags: {
-          newTag: { value:"", key:"" },
-          tagsArray: [{ key:"_falcon_mirroring_type", value:"HDFS" }],
-          tagsString: ""
-        },
-        formType: "HDFS",
+        tags: [{ value:"", key:"" }],
+        type: "HDFS",
         runOn: "target",
+        tdeEncryptionEnabled: true,
         source: {
           location: "HDFS",
           cluster: "",
@@ -121,42 +123,43 @@
           path: "",
           hiveDatabaseType: "databases",
           hiveDatabases: "",
-          hiveDatabase: "",
-          hiveTables: ""
+          hiveTables: "",
+          hiveMetastoreUri : "thrift://localhost:9083",
+          hive2KerberosPrincipal : "hive/_HOST@EXAMPLE.COM",
+          hiveMetastoreKerberosPrincipal : "hive/_HOST@EXAMPLE.COM"
         },
         target: {
           location: "HDFS",
           cluster: "",
           url: "",
-          path: ""
+          path: "",
+          hive2KerberosPrincipal : "hive/_HOST@EXAMPLE.COM",
+          hiveMetastoreUri : "thrift://localhost:9083",
+          hiveMetastoreKerberosPrincipal : "hive/_HOST@EXAMPLE.COM"
         },
-        alerts: {
-          alert: { email: "" },
-          alertsArray: []
-        },
+        alerts: [],
         validity: {
-          start: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
-          startTime: new Date(),
-          end: "",
-          endTime: new Date(),
-          tz: "GMT+00:00",
+          start: {date: (function () { var d = new Date(); d.setHours(0); d.setMinutes(0); d.setSeconds(0); return d; }()),
+                  time: new Date()},
+          end: {date: new Date("Dec 31, 2099 11:59:59"), time: new Date("Dec 31, 2099 11:59:59")},
+          timezone: "UTC",
           startISO: "",
           endISO: ""
         },
         frequency: {
-          number: 5,
-          unit: 'minutes'
+          quantity: 1,
+          unit: 'days'
         },
         allocation: {
           hdfs:{
-            maxMaps: "5",
-            maxBandwidth: "100"
+            distcpMaxMaps: "5",
+            distcpMapBandwidth: "100"
           },
           hive:{
-            maxMapsDistcp: "1",
-            maxMapsMirror: "5",
-            maxMapsEvents: "-1",
-            maxBandwidth: "100"
+            distcpMaxMaps: "1",
+            replicationMaxMaps: "5",
+            maxEvents: "-1",
+            distcpMapBandwidth: "100"
           }
         },
         hiveOptions: {
@@ -173,14 +176,14 @@
           policy:"periodic",
           delay: {
             unit: "minutes",
-            number: 30
+            quantity: 30
           },
           attempts: 3
         },
-        acl: {
-          owner: userName,
+        ACL: {
+          owner: EntityModel.getUserNameFromCookie(),
           group: "users",
-          permissions: "0x755"
+          permission: "0x755"
         }
       }
     };
@@ -191,7 +194,7 @@
         tags: "",
         groups: "",
         frequency: "",
-        /*timezone: "GMT+00:00",*/
+        /*timezone: "UTC",*/
         "late-arrival": {
           "_cut-off": ""
         },
@@ -222,7 +225,7 @@
           }]
         },
         ACL: {
-          _owner: userName,
+          _owner: EntityModel.getUserNameFromCookie(),
           _group: "users",
           _permission: "0x755"
         },
@@ -241,7 +244,7 @@
       UIModel: {},
       HDFS: {
         process: {
-          tags: "",
+          tags: [{ value:"", key:"" }],
           clusters: {
             cluster: [{
               validity: {
@@ -253,7 +256,7 @@
           },
           parallel: "1",
           order: "LAST_ONLY",
-          frequency: "minutes(5)",
+          frequency: "days(1)",
           timezone: "UTC",
           properties: {
             property: [
@@ -296,13 +299,16 @@
               {
                 _name: "sourceCluster",
                 _value: ""
+              }, {
+                _name: "tdeEncryptionEnabled",
+                _value: "true"
               }
             ]
           },
           workflow: {
             _name: "hdfs-dr-workflow",
             _engine: "oozie",
-            _path: "/apps/data-mirroring/workflows/hdfs-replication-workflow.xml",
+            _path: "/apps/falcon/extensions/hdfs-mirroring/resources/runtime/hdfs-mirroring-workflow.xml",
             _lib: ""
           },
           retry: {
@@ -321,7 +327,7 @@
       },
       HIVE: {
         process: {
-          tags: "",
+          tags: [{ value:"", key:"" }],
           clusters: {
             cluster: [{
               validity: {
@@ -333,7 +339,7 @@
           },
           parallel: "1",
           order: "LAST_ONLY",
-          frequency: "minutes(3)",
+          frequency: "days(1)",
           timezone: "UTC",
           properties: {
             property: [
@@ -391,11 +397,27 @@
               },
               {
                 _name: "targetMetastoreUri",
-                _value: "thrift://240.0.0.11:9083"
+                _value: "thrift://localhost:9083"
               },
               {
                 _name: "sourceMetastoreUri",
-                _value: "thrift://240.0.0.10:9083"
+                _value: "thrift://localhost:9083"
+              },
+              {
+                _name: "targetHiveMetastoreKerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
+              },
+              {
+                _name: "sourceHiveMetastoreKerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
+              },
+              {
+                _name: "targetHive2KerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
+              },
+              {
+                _name: "sourceHive2KerberosPrincipal",
+                _value: "hive/_HOST@EXAMPLE.COM"
               },
               {
                 _name: "sourceTable",
@@ -428,13 +450,16 @@
               {
                 _name: "drNotificationReceivers",
                 _value: "NA"
+              }, {
+                _name: "tdeEncryptionEnabled",
+                _value: "true"
               }
             ]
           },
           workflow: {
             _name: "falcon-dr-hive-workflow",
             _engine: "oozie",
-            _path: "/apps/data-mirroring/workflows/hive-disaster-recovery-workflow.xml",
+            _path: "/apps/falcon/extensions/hive-mirroring/resources/runtime/hive-mirroring-workflow.xml",
             _lib: ""
           },
           retry: {

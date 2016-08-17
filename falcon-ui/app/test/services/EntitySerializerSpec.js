@@ -136,9 +136,9 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.lateArrival.active).toBe(false);
+        expect(feed.lateArrival.active).toBe(true);
         expect(feed.lateArrival.cutOff.unit).toBe('hours');
-        expect(feed.lateArrival.cutOff.quantity).toBe(null);
+        expect(feed.lateArrival.cutOff.quantity).toBe(4);
       });
 
       it('Should copy availabilityFlag', function() {
@@ -160,7 +160,7 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.availabilityFlag).toBe(null);
+        expect(feed.availabilityFlag).toBe("_success");
       });
 
       it('Should copy custom properties', function() {
@@ -213,7 +213,7 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(6);
+        expect(feed.properties.length).toBe(5);
         expect(feed.properties[0].key).toBe('queueName');
         expect(feed.properties[0].value).toBe('QueueName');
       });
@@ -232,29 +232,12 @@
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.properties.length).toBe(6);
+        expect(feed.properties.length).toBe(5);
+
         expect(feed.properties[0].key).toBe('queueName');
-        expect(feed.properties[0].value).toBe('');
+        expect(feed.properties[0].value).toBe('default');
         expect(feed.properties[1].key).toBe('jobPriority');
         expect(feed.properties[1].value).toBe('MEDIUM');
-      });
-
-      it('Should copy timeout as a Frequency Object', function() {
-        var feedModel = {
-          feed: {
-            properties: {property: [
-              {_name: 'queueName', _value: 'QueueName'},
-              {_name: 'timeout', _value: 'days(4)'}
-            ]}
-          }
-        };
-
-        var feed = serializer.preDeserialize(feedModel, 'feed');
-
-        expect(feed.properties.length).toBe(6);
-        expect(feed.properties[2].key).toBe('timeout');
-        expect(feed.properties[2].value.quantity).toBe('4');
-        expect(feed.properties[2].value.unit).toBe('days');
       });
 
       it('Should copy file system locations', function() {
@@ -270,7 +253,6 @@
         var feed = serializer.preDeserialize(feedModel, 'feed');
         var locations = feed.storage.fileSystem.locations;
 
-        expect(feed.storage.fileSystem.active).toBe(true);
         expect(locations.length).toBe(2);
         expect(locations[0].type).toBe('data');
         expect(locations[0].path).toBe('/none1');
@@ -281,55 +263,24 @@
       it('Should not copy file system locations if they are not defined and keep the defaults', function() {
         var feedModel = {
           feed: {
-          }
-        };
-
-        var feed = serializer.preDeserialize(feedModel, 'feed');
-        var locations = feed.storage.fileSystem.locations;
-
-        expect(feed.storage.fileSystem.active).toBe(false);
-        expect(locations.length).toBe(3);
-        expect(locations[0].type).toBe('data');
-        expect(locations[0].path).toBe('/');
-        expect(locations[1].type).toBe('stats');
-        expect(locations[1].path).toBe('/');
-        expect(locations[2].type).toBe('meta');
-        expect(locations[2].path).toBe('/');
-      });
-
-      it('Should set file system active flag as false if there are no locations are', function() {
-        var feedModel = {
-          feed: {}
-        };
-
-        var feed = serializer.preDeserialize(feedModel, 'feed');
-
-        expect(feed.storage.fileSystem.active).toBe(false);
-      });
-
-      it('Should copy catalog uri', function() {
-        var feedModel = {
-          feed: {
-            "table": {
-              _uri : 'table:uri'
-            }
+            dataTransferType: 'hdfs',
           }
         };
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.storage.catalog.active).toBe(true);
-        expect(feed.storage.catalog.catalogTable.uri).toBe('table:uri');
+        expect(feed.storage.fileSystem.locations).toBe(null);
       });
 
       it('Should not copy catalog uri if not present', function() {
         var feedModel = {
-          feed: {}
+          feed: {
+            dataTransferType: 'hive',
+          }
         };
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
 
-        expect(feed.storage.catalog.active).toBe(false);
         expect(feed.storage.catalog.catalogTable.uri).toBe(null);
       });
 
@@ -418,12 +369,12 @@
       it('Should copy clusters locations', function() {
         var feedModel = {
           feed: {
+            dataTransferType: 'hdfs',
             clusters: {cluster: [{_name: 'ClusterOne', _type: 'target',
               locations: {
                 location: [
-                  {_type: 'stats', _path: '/path1'},
-                  {_type: 'data', _path: '/path2'},
-                  {_type: 'tmp', _path: '/path3'}
+                  {_type: 'data', _path: '/path1'},
+                  {_type: 'stats', _path: '/path2'}
                 ]}
             }]}
           }
@@ -432,62 +383,43 @@
         var feed = serializer.preDeserialize(feedModel, 'feed');
         var locations = feed.clusters[0].storage.fileSystem.locations;
 
-        expect(feed.clusters[0].storage.fileSystem.active).toBe(true);
-        expect(locations.length).toBe(3);
-        expect(locations[0].type).toBe('stats');
+        expect(locations.length).toBe(2);
+        expect(locations[0].type).toBe('data');
         expect(locations[0].path).toBe('/path1');
-        expect(locations[1].type).toBe('data');
+        expect(locations[1].type).toBe('stats');
         expect(locations[1].path).toBe('/path2');
-        expect(locations[2].type).toBe('tmp');
-        expect(locations[2].path).toBe('/path3');
       });
 
       it('filesystem should be inactive if there are no locations', function() {
         var feedModel = {
           feed: {
-            clusters: {cluster: [{_name: 'ClusterOne', _type: 'target'}]}
+            dataTransferType: 'hdfs',
+            clusters: {cluster: [{_name: 'ClusterOne', _type: 'target',
+              locations: {
+                location: []}
+            }]}
           }
         };
 
         var feed = serializer.preDeserialize(feedModel, 'feed');
         var locations = feed.clusters[0].storage.fileSystem.locations;
-
-        expect(feed.clusters[0].storage.fileSystem.active).toBe(false);
-        expect(locations.length).toBe(3);
+        expect(locations.length).toBe(0);
       });
 
       it('Should copy catalog uri', function() {
         var feedModel = {
           feed: {
             clusters: {cluster: [{_name: 'ClusterOne', _type: 'target',
-              "table": {
+              table: {
                 _uri : 'table:uri'
               }
             }]}
           }
         };
 
-
         var feed = serializer.preDeserialize(feedModel, 'feed');
         var catalogStorage = feed.clusters[0].storage.catalog;
-
-        expect(catalogStorage.active).toBe(true);
         expect(catalogStorage.catalogTable.uri).toBe('table:uri');
-      });
-
-      it('Should set catalog storage as inactive when not present in the xml', function() {
-        var feedModel = {
-          feed: {
-            clusters: {cluster: [{_name: 'ClusterOne', _type: 'target'}]}
-          }
-        };
-
-
-        var feed = serializer.preDeserialize(feedModel, 'feed');
-        var catalogStorage = feed.clusters[0].storage.catalog;
-
-        expect(catalogStorage.active).toBe(false);
-        expect(catalogStorage.catalogTable.uri).toBe(null);
       });
 
       it('Should copy timezone', function() {
@@ -705,7 +637,7 @@
           properties: [
             {key: 'queueName', value: null},
             {key: 'jobPriority', value: 'HIGH'},
-            {key: 'timeout', value: {quantity: null, unit: 'weeks'}}
+            {key: 'timeout', value: {quantity: 2, unit: 'months'}}
           ]
         };
 
@@ -715,6 +647,7 @@
             "<feed xmlns='uri:falcon:feed:0.1' name='FeedName'>" +
             "<properties>" +
             "<property name='jobPriority' value='HIGH'></property>" +
+            "<property name='timeout' value='months(2)'></property>" +
             "</properties>" +
             "</feed>"
         );
@@ -723,13 +656,13 @@
 
       it('Should transform locations properly if file system storage is active', function () {
         var feed = {name: 'FeedName',
+          dataTransferType: 'hdfs',
           storage: {
             fileSystem: {
               active: true,
               locations: [
                 {type: 'data', path: '/none1'},
-                {type: 'stats', path: '/none2'},
-                {type: 'meta', path: '/none3'}
+                {type: 'stats', path: '/none2'}
               ]
             }
           }
@@ -742,7 +675,6 @@
             "<locations>" +
             "<location type='data' path='/none1'></location>" +
             "<location type='stats' path='/none2'></location>" +
-            "<location type='meta' path='/none3'></location>" +
             "</locations>" +
             "</feed>"
         );
@@ -756,8 +688,7 @@
               active: false,
               locations: [
                 {type: 'data', path: '/none1'},
-                {type: 'stats', path: '/none2'},
-                {type: 'meta', path: '/none3'}
+                {type: 'stats', path: '/none2'}
               ]
             }
           }
@@ -773,6 +704,7 @@
 
       it('Should transform catalog properly if catalog storage is active', function () {
         var feed = {name: 'FeedName',
+          dataTransferType: 'hive',
           storage: {
             catalog: {
               active: true,
@@ -828,8 +760,7 @@
                   active: true,
                   locations: [
                     {type: 'data', path: '/none1'},
-                    {type: 'stats', path: '/none2'},
-                    {type: 'meta', path: '/none3'}
+                    {type: 'stats', path: '/none2'}
                   ]
                 },
                 catalog: {
@@ -848,8 +779,7 @@
                   active: true,
                   locations: [
                     {type: 'data', path: '/none4'},
-                    {type: 'stats', path: '/none5'},
-                    {type: 'meta', path: '/none6'}
+                    {type: 'stats', path: '/none5'}
                   ]
                 },
                 catalog: {
@@ -872,7 +802,6 @@
             "<locations>" +
             "<location type='data' path='/none1'></location>" +
             "<location type='stats' path='/none2'></location>" +
-            "<location type='meta' path='/none3'></location>" +
             "</locations>" +
             "<table uri='/primaryuri'/>" +
             "</cluster>" +
@@ -882,7 +811,6 @@
             "<locations>" +
             "<location type='data' path='/none4'></location>" +
             "<location type='stats' path='/none5'></location>" +
-            "<location type='meta' path='/none6'></location>" +
             "</locations>" +
             "<table uri='/secondaryuri'/>" +
             "</cluster>" +

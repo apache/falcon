@@ -453,7 +453,7 @@
   });
 
 
-  d3Module.controller('chartCtrl', [ "$scope", "Falcon", function($scope, Falcon) {
+  d3Module.controller('chartCtrl', [ "$scope", "Falcon", "DateHelper", function($scope, Falcon, DateHelper) {
 
     var formatFL = d3.time.format.utc("%A %d"),
         formatSL = d3.time.format.utc("%b %Y"),
@@ -500,7 +500,7 @@
 
     };
 
-    $scope.dateFormat ='MM/dd/yyyy';
+    $scope.dateFormat = DateHelper.getLocaleDateFormat();
     $scope.openDatePicker = function($event) {
       $event.preventDefault();
       $event.stopPropagation();

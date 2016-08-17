@@ -1,0 +1,53 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Falcon-Ambari-UI
+=========
+Web UI inside ambari for the Falcon-UI
+
+To clone the repository
+===============================
+- git clone https://github.com/hortonworks/falcon.git
+- git checkout dal
+
+
+Before starting
+===============
+NodeJs , npm, Grunt must be installed in the local pc.
+
+- From git root cd to /falcon-ui
+- npm install (this will install all the app related node modules)
+
+
+To deploy to the sandbox (v2-2)
+===============================
+- Deploy ambari view in order to generate falcon-ambari-view-0.7-incubating-SNAPSHOT.jar:
+ 1. cd falcon-ui
+ 2. grunt ambariview
+ 3. cd ..
+ 4. cd falcon-ambari-view
+ 5. mvn clean install
+ 6. falcon-ambari-view-0.7-incubating-SNAPSHOT.jar will be generated inside the taget directory
+
+- Upload falcon-ambari-view-0.7-incubating-SNAPSHOT.jar to /var/lib/ambari-server/resources/views/
+- Restart ambari server
+- Go to ambari admin -> Manage Ambari -> Falcon Ambari View -> Create Instance
+- Enter the API URL in the falcon.service.uri property
+
+Important!
+Security/Kerberos must be enabled, otherwise the services will ask for user.name param

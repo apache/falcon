@@ -17,147 +17,208 @@
  * limitations under the License.
  */
 -->
-<div class="row" id="feedFormSummaryStep">
+<div class="row feedSummaryRow" id="feedSummaryStep">
   <h4 class="col-sm-24">
     General
   </h4>
-  <div class="col-sm-12">
-    <label>Name</label>: {{feed.name}}
-  </div>
-  <div class="col-sm-12">
-    <label>Description</label>: {{optional(feed.description)}}
-  </div>
-
-  <h4 class="col-sm-24">
-    Tags
-  </h4>
   <div class="col-sm-24">
+    <label>Feed Name</label>: <span>{{feed.name}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Description</label>:<span> {{optional(feed.description)}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Tags</label>:
     <div ng-repeat="tag in feed.tags | filter:{key: '!!'}">
-      {{tag.key}} = {{tag.value}}
+      <span>{{tag.key}} = {{tag.value}}</span>
     </div>
-    <div ng-show="!hasTags()">No tags selected</div>
+    <div ng-show="!hasTags()"><span>No tags selected</span></div>
   </div>
 
-  <h4 class="col-sm-24">
-    Groups
-  </h4>
   <div class="col-sm-24">
+    <label>Feed Groups</label>:
     {{feed.groups}}
-    <div ng-show="!feed.groups">No groups selected</div>
+    <div ng-show="!feed.groups"><span>No groups selected</span></div>
   </div>
 
   <h4 class="col-sm-24">
     Access Control List
   </h4>
-  <div class="col-sm-8">
-    <label>Owner</label>: {{optional(feed.ACL.owner)}}
-  </div>
-  <div class="col-sm-8">
-    <label>Group</label>: {{optional(feed.ACL.group)}}
-  </div>
-  <div class="col-sm-8">
-    <label>Permissions</label>: {{optional(feed.ACL.permission)}}
+  <div class="col-sm-24">
+    <label>Owner</label>: <span>{{optional(feed.ACL.owner)}}</span>
+    <label>Group</label>: <span>{{optional(feed.ACL.group)}}</span>
+    <label>Permissions</label>:<span> {{optional(feed.ACL.permission)}}</span>
   </div>
 
   <h4 class="col-sm-24">
-    Schema
+    Feed Schema
   </h4>
 
-  <div class="col-sm-12">
-    <label>Location</label>: {{optional(feed.schema.location)}}
-  </div>
-  <div class="col-sm-12">
-    <label>Provider</label>: {{optional(feed.schema.provider)}}
+  <div class="col-sm-24">
+    <label>Location</label>: <span>{{optional(feed.schema.location)}}</span>
+    <label>Provider</label>: <span>{{optional(feed.schema.provider)}}</span>
   </div>
 
   <h4 class="col-sm-24">
     Properties
   </h4>
 
-  <div class="col-sm-8">
-    <label>Frequency</label>: <frequency value="feed.frequency" prefix="Every"/>
+  <div class="col-sm-24">
+    <label>Frequency</label>:<span> <frequency value="feed.frequency" prefix="Every"/></span>
   </div>
-  <div class="col-sm-8">
-    <label>Late Arrival</label>: <frequency value="feed.lateArrival.cutOff" prefix="Up to"/>
+  <div class="col-sm-24">
+    <label>Late Arrival</label>:<span> <frequency value="feed.lateArrival.cutOff" prefix="Up to"/></span>
   </div>
-  <div class="col-sm-8">
-    <label>Availability Flag</label>: {{optional(feed.availabilityFlag)}}
+  <div class="col-sm-24">
+    <label>Availability Flag</label>: <span>{{optional(feed.availabilityFlag)}}</span>
   </div>
 
-  <div class="col-sm-8" ng-repeat="property in feed.properties">
-    <label>{{property.key}}</label>:
+  <div class="col-sm-24" ng-repeat="property in feed.properties">
+    <label>{{feedPropertiesLabels[property.key]}}</label>:
     <span ng-if="property.key !== 'timeout'">{{optional(property.value)}}</span>
-    <frequency ng-if="property.key === 'timeout'" value="property.value" prefix="at"/>
+    <span><frequency ng-if="property.key === 'timeout'" value="property.value" prefix="at"/></span>
   </div>
 
-  <div class="col-sm-8" ng-repeat="property in feed.customProperties | filter: {key: '!!'}">
-    <label>{{property.key}}</label>: {{property.value}}
+  <div class="col-sm-24" ng-repeat="property in feed.customProperties | filter: {key: '!!'}">
+    <label>{{feedPropertiesLabels[property.key]}}</label>: <span>{{property.value}}</span>
   </div>
 
-  <h4 class="col-sm-8" >
-    Default Storage Type:
+  <h4 class="col-sm-24">Default Storage Type:</h4>
+  <div class="col-sm-24">
+    <label class="light" ng-show="feed.storage.fileSystem.locations">File System</label>
+    <label class="light" ng-show="feed.storage.catalog.catalogTable.uri">Catalog Storage</label>
+  </div>
+
+  <h4 class="col-sm-24">Default Location:</h4>
+  <div class="col-sm-24" ng-repeat="location in feed.storage.fileSystem.locations"
+    ng-show="feed.storage.fileSystem.locations">
+    <label>{{capitalize(location.type)}}</label>:
+    <span>{{optional(location.path)}}</span>
+  </div>
+
+  <div class="col-sm-24" ng-show="feed.storage.catalog.catalogTable.uri">
+    <label>Table uri</label>:<span>{{optional(feed.storage.catalog.catalogTable.uri)}}</span>
+  </div>
+
+  <h4 class="col-sm-24" ng-if="(feed.clusters | filter:{type:'source'} | filter:emptyClusterName).length > 0">
+    Source Cluster(s)
   </h4>
 
-  <div class="col-sm-8 light" ng-show="feed.storage.fileSystem.active">File System</div>
-  <div class="col-sm-8 light" ng-show="feed.storage.catalog.active">Catalog Storage</div>
-
-  <h4 class="col-sm-24" >Default Location:</h4>
-
-  <div ng-repeat="location in feed.storage.fileSystem.locations" ng-show="feed.storage.fileSystem.active">
-    <label class="col-sm-24" >{{capitalize(location.type)}}</label>
-    <div class="col-sm-24">{{optional(location.path)}}</div>
-  </div>
-
-  <div ng-show="feed.storage.catalog.active">
-    <label class="col-sm-24" >Table uri</label>
-    <div class="col-sm-24">{{optional(feed.storage.catalog.catalogTable.uri)}}</div>
-  </div>
-
-  <div ng-repeat="cluster in feed.clusters" >
-    <h4 class="col-sm-24" >{{capitalize(cluster.type)}} Cluster</h4>
-
-    <div class="col-sm-12">
-      <label>Name</label>: {{cluster.name}}
+  <div ng-repeat="cluster in feed.clusters | filter:{type:'source'} | filter:emptyClusterName">
+    <div class="col-sm-24">
+      <label>Name</label>: <span>{{cluster.name}}</span>
     </div>
-    <div class="clearfix hidden-md"></div>
 
-    <div class="col-sm-12">
-      <label>Start</label>: {{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}
-    </div>
-    <div class="col-sm-12">
-      <label>End</label>: {{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}
+    <div class="col-sm-24">
+      <label>Start</label>: <span>{{getDateTimeString(cluster.validity.start.date,cluster.validity.start.time)}}</span>
     </div>
     <div class="col-sm-24">
-      <label>Timezone</label>: {{feed.timezone}}
+      <label>End</label>: <span>{{getDateTimeString(cluster.validity.end.date,cluster.validity.end.time)}}</span>
     </div>
     <div class="col-sm-24">
-      <label>Retention</label>: <frequency value="cluster.retention" prefix="Archive in"/>
+      <label>Timezone</label>: <span>{{feed.timezone}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Retention</label>: <span><frequency value="cluster.retention" prefix=""/></span>
+    </div>
+
+    <label class="col-sm-24" ng-show="cluster.storage.fileSystem.locations">Location</label>
+    <div class="col-sm-24" ng-repeat="location in cluster.storage.fileSystem.locations"
+      ng-show="cluster.storage.fileSystem.locations">
+      <label>{{capitalize(location.type)}}</label>: <span>{{optional(location.path)}}</span>
+    </div>
+    <div class="col-sm-24" ng-show="cluster.storage.catalog.catalogTable.uri">
+      <label>Table uri</label>: <span>{{optional(cluster.storage.catalog.catalogTable.uri)}}</span>
     </div>
   </div>
-  <div class="clearfix hidden-md"></div>
-  <h4 class="col-sm-24" >Location</h4>
-  <div ng-repeat="location in cluster.storage.fileSystem.locations" ng-show="cluster.storage.fileSystem">
-    <label class="col-sm-24" >{{capitalize(location.type)}}</label>
-    <div class="col-sm-24">{{optional(location.path)}}</div>
+
+  <h4 class="col-sm-24"
+    ng-if="feed.enableFeedReplication && (feed.clusters | filter:{type:'target'} | filter:emptyClusterName).length > 0">
+    Target Cluster(s)
+  </h4>
+  <div ng-repeat="cluster in feed.clusters | filter:{type:'target'} | filter:emptyClusterName" ng-if="feed.enableFeedReplication">
+    <div class="col-sm-24">
+      <label>Name</label>: <span>{{cluster.name}}</span>
+    </div>
+
+    <div class="col-sm-24">
+      <label>Start</label>: <span>{{getDateTimeString(cluster.validity.start.date,cluster.validity.start.time)}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>End</label>: <span>{{getDateTimeString(cluster.validity.end.date,cluster.validity.end.time)}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Timezone</label>: <span>{{feed.timezone}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Retention</label>: <span><frequency value="cluster.retention" prefix=""/></span>
+    </div>
+
+    <label class="col-sm-24" ng-show="cluster.storage.fileSystem.locations">Location</label>
+    <div class="col-sm-24" ng-repeat="location in cluster.storage.fileSystem.locations"
+      ng-show="cluster.storage.fileSystem.locations">
+      <label>{{capitalize(location.type)}}</label>: <span>{{optional(location.path)}}</span>
+    </div>
+    <div class="col-sm-24" ng-show="cluster.storage.catalog.catalogTable.uri">
+      <label>Table uri</label>: <span>{{optional(cluster.storage.catalog.catalogTable.uri)}}</span>
+    </div>
   </div>
-  <div ng-show="cluster.storage.catalog.active">
-    <label class="col-sm-24" >Table uri</label>
-    <div class="col-sm-24">{{optional(cluster.storage.catalog.catalogTable.uri)}}</div>
+
+  <h4 class="col-sm-24" ng-if="feed.dataTransferType === 'import' || feed.dataTransferType === 'export'">
+    Datasource
+  </h4>
+  <div class="col-sm-24 plr0px" ng-if="feed.dataTransferType === 'import'">
+    <div class="col-sm-24">
+      <label>Datasource Name</label>: <span>{{feed.import.source.name}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Table Name</label>: <span>{{feed.import.source.tableName}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Extract Type</label>: <span>{{feed.import.source.extract.type}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Merge Type</label>: <span>{{feed.import.source.extract.mergepolicy}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Columns</label>:
+      <span ng-if="feed.import.source.columnsType === 'include'">{{feed.import.source.includesCSV}}</span>
+      <span ng-if="feed.import.source.columnsType === 'exclude'">{{feed.import.source.excludesCSV}}</span>
+      <span ng-if="feed.import.source.columnsType === 'all'">All</span>
+    </div>
+  </div>
+
+  <div class="col-sm-24 plr0px" ng-if="feed.dataTransferType === 'export'">
+    <div class="col-sm-24">
+      <label>Datasource Name</label>: <span>{{feed.export.target.name}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Table Name</label>: <span>{{feed.export.target.tableName}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Load Method</label>: <span>{{feed.export.target.load.type}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Columns</label>:
+      <span ng-if="feed.export.target.columnsType === 'include'">{{feed.export.target.includesCSV}}</span>
+      <span ng-if="feed.export.target.columnsType === 'exclude'">{{feed.export.target.excludesCSV}}</span>
+      <span ng-if="feed.export.target.columnsType === 'all'">All</span>
+    </div>
   </div>
 </div>
 
-<div class="row">
-  <div class="col-xs-24 mt20">
-    <button id="feed.backToStep4" class="btn prevBtn" type="button"
-         ng-click="goBack('forms.feed.clusters')"
-         ng-disabled="buttonSpinners.backShow">
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
-    </button>
-    <button id="feed.step5" class="btn nextBtn pull-right" ng-click="saveEntity()">
-      Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-    <a class="pull-right" ui-sref="main">
-      Cancel
+<div class="col-xs-24 mt35 pb15px pl0px">
+  <button id="feed.backToStep4" class="btn prevBtn" type="button"
+       ng-click="goBack()"
+       ng-disabled="buttonSpinners.backShow">
+    PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+  </button>
+  <div class="pull-right">
+    <a class="btn cnclBtn" ui-sref="main">
+      CANCEL
     </a>
+    <button id="feed.step5" class="btn nextBtn" ng-click="saveEntity()" focus-if>
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
+    </button>
   </div>
 </div>

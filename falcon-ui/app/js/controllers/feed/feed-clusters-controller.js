@@ -30,14 +30,38 @@
   feedModule.controller('FeedClustersController', [ "$scope", "clustersList", "EntityFactory", "$timeout",
                                             function($scope, clustersList, entityFactory, $timeout) {
 
-      function focusOnElement () {
-        $timeout(function () {
-          angular.element('#clusterNameSelect').trigger('focus');
-        }, 500);
-      }
-      focusOnElement();
-
       unwrapClusters(clustersList);
+      $scope.sourceClusterName;
+      $scope.sourceClusterNotSelected = false;
+      $scope.sourceClusterExists = false;
+      $scope.targetClusterName;
+      $scope.targetClusterNotSelected = false;
+      $scope.targetClusterExists = false;
+
+      function preparePartitionString() {
+        $scope.feedPartitions = "";
+        $scope.feed.partitions.forEach(function(partition, index){
+          $scope.feedPartitions = $scope.feedPartitions.concat(partition.name);
+          if (index < $scope.feed.partitions.length - 1) {
+            $scope.feedPartitions = $scope.feedPartitions.concat(",");
+          }
+        });
+      }
+
+      $scope.$watch("feed.partitions",function(){
+        preparePartitionString();
+        $scope.$broadcast("createClusterPartitions");
+      }, true);
+
+      $scope.createFeedClusterPartitions = function() {
+        if ($scope.feedPartitions != undefined) {
+          var currentPartitions = ($scope.feedPartitions.trim() === "") ? [] : $scope.feedPartitions.split(",");
+          $scope.feed.partitions = [];
+          currentPartitions.forEach(function(element) {
+            $scope.feed.partitions.push(entityFactory.newPartition(element));
+          });
+        }
+      };
 
       $scope.updateRetention = function() {
         if($scope.selectedCluster.retention.action === 'archive' && $scope.selectedCluster.type === 'source') {
@@ -64,15 +88,75 @@
         }
       };
 
-      $scope.addCluster = function() {
-        $scope.selectedCluster.selected = false;
-        var cluster = $scope.newCluster(true);
-        $scope.feed.clusters.push(cluster);
-        $scope.selectedCluster = cluster;
+      function openClusterInAccordion(object, flagValue) {
+        object.isAccordionOpened = flagValue;
+      }
+
+      $scope.feed.clusters.forEach(function(cluster) {
+        openClusterInAccordion(cluster, false);
+      });
+
+      function findClusterExists(clusterList, newClusterName, newClusterType) {
+        var clusterExists = false;
+        clusterList.forEach(function (cluster) {
+          if (cluster.name === newClusterName && cluster.type === newClusterType) {
+            clusterExists = true;
+            return;
+          }
+        });
+        return clusterExists;
+      }
+
+      $scope.clearSourceClusterFlags = function() {
+        $scope.sourceClusterNotSelected = false;
+        $scope.sourceClusterExists = false;
+      }
+
+      $scope.clearTargetClusterFlags = function() {
+        $scope.targetClusterNotSelected = false;
+        $scope.targetClusterExists = false;
+      }
+
+      $scope.addSourceCluster = function() {
+        $scope.clearSourceClusterFlags();
+        if ($scope.sourceClusterName == undefined) {
+          $scope.sourceClusterNotSelected = true;
+        } else if (!findClusterExists($scope.feed.clusters, $scope.sourceClusterName, 'source')) {
+          $scope.addCluster('source', $scope.sourceClusterName);
+        } else {
+          $scope.sourceClusterExists = true;
+        }
       };
 
-      $scope.newCluster = function(selected) {
-        return entityFactory.newCluster('target', selected);
+      $scope.addTargetCluster = function() {
+        if ($scope.targetClusterName == undefined) {
+          $scope.targetClusterNotSelected = true;
+        } else if (!findClusterExists($scope.feed.clusters, $scope.targetClusterName, 'target')) {
+          $scope.addCluster('target', $scope.targetClusterName);
+        } else {
+          $scope.targetClusterExists = true;
+        }
+      };
+
+      $scope.addCluster = function(clusterType, clusterName) {
+        var cluster = $scope.newCluster(clusterType, true, clusterName);
+        if($scope.feed.storage.catalog.active){
+          cluster.storage.catalog.catalogTable.uri = $scope.feed.storage.catalog.catalogTable.uri
+        }
+        cluster.storage.fileSystem.locations.forEach(function (location) {
+          if (location.type === 'data') {
+            var dataLocation = $scope.feed.storage.fileSystem.locations.filter(function(obj) {
+              return obj.type == 'data';
+            })[0];
+            location.path = (dataLocation != undefined) ? dataLocation.path : '';
+          }
+        });
+        openClusterInAccordion(cluster, true);
+        $scope.feed.clusters.push(cluster);
+      };
+
+      $scope.newCluster = function(clusterType, selected, clusterName, partition) {
+        return entityFactory.newCluster(clusterType, selected, clusterName, partition);
       };
 
       $scope.handleCluster = function(cluster, index) {
@@ -89,12 +173,27 @@
         $scope.selectedCluster = cluster;
       };
 
-      $scope.removeCluster = function(index) {
-        if(index >= 0 && $scope.feed.clusters.length > 1 &&
-          $scope.feed.clusters[index].type !== 'source' &&
-          !$scope.archiveCluster.active) {
-          $scope.feed.clusters.splice(index, 1);
-          $scope.selectCluster($scope.sourceCluster);
+      function findClusterIndex(atIndex, ofType) {
+        var index = -1;
+        for (var i=0,len=$scope.feed.clusters.length;i<len;i++){
+          var cluster=$scope.feed.clusters[i];
+          if (cluster.type === ofType) {
+            index++;
+            if (index === atIndex) {
+              return i;
+            }
+          }
+        }
+        return -1;
+      };
+
+      $scope.removeCluster = function(clusterIndex, clusterType) {
+        if (clusterIndex >= 0 && $scope.feed.clusters.length > 0
+          && !$scope.archiveCluster.active) {
+          var clusterTypeIndex = findClusterIndex(clusterIndex, clusterType);
+          if (clusterTypeIndex > -1) {
+            $scope.feed.clusters.splice(clusterTypeIndex, 1);
+          }
         }
       };
 

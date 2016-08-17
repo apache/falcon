@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 @popover-bg-color: #fff;
+@popover-text-color: #000;
+@popover-header-color: #777;
 @popover-border-color: #d2d2d2;
 
 @popover-triangle-size: 11px;
@@ -141,7 +143,7 @@
   box-sizing: border-box;
   z-index: 100;
   background-color: transparent;
-
+  color: @popover-text-color;
   .ns-popover-tooltip {
     box-sizing: border-box;
     border: solid 1px @popover-border-color;
@@ -157,7 +159,7 @@
     h5 {
       font-weight: bold;
       font-size: 16px;
-      color: #777;
+      color: @popover-header-color;
     }
 
     ul {

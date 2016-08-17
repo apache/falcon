@@ -21,8 +21,21 @@
   var entityModule = angular.module('app.controllers.entity',[ 'app.services' ]);
 
   entityModule.controller('EntityRootCtrl',
-    [ '$scope',
-      function($scope) {
+    [ '$scope', 'ValidationService',
+      function($scope, validationService) {
+
+        $scope.invalidXml = false;
+        $scope.isFrequencyValid = true;
+
+        $scope.checkMininumFrequency = function(quantity, unit, field){
+          $scope.isFrequencyValid = quantity ? true : false;
+          if (quantity && unit === 'minutes') {
+            $scope.isFrequencyValid = validationService.checkMininum(quantity);
+          } else if (unit !== 'minutes' && quantity && parseInt(quantity) === 0) {
+            $scope.isFrequencyValid = false;
+          }
+          field.$setValidity('required', $scope.isFrequencyValid);
+        };
 
         $scope.baseInit = function() {
           $scope.editXmlDisabled = true;
@@ -30,6 +43,11 @@
 
         $scope.toggleEditXml = function() {
           $scope.editXmlDisabled = !$scope.editXmlDisabled;
+        };
+
+        $scope.revertXml = function() {
+          $scope.transform();
+          $scope.invalidXml = false;
         };
 
         $scope.capitalize = function(input) {

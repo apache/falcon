@@ -31,8 +31,7 @@
            active: true,
            locations: [
              {type: 'data', path: '/'},
-             {type: 'stats', path: '/'},
-             {type: 'meta', path: '/'}
+             {type: 'stats', path: '/'}
            ]
          },
          catalog: {

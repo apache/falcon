@@ -17,95 +17,91 @@
  * limitations under the License.
  */
 -->
-<form name="processForm" class="mt10" novalidate id="processFormClusterStep">
-  <div class="col-xs-offset-1 col-xs-22">
+<form name="processForm" novalidate>
+  <div class="col-xs-24">
     <div ng-repeat="cluster in process.clusters" class="row">
       <div class="col-xs-24 detailsBox processCluster">
-
-        <h5>Cluster</h5>
-        <div class="row">
-          <div class="col-xs-24">
-            <label class="light">Name</label>
-            <select ng-model="cluster.name" ng-class="{firstSelectClusterStep: $index === 0}"
+        <div class="col-xs-24"><label class="mt15" tooltip="process.cluster">CLUSTER</label></div>
+        <div class="col-xs-24">
+          <label class="light">Cluster Name<mandatory-field></mandatory-field></label>
+          <select ng-model="cluster.name" ng-class="{firstSelectClusterStep: $index === 0}"
                     ng-required="true"
                     class="form-control padding0"
                     validation-message="{{validations.messages.cluster}}">
-              <option value="" disabled selected style='display:none;'>-Select cluster-</option>
-              <option ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
-            </select>
-          </div>
+            <option value="" disabled selected style='display:none;'>-Select cluster-</option>
+            <option ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+          </select>
         </div>
-        <div class="clearfix"></div>
 
-        <label class="col-xs-24"> Validity </label>
-        <div class="col-xs-24 validityBox">
-          <div class="startDateBox">
-            <label>Start
+        <div class="col-xs-24"><label class="mt15">VALIDITY</label></div>
+        <div class="col-xs-24"><label class="mt15 light">Time Zone : <span>{{process.timezone}}</span></label></div>
+        <div class="col-xs-24 validityBox plr0px">
+          <div class="col-xs-24 plr0px">
+            <div class="col-xs-4 startDateBox">
+              <label class="light">Start<mandatory-field></mandatory-field></label>
               <input type="text"
                      name="startDateInput"
                      class="form-control dateInput"
-                     placeholder="mm/dd/yyyy"
+                     placeholder="{{dateFormat | lowercase}}"
                      datepicker-popup="{{dateFormat}}"
                      ng-model="cluster.validity.start.date"
                      is-open="cluster.validity.start.opened"
                      ng-click="openDatePicker($event, cluster.validity.start)"
+                     ng-change="constructDate()"
                      ng-required="true"
                      simple-date>
-            </label>
-            <label class="col-xs-24 custom-danger validationMessageGral"
-                   ng-if="!cluster.validity.start.date">
-              {{validations.messages.date.empty}}
-            </label>
-          </div>
-          <div class="startTimeBox">
-            <label>Time
-              <timepicker
+
+            </div>
+            <div class="col-xs-6 startTimeBox">
+              <label class="light">Time<mandatory-field></mandatory-field></label>
+              <timepicker ng-change="constructDate()"
                           ng-model="cluster.validity.start.time"
                           hour-step="1"
                           minute-step="1"
                           show-meridian="true">
               </timepicker>
-            </label>
+            </div>
           </div>
-          <div class="endDateBox">
-            <label>End
+          <label class="col-xs-24 custom-danger validationMessageGral"
+                 ng-if="!cluster.validity.start.date">
+            {{validations.messages.date.empty}}
+          </label>
+          <div class="col-xs-24 plr0px">
+            <div class="col-xs-4 endDateBox">
+              <label class="light">End<mandatory-field></mandatory-field></label>
               <input type="text"
                      name="endDateInput"
                      class="form-control dateInput"
-                     placeholder="mm/dd/yyyy"
+                     placeholder="{{dateFormat | lowercase}}"
                      datepicker-popup="{{dateFormat}}"
                      ng-model="cluster.validity.end.date"
                      is-open="cluster.validity.end.opened"
                      ng-click="openDatePicker($event, cluster.validity.end)"
+                     ng-change="constructDate()"
                      ng-required="true"
                      min-date="cluster.validity.start.date"
                      simple-date>
-            </label>
-            <label class="col-xs-24 custom-danger validationMessageGral"
-                   ng-if="!cluster.validity.end.date">
-              {{validations.messages.date.empty}}
-            </label>
-          </div>
-          <div class="endTimeBox">
-            <label>Time
-              <timepicker
+            </div>
+            <div class="col-xs-6 endTimeBox">
+              <label class="light">Time<mandatory-field></mandatory-field></label>
+              <timepicker ng-change="constructDate()"
                           ng-model="cluster.validity.end.time"
                           hour-step="1"
                           minute-step="1"
                           show-meridian="true">
               </timepicker>
-            </label>
+            </div>
           </div>
-
-          <div class="col-xs-24 mt10">
+          <label class="col-xs-24 custom-danger validationMessageGral"
+                 ng-if="!cluster.validity.end.date">
+            {{validations.messages.date.empty}}
+          </label>
+        </div>
+        <div class="col-xs-24 mt10">
             <button type="button" class="btn btn-default pull-right btn-xs" ng-click="removeCluster($index)" ng-if="!$first">
               <span class="entypo minus"></span> delete
             </button>
-          </div>
         </div>
-
-
-
       </div>
     </div>
   </div>
@@ -114,20 +110,23 @@
       <span class="entypo plus"></span> add cluster
     </button>
   </div>
-  <div class="col-xs-24 mt20">
+
+  <div class="col-xs-24 pb15px mt35">
     <button class="btn prevBtn" type="button"
-         ng-click="goBack('forms.process.properties')"
+         ng-click="goBack()"
          ng-disabled="buttonSpinners.backShow">
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+      PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
     </button>
-    <button class="btn nextBtn pull-right"
-         ng-disabled="buttonSpinners.show"
-            ng-click="goNext(processForm.$invalid, 'forms.process.io')" >
-      Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-    <a class="pull-right" ui-sref="main">
-      Cancel
-    </a>
+    <div class="pull-right">
+        <a class="btn cnclBtn" ui-sref="main">
+            CANCEL
+        </a>
+        <button class="btn nextBtn"
+             ng-disabled="buttonSpinners.show"
+             ng-click="goNext(processForm.$invalid)" scroll-to-error>
+          NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+        </button>
+    </div>
   </div>
 
 </form>

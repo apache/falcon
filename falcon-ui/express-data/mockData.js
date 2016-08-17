@@ -118,6 +118,10 @@
       {"type":"process","name":"hive-databases-mirror-test","status":"SUBMITTED","tags":{"tag":["_falcon_mirroring_type=HIVE","runsOn=target"]}},
       {"type":"process","name":"hive-db-tables-mirror-test","status":"SUBMITTED","tags":{"tag":["_falcon_mirroring_type=HIVE","runsOn=source"]}},
       {"type":"process","name":"mirror4","status":"SUBMITTED","tags":{"tag":["_falcon_mirroring_type=HDFS","runsOn=source"]}}
+    ]},
+	datasource:{"entity":[
+	  {"type":"DATASOURCE","name":"testConn1","status":"SUBMITTED","tags":null},
+	  {"type":"DATASOURCE","name":"testConn2","status":"SUBMITTED","tags":null}
     ]}
   },
     definitions = {
@@ -281,8 +285,49 @@
 
         'hive-db-tables-mirror-test': "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><process xmlns='uri:falcon:process:0.1' name='hive-db-tables-mirror-test'><tags>_falcon_mirroring_type=HIVE,runsOn=source</tags><clusters><cluster name='completeCluster'><validity start='2015-05-01T09:42:00.000Z' end='2016-04-09T09:04:00.000Z'/></cluster></clusters><parallel>1</parallel><order>LAST_ONLY</order><frequency>months(7)</frequency><timezone>GMT+00:00</timezone><properties><property name='oozie.wf.subworkflow.classpath.inheritance' value='true'></property><property name='distcpMaxMaps' value='111'></property><property name='distcpMapBandwidth' value='678'></property><property name='targetCluster' value='primaryCluster'></property><property name='sourceCluster' value='completeCluster'></property><property name='targetHiveServer2Uri' value='some/path/staging'></property><property name='sourceHiveServer2Uri' value='thrift://localhost:10000'></property><property name='sourceStagingPath' value='/apps/falcon/backupCluster/staging'></property><property name='targetStagingPath' value='/apps/falcon/some/staging'></property><property name='targetNN' value='hdfs://sandbox.hortonworks.com:8020'></property><property name='sourceNN' value='hdfs://sandbox.hortonworks.com:8020'></property><property name='sourceServicePrincipal' value='hive'></property><property name='targetServicePrincipal' value='hive'></property><property name='targetMetastoreUri' value=''></property><property name='sourceMetastoreUri' value='thrift://localhost:9083'></property><property name='sourceTable' value='table1,table2,table3'></property><property name='sourceDatabase' value='database1'></property><property name='maxEvents' value='-10'></property><property name='replicationMaxMaps' value='52'></property><property name='clusterForJobRun' value='completeCluster'></property><property name='clusterForJobRunWriteEP' value='hdfs://sandbox.hortonworks.com:8020'></property><property name='drJobName' value='hive-db-tables-mirror-test'></property><property name='drNotifyEmail' value='hive-tables@test.com'></property></properties><workflow name='falcon-dr-hive-workflow' engine='oozie' path='hdfs://node-1.example.com:8020/apps/falcon/recipe/hive-disaster-recovery/resources/runtime/hive-disaster-recovery-workflow.xml' lib=''/><retry policy='PERIODIC' delay='months(60)' attempts='15'/><ACL owner='ambari-qa' group='users' permission='0x755'/></process>"
 
-      }
-
+      },
+	  DATASOURCE: {
+		 testConn1 :
+			"<datasource xmlns='uri:falcon:datasource:0.1' colo='testColo' type='mysql' name='testConn1'>" +
+				"<interfaces>" +
+					"<interface type='readonly' endpoint='jdbc:mysql://localhost:3306/test'>" +
+						"<credential type='password-text'>" +
+							"<userName>user1</userName>" +
+							"<passwordText>password1</passwordText>" +
+						"</credential>" +
+					"</interface>" +
+					"<credential type='password-text'>" +
+						"<userName>user1</userName>" +
+						"<passwordText>password1</passwordText>" +
+					"</credential>" +
+				"</interfaces>" +
+				"<driver>" +
+					"<clazz>com.mysql.jdbc.Driver</clazz>" +
+					"<jar>abc</jar>" +
+				"</driver>" +
+				"<ACL owner='root' group='users' permission='0x755'/>" +
+			"</datasource>",
+		testConn2 :
+			"<datasource xmlns='uri:falcon:datasource:0.1' colo='testColo' type='mysql' name='testConn2'>" +
+				"<interfaces>" +
+					"<interface type='readonly' endpoint='jdbc:mysql://localhost:3306/test'>" +
+						"<credential type='password-text'>" +
+							"<userName>user1</userName>" +
+							"<passwordText>password1</passwordText>" +
+						"</credential>" +
+					"</interface>" +
+					"<credential type='password-text'>" +
+						"<userName>user1</userName>" +
+						"<passwordText>password1</passwordText>" +
+					"</credential>" +
+				"</interfaces>" +
+				"<driver>" +
+					"<clazz>com.mysql.jdbc.Driver</clazz>" +
+					"<jar>abc</jar>" +
+				"</driver>" +
+				"<ACL owner='root' group='users' permission='0x755'/>" +
+			"</datasource>"
+	  }
     },
     instancesList = {
       FEED: [
@@ -582,7 +627,8 @@
     },
     verticesDirection = [
       {"results":[{"_id":"2wm3-aqU-4u","_type":"edge","_outV":40108,"_inV":16,"_label":"owned-by"},{"_id":"2wm1-aqU-5o","_type":"edge","_outV":40108,"_inV":4,"_label":"runs-on"},{"_id":"2wm7-apq-5w","_type":"edge","_outV":40016,"_inV":40108,"_label":"input"},{"_id":"2wm5-aqU-5E","_type":"edge","_outV":40108,"_inV":40012,"_label":"output"},{"_id":"2wlZ-aqU-86","_type":"edge","_outV":40108,"_inV":32,"_label":"instance-of"}],"totalSize":5},
-      {"results":[{"timestamp":"2015-03-26T02:45Z","name":"ambari-qa","type":"user","_id":16,"_type":"vertex"},{"timestamp":"2015-03-26T02:42Z","name":"primaryCluster","type":"cluster-entity","_id":4,"_type":"vertex"},{"timestamp":"2015-03-26T20:21Z","name":"SampleFeed1\/yearno=2014\/monthno=11","type":"feed-instance","_id":40016,"_type":"vertex"},{"timestamp":"2015-03-26T20:21Z","name":"SampleFeed6\/yearno=2014\/monthno=11","type":"feed-instance","_id":40012,"_type":"vertex"},{"timestamp":"2015-03-26T02:46Z","name":"SampleProcess3","type":"process-entity","version":"1.0","_id":32,"_type":"vertex"}],"totalSize":5},
+     //{"results":[{"timestamp":"2015-03-26T02:45Z","name":"ambari-qa","type":"user","_id":16,"_type":"vertex"},{"timestamp":"2015-03-26T02:42Z","name":"primaryCluster","type":"cluster-entity","_id":4,"_type":"vertex"},{"timestamp":"2015-03-26T20:21Z","name":"SampleFeed1\/yearno=2014\/monthno=11","type":"feed-instance","_id":40016,"_type":"vertex"},{"timestamp":"2015-03-26T20:21Z","name":"SampleFeed6\/yearno=2014\/monthno=11","type":"feed-instance","_id":40012,"_type":"vertex"},{"timestamp":"2015-03-26T02:46Z","name":"SampleProcess3","type":"process-entity","version":"1.0","_id":32,"_type":"vertex"}],"totalSize":5},
+      {"results":[{"timestamp":"2015-03-26T02:45Z","name":"ambari-qa","type":"user","_id":16,"_type":"vertex"},{"timestamp":"2015-03-26T02:42Z","name":"primaryCluster","type":"cluster-entity","_id":4,"_type":"vertex"},{"timestamp":"2015-03-26T20:21Z","name":"SampleFeed1\/yearno=2014\/monthno=11","type":"feed-instance","_id":40016,"_type":"vertex"},{"timestamp":"2015-03-26T20:21Z","name":"SampleFeed6-654351354651351684vd5svdv65fv6s5v61vs616sd51vsxd61v6\/yearno=2014\/monthno=11","type":"feed-instance","_id":40012,"_type":"vertex"},{"timestamp":"2015-03-26T02:46Z","name":"SampleProcess3","type":"process-entity","version":"1.0","_id":32,"_type":"vertex"}],"totalSize":5},
       {"results":[{"_id":"2w9d-apm-4u","_type":"edge","_outV":40012,"_inV":16,"_label":"owned-by"},{"_id":"2w9b-apm-4S","_type":"edge","_outV":40012,"_inV":4,"_label":"stored-in"},{"_id":"2whH-aqo-5E","_type":"edge","_outV":40076,"_inV":40012,"_label":"output"},{"_id":"2wif-aqs-5E","_type":"edge","_outV":40080,"_inV":40012,"_label":"output"},{"_id":"2w9f-api-5E","_type":"edge","_outV":40008,"_inV":40012,"_label":"output"},{"_id":"2wiN-aqw-5E","_type":"edge","_outV":40084,"_inV":40012,"_label":"output"},{"_id":"2wa1-apu-5E","_type":"edge","_outV":40020,"_inV":40012,"_label":"output"},{"_id":"2wjl-aqA-5E","_type":"edge","_outV":40088,"_inV":40012,"_label":"output"},{"_id":"2waz-apy-5E","_type":"edge","_outV":40024,"_inV":40012,"_label":"output"},{"_id":"2wjT-aqE-5E","_type":"edge","_outV":40092,"_inV":40012,"_label":"output"},{"_id":"2wb7-apC-5E","_type":"edge","_outV":40028,"_inV":40012,"_label":"output"},{"_id":"2wkr-aqI-5E","_type":"edge","_outV":40096,"_inV":40012,"_label":"output"},{"_id":"2wbF-apG-5E","_type":"edge","_outV":40032,"_inV":40012,"_label":"output"},{"_id":"2wkZ-aqM-5E","_type":"edge","_outV":40100,"_inV":40012,"_label":"output"},{"_id":"2wcd-apK-5E","_type":"edge","_outV":40036,"_inV":40012,"_label":"output"},{"_id":"2wlx-aqQ-5E","_type":"edge","_outV":40104,"_inV":40012,"_label":"output"},{"_id":"2wcL-apO-5E","_type":"edge","_outV":40040,"_inV":40012,"_label":"output"},{"_id":"2wm5-aqU-5E","_type":"edge","_outV":40108,"_inV":40012,"_label":"output"},{"_id":"2wdj-apS-5E","_type":"edge","_outV":40044,"_inV":40012,"_label":"output"},{"_id":"2wdR-apW-5E","_type":"edge","_outV":40048,"_inV":40012,"_label":"output"},{"_id":"2wep-aq0-5E","_type":"edge","_outV":40052,"_inV":40012,"_label":"output"},{"_id":"2weX-aq4-5E","_type":"edge","_outV":40056,"_inV":40012,"_label":"output"},{"_id":"2wfv-aq8-5E","_type":"edge","_outV":40060,"_inV":40012,"_label":"output"},{"_id":"2wg3-aqc-5E","_type":"edge","_outV":40064,"_inV":40012,"_label":"output"},{"_id":"2wgB-aqg-5E","_type":"edge","_outV":40068,"_inV":40012,"_label":"output"},{"_id":"2wh9-aqk-5E","_type":"edge","_outV":40072,"_inV":40012,"_label":"output"},{"_id":"2w99-apm-86","_type":"edge","_outV":40012,"_inV":28,"_label":"instance-of"}],"totalSize":27},
       {"results":[{"_id":"2w9t-apq-4u","_type":"edge","_outV":40016,"_inV":16,"_label":"owned-by"},{"_id":"2w9r-apq-4S","_type":"edge","_outV":40016,"_inV":4,"_label":"stored-in"},{"_id":"2wih-apq-5w","_type":"edge","_outV":40016,"_inV":40080,"_label":"input"},{"_id":"2wiP-apq-5w","_type":"edge","_outV":40016,"_inV":40084,"_label":"input"},{"_id":"2wa3-apq-5w","_type":"edge","_outV":40016,"_inV":40020,"_label":"input"},{"_id":"2wjn-apq-5w","_type":"edge","_outV":40016,"_inV":40088,"_label":"input"},{"_id":"2waB-apq-5w","_type":"edge","_outV":40016,"_inV":40024,"_label":"input"},{"_id":"2w9v-apq-5w","_type":"edge","_outV":40016,"_inV":40008,"_label":"input"},{"_id":"2wjV-apq-5w","_type":"edge","_outV":40016,"_inV":40092,"_label":"input"},{"_id":"2wb9-apq-5w","_type":"edge","_outV":40016,"_inV":40028,"_label":"input"},{"_id":"2wkt-apq-5w","_type":"edge","_outV":40016,"_inV":40096,"_label":"input"},{"_id":"2wbH-apq-5w","_type":"edge","_outV":40016,"_inV":40032,"_label":"input"},{"_id":"2wl1-apq-5w","_type":"edge","_outV":40016,"_inV":40100,"_label":"input"},{"_id":"2wcf-apq-5w","_type":"edge","_outV":40016,"_inV":40036,"_label":"input"},{"_id":"2wlz-apq-5w","_type":"edge","_outV":40016,"_inV":40104,"_label":"input"},{"_id":"2wcN-apq-5w","_type":"edge","_outV":40016,"_inV":40040,"_label":"input"},{"_id":"2wm7-apq-5w","_type":"edge","_outV":40016,"_inV":40108,"_label":"input"},{"_id":"2wdl-apq-5w","_type":"edge","_outV":40016,"_inV":40044,"_label":"input"},{"_id":"2wdT-apq-5w","_type":"edge","_outV":40016,"_inV":40048,"_label":"input"},{"_id":"2wer-apq-5w","_type":"edge","_outV":40016,"_inV":40052,"_label":"input"},{"_id":"2weZ-apq-5w","_type":"edge","_outV":40016,"_inV":40056,"_label":"input"},{"_id":"2wfx-apq-5w","_type":"edge","_outV":40016,"_inV":40060,"_label":"input"},{"_id":"2wg5-apq-5w","_type":"edge","_outV":40016,"_inV":40064,"_label":"input"},{"_id":"2wgD-apq-5w","_type":"edge","_outV":40016,"_inV":40068,"_label":"input"},{"_id":"2whb-apq-5w","_type":"edge","_outV":40016,"_inV":40072,"_label":"input"},{"_id":"2whJ-apq-5w","_type":"edge","_outV":40016,"_inV":40076,"_label":"input"},{"_id":"2w9p-apq-86","_type":"edge","_outV":40016,"_inV":12,"_label":"instance-of"}],"totalSize":27}
     ],

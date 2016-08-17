@@ -18,128 +18,215 @@
  */
 -->
 <div id="formSummaryBox" class="col-xs-24">
+  <h4>General</h4>
   <div>
-    <h4 class="lightSubtitle">Name</h4>
-    {{UIModel.name}}
+    <label>Name</label>:
+    <span>{{UIModel.name}}</span>
   </div>
   <div>
-    <h4 class="lightSubtitle">Type</h4>
-    {{UIModel.formType}}
-  </div>
-  <div>
-    <h4 class="lightSubtitle">Tags</h4>
-    <div ng-repeat="tag in UIModel.tags.tagsArray"><span>{{tag.key}}</span> - {{tag.value}}</div>
+    <label>Tags</label>:
+    <div ng-repeat="tag in UIModel.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
   </div>
 
   <div>
-    <h4 class="lightSubtitle">Source</h4>
+    <h4>Source</h4>
   </div>
   <div class="box">
-    <h3 ng-if="UIModel.formType === 'HIVE' || UIModel.source.location === 'HDFS'">{{UIModel.source.cluster}}</h3>
+    <h3 ng-if="UIModel.type === 'HIVE' || UIModel.source.location === 'HDFS'">{{UIModel.source.cluster}}</h3>
+    <div ng-if="UIModel.type === 'HDFS'">
+      <label class="locationBox">Location</label>:
+      <span>{{UIModel.source.location}}</span>
+    </div>
+    <div ng-if="UIModel.type === 'HDFS'">
+      <label>Path</label>:
+      <span>{{UIModel.source.path}}</span></div>
+    <div ng-if="UIModel.type === 'HDFS' && UIModel.source.location !== 'HDFS'">
+      <label>URL</label>:
+      <span>{{UIModel.source.url}}</span>
+    </div>
 
-    <h4 ng-if="UIModel.formType === 'HDFS'">Location</h4>
-    <div ng-if="UIModel.formType === 'HDFS'">{{UIModel.source.location}}</div>
-    <div ng-if="UIModel.formType === 'HDFS'"><span>Path:</span> {{UIModel.source.path}}</div>
-    <div ng-if="UIModel.formType === 'HDFS' && UIModel.source.location !== 'HDFS'"><span>URL:</span>{{UIModel.source.url}}</div>
+    <div ng-if="UIModel.type === 'HIVE'">I want to copy <span>{{UIModel.source.hiveDatabaseType}}</span></div>
+    <div ng-if="UIModel.type === 'HIVE' && UIModel.source.hiveDatabaseType === 'databases'">
+      <label>Databases</label>:
+      <span>{{UIModel.source.hiveDatabases}}</span>
+    </div>
+    <div ng-if="UIModel.type === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
+      <label>From Database </label>
+      <span>{{UIModel.source.hiveDatabases}}</span>
+    </div>
+    <div ng-if="UIModel.type === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'">
+      <label>Tables</label>:
+      <span>{{UIModel.source.hiveTables}}</span>
+    </div>
 
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{UIModel.hiveOptions.source.hiveServerToEndpoint}}</span>
+    </div>
 
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{UIModel.hiveOptions.source.stagingPath}}</span>
+    </div>
 
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{UIModel.source.hive2KerberosPrincipal}}</span>
+    </div>
 
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{UIModel.source.hiveMetastoreUri}}</span>
+    </div>
 
-    <div ng-if="UIModel.formType === 'HIVE'">I want to copy <span>{{UIModel.source.hiveDatabaseType}}</span></div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'databases'"><span>Databases:</span> {{UIModel.source.hiveDatabases}}</div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'"><span>From Database </span>{{UIModel.source.hiveDatabase}}</div>
-    <div ng-if="UIModel.formType === 'HIVE' && UIModel.source.hiveDatabaseType === 'tables'"><span>Tables:</span> {{UIModel.source.hiveTables}}</div>
-
-
-
-
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{UIModel.source.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
   </div>
+
   <div>
-    <h4 class="lightSubtitle">Target</h4>
+    <h4>Target</h4>
   </div>
   <div class="box">
-    <h3 ng-if="(UIModel.formType === 'HDFS' && UIModel.target.location === 'HDFS') || UIModel.formType === 'HIVE'">{{UIModel.target.cluster}}</h3>
+    <h3 ng-if="(UIModel.type === 'HDFS' && UIModel.target.location === 'HDFS') || UIModel.type === 'HIVE'">
+      {{UIModel.target.cluster}}
+    </h3>
 
-    <h4 ng-if="UIModel.formType === 'HDFS'">Location</h4>
-    <div ng-if="UIModel.formType === 'HDFS'">{{UIModel.target.location}}</div>
-    <div ng-if="UIModel.formType === 'HDFS'"><span>Path:</span> {{UIModel.target.path}}</div>
-    <div ng-if="UIModel.formType === 'HDFS' && UIModel.target.location !== 'HDFS'"><span>URL:</span> {{UIModel.target.url}}</div>
+    <div ng-if="UIModel.type === 'HDFS'">
+      <label class="locationBox">Location</label>:
+      <span>{{UIModel.target.location}}</span>
+    </div>
+    <div ng-if="UIModel.type === 'HDFS'">
+      <label>Path</label>:
+      <span>{{UIModel.target.path}}</span>
+    </div>
+    <div ng-if="UIModel.type === 'HDFS' && UIModel.target.location !== 'HDFS'">
+      <label>URL:</label>:
+      <span>{{UIModel.target.url}}</span>
+    </div>
 
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{UIModel.hiveOptions.target.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{UIModel.hiveOptions.target.stagingPath}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{UIModel.target.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{UIModel.target.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="UIModel.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{UIModel.target.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
   </div>
 
   <div>
     <h4 class="lightSubtitle">Run On</h4>
-    <div ng-if="UIModel.runOn === 'source'">{{UIModel.source.cluster}}</div>
-    <div ng-if="UIModel.runOn === 'target'">{{UIModel.target.cluster}}</div>
+    <div ng-if="UIModel.runOn === 'source'"><span>{{UIModel.source.cluster}}</span></div>
+    <div ng-if="UIModel.runOn === 'target'"><span>{{UIModel.target.cluster}}</span></div>
   </div>
 
   <hr />
 
   <div>
     <h4 class="lightSubtitle">Schedule</h4>
-    <span>Start on: </span>{{UIModel.validity.startISO}} <br />
-    <span>End on: </span>{{UIModel.validity.endISO}}
-  </div>
-
-  <div ng-if="UIModel.formType === 'HDFS'">
-    <h4 class="lightSubtitle">Max Maps</h4>
-    {{UIModel.allocation.hdfs.maxMaps}}
-
-    <h4 class="lightSubtitle">Max Bandwidth</h4>
-    {{UIModel.allocation.hdfs.maxBandwidth}}
-  </div>
-  <div ng-if="UIModel.formType === 'HIVE'">
-
-    <h4 class="lightSubtitle">Max Maps for Distcp</h4>
-    {{UIModel.allocation.hive.maxMapsDistcp}}
-
-    <h4 class="lightSubtitle">Max Bandwidth</h4>
-    {{UIModel.allocation.hive.maxBandwidth}}
-
-    <h4 class="lightSubtitle">Max Events</h4>
-    {{UIModel.allocation.hive.maxMapsEvents}}
-
-    <h4 class="lightSubtitle">Max Maps for mirror</h4>
-    {{UIModel.allocation.hive.maxMapsMirror}}
+    <div><label>Start on</label>: <span>{{UIModel.validity.start.date|date:'yyyy-MM-dd'}} {{UIModel.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
+    <div><label>End on</label>: <span>{{UIModel.validity.end.date|date:'yyyy-MM-dd'}} {{UIModel.validity.end.time|date:'HH:mm'}}</span></div>
   </div>
 
   <div>
-    <h4 ng-if="UIModel.alerts.alertsArray.length > 0" class="lightSubtitle">Alerts</h4>
-    {{ UIModel.alerts.alertsArray.join() }}
+    <h4 class="lightSubtitle">Frequency</h4>
+    <span>{{UIModel.frequency.quantity}} {{UIModel.frequency.unit}}</span>
   </div>
 
+  <div>
+    <h4 class="lightSubtitle">Timezone</h4>
+    <span>{{UIModel.validity.timezone}}</span>
+  </div>
+
+  <div>
+    <h4 ng-if="UIModel.alerts.length > 0" class="lightSubtitle">Alerts</h4>
+    <span>{{ UIModel.alerts.join() }}</span>
+  </div>
+
+  <div ng-if="UIModel.type === 'HIVE'">
+    <h4 class="lightSubtitle">TDE Encryption</h4>
+    <span>{{UIModel.tdeEncryptionEnabled}}</span>
+  </div>
   <hr />
-  <h4 class="lightSubtitle">ACL</h4>
-  <div><span>Owner:</span> {{UIModel.acl.owner}}</div>
-  <div><span>Group:</span> {{UIModel.acl.group}}</div>
-  <div><span>Permissions:</span> {{UIModel.acl.permissions}}</div>
+
+  <h4 class="lightSubtitle">Allocation</h4>
+  <div ng-if="UIModel.type === 'HDFS'">
+    <div>
+      <label>Max Maps</label>:
+      <span>{{UIModel.allocation.hdfs.distcpMaxMaps}}</span>
+    </div>
+    <div>
+      <label>Max Bandwidth</label>:
+      <span>{{UIModel.allocation.hdfs.distcpMapBandwidth}}</span>
+    </div>
+  </div>
+  <div ng-if="UIModel.type === 'HIVE'">
+    <div>
+      <label>Max Maps for Distcp</label>:
+      <span>{{UIModel.allocation.hive.distcpMaxMaps}}</span>
+    </div>
+    <div>
+      <label>Max Bandwidth</label>:
+      <span>{{UIModel.allocation.hive.distcpMapBandwidth}}</span>
+    </div>
+    <div>
+      <label>Max Events</label>:
+      <span>{{UIModel.allocation.hive.maxEvents}}</span>
+    </div>
+    <div>
+      <label>Max Maps for mirror</label>:
+      <span>{{UIModel.allocation.hive.replicationMaxMaps}}</span>
+    </div>
+  </div>
+  <hr />
 
   <h4 class="lightSubtitle">Retry</h4>
-  <div><span>Policy: </span> {{UIModel.retry.policy}}</div>
-  <div><span>delay: </span> {{UIModel.retry.delay.number}} {{UIModel.retry.delay.unit}}</div>
-  <div><span>Attempts: </span> {{UIModel.retry.attempts}}</div>
-
-  <h4 class="lightSubtitle">Frequency</h4>
-  <div>{{UIModel.frequency.number}} {{UIModel.frequency.unit}}</div>
-
+  <div><label>Policy</label>: <span>{{UIModel.retry.policy}}</span></div>
+  <div><label>Delay</label>: <span>{{UIModel.retry.delay.quantity}} {{UIModel.retry.delay.unit}}</span></div>
+  <div><label>Attempts</label>: <span>{{UIModel.retry.attempts}}</span></div>
   <hr />
 
-  <div class="row">
-    <div class="col-xs-24 mt20">
-      <button type="button" class="btn prevBtn"
-              ng-click="goBack('forms.dataset.general')"
-              ng-disabled="buttonSpinners.backShow">
-        Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
-      </button>
-      <button class="btn nextBtn pull-right"
+  <h4 class="lightSubtitle">Access Control List</h4>
+  <div>
+    <label>Owner</label>: <span>{{UIModel.ACL.owner}}</span>
+    <label>Group</label>: <span>{{UIModel.ACL.group}}</span>
+    <label>Permissions</label>: <span>{{UIModel.ACL.permission}}</span>
+  </div>
+  <hr />
+
+  <div class="col-xs-24 mt35 pb15px pl0px">
+    <button type="button" class="btn prevBtn"
+            ng-click="goBack()"
+            ng-disabled="buttonSpinners.backShow">
+      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+    </button>
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
+      </a>
+      <button class="btn nextBtn"
               ng-disabled="buttonSpinners.show"
               ng-click="save()">
-        Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
       </button>
-      <a class="pull-right" ui-sref="main">
-        Cancel
-      </a>
     </div>
   </div>
 

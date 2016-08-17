@@ -41,36 +41,67 @@
       };
 
       $scope.resetCluster = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         angular.copy(EntityModel.defaultValues.cluster, EntityModel.clusterModel);
-        $state.go("forms.cluster.general");
+        $state.go("forms.cluster");
       };
 
       $scope.resetProcess = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
         $scope.models.processModel = null;
-        $state.go("forms.process.general");
+        $state.go("forms.process");
       };
 
       $scope.resetFeed = function () {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         $scope.cloningMode = true;
         $scope.models.feedModel = null;
-        $state.go("forms.feed.general");
+        $state.go("forms.feed");
       };
 
-      $scope.resetDataset = function () {
+      $scope.resetDataset = function (mirrorType) {
+        $scope.clearTags();
         validationService.displayValidations = {show: false, nameShow: false};
         EntityModel.datasetModel.toImportModel = undefined;
         angular.copy(EntityModel.defaultValues.MirrorUIModel, EntityModel.datasetModel.UIModel);
+        EntityModel.datasetModel.UIModel.type = mirrorType;
         $scope.cloningMode = true;
-        $scope.models.feedModel = null;
-        $state.go("forms.dataset.general");
+        if($rootScope.currentState === 'forms.dataset.general') {
+          $state.reload("forms.dataset");
+        } else if($rootScope.currentState === 'forms.dataset.summary') {
+          EntityModel.datasetModel.UIModel.ACL.owner = $cookieStore.get('userToken').user;
+          $state.go("forms.dataset.general");
+        } else {
+          $state.go("forms.dataset");
+        }
+      };
+
+      $scope.resetSnapshot = function () {
+        $scope.clearTags();
+        validationService.displayValidations = {show: false, nameShow: false};
+        $scope.cloningMode = true;
+        $scope.models.snapshotModel = null;
+        $state.go("forms.snapshot");
+      };
+
+      $scope.isMirror = function(mirrorType) {
+        return EntityModel.datasetModel.UIModel && EntityModel.datasetModel.UIModel.type === mirrorType;
+      };
+
+      $scope.resetDatasource = function () {
+        $scope.clearTags();
+        validationService.displayValidations = {show: false, nameShow: false};
+        $scope.cloningMode = true;
+        $scope.models.dataSource = null;
+        $state.go("forms.datasource");
       };
 
       $scope.userLogged = function () {
-        if($rootScope.isSecureMode()){
+        if($rootScope.isSecureMode() || $rootScope.ambariView()){
           return true;
         }else if($rootScope.userLogged()){
 		if(angular.isDefined($cookieStore.get('userToken')) && $cookieStore.get('userToken') !== null){
@@ -94,7 +125,7 @@
       };
 
       $scope.restore = function(state) {
-        $state.go(state);
+        $state.go(state, {name : null, action : null});
       };
 
       $scope.notify = function() {

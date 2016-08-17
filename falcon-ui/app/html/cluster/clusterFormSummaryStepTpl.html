@@ -18,70 +18,75 @@
  */
 -->
 <div class="row clusterSummaryRow" id="clusterSummaryStep">
+  <h4 class="col-sm-24">
+    General
+  </h4>
   <div class="col-sm-24">
-    <label>Name</label>: {{clusterEntity.clusterModel.cluster._name}}
+    <label>Cluster Name</label>:<span data-qe-id="clusterName"> {{clusterEntity.clusterModel.cluster._name}}</span>
   </div>
   <div class="col-sm-24">
-    <label>Colo</label>: {{clusterEntity.clusterModel.cluster._colo}}
+    <label>Data Center or Colo Name</label>:<span data-qe-id="clusterColo"> {{clusterEntity.clusterModel.cluster._colo}}</span>
   </div>
   <div class="col-sm-24">
-    <label>Description</label>: {{clusterEntity.clusterModel.cluster._description}}
+    <label>Description</label>:<span data-qe-id="clusterDescription"> {{clusterEntity.clusterModel.cluster._description}}</span>
   </div>
   <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.tags">
-    <label>Tags</label>: {{clusterEntity.clusterModel.cluster.tags}}
+    <label>Tags</label>:<span data-qe-id="clusterTags"> {{clusterEntity.clusterModel.cluster.tags}}</span>
   </div>
   <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.ACL">
-    ACL
+    Access Control List
   </h4>
   <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.ACL" >
-    <label>Owner</label>: {{clusterEntity.clusterModel.cluster.ACL._owner}}
-    <label>Group</label>: {{clusterEntity.clusterModel.cluster.ACL._group}}
-    <label>Permission</label>: {{clusterEntity.clusterModel.cluster.ACL._permission}}
+    <label>Owner</label>:<span data-qe-id="clusterACLOwner"> {{clusterEntity.clusterModel.cluster.ACL._owner}}</span>
+    <label>Group</label>:<span data-qe-id="clusterACLGroup"> {{clusterEntity.clusterModel.cluster.ACL._group}}</span>
+    <label>Permission</label>:<span data-qe-id="clusterACLPermission"> {{clusterEntity.clusterModel.cluster.ACL._permission}}</span>
   </div>
   <h4 class="col-sm-24">
     Interfaces
   </h4>
 
   <div class="col-sm-24" ng-repeat="_interface in clusterEntity.clusterModel.cluster.interfaces.interface">
-    <label>{{_interface._type}}</label>: {{_interface._endpoint}} - {{ _interface._version }}
+    <label>{{clusterInterfaceLabels(_interface._type)}}</label>:
+    <span data-qe-id="clusterInterface{{_interface._type}}">{{_interface._endpoint}}</span>
+     <!-- - <span data-qe-id="clusterInterface{{_interface._type}}Version">{{ _interface._version }}</span> -->
   </div>
 
   <h4 class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties">
     Properties
   </h4>
 
-  <div class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0"
+  <div data-qe-id="clusterProps" class="col-sm-24" ng-if="clusterEntity.clusterModel.cluster.properties.property.length > 0"
     ng-repeat="property in clusterEntity.clusterModel.cluster.properties.property">
-    <label>{{property._name}}</label>: {{property._value}}
+    <label>{{property._name}}</label>:<span data-qe-id="clusterProp{{property._name}}"> {{property._value}}</span>
   </div>
 
   <h4 class="col-sm-24">
     Locations
   </h4>
 
-  <div class="col-sm-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location">
-    <label>{{location._name}}</label>: {{location._path}}
+  <div data-qe-id="clusterLocations" class="col-sm-24" ng-repeat="location in clusterEntity.clusterModel.cluster.locations.location">
+    <label data-qe-id="{{location._name}}">{{capitalize(location._name)}}</label>:<span data-qe-id="clusterLocation{{capitalize(location._name)}}"> {{location._path}}</span>
   </div>
 </div>
 
 
-<div class="row clusterSummaryRow">
-  <div class="col-xs-24 mt20">
-    <button id="cluster.backToStep1"
-         class="btn prevBtn"
-         ui-sref="forms.cluster.general"
-         ng-click="goGeneralStep()"
-         ng-disabled="buttonSpinners.backShow">
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
-    </button>
+<div class="col-xs-24 mt35 pb15px pl0px">
+  <button id="cluster.backToStep1"
+       class="btn prevBtn"
+       ui-sref="forms.cluster.general"
+       ng-click="goGeneralStep()"
+       ng-disabled="buttonSpinners.backShow">
+    PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+  </button>
 
-    <button id="cluster.step2" class="btn btn-default nextBtn pull-right"
-         ng-click="saveCluster()" ng-disabled="xmlPreview.edit || buttonSpinners.show">
-      Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-
-    <a class="pull-right" ui-sref="main">
-      Cancel
+  <div class="pull-right">
+    <a class="btn cnclBtn" ui-sref="main">
+      CANCEL
     </a>
+    <button id="cluster.step2" class="btn nextBtn"
+         ng-click="saveCluster()" ng-disabled="xmlPreview.edit || buttonSpinners.show">
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+    </button>
   </div>
+
 </div>

@@ -17,34 +17,28 @@
  * limitations under the License.
  */
 -->
-<table class="listTable table" id="instancesList">
+<table class="listTable table">
   <thead>
   <tr>
-    <th><div class="filtersSearchBox vertical-align"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
-    <th><div class="filtersSearchBox vertical-align">Instance</div></th>
-    <th><div class="filtersSearchBox">Started&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('startTime')"></span>
-      <input type="text" class="form-control dateInput" ng-model="startFilter" ng-keypress="validateDate($event, 'start');"
-             ng-enter="filterInstances('startTime')" placeholder="mm/dd/yyyy hh:mm">
-      <label class="error" ng-if="startFilterError">Incorrect Date Format</label>
-      <label class="error" ng-if="startAfterEndError">Start date should be before end date</label>
-      <label class="error" ng-if="startAfterNominalError">Start date should be after nominal start date {{ start }}</label>
-      <label class="error" ng-if="startBeforeNominalError">Start date should be before nominal end date {{ end }}</label>
+    <th class="align-top"><div class="filtersSearchBox vertical-align pt35px"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
+    <th class="align-top"><div class="filtersSearchBox vertical-align">Instance</div>
+		 <input type="text" class="form-control" placeholder="instance" restrict="reject">
+	</th>
+    <th class="align-top"><div class="filtersSearchBox" ng-class="{showMessage:!startDateValid, showValidationStyle :!startDateValid, validationMessageParent:!startDateValid}">Started&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('startTime')"></span>
+      <input type="text" title="Date should be entered in {{dateFormat | lowercase}} format." class="form-control dateInput" ng-model="startFilter" ng-enter="filterInstances('startTime')" placeholder="{{dateFormat | lowercase}}" ng-keypress="validateDate($event,'start')">
+      <label class="custom-danger validationMessageGral" ng-if="!startDateValid">You need to provide a valid date</label>
     </div></th>
-    <th><div class="filtersSearchBox">Ended&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('endTime')"></span>
-      <input type="text" class="form-control dateInput" ng-model="endFilter" ng-keypress="validateDate($event, 'end');"
-             ng-enter="filterInstances('endTime')" placeholder="mm/dd/yyyy hh:mm">
-      <label class="error" ng-if="endFilterError">Incorrect Date Format</label>
-      <label class="error" ng-if="endAfterNominalError">End date should be after nominal start date {{ start }}</label>
-      <label class="error" ng-if="endBeforeNominalError">End date should be before nominal end date {{ end }}</label>
+    <th class="align-top"><div class="filtersSearchBox" ng-class="{showMessage:!endDateValid, showValidationStyle :!endDateValid, validationMessageParent:!endDateValid}">Ended&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('endTime')"></span>
+      <input type="text" title="Date should be entered in {{dateFormat | lowercase}} format." class="form-control dateInput" ng-model="endFilter" ng-enter="filterInstances('startTime')" placeholder="{{dateFormat | lowercase}}" ng-keypress="validateDate($event,'end')">
+      <label class="custom-danger validationMessageGral" ng-if="!endDateValid">You need to provide a valid date</label>
     </div></th>
-    <th>
+    <th class="align-top">
       <div class="filtersSearchBox">Status&nbsp;<span class="glyphicon glyphicon-sort pointer" ng-click="filterInstances('status')"></span>
         <select class="form-control padding0" ng-model="statusFilter" ng-change="filterInstances('startTime')">
           <option value="">ALL</option>
           <option value="RUNNING">RUNNING</option>
           <option value="SUCCEEDED">SUCCEEDED</option>
           <option value="SUSPENDED">SUSPENDED</option>
-          <option value="WAITING">WAITING</option>
           <option value="KILLED">KILLED</option>
         </select>
       </div>
@@ -54,18 +48,18 @@
 
   <tbody>
   <tr ng-if="input.length > 0" class="buttonsRow">
-    <td class="buttonCell" colspan="9">
+    <td class="buttonCell border0px" colspan="9">
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="download()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
         <span class="entypo down"></span> <div>Log</div>
       </div>
-      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selectedDisabledButtons.resume">
+      <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selecteisabledButtons.resume">
         <span class="entypo play"></span> <div>Resume</div>
       </div>
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeRerun()" ng-disabled="selectedDisabledButtons.rerun">
         <span class="entypo play"></span> <div>Rerun</div>
       </div>
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-disabled="selectedDisabledButtons.suspend">
-        <span class="entypo paus"></span> <div>Suspend</div>
+        <span class="entypo paus"></span> <div>Pause</div>
       </div>
       <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeKill()" ng-disabled="selectedDisabledButtons.stop">
         <span class="entypo stop"></span> <div>Kill</div>
@@ -107,18 +101,18 @@
     <td>
       <!--{{ item.startTime }}<br/>-->
       <!--{{ item.startTime | date :'yyyy-MM-ddTHH:mm:ssZ' }}<br/>-->
-      {{ item.startTime | date :'MM/dd/yyyy HH:mm'}}
+      {{ item.startTime | date : dateFormat}}
     </td>
     <td>
-      {{ item.endTime | date :'MM/dd/yyyy HH:mm'}}
+      {{ item.endTime | date : dateFormat}}
     </td>
     <td class="stateCell">
       <span ng-class="{
-      'blink-success': item.status == 'RUNNING',
-      'text-success': item.status == 'SUCCEEDED',
-      'blink-warning': item.status == 'WAITING' || item.status == 'UNKNOWN',
-      'blink-danger': item.status == 'SUSPENDED',
-      'text-danger': item.status == 'FAILED' || item.status == 'KILLED',
+        'blink-success': item.status == 'RUNNING',
+        'text-success': item.status == 'SUCCEEDED',
+        'blink-warning': item.status == 'WAITING' || item.status == 'UNKNOWN',
+        'blink-danger': item.status == 'SUSPENDED',
+        'text-danger': item.status == 'FAILED' || item.status == 'KILLED',
       }">{{ item.status }}</span>
     </td>
 
@@ -131,7 +125,7 @@
     </td>
   </tr>
 
-  <tr>
+  <tr class="paginationRow">
     <td colspan="5">
       <nav class="pull-right">
         <ul class="pagination">

@@ -32,6 +32,7 @@
 
       controller = $controller('FeedGeneralInformationController', {
         $scope: scope,
+        clustersList: [],
         $state: {},
         $filter: $filter
       });

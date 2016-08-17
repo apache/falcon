@@ -23,7 +23,7 @@
     mockData = require('./express-data/mockData.js'),
     chartData = require('./express-data/chartData.js'),
     server = express(),
-    PORT = 3000;
+    PORT = process.env.PORT || 3000;
 
   server.use('/', express.static(__dirname + '/dist'));
   server.use(bodyParser());
@@ -152,6 +152,27 @@
     }
   });
 
+  server.get('/api/entities/status/:type/:name', function(req, res) {
+	var responseMessage = {
+          "status": "SUCCEEDED",
+          "message": "default/SUBMITTED\n",
+          "requestId": "default/2009721512@qtp-1933075111-15 - 96165552-6fec-46c5-9646-8b28887d09b0\n"
+        };
+	 res.json(200, responseMessage);
+  });
+
+  server.post('/api/entities/validate/:type', function (req, res) {
+    var type = req.params.type.toLowerCase(),
+	  text = req.text,
+      name = req.params.name,
+      responseMessage = {
+        "status": "SUCCEEDED",
+        "message": "default/Validated successfully (" + type + ") " + "\n",
+        "requestId": "default/546cbe05-2cb3-4e5c-8e7a-b1559d866c99\n"
+      };
+    res.json(200, responseMessage);
+  });
+
   server.post('/api/entities/submit/:type', function (req, res) {
     var type = req.params.type.toUpperCase(),
       text = req.text,
@@ -239,6 +260,8 @@
         "requestId": "falcon/default/13015853-8e40-4923-9d32-6d01053c31c6\n\n"
       },
       indexInArray = mockData.findByNameInList(type, name);
+
+	delete mockData.definitions[type.toUpperCase()][name];
     mockData.entitiesList[type].entity.splice(indexInArray, 1);
     res.json(200, responseMessage);
   });
@@ -474,7 +497,7 @@
         res.send(200, response);
       } else {
         res.send(404, response);
-      }
+      }cls
 
     } else {
       console.log('error');
@@ -508,6 +531,7 @@
   server.get('/api/admin/version', function(req, res) {
     setTimeout(function(){
       res.send(200, mockData.server);
+      //res.send(401);
     }, 3000);
   });
 

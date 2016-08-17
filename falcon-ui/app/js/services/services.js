@@ -29,19 +29,19 @@
     'app.services.entity.factory',
     'app.services.entity.model',
     'app.services.instance',
-    'app.services.server'
+    'app.services.server',
+    'app.services.entity.scheduler',
+    'app.services.tooltip',
+    'app.services.entity.details',
+    'app.services.extension.serializer'
   ]);
 
   services.factory('SpinnersFlag', function () {
     return {
       show: false,
-      backShow: false
-    };
-  });
-  services.factory('SpinnersFlag', function () {
-    return {
-      show: false,
-      backShow: false
+      backShow: false,
+      saveShow: false,
+      validateShow: false
     };
   });
 

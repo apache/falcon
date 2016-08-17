@@ -52,9 +52,9 @@
             <span class="entypo play"></span> <div>Resume</div>
         </div>
         <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-hide="selectedDisabledButtons.suspend" ng-if="type !== 'cluster'">
-            <span class="entypo paus"></span> <div>Suspend</div>
+            <span class="entypo paus"></span> <div>Pause</div>
         </div>
-        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeEdit()" ng-hide="selectedRows.length === 0 || selectedRows.length > 1" ng-if="type !== 'cluster'">
+        <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeEdit()" ng-hide="selectedRows.length === 0 || selectedRows.length > 1">
             <span class="entypo cog"></span> <div>Edit</div>
         </div>
         <div class="btn btn-default btn-xs buttons-to-show" ng-click="scopeClone()" ng-hide="selectedRows.length === 0 || selectedRows.length > 1">
@@ -68,6 +68,8 @@
         </div>
       </td>
     </tr>
+  </tbody>
+  <tbody>
     <tr ng-if="input.length === 0 && !server.responses.listLoaded[type]">
       <td> loading {{ type }}s </td>
     </tr>

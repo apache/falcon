@@ -17,67 +17,72 @@
  * limitations under the License.
  */
 -->
-<div class="col-xs-22 col-xs-offset-1 clusterForm" id="clusterForm">
-  <div class="col-xs-24">
-    <div class="row">
-
-      <h3 id="cluster.title" class="col-xs-24">
-        <span class="entypo archive icon-lg"></span> New Cluster
-      </h3>
-
-      <div ng-class="{'col-xs-12' : propsOpen, 'col-xs-20' : !propsOpen}">
-        <div class="detailsBox">
-          <div class="clusterProgressBox" ng-class="{summary:secondStep===true}">
-            <div class="progressBar col-xs-24">
-              <div>
-              <span>
-                <div>1<span class="entypo check"></span></div>
-                <h6>General</h6>
-              </span>
-              <span>
-                <div>2</div>
-                <h6>Summary</h6>
-              </span>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-xs-offset-1 col-xs-22" ui-view></div>
-          </div>
+<div class="clusterForm">
+    <div class="col-xs-22">
+        <div class="preview pullOver">
+            <button id="previewXMLBtn" type="button" class="btn btn-default btn-md pull-right nextBtn"
+              ng-disabled="invalidXml && xmlPreview.edit" ng-click="toggleclick()" >Preview XML</button>
         </div>
-      </div>
-
-      <div ng-class="{'col-xs-12' : propsOpen, 'col-xs-4' : !propsOpen}">
-        <div class="detailsBox">
-          <div class="row">
-
-            <div class="col-xs-13 col-xs-offset-1 noSpecial">
-              <h5><i class="pointer glyphicon" ng-click="propsOpen = !propsOpen" ng-class="propsOpen ? 'glyphicon-minus-sign':'glyphicon-plus-sign'"></i> XML Preview</h5>
-            </div>
-
-            <div ng-if="propsOpen" class="col-xs-9">
-              <button type="button"
-                      id="cluster.editXML"
-                      class="btn btn-default btn-xs pull-right"
-                      ng-click="xmlPreview.editXML()"
-                      ng-class="{'btn-warning':xmlPreview.edit}">
-                <div ng-if="!xmlPreview.edit">Edit XML</div>
-                <div ng-if="xmlPreview.edit">Finish</div>
-              </button>
-            </div>
-
-            <div ng-show="propsOpen" class="col-xs-24">
-              <div class="row">
-                <div class="col-xs-22 col-xs-offset-1">
-                  <textarea ng-model="prettyXml" elastic class="form-control prettyXml" ng-disabled="!xmlPreview.edit"></textarea>
+        <br/>
+        <div class="formBoxContainer detailsBox">
+            <div class="row clusterProgressBox" ng-class="{summary:secondStep===true}">
+                <div class="progressBar col-xs-24">
+                    <div class="text-center" ng-class="{
+                active:isActive('forms.cluster.general'),
+                completed:isCompleted('forms.cluster.general')}">General</div>
+                    <div class="text-center" ng-class="{
+                active:isActive('forms.cluster.summary'),
+                completed:isCompleted('forms.cluster.summary')}">Summary</div>
                 </div>
-              </div>
             </div>
-
-          </div>
+            <div class="row customContainer">
+                <div class="col-xs-offset-1 col-xs-22">
+                    <div class="col-xs-24">
+                        <label class="title"><span class="entypo archive icon-lg entypo-align-sub"></span> NEW CLUSTER</label>
+                    </div>
+                    <div ui-view></div>
+                </div>
+            </div>
         </div>
-      </div>
 
+        <div class="hide xmlPreviewContainer detailsBox" >
+            <div class="row dt">
+                <div class="col-xs-24 pt15px">
+                    <div class="col-xs-13 noSpecial">
+                        <h5>XML Preview</h5>
+                        <label style="margin-top: -10px;margin-bottom: -2px;" ng-if="invalidXml" class="custom-danger">Invalid Xml</label>
+                    </div>
+
+                    <div class="pull-right">
+                        <button type="button"
+                                id="cluster.editXML"
+                                class="btn btn-default btn-xs"
+                                ng-click="xmlPreview.editXML()"
+                                ng-class="{'btn-warning':xmlPreview.edit}"
+                                ng-disabled="invalidXml">
+                            <div ng-if="!xmlPreview.edit">Edit XML</div>
+                            <div ng-if="xmlPreview.edit">Finish</div>
+                        </button>
+
+                        <button type="button"
+                                id="revertXMLBtn"
+                                class="btn btn-default btn-xs"
+                                ng-if="invalidXml"
+                                ng-click="revertXml()">
+                            <div>Revert</div>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-xs-24 showValidationStyle">
+                    <textarea ng-model="prettyXml"
+                              elastic
+                              class="form-control"
+                              ng-disabled="!xmlPreview.edit"
+                              ng-class="{fakeInvalid:invalidXml}">
+                    </textarea>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
 </div>

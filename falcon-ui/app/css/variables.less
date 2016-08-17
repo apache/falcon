@@ -23,13 +23,20 @@
 //== Colors
 //
 //## Gray and brand colors for use across Bootstrap.
+@white: #FFFFFF;
 
 @gray-darker:            lighten(#000, 13.5%); // #222
 @gray-dark:              lighten(#000, 20%);   // #333
 @gray:                   lighten(#000, 33.5%); // #555
+@gray-lightest:           lighten(#000, 40%); // #666
 @gray-light:             lighten(#000, 46.7%); // #777
-@gray-light2:             lighten(#000, 65%); 
+@gray-light2:            lighten(#000, 65%);
 @gray-lighter:           lighten(#000, 93.5%); // #eee
+@gray-darken:           #232323;
+@cool-gray :			#aaaaaa;
+
+@green-light:           #69BE28;
+@green-lighter:         lighten(#69BE28, 40%);
 
 @brand-primary:         #428bca;
 @brand-success:         #5cb85c;
@@ -37,13 +44,64 @@
 @brand-warning:         #f0ad4e;
 @brand-danger:          #d9534f;
 
-@headerNavBG: #69BE28;
+
+@headerNavBG: @white;
+@header1Border: @white;
+@header2Border: @green-light;
+@header2NavBG: @green-light;
+@header3NavBG: @gray-dark;
+
+@search-box-border: @white;
+@search-input-color: @white;
+@search-icon-color: @white;
+/*@search-bar-background: #676567;*/
+
+/*
+@header-menu-color: #000;
+@header-menu-background-color: transparent;
+*/
+
+/* Entity Detail Screen */
+@entity-detail-background-color: @gray-darken;
+
+/* Detail Screen */
+@detail-header-color: @white;
+@detail-header-button-background-color: @gray;
+@detail-background-color: @gray-dark;
+@detail-border-color: @gray-lightest;
+@detail-color: @white;
+
+/* Lineage Graph*/
+@lineage-path-stroke-color: @white;
+@lineage-rect-fill-color: @gray-light;
+@lineage-rect-stroke-color: @white;
+@lineage-node-text-color: @white;
+@lineage-marker-fill-color: @white;
+
+/* Controls */
+@input-color: @white;
+@input-background-color: @gray-dark;
+
+@form-input-background-color: @gray-dark;
+@details-box-dt-bg : @gray-darken;
+@progress-div-active-bg:@green-light;
+@progress-div-active-color: @gray-darken;
+@progress-div-completed-bg :@gray-dark;
+@progress-div-completed-color: @gray-lightest;
+@progress-div-border : @green-light;
+@progress-div-color : @green-light;
+@form-label-color: @detail-color;
+@form-nxt-btn: @green-light;
+@form-box-clusterBox-runJobOnBox:@gray-dark;
+@form-table-color: @white;
+@details-form-border: transparent;
+@progress-div-bottom-border: @progress-div-border;
 //== Scaffolding
 //
 //## Settings for some of the most global styles.
 
 //** Background color for `<body>`.
-@body-bg:               #fff;
+@body-bg:               @gray-darken;
 //** Global text color on `<body>`.
 @text-color:            @gray-dark;
 
@@ -57,7 +115,7 @@
 //
 //## Font, line-height, and color for body text, headings, and more.
 
-@font-family-sans-serif:  cabin, Arial, sans-serif;
+@font-family-sans-serif:  Arial, sans-serif;
 @font-family-serif:       Georgia, "Times New Roman", Times, serif;
 //** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
 @font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace;
@@ -93,7 +151,7 @@
 //** Load fonts from this directory.
 @icon-font-path:          "fonts/";
 //** File name for all font files.
-@icon-font-name:          "glyphicons-halflings-regular"; 
+@icon-font-name:          "glyphicons-halflings-regular";
 //** Element ID within SVG icon file.
 @icon-font-svg-id:        "glyphicons_halflingsregular";
 
@@ -137,12 +195,17 @@
 //## Customizes the `.table` component with basic values, each used across all table variations.
 
 //** Padding for `<th>`s and `<td>`s.
-@table-cell-padding:            8px;
+@table-cell-padding:            5px;
+@table-cell-color:              @white;
+@table-cell-hover-color:        @white;
+
+@table-row-selected-background-color: @gray-dark;
 //** Padding for cells in `.table-condensed`.
 @table-condensed-cell-padding:  5px;
 
 //** Default background color used for all tables.
 @table-bg:                      transparent;
+@table-inactive-bg:             #000;
 //** Background color used for `.table-striped`.
 @table-bg-accent:               #f9f9f9;
 //** Background color used for `.table-hover`.
@@ -150,8 +213,14 @@
 @table-bg-active:               @table-bg-hover;
 
 //** Border color for table and cell borders.
-@table-border-color:            #ddd;
+@table-border-color:            transparent;
 
+@table-header-border-width: 0px 1px 1px;
+@table-header-border-color: @gray-dark;
+@table-header-color: @white;
+@table-header-background-color: @gray-dark;
+@table-header-button-color: @white;
+@table-header-button-hover-color: @white;
 
 //== Buttons
 //
@@ -453,12 +522,12 @@
 @pagination-hover-bg:                  @gray-lighter;
 @pagination-hover-border:              #ddd;
 
-@pagination-active-color:              #fff;
-@pagination-active-bg:                 @brand-primary;
+@pagination-active-color:              @white;
+@pagination-active-bg:                 @gray-dark;
 @pagination-active-border:             @brand-primary;
 
 @pagination-disabled-color:            @gray-light;
-@pagination-disabled-bg:               #fff;
+@pagination-disabled-bg:               @gray-dark;
 @pagination-disabled-border:           #ddd;
 
 
@@ -617,7 +686,7 @@
 //
 //## Define alert colors, border radius, and padding.
 
-@alert-padding:               5px; 
+@alert-padding:               5px;
 @alert-border-radius:         @border-radius-base;
 @alert-link-font-weight:      bold;
 
@@ -860,5 +929,3 @@
 @dl-horizontal-offset:        @component-offset-horizontal;
 //** Horizontal line color.
 @hr-border:                   @gray-lighter;
-
-

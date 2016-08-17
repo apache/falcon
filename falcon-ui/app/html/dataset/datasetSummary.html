@@ -1,0 +1,209 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div id="formSummaryBox" class="summaryBox">
+  <h5>{{entityTypeLabel}}</h5>
+  <div>
+    <label>Name</label>:
+    <span>{{extension.name}}</span>
+  </div>
+  <div>
+    <label>Tags</label>:
+    <div ng-repeat="tag in extension.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Source</h4>
+  </div>
+  <div class="box">
+    <h3 ng-if="extension.type === 'HIVE' || extension.source.location === 'HDFS'">{{extension.source.cluster}}</h3>
+    <div ng-if="extension.type === 'HDFS'">
+      <label class="locationBox">Location</label>:
+      <span>{{extension.source.location}}</span>
+    </div>
+    <div ng-if="extension.type === 'HDFS'">
+      <label>Path</label>:
+      <span>{{extension.source.path}}</span></div>
+    <div ng-if="extension.type === 'HDFS' && extension.source.location !== 'HDFS'">
+      <label>URL</label>:
+      <span>{{extension.source.url}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">I want to copy <span>{{extension.source.hiveDatabaseType}}</span></div>
+    <div ng-if="extension.type === 'HIVE' && extension.source.hiveDatabaseType === 'databases'">
+      <label>Databases</label>:
+      <span>{{extension.source.hiveDatabases}}</span>
+    </div>
+    <div ng-if="extension.type === 'HIVE' && extension.source.hiveDatabaseType === 'tables'">
+      <label>From Database </label>
+      <span>{{extension.source.hiveDatabases}}</span>
+    </div>
+    <div ng-if="extension.type === 'HIVE' && extension.source.hiveDatabaseType === 'tables'">
+      <label>Tables</label>:
+      <span>{{extension.source.hiveTables}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{extension.hiveOptions.source.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{extension.hiveOptions.source.stagingPath}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{extension.source.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{extension.source.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{extension.source.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Target</h4>
+  </div>
+  <div class="box">
+    <h3 ng-if="(extension.type === 'HDFS' && extension.target.location === 'HDFS') || extension.type === 'HIVE'">
+      {{extension.target.cluster}}
+    </h3>
+
+    <div ng-if="extension.type === 'HDFS'">
+      <label class="locationBox">Location</label>:
+      <span>{{extension.target.location}}</span>
+    </div>
+    <div ng-if="extension.type === 'HDFS'">
+      <label>Path</label>:
+      <span>{{extension.target.path}}</span>
+    </div>
+    <div ng-if="extension.type === 'HDFS' && extension.target.location !== 'HDFS'">
+      <label>URL</label>:
+      <span>{{extension.target.url}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>HiveServer2 endpoint</label>:
+      <span>{{extension.hiveOptions.target.hiveServerToEndpoint}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE'">
+      <label>Staging path</label>:
+      <span>{{extension.hiveOptions.target.stagingPath}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Hive2 Kerberos Principal</label>:
+      <span>{{extension.target.hive2KerberosPrincipal}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Meta Store URI</label>:
+      <span>{{extension.target.hiveMetastoreUri}}</span>
+    </div>
+
+    <div ng-if="extension.type === 'HIVE' && secureMode === true">
+      <label>Kerberos Principal</label>:
+      <span>{{extension.target.hiveMetastoreKerberosPrincipal}}</span>
+    </div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Run On</h4>
+    <div ng-if="extension.runOn === 'source'"><span>{{extension.source.cluster}}</span></div>
+    <div ng-if="extension.runOn === 'target'"><span>{{extension.target.cluster}}</span></div>
+  </div>
+
+  <hr />
+
+  <div>
+    <h4 class="lightSubtitle">Schedule</h4>
+    <div><label>Start on</label>: <span>{{extension.validity.start.date|date:'yyyy-MM-dd'}} {{extension.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
+    <div><label>End on</label>: <span>{{extension.validity.end.date|date:'yyyy-MM-dd'}} {{extension.validity.end.time|date:'HH:mm'}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Frequency</h4>
+    <span>{{extension.frequency.quantity}} {{extension.frequency.unit}}</span>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Timezone</h4>
+    <span>{{extension.validity.timezone}}</span>
+  </div>
+
+  <div>
+    <h4 ng-if="extension.alerts.length > 0" class="lightSubtitle">Alerts</h4>
+    <span>{{ extension.alerts.join() }}</span>
+  </div>
+  <hr />
+
+  <h4 class="lightSubtitle">Allocation</h4>
+  <div ng-if="extension.type === 'HDFS'">
+    <div>
+      <label>Max Maps</label>:
+      <span>{{extension.allocation.hdfs.distcpMaxMaps}}</span>
+    </div>
+    <div>
+      <label>Max Bandwidth</label>:
+      <span>{{extension.allocation.hdfs.distcpMapBandwidth}}</span>
+    </div>
+  </div>
+  <div ng-if="extension.type === 'HIVE'">
+    <div>
+      <label>Max Maps for Distcp</label>:
+      <span>{{extension.allocation.hive.distcpMaxMaps}}</span>
+    </div>
+    <div>
+      <label>Max Bandwidth</label>:
+      <span>{{extension.allocation.hive.distcpMapBandwidth}}</span>
+    </div>
+    <div>
+      <label>Max Events</label>:
+      <span>{{extension.allocation.hive.maxEvents}}</span>
+    </div>
+    <div>
+      <label>Max Maps for mirror</label>:
+      <span>{{extension.allocation.hive.replicationMaxMaps}}</span>
+    </div>
+  </div>
+  <hr />
+
+  <h4 class="lightSubtitle">Retry</h4>
+  <div><label>Policy</label>: <span>{{extension.retry.policy}}</span></div>
+  <div><label>delay</label>: <span>{{extension.retry.delay.quantity}} {{extension.retry.delay.unit}}</span></div>
+  <div><label>Attempts</label>: <span>{{extension.retry.attempts}}</span></div>
+  <hr />
+
+  <h4 class="lightSubtitle">Access Control List</h4>
+  <div>
+    <label>Owner</label>: <span>{{extension.ACL.owner}}</span>
+    <label>Group</label>: <span>{{extension.ACL.group}}</span>
+    <label>Permissions</label>: <span>{{extension.ACL.permission}}</span>
+  </div>
+  <hr />
+</div>

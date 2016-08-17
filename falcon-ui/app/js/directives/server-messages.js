@@ -19,18 +19,53 @@
   'use strict';
 
 	var serverMessagesModule = angular.module('app.directives.server-messages', []);
-	
-	serverMessagesModule.directive('serverMessages', function () {
+
+	serverMessagesModule.directive('serverMessages', ["$rootScope", "$timeout","Falcon", function ($rootScope, $timeout, Falcon) {
 		return {
 			replace:false,
 			restrict: 'E',
 			templateUrl: 'html/directives/serverMessagesDv.html',
       link: function (scope, element) {
-
+        scope.close = function(){
+          Falcon.hideNotifs();
+        };
         //scope.allMessages
+        var hideoutTimer;
+        var notifyPanel = element.find(".notifs");
+        $rootScope.$on('hideNotifications', function(event, setting) {
+          scope.showClose = false;
+          $timeout.cancel(hideoutTimer);
+          if (setting && setting.delay) {
+            hideoutTimer = $timeout(function () {
+              notifyPanel.fadeOut(300);
+            }, setting.delay==='slow'?5000:0);
+          } else {
+            notifyPanel.stop();
+            notifyPanel.fadeOut(300);
+          }
+        });
+
+        $rootScope.$on('flashNotifications', function() {
+          $timeout.cancel(hideoutTimer);
+          notifyPanel.stop();
+          notifyPanel.hide();
+          notifyPanel.fadeIn(300);
+          notifyPanel.fadeOut(300);
+          notifyPanel.fadeIn(300);
+          notifyPanel.fadeOut(300);
+          notifyPanel.fadeIn(300);
+        });
+
+        $rootScope.$on('showNotifications', function() {
+          scope.showClose = true;
+          $timeout.cancel(hideoutTimer);
+          notifyPanel.stop();
+          notifyPanel.hide();
+          notifyPanel.fadeIn(300);
+        });
 
       }
 		};
-	});
-	  
+	}]);
+
 })();

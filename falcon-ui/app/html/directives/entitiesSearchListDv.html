@@ -22,31 +22,39 @@
 <table class="listTable table" id="entitiesSearchList">
   <thead>
     <tr>
-      <th><div class="filtersSearchBox"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
+      <th><div class="filtersSearchBox pointer"><input type="checkbox" ng-model="selectedAll" ng-click="checkAll()"/></div></th>
       <th><div class="filtersSearchBox pointer" ng-click="toggleSortOrder()">Name <span class="glyphicon glyphicon-sort"></span></div> </th>
       <th><div class="filtersSearchBox">Tags</div></th>
-      <th><div class="filtersSearchBox">Cluster</div></th>
-      <th><div class="filtersSearchBox">Type</div></th>
-      <th><div class="filtersSearchBox">Status</div></th>
+      <th ng-if="$parent.$parent.$parent.entityType != 'cluster'"><div class="filtersSearchBox">Cluster</div></th>
+      <th ng-if="$parent.$parent.$parent.entityType != 'cluster'"><div class="filtersSearchBox">Type</div></th>
+      <th ng-if="$parent.$parent.$parent.entityType != 'cluster'"><div class="filtersSearchBox">Status</div></th>
     </tr>
+
   </thead>
 
   <tbody>
     <tr ng-if="input.length > 0" class="buttonsRow">
       <td class="buttonCell" colspan="9">
-        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-disabled="selectedDisabledButtons.schedule">
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSchedule()" ng-disabled="selectedDisabledButtons.schedule"
+           ng-if="$parent.$parent.$parent.entityType != 'cluster'">
           <span class="entypo play"></span> <div>Schedule</div>
         </div>
-        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selectedDisabledButtons.resume">
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeResume()" ng-disabled="selectedDisabledButtons.resume"
+           ng-if="$parent.$parent.$parent.entityType != 'cluster'">
           <span class="entypo play"></span> <div>Resume</div>
         </div>
-        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-disabled="selectedDisabledButtons.suspend">
-          <span class="entypo paus"></span> <div>Suspend</div>
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeSuspend()" ng-disabled="selectedDisabledButtons.suspend"
+           ng-if="$parent.$parent.$parent.entityType != 'cluster'">
+          <span class="entypo paus"></span> <div>Pause</div>
         </div>
-        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeEdit()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeEdit()"
+          ng-disabled="selectedRows.length === 0 || selectedRows.length > 1 || ($parent.$parent.$parent.entityType === 'cluster' && (!isSafeMode() || !isSuperUser()))"
+          ng-class="{disabledEditBtn: $parent.$parent.$parent.entityType === 'cluster' && (!isSafeMode()  || !isSuperUser())}"
+          title="{{($parent.$parent.$parent.entityType === 'cluster' && (!isSafeMode() || !isSuperUser())) ? 'Cluster entity update can only be performed by superuser during safemode' : ''}}">
           <span class="entypo cog"></span> <div>Edit</div>
         </div>
-        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeClone()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1">
+        <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeClone()" ng-disabled="selectedRows.length === 0 || selectedRows.length > 1"
+          ng-if="$parent.$parent.$parent.entityType != 'cluster'">
           <span class="entypo docs"></span> <div>Copy</div>
         </div>
         <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scopeRemove()" ng-disabled="selectedRows.length === 0">
@@ -57,7 +65,8 @@
         </div>
       </td>
     </tr>
-
+  </tbody>
+  <tbody>
     <tr ng-if="input.length === 0 && !server.responses.listLoaded">
       <td> loading... </td>
     </tr>
@@ -72,14 +81,15 @@
         ng-class="{
               firstEntityRow:$first, lastEntityRow:$last,
               rowSelected:checkedRow(item.name)
-            }">
+            }"
+        ng-class-odd="'oddRow'" ng-class-even="'evenRow'">
       <td class="checkboxCell">
         <input type="checkbox" checklist-model="selectedRows" ng-model="$index"
                checklist-value="{name:item.name, type:item.type, status:item.status}"
                ng-change="checkButtonsToShow()"/>
       </td>
       <td class="nameCell" ng-init="entityType = item.type | uppercase">
-        <button type="button" class="btn btn-default" ng-click="goEntityDetails(item.name, item.type)">
+        <button type="button" class="btn btn-link" ng-click="goEntityDetails(item.name, item.type)">
           <span ng-class="displayIcon((item.type | uppercase), item.tags.tag)"></span> {{ item.name }}
         </button>
       </td>
@@ -88,17 +98,17 @@
           {{ tag }}{{$last ? '' : ', '}}
         </span>
       </td>
-      <td>
+      <td ng-if="$parent.$parent.$parent.entityType != 'cluster'">
         <span ng-repeat="cluster in item.clusters.cluster">
           {{ cluster }}{{$last ? '' : ', '}}
         </span>
       </td>
-      <td>
+      <td ng-if="$parent.$parent.$parent.entityType != 'cluster'">
         <span ng-repeat="tag in item.tags.tag" ng-init="type = displayType(tag)">
           {{ type | uppercase}}
         </span>
       </td>
-      <td class="stateCell">
+      <td class="stateCell" ng-if="$parent.$parent.$parent.entityType != 'cluster'">
         <span ng-class="{'blink-success': item.status == 'RUNNING',
                          'text-success': item.status == 'SUCCEEDED',
                          'blink-warning': item.status == 'SUSPENDED',
@@ -114,7 +124,7 @@
       </td>
     </tr>
 
-    <tr>
+    <tr class="paginationRow">
       <td colspan="9">
         <nav class="pull-right">
           <ul class="pagination">

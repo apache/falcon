@@ -21,9 +21,9 @@
   var controller;
 
   describe('FeedSummaryController', function () {
-    beforeEach(module('app.controllers.feed'));
+    beforeEach(module('app.controllers.feed','dateHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper) {
       scope = $rootScope.$new();
       scope.feed = {};
 

@@ -85,13 +85,13 @@
   </div>
 
   <div class="col-sm-8" ng-repeat="property in feed.properties">
-    <label>{{property.key}}</label>:
+    <label>{{feedPropertiesLabels[property.key]}}</label>:
     <span ng-if="property.key !== 'timeout'">{{optional(property.value)}}</span>
     <frequency ng-if="property.key === 'timeout'" value="property.value" prefix="at"/>
   </div>
 
   <div class="col-sm-8" ng-repeat="property in feed.customProperties | filter: {key: '!!'}">
-    <label>{{property.key}}</label>: {{property.value}}
+    <label>{{feedPropertiesLabels[property.key]}}</label>: {{property.value}}
   </div>
 
   <h4 class="col-sm-8" >
@@ -131,7 +131,7 @@
       <label>Timezone</label>: {{feed.timezone}}
     </div>
     <div class="col-sm-24">
-      <label>Retention</label>: <frequency value="cluster.retention" prefix="Archive in"/>
+      <label>Retention</label>: <frequency value="cluster.retention" prefix=""/>
     </div>
   </div>
   <div class="clearfix hidden-md"></div>

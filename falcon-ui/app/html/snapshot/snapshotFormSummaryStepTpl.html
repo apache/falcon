@@ -1,0 +1,157 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div id="formSummaryBox" class="col-xs-24">
+  <h4>General</h4>
+  <div>
+    <label>Name</label>:
+    <span>{{snapshot.name}}</span>
+  </div>
+  <div>
+    <label>Type</label> :
+    <span>{{snapshot.type}}</span>
+  </div>
+  <div>
+    <label>Tags</label>:
+    <div ng-repeat="tag in snapshot.tags"><span>{{tag.key}}</span> - <span>{{tag.value}}</span></div>
+  </div>
+
+  <div class="col-xs-12 plr0px mb15">
+    <div>
+      <h4>Source</h4>
+    </div>
+    <div class="box">
+      <h3>{{snapshot.source.cluster}}</h3>
+      <div>
+        <label class="locationBox">Source Directory</label>:
+        <span>{{snapshot.source.directoryPath}}</span>
+      </div>
+      <div>
+        <label>Delete Snapshot After</label>:
+        <span>{{snapshot.source.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
+      </div>
+      <div>
+        <label>Keep Last</label>:
+        <span>{{snapshot.source.retentionNumber}} snapshots</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-12 mb15">
+    <div>
+      <h4>Target</h4>
+    </div>
+    <div class="box">
+      <h3>{{snapshot.target.cluster}}</h3>
+      <div>
+        <label class="locationBox">Target Directory</label>:
+        <span>{{snapshot.target.directoryPath}}</span>
+      </div>
+      <div>
+        <label>Delete Snapshot After</label>:
+        <span>{{snapshot.target.deleteFrequency.quantity}} {{snapshot.source.deleteFrequency.unit}}</span>
+      </div>
+      <div>
+        <label>Keep Last</label>:
+        <span>{{snapshot.target.retentionNumber}} snapshots</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Run On</h4>
+    <div ng-if="snapshot.runOn === 'source'"><span>{{snapshot.source.cluster}}</span></div>
+    <div ng-if="snapshot.runOn === 'target'"><span>{{snapshot.target.cluster}}</span></div>
+  </div>
+
+  <hr />
+
+  <div>
+    <h4 class="lightSubtitle">Run Duration</h4>
+    <div><label>Start on</label>: <span>{{snapshot.validity.start.date|date:'yyyy-MM-dd'}} {{snapshot.validity.start.time|date:'HH:mm'|date:'HH:mm'}}</span></div>
+    <div><label>End on</label>: <span>{{snapshot.validity.end.date|date:'yyyy-MM-dd'}} {{snapshot.validity.end.time|date:'HH:mm'}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Frequency</h4>
+    <div><span>{{snapshot.frequency.quantity}} {{snapshot.frequency.unit}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">Timezone</h4>
+    <div><span>{{snapshot.validity.timezone}}</span></div>
+  </div>
+
+  <div>
+    <h4 class="lightSubtitle">TDE Encryption</h4>
+    <span>{{snapshot.tdeEncryptionEnabled}}</span>
+  <div>
+
+  <div>
+    <h4 class="lightSubtitle">Retry</h4>
+    <label>Policy</label>: <span>{{snapshot.retry.policy}}</span>
+    <label>delay</label>: <span>{{snapshot.retry.delay.quantity}} {{snapshot.retry.delay.unit}}</span>
+    <label>Attempts</label>: <span>{{snapshot.retry.attempts}}</span>
+  </div>
+  <hr />
+
+  <div>
+    <h4 class="lightSubtitle">Allocation</h4>
+    <div>
+      <label>Max Bandwidth</label>:
+      <span>{{snapshot.allocation.distcpMapBandwidth}} MB</span>
+    </div>
+    <div>
+      <label>Max Map Jobs</label>:
+      <span>{{snapshot.allocation.distcpMaxMaps}}</span>
+    </div>
+  </div>
+
+  <div>
+    <h4 ng-if="snapshot.alerts.length > 0" class="lightSubtitle">Alerts</h4>
+    <span>{{ snapshot.alerts.join() }}</span>
+  </div>
+
+  <hr />
+  <h4 class="lightSubtitle">Access Control List</h4>
+  <div>
+    <label>Owner</label>: <span>{{snapshot.ACL.owner}}</span>
+    <label>Group</label>: <span>{{snapshot.ACL.group}}</span>
+    <label>Permissions</label>: <span>{{snapshot.ACL.permission}}</span>
+  </div>
+
+  <div class="col-xs-24 mt35 pb15px plr0px">
+    <button type="button" class="btn prevBtn"
+            ng-click="goBack()"
+            ng-disabled="buttonSpinners.backShow">
+      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+    </button>
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
+      </a>
+      <button class="btn nextBtn"
+              ng-disabled="buttonSpinners.saveShow"
+              ng-click="save()">
+        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
+      </button>
+    </div>
+  </div>
+
+</div>

@@ -72,6 +72,15 @@
         });
 
         return formatted;
+      },
+
+      isValidXml: function(xml){
+        try {
+          this.xml_str2json(xml);
+          return true;
+        } catch (err) {
+          return false;
+        }
       }
     };
 

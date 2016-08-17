@@ -19,6 +19,7 @@
   'use strict';
 
   angular.module('app.controllers', [
+                                      'app.controllers.theme',
                                       'app.controllers.login',
                                       'app.controllers.navHeader',
                                       'app.controllers.rootCtrl',
@@ -29,7 +30,9 @@
                                       'app.controllers.process',
                                       'app.controllers.entity',
                                       'app.controllers.instance',
-                                      'app.controllers.dataset'
+                                      'app.controllers.dataset',
+                                      'app.controllers.snapshot',
+                                      'app.controllers.datasource'
                                     ]);
 
 })();

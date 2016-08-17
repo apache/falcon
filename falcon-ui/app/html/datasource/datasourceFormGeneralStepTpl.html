@@ -1,0 +1,355 @@
+<!--
+/**
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+-->
+<form name="datasourceForm" novalidate id="datasourceFormGeneralStep">
+	<div class="col-xs-24 plr0px">
+		<div class="col-xs-12">
+			<label class="light" tooltip="datasource.name">Connection Name<mandatory-field></mandatory-field></label>
+			<input type="text" class="form-control" ng-disabled="editingMode" ng-keydown="validations.acceptNoSpaces($event)"
+			check-name="{type:'datasource', check:!editingMode}" ng-class="{fakeInvalid:!validations.nameAvailable}"
+			ng-model="datasource.name" ng-required="true" ng-pattern="validations.patterns.name"/>
+		</div>
+		<div class="col-xs-12">
+			<label class="light" tooltip="cluster.colo">Data Center or Colo Name<mandatory-field></mandatory-field></label>
+			<input type="text" class="form-control"
+						ng-pattern="validations.patterns.name"
+						ng-required="true" ng-disabled="xmlPreview.edit"
+						ng-model="datasource.colo" validation-message="{{validations.messages.colo}}"/>
+		</div>
+	</div>
+	<div class="col-xs-24">
+		<label class="light">Description</label>
+		<input type="text" class="form-control"
+		ng-disabled="xmlPreview.edit"
+		ng-pattern="validations.patterns.freeText"
+		ng-model="datasource.description" />
+	</div>
+	<div class="col-xs-24">
+		<label class="light">Tags</label>
+	</div>
+
+	<div class="col-xs-12">
+		<div ng-repeat="tag in datasource.tags">
+			<div class="row dynamic-table-spacer">
+				<div class="col-xs-8">
+					<input type="text" class="form-control" ng-model="tag.key"
+						validation-optional-message="{{validations.messages.key}}"
+							ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
+				</div>
+				<div class="col-xs-8">
+					<input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+							ng-model="tag.value"
+							ng-pattern="validations.patterns.alpha" ng-required="tag.key" placeholder="value"/>
+				</div>
+				<div class="col-xs-8">
+					<button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-disabled="xmlPreview.edit" ng-if="!$first || !$last">
+						<span class="entypo minus"></span> delete
+					</button>
+					<button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-disabled="xmlPreview.edit" ng-if="$last">
+						<span class="entypo plus"></span> add tag
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-xs-24 plr0px">
+		<div class="col-xs-12">
+			<label class="light">Database Manager<mandatory-field></mandatory-field></label>
+			<select class="form-control padding0 "ng-required="true" validation-message="{{validations.messages.dbManager}}"
+				ng-model="datasource.type" ng-change="getDatabaseDefaultDetails()">
+				<option value="" disabled selected style='display:none;'>- Select Database Manager -</option>
+				<option value="mysql">MySQL</option>
+				<option value="oracle">Oracle</option>
+				<option value="hsql">HSQL</option>
+				<option value="db2">DB2</option>
+				<option value="postgres">Postgres</option>
+				<option value="netezza">Netezza</option>
+				<option value="teradata">Teradata</option>
+				<option value="generic">Generic</option>
+				<!-- <option ng-repeat="driverItem in driverList">{{driverItem.name}}</option> -->
+			</select>
+		</div>
+		<div class="col-xs-12">
+			<label class="light">Connection String<mandatory-field></mandatory-field></label>
+			<input type="text" title="You need to update the connection string to point to your db"
+			 ng-required="true"
+			 validation-message="{{validations.messages.connectionString}}"
+			 class="form-control endpointDefault" ng-class="{endpointChanged:datasourceForm.endpoint.$dirty}"
+			 ng-model="datasource.interfaces.interfaces[0].endpoint"/>
+			<!-- <span>jdbc:sqlserver//localhost:80</span> -->
+		</div>
+	</div>
+	<div class="col-xs-24 plr0px">
+		<div class="col-xs-12">
+			<label class="light" tooltip="datasource.driver.jar">Driver Jar<mandatory-field></mandatory-field></label>
+			<div ng-repeat="jar in datasource.driver.jar track by $index" class="col-xs-24 plr0px">
+				<div class="col-xs-16 plr0px">
+					<input type="text" class="form-control" ng-model="jar.value"
+					validation-message="{{validations.messages.driver.jar}}"
+					ng-pattern="validations.patterns.driver"
+					ng-required="true"
+					/>
+				</div>
+				<div class="col-xs-4" ng-if="!$first || !$last">
+					<a href="" class="driver-jar-link" ng-click="removeDriverJar($index)" ng-disabled="xmlPreview.edit">- Delete</a>
+				</div>
+				<div class="col-xs-4">
+					<a href="" class="driver-jar-link" ng-click="addDriverJar()" ng-disabled="xmlPreview.edit" ng-if="$last">+ Add</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-xs-12">
+			<label class="light" tooltip="datasource.driver">Driver Class<mandatory-field></mandatory-field></label>
+			<input type="text" name="driverClass" class="form-control" ng-model="datasource.driver.clazz"
+				validation-message="{{validations.messages.driver.clazz}}"
+				ng-required="true"
+				ng-pattern="validations.patterns.driver"
+			/>
+		</div>
+	</div>
+	<div class="col-xs-12 plr0px">
+		<div class="col-xs-24">
+			<label class="light">Type<mandatory-field></mandatory-field></label>
+		</div>
+		<div class="col-xs-24">
+			<input type="radio" ng-model="datasource.interfaces.interfaces[0].type" value="readonly" class="ml0" />
+			<label class="light mt5" tooltip="datasource.readMode">Read only</label>
+			<input type="radio" ng-model="datasource.interfaces.interfaces[0].type" value="write"/>
+			<label class="light mt5" tooltip="datasource.writeMode">Write</label>
+		</div>
+		<div class="col-xs-24 plr0px">
+			<div class="col-xs-24">
+				<label class="light" tooltip="datasource.interfaces.credentialType">Credential Type<mandatory-field></mandatory-field></label>
+			</div>
+			<div class="col-xs-24">
+				<input type="radio" ng-model="datasource.interfaces.interfaces[0].credential.type" ng-required="!datasource.interfaces.credential.type" value="password-text" class="ml0" />
+				<label class="light mt5" tooltip="datasource.interfaces.credentialType">Username / Password</label>
+				<input type="radio" ng-model="datasource.interfaces.interfaces[0].credential.type" ng-required="!datasource.interfaces.credential.type" value="password-file"/>
+				<label class="light mt5" tooltip="datasource.interfaces.credentialType">Password File</label>
+				<input type="radio" ng-model="datasource.interfaces.interfaces[0].credential.type" ng-required="!datasource.interfaces.credential.type" value="password-alias"/>
+				<label class="light mt5" tooltip="datasource.interfaces.credentialType">Password Alias</label>
+				<label class="col-xs-24 custom-danger validationMessageGral" ng-if="!datasource.interfaces.interfaces[0].credential.type">
+          {{validations.messages.credential.empty}}
+        </label>
+			</div>
+
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type">
+				<label class="light" tooltip="datasource.userName">Username<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.userName"
+				ng-required="true"
+				validation-optional-message="{{validations.messages.userName}}"
+				ng-pattern="validations.patterns.userName"
+				/>
+			</div>
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-text'">
+				<label class="light" tooltip="datasource.password">Password<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.passwordText"
+				ng-required="true"
+				validation-optional-message="{{validations.messages.dbPassword}}"
+				ng-pattern="validations.patterns.password"
+				/>
+			</div>
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-file'">
+				<label class="light" tooltip="datasource.credential.passwordFile">Password File<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.passwordFile"
+				ng-required="true"
+				validation-optional-message="{{validations.messages.passwordFile}}"
+				ng-pattern="validations.patterns.password"
+				/>
+			</div>
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-alias'">
+				<label class="light" tooltip="datasource.password">Password Alias<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.passwordAlias"
+				validation-optional-message="{{validations.messages.passwordAlias}}"
+				ng-required="true"
+				ng-pattern="validations.patterns.password"
+				/>
+			</div>
+
+			<div class="col-xs-10" ng-if="datasource.interfaces.interfaces[0].credential.type == 'password-alias'">
+				<label class="light" tooltip="datasource.password">Provider Path<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" ng-model="datasource.interfaces.interfaces[0].credential.providerPath"
+				validation-optional-message="{{validations.messages.providerPath}}"
+				ng-required="true"
+				ng-pattern="validations.patterns.password"
+				/>
+			</div>
+		</div>
+	</div>
+	<div class="col-xs-24 plr0px">
+		<label class="col-xs-24" tooltip="datasource.properties">Sqoop Properties</label>
+		<div class="col-xs-12">
+			<input type="checkbox" class="ml0"
+			ng-model="((datasource.properties | filter:{name:'directMode'})[0]).value"
+			ng-disabled="xmlPreview.edit" />
+			<label class="light" tooltip="datasource.directMode">Direct</label>
+			<input type="checkbox"
+			ng-model="((datasource.properties | filter:{name:'verboseMode'})[0]).value"
+			ng-disabled="xmlPreview.edit" />
+			<label class="light" tooltip="datasource.verboseMode">Verbose</label>
+		</div>
+	</div>
+	<div class="col-xs-24 plr0px">
+		<div class="col-xs-24">
+			<a href="" class="datasource-link" ng-click="addProperty()" ng-disabled="xmlPreview.edit">+ Add Property</a>
+		</div>
+		<div class="row m0" ng-if="datasource.customProperties.length > 0">
+			<label class="col-xs-8">Property Name</label><label class="col-xs-16">Value</label>
+		</div>
+		<div ng-repeat="property in datasource.customProperties" class="row m0"  ng-if="datasource.customProperties.length > 0">
+			<div class="col-xs-8 dynamic-table-spacer">
+				<input type="text" class="form-control" ng-model="property.name"
+				ng-pattern="validations.patterns.propertyName"
+				validation-optional-message="{{validations.messages.name}}"
+				ng-disabled="xmlPreview.edit"
+				ng-required="property.value" placeholder="name" />
+			</div>
+			<div class="col-xs-8 dynamic-table-spacer">
+				<input type="text" class="form-control" ng-model="property.value"
+				validation-optional-message="{{validations.messages.value}}"
+				ng-disabled="xmlPreview.edit"
+				ng-required="property.name" placeholder="value" />
+			</div>
+			<div class="dynamic-table-spacer">
+				<button type="button" class="btn btn-default btn-xs" ng-click="removeProperty($index)"
+				ng-disabled="xmlPreview.edit">
+				<span class="entypo minus"></span> delete
+			</button>
+		</div>
+	</div>
+</div>
+</div>
+<div class="col-xs-24 plr0px">
+	<div class="col-xs-12">
+		<label class="light" tooltip="datasource.parameterFile">Sqoop Parameter File</label>
+		<div class="form-inline">
+			<input type="text" class="form-control" ng-disabled="xmlPreview.edit"
+			ng-model="((datasource.properties | filter:{name:'parameterFile'})[0]).value"
+			validation-optional-message="{{validations.messages.parameterFile}}"/>
+			<!-- <button type="button" class="btn btn-sharp btn-browse" ng-disabled="xmlPreview.edit" ng-click="">
+			<i>Browse</i>
+		</button> -->
+		<!-- <a href="" class="datasource-link" ng-click="addParameter()" ng-disabled="xmlPreview.edit">+ Add Parameters</a> -->
+		<!-- <div class="pull-right">
+		<label class="light" tooltip="datasource.parameters">Parameters</label>
+		<a href="" class="datasource-link">+ Add Parameters</a>
+	</div>
+</div> -->
+<!-- <div class="form-inline pull-right">
+<label class="light" tooltip="datasource.parameterFile">Parameter File</label>
+<input type="text" class="form-control" ng-disabled="xmlPreview.edit"
+ng-model="datasource.parameterFile"
+validation-optional-message="{{validations.messages.parameterFile}}"/>
+<button type="button" class="btn btn-sharp btn-browse" ng-disabled="xmlPreview.edit" ng-click="">
+<i>Browse</i>
+</button>
+</div> -->
+</div>
+</div>
+</div>
+
+<div class="col-xs-12 plr0px">
+	<div class="row m0" ng-if="datasource.parameters.length > 0">
+		<label class="col-xs-8">Parameter Name</label><label class="col-xs-16">Value</label>
+	</div>
+	<div ng-repeat="parameter in datasource.parameters" class="row m0" ng-if="datasource.parameters.length > 0">
+		<div class="col-xs-8 dynamic-table-spacer">
+			<input type="text" class="form-control" ng-model="parameter.name"
+			ng-pattern="validations.patterns.propertyName"
+			validation-optional-message="{{validations.messages.name}}"
+			ng-disabled="xmlPreview.edit"
+			ng-required="parameter.value" placeholder="name" />
+		</div>
+		<div class="col-xs-8 dynamic-table-spacer">
+			<input type="text" class="form-control" ng-model="parameter.value"
+			validation-optional-message="{{validations.messages.value}}"
+			ng-disabled="xmlPreview.edit"
+			ng-required="parameter.name" placeholder="value" />
+		</div>
+		<div class="dynamic-table-spacer">
+			<button type="button" class="btn btn-default btn-xs" ng-click="removeParameter($index)"
+			ng-disabled="xmlPreview.edit">
+			<span class="entypo minus"></span> delete
+		</button>
+	</div>
+</div>
+</div>
+<!-- <div class="pull-right">
+<label class="light" tooltip="datasource.properties">Properties</label>
+<a href="" class="datasource-link">+ Add Properties</a>
+</div> -->
+
+	<div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="snapshotAdvancedOption">
+		<label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
+		<i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+		<i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+	</div>
+
+	<div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+		<div class="col-xs-24"><label>Access Control List</label></div>
+		<div class="col-xs-24 plr0px">
+			<div class="col-xs-8">
+				<label class="light">Owner<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" validation-message="{{validations.messages.acl.owner}}"
+							 ng-required="true"
+							 ng-pattern="validations.patterns.unixId"
+							 ng-model="datasource.ACL.owner"/>
+			</div>
+			<div class="col-xs-8">
+				<label class="light">Group<mandatory-field></mandatory-field></label>
+				<input type="text" class="form-control" validation-message="{{validations.messages.acl.group}}"
+							 ng-required="true"
+							 ng-pattern="validations.patterns.unixId"
+							 ng-model="datasource.ACL.group"/>
+			</div>
+			<div class="col-xs-24">
+				<div class="col-xs-8 plr0px">
+					<label class="light">Permissions<mandatory-field></mandatory-field></label>
+					<acl-permissions acl-model="datasource.ACL.permission"></acl-permissions>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-xs-24">
+		<div class="pull-right">
+			<button id="datasource.step2" class="btn btn-datasource"
+					 ng-disabled="buttonSpinners.validateShow"
+					 ng-click="validate()">
+				TEST <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.validateShow" />
+			</button>
+		</div>
+	</div>
+
+	<div class="col-xs-24 pb15px mt35">
+		<div class="pull-right">
+			<a class="btn cnclBtn" ui-sref="main">
+				CANCEL
+			</a>
+			<button id="datasource.step1" class="btn nextBtn"
+				ng-disabled="buttonSpinners.show"
+				ng-click="goNext(datasourceForm.$invalid)"
+				scroll-to-error>
+				NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+			</button>
+		</div>
+	</div>
+
+</form>

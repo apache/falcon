@@ -19,154 +19,191 @@
 -->
 <form name="processForm" class="mt10" novalidate id="processFormSummaryStep">
 
-  <div class="row">
-    <h4 class="col-sm-24">Process</h4>
+  <div class="row" id="processSummaryStep">
+    <h4 class="col-sm-24">General</h4>
 
-    <div class="clearfix hidden-md">&nbsp</div>
-
-    <label class="col-sm-24">Name</label>
-    <label class="col-sm-24 light">{{process.name}}</label>
-
-    <div class="clearfix hidden-md">&nbsp</div>
-
-    <label class="col-sm-24">Tags</label>
     <div class="col-sm-24">
-      <div ng-repeat="tag in process.tags | filter:{key: '!!'}">
-        {{tag.key}} = {{tag.value}}
-      </div>
-      <div ng-show="!hasTags()">No tags selected</div>
+      <label>Process Name</label>: <span data-qe-id="processName">{{process.name}}</span>
     </div>
 
-    <div class="clearfix hidden-md">&nbsp</div>
+    <div class="col-sm-24">
+      <label>Tags</label>:
+      <div ng-repeat="tag in process.tags | filter:{key: '!!'} track by $index">
+        <span data-qe-id="processTags">{{tag.key}} = {{tag.value}}</span>
+      </div>
+      <div ng-show="!hasTags()"><span data-qe-id="processTags">No tags selected</span></div>
+    </div>
+
+    <h4 class="col-sm-24">
+      Access Control List
+    </h4>
+    <div class="col-sm-24">
+      <label>Owner</label>: <span data-qe-id="processACLOwner">{{optional(process.ACL.owner)}}</span>
+      <label>Group</label>: <span data-qe-id="processACLGroup">{{optional(process.ACL.group)}}</span>
+      <label>Permissions</label>:<span data-qe-id="processACLPermission"> {{optional(process.ACL.permission)}}</span>
+    </div>
 
     <h4 class="col-sm-24">Workflow</h4>
-    <div class="clearfix hidden-md">&nbsp</div>
-    <div class="row">
-      <div class="col-sm-8">
-        <label class="col-sm-24">Name</label>
-        <label class="col-sm-24 light">{{process.workflow.name}}</label>
+    <div class="col-sm-24">
+      <label>Workflow Name</label>:
+      <label class="light" data-qe-id="processWorkflowName">{{process.workflow.name}}</label>
+    </div>
+    <div class="col-sm-24">
+      <label>Engine</label>:
+      <label class="light"  data-qe-id="processWorkflowEngine">{{process.workflow.engine}}</label>
+    </div>
+    <div class="col-sm-24">
+      <label>Workflow Path</label>:
+      <label class="light" data-qe-id="processWorkflowPath">{{process.workflow.path}}</label>
+    </div>
+
+    <div class="col-sm-24 plr0px" ng-show="process.workflow.engine==='spark'">
+      <h4 class="col-sm-24">Spark Attributes</h4>
+      <div class="col-sm-24">
+        <label>Aplication</label>:
+        <label class="light" data-qe-id="processSparkApplication">{{process.workflow.spark.name}}</label>
       </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Engine</label>
-        <label class="col-sm-24 light">{{process.workflow.engine}}</label>
+      <div class="col-sm-24">
+        <label>Main Class</label>:
+        <label class="light"  data-qe-id="processSparkMainClass">{{process.workflow.spark.class}}</label>
       </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Version</label>
-        <label class="col-sm-24 light">{{process.workflow.version}}</label>
+      <div class="col-sm-24">
+        <label>Runs On</label>:
+        <label class="light" data-qe-id="processSparkRunsOn">{{process.workflow.spark.master}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Mode</label>:
+        <label class="light" data-qe-id="processSparkMode">{{process.workflow.spark.mode}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Jar</label>:
+        <label class="light" data-qe-id="processSparkJar">{{process.workflow.spark.jar}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Spark Options</label>:
+        <label class="light" data-qe-id="processSparkOpts">{{process.workflow.spark.sparkOptions}}</label>
+      </div>
+
+      <div class="col-sm-24">
+        <label>Spark Arguments</label>:
+        <label class="light" data-qe-id="processSparkOpts">{{process.workflow.spark.arg}}</label>
       </div>
     </div>
-    <label class="col-sm-24">Path</label>
-    <label class="col-sm-24 light">{{process.workflow.path}}</label>
-
 
     <h4 class="col-sm-24">Timing</h4>
-    <div class="clearfix hidden-md">&nbsp</div>
-    <label class="col-sm-24">Timezone</label>
-    <label class="col-sm-24 light">{{optional(process.timezone)}}</label>
-    <div class="row">
-      <div class="col-sm-8">
-        <label class="col-sm-24">Frequency</label>
-        <label class="col-sm-24 light">Every {{process.frequency.quantity}} {{process.frequency.unit}}</label>
-      </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Max. parallel instances</label>
-        <label class="col-sm-24 light">{{process.parallel}}</label>
-      </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Order</label>
-        <label class="col-sm-24 light">{{optional(process.order)}}</label>
-      </div>
+    <div class="col-sm-24">
+      <label>Timezone</label>:
+      <label class="light" data-qe-id="processTimezone">{{optional(process.timezone)}}</label>
     </div>
-    <div class="clearfix hidden-md">&nbsp</div>
+    <div class="col-sm-24">
+      <label>Frequency</label>:
+      <label class="light">Every
+        <span data-qe-id="processFrequencyQuantity">{{process.frequency.quantity}}</span>
+        <span data-qe-id="processFrequencyUnit">{{process.frequency.unit}}</span>
+      </label>
+    </div>
+    <div class="col-sm-24">
+      <label>Max. parallel instances</label>:
+      <label class="light" data-qe-id="processParallel">{{process.parallel}}</label>
+    </div>
+    <div class="col-sm-24">
+      <label>Instance Usage</label>:
+      <label class="light" data-qe-id="processOrder">{{optional(process.order)}}</label>
+    </div>
+
     <h4 class="col-sm-24">Retry</h4>
-    <div class="clearfix hidden-md">&nbsp</div>
-    <div class="row">
-      <div class="col-sm-8">
-        <label class="col-sm-24">Policy</label>
-        <label class="col-sm-24 light">{{process.retry.policy}}</label>
-      </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Attempts</label>
-        <label class="col-sm-24 light">{{process.retry.attempts}}</label>
-      </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Delay</label>
-        <label class="col-sm-24 light">Up to {{process.retry.delay.quantity}} {{process.retry.delay.unit}}</label>
-      </div>
+    <div class="col-sm-24">
+      <label>Retry Policy</label>:
+      <label class="light" data-qe-id="processRetryPolicy">{{process.retry.policy}}</label>
     </div>
-    <div class="clearfix hidden-md">&nbsp</div>
+    <div class="col-sm-24">
+      <label>Attempts</label>:
+      <label class="light" data-qe-id="processRetryAttempts">{{process.retry.attempts}}</label>
+    </div>
+    <div class="col-sm-24">
+      <label>Delay</label>:
+      <label class="light">Up to
+        <span data-qe-id="processRetryDelayQuantity">{{process.retry.delay.quantity}}</span>
+        <span data-qe-id="processRetryDelayUnit">{{process.retry.delay.unit}}</span>
+      </label>
+    </div>
+
+    <h4 class="col-sm-24" ng-if="(process.properties | filter:{name: '!!'}).length > 0">Properties</h4>
+    <div class="col-sm-24" ng-repeat="property in process.properties | filter:{name: '!!'} track by $index">
+      <label>{{property.name}}</label>:<span> {{property.value}}</span>
+    </div>
+
     <h4 class="col-sm-24">Clusters</h4>
-    <div ng-repeat="cluster in process.clusters">
+    <div ng-repeat="cluster in process.clusters track by $index" data-qe-id="processClusters">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
-        <label class="col-sm-24">Name</label>
-        <label class="col-sm-24 light">{{cluster.name}}</label>
-        <div class="clearfix hidden-md">&nbsp</div>
-        <h4 class="col-sm-24">Validity</h4>
-        <div class="row">
-          <div class="col-sm-12">
-            <label class="col-sm-24">Start</label>
-            <label class="col-sm-24 light">{{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}</label>
-          </div>
-          <div class="col-sm-12">
-            <label class="col-sm-24">End</label>
-            <label class="col-sm-24 light">{{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}</label>
-          </div>
+        <div class="col-sm-24">
+          <label>Cluster Name</label>:
+          <label class="light" data-qe-id="processClusterName">{{cluster.name}}</label>
+        </div>
+        <label class="col-sm-24">Validity</label>
+        <div class="col-sm-24">
+          <label>Start</label>:
+          <label class="light" data-qe-id="processClusterStart">{{cluster.validity.start.date|date:'yyyy-MM-dd'}} {{cluster.validity.start.time|date:'HH:mm'}}</label>
+          <label>End</label>:
+          <label class="light" data-qe-id="processClusterEnd">{{cluster.validity.end.date|date:'yyyy-MM-dd'}} {{cluster.validity.end.time|date:'HH:mm'}}</label>
         </div>
       </div>
     </div>
-    <div class="clearfix hidden-md">&nbsp</div>
     <h4 class="col-sm-24">Inputs</h4>
-    <div ng-repeat="input in process.inputs">
+    <div ng-repeat="input in process.inputs track by $index" data-qe-id="processInputs">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
-        <label class="col-sm-24">Name</label>
-        <label class="col-sm-24 light">{{input.name}}</label>
-        <label class="col-sm-24">Feed</label>
-        <label class="col-sm-24 light">{{input.feed}}</label>
-        <div class="clearfix hidden-md">&nbsp</div>
-        <h4 class="col-sm-24">Instance</h4>
-        <div class="row">
-          <div class="col-sm-12">
-            <label class="col-sm-24">Start</label>
-            <label class="col-sm-24 light">{{input.start}}</label>
-          </div>
-          <div class="col-sm-12">
-            <label class="col-sm-24">End</label>
-            <label class="col-sm-24 light">{{input.end}}</label>
-          </div>
+        <div class="col-sm-24">
+          <label>Name</label>:
+          <label class="light" data-qe-id="processInputName">{{input.name}}</label>
+        </div>
+        <div class="col-sm-24">
+          <label>Feed</label>:
+          <label class="light" data-qe-id="processInputFeed">{{input.feed}}</label>
+        </div>
+        <label class="col-sm-24">Instance</label>
+        <div class="col-sm-24">
+          <label>Start</label>:
+          <label class="light" data-qe-id="processInstanceStart">{{input.start}}</label>
+          <label>End</label>:
+          <label class="light" data-qe-id="processInstanceEnd">{{input.end}}</label>
         </div>
       </div>
     </div>
     <h4 class="col-sm-24">Outputs</h4>
-    <div ng-repeat="output in process.outputs">
+    <div ng-repeat="output in process.outputs track by $index" data-qe-id="processOutputs">
       <div class="row col-sm-offset-1 col-sm-22 detailsBox">
-        <label class="col-sm-24">Name</label>
-        <label class="col-sm-24 light">{{output.name}}</label>
-        <label class="col-sm-24">Feed</label>
-        <label class="col-sm-24 light">{{output.feed}}</label>
-        <div class="clearfix hidden-md">&nbsp</div>
-        <h4 class="col-sm-24">Instance</h4>
+        <div class="col-sm-24">
+          <label>Name</label>
+          <label class="light" data-qe-id="processOutputName">{{output.name}}</label>
+        </div>
+        <div class="col-sm-24">
+          <label>Feed</label>
+          <label class="light" data-qe-id="processOutputFeed">{{output.feed}}</label>
+        </div>
         <label class="col-sm-24">Instance</label>
-        <label class="col-sm-24 light">{{output.outputInstance}}</label>
+        <div class="col-sm-24">
+          <label>Instance</label>
+          <label class="light" data-qe-id="processOutputInstance">{{output.outputInstance}}</label>
+        </div>
       </div>
     </div>
   </div>
-  <div class="clearfix hidden-md">&nbsp</div>
 
-  <div class="row">
-    <div class="col-xs-24 mt20">
-      <button type="button" class="btn prevBtn"
-           ng-click="goBack('forms.process.io')"
-           ng-disabled="buttonSpinners.backShow">
-        Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
-      </button>
-      <button class="btn nextBtn pull-right"
-           ng-disabled="processForm.$invalid || buttonSpinners.show"
-           ng-click="saveEntity()">
-        Save <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-      </button>
-      <a class="pull-right" ui-sref="main">
-        Cancel
+  <div class="col-xs-24 mt35 pb15px pl0px">
+    <button type="button" class="btn prevBtn"
+         ng-click="goBack()"
+         ng-disabled="buttonSpinners.backShow">
+      PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+    </button>
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
       </a>
+      <button class="btn nextBtn"
+           ng-disabled="processForm.$invalid || buttonSpinners.show"
+           ng-click="saveEntity()" scroll-to-error>
+        SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
     </div>
   </div>
 

@@ -1,0 +1,132 @@
+<!--
+/**
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+-->
+<div class="col-xs-24 plr0px">
+  <div class="col-xs-10 plr0px">
+    <div class="datasourceBox">
+      <div class="col-xs-24">
+        <label class="light">Cluster<mandatory-field></mandatory-field></label>
+      </div>
+      <div class="col-xs-24">
+        <select ng-model="cluster.name" class="form-control padding0" ng-required="required"
+          ng-change="findClusterExists(cluster.name, cluster.type, storageInfo.feedClusters)"
+          validation-message="{{validations.messages.cluster}}">
+          <option value="" disabled style='display:none;'>-Select {{cluster.type}} cluster-</option>
+          <option ng-repeat="clusterItem in storageInfo.clustersList"
+            value="{{clusterItem.name}}" ng-selected="cluster.name === clusterItem.name">
+          {{clusterItem.name}}
+          </option>
+        </select>
+      </div>
+      <div class="col-xs-24 custom-danger" ng-show="checkDuplicateClusterOnTarget()">
+        Target cannot be the same as the Source
+      </div>
+      <div class="col-xs-24 custom-danger" ng-show="clusterExists">
+        Cluster is already added
+      </div>
+      <div class="col-xs-24">
+        <label class="light" tooltip="feed.storage.tableUri">
+          Table URI<mandatory-field></mandatory-field>
+        </label>
+      </div>
+      <div class="col-xs-24">
+        <input type="text"
+          placeholder="Enter table uri"
+          class="form-control"
+          ng-required="cluster.name"
+          validation-optional-message="{{validations.messages.tableUri}}"
+          ng-model="cluster.storage.catalog.catalogTable.uri" />
+      </div>
+      <div class="col-xs-24">
+        <a href="" ng-click="toggleAdvancedOptions()">MORE OPTIONS ></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-12 plr0px">
+    <div class="datasourceBox" ng-show="showingAdvancedOptions">
+      <div class="col-xs-24 validityBox plr0px">
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-12 startDateBox">
+            <label class="light">Start<mandatory-field></mandatory-field></label>
+            <input type="text"
+              name="startDateInput"
+              class="form-control dateInput"
+              placeholder="{{dateFormat | lowercase}}"
+              ng-model="cluster.validity.start.date"
+              simple-date-picker />
+          </div>
+          <div class="col-xs-12 startTimeBox">
+            <label class="light">Time<mandatory-field></mandatory-field></label>
+            <timepicker ng-change="constructDate()"
+              ng-model="cluster.validity.start.time"
+              hour-step="1"
+              minute-step="1"
+              show-meridian="true">
+            </timepicker>
+          </div>
+        </div>
+        <label class="col-xs-24 custom-danger validationMessageGral" ng-if="!cluster.validity.start.date">
+          {{validations.messages.date.empty}}
+        </label>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-12 endDateBox">
+            <label class="light">End<mandatory-field></mandatory-field></label>
+            <input type="text"
+              name="startDateInput"
+              class="form-control dateInput"
+              placeholder="{{dateFormat | lowercase}}"
+              ng-model="cluster.validity.end.date"
+              simple-date-picker />
+          </div>
+          <div class="col-xs-12 endTimeBox">
+            <label class="light">Time<mandatory-field></mandatory-field></label>
+            <timepicker ng-change="constructDate()"
+              ng-model="cluster.validity.end.time"
+              hour-step="1"
+              minute-step="1"
+              show-meridian="true">
+            </timepicker>
+          </div>
+        </div>
+        <label class="col-xs-24 custom-danger validationMessageGral" ng-if="!cluster.validity.end.date">
+          {{validations.messages.date.empty}}
+        </label>
+      </div>
+      <label class="light col-xs-24">Retention<mandatory-field></mandatory-field></label>
+      <div class="col-xs-24 inlineInputsGroup">
+        <input type="text" class="form-control" ng-required="required" ng-model="cluster.retention.quantity" ng-keydown="validations.acceptOnlyNumber($event)" ng-pattern="validations.patterns.twoDigits">
+        <select ng-model="cluster.retention.unit" ng-keydown="validations.acceptOnlyNumber({$event:$event})" ng-required="required">
+          <option selected value="minutes">minutes</option>
+          <option value="hours">hours</option>
+          <option value="days">days</option>
+          <option value="months">months</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col-xs-24 mt10">
+  <a ng-click="reset()" ng-if="!storageInfo.readOnly">Reset</a>
+  <button class="btn datasourceBtn" ng-if="!storageInfo.readOnly"
+    ng-disabled="cluster.name === '' || !cluster.storage.catalog.catalogTable.uri || $scope.cluster.name === '' || $scope.cluster.storage.catalog.catalogTable.uri==='' || clusterExists"
+    ng-click="addCluster({type : storageInfo.type, dataTransferType : 'hive'})">Add {{buttonText}}</button>
+  <button class="btn datasourceBtn" ng-click="deleteCluster()"
+    ng-if="(storageInfo.feedClusters | filter:{type: cluster.type}).length > 1">Delete</button>
+</div>

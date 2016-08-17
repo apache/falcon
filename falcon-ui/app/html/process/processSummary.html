@@ -30,7 +30,6 @@
       <div ng-repeat="tag in process.tags | filter:{key: '!!'}">
         {{tag.key}} = {{tag.value}}
       </div>
-      <div ng-show="!hasTags()">No tags selected</div>
     </div>
 
     <h5 class="col-sm-24">Access Control List</h5>
@@ -61,14 +60,41 @@
         <label class="col-sm-24">Engine</label>
         <label class="col-sm-24 light">{{process.workflow.engine}}</label>
       </div>
-      <div class="col-sm-8">
-        <label class="col-sm-24">Version</label>
-        <label class="col-sm-24 light">{{process.workflow.version}}</label>
-      </div>
     </div>
     <label class="col-sm-24">Path</label>
     <label class="col-sm-24 light">{{process.workflow.path}}</label>
 
+    <div class="col-sm-24 plr0px" ng-show="process.workflow.engine==='spark'">
+      <h5 class="col-sm-24">Spark Attributes</h4>
+      <div class="col-sm-24">
+        <label>Aplication</label>:
+        <label class="light" data-qe-id="processSparkApplication">{{process.workflow.spark.name}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Main Class</label>:
+        <label class="light"  data-qe-id="processSparkMainClass">{{process.workflow.spark.class}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Runs On</label>:
+        <label class="light" data-qe-id="processSparkRunsOn">{{process.workflow.spark.master}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Mode</label>:
+        <label class="light" data-qe-id="processSparkMode">{{process.workflow.spark.mode}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Jar</label>:
+        <label class="light" data-qe-id="processSparkJar">{{process.workflow.spark.jar}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Spark Options</label>:
+        <label class="light" data-qe-id="processSparkOpts">{{process.workflow.spark.sparkOptions}}</label>
+      </div>
+      <div class="col-sm-24">
+        <label>Spark Arguments</label>:
+        <label class="light" data-qe-id="processSparkOpts">{{process.workflow.spark.arg}}</label>
+      </div>
+    </div>
 
     <h5 class="col-sm-24">Timing</h5>
     <label class="col-sm-24" ng-if="process.timezone">Timezone</label>
@@ -87,6 +113,11 @@
         <label class="col-sm-24">Order</label>
         <label class="col-sm-24 light">{{process.order}}</label>
       </div>
+    </div>
+
+    <h5 class="col-sm-24" ng-if="(process.properties | filter:{name: '!!'}).length > 0">Properties</h5>
+    <div class="col-sm-24" ng-repeat="property in process.properties  | filter:{name: '!!'}">
+      <label>{{property.name}}</label>:<span> {{property.value}}</span>
     </div>
 
     <h5 class="col-sm-24">Retry</h5>

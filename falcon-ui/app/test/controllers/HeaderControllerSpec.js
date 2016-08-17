@@ -29,30 +29,30 @@
               interface:[
                 {
                   _type:"readonly",
-                  _endpoint:"hftp://sandbox.hortonworks.com:50070",
+                  _endpoint:"hftp://localhost:50070",
                   _version:"2.2.0"
                 },
                 {
                   _type:"write",
-                  _endpoint:"hdfs://sandbox.hortonworks.com:8020",
+                  _endpoint:"hdfs://localhost:8020",
                   _version:"2.2.0"
 
                 },
                 {
                   _type:"execute",
-                  _endpoint:"sandbox.hortonworks.com:8050",
+                  _endpoint:"localhost:8050",
                   _version:"2.2.0"
 
                 },
                 {
                   _type:"workflow",
-                  _endpoint:"http://sandbox.hortonworks.com:11000/oozie/",
+                  _endpoint:"http://localhost:11000/oozie/",
                   _version:"4.0.0"
 
                 },
                 {
                   _type:"messaging",
-                  _endpoint:"tcp://sandbox.hortonworks.com:61616?daemon=true",
+                  _endpoint:"tcp://localhost:61616?daemon=true",
                   _version:"5.1.6"
 
                 }

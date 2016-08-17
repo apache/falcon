@@ -26,11 +26,14 @@
     var controllerProvider;
     var falconServiceMock;
 
-    beforeEach(module('app.controllers.feed', 'dateHelper'));
+    beforeEach(module('app.controllers.feed', 'dateHelper', 'routeHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller, DateHelper) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper, RouteHelper) {
       scope = $rootScope.$new();
       scope.models = {};
+      scope.$parent = $rootScope.$new();
+      scope.$parent.models = {};
+      scope.$parent.models.feedModel = undefined;
       entityFactoryMock = jasmine.createSpyObj('EntityFactory', ['newEntity']);
       serializerMock = jasmine.createSpyObj('EntitySerializer', ['preDeserialize']);
       falconServiceMock = jasmine.createSpyObj('Falcon', ['postUpdateEntity', 'postSubmitEntity', 'logRequest', 'logResponse']);
@@ -39,12 +42,14 @@
       controller = $controller('FeedController', {
         $scope: scope,
         $state: {
-          $current:{
+          current:{
             name: 'main.forms.feed.general'
           },
           go: angular.noop
         },
-        Falcon: falconServiceMock
+        Falcon: falconServiceMock,
+        FeedModel: {feed : {}},
+        datasourcesList: []
       });
     }));
 
@@ -75,7 +80,7 @@
     describe('loadOrCreateEntity()', function() {
       it('Should deserialize the entity if the xml is found on the scope', function() {
 
-        controller = createController();
+        controller = createController({name: 'FeedName'});
         var createdFeed =  {};
         var deserialzedFeed =  {};
         var feedModel = {name: 'FeedName'};
@@ -93,12 +98,11 @@
       });
 
       it('Should not deserialize the entity if the xml is not found on the scope', function() {
-        controller = createController();
+        controller = createController(undefined);
         var createdFeed =  {};
         var deserialzedFeed =  {};
         serializerMock.preDeserialize.andReturn(deserialzedFeed);
         entityFactoryMock.newEntity.andReturn(createdFeed);
-
 
         var feed = scope.loadOrCreateEntity();
 
@@ -108,13 +112,13 @@
       });
 
       it('Should clear the feedModel from the scope', function() {
-        controller = createController();
+        controller = createController(undefined);
         entityFactoryMock.newEntity.andReturn({});
         scope.models.feedModel = {};
 
         scope.loadOrCreateEntity();
 
-        expect(scope.models.feedModel).toBe(null);
+        expect(scope.$parent.models.feedModel).toBe(null);
       });
 
 
@@ -139,7 +143,6 @@
 
         scope.saveEntity();
 
-        expect(scope.editingMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
         expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><feed><clusters><cluster></cluster></clusters></feed>', 'feed', 'FeedOne');
       });
@@ -162,25 +165,26 @@
 
         scope.saveEntity();
 
-        expect(scope.cloningMode).toBe(false);
         expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><feed><clusters><cluster></cluster></clusters></feed>', 'feed');
         expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
       });
 
     });
 
-    function createController() {
+    function createController(feedModel) {
       return controllerProvider('FeedController', {
         $scope: scope,
         $state: {
-          $current:{
+          current:{
             name: 'main.forms.feed.general'
           },
           go: angular.noop
         },
         Falcon: {},
         EntityFactory: entityFactoryMock,
-        EntitySerializer: serializerMock
+        EntitySerializer: serializerMock,
+        FeedModel: feedModel,
+        datasourcesList: []
       });
     }
 

@@ -19,55 +19,98 @@
 -->
 <div class="container" id="entityDetails">
 
-  <div class="row">
-    <div class="col-sm-24">
-      <button class="btn " ui-sref="main">< Back to Search</button>
+  <div class="row pt15px">
+    <div class="col-sm-24 detailsHeaders pl0px">
+	<button class="btn" title="Back to search" ui-sref="main">< </button>
+		<span class="entityName">{{entity.name}}</span>
+        <span ng-class="{'blink-success': entity.status == 'RUNNING',
+                     'text-success': entity.status == 'SUCCEEDED',
+                     'blink-warning': entity.status == 'SUSPENDED',
+                     'blink-danger': entity.status == 'UNKNOWN'}"  ng-if="entity.type != 'cluster'">
+                     {{entity.status}}</span>
+    <br><br>
+    <div class="pull-left">
+      <table>
+        <tbody>
+          <tr>
+            <td class="buttonCell" colspan="9">
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="scheduleEntity()" ng-if="entity.type != 'cluster' && entity.status == 'SUBMITTED'">
+            <span class="entypo play"></span> <div>Schedule</div>
+          </div>
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="resumeEntity()" ng-if="entity.type != 'cluster' && entity.status == 'SUSPENDED'">
+            <span class="entypo play"></span> <div>Resume</div>
+          </div>
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="suspendEntity()" ng-if="entity.type != 'cluster' && entity.status == 'RUNNING'">
+            <span class="entypo paus"></span> <div>Pause</div>
+          </div>
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="editEntity()"
+            ng-disabled="entity.type === 'cluster' && (!isSafeMode() || !isSuperUser())"
+            ng-class="{disabledEditBtn: entity.type === 'cluster' && (!isSafeMode() || !isSuperUser())}"
+            title="{{(entity.type === 'cluster' && !isSafeMode() || (!isSuperUser())) ? 'Cluster entity update can only be performed by superuser during safemode' : ''}}">
+            <span class="entypo cog"></span> <div>Edit</div>
+          </div>
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="cloneEntity()"  ng-if="entity.type != 'cluster'">
+            <span class="entypo docs"></span> <div>Copy</div>
+          </div>
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="deleteEntity()">
+            <span class="entypo trash"></span> <div>Delete</div>
+          </div>
+          <div class="btn btn-gray btn-xs buttons-to-show" ng-click="downloadEntity()">
+            <span class="entypo down"></span> <div>XML</div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+      </table>
+
+    </div>
     </div>
   </div>
-
+<!--*
 	<h3 class="link-icons entity-title entity-link-null" id="entity-title">
 		{{entity.name}} <button type="button" class="detailsBT">
 		<span ng-class="displayIcon((entity.type | uppercase), entity.model)"></span> {{entityTypeLabel}}
 	</button>
-	</h3>
+	</h3>-->
 
-	<div class="row">
-		<div class="col-sm-24">
-			<div class="detailsBox">
-				<h4>
-					Dependencies
-				</h4>
-        <div class="dependencies-graph"><dependencies-graph name="entity.name" type="entity.type"/></div>
+	<div class="row pt15px" ng-if="entity.type != 'cluster'">
+		<div class="col-sm-24 pl0px">
+			<div class="entityDetailsBox">
+			<div class="dependencies-graph"><dependencies-graph name="entity.name" type="entity.type"/></div>
 			</div>
 		</div>
 	</div>
 
-	<div class="row">
-		<div class="col-sm-16">
-			<div class="detailsBox">
+	<div class="row pt15px">
+		<div class="col-sm-16 entityDetailsBox p10px" ng-if="entity.type != 'cluster'">
+			<div>
 				<h4>
-					Instances
+					INSTANCES
 				</h4>
 				<instances-list input="instancesList" type="entity.type" name="entity.name" instance-details="instanceDetails"
 												pages="pages" go-page="goPage" next-pages="nextPages" prev-pages="prevPages" change-pages-set="changePagesSet"
 												start="entity.start" end="entity.end"/>
 			</div>
 		</div>
-		<div class="col-sm-8">
-			<div class="summaryBox" ng-init="propsOpen = false">
+		<div ng-class="{'col-sm-8': entity.type !== 'cluster', 'col-sm-24': entity.type === 'cluster'}">
+			<div class="summaryBox" ng-init="propsOpen = entity.type === 'cluster'">
 				<div class="row">
 					<div class="col-sm-21">
 						<h4>
-							Properties
+							PROPERTIES
 						</h4>
 					</div>
 					<div class="col-sm-3">
-						<h4 class="pointer glyphicon" ng-click="propsOpen = !propsOpen" ng-class="propsOpen ? 'glyphicon-chevron-up':'glyphicon-chevron-down'"></h4>
+						<h4 ng-hide="entity.type === 'cluster'" class="pointer glyphicon" ng-click="propsOpen = !propsOpen" ng-class="propsOpen ? 'glyphicon-chevron-up':'glyphicon-chevron-down'"></h4>
 					</div>
 				</div>
         <div ng-show="propsOpen" class="animate-show">
 					<div ng-if="entity.type == 'feed'" ui-view="feedSummary"></div>
-					<div ng-if="entity.type == 'process'" ui-view="processSummary"></div>
+          <div ng-if="entity.type == 'cluster'" ui-view="clusterSummary"></div>
+          <div ng-if="entity.type == 'process' && entityTypeLabel == 'Process'" ui-view="processSummary"></div>
+          <div ng-if="entity.type == 'process' && entityTypeLabel == 'Snapshot'" ui-view="snapshotSummary"></div>
+          <div ng-if="entity.type == 'process' && (entityTypeLabel == 'HDFS Mirror' || entityTypeLabel == 'Hive Mirror')"
+            ui-view="datasetSummary"></div>
 				</div>
 			</div>
 		</div>

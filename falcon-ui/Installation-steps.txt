@@ -45,3 +45,7 @@ Then navigate to localhost:15000
 - grunt dev
 This will launch an express server with the falcon-ui to localhost:3000
 (You can test there all UI related behaviours and express will mock all falcon REST calls)
+
+
+## Font/Icons
+http://web.archive.org/web/20140912210715/http://entypo.com/characters/

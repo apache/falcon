@@ -17,19 +17,19 @@
  * limitations under the License.
  */
 -->
-<form name="processForm" class="mt10" novalidate id="processFormPropsStep">
+<form name="processForm" novalidate>
 
-  <h5 class="col-xs-24">Timing</h5>
+  <div class="col-xs-24"><label class="mt15">TIMING</label></div>
 
   <div class="col-xs-24 mb10">
-    <label class="light">Timezone</label>
-    <time-zone-select ng-model="process.timezone" id="timeZoneSelect"></time-zone-select>
+    <label class="light" tooltip="process.properties.timezone">Timezone<mandatory-field></mandatory-field></label>
+    <time-zone-select ng-model="process.timezone" id="timeZoneSelect" required="true">
+    </time-zone-select>
   </div>
-
-  <div class="col-xs-9">
+  <div class="col-xs-24 plr0px">
+    <div class="col-xs-9">
     <div class="inlineInputsGroup">
-      <div>Frequency</div>
-      <span>Every</span>
+      <div><label class="light">Frequency Every<mandatory-field></mandatory-field></label></div>
       <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
              ng-model="process.frequency.quantity" ng-keydown="validations.acceptOnlyNumber($event)"
              id="frequencyQuantity"
@@ -45,39 +45,48 @@
         <option value="months">months</option>
       </select>
     </div>
-  </div>
-  <div class="col-xs-7">
+    </div>
+    <div class="col-xs-7">
     <div class="inlineInputsGroup">
-      <div>Maximum Parallel Instances</div>
+      <div><label class="light">Maximum Parallel Instances<mandatory-field></mandatory-field></label></div>
       <select
         ng-model="process.parallel"
         ng-required="true">
         <option ng-repeat="value in [1,2,3,4,5,6,7,8,9,10,11,12]">{{value}}</option>
       </select>
     </div>
-  </div>
-  <div class="col-xs-8">
+    </div>
+    <div class="col-xs-8">
     <div class="inlineInputsGroup">
-      <div>Order</div>
+      <div>
+        <label class="light" tooltip="process.properties.order">
+          Instance Usage<mandatory-field></mandatory-field>
+        </label>
+      </div>
       <select ng-model="process.order" ng-required="true" validation-message="{{validations.messages.option}}">
         <option value="" disabled selected style='display:none;'>-Select order-</option>
         <option ng-repeat="value in ['FIFO', 'LIFO', 'LAST_ONLY']">{{value}}</option>
       </select>
     </div>
-  </div>
-  <div class="clearfix mb10"></div>
-  <h4 class="col-xs-24">Retry</h4>
-
-  <div class="col-xs-9 inlineInputsGroup">
-      <div class="mt10 mb10">Policy</div>
-      <select ng-model="process.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}">
-        <option value="" disabled selected style='display:none;'>-Select policy-</option>
-        <option ng-repeat="value in ['periodic', 'exp-backoff', 'final']">{{value}}</option>
-      </select>
     </div>
   </div>
-  <div class="col-xs-7 inlineInputsGroup">
-      <div class="mt10">Attempts</div>
+  <div class="col-xs-24"><label class="mt15">RETRY</label></div>
+  <div class="col-xs-24 plr0px">
+    <div class="col-xs-9 inlineInputsGroup">
+      <div>
+        <label class="light" tooltip="process.properties.retryPolicy" tooltip-position="up">
+          Retry Policy<mandatory-field></mandatory-field>
+        </label>
+      </div>
+      <select ng-model="process.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}">
+        <option value="" disabled selected style='display:none;'>-Select policy-</option>
+        <option value="periodic">Periodic</option>
+        <option value="exp-backoff">Exponential Backup</option>
+        <option value="final">None</option>
+      </select>
+    </div>
+    <div class="col-xs-7 inlineInputsGroup">
+      <div><label class="light">Attempts<mandatory-field></mandatory-field></label></div>
 
       <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
              ng-model="process.retry.attempts" ng-keydown="validations.acceptOnlyNumber($event)"
@@ -85,11 +94,9 @@
              ng-required="true"
              ng-pattern="validations.patterns.twoDigits"/>
     </div>
-  </div>
-  <div class="col-xs-8">
+    <div class="col-xs-8">
     <div class="inlineInputsGroup">
-      <div class="mt10">Delay</div>
-      <span>Up to</span>
+      <div><label class="light">Delay Up to<mandatory-field></mandatory-field></label></div>
       <input type="text" class="form-control"
              ng-model="process.retry.delay.quantity" validation-message="{{validations.messages.number}}"
              id="delayQuantity" ng-keydown="validations.acceptOnlyNumber($event)"
@@ -104,23 +111,25 @@
         <option value="months">months</option>
       </select>
     </div>
+    </div>
   </div>
-
-  <div class="col-xs-24 mt20">
+  <div class="col-xs-24 mt35 pb15px pl0px">
     <button class="btn prevBtn"
          type="button"
-         ng-click="goBack('forms.process.general')"
+         ng-click="goBack()"
          ng-disabled="buttonSpinners.backShow">
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+      PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
     </button>
-    <button class="btn nextBtn pull-right"
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
+      </a>
+      <button class="btn nextBtn"
          ng-disabled="buttonSpinners.show"
-         ng-click="goNext(processForm.$invalid, 'forms.process.clusters')" >
-      Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-    <a class="pull-right" ui-sref="main">
-      Cancel
-    </a>
+         ng-click="goNext(processForm.$invalid)" scroll-to-error>
+          NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
+    </div>
   </div>
 
 </form>

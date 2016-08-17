@@ -19,18 +19,19 @@
 //---------------------------------//
 //---------progress Bar------------//
 //---------------------------------//
+/*
 .progressBar {
   overflow: hidden;
   padding: 10px 35px;
   .entypo {
-    /*float: none!important;
+    /!*float: none!important;
     position: absolute;
     margin: 0!important;
     top:0;
-    left:0;*/
-   /* line-height: 36px;
+    left:0;*!/
+   /!* line-height: 36px;
     height: 36px;
-    width: 36px;*/
+    width: 36px;*!/
 
     color: white;
     z-index:2;
@@ -308,6 +309,37 @@
     }
     .fir, .sec, .thi, .fou, .fif {
       background-color: @gray-dark;
+    }
+  }
+}*/
+.feedProgressBox, .clusterProgressBox, .processProgressBox, .datasetProgressBox,
+.snapshotProgressBox, .datasourceProgressBox {
+  .progressBar {
+    padding: 0px;
+    > div {
+      width: 19%;
+      margin-left: 1%;
+      float: left;
+      height: 32px;
+      border: 1px solid @progress-div-border;
+      border-bottom:1px solid @progress-div-bottom-border;
+      line-height: 32px;
+      font-size: 110%;
+      border-radius: 5px 5px 0px 0px;
+      color: @progress-div-color;
+      &.completed {
+        background-color: @progress-div-completed-bg;
+        color: @progress-div-completed-color;
+        border-color: @gray-lightest;
+        border-bottom: @progress-div-bottom-border;
+      }
+      &.active {
+        background-color: @progress-div-active-bg;
+        color: @progress-div-active-color;
+      }
+      &.fir {
+        margin-left: 0.5%;
+      }
     }
   }
 }

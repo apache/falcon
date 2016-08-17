@@ -26,12 +26,13 @@
       entityModelArrangeMock = jasmine.createSpyObj('EntityModel', ['arrangeFieldsOrder']),
       entityModel = {clusterModel :
         {cluster:{tags: "",interfaces:{interface:[
-            {_type:"readonly",_endpoint:"hftp://sandbox.hortonworks.com:50070",_version:"2.2.0"},
-            {_type:"write",_endpoint:"hdfs://sandbox.hortonworks.com:8020",_version:"2.2.0"},
-            {_type:"execute",_endpoint:"sandbox.hortonworks.com:8050",_version:"2.2.0"},
-            {_type:"workflow",_endpoint:"http://sandbox.hortonworks.com:11000/oozie/",_version:"4.0.0"},
-            {_type:"messaging",_endpoint:"tcp://sandbox.hortonworks.com:61616?daemon=true",_version:"5.1.6"}
-          ]},locations:{location:[{_name: "staging", _path: ""},{_name: "temp", _path: ""},{_name: "working", _path: ""}]},
+            {_type:"readonly",_endpoint:"hftp://localhost:50070",_version:"2.2.0"},
+            {_type:"write",_endpoint:"hdfs://localhost:8020",_version:"2.2.0"},
+            {_type:"execute",_endpoint:"localhost:8050",_version:"2.2.0"},
+            {_type:"workflow",_endpoint:"http://localhost:11000/oozie/",_version:"4.0.0"},
+            {_type:"messaging",_endpoint:"tcp://localhost:61616?daemon=true",_version:"5.1.6"},
+            {_type:"spark",_endpoint:"",_version:""}
+          ]},locations:{location:[{_name: "staging", _path: ""},{_name: "temp", _path: "/tmp"},{_name: "working", _path: ""}]},
           ACL: {_owner: "",_group: "",_permission: ""},properties: {property: [{ _name: "", _value: ""}]},
           _xmlns:"uri:falcon:cluster:0.1",_name:"",_description:"",_colo:""},
       }},
@@ -57,9 +58,16 @@
         $scope: scope,
         Falcon: falconServiceMock,
         EntityModel: entityModel,
-        $state: stateMock,
+        $state: {
+          current: {
+            name: 'main.forms.custer.general'
+          },
+          go: angular.noop
+        },
         X2jsService: x2jsServiceMock,
-        validationService:ValidationService
+        validationService:ValidationService,
+        $stateParams: {},
+        ClusterModel: {cluster : {}},
       });
       //
     }));
@@ -73,8 +81,8 @@
         expect(scope.secondStep).toEqual(false);
         expect(scope.clusterEntity.clusterModel.cluster.properties.property).toEqual([{ _name: "", _value: ""}]);
 
-        expect(scope.registry).toEqual({ check: false });
-        expect(scope.registry).toEqual({ check: false });
+        // expect(scope.registry).toEqual({ check: true });
+        // expect(scope.registry).toEqual({ check: true });
       });
     });
     describe('tags', function() {
@@ -137,7 +145,7 @@
         it('should init with default locations and correct values', function() {
 
           expect(scope.clusterEntity.clusterModel.cluster.locations.location).toEqual(
-            [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '' }, { _name : 'working', _path : '' }, { _name : '', _path : '' }]
+            [{ _name : 'staging', _path : '' }, { _name : 'temp', _path : '/tmp' }, { _name : 'working', _path : '' }]
           );
         });
       });
@@ -264,16 +272,16 @@
         it('should delete registry interface only if not checked', function() {
           scope.validations = validationService;
           scope.clusterEntity.clusterModel.cluster.tags = "";
-          expect(scope.registry.check).toBe(true);
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(6);
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : '', _version : '' });
+          expect(scope.registry.check).toBe(false);
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(7);
+          //expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://<hostname>:9083', _version : '' });
           scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : '', _version : '' });
+          //expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toEqual({ _type : 'registry', _endpoint : 'thrift://<hostname>:9083', _version : '' });
           scope.registry.check = false;
           scope.clusterEntity.clusterModel.cluster.ACL = { _owner : '', _group : '', _permission : '' };
           scope.clusterEntity.clusterModel.cluster.tags = "";
           scope.goSummaryStep();
-          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[5]).toBeUndefined();
+          expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface[7]).toBeUndefined();
           expect(scope.clusterEntity.clusterModel.cluster.interfaces.interface.length).toEqual(5);
         });
 

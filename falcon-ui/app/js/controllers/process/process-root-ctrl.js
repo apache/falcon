@@ -28,12 +28,17 @@
   var processModule = angular.module('app.controllers.process');
 
   processModule.controller('ProcessRootCtrl', [
-    '$scope', '$state', '$interval', '$controller', 'EntityFactory',
-    'EntitySerializer', 'X2jsService', 'ValidationService', 'SpinnersFlag', '$rootScope',
-    function ($scope, $state, $interval, $controller, entityFactory,
-              serializer, X2jsService, validationService, SpinnersFlag, $rootScope) {
+    '$scope', '$state', '$interval', '$controller', 'EntityFactory', 'RouteHelper',
+    'EntitySerializer', 'X2jsService', 'ValidationService', 'SpinnersFlag', '$rootScope', 'ProcessModel', 'Falcon',
+    function ($scope, $state, $interval, $controller, entityFactory, RouteHelper,
+              serializer, X2jsService, validationService, SpinnersFlag, $rootScope, processModel, Falcon) {
 
       $scope.entityType = 'process';
+
+      var stateMatrix = {
+              general : {previous : '', next : 'summary'},
+              summary : {previous : 'general', next : ''}
+      };
 
         //extending root controller
       $controller('EntityRootCtrl', {
@@ -44,20 +49,34 @@
         $scope.baseInit();
         var type = $scope.entityType;
         $scope[type] = $scope.loadOrCreateEntity();
+        if(processModel && processModel.clone === true){
+          $scope.cloningMode = true;
+          $scope.editingMode = false;
+          $scope[type].name = "";
+        }else if(processModel && processModel.edit === true){
+          $scope.editingMode = true;
+          $scope.cloningMode = false;
+        }else{
+          $scope.editingMode = false;
+          $scope.cloningMode = false;
+        }
       };
 
       $scope.isActive = function (route) {
-        return route === $state.$current.name;
+        return route === $state.current.name;
+      };
+
+      $scope.isCompleted = function (route) {
+        return $state.get(route).data && $state.get(route).data.completed;
       };
 
       $scope.loadOrCreateEntity = function() {
         var type = $scope.entityType;
-        var model = $scope.models[type + 'Model'];
-        $scope.models[type + 'Model'] = null;
-        if(model) {
-          return serializer.preDeserialize(model, type);
+        if(!processModel && $scope.$parent.models.processModel){
+          processModel = $scope.$parent.models.processModel;
         }
-        return entityFactory.newEntity(type);
+        $scope.$parent.models.processModel = null;
+        return processModel ? serializer.preDeserialize(processModel, type) : entityFactory.newEntity(type);
       };
 
       $scope.init();
@@ -82,7 +101,9 @@
         } else {
           try {
             $scope[type] = serializer.deserialize($scope.prettyXml, type);
+            $scope.invalidXml = false;
           } catch (exception) {
+            $scope.invalidXml = true;
             console.log('user entered xml incorrect format');
             console.log(exception);
           }
@@ -90,7 +111,17 @@
 
       };
 
-      var xmlPreviewWorker = $interval(xmlPreviewCallback, 1000);
+      $scope.$watch('process', function(){
+        if($scope.editXmlDisabled) {
+          xmlPreviewCallback();
+        }
+      }, true);
+     $scope.$watch('prettyXml', function(){
+       if(!$scope.editXmlDisabled) {
+         xmlPreviewCallback();
+       }
+      }, true);
+
       $scope.skipUndo = false;
       $scope.$on('$destroy', function() {
 
@@ -100,16 +131,22 @@
           ACLIsEqual = angular.equals($scope.process.ACL, defaultProcess.ACL),
           workflowIsEqual = angular.equals($scope.process.workflow, defaultProcess.workflow);
 
-        $interval.cancel(xmlPreviewWorker);
-
         if (!$scope.skipUndo && (!nameIsEqual || !ACLIsEqual || !workflowIsEqual)) {
           $scope.$parent.models.processModel = angular.copy(X2jsService.xml_str2json($scope.xml));
+          if($scope.cloningMode){
+            $scope.$parent.models.processModel.clone = true;
+          }
+          if($scope.editingMode){
+            $scope.$parent.models.processModel.edit = true;
+          }
           $scope.$parent.cancel('process', $rootScope.previousState);
         }
       });
 
       //---------------------------------//
-      $scope.goNext = function (formInvalid, stateName) {
+      $scope.goNext = function (formInvalid) {
+        $state.current.data = $state.current.data || {};
+        $state.current.data.completed = !formInvalid;
         SpinnersFlag.show = true;
         if (!validationService.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
@@ -119,20 +156,69 @@
         }
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
-        $state.go(stateName);
+        $state.go(RouteHelper.getNextState($state.current.name, stateMatrix));
       };
 
-      $scope.goBack = function (stateName) {
+      $scope.goBack = function () {
         SpinnersFlag.backShow = true;
         validationService.displayValidations.show = false;
         validationService.displayValidations.nameShow = false;
-        $state.go(stateName);
+        $state.go(RouteHelper.getPreviousState($state.current.name, stateMatrix));
       };
 
       $scope.goTest = function (formInvalid) {
         console.log(formInvalid);
       };
 
+      $scope.toggleclick = function () {
+        $('.formBoxContainer').toggleClass('col-xs-14 ');
+        $('.xmlPreviewContainer ').toggleClass('col-xs-10 hide');
+        $('.preview').toggleClass('pullOver pullOverXml');
+        ($('.preview').hasClass('pullOver')) ? $('.preview').find('button').html('Preview XML') : $('.preview').find('button').html('Hide XML');
+        ($($("textarea")[0]).attr("ng-model") == "prettyXml" ) ? $($("textarea")[0]).css("min-height", $(".formBoxContainer").height() - 40 ) : '';
+      };
+
+      $scope.saveEntity = function() {
+        var type = $scope.entityType;
+        SpinnersFlag.saveShow = true;
+
+        if($scope.editingMode) {
+          Falcon.logRequest();
+          Falcon.postUpdateEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'  + $scope.xml, $scope.entityType, $scope[type].name)
+            .success(function (response) {
+               $scope.skipUndo = true;
+               Falcon.logResponse('success', response, false);
+               SpinnersFlag.saveShow = false;
+               $state.go('main');
+
+            })
+            .error(function (err) {
+              Falcon.logResponse('error', err, false);
+              SpinnersFlag.saveShow = false;
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
+        else {
+          Falcon.logRequest();
+          Falcon.postSubmitEntity('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + $scope.xml, $scope.entityType)
+            .success(function (response) {
+               $scope.skipUndo = true;
+               Falcon.logResponse('success', response, false);
+               SpinnersFlag.saveShow = false;
+               $state.go('main');
+
+            })
+            .error(function (err) {
+              Falcon.logResponse('error', err, false);
+              SpinnersFlag.saveShow = false;
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
+      };
+
+      if($state.current.name !== "forms.process.general"){
+        $state.go("forms.process.general");
+      }
     }
   ]);
 

@@ -22,14 +22,21 @@
   var controllerProvider;
   var entityFactoryMock;
   var serializerMock;
+  var falconServiceMock;
 
   describe('ProcessRootCtrl', function () {
 
-    beforeEach(module('app.controllers.process'));
+    beforeEach(module('app.controllers.process','dateHelper','routeHelper'));
 
-    beforeEach(inject(function($q, $rootScope, $controller) {
+    beforeEach(inject(function($q, $rootScope, $controller, DateHelper, RouteHelper) {
+      falconServiceMock = jasmine.createSpyObj('Falcon', ['postUpdateEntity', 'postSubmitEntity', 'logRequest', 'logResponse']);
+
       scope = $rootScope.$new();
       scope.models = {};
+      scope.$parent = $rootScope.$new();
+      scope.$parent.models = {};
+      scope.process = {};
+      scope.entityType = 'process';
       controllerProvider = $controller;
       entityFactoryMock = jasmine.createSpyObj('EntityFactory', ['newEntity']);
       serializerMock = jasmine.createSpyObj('EntitySerializer', ['preDeserialize']);
@@ -37,13 +44,15 @@
       controller = $controller('ProcessRootCtrl', {
         $scope: scope,
         $state: {
-          $current:{
+          current:{
             name: 'forms.process.general'
           },
           go: angular.noop
         },
         EntityFactory: entityFactoryMock,
-        EntitySerializer: serializerMock
+        EntitySerializer: serializerMock,
+        Falcon: falconServiceMock,
+        ProcessModel : undefined
       });
     }));
 
@@ -52,10 +61,11 @@
       expect(scope.entityType).toBe('process');
     });
 
-    it('Should be initialized properly', function() {
-      scope.init();
-
-      expect(scope.editXmlDisabled).toBe(true);
+    describe('init', function() {
+      it('Should be initialized properly', function() {
+        scope.init();
+        expect(scope.editXmlDisabled).toBe(true);
+      });
     });
 
     it('Should toggle editXmlDisable value to true', function() {
@@ -76,7 +86,7 @@
 
     it('Should deserialize the entity if the xml is found on the scope', function() {
 
-      controller = createController();
+      controller = createController({name: 'ProcessName'});
       var createdProcess =  {};
       var deserialzedProcess =  {};
       var processModel = {name: 'ProcessName'};
@@ -92,7 +102,7 @@
     });
 
     it('Should not deserialize the entity if the xml is not found on the scope', function() {
-      controller = createController();
+      controller = createController(undefined);
       var createdProcess =  {};
       var deserialzedProcess =  {};
       serializerMock.preDeserialize.andReturn(deserialzedProcess);
@@ -106,29 +116,70 @@
     });
 
     it('Should clear the processModel from the scope', function() {
-      controller = createController();
+      controller = createController({name: 'ProcessName'});
       entityFactoryMock.newEntity.andReturn({});
       scope.models.processModel = {};
 
       scope.loadOrCreateEntity();
 
-      expect(scope.models.processModel).toBe(null);
+      expect(scope.$parent.models.processModel).toBe(null);
     });
+
+
+    describe('saveEntity', function() {
+      it('Should save the update the entity if in edit mode', function() {
+        falconServiceMock.postUpdateEntity.andReturn(successResponse({}));
+        scope.editingMode = true;//---this line doesnt work
+        scope.$parent.cloningMode = false;
+        scope.process = { name:  'ProcessOne'};
+        scope.xml = '<process/>';
+
+        scope.saveEntity();
+
+        expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
+        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process', 'ProcessOne');
+      });
+
+      it('Should save the update the entity if in cloning mode', function() {
+        falconServiceMock.postSubmitEntity.andReturn(successResponse({}));
+        scope.cloningMode = true;//---this line doesnt work
+        scope.$parent.cloningMode = true;
+        scope.process = { name:  'ProcessOne'};
+        scope.xml = '<process/>';
+
+        scope.saveEntity();
+
+        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process');
+        expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
+      });
+
+    });
+
+    function successResponse(value) {
+      var fakePromise = {};
+      fakePromise.success = function(callback) {
+        callback(value);
+        return fakePromise;
+      };
+      fakePromise.error = angular.noop;
+      return fakePromise;
+    }
 
 
   });
 
-  function createController() {
+  function createController(processModel) {
     return controllerProvider('ProcessRootCtrl', {
       $scope: scope,
       $state: {
-        $current:{
+        current:{
           name: 'forms.process.general'
         },
         go: angular.noop
       },
       EntityFactory: entityFactoryMock,
-      EntitySerializer: serializerMock
+      EntitySerializer: serializerMock,
+      ProcessModel : processModel
     });
   }
 

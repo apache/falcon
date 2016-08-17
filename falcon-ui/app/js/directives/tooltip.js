@@ -34,4 +34,26 @@
     };
   });
 
+  module.directive("tooltip", ['TooltipMessages', function(TooltipMessages){
+    return {
+      restrict: "A",
+      link: function(scope, element, attrs) {
+        var message = TooltipMessages.messages[attrs.tooltip];
+        if (!message) {
+          console.warn('Message not defined for key ' + attrs.tooltip);
+          return;
+        }
+        var tooltipElement = angular.element("<div class='entities-tooltip-theme'>");
+        tooltipElement.append("<div class='arrow-up'></div>");
+        tooltipElement.append("<div class='entities-tooltip'>" + message + "</div>");
+        element.append(tooltipElement);
+        element.on('mouseenter', function(){
+             tooltipElement.show();
+           }).on('mouseleave', function(){
+             tooltipElement.hide();
+           });
+      }
+    };
+  }]);
+
 })();
