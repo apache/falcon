@@ -78,6 +78,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -114,6 +115,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "clicksummary", FEED_XML);
         storeEntity(EntityType.PROCESS, "clicksummary", PROCESS_XML);
         storeEntity(EntityType.PROCESS, "pig-process", PIG_PROCESS_XML);
+
 
         ConfigurationStore store = ConfigurationStore.get();
         cluster = store.get(EntityType.CLUSTER, "corp");
@@ -372,6 +374,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
+        assertEquals(process.getWorkflow().getLib(), "/resources/action/lib/falcon-examples.jar");
 
         ACTION sparkNode = getAction(parentWorkflow, "user-action");
 
@@ -380,7 +383,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
 
         assertEquals(sparkAction.getMaster(), "local");
-        assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/falcon-examples.jar");
+        assertEquals(sparkAction.getJar(), "falcon-examples.jar");
 
         Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
         List<String> argsList = sparkAction.getArg();
@@ -430,6 +433,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
+        assertEquals(process.getWorkflow().getLib(), "/resources/action/lib/spark-wordcount.jar");
 
         ACTION sparkNode = getAction(parentWorkflow, "user-action");
 
@@ -437,7 +441,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 OozieUtils.unMarshalSparkAction(sparkNode);
         org.apache.falcon.oozie.spark.ACTION sparkAction = actionJaxbElement.getValue();
         assertEquals(sparkAction.getMaster(), "local");
-        assertEquals(sparkAction.getJar(), "jail://testCluster:00/resources/action/lib/spark-wordcount.jar");
+        assertEquals(sparkAction.getJar(), "spark-wordcount.jar");
         List<String> argsList = sparkAction.getArg();
         Input input = process.getInputs().getInputs().get(0);
         Output output = process.getOutputs().getOutputs().get(0);
@@ -781,6 +785,38 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertAction(parentWorkflow, "succeeded-post-processing", true);
         assertAction(parentWorkflow, "failed-post-processing", true);
         assertAction(parentWorkflow, "user-action", false);
+    }
+
+    @Test
+    public void testPostProcessingProcess() throws Exception {
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "pig-process");
+
+        OozieEntityBuilder builder = OozieEntityBuilder.get(process);
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
+        builder.build(cluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP workflowapp = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
+
+        Boolean foudUserAction = false;
+        Boolean foundpostProcessing =false;
+
+        for(Object action : workflowapp.getDecisionOrForkOrJoin()){
+            if (action instanceof ACTION && ((ACTION)action).getName().equals("user-action")){
+                foudUserAction = true;
+            }
+            if (action instanceof ACTION && ((ACTION)action).getName().contains("post")){
+                foundpostProcessing = true;
+            }
+
+        }
+        assertTrue(foudUserAction);
+        assertFalse(foundpostProcessing);
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
     @AfterMethod

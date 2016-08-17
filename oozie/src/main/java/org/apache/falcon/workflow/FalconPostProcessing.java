@@ -23,7 +23,6 @@ import org.apache.falcon.messaging.JMSMessageProducer;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -60,7 +59,7 @@ public class FalconPostProcessing extends Configured implements Tool {
 
         // JobLogMover doesn't throw exception, a failed log mover will not fail the user workflow
         LOG.info("Moving logs {}", context);
-        invokeLogProducer(context);
+        new JobLogMover().moveLog(context);
 
         return 0;
     }
@@ -70,20 +69,5 @@ public class FalconPostProcessing extends Configured implements Tool {
                 .type(JMSMessageProducer.MessageType.USER)
                 .build();
         jmsMessageProducer.sendMessage(WorkflowExecutionContext.USER_MESSAGE_ARGS);
-    }
-
-    private void invokeLogProducer(WorkflowExecutionContext context) {
-        // todo: need to move this out to Falcon in-process
-        if (UserGroupInformation.isSecurityEnabled()) {
-            LOG.info("Unable to move logs as security is enabled.");
-            return;
-        }
-
-        try {
-            new JobLogMover().run(context);
-        } catch (Exception ignored) {
-            // Mask exception, a failed log mover will not fail the user workflow
-            LOG.error("Exception in job log mover:", ignored);
-        }
     }
 }

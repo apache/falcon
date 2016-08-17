@@ -24,6 +24,8 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.AbstractExtension;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 /**
@@ -53,15 +55,16 @@ public class HdfsMirroringExtension extends AbstractExtension {
         Properties additionalProperties = new Properties();
 
         // Add default properties if not passed
-        String distcpMaxMaps = extensionProperties.getProperty(HdfsMirroringExtensionProperties.MAX_MAPS.getName());
+        String distcpMaxMaps = extensionProperties.getProperty(
+                HdfsMirroringExtensionProperties.DISTCP_MAX_MAPS.getName());
         if (StringUtils.isBlank(distcpMaxMaps)) {
-            additionalProperties.put(HdfsMirroringExtensionProperties.MAX_MAPS.getName(), "1");
+            additionalProperties.put(HdfsMirroringExtensionProperties.DISTCP_MAX_MAPS.getName(), "1");
         }
 
         String distcpMapBandwidth = extensionProperties.getProperty(
-                HdfsMirroringExtensionProperties.MAP_BANDWIDTH_IN_MB.getName());
+                HdfsMirroringExtensionProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName());
         if (StringUtils.isBlank(distcpMapBandwidth)) {
-            additionalProperties.put(HdfsMirroringExtensionProperties.MAP_BANDWIDTH_IN_MB.getName(), "100");
+            additionalProperties.put(HdfsMirroringExtensionProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100");
         }
 
         // Construct fully qualified hdfs src path
@@ -81,16 +84,42 @@ public class HdfsMirroringExtension extends AbstractExtension {
         if (StringUtils.isNotBlank(srcPaths)) {
             String[] paths = srcPaths.split(COMMA_SEPARATOR);
 
+            URI pathUri;
             for (String path : paths) {
-                StringBuilder srcpath = new StringBuilder(srcClusterEndPoint);
+                try {
+                    pathUri = new URI(path.trim());
+                } catch (URISyntaxException e) {
+                    throw new FalconException(e);
+                }
+                String authority = pathUri.getAuthority();
+                StringBuilder srcpath = new StringBuilder();
+                if (authority == null) {
+                    srcpath.append(srcClusterEndPoint);
+                }
+
                 srcpath.append(path.trim());
                 srcpath.append(COMMA_SEPARATOR);
                 absoluteSrcPaths.append(srcpath);
             }
         }
-
         additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
                 StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
+
+        // Target dir shouldn't have the namenode
+        String targetDir = extensionProperties.getProperty(HdfsMirroringExtensionProperties
+                .TARGET_DIR.getName());
+
+        URI targetPathUri;
+        try {
+            targetPathUri = new URI(targetDir.trim());
+        } catch (URISyntaxException e) {
+            throw new FalconException(e);
+        }
+
+        if (targetPathUri.getScheme() != null) {
+            additionalProperties.put(HdfsMirroringExtensionProperties.TARGET_DIR.getName(),
+                    targetPathUri.getPath());
+        }
 
         // add sourceClusterFS and targetClusterFS
         additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName(),
@@ -105,6 +134,13 @@ public class HdfsMirroringExtension extends AbstractExtension {
         }
         additionalProperties.put(HdfsMirroringExtensionProperties.TARGET_CLUSTER_FS_WRITE_ENDPOINT.getName(),
                 ClusterHelper.getStorageUrl(targetCluster));
+
+        if (StringUtils.isBlank(
+                extensionProperties.getProperty(HdfsMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName()))) {
+            additionalProperties.put(HdfsMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName(), "false");
+        }
+
+        addAdditionalDistCPProperties(extensionProperties, additionalProperties);
         return additionalProperties;
     }
 

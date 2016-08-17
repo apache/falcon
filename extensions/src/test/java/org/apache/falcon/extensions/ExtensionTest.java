@@ -136,7 +136,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
                 RETENTION_NUM);
         properties.setProperty(HdfsSnapshotMirrorProperties.TARGET_NN.getName(),
                 NN_URI);
-        properties.setProperty(HdfsSnapshotMirrorProperties.DISTCP_MAX_MAPS.getName(),
+        properties.setProperty(HdfsSnapshotMirrorProperties.MAX_MAPS.getName(),
                 "5");
         properties.setProperty(HdfsSnapshotMirrorProperties.MAP_BANDWIDTH_IN_MB.getName(),
                 "100");

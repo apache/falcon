@@ -51,12 +51,16 @@
             <artifactId>oozie-core</artifactId>
             <exclusions>
                 <exclusion>
-            <groupId>org.apache.openjpa</groupId>
-                    <artifactId>openjpa-jdbc</artifactId>
-                    </exclusion>
+                  <groupId>org.apache.openjpa</groupId>
+                  <artifactId>openjpa-jdbc</artifactId>
+                </exclusion>
                 <exclusion>
-                    <groupId>org.apache.openjpa</groupId>
-                    <artifactId>openjpa-persistence</artifactId>
+                  <groupId>org.apache.openjpa</groupId>
+                  <artifactId>openjpa-persistence</artifactId>
+                </exclusion>
+                <exclusion>
+                  <groupId>c3p0</groupId>
+                  <artifactId>c3p0</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

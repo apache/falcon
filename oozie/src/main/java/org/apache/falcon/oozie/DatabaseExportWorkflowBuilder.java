@@ -67,18 +67,7 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
         ImportExportCommon.addHCatalogProperties(props, entity, cluster, workflow, this, buildPath, sqoopExport);
         OozieUtils.marshalSqoopAction(action, actionJaxbElement);
 
-        addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(action);
-
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
-
+        addPostProcessing(workflow, action);
         decorateWorkflow(workflow, workflow.getName(), EXPORT_ACTION_NAME);
         addLibExtensionsToWorkflow(cluster, workflow, Tag.EXPORT);
 
@@ -94,12 +83,16 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
         StringBuilder sqoopArgs = new StringBuilder();
         StringBuilder sqoopOptions = new StringBuilder();
 
-        buildConnectArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
-        buildTableArg(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
-        Datasource datasource = DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(
-                FeedHelper.getCluster(entity, cluster.getName())));
-        ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions, datasource)
-                .append(ImportExportCommon.ARG_SEPARATOR);
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
+        Datasource datasource = DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(feedCluster));
+        ImportExportCommon.buildConnectionManagerArg(sqoopArgs, datasource);
+        ImportExportCommon.buildDriverArgs(sqoopArgs, datasource).append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildConnectArg(sqoopArgs, DatasourceHelper.getWriteEndpoint(datasource))
+            .append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildTableArg(sqoopArgs, FeedHelper.getExportDataSourceTableName(feedCluster))
+            .append(ImportExportCommon.ARG_SEPARATOR);
+        ImportExportCommon.buildUserPasswordArg(sqoopArgs, sqoopOptions,
+            DatasourceHelper.getWritePasswordInfo(datasource)).append(ImportExportCommon.ARG_SEPARATOR);
         buildNumMappers(sqoopArgs, extraArgs).append(ImportExportCommon.ARG_SEPARATOR);
         buildArguments(sqoopArgs, extraArgs, feed, cluster).append(ImportExportCommon.ARG_SEPARATOR);
         buildLoadType(sqoopArgs, cluster).append(ImportExportCommon.ARG_SEPARATOR);
@@ -109,19 +102,6 @@ public class DatabaseExportWorkflowBuilder extends ExportWorkflowBuilder {
         return sqoopCmd.append("export").append(ImportExportCommon.ARG_SEPARATOR)
                 .append(sqoopOptions).append(ImportExportCommon.ARG_SEPARATOR)
                 .append(sqoopArgs).toString();
-    }
-
-    private StringBuilder buildConnectArg(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--connect").append(ImportExportCommon.ARG_SEPARATOR)
-                .append(DatasourceHelper.getReadOnlyEndpoint(
-                        DatasourceHelper.getDatasource(FeedHelper.getExportDatasourceName(feedCluster))));
-    }
-
-    private StringBuilder buildTableArg(StringBuilder builder, Cluster cluster) throws FalconException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
-        return builder.append("--table").append(ImportExportCommon.ARG_SEPARATOR)
-                .append(FeedHelper.getExportDataSourceTableName(feedCluster));
     }
 
     private StringBuilder buildLoadType(StringBuilder builder, Cluster cluster)

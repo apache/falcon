@@ -27,7 +27,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.catalog.HiveCatalogService;
@@ -323,6 +323,21 @@ public class TestContext extends AbstractTestContext {
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
                 .method(HttpMethod.GET, ClientResponse.class);
         return response.getEntity(ExtensionInstanceList.class);
+    }
+
+    public void waitForInstancesToStart(String entityType, String entityName, long timeout) {
+        long mustEnd = System.currentTimeMillis() + timeout;
+        WebResource resource = this.service.path("api/instance/running/" + entityType + "/" + entityName);
+        InstancesResult instancesResult;
+        while (System.currentTimeMillis() < mustEnd) {
+            ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                    .method(HttpMethod.GET, ClientResponse.class);
+            instancesResult = response.getEntity(InstancesResult.class);
+            if (instancesResult.getInstances() != null && instancesResult.getInstances().length > 0) {
+                break;
+            }
+        }
     }
 
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)

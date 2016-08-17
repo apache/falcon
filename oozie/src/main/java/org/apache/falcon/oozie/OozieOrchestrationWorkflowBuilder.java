@@ -29,7 +29,6 @@ import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
-import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -81,6 +80,13 @@ import java.util.Set;
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
 
+    public String getEnablePostProcessing() {
+        return enablePostprocessing;
+    }
+
+    private String enablePostprocessing = StartupProperties.get().
+            getProperty("falcon.postprocessing.enable");
+
     protected static final String USER_ACTION_NAME = "user-action";
     protected static final String PREPROCESS_ACTION_NAME = "pre-processing";
     protected static final String SUCCESS_POSTPROCESS_ACTION_NAME = "succeeded-post-processing";
@@ -131,6 +137,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         return get(entity, cluster, lifecycle, Scheduler.OOZIE);
     }
 
+    public Boolean isPostProcessingEnabled(){
+        return Boolean.parseBoolean(getEnablePostProcessing());
+    }
+
     public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle,
                                                         Scheduler scheduler)
         throws FalconException {
@@ -150,26 +160,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 }
 
             case IMPORT:
-                DatasourceType dsType = EntityUtil.getImportDatasourceType(cluster, feed);
-                if ((dsType == DatasourceType.MYSQL)
-                    || (dsType == DatasourceType.ORACLE)
-                    || (dsType == DatasourceType.HSQL)) {
-                    return new DatabaseImportWorkflowBuilder(feed);
-                } else {
-                    LOG.info("Import policy not implemented for DataSourceType : " + dsType);
-                }
-                break;
+                return new DatabaseImportWorkflowBuilder(feed);
 
             case EXPORT:
-                dsType = EntityUtil.getExportDatasourceType(cluster, feed);
-                if ((dsType == DatasourceType.MYSQL)
-                        || (dsType == DatasourceType.ORACLE)
-                        || (dsType == DatasourceType.HSQL)) {
-                    return new DatabaseExportWorkflowBuilder(feed);
-                } else {
-                    LOG.info("Export policy not implemented for DataSourceType : " + dsType);
-                }
-                break;
+                return new DatabaseExportWorkflowBuilder(feed);
 
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
@@ -234,6 +228,25 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         kill.setName(FAIL_ACTION_NAME);
         kill.setMessage("Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]");
         wf.getDecisionOrForkOrJoin().add(kill);
+    }
+
+    protected void addPostProcessing(WORKFLOWAPP workflow, ACTION action) throws FalconException{
+        if (!isPostProcessingEnabled()){
+            addTransition(action, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(action);
+        }else{
+            addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(action);
+
+            //Add post-processing actions
+            ACTION success = getSuccessPostProcessAction();
+            addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(success);
+
+            ACTION fail = getFailPostProcessAction();
+            addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(fail);
+        }
     }
 
     protected ACTION getSuccessPostProcessAction() throws FalconException {

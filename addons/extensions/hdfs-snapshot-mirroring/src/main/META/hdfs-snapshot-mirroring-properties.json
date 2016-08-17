@@ -140,13 +140,13 @@
       "example":"10"
     },
     {
-      "propertyName":"distcpMaxMaps",
+      "propertyName":"maxMaps",
       "required":false,
       "description":"Maximum number of mappers for DistCP",
       "example":"1"
     },
     {
-      "propertyName":"distcpMapBandwidth",
+      "propertyName":"mapBandwidth",
       "required":false,
       "description":"Bandwidth in MB for each mapper in DistCP",
       "example":"100"
@@ -156,6 +156,78 @@
       "required":false,
       "description":"Specify if TDE based encryption is enabled on source and target dirs",
       "example":"false"
+    },
+    {
+      "propertyName":"ignoreErrors",
+      "required":false,
+      "description":"Ignore failures during DistCp",
+      "example":"true"
+    },
+    {
+      "propertyName":"skipChecksum",
+      "required":false,
+      "description":"Skip checksum errors during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"removeDeletedFiles",
+      "required":false,
+      "description":"DistCP deletes the files existing in the dst but not in src",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveBlockSize",
+      "required":false,
+      "description":"Preserve block size during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveReplicationNumber",
+      "required":false,
+      "description":"Preserve replication number during DistCP",
+      "example":"false"
+    },
+    {
+      "propertyName":"preservePermission",
+      "required":false,
+      "description":"Preserve permission during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveUser",
+      "required":false,
+      "description":"Preserve user during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveGroup",
+      "required":false,
+      "description":"Preserve group during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveChecksumType",
+      "required":false,
+      "description":"Preserve checksum type during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveAcl",
+      "required":false,
+      "description":"Preserve ACL during DistCP",
+      "example":"false"
+    },
+    {
+      "propertyName":"preserveXattr",
+      "required":false,
+      "description":"Preserve Xattr during DistCP",
+      "example":"true"
+    },
+    {
+      "propertyName":"preserveTimes",
+      "required":false,
+      "description":"Preserve access and modification times during DistCP",
+      "example":"true"
     },
     {
       "propertyName":"jobNotificationType",

@@ -29,7 +29,13 @@ public enum ReplicationDistCpOption {
     DISTCP_OPTION_REMOVE_DELETED_FILES("removeDeletedFiles"),
     DISTCP_OPTION_PRESERVE_BLOCK_SIZE("preserveBlockSize"),
     DISTCP_OPTION_PRESERVE_REPLICATION_NUMBER("preserveReplicationNumber"),
-    DISTCP_OPTION_PRESERVE_PERMISSIONS("preservePermission");
+    DISTCP_OPTION_PRESERVE_PERMISSIONS("preservePermission"),
+    DISTCP_OPTION_PRESERVE_USER("preserveUser"),
+    DISTCP_OPTION_PRESERVE_GROUP("preserveGroup"),
+    DISTCP_OPTION_PRESERVE_CHECKSUM_TYPE("preserveChecksumType"),
+    DISTCP_OPTION_PRESERVE_ACL("preserveAcl"),
+    DISTCP_OPTION_PRESERVE_XATTR("preserveXattr"),
+    DISTCP_OPTION_PRESERVE_TIMES("preserveTimes");
 
     private final String name;
 

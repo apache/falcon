@@ -139,14 +139,14 @@ public class MetadataMappingService
         }
     }
 
-    protected Graph initializeGraphDB() {
+    public static Graph initializeGraphDB() {
         LOG.info("Initializing graph db");
         Configuration graphConfig = getConfiguration();
         validateConfiguration(graphConfig);
         return GraphFactory.open(graphConfig);
     }
 
-    private void validateConfiguration(Configuration graphConfig) {
+    private static void validateConfiguration(Configuration graphConfig) {
         // check if storage backend if configured
         if (!graphConfig.containsKey(PROPERTY_KEY_STORAGE_BACKEND)) {
             throw new FalconRuntimException("Titan GraphDB storage backend is not configured. "

@@ -18,7 +18,7 @@
 
 package org.apache.falcon.cli;
 
-import org.apache.falcon.FalconCLIConstants;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.TestContext;

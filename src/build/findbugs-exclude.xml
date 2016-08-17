@@ -57,6 +57,12 @@
         <Bug pattern="UWF_UNWRITTEN_FIELD,NP_BOOLEAN_RETURN_NULL" />
     </Match>
 
+    <Match>
+        <Class name="org.apache.falcon.persistence.BacklogMetricBean" />
+        <Bug pattern="UWF_UNWRITTEN_FIELD,NP_BOOLEAN_RETURN_NULL" />
+    </Match>
+
+
 
     <Match>
         <Class name="org.apache.falcon.persistence.MonitoredEntityBean" />

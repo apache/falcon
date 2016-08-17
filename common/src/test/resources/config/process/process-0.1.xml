@@ -18,7 +18,7 @@
   -->
 <process name="sample" version="0" xmlns="uri:falcon:process:0.1">
     <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting</tags>
-    <pipelines>testPipeline,dataReplication_Pipeline</pipelines>
+    <pipelines>testPipeline</pipelines>
     <clusters>
         <cluster name="testCluster">
             <validity start="2011-11-02T00:00Z" end="2091-12-30T00:00Z"/>

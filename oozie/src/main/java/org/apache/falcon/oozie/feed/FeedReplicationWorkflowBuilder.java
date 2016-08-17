@@ -24,7 +24,6 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -50,6 +49,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
     private static final String MR_MAX_MAPS = "maxMaps";
     private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
     private static final String REPLICATION_JOB_COUNTER = "job.counter";
+    private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
     public FeedReplicationWorkflowBuilder(Feed entity) {
         super(entity, LifeCycle.REPLICATION);
@@ -59,7 +59,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         if (entity.getProperties() != null) {
             List<Property> propertyList = entity.getProperties().getProperties();
             for (Property prop : propertyList) {
-                if (prop.getName().equals(REPLICATION_JOB_COUNTER) && "true".equalsIgnoreCase(prop.getValue())) {
+                if (prop.getName().equals(REPLICATION_JOB_COUNTER) && "true" .equalsIgnoreCase(prop.getValue())) {
                     return true;
                 }
             }
@@ -67,7 +67,8 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         return false;
     }
 
-    @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
+    @Override
+    public Properties build(Cluster cluster, Path buildPath) throws FalconException {
         Cluster srcCluster = ConfigurationStore.get().get(EntityType.CLUSTER, buildPath.getName());
 
         WORKFLOWAPP workflow = getWorkflow(srcCluster, cluster);
@@ -79,11 +80,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         marshal(cluster, workflow, buildPath);
         Properties props = getProperties(buildPath, wfName);
         props.putAll(createDefaultConfiguration(cluster));
-        if (EntityUtil.isTableStorageType(cluster, entity)) {
-            // todo: kludge send source hcat creds for coord dependency check to pass
-            props.putAll(HiveUtil.getHiveCredentials(srcCluster));
-            props.putAll(HiveUtil.getHiveCredentials(cluster));
-        }
+
         props.putAll(getWorkflowProperties(entity));
         props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
         // Write out the config to config-default.xml
@@ -124,6 +121,15 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         return action;
     }
 
+    protected ACTION enableTDE(ACTION action) throws FalconException {
+        if (isTDEEnabled()) {
+            List<String> args = action.getJava().getArg();
+            args.add("-tdeEncryptionEnabled");
+            args.add("true");
+        }
+        return action;
+    }
+
     protected abstract WORKFLOWAPP getWorkflow(Cluster src, Cluster target) throws FalconException;
 
     @Override
@@ -137,5 +143,10 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
 
     private String getDefaultMapBandwidth() {
         return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
+    }
+
+    private boolean isTDEEnabled() {
+        String tdeEncryptionEnabled = FeedHelper.getPropertyValue(entity, TDE_ENCRYPTION_ENABLED);
+        return "true" .equalsIgnoreCase(tdeEncryptionEnabled);
     }
 }

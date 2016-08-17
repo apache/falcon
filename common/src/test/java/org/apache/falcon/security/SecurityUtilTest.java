@@ -120,6 +120,22 @@ public class SecurityUtilTest {
     }
 
     @Test
+    public void testIsCSRFFilterEnabledByDefault() throws Exception {
+        Assert.assertFalse(SecurityUtil.isCSRFFilterEnabled());
+    }
+
+    @Test
+    public void testIsCSRFFilterEnabled() throws Exception {
+        try {
+            StartupProperties.get().setProperty("falcon.security.csrf.enabled", "true");
+            Assert.assertTrue(SecurityUtil.isCSRFFilterEnabled());
+        } finally {
+            // reset
+            StartupProperties.get().setProperty("falcon.security.csrf.enabled", "false");
+        }
+    }
+
+    @Test
     public void testTryProxy() throws IOException, FalconException {
         Process process = Mockito.mock(Process.class);
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");

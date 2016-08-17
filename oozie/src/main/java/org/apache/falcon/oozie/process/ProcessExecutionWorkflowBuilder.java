@@ -83,20 +83,10 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
             wfApp.getDecisionOrForkOrJoin().add(preProcessAction);
             startAction = PREPROCESS_ACTION_NAME;
         }
-
         //Add user action
         ACTION userAction = getUserAction(cluster, buildPath);
-        addTransition(userAction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(userAction);
 
-        //Add post-processing
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(fail);
+        addPostProcessing(wfApp, userAction);
 
         decorateWorkflow(wfApp, wfName, startAction);
 
