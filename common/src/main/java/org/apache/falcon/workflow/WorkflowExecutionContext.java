@@ -186,6 +186,10 @@ public class WorkflowExecutionContext {
         return getValue(WorkflowExecutionArgs.TIMESTAMP);
     }
 
+    public boolean hasTimeStamp() {
+        return containsKey(WorkflowExecutionArgs.TIMESTAMP);
+    }
+
     /**
      * Returns timestamp as a long.
      * @return Date as long (milliseconds since epoch) for the timestamp.
