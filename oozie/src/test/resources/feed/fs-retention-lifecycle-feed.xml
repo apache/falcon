@@ -45,12 +45,13 @@
     <properties>
         <property name="maxMaps" value="33" />
         <property name="mapBandwidth" value="2" />
+        <property name="queueName" value="retentionQueue" />
     </properties>
 
     <lifecycle>
         <retention-stage>
             <frequency>hours(17)</frequency>
-            <queue>retention</queue>
+            <queue>ageBasedDeleteQueue</queue>
             <priority>LOW</priority>
             <properties>
                 <property name="retention.policy.agebaseddelete.limit" value="hours(2)"></property>

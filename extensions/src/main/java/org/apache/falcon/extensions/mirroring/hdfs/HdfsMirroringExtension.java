@@ -24,6 +24,8 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.AbstractExtension;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 /**
@@ -82,16 +84,42 @@ public class HdfsMirroringExtension extends AbstractExtension {
         if (StringUtils.isNotBlank(srcPaths)) {
             String[] paths = srcPaths.split(COMMA_SEPARATOR);
 
+            URI pathUri;
             for (String path : paths) {
-                StringBuilder srcpath = new StringBuilder(srcClusterEndPoint);
+                try {
+                    pathUri = new URI(path.trim());
+                } catch (URISyntaxException e) {
+                    throw new FalconException(e);
+                }
+                String authority = pathUri.getAuthority();
+                StringBuilder srcpath = new StringBuilder();
+                if (authority == null) {
+                    srcpath.append(srcClusterEndPoint);
+                }
+
                 srcpath.append(path.trim());
                 srcpath.append(COMMA_SEPARATOR);
                 absoluteSrcPaths.append(srcpath);
             }
         }
-
         additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
                 StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
+
+        // Target dir shouldn't have the namenode
+        String targetDir = extensionProperties.getProperty(HdfsMirroringExtensionProperties
+                .TARGET_DIR.getName());
+
+        URI targetPathUri;
+        try {
+            targetPathUri = new URI(targetDir.trim());
+        } catch (URISyntaxException e) {
+            throw new FalconException(e);
+        }
+
+        if (targetPathUri.getScheme() != null) {
+            additionalProperties.put(HdfsMirroringExtensionProperties.TARGET_DIR.getName(),
+                    targetPathUri.getPath());
+        }
 
         // add sourceClusterFS and targetClusterFS
         additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName(),

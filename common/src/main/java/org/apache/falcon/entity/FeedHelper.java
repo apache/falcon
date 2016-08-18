@@ -803,12 +803,11 @@ public final class FeedHelper {
                                                             Date start, Date end) throws FalconException {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entityObject);
         FeedInstanceResult result = new FeedInstanceResult(APIResult.Status.SUCCEEDED, "Success");
+        List<FeedInstanceResult.Instance> allInstances = new ArrayList<FeedInstanceResult.Instance>();
         for (String cluster : clusters) {
             Feed feed = (Feed) entityObject;
             Storage storage = createStorage(cluster, feed);
             List<FeedInstanceStatus> feedListing = storage.getListing(feed, cluster, LocationType.DATA, start, end);
-            FeedInstanceResult.Instance[] instances = new FeedInstanceResult.Instance[feedListing.size()];
-            int index = 0;
             for (FeedInstanceStatus feedStatus : feedListing) {
                 FeedInstanceResult.Instance instance = new
                         FeedInstanceResult.Instance(cluster, feedStatus.getInstance(),
@@ -817,10 +816,12 @@ public final class FeedHelper {
                 instance.uri = feedStatus.getUri();
                 instance.size = feedStatus.getSize();
                 instance.sizeH = feedStatus.getSizeH();
-                instances[index++] = instance;
+                allInstances.add(instance);
             }
-            result.setInstances(instances);
         }
+        FeedInstanceResult.Instance[] resultInstances = allInstances.toArray(
+                new FeedInstanceResult.Instance[allInstances.size()]);
+        result.setInstances(resultInstances);
         return result;
     }
 

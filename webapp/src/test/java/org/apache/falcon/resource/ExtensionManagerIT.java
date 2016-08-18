@@ -42,8 +42,8 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
     private static final String START_TIME_1 = "2016-05-03T00:00Z";
     private static final String START_TIME_2 = "2016-05-01T00:00Z";
     private static final String FREQUENCY = "days(1)";
-    private static final String SOURCE_DIR = "/apps/falcon/demo/input-{year}-{month}-{day}";
-    private static final String TARGET_DIR = "/apps/falcon/demo/output-{year}-{month}-{day}";
+    private static final String SOURCE_DIR = "/apps/falcon/demo/input-2016-07-10";
+    private static final String TARGET_DIR = "/apps/falcon/demo/output";
 
     private final TestContext context = new TestContext();
 
