@@ -139,8 +139,7 @@ public class WorkflowExecutionContext {
             return WorkflowEngineFactory.getWorkflowEngine().
                     isWorkflowKilledByUser(
                             getValue(WorkflowExecutionArgs.CLUSTER_NAME),
-                            getValue(WorkflowExecutionArgs.WORKFLOW_ID),
-                            getValue(WorkflowExecutionArgs.PARENT_ID));
+                            getValue(WorkflowExecutionArgs.WORKFLOW_ID));
         } catch (Exception e) {
             LOG.error("Got Error in getting error codes from actions: " + e);
         }
