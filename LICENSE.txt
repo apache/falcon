@@ -259,3 +259,7 @@ MIT license. For details see docs/license/ngTagsInput-LICENSE.txt
 
 This product bundles ngMask v3.1.1 which is available under
 MIT license. For details see docs/license/ngMask-LICENSE.txt
+
+This product bundles angular-notify.css v1.0.0, copyright Chris Gross,
+which is available under a MIT license.
+For details, see docs/license/angular-notify-LICENSE.txt
