@@ -38,7 +38,10 @@
                     <priority>HIGH</priority>
                     <properties>
                         <property name="retention.policy.agebaseddelete.limit" value="hours(4)"></property>
-                        <property name="mapMemory" value="1024" />
+                        <property name="amMemory" value="1024"></property>
+                        <property name="amCommandOpts" value="-Xmx800m -XX:MaxMetaspaceSize=128m"></property>
+                        <property name="mapMemory" value="1024"></property>
+                        <property name="mapJavaOpts" value="-Xmx800m -XX:MaxMetaspaceSize=128m"></property>
                     </properties>
                 </retention-stage>
             </lifecycle>

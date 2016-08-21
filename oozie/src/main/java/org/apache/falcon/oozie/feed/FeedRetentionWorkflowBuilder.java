@@ -44,7 +44,11 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
     private static final String EVICTION_ACTION_TEMPLATE = "/action/feed/eviction-action.xml";
 
     private static final String EVICTION_ACTION_NAME = "eviction";
+    private static final String MR_AM_MEMORY = "amMemory";
+    private static final String MR_AM_COMMAND_OPTS = "amCommandOpts";
     private static final String MR_MAP_MEMORY = "mapMemory";
+    private static final String MR_MAP_JAVA_OPTS = "mapJavaOpts";
+
 
     public FeedRetentionWorkflowBuilder(Feed entity) {
         super(entity, LifeCycle.EVICTION);
@@ -65,9 +69,23 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
         props.putAll(createDefaultConfiguration(cluster));
         props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
 
+        if (props.getProperty(MR_AM_MEMORY) == null) { // set default app master memory if user has not overridden
+            props.put(MR_AM_MEMORY, RuntimeProperties.get()
+                    .getProperty("falcon.feed.workflow.yarn.app.mapreduce.am.resource.mb", "512"));
+        }
+        if (props.getProperty(MR_AM_COMMAND_OPTS) == null) { // set default app maseter opts if user has not overridden
+            props.put(MR_AM_COMMAND_OPTS, RuntimeProperties.get()
+                    .getProperty("falcon.feed.workflow.yarn.app.mapreduce.am.command-opts",
+                            "-Xmx400m -XX:MaxMetaspaceSize=64m"));
+        }
         if (props.getProperty(MR_MAP_MEMORY) == null) { // set default memory if user has not overridden
-            props.put(MR_MAP_MEMORY,
-                    RuntimeProperties.get().getProperty("falcon.feed.workflow.mapreduce.map.memory.mb", "512"));
+            props.put(MR_MAP_MEMORY, RuntimeProperties.get().
+                    getProperty("falcon.feed.workflow.mapreduce.map.memory.mb", "512"));
+        }
+        if (props.getProperty(MR_MAP_JAVA_OPTS) == null) { // set default map java opts if user has not overridden
+            props.put(MR_MAP_JAVA_OPTS,
+                    RuntimeProperties.get().getProperty("falcon.feed.workflow.mapreduce.map.java.opts",
+                            "-Xmx400m -XX:MaxMetaspaceSize=64m"));
         }
 
         if (EntityUtil.isTableStorageType(cluster, entity)) {

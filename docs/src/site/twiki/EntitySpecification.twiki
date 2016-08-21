@@ -392,7 +392,10 @@ permission indicates the permission.
         <property name="parallel" value="3"/>
         <property name="maxMaps" value="8"/>
         <property name="mapBandwidth" value="1"/>
+        <property name="amMemory" value="512"/>
+        <property name="amCommandOpts" value="-Xmx400m -XX:MaxMetaspaceSize=64m"/>
         <property name="mapMemory" value="512"/>
+        <property name="mapJavaOpts" value="-Xmx400m -XX:MaxMetaspaceSize=64m"/>
         <property name="overwrite" value="true"/>
         <property name="ignoreErrors" value="false"/>
         <property name="skipChecksum" value="false"/>
@@ -417,8 +420,12 @@ waiting for the feed instance, parallel decides the concurrent replication insta
 order decides the execution order for replication instances like FIFO, LIFO and LAST_ONLY.
 DistCp options can be passed as custom properties, which will be propagated to the DistCp tool. "maxMaps" represents
 the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s
-used by each mapper during replication. "mapMemory" represents the mapreduce map memory in mb to be specified to the
-respective replication and retention jobs.  "overwrite" represents overwrite destination during replication.
+used by each mapper during replication.
+"mapMemory" represents the mapreduce map memory in mb to be specified to the respective replication and retention jobs.
+"mapJavaOpts" represents the mapreduce java opts to be specified to therespective replication and retention jobs.
+"amMemory" represents the application master memory in mb to be specified to the respective replication and retention
+application masters. "amJavaOpts" represents the application master java opts to be specified to the respective
+replication and retention application masters. "overwrite" represents overwrite destination during replication.
 "ignoreErrors" represents ignore failures not causing the job to fail during replication. "skipChecksum" represents
 bypassing checksum verification during replication. "removeDeletedFiles" represents deleting the files existing in the
 destination but not in source during replication. "preserveBlockSize" represents preserving block size during

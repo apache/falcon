@@ -48,7 +48,10 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
     protected static final String REPLICATION_ACTION_NAME = "replication";
     private static final String MR_MAX_MAPS = "maxMaps";
     private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
+    private static final String MR_AM_MEMORY = "amMemory";
+    private static final String MR_AM_COMMAND_OPTS = "amCommandOpts";
     private static final String MR_MAP_MEMORY = "mapMemory";
+    private static final String MR_MAP_JAVA_OPTS = "mapJavaOpts";
     private static final String REPLICATION_JOB_COUNTER = "job.counter";
     private static final String TDE_ENCRYPTION_ENABLED = "tdeEncryptionEnabled";
 
@@ -97,8 +100,17 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         if (props.getProperty(MR_MAP_BANDWIDTH) == null) { // set default if user has not overridden
             props.put(MR_MAP_BANDWIDTH, getDefaultMapBandwidth());
         }
-        if (props.getProperty(MR_MAP_MEMORY) == null) { // set default memory if user has not overridden
+        if (props.getProperty(MR_AM_MEMORY) == null) { // set default app master memory if user has not overridden
+            props.put(MR_AM_MEMORY, getDefaultAmMemory());
+        }
+        if (props.getProperty(MR_AM_COMMAND_OPTS) == null) { // set default app maseter opts if user has not overridden
+            props.put(MR_AM_COMMAND_OPTS, getDefaultAmCommandOpts());
+        }
+        if (props.getProperty(MR_MAP_MEMORY) == null) { // set default map memory if user has not overridden
             props.put(MR_MAP_MEMORY, getDefaultMapMemory());
+        }
+        if (props.getProperty(MR_MAP_JAVA_OPTS) == null) { // set default map java opts if user has not overridden
+            props.put(MR_MAP_JAVA_OPTS, getDefaultMapJavaOpts());
         }
 
         return props;
@@ -149,8 +161,22 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
     }
 
+    private String getDefaultAmMemory() {
+        return RuntimeProperties.get().getProperty("falcon.feed.workflow.yarn.app.mapreduce.am.resource.mb", "512");
+    }
+
+    private String getDefaultAmCommandOpts() {
+        return RuntimeProperties.get().getProperty("falcon.feed.workflow.yarn.app.mapreduce.am.command-opts",
+                "-Xmx400m -XX:MaxMetaspaceSize=64m");
+    }
+
     private String getDefaultMapMemory() {
         return RuntimeProperties.get().getProperty("falcon.feed.workflow.mapreduce.map.memory.mb", "512");
+    }
+
+    private String getDefaultMapJavaOpts() {
+        return RuntimeProperties.get().getProperty("falcon.feed.workflow.mapreduce.map.java.opts",
+                "-Xmx400m -XX:MaxMetaspaceSize=64m");
     }
 
     private boolean isTDEEnabled() {
