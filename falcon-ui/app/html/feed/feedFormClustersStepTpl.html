@@ -18,179 +18,107 @@
  */
 -->
 <form name="feedForm" novalidate id="feedFormClusterStep">
-  <button class="hidden" ng-click="goNext(feedForm.$invalid, 'forms.feed.summary')" ></button>
-  <div ng-repeat="cluster in feed.clusters">
-    <div class="row">
-      <h4 class="col-xs-24">{{capitalize(cluster.type)}} Cluster </h4>
+  <div class="feedFormClusters">
+    <div class="col-xs-24 pt5px">
+      <label class="light">Partitions (comma separated)</label>
+      <input type="text" class="form-control" validation-optional-message="{{validations.messages.partitions}}"
+        ng-pattern="validations.patterns.commaSeparated"
+        ng-blur="createFeedClusterPartitions()"
+        ng-model="feedPartitions" />
     </div>
 
-    <div class="row detailsBox">
-      <div class="col-xs-offset-1 col-xs-22">
+    <div class="col-xs-24">
+      <label>Source Cluster<mandatory-field></mandatory-field></label>
+    </div>
 
-        <div class="row">
-          <div class="col-xs-24">
-            <select ng-model="cluster.name" validation-message="{{validations.messages.cluster}}"
-                    ng-required="true" class="col-xs-24 form-control padding0" id="clusterNameSelect">
-              <option value="" disabled selected style='display:none;'>-Select cluster-</option>
-              <option id="cluster_" ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
-            </select>
-          </div>
+    <div class="col-xs-24">
+      <select ng-model="sourceClusterName"
+            ng-change="clearSourceClusterFlags()"
+            class="form-control padding0 clusterSelect">
+          <option value="" disabled selected style='display:none;'>-Select source cluster-</option>
+          <option id="cluster_" ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+      </select>
 
+      <button type="button" class="btn btn-default btn-xs clusterAddBtn" ng-click="addSourceCluster()">
+        Add
+      </button>
+    </div>
+    <div class="col-xs-24">
+      <label class="custom-danger" ng-show="sourceClusterNotSelected">
+        You need to select the source cluster
+      </label>
+      <label class="custom-danger" ng-show="sourceClusterExists">
+        Source cluster is already added
+      </label>
+    </div>
 
-          <div class="col-xs-24 feedLocationNavBox nopointer">
-            <h4 class="col-xs-7" ng-show="!feed.storage.fileSystem.active">Default Storage type</h4>
-            <h4 class="col-xs-7" ng-show="feed.storage.fileSystem.active">Storage type</h4>
-
-            <div class="col-xs-17 feedLocationNav disabled">
-              <button class="btn btn-default pull-right"
-                      ng-class="{active: feed.storage.catalog.active}"
-                      ng-disabled="true">
-                Catalog Storage
-              </button>
-              <button class="btn btn-default pull-right"
-                      ng-class="{active: feed.storage.fileSystem.active}"
-                      ng-disabled="true">
-                File System
-              </button>
-            </div>
-          </div>
-
-          <div class="col-xs-19">
-            <label>Location</label>
-            <label class="light">(if not defined, will use default location)</label>
-          </div>
-
-          <div class="col-xs-24"
-               ng-show="feed.storage.fileSystem.active"
-               ng-repeat="location in cluster.storage.fileSystem.locations">
-            <label class="light">{{location.type}} path</label>
-            <input type="text"
-                   placeholder="{{clusterLocationsPlaceHolders[location.type]}}"
-                   class="form-control"
-                   ng-model="location.path"
-                   validation-optional-message="{{validations.messages.path}}"
-                   ng-pattern="validations.patterns.osPath" />
-          </div>
-
-          <div class="col-xs-24 mb10" ng-show="feed.storage.catalog.active">
-            <label class="light">Table uri</label>
-            <input type="text" class="form-control"
-                   ng-model="cluster.storage.catalog.catalogTable.uri"
-                   validation-optional-message="{{validations.messages.path}}"
-                   ng-pattern="validations.patterns.osPath"/>
-          </div>
-          <div class="clearfix mb20"></div>
-          <label class="col-xs-24"> Validity </label>
-          <div class="col-xs-24 validityBox">
-            <div class="startDateBox">
-              <label>Start
-                <input type="text"
-                       name="startDateInput"
-                       class="form-control dateInput"
-                       placeholder="mm/dd/yyyy"
-                       datepicker-popup="{{dateFormat}}"
-                       ng-model="cluster.validity.start.date"
-                       is-open="cluster.validity.start.opened"
-                       ng-click="openDatePicker($event, cluster.validity.start)"
-                       ng-change="constructDate()"
-                       ng-required="true"
-                       simple-date>
-              </label>
-              <label class="col-xs-24 custom-danger validationMessageGral"
-                     ng-if="!cluster.validity.start.date">
-                {{validations.messages.date.empty}}
-              </label>
-            </div>
-            <div class="startTimeBox">
-              <label>Time
-                <timepicker ng-change="constructDate()"
-                            ng-model="cluster.validity.start.time"
-                            hour-step="1"
-                            minute-step="1"
-                            show-meridian="true">
-                </timepicker>
-              </label>
-            </div>
-            <div class="endDateBox">
-              <label>End
-                <input type="text"
-                       name="startDateInput"
-                       class="form-control dateInput"
-                       placeholder="mm/dd/yyyy"
-                       datepicker-popup="{{dateFormat}}"
-                       ng-model="cluster.validity.end.date"
-                       is-open="cluster.validity.end.opened"
-                       ng-click="openDatePicker($event, cluster.validity.end)"
-                       ng-change="constructDate()"
-                       ng-required="true"
-                       min-date="cluster.validity.start.date"
-                       simple-date>
-              </label>
-              <label class="col-xs-24 custom-danger validationMessageGral"
-                     ng-if="!cluster.validity.end.date">
-                {{validations.messages.date.empty}}
-              </label>
-            </div>
-            <div class="endTimeBox">
-              <label>Time
-                <timepicker ng-change="constructDate()"
-                            ng-model="cluster.validity.end.time"
-                            hour-step="1"
-                            minute-step="1"
-                            show-meridian="true">
-                </timepicker>
-              </label>
-            </div>
-          </div>
-
-          <label class="light col-xs-24"> Retention </label>
-
-          <div class="col-xs-24 inlineInputsGroup">
-            <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
-                   ng-required="true" ng-model="cluster.retention.quantity" ng-keydown="validations.acceptOnlyNumber($event)"
-                   ng-pattern="validations.patterns.twoDigits">
-
-            <select ng-model="cluster.retention.unit"
-                    ng-required="true">
-              <option selected value="minutes">minutes</option>
-              <option value="hours">hours</option>
-              <option value="days">days</option>
-              <option value="months">months</option>
-            </select>
-          </div>
-
-          <div class="row"  ng-if="cluster.type !== 'source'">
-            <button type="button" class="btn btn-default pull-right btn-xs" ng-click="removeCluster($index)">
-              <span class="entypo minus"></span> delete
-            </button>
-          </div>
-
-
-        </div>
-
-      </div>
+    <div class="col-xs-24 sourceClusterList" ng-show="(feed.clusters | filter:{type:'source'}).length > 0">
+      <label class="clusterListLabel mb7">Source Clusters</label>
+      <accordion close-others="false">
+        <accordion-group ng-repeat="cluster in feed.clusters | filter:{type:'source'}" is-open="cluster.isAccordionOpened">
+          <accordion-heading>{{ cluster.name }}</accordion-heading>
+          <feed-form-cluster-details></feed-form-cluster-details>
+        </accordion-group>
+      </accordion>
     </div>
   </div>
-  <div class="col-xs-24 mt10">
-    <button type="button" class="btn btn-default btn-xs" ng-click="addCluster()">
-      <span class="entypo plus"></span> add cluster
+  <div class="col-xs-24" ng-show="(feed.clusters | filter:{type:'source'}).length < 1">
+    <label class="custom-danger">
+      You need to provide at least one source cluster
+    </label>
+  </div>
+
+  <div class="col-xs-24">
+    <label>Target Cluster</label>
+  </div>
+  <div class="col-xs-24">
+    <select ng-model="targetClusterName"
+          ng-change="clearTargetClusterFlags()"
+          class="form-control padding0 clusterSelect">
+        <option value="" disabled selected style='display:none;'>-Select target cluster-</option>
+        <option id="cluster_" ng-repeat="clusterItem in clusterList">{{clusterItem.name}}</option>
+    </select>
+
+    <button type="button" class="btn btn-default btn-xs clusterAddBtn" ng-click="addTargetCluster()">
+      Add
     </button>
   </div>
 
-  <div class="col-xs-24 mt20">
+  <div class="col-xs-24">
+    <label class="custom-danger" ng-show="targetClusterNotSelected">
+      You need to select the target cluster
+    </label>
+    <label class="custom-danger" ng-show="targetClusterExists">
+      Target cluster is already added
+    </label>
+  </div>
+
+  <div class="col-xs-24 targetClusterList" ng-show="(feed.clusters | filter:{type:'target'}).length > 0">
+    <label class="clusterListLabel mb7">Target Clusters</label>
+    <accordion close-others="false">
+      <accordion-group ng-repeat="cluster in feed.clusters | filter:{type:'target'}" is-open="cluster.isAccordionOpened">
+        <accordion-heading>{{ cluster.name }}</accordion-heading>
+        <feed-form-cluster-details></feed-form-cluster-details>
+      </accordion-group>
+    </accordion>
+  </div>
+
+  <div class="col-xs-24 mt35 pb15px">
     <button id="feed.backToStep3"
-            class="btn prevBtn"
-            type="button"
-            ng-click="goBack('forms.feed.location')"
-            ng-disabled="buttonSpinners.backShow" >
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+        class="btn prevBtn"
+        type="button"
+        ng-click="goBack()"
+        ng-disabled="buttonSpinners.backShow" >
+      PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
     </button>
-    <button id="feed.step4" class="btn nextBtn pull-right"
-            ng-click="goNext(feedForm.$invalid, 'forms.feed.summary')" >
-      Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-    <a class="pull-right" ui-sref="main">
-      Cancel
-    </a>
+    <div class="pull-right">
+        <a class="btn cnclBtn" ui-sref="main">
+          CANCEL
+        </a>
+         <button id="feed.step4" class="btn nextBtn"
+            ng-click="goNext(feedForm.$invalid)" scroll-to-error>
+            NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+        </button>
+     </div>
   </div>
 </form>

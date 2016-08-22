@@ -19,700 +19,774 @@
 -->
 <form id="formGeneralBox"
       name="datasetForm"
-      class="col-xs-24"
       novalidate>
 
-  <div class="row">
-    <div class="col-xs-24">
-      <label class="db"> Mirror Name
-        <input type="text"
-               name="nameInput"
-               class="form-control"
-               ng-model="UIModel.name"
-               placeholder=""
-               ng-disabled="!cloningMode"
-               ng-pattern="validations.patterns.name"
-               ng-required="true"
-               check-name="{type:'process', check:clone}"/>
-      </label>
-    </div>
+  <div class="col-xs-8">
+    <label class="light" tooltip="dataset.name">Mirror Name<mandatory-field></mandatory-field></label>
+    <input type="text"
+           name="nameInput"
+           class="form-control"
+           ng-model="UIModel.name"
+           placeholder=""
+           ng-disabled="editingMode"
+           ng-pattern="validations.patterns.name"
+           ng-required="true"
+           check-name="{type:'process', check:!editingMode}"/>
+    </label>
+  </div>
 
-    <div class="col-xs-24 tagsBox mt10">
-      <label class="db">Tags
-
-        <div class="row mb10">
-          <div class="col-xs-10">
-            <input type="text"
-                   name="newTagKeyInput"
-                   class="form-control"
-                   ng-model="UIModel.tags.newTag.key"
-                   placeholder="key"
-                   ng-pattern="validations.patterns.alpha"
-                   ng-required="UIModel.tags.newTag.value"
-                   validation-optional-message="{{validations.messages.key}}"/>
+  <div class="col-xs-24 tagsBox plr0px">
+    <label class="col-xs-24 light">Tags</label>
+    <div class="col-xs-12">
+      <div ng-repeat="tag in UIModel.tags">
+        <div class="row dynamic-table-spacer">
+          <div class="col-xs-8">
+            <input type="text" class="form-control" ng-model="tag.key"
+              validation-optional-message="{{validations.messages.key}}"
+                ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="key"/>
           </div>
-          <div class="col-xs-10">
-            <input type="text"
-                   name="newTagValueInput"
-                   class="form-control"
-                   ng-model="UIModel.tags.newTag.value"
-                   placeholder="value"
-                   ng-pattern="validations.patterns.alpha"
-                   ng-required="UIModel.tags.newTag.key"
-                   validation-optional-message="{{validations.messages.value}}"/>
+          <div class="col-xs-8">
+            <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+                ng-model="tag.value" ng-pattern="validations.patterns.alpha"
+                ng-required="tag.key" placeholder="value"/>
           </div>
-          <div class="col-xs-4">
-            <button type="button"
-                    class="btn btn-default btn-xs"
-                    ng-click="addTag()"
-                    ng-disabled="!UIModel.tags.newTag.key || !UIModel.tags.newTag.value"
-                    ng-disabled="false">
-              <span class="glyphicon glyphicon-plus"></span> add tag
+          <div class="col-xs-8">
+            <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+              <span class="entypo minus"></span> delete
+            </button>
+            <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
+              <span class="entypo plus"></span> add tag
             </button>
           </div>
         </div>
-
-        <div ng-repeat="tag in UIModel.tags.tagsArray" class="row">
-          <div class="col-xs-10">
-            <h6>{{tag.key}}</h6>
-          </div>
-          <div class="col-xs-10">
-            <h6>{{tag.value}}</h6>
-          </div>
-          <div class="col-xs-4" ng-if="tag.key !== '_falcon_mirroring_type'">
-            <button type="button"
-                    class="btn btn-default btn-xs"
-                    ng-click="removeTag($index)"
-                    ng-disabled="false">
-              <span class="glyphicon glyphicon-minus"></span> delete
-            </button>
-          </div>
-        </div>
-
-      </label>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-xs-24 mt10">
-      <label class="db">Mirror type
-        <div class="typeButtonsBox">
-          <button type="button"
-                  ng-class="{active:UIModel.formType === 'HDFS'}"
-                  class="btn btn-default btn-xs"
-                  ng-click="switchModel('HDFS')">
-            File System
-          </button>
-          <button type="button"
-                  ng-class="{active:UIModel.formType === 'HIVE'}"
-                  class="btn btn-default btn-xs"
-                  ng-click="switchModel('HIVE')">
-            HIVE(catalog Storage)
-          </button>
-        </div>
-      </label>
+      </div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-xs-24 clusterBox">
-      <h3>Source</h3>
-      <div class="runJobOnBox">
-        <input type="radio"
-               id="runJobOnSourceRadio"
-               ng-model="UIModel.runOn",
-               value="source"
-               ng-required="true"
-               ng-disabled="UIModel.source.location !== 'HDFS'"/>
-        Run job here
-      </div>
-
-      <div class="locationBox" ng-if="UIModel.formType === 'HDFS'">
-        <label class="db">Location:
-          <span>
-            <input type="radio"
-                   ng-change="checkFromSource()"
-                   id="sourceHDFSRadio"
-                   ng-model="UIModel.source.location"
-                   value="HDFS"
-                   ng-required="!UIModel.source.location"/> HDFS
-          </span>
-          <span ng-if="UIModel.target.location === 'HDFS'">
-            <input type="radio"
-                   ng-change="checkFromSource()"
-                   id="sourceAzureRadio"
-                   ng-model="UIModel.source.location"
-                   value="azure"
-                   ng-required="!UIModel.source.location"/> Azure
-          </span>
-          <span ng-if="UIModel.target.location === 'HDFS'">
-            <input type="radio"
-                   ng-change="checkFromSource()"
-                   id="sourceS3Radio"
-                   ng-model="UIModel.source.location"
-                   value="s3"
-                   ng-required="!UIModel.source.location"/> S3
-          </span>
-
-        </label>
-      </div>
-
-      <div>
-        <select ng-if="UIModel.source.location === 'HDFS' || UIModel.formType === 'HIVE'"
-                ng-model="UIModel.source.cluster"
-                name="sourceClusterSelect"
-                ng-change="getSourceDefinition()"
-                ng-required="UIModel.source.location === 'HDFS' || UIModel.formType === 'HIVE'"
-                class="col-xs-24 form-control"
-                id="sourceClusterSelect">
-
-          <option value="" disabled style='display:none;'>-Select cluster-</option>
-          <option ng-selected="UIModel.source.cluster === cluster.name"
-                  ng-repeat="cluster in clustersList"
-                  value="{{cluster.name}}">
-            {{cluster.name}}
-          </option>
-        </select>
-      </div>
-
-      <div ng-if="UIModel.source.location === 'azure' && UIModel.formType === 'HDFS'">
-        <label class="db">Base URL
-          <input type="text"
-                 name="sourceClusterUrlInput"
-                 class="form-control"
-                 ng-model="UIModel.source.url"
-                 placeholder="URL"
-                 ng-pattern="validations.patterns.azure"
-                 ng-required="UIModel.source.location === 'azure'"
-                 validation-message="{{validations.messages.azure}}" />
-        </label>
-      </div>
-      <div ng-if="UIModel.source.location === 's3' && UIModel.formType === 'HDFS'">
-        <label class="db">Base URL
-          <input type="text"
-                 name="sourceClusterUrlInput"
-                 class="form-control"
-                 ng-model="UIModel.source.url"
-                 placeholder="URL"
-                 ng-pattern="validations.patterns.s3"
-                 ng-required="UIModel.source.location === 's3'"
-                 validation-message="{{validations.messages.s3}}" />
-        </label>
-      </div>
-
-      <div ng-if="UIModel.formType === 'HDFS'">
-        <label class="db">Path
-          <input type="text"
-                 name="sourceClusterPathInput"
-                 class="form-control"
-                 ng-model="UIModel.source.path"
-                 placeholder="Path"
-                 ng-pattern="validations.patterns.osPath"
-                 ng-required="UIModel.source.location === 'HDFS' || UIModel.formType === 'HIVE'"
-                 validation-message="{{validations.messages.path}}"/>
-        </label>
-      </div>
-
-      <div ng-if="UIModel.formType === 'HIVE'">
-        <h5 class="hiveDatabasesTitol">I want to copy</h5>
-        <div class="databaseRadioBox">
+  <div class="col-xs-24 plr0px">
+    <div class="col-xs-12 plr0px">
+      <div class="col-xs-24 clusterBox plr0px">
+        <h3>Source</h3>
+        <div class="runJobOnBox">
           <input type="radio"
-                 id="targetHIVEDatabaseRadio"
-                 ng-model="UIModel.source.hiveDatabaseType"
-                 value="databases"
-                 ng-required="!UIModel.source.location"/> Entire databases
-          <input type="radio"
-                 id="targetHIVETablesRadio"
-                 ng-model="UIModel.source.hiveDatabaseType"
-                 value="tables"
-                 ng-required="!UIModel.source.hiveDatabaseType"/> Tables in a single database
+                 id="runJobOnSourceRadio"
+                 ng-model="UIModel.runOn"
+                 value="source"
+                 ng-required="true"
+                 ng-disabled="UIModel.source.location !== 'HDFS'"/>
+          Run job here
         </div>
 
-        <div ng-if="UIModel.source.hiveDatabaseType === 'databases'">
-          <label class="db">Databases (comma separated)
-            <textarea name="sourceDatabasesInput"
-                      class="form-control databasesTextArea"
-                      ng-model="UIModel.source.hiveDatabases"
-                      ng-pattern="validations.patterns.textarea"
-                      ng-required="UIModel.target.location === 'HDFS'"
-                      validation-message="{{validations.messages.databases}}"
-                      ng-keydown="validations.acceptNoSpaces($event)">
-            </textarea>
-          </label>
+        <div class="locationBox" ng-if="UIModel.type === 'HDFS'">
+          <div class="col-xs-5"><label class="light">Location</label></div>
+          <div class="col-xs-3"><label class="mt15 radio-inline">
+              <input type="radio"
+                     ng-change="checkFromSource()"
+                     id="sourceHDFSRadio"
+                     ng-model="UIModel.source.location"
+                     value="HDFS"
+                     ng-required="!UIModel.source.location"/> HDFS
+              </label>
+          </div>
+          <div class="col-xs-3"><label class="mt15 radio-inline">
+              <input type="radio"
+                     ng-change="checkFromSource()"
+                     id="sourceAzureRadio"
+                     ng-model="UIModel.source.location"
+                     value="azure"
+                     ng-required="!UIModel.source.location"/> Azure
+              </label>
+          </div>
+          <div class="col-xs-1"><label class="mt15 radio-inline">
+              <input type="radio"
+                     ng-change="checkFromSource()"
+                     id="sourceS3Radio"
+                     ng-model="UIModel.source.location"
+                     value="s3"
+                     ng-required="!UIModel.source.location"/> S3
+              </label>
+          </div>
         </div>
-        <div ng-if="UIModel.source.hiveDatabaseType === 'tables'">
-          <label class="db">Database
+
+        <div class="col-xs-24" ng-if="UIModel.source.location === 'HDFS' || UIModel.type === 'HIVE'">
+          <div class="col-xs-5 p0"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+              <select ng-model="UIModel.source.cluster"
+                  name="sourceClusterSelect"
+                  ng-change="getSourceDefinition()"
+                  ng-required="UIModel.source.location === 'HDFS' || UIModel.type === 'HIVE'"
+                  class="form-control padding0"
+                  id="sourceClusterSelect">
+
+                <option value="" disabled style='display:none;'>-Select cluster-</option>
+                <option ng-selected="UIModel.source.cluster === cluster.name"
+                        ng-repeat="cluster in clustersList"
+                        value="{{cluster.name}}">
+                  {{cluster.name}}
+                </option>
+              </select>
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.source.location === 'azure' && UIModel.type === 'HDFS'">
+          <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
             <input type="text"
-                   name="sourceDatabaseInput"
+                   name="sourceClusterUrlInput"
                    class="form-control"
-                   ng-model="UIModel.source.hiveDatabase"
-                   ng-pattern="validations.patterns.textarea"
+                   ng-model="UIModel.source.url"
+                   placeholder="URL"
+                   ng-pattern="validations.patterns.azure"
+                   ng-required="UIModel.source.location === 'azure'"
+                   validation-message="{{validations.messages.azure}}" />
+          </div>
+        </div>
+        <div class="col-xs-24" ng-if="UIModel.source.location === 's3' && UIModel.type === 'HDFS'">
+          <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="sourceClusterUrlInput"
+                   class="form-control"
+                   ng-model="UIModel.source.url"
+                   placeholder="URL"
+                   ng-pattern="validations.patterns.s3"
+                   ng-required="UIModel.source.location === 's3'"
+                   validation-message="{{validations.messages.s3}}" />
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.type === 'HDFS'">
+          <div class="col-xs-5 p0"><label class="light">Path<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="sourceClusterPathInput"
+                   class="form-control"
+                   ng-model="UIModel.source.path"
+                   placeholder="Path"
+                   ng-pattern="validations.patterns.osPath"
+                   ng-required="UIModel.source.location === 'HDFS' || UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.path}}"/>
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'">
+          <div class="col-xs-5 p0">
+            <label class="light" tooltip="dataset.sourceHiveServer2Uri">HiveServer2 endpoint</label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="sourceHiveServerInput"
+                   ng-model="UIModel.hiveOptions.source.hiveServerToEndpoint"
+                   class="form-control"
+                   validation-optional-message="{{validations.messages.path}}" />
+          </div>
+        </div>
+
+        <div class="col-xs-24 mt5" ng-if="UIModel.type === 'HIVE'">
+          <div class="col-xs-5 p0">
+            <label class="light">I want to copy<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-4"><label class="mt15 radio-inline">
+              <input type="radio"
+                   id="targetHIVEDatabaseRadio"
+                   ng-model="UIModel.source.hiveDatabaseType"
+                   value="databases"
+                   ng-required="!UIModel.source.location"/>Entire databases
+            </label>
+          </div>
+          <div><label class="mt15 radio-inline">
+              <input type="radio"
+                   id="targetHIVETablesRadio"
+                   ng-model="UIModel.source.hiveDatabaseType"
+                   value="tables"
+                   ng-required="!UIModel.source.hiveDatabaseType"/>
+              Tables in a single database
+            </label>
+          </div>
+
+          <div class="col-xs-24 mt5 plr0px">
+              <div class="col-xs-13 col-xs-offset-5" ng-if="UIModel.source.hiveDatabaseType === 'databases'">
+                <label class="col-xs-24 p0 light" tooltip="dataset.sourceDatabases">Databases (comma separated)<mandatory-field></mandatory-field></label>
+                <textarea name="sourceDatabasesInput"
+                          class="form-control databasesTextArea"
+                          ng-model="UIModel.source.hiveDatabases"
+                          ng-pattern="validations.patterns.hiveDatabases"
+                          ng-required="UIModel.target.location === 'HDFS'"
+                          validation-message="{{validations.messages.databases}}"
+                          ng-keydown="validations.acceptNoSpaces($event)">
+                </textarea>
+              </div>
+              <div class="col-xs-13 col-xs-offset-5" ng-if="UIModel.source.hiveDatabaseType === 'tables'">
+                <label class="col-xs-24 p0 light">Database<mandatory-field></mandatory-field></label>
+                <input type="text"
+                       name="sourceDatabaseInput"
+                       class="form-control"
+                       ng-model="UIModel.source.hiveDatabases"
+                       ng-pattern="validations.patterns.hiveDatabase"
+                       ng-required="UIModel.target.location === 'HDFS'"
+                       validation-message="{{validations.messages.database}}"
+                       ng-keydown="validations.acceptNoSpaces($event)"/>
+                <label class="col-xs-24 p0 light" tooltip="dataset.sourceTables">Tables (comma separated)<mandatory-field></mandatory-field></label>
+                <textarea name="sourceTablesInput"
+                          class="form-control tablesTextArea"
+                          ng-model="UIModel.source.hiveTables"
+                          ng-pattern="validations.patterns.hiveTables"
+                          ng-required="UIModel.target.location === 'HDFS'"
+                          validation-message="{{validations.messages.tables}}"
+                          ng-keydown="validations.acceptNoSpaces($event)">
+                  </textarea>
+              </div>
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+          <div class="col-xs-5 p0">
+            <label class="light" tooltip="dataset.sourceHive2KerberosPrincipal">Hive2 Kerberos Principal<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="sourceHive2KerberosPrincipal"
+                   class="form-control"
+                   ng-model="UIModel.source.hive2KerberosPrincipal"
+                   placeholder="Source Metastore URI"
+                   ng-pattern="validations.patterns.kerberosPrincipal"
+                   ng-required="UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.kerberosPrincipal}}" />
+          </div>
+        </div>
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+          <div class="col-xs-5 p0">
+            <label class="light">Meta Store URI<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="sourceMetastoreUri"
+                   class="form-control"
+                   ng-model="UIModel.source.hiveMetastoreUri"
+                   placeholder="Source Metastore URI"
+                   ng-pattern="validations.patterns.metastoreUri"
+                   ng-required="UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.metastoreUri}}" />
+          </div>
+        </div>
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+          <div class="col-xs-5 p0">
+            <label class="light">Kerberos Principal<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="sourceMetastoreKerberosPrincipal"
+                   class="form-control"
+                   ng-model="UIModel.source.hiveMetastoreKerberosPrincipal"
+                   placeholder="Kerberos Principal"
+                   ng-pattern="validations.patterns.kerberosPrincipal"
+                   ng-required="UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.kerberosPrincipal}}" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="col-xs-12 plr0px pl5">
+      <div class="col-xs-24 plr0px clusterBox">
+        <h3>Target</h3>
+        <div class="runJobOnBox">
+          <input type="radio"
+                 id="runJobOnTargetRadio"
+                 ng-model="UIModel.runOn"
+                 value="target"
+                 ng-required="true"
+                 ng-disabled="UIModel.target.location !== 'HDFS'"/>
+          Run job here
+        </div>
+        <div class="locationBox" ng-if="UIModel.type === 'HDFS'">
+          <div class="col-xs-5"><label class="light">Location</label></div>
+          <div class="col-xs-3"><label class="mt15 radio-inline">
+              <input type="radio"
+                     ng-change="checkFromTarget()"
+                     id="targetHDFSRadio"
+                     ng-model="UIModel.target.location"
+                     value="HDFS"
+                     ng-required="!UIModel.target.location"/> HDFS
+                </label>
+          </div>
+          <div class="col-xs-3"><label class="mt15 radio-inline">
+              <input type="radio"
+                     ng-change="checkFromTarget()"
+                     id="targetAzureRadio"
+                     ng-model="UIModel.target.location"
+                     value="azure"
+                     ng-required="!UIModel.target.location"/> Azure
+                </label>
+          </div>
+          <div class="col-xs-1"><label class="mt15 radio-inline">
+              <input type="radio"
+                     ng-change="checkFromTarget()"
+                     id="targetS3Radio"
+                     ng-model="UIModel.target.location"
+                     value="S3"
+                     ng-required="!UIModel.target.location"/> S3
+                </label>
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.target.location === 'HDFS' || UIModel.type === 'HIVE'">
+          <div class="col-xs-5 p0">
+            <label class="light">Cluster<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-13 mt10">
+              <select ng-model="UIModel.target.cluster"
+                  ng-change="getTargetDefinition()"
+                  name="targetClusterSelect"
+                  ng-required="UIModel.target.location === 'HDFS' || UIModel.type === 'HIVE'"
+                  class="col-xs-24 form-control padding0"
+                  id="targetClusterSelect">
+                <option value="" disabled selected style='display:none;'>-Select cluster-</option>
+                <option ng-selected="UIModel.target.cluster === clusterItem.name"
+                        ng-repeat="clusterItem in clustersList"
+                        value="{{clusterItem.name}}">
+                  {{clusterItem.name}}
+                </option>
+              </select>
+              <div class="custom-danger" ng-show="clusterErrorMessage != ''">
+                {{clusterErrorMessage}}
+              </div>
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'">
+          <div class="col-xs-5 p0">
+            <label class="light" tooltip="dataset.targetHiveServer2Uri">HiveServer2 endpoint</label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetHiveServerInput"
+                   ng-model="UIModel.hiveOptions.target.hiveServerToEndpoint"
+                   class="form-control"
+                   validation-optional-message="{{validations.messages.path}}" />
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'&& secureMode === true">
+          <div class="col-xs-5 p0">
+            <label class="light" tooltip="dataset.targetHive2KerberosPrincipal">Hive2 Kerberos Principal<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetHive2KerberosPrincipal"
+                   class="form-control"
+                   ng-model="UIModel.target.hive2KerberosPrincipal"
+                   placeholder="Hive2 Kerberos Principal"
+                   ng-pattern="validations.patterns.kerberosPrincipal"
+                   ng-required="UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.kerberosPrincipal}}" />
+          </div>
+        </div>
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'&& secureMode === true">
+          <div class="col-xs-5 p0"><label class="light">Meta Store URI<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetMetastoreUri"
+                   class="form-control"
+                   ng-model="UIModel.target.hiveMetastoreUri"
+                   placeholder="Target Metastore URI"
+                   ng-pattern="validations.patterns.metastoreUri"
+                   ng-required="UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.metastoreUri}}" />
+          </div>
+        </div>
+        <div class="col-xs-24" ng-if="UIModel.type === 'HIVE' && secureMode === true">
+          <div class="col-xs-5 p0">
+            <label class="light">Kerberos Principal<mandatory-field></mandatory-field></label>
+          </div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetMetastoreKerberosPrincipal"
+                   class="form-control"
+                   ng-model="UIModel.target.hiveMetastoreKerberosPrincipal"
+                   placeholder="Kerberos Principal"
+                   ng-pattern="validations.patterns.kerberosPrincipal"
+                   ng-required="UIModel.type === 'HIVE'"
+                   validation-message="{{validations.messages.kerberosPrincipal}}" />
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.target.location === 'azure' && UIModel.type === 'HDFS'">
+          <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetClusterUrlInput"
+                   class="form-control"
+                   ng-model="UIModel.target.url"
+                   placeholder="URL"
+                   ng-pattern="validations.patterns.azure"
+                   ng-required="UIModel.target.location === 'azure'"
+                   validation-message="{{validations.messages.azure}}"/>
+          </div>
+        </div>
+        <div class="col-xs-24" ng-if="UIModel.target.location === 'S3' && UIModel.type === 'HDFS'">
+          <div class="col-xs-5 p0"><label class="light">Base URL<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetClusterUrlInput"
+                   class="form-control"
+                   ng-model="UIModel.target.url"
+                   placeholder="URL"
+                   ng-pattern="validations.patterns.s3"
+                   ng-required="UIModel.target.location === 'S3'"
+                   validation-message="{{validations.messages.s3}}"/>
+          </div>
+        </div>
+
+        <div class="col-xs-24" ng-if="UIModel.type === 'HDFS'">
+          <div class="col-xs-5 p0"><label class="light">Path<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-13 mt10">
+            <input type="text"
+                   name="targetClusterPathInput"
+                   class="form-control"
+                   ng-model="UIModel.target.path"
+                   placeholder="Path"
+                   ng-pattern="validations.patterns.osPath"
                    ng-required="UIModel.target.location === 'HDFS'"
-                   validation-message="{{validations.messages.database}}"
-                   ng-keydown="validations.acceptNoSpaces($event)"/>
-          </label>
-          <label class="db">Tables (comma separated)
-            <textarea name="sourceTablesInput"
-                      class="form-control tablesTextArea"
-                      ng-model="UIModel.source.hiveTables"
-                      ng-pattern="validations.patterns.textarea"
-                      ng-required="UIModel.target.location === 'HDFS'"
-                      validation-message="{{validations.messages.tables}}"
-                      ng-keydown="validations.acceptNoSpaces($event)">
-            </textarea>
-          </label>
+                   validation-message="{{validations.messages.path}}"/>
+          </div>
         </div>
       </div>
-
-    </div>
-
-    <div class="col-xs-24 clusterBox">
-      <h3>Target</h3>
-      <div class="runJobOnBox">
-        <input type="radio"
-               id="runJobOnTargetRadio"
-               ng-model="UIModel.runOn"
-               value="target"
-               ng-required="true"
-               ng-disabled="UIModel.target.location !== 'HDFS'"/>
-        Run job here
-      </div>
-
-      <div class="locationBox" ng-if="UIModel.formType === 'HDFS'">
-        <label class="db">Location:
-
-          <input type="radio"
-                 ng-change="checkFromTarget()"
-                 id="targetHDFSRadio"
-                 ng-model="UIModel.target.location"
-                 value="HDFS"
-                 ng-required="!UIModel.target.location"/> HDFS
-          <span ng-if="UIModel.source.location === 'HDFS'">
-            <input type="radio"
-                   ng-change="checkFromTarget()"
-                   id="targetAzureRadio"
-                   ng-model="UIModel.target.location"
-                   value="azure"
-                   ng-required="!UIModel.target.location"/> Azure
-          </span>
-          <span ng-if="UIModel.source.location === 'HDFS'">
-            <input type="radio"
-                   ng-change="checkFromTarget()"
-                   id="targetS3Radio"
-                   ng-model="UIModel.target.location"
-                   value="S3"
-                   ng-required="!UIModel.target.location"/> S3
-          </span>
-        </label>
-      </div>
-
-      <div>
-        <select ng-if="UIModel.target.location === 'HDFS' || UIModel.formType === 'HIVE'"
-                ng-model="UIModel.target.cluster"
-                ng-change="getTargetDefinition()"
-                name="targetClusterSelect"
-                ng-required="UIModel.target.location === 'HDFS' || UIModel.formType === 'HIVE'"
-                class="col-xs-24 form-control"
-                id="targetClusterSelect">
-          <option value="" disabled selected style='display:none;'>-Select cluster-</option>
-          <option ng-selected="UIModel.target.cluster === clusterItem.name"
-                  ng-repeat="clusterItem in clustersList"
-                  value="{{clusterItem.name}}">
-            {{clusterItem.name}}
-          </option>
-        </select>
-      </div>
-
-      <div ng-if="UIModel.target.location === 'azure' && UIModel.formType === 'HDFS'">
-        <label class="db">Base URL
-          <input type="text"
-                 name="targetClusterUrlInput"
-                 class="form-control"
-                 ng-model="UIModel.target.url"
-                 placeholder="URL"
-                 ng-pattern="validations.patterns.azure"
-                 ng-required="UIModel.target.location === 'azure'"
-                 validation-message="{{validations.messages.azure}}"/>
-        </label>
-      </div>
-      <div ng-if="UIModel.target.location === 'S3' && UIModel.formType === 'HDFS'">
-        <label class="db">Base URL
-          <input type="text"
-                 name="targetClusterUrlInput"
-                 class="form-control"
-                 ng-model="UIModel.target.url"
-                 placeholder="URL"
-                 ng-pattern="validations.patterns.s3"
-                 ng-required="UIModel.target.location === 'S3'"
-                 validation-message="{{validations.messages.s3}}"/>
-        </label>
-      </div>
-
-      <div ng-if="UIModel.formType === 'HDFS'">
-        <label class="db">Path
-          <input type="text"
-                 name="targetClusterPathInput"
-                 class="form-control"
-                 ng-model="UIModel.target.path"
-                 placeholder="Path"
-                 ng-pattern="validations.patterns.osPath"
-                 ng-required="UIModel.target.location === 'HDFS'"
-                 validation-message="{{validations.messages.path}}"/>
-        </label>
-      </div>
-
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-xs-24 validityBox">
-      <h4>Validity </h4>
-      <div class="startDateBox">
-        <label>Start
-          <input type="text"
-                 name="startDateInput"
-                 class="form-control dateInput"
-                 placeholder="mm/dd/yyyy"
-                 datepicker-popup="{{dateFormat}}"
-                 ng-model="UIModel.validity.start"
-                 is-open="$parent.startOpened"
-                 ng-click="openStartDatePicker($event)"
-                 ng-change="constructDate()"
-                 ng-required="true"
-                 simple-date>
-        </label>
-      </div>
-      <div class="startTimeBox">
-        <label>Time
-          <timepicker ng-change="constructDate()"
-                      ng-model="UIModel.validity.startTime"
-                      hour-step="1"
-                      minute-step="1"
-                      show-meridian="true">
-          </timepicker>
-        </label>
-      </div>
-      <div class="endDateBox">
-        <label>End
-          <input type="text"
-                 name="startDateInput"
-                 class="form-control dateInput"
-                 placeholder="mm/dd/yyyy"
-                 datepicker-popup="{{dateFormat}}"
-                 ng-model="UIModel.validity.end"
-                 is-open="$parent.endOpened"
-                 ng-click="openEndDatePicker($event)"
-                 ng-change="constructDate()"
-                 min-date="UIModel.validity.start"
-                 ng-required="true"
-                 simple-date>
-        </label>
-      </div>
-      <div class="endTimeBox">
-        <label>Time
-          <timepicker ng-change="constructDate()"
-                      ng-model="UIModel.validity.endTime"
-                      hour-step="1"
-                      minute-step="1"
-                      show-meridian="true">
-          </timepicker>
-        </label>
-      </div>
-      <div class="tzBox">
-        <label> &nbsp;
-          <time-zone-select
-                  ng-model="UIModel.validity.tz"
-                  class="">
-          </time-zone-select>
-          </label>
+  <div class="col-xs-24 plr0px">
+    <div class="col-xs-12 plr0px clusterBoxEndLine">
+    </div>
+    <div class="col-xs-12 plr0px pl5">
+      <div class="col-xs-24 plr0px clusterBoxEndLine">
       </div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-xs-24 alertsBox">
+    <div class="col-xs-24"><label class="mt15">Validity</label></div>
+    <div class="col-xs-24 validityBox plr0px">
+      <div class="col-xs-24 plr0px">
+        <div class="startDateBox col-xs-4">
+          <label class="light">Start<mandatory-field></mandatory-field></label>
+          <input type="text"
+            name="startDateInput"
+            class="form-control dateInput"
+            placeholder="{{dateFormat | lowercase}}"
+            ng-model="UIModel.validity.start.date"
+            ng-required="true"
+            simple-date-picker />
+        </div>
+        <div class="startTimeBox col-xs-4">
+          <label class="light">Begin Time<mandatory-field></mandatory-field></label>
+          <timepicker ng-change="constructDate()"
+                      ng-model="UIModel.validity.start.time"
+                      ng-required="true"
+                      hour-step="1"
+                      minute-step="1"
+                      show-meridian="true">
+          </timepicker>
+        </div>
+      </div>
+      <div class="col-xs-24 plr0px">
+        <div class="endDateBox col-xs-4">
+          <label class="light">End<mandatory-field></mandatory-field></label>
+          <input type="text"
+            name="startDateInput"
+            class="form-control dateInput"
+            placeholder="{{dateFormat | lowercase}}"
+            ng-model="UIModel.validity.end.date"
+            ng-required="true"
+            simple-date-picker />
+        </div>
+        <div class="endTimeBox col-xs-4">
+          <label class="light">End Time<mandatory-field></mandatory-field></label>
+          <timepicker ng-change="constructDate()"
+                      ng-model="UIModel.validity.end.time"
+                      ng-required="true"
+                      hour-step="1"
+                      minute-step="1"
+                      show-meridian="true">
+          </timepicker>
+        </div>
+      </div>
+    </div>
+
+    <div class="frequencyBox">
+      <div class="col-xs-24">
+        <label>Frequency</label>
+      </div>
+      <div class="col-xs-24 plr0px">
+        <div class="col-xs-24">
+          <label class="light">Repeat Every</label>
+        </div>
+        <div class="col-xs-2">
+          <input type="text"
+                 name="frequencyQuantity"
+                 ng-model="UIModel.frequency.quantity"
+                 ng-pattern="validations.patterns.twoDigits"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 ng-keyup="checkMininumFrequency(UIModel.frequency.quantity, UIModel.frequency.unit, datasetForm.frequencyQuantity)"
+                 class="form-control"
+                 ng-required="true"
+                 validation-optional-message="{{validations.messages.number}}" />
+        </div>
+        <div class="col-xs-6">
+          <select ng-model="UIModel.frequency.unit" class="form-control padding0" ng-required="true"
+            ng-change="checkMininumFrequency(UIModel.frequency.quantity, UIModel.frequency.unit, datasetForm.frequencyQuantity)">
+            <option selected value="minutes">minutes</option>
+            <option value="hours">hours</option>
+            <option value="days">days</option>
+            <option value="months">months</option>
+          </select>
+        </div>
+        <div class="col-xs-24 custom-danger" ng-if="!isFrequencyValid">{{validations.messages.frequency.minimum}}</div>
+      </div>
+    </div>
+
+    <div class="tzBox col-xs-8">
+      <label class="light">Timezone<mandatory-field></mandatory-field></label>
+      <time-zone-select ng-model="UIModel.validity.timezone"></time-zone-select>
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light" tooltip="dataset.jobNotificationReceivers">Send alerts to</label>
+    </div>
+    <div class="col-xs-24 alertsBox plr0px">
       <div class="emailBox">
-        <label>
-          <h4>Send alerts to </h4>
+        <div class="col-xs-8">
           <input class="form-control"
                  name="emailAlertInput"
-                 ng-model="UIModel.alerts.alert.email"
+                 ng-model="UIModel.alert.email"
                  type="text"
                  placeholder="Email"
                  ng-pattern="validations.patterns.email"
-                 validation-optional-message="{{validations.messages.email}}">
-        </label>
+                 validation-message="{{validations.messages.email}}">
+        </div>
       </div>
-      <div class="addAlertBox">
+      <div class="addAlertBox col-xs-3">
         <button class="btn btn-default btn-xs"
-                ng-disabled="!UIModel.alerts.alert.email"
+                ng-disabled="!UIModel.alert.email"
                 type="button"
                 ng-click="addAlert()">
           <span class="glyphicon glyphicon-plus"></span>add alert
         </button>
       </div>
-
-      <div class="emailArrayRow" ng-repeat="email in UIModel.alerts.alertsArray">
-        <span>{{email}}</span>
-        <button class="btn btn-default btn-xs"
-                type="button"
-                ng-click="removeAlert()">
-          <span class="glyphicon glyphicon-minus"></span> delete
-        </button>
-      </div>
-
-    </div>
   </div>
 
-  <div class="row advancedOptionsButton" ng-click="expandOptions = !expandOptions">
-    <h4>Advanced options
-      <span class="entypo chevron-down" ng-if="!expandOptions"></span>
-      <span class="entypo chevron-up" ng-if="expandOptions"></span>
-      <hr />
-    </h4>
+  <div class="col-xs-24 emailArrayRow mt10 plr0px" ng-repeat="email in UIModel.alerts">
+    <span class="col-xs-8">{{email}}</span>
+    <div class="col-xs-3"><button class="btn btn-default btn-xs"
+            type="button"
+            ng-click="removeAlert()">
+      <span class="glyphicon glyphicon-minus"></span> delete
+    </button></div>
   </div>
 
-  <div id="advancedOptionsBox" ng-class="{expanded:expandOptions}">
-    <div class="frequencyBox">
-      <h4>Frequency</h4>
-      <label>Every</label>
-      <input type="text"
-             name="frequencyEveryInput"
-             ng-model="UIModel.frequency.number"
-             ng-pattern="validations.patterns.twoDigits"
-             ng-keydown="validations.acceptOnlyNumber($event)"
-             class="form-control"
-             validation-optional-message="{{validations.messages.number}}" />
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions">
+    <label class="pointer blink-success">Advanced Options</label>
+    <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+    <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+  </div>
 
-      <select ng-model="UIModel.frequency.unit" class="form-control">
-        <option selected value="minutes">minutes</option>
-        <option value="hours">hours</option>
-        <option value="days">days</option>
-        <option value="months">months</option>
-      </select>
-    </div>
+  <div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+    <div class="col-xs-24" ng-if="UIModel.type === 'HIVE'">
+		<label tooltip="dataset.tdeEncryptionEnabled">TDE Encryption</label>
+		<input type="checkbox" ng-model="UIModel.tdeEncryptionEnabled" ng-checked="UIModel.tdeEncryptionEnabled"/>
+	</div>
 
     <div class="allocationBox">
-      <h4>Allocation</h4>
-
-      <div ng-if="UIModel.formType === 'HDFS'">
-        <div>
-          <label>Max Maps for Distcp
-            <input type="text"
-                   name="maxMapsInput"
-                   ng-model="UIModel.allocation.hdfs.maxMaps"
-                   ng-pattern="validations.patterns.number"
-                   ng-keydown="validations.acceptOnlyNumber($event)"
-                   class="form-control"
-                   validation-optional-message="{{validations.messages.allocationNumber}}"/>
-          </label>
+      <div class="col-xs-24">
+        <label>Allocation</label>
+      </div>
+      <div class="col-xs-24 plr0px" ng-if="UIModel.type === 'HDFS'">
+        <div class="col-xs-6">
+          <label class="light" tooltip="dataset.distcpMaxMaps">Max Maps for Distcp</label>
+          <input type="text"
+                 name="maxMapsInput"
+                 ng-model="UIModel.allocation.hdfs.distcpMaxMaps"
+                 ng-pattern="validations.patterns.number"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.allocationNumber}}"/>
         </div>
-        <div>
-          <label>Max bandwidth (MB)
-            <input type="text"
-                   name="maxBandwidthInput"
-                   ng-model="UIModel.allocation.hdfs.maxBandwidth"
-                   ng-pattern="validations.patterns.number"
-                   ng-keydown="validations.acceptOnlyNumber($event)"
-                   class="form-control"
-                   validation-optional-message="{{validations.messages.allocationNumber}}" />
-          </label>
+        <div class="col-xs-6">
+          <label class="light" tooltip="dataset.distcpMapBandwidth">Max bandwidth (MB)</label>
+          <input type="text"
+                 name="maxBandwidthInput"
+                 ng-model="UIModel.allocation.hdfs.distcpMapBandwidth"
+                 ng-pattern="validations.patterns.number"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.allocationNumber}}" />
         </div>
       </div>
 
-      <div ng-if="UIModel.formType === 'HIVE'">
-        <div>
-          <label>Max Maps for Distcp
-            <input type="text"
-                   name="hiveMaxMapsInput"
-                   ng-model="UIModel.allocation.hive.maxMapsDistcp"
-                   ng-pattern="validations.patterns.number"
-                   ng-keydown="validations.acceptOnlyNumber($event)"
-                   class="form-control"
-                   validation-optional-message="{{validations.messages.allocationNumber}}"/>
-          </label>
+      <div class="col-xs-24 plr0px" ng-if="UIModel.type === 'HIVE'">
+        <div class="col-xs-6">
+          <label class="light" tooltip="dataset.distcpMaxMaps">Max Maps for Distcp</label>
+          <input type="text"
+                 name="hiveMaxMapsInput"
+                 ng-model="UIModel.allocation.hive.distcpMaxMaps"
+                 ng-pattern="validations.patterns.number"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.allocationNumber}}"/>
         </div>
-        <div>
-          <label>Max Maps for Mirror
-            <input type="text"
-                   name="maxBandwidthInput"
-                   ng-model="UIModel.allocation.hive.maxMapsMirror"
-                   ng-pattern="validations.patterns.number"
-                   ng-keydown="validations.acceptOnlyNumber($event)"
-                   class="form-control"
-                   validation-optional-message="{{validations.messages.allocationNumber}}" />
-          </label>
+        <div class="col-xs-6">
+          <label class="light" tooltip="dataset.replicationMaxMaps">Max Maps for Mirror</label>
+          <input type="text"
+                 name="maxMapsInput"
+                 ng-model="UIModel.allocation.hive.replicationMaxMaps"
+                 ng-pattern="validations.patterns.number"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.allocationNumber}}" />
         </div>
-        <div>
-          <label>Max Events
-            <input type="text"
-                   name="maxMapsEventsInput"
-                   ng-model="UIModel.allocation.hive.maxMapsEvents"
-                   ng-pattern="validations.patterns.number"
-                   ng-keydown="validations.acceptOnlyNumber($event)"
-                   class="form-control"
-                   validation-optional-message="{{validations.messages.allocationNumber}}" />
-          </label>
+        <div class="col-xs-6">
+          <label class="light" tooltip="dataset.maxEvents">Max Events</label>
+          <input type="text"
+                 name="maxEventsInput"
+                 ng-model="UIModel.allocation.hive.maxEvents"
+                 ng-pattern="validations.patterns.number"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.allocationNumber}}" />
         </div>
-        <div>
-          <label>Max bandwidth (MB)
-            <input type="text"
-                   name="maxBandwidthInput"
-                   ng-model="UIModel.allocation.hive.maxBandwidth"
-                   ng-pattern="validations.patterns.number"
-                   ng-keydown="validations.acceptOnlyNumber($event)"
-                   class="form-control"
-                   validation-optional-message="{{validations.messages.allocationNumber}}" />
-          </label>
+        <div class="col-xs-6">
+          <label class="light" tooltip="dataset.distcpMapBandwidth">Max bandwidth (MB)</label>
+          <input type="text"
+                 name="maxBandwidthInput"
+                 ng-model="UIModel.allocation.hive.distcpMapBandwidth"
+                 ng-pattern="validations.patterns.number"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 validation-optional-message="{{validations.messages.allocationNumber}}" />
         </div>
       </div>
-
     </div>
 
-    <div class="hiveOptBox" ng-if="UIModel.formType === 'HIVE'">
-      <h4>Source</h4>
+    <div class="hiveOptBox mt10 col-xs-24 plr0px" ng-if="UIModel.type === 'HIVE'">
+      <label class="col-xs-24">Source</label>
 
-      <label>Staging path
+      <label class="col-xs-24 light mt10">Staging path</label>
+      <div class="col-xs-8">
         <input type="text"
                name="sourceStagingPathInput"
                ng-model="UIModel.hiveOptions.source.stagingPath"
                ng-pattern="validations.patterns.path"
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
-      </label>
-      <label>HiveServer2 endpoint
-        <input type="text"
-               name="sourceHiveServerInput"
-               ng-model="UIModel.hiveOptions.source.hiveServerToEndpoint"
-               ng-pattern="validations.patterns.path"
-               class="form-control"
-               validation-optional-message="{{validations.messages.path}}" />
-      </label>
+      </div>
 
-      <h4>Target</h4>
-      <label>Staging path
+      <label class="col-xs-24 mt15">Target</label>
+
+      <label class="col-xs-24 light mt10">Staging path</label>
+      <div class="col-xs-8">
         <input type="text"
                name="targetStagingPathInput"
                ng-model="UIModel.hiveOptions.target.stagingPath"
                ng-pattern="validations.patterns.path"
                class="form-control"
                validation-optional-message="{{validations.messages.path}}" />
-      </label>
-      <label>HiveServer2 endpoint
-        <input type="text"
-               name="targetHiveServerInput"
-               ng-model="UIModel.hiveOptions.target.hiveServerToEndpoint"
-               ng-pattern="validations.patterns.path"
-               class="form-control"
-               validation-optional-message="{{validations.messages.path}}" />
-      </label>
-    </div>
-
-    <div class="retryBox">
-      <h4>Retry</h4>
-
-      <div class="policyBox">
-        <label>Policy</label>
-        <select ng-model="UIModel.retry.policy"
-                class="form-control">
-          <option selected value="periodic">PERIODIC</option>
-          <option value="exp-backoff">EXPONENTIAL_BACKOFF</option>
-          <option value="final">FINAL</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Delay</label>
-        <input type="text"
-               name="frequencyEveryInput"
-               ng-model="UIModel.retry.delay.number"
-               ng-pattern="validations.patterns.twoDigits"
-               ng-keydown="validations.acceptOnlyNumber($event)"
-               class="form-control"
-               validation-optional-message="{{validations.messages.number}}" />
-
-        <select ng-model="UIModel.retry.delay.unit"
-                class="form-control">
-          <option selected value="minutes">minutes</option>
-          <option value="hours">hours</option>
-          <option value="days">days</option>
-          <option value="months">months</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Attempts</label>
-        <input type="text"
-               name="frequencyEveryInput"
-               ng-model="UIModel.retry.attempts"
-               ng-pattern="validations.patterns.twoDigits"
-               ng-keydown="validations.acceptOnlyNumber($event)"
-               class="form-control"
-               validation-optional-message="{{validations.messages.number}}" />
       </div>
     </div>
 
-    <div class="aclBox col-xs-24">
-      <h4>Access Control List</h4>
-      <div class="col-xs-8">
-        <label>Owner
+    <div class="col-xs-24 plr0px retryBox">
+      <label class="col-xs-24">Retry</label>
+
+      <div class="col-xs-6 policyBox pt5px mt5">
+        <label class="light">Policy</label>
+        <select ng-model="UIModel.retry.policy" ng-required="true"
+                class="form-control padding0" ng-change="policyChange()">
+              <option selected value="periodic">PERIODIC</option>
+              <option value="exp-backoff">EXPONENTIAL_BACKOFF</option>
+              <option value="final">FINAL</option>
+        </select>
+      </div>
+
+      <div class="col-xs-6 pt5px mt8">
+        <label class="col-xs-6 light plr0px">Delay</label>
+        <div class="col-xs-8 plr0px">
+          <input type="text"
+                 name="frequencyEveryInput"
+                 ng-model="UIModel.retry.delay.quantity"
+                 ng-pattern="validations.patterns.twoDigits"
+                 ng-keydown="validations.acceptOnlyNumber($event)"
+                 class="form-control"
+                 ng-disabled = "UIModel.retry.policy === 'final'"
+                 validation-optional-message="{{validations.messages.number}}" />
+        </div>
+        <div class="col-xs-16">
+          <select ng-model="UIModel.retry.delay.unit"
+                  class="form-control padding0" ng-disabled = "UIModel.retry.policy === 'final'">
+            <option selected value="minutes">minutes</option>
+            <option value="hours">hours</option>
+            <option value="days">days</option>
+            <option value="months">months</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="col-xs-6 pt5px mt5">
+        <label class="light">Attempts</label>
+        <input type="text"
+           name="frequencyEveryInput"
+           ng-model="UIModel.retry.attempts"
+           ng-pattern="validations.patterns.twoDigits"
+           ng-keydown="validations.acceptOnlyNumber($event)"
+           class="form-control"
+           ng-disabled = "UIModel.retry.policy === 'final'"
+           validation-optional-message="{{validations.messages.number}}" />
+      </div>
+    </div>
+
+    <div class="col-xs-24 plr0px">
+      <label class="col-xs-24">Access Control List</label>
+      <div class="col-xs-24 plr0px">
+        <div class="col-xs-8">
+          <label class="light">Owner<mandatory-field></mandatory-field></label>
           <input type="text"
                  name="aclOwnerInput"
-                 ng-model="UIModel.acl.owner"
+                 ng-model="UIModel.ACL.owner"
                  ng-pattern="validations.patterns.unixId"
                  class="form-control"
                  ng-required="true"
                  validation-message="{{validations.messages.acl.owner}}"/>
-        </label>
-      </div>
-      <div class="col-xs-8">
-        <label>Group
+        </div>
+        <div class="col-xs-8 pl0px">
+          <label class="light">Group<mandatory-field></mandatory-field></label>
           <input type="text"
                  name="aclGroupInput"
-                 ng-model="UIModel.acl.group"
+                 ng-model="UIModel.ACL.group"
                  ng-pattern="validations.patterns.unixId"
                  class="form-control"
                  ng-required="true"
                  validation-message="{{validations.messages.acl.group}}" />
-        </label>
+        </div>
       </div>
-      <div class="col-xs-8">
-        <label>Permissions
-          <input type="text"
-                 name="aclPermissionsInput"
-                 ng-model="UIModel.acl.permissions"
-                 ng-pattern="validations.patterns.unixPermissions"
-                 class="form-control"
-                 ng-required="true"
-                 validation-message="{{validations.messages.acl.permission}}" />
-        </label>
+      <div class="col-xs-24">
+        <div class="col-xs-8 plr0px">
+          <label class="light">Permissions<mandatory-field></mandatory-field></label>
+          <acl-permissions acl-model="UIModel.ACL.permission"></acl-permissions>
+        </div>
       </div>
     </div>
 
-
-
-
-
   </div>
 
-
-  <div class="row">
-    <div class="col-xs-24 mt20">
-
-      <button class="btn nextBtn pull-right"
-              ng-disabled="buttonSpinners.show"
-              ng-click="goNext(datasetForm.$invalid, 'forms.dataset.summary')" >
-        Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-      </button>
-      <a class="pull-right" ui-sref="main">
-        Cancel
+  <div class="col-xs-24 pb15px mt35">
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
       </a>
-
+      <button class="btn nextBtn"
+            ng-disabled="buttonSpinners.show"
+            ng-click="goNext(datasetForm.$invalid)" scroll-to-error>
+      NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
     </div>
   </div>
-
-
-
-
-
 
 </form>

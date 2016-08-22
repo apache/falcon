@@ -20,8 +20,16 @@
 
 	var entitiesListModule = angular.module('app.directives.entities-search-list', ['app.services' ]);
 
-  entitiesListModule.controller('EntitiesSearchListCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService',
-                                      function($scope, Falcon, X2jsService, $window, encodeService) {
+  entitiesListModule.controller('EntitiesSearchListCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService', '$rootScope',
+                                      function($scope, Falcon, X2jsService, $window, encodeService, $rootScope) {
+
+    $scope.isSafeMode = function() {
+      return $rootScope.safeMode;
+    };
+
+    $scope.isSuperUser = function() {
+      return $rootScope.superUser;
+    };
 
     $scope.downloadEntity = function(type, name) {
       Falcon.logRequest();
@@ -47,7 +55,7 @@
     };
   });
 
-  entitiesListModule.directive('entitiesSearchList', ["$timeout", 'Falcon', function($timeout, Falcon) {
+  entitiesListModule.directive('entitiesSearchList', ["$timeout", 'Falcon', "$state", "$rootScope", function($timeout, Falcon, $state, $rootScope) {
     return {
       scope: {
         input: "=",
@@ -78,7 +86,7 @@
         }, true);
 
         scope.selectedRows = [];
-        scope.mirrorTag = "_falcon_mirroring_type";
+        scope.mirrorTag = "_falcon_extension_name";
 
         scope.checkedRow = function (name) {
           var isInArray = false;
@@ -159,6 +167,17 @@
               scope.selectedDisabledButtons = { schedule:true, suspend:true, resume:true };
             }
 
+            var selectedClusterRows = scope.selectedRows.filter(function(entity) {
+              return entity.type == 'cluster' || entity.type == 'CLUSTER';
+            });
+            if (selectedClusterRows && selectedClusterRows.length > 0) {
+              scope.selectedDisabledButtons = {
+                schedule:true,
+                suspend:true,
+                resume:true
+              };
+            }
+
             if(scope.selectedRows.length === 0) {
               scope.selectedDisabledButtons = {
                 schedule:true,
@@ -166,6 +185,7 @@
                 resume:true
               };
             }
+
           }, 50);
         };
 
@@ -209,16 +229,48 @@
         };
 
         scope.scopeEdit = function () {
-          scope.edit(scope.selectedRows[0].type, scope.selectedRows[0].name);
+          var selectedRow = scope.selectedRows[0];
+          if (selectedRow.type.toLowerCase() === 'cluster' && (!$rootScope.safeMode || !$rootScope.superUser)) {
+            return;
+          }
+          var state = 'forms.' + selectedRow.type.toLowerCase();
+          var selectedEntity = scope.input.filter(function(value){
+            return value.name === selectedRow.name;
+          });
+          if(selectedRow.type.toLowerCase() === 'process' && selectedEntity[0].tags
+            && scope.isMirror(selectedEntity[0].tags.tag)){
+            var mirrorType = scope.getMirrorType(selectedEntity[0].tags.tag);
+            if (mirrorType === 'hdfs-mirror' || mirrorType === 'hive-mirror') {
+              state = 'forms.dataset';
+            } else {
+              state = 'forms.snapshot';
+            }
+          }
+          $state.go(state, {'name' : selectedRow.name, 'action' : 'edit'});
         };
+
         scope.scopeClone = function () {
-          scope.clone(scope.selectedRows[0].type, scope.selectedRows[0].name);
+          var selectedRow = scope.selectedRows[0];
+          var state = 'forms.' + selectedRow.type.toLowerCase();
+          var selectedEntity = scope.input.filter(function(value){
+            return value.name === selectedRow.name;
+          });
+          if(selectedRow.type.toLowerCase() === 'process' && selectedEntity[0].tags
+            && scope.isMirror(selectedEntity[0].tags.tag)){
+            var mirrorType = scope.getMirrorType(selectedEntity[0].tags.tag);
+            if (mirrorType === 'hdfs-mirror' || mirrorType === 'hive-mirror') {
+              state = 'forms.dataset';
+            } else {
+              state = 'forms.snapshot';
+            }
+          }
+          $state.go(state, {'name' : selectedRow.name, 'action' : 'clone'});
         };
         scope.goEntityDefinition = function(name, type) {
           scope.entityDefinition(name, type);
         };
         scope.goEntityDetails = function(name, type) {
-          scope.entityDetails(name, type);
+          $state.go('entityDetails',{'name' : name, 'type' : type});
         };
 
         scope.scopeRemove = function () {
@@ -279,19 +331,31 @@
           return flag;
         };
 
+        scope.getMirrorType = function(tags) {
+          if (tags.indexOf('_falcon_extension_name=HDFS-MIRRORING') !== -1) {
+            return "hdfs-mirror";
+          } else if (tags.indexOf('_falcon_extension_name=HDFS-SNAPSHOT-MIRRORING') !== -1) {
+            return "snapshot";
+          } else if (tags.indexOf('_falcon_extension_name=HIVE-MIRRORING') !== -1) {
+            return "hive-mirror";
+          }
+        };
+
         scope.displayIcon = function (type, tags) {
           if(type === "FEED"){
             return "entypo download";
-          }else if(type === "PROCESS" && scope.isMirror(tags)){
+          } else if(type === "CLUSTER"){
+            return "entypo archive";
+          } else if(type === "PROCESS" && scope.isMirror(tags)){
             return "glyphicon glyphicon-duplicate";
-          }else{
+          } else{
             return "entypo cycle";
           }
         };
 
         scope.displayType = function (tag) {
           var tagKeyVal = tag.split("=");
-          if(tagKeyVal[0] === "_falcon_mirroring_type"){
+          if(tagKeyVal[0] === "_falcon_extension_name"){
             return tagKeyVal[1];
           }else{
             return "";

@@ -27,12 +27,8 @@
    */
   var feedModule = angular.module('app.controllers.feed');
 
-  feedModule.controller('FeedSummaryController', [ "$scope", "$filter", "$timeout",
-                                                function($scope, $filter, $timeout) {
-
-    $timeout(function () {
-      angular.element('.nextBtn').trigger('focus');
-    }, 500);
+  feedModule.controller('FeedSummaryController', [ "$scope", "$filter", "$timeout", "DateHelper",
+                                                function($scope, $filter, $timeout, DateHelper) {
 
     if($scope.transform) {
       $scope.transform();
@@ -45,6 +41,10 @@
 
     $scope.optional = function(input, output) {
       return input ? (output || input) : 'Not specified';
+    };
+
+    $scope.getDateTimeString = function (date,time) {
+      return DateHelper.getDateTimeString(date,time);
     };
 
   }]);

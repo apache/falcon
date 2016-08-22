@@ -17,29 +17,29 @@
  * limitations under the License.
  */
 -->
-<div class="container" id="instanceDetails">
+<div class="container instanceDetails pt15px">
 
   <div class="row">
     <div class="col-sm-24">
       <div class="detailsBox">
         <div class="row">
           <div class="col-sm-9">
-            <h3 class="instance-title">
-              <a href="javascript:void(0);" ng-click="backToEntity()">{{ instance.name }}</a> | {{ instance.instance }}
+            <h3 class="instance-title pl0px">
+              <a href="javascript:void(0);" ng-click="backToEntity()">{{ instance.name }}</a> | <span>{{ instance.instance }}</span>
             </h3>
           </div>
           <div class="col-sm-3 instance-status">
             <span class="text-success">STARTED</span><br/>
-            {{ instance.startTime | date :'MM/dd/yyyy HH:mm' }}
+            <span>{{ instance.startTime | date : dateFormat }}</span>
           </div>
           <div class="col-sm-5 border-left">
             <h4 class="instance-title">
               Status: <span ng-class="{
-              'blink-success': instance.status == 'RUNNING',
-              'text-success': instance.status == 'SUCCEEDED',
-              'blink-warning': instance.status == 'WAITING' || instance.status == 'UNKNOWN',
-              'blink-danger': instance.status == 'SUSPENDED',
-              'text-danger': instance.status == 'FAILED' || instance.status == 'KILLED',
+                'blink-success': instance.status == 'RUNNING',
+                'text-success': instance.status == 'SUCCEEDED',
+                'blink-warning': instance.status == 'WAITING' || instance.status == 'UNKNOWN',
+                'blink-danger': instance.status == 'SUSPENDED',
+                'text-danger': instance.status == 'FAILED' || instance.status == 'KILLED',
               }">{{ instance.status }}</span>
             </h4>
           </div>
@@ -49,11 +49,11 @@
               <span class="entypo play"></span> <div>Resume</div>
             </div>
             <div class="btn btn-big btn-xs buttons-to-show" ng-click="reRunInstance()"
-                 ng-disabled="!(instance.status === 'KILLED' || instance.status === 'SUCCEEDED' || instance.status === 'FAILED')">
-              <span class="entypo play"></span> <div>Rerun</div>
-            </div>
+                ng-disabled="!(instance.status === 'KILLED' || instance.status === 'SUCCEEDED' || instance.status === 'FAILED')">
+                <span class="entypo play"></span> <div>Rerun</div>
+              </div>
             <div class="btn btn-big btn-xs buttons-to-show" ng-click="suspendInstance()" ng-disabled="!(instance.status === 'RUNNING')">
-              <span class="entypo paus"></span> <div>Suspend</div>
+              <span class="entypo paus"></span> <div>Pause</div>
             </div>
             <div class="btn btn-big btn-xs buttons-to-show" ng-click="killInstance()" ng-disabled="!(instance.status === 'SUSPENDED' || instance.status === 'RUNNING')">
               <span class="entypo stop"></span> <div>Kill</div>

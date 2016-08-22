@@ -859,7 +859,7 @@
             span.css('display', 'none');
           }
 
-          element.css('width', width ? width + threshold + 'px' : '');
+          //element.css('width', width ? width + threshold + 'px' : '');
 
           return originalValue;
         };

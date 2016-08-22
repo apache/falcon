@@ -17,71 +17,10 @@
  */
 (function () {
   'use strict';
-  var scope, controller, falconServiceMock;
+  var scope, controller;
 
   describe('ProcessSummaryCtrl', function () {
     beforeEach(module('app.controllers.process'));
-
-    beforeEach(inject(function($q, $rootScope, $controller) {
-      falconServiceMock = jasmine.createSpyObj('Falcon', ['postUpdateEntity', 'postSubmitEntity', 'logRequest', 'logResponse']);
-
-      scope = $rootScope.$new();
-      scope.process = {};
-      scope.entityType = 'process';
-      controller = $controller('ProcessSummaryCtrl', {
-        $scope: scope,
-        Falcon: falconServiceMock,
-        $state: {
-          $current:{
-            name: 'main.forms.feed.general'
-          },
-          go: angular.noop
-        }
-      });
-    }));
-
-
-    describe('saveEntity', function() {
-      it('Should save the update the entity if in edit mode', function() {
-        falconServiceMock.postUpdateEntity.andReturn(successResponse({}));
-        scope.editingMode = true;//---this line doesnt work
-        scope.$parent.cloningMode = false;
-        scope.process = { name:  'ProcessOne'};
-        scope.xml = '<process/>';
-
-        scope.saveEntity();
-
-        expect(scope.editingMode).toBe(false);
-        expect(falconServiceMock.postSubmitEntity).not.toHaveBeenCalled();
-        expect(falconServiceMock.postUpdateEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process', 'ProcessOne');
-      });
-
-      it('Should save the update the entity if in cloning mode', function() {
-        falconServiceMock.postSubmitEntity.andReturn(successResponse({}));
-        scope.cloningMode = true;//---this line doesnt work
-        scope.$parent.cloningMode = true;
-        scope.process = { name:  'ProcessOne'};
-        scope.xml = '<process/>';
-
-        scope.saveEntity();
-
-        expect(scope.cloningMode).toBe(false);
-        expect(falconServiceMock.postSubmitEntity).toHaveBeenCalledWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><process/>', 'process');
-        expect(falconServiceMock.postUpdateEntity).not.toHaveBeenCalled();
-      });
-
-    });
-
-    function successResponse(value) {
-      var fakePromise = {};
-      fakePromise.success = function(callback) {
-        callback(value);
-        return fakePromise;
-      };
-      fakePromise.error = angular.noop;
-      return fakePromise;
-    }
-
 
   });
 

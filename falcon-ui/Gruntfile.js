@@ -24,7 +24,7 @@
       copy: {
         resources: {
           cwd: 'app',
-          src: ['html/**/*.html', 'index.html', 'config/*'],
+          src: ['html/**/*.html', 'index.html', 'config/*', 'css/jquery-ui.css'],
           dest: 'dist/',
           expand: true
         },
@@ -32,6 +32,12 @@
           cwd: 'app/',
           src: ['css/fonts/*', 'css/img/*'],
           dest: 'dist/',
+          expand: true
+        },
+        webapp : {
+          cwd: 'dist',
+          src: ['**/*.*'],
+          dest: '../webapp/src/main/webapp/',
           expand: true
         },
 	ambariview : {
@@ -54,6 +60,7 @@
             'app/js/lib/jquery-1.11.1.min.js',
             'app/js/lib/angular.min.js',
             'app/js/lib/angular-cookies.min.js',
+            'app/js/lib/angular-ngStorage.js',
             'app/js/lib/uirouter.min.js',
             'app/js/lib/ui-bootstrap-tpls-0.11.0.min.js',
             'app/js/lib/d3.min.js',
@@ -65,7 +72,10 @@
             'app/js/lib/ng-tags-input.js',
             'app/js/lib/popover.js',
             'app/js/lib/ng-mask.min.js',
-            'app/js/lib/dagre.min.js'
+            'app/js/lib/dagre.min.js',
+			'app/js/lib/focusIf.min.js',
+            'app/js/lib/jquery.mask.min.js',
+			'app/js/lib/jquery-ui.min.js'
             //'app/js/lib/bootstrap.notify.js'
           ],
           dest: 'dist/js/vendor.min.js'
@@ -151,7 +161,10 @@
             ieCompat: false
           },
           files: {
-            'dist/css/main.css': 'app/css/main.less'
+            'dist/css/dark-theme.css': 'app/css/main.less',
+            'dist/css/white-theme.css': 'app/css/white-theme.less',
+            'dist/css/gray-theme.css': 'app/css/gray-theme.less',
+			'dist/css/default-theme.css': 'app/css/default-theme.less'
           }
         }
       },

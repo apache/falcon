@@ -20,46 +20,138 @@
 .mt1 {
   margin-top: 1px;
 }
+.mt3 {
+  margin-top: 3px;
+}
 .mt5 {
   margin-top: 5px;
+}
+.mt8 {
+  margin-top: 8px;
 }
 .mt10 {
   margin-top: 10px;
 }
+.mt15 {
+  margin-top: 15px !important;
+}
 .mt20 {
   margin-top: 20px;
+}
+.mt25 {
+  margin-top: 25px;
+}
+.mt30 {
+  margin-top: 30px;
+}
+.mt35 {
+  margin-top: 35px;
+}
+.mb0 {
+  margin-bottom: 0px !important;
+}
+.mb5 {
+  margin-bottom: 5px;
+}
+.mb7 {
+  margin-bottom: 7px;
 }
 .mb10 {
   margin-bottom: 10px;
 }
-.formViewContainer {
-  .mt10;
-
+.mr20 {
+  margin-right: 20px;
 }
+.ml20{
+  margin-left: 20px;
+}
+.pt15px{
+  padding-top:15px;
+}
+.pt35px{
+  padding-top:35px;
+}
+.pt5px{
+  padding-top:5px;
+}
+.pt3px{
+  padding-top:3px;
+}
+.pb5px{
+  padding-bottom:5px;
+}
+.pl0px{
+  padding-left: 8px;
+}
+.p0px{
+  padding: 0px;
+}
+.plr0px{
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.pl5 {
+  padding-left: 5px;
+}
+
 //-----------------next and previous buttons----------//
-@nextBtnBackground: #666666;
+@nextBtnBackground: #69be28;
 @prevBtnBackground: #CCCCCC;
-.nextBtn, .prevBtn {
+.nextBtn, .prevBtn ,.cnclBtn {
   .transition(background, 0.3s, ease);
   border: 0px none;
-  width: 90px;
-  border-radius: 7px!important;
-  padding: 10px;
+  width: 100px;
+  font-size: 12px;
+  line-height: 1.3em;
 }
-.nextBtn {
-  background: @nextBtnBackground;
-  color: white;
+.advancedSaveBtn {
+  .transition(background, 0.3s, ease);
+  border: 0px none;
+  font-size: 12px;
+  line-height: 1.3em;
+  width: 180px;
+}
+.datasourceBtn {
+  .transition(background, 0.3s, ease);
+  border: 0px none;
+  width: 120px;
+  font-size: 12px;
+  line-height: 1.3em;
+}
+a.cnclBtn {
+	height:24px;
+	background-color:#cccccc;
+	/*border-radius:7px;*/
+	margin:0px;
+	line-height: 1.3em;
   &:hover {
-    background: darken(@nextBtnBackground, 10%);
-    color: white;
+    background: darken(#cccccc, 10%);
+    color: #232323;
     outline: hidden;
-    border-radius: 7px!important;
+    /*border-radius: 7px!important;*/
   }
   &:focus, &:active, &:visited {
-    background: darken(@nextBtnBackground, 10%);
-    color: white;
+    background: darken(#cccccc, 10%);
+    color: #232323;
     outline: hidden;
-    border-radius: 10px!important;
+	/*border-radius: 7px!important;*/
+  }
+}
+.nextBtn {
+  background: @form-nxt-btn;
+  color: @progress-div-active-color;
+  /*line-height: 1.3em;*/
+  &:hover {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+    /*border-radius: 7px!important;*/
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
   }
 }
 .prevBtn {
@@ -67,17 +159,46 @@
   &:hover {
     background: darken(@prevBtnBackground, 10%);
     outline: hidden;
-    border-radius: 7px!important;
+    /*border-radius: 7px!important;*/
   }
   &:focus, &:active, &:visited {
     background: darken(@prevBtnBackground, 10%);
     outline: hidden;
-    border-radius: 10px!important;
+    /*border-radius: 10px!important;*/
+  }
+}
+.advancedSaveBtn {
+  background: @form-nxt-btn;
+  color: @progress-div-active-color;
+  &:hover {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+  }
+}
+.datasourceBtn {
+  background: @form-nxt-btn;
+  color: @progress-div-active-color;
+  /*line-height: 1.3em;*/
+  &:hover {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
+    /*border-radius: 7px!important;*/
+  }
+  &:focus, &:active, &:visited {
+    background: darken(@form-nxt-btn, 10%);
+    color: @progress-div-active-color;
+    outline: hidden;
   }
 }
 //-----------------------------------------------------//
 .aclBox {
-  .mt10;
 
   > div {
     label {
@@ -90,8 +211,22 @@
     vertical-align: top;
   }
 }
+.formBoxContainer {
+  .customContainer{
+	overflow:auto;
+	border:1px solid @details-form-border;
+	margin-left:0px;
+	margin-right:0px;
+  }
+}
 .dt {
   //display: table;
+}
+/*.xmlPreviewContainer {
+  position: absolute;
+  left: 530px;
+  top: 55px;
+  right: 0;
 }
 @media screen and (max-width: @grid-float-breakpoint) {
   .xmlPreviewContainer {
@@ -100,17 +235,42 @@
     top:0;
     width: 500px;
   }
-}
+}*/
 .formPage {
 
   h3 {
     font-weight: bold;
   }
+  a.cnclBtn {
+	height:24px;
+	background-color:#cccccc;
+	/*border-radius:7px;*/
+	margin:0px;
+	text-decoration: none;
+	text-align: center;
+	line-height: 1.3em;
+	&:hover {
+		background: darken(#cccccc, 10%);
+		color: #232323;
+		outline: hidden;
+		/*border-radius: 7px!important;*/
+	  }
+	  &:focus, &:active, &:visited {
+		background: darken(#cccccc, 10%);
+		color: #232323;
+		outline: hidden;
+		/*border-radius: 7px!important;*/
+	  }
+	}
   .entypo {
     font-size: 22px;
+	color: #000;
    /* line-height: 14px;*/
     /*vertical-align: top;
     display: inline-table;*/
+  }
+  .addTag {
+	background-color:#cccccc;
   }
   h4 {
     font-size: 14px;
@@ -129,6 +289,9 @@
     font-size: 12px;
     line-height: 12px;
     margin: 10px 0 2px 0;
+  }
+  .font11px {
+    font-size: 11px;
   }
   .light {
     font-weight: normal;
@@ -165,7 +328,7 @@ select {
     &:last-child { margin-right:0;}
   }
   input[type="text"] {
-    width: 20px;
+    width: 43px;
     //height: 18px;
     //line-height: 18px;
     vertical-align: top;
@@ -178,7 +341,6 @@ select {
     margin:0;
     vertical-align: middle;
   }
-  div { margin-bottom: 5px;}
   #availInput {
     width: 60px;
   }
@@ -196,16 +358,43 @@ select {
   }
 
 }
-.clusterSummaryRow {
+
+#clusterSummaryStep, #feedSummaryStep, #processSummaryStep, #formSummaryBox, #datasourceSummaryStep {
   padding: 0 10px;
+  h4 {
+    margin-top: 25px;
+    margin-bottom: 0px;
+  }
 }
-.clusterForm, .feedForm, .entityForm {
-  input {
+
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm, .datasourceForm {
+  input, input[disabled],textarea, textarea[disabled] {
     padding-left: 1px;
     border-width: 1px;
+    background-color:@form-input-background-color;
+    color:#333333;
+    &.form-control {
+      background-color:@form-input-background-color;
+    }
+    &[disabled] {
+      background-color:@input-bg-disabled;
+    }
+  }
+  input:active,input:focus,input:visited,
+  select:active,select:focus,select:visited,
+  textarea:active,textarea:focus,textarea:visited {
+    background-color:#ffffff;
+    color:#333333;
   }
   select {
-    background-color: white;
+    background-color: @form-input-background-color;
+    color:#333333;
+  }
+  select[disabled] {
+    background-color:@input-bg-disabled;
+  }
+  .p0px{
+	padding:0px;
   }
   > div {
     &:first-child {
@@ -226,16 +415,41 @@ select {
     margin-top: 10px;
   }
   label {
-    font-size: 12px;
     margin:0;
   }
   input[type="checkbox"] {
-    vertical-align: sub;
+    vertical-align: middle;
+  }
+}
+#clusterLocationBox {
+  label {
+    margin:0;
   }
 }
 //---------------------------------//
-.feedForm, .entityForm {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm, .datasourceForm {
+  .pullOver {
 
+    button {
+      transform: rotate(90deg);
+      height:auto!important;
+      position: absolute;
+      right: -61px;
+      top: 57px;
+
+    }
+  }
+  .pullOverXml {
+
+
+    button {
+      transform: rotate(90deg);
+      height:auto!important;
+      position: absolute;
+      right: -88px;
+      top: 57px;
+    }
+  }
   .small {
     display: inline-block;
     width: 30px;
@@ -249,6 +463,30 @@ select {
   }
   .freqTitle {
     margin: 0 0 5px 0;
+  }
+  .title {
+	font-size: 14px;
+	color: @form-label-color;
+    .mb0;
+  }
+  .pb15px {
+	padding-bottom:15px;
+  }
+  .pb30px {
+	padding-bottom:30px;
+  }
+  .bb1pxw {
+	border-bottom: 1px solid #666666;
+  }
+  input,select,button,textarea {
+	height:24px;
+	border-color:#cccccc;
+  }
+  .labelCheckBox  {
+    height:17px;
+  }
+  input[type="radio"] {
+    height: auto
   }
   .top-buffer {
     margin-top: 8px;
@@ -361,9 +599,9 @@ select {
       margin-top: 0;
     }
   }
-  .TZSelect {
+  /*.TZSelect {
     margin: 5px 0;
-  }
+  }*/
   .addProperty {
     margin: 12px 5px;
     display: inline-block;
@@ -373,16 +611,21 @@ select {
 
 //----old entity details------------------//
 .detailsHeaders {
-  h3 { display: inline-block;}
-  small{
+  /*h3 { display: inline-block;}
+  small {
     color: @gray-light;
     display: block;
     margin-bottom: -2px;
-  }
+  }*/
   .btn {
     margin-top: -2px;
-    background-color: @gray;
-    color: white;
+    background-color: @detail-header-button-background-color;
+    color: @detail-header-color;
+  }
+  .entityName {
+    color: @detail-header-color;
+    font-size: 15px;
+    padding-left: 5px;
   }
 }
 
@@ -391,34 +634,106 @@ select {
     float:none!important;
   }
 }
+.entityDetailsBox {
+	background-color: @entity-detail-background-color;
+	color: @detail-color;
+    border: 1px solid @detail-border-color;
+}
+
+.instanceDetails {
+  .detailsBox {
+    border: 1px solid @detail-border-color;
+    margin: 5px;
+    padding: 15px;
+  }
+}
+
 .detailsBox {
-  border-radius: 5px;
-  border: 1px solid @gray-light2;
-  margin: 5px 0;
-  padding: 15px 5px;
+  /*border-radius: 5px;
+  border: 1px solid @gray-light2;*/
+  margin: 0px;
+  padding: 0px;
   font-size: 12px;
-  background-color: #ffffff;
+  background-color: @detail-background-color;
   h4 {
     font-weight: bold;
     margin:5px 0;
+    color: @form-label-color;
   }
   h5 {
     font-weight: bold;
     margin-top:2px;
+	color:  @form-label-color;
   }
   table {
     width: 100%;
     border-spacing: 5px;
     border-collapse: separate;
   }
+  .blink-success {
+	color: #69be28;
+  }
+  .blink-warning {
+	color: #E6DD00;
+  }
+  .blink-danger {
+    color: #E6DD00;
+  }
+  .blink-notification {
+	color: #ffff00;
+  }
+  .text-success {
+	color: #3c763d;
+  }
+  table.properties {
+	color: @form-table-color;
+	border-collapse: collapse;
+    .mb0;
+  }
+  .no-border-top {
+	border-top:0px;
+  }
+  .no-border-bottom {
+	border-bottom:0px;
+  }
+
+  .editXMLBtn {
+	backgorund-color:#cccccc;
+	color:#232323;
+	font-size:12px;
+  }
   .tableHeader {
     width: 70px;
     font-weight: bold;
   }
-  textarea {
-    width: 100%;
+  label, span {
+    color: @form-label-color;
   }
-  &.processCluster {
+  label {
+    margin-top: 15px;
+  }
+  label.custom-danger {
+	color: #f33;
+  }
+  textarea.form-control {
+    width: 100%;
+	/*background-color:#232323;
+	color:#ffffff;
+	border:0px;
+	font-size:12px;*/
+  }
+  .dt {
+	background-color: @details-box-dt-bg;
+	border:1px solid #666666;
+  }
+
+  .processCluster {
+    border-radius: 5px;
+    border: 1px solid #a6a6a6;
+    padding: 15px 4%;
+    margin: 10px auto;
+  }
+  /*&.processCluster {
     padding: 15px 4%;
     margin: 5px auto;
     h5 {
@@ -426,6 +741,14 @@ select {
       &:first-child {
         margin-top:0;
       }
+    }
+  }*/
+  &.xmlPreviewContainer {
+    margin-left: 25px;
+    margin-right: -25px;
+    textarea[disabled] {
+      border: none;
+      background-color: transparent;
     }
   }
 }
@@ -449,35 +772,36 @@ select {
 ///////VALIDITY BOXES//////////////////////////
 ///////////////////////////////////////////////
 .validityBox {
-  label, input, button {
+  /*label, input, button {
     font-weight: normal;
-  }
+  }*/
 
-  > div {
+  /*> div {
     display: inline-block;
     margin: 0 2px;
-  }
+  }*/
 
   h4 {
     margin-top: 5px;
     margin-bottom: 0;
   }
   .startDateBox, .endDateBox {
-    width: 20%;
+    /*width: 20%;*/
     vertical-align: top;
+    margin-right: 5px;
   }
   .startTimeBox, .endTimeBox {
-    width: 15%;
+    /*width: 15%;*/
     vertical-align: top;
-    padding-left:0;
     input {
-      //width: 20px;
-      //margin:0;
+      width: 45px;
+      margin-right: 5px;
+      /*margin:0 auto;*/
     }
     button {
       border-radius: 0;
       width: 25px;
-      height: 25px;
+      /*height: 25px;*/
       padding:0;
       margin-left: 1px;
     }
@@ -504,17 +828,90 @@ select {
   .endTimeBox {
 
   }
-  .tzBox {
+  /* Date-picker */
+  ul.dropdown-menu {
+    color: @gray-dark;
+    span, label {
+      color: @gray-dark;
+    }
+    button {
+      height: auto;
+    }
+  }
+  /*.tzBox {
     width: 22%;
     //padding-top: 20px;
-  }
+  }*/
 }
 
-.feedForm, .entityForm {
-  .validityBox {
+.clusterForm, .feedForm, .entityForm, .datasetForm, .snapshotForm, .datasourceForm {
+  margin-top: 25px;
+  /*.validityBox {
     .startDateBox, .endDateBox { width: 27%;}
     .startTimeBox, .endTimeBox {width: 17%;}
     .endDateBox { margin-left: 20px;}
-    .error_input { border:1px solid red !important;}
-  }
+  }*/
+}
+
+.feedFormClusters {
+  padding-top: 50px;
+}
+
+.feedForm .clusterSelect {
+  display: inline;
+  width: auto;
+}
+
+.feedForm .clusterAddBtn {
+  margin: 0px 0px 1px 8px;
+}
+
+.feedForm .sourceClusterList, .feedForm .targetClusterList {
+  padding-top: 7px;
+}
+
+.feedForm .clusterListLabel {
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.feedForm .panel-heading {
+  padding: 1px;
+}
+
+.feedForm .panel-group .panel {
+  border-radius: 0px;
+  margin-top: -1px;
+}
+
+.feedForm .panel-group .panel .panel-collapse {
+  padding: 0px;
+}
+
+.feedFormInputBorder {
+  border: 1px solid @input-border;
+}
+
+.feedForm .partition-panel-body {
+  padding: 5px 5px 30px 5px;
+}
+
+.aclPermission {
+  min-width: 250px;
+}
+
+.endpointDefault {
+  color : @form-label-color !important;
+}
+
+.endpointChanged {
+  color: @gray-darker !important;
+}
+
+.clusterBoxEndLine {
+  border-top: 1px solid #aaa;
+}
+
+.disabledEditBtn {
+  pointer-events: auto !important;
 }

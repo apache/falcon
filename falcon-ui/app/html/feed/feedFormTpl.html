@@ -17,91 +17,82 @@
  * limitations under the License.
  */
 -->
-<div class="col-xs-22 col-xs-offset-1 feedForm" id="feedFormTmpl">
+<div id="formBox" class="feedForm">
   <div class="col-xs-24">
-    <div class="row dt">
-
-      <h3 id="feed.title" class="col-xs-24">
-        <span class="entypo download icon-lg"></span> New Feed
-      </h3>
-
-      <div ng-class="{'col-xs-12' : propsOpen, 'col-xs-20' : !propsOpen}">
-        <div class="detailsBox">
-          <div class="feedProgressBox" ng-class="{
-            general:isActive('forms.feed.general'),
-            properties:isActive('forms.feed.properties'),
-            location:isActive('forms.feed.location'),
-            clusters:isActive('forms.feed.clusters'),
-            summary:isActive('forms.feed.summary')
-            }">
-            <div class="progressBar col-xs-24">
-              <div>
-                <span>
-                  <div class="fir">1<span class="entypo check"></span></div>
-                  <h6>General</h6>
-                </span>
-                <span>
-                  <div class="sec">2<span class="entypo check"></span></div>
-                  <h6>Properties</h6>
-                </span>
-                <span>
-                  <div class="thi">3<span class="entypo check"></span></div>
-                  <h6>Location</h6>
-                </span>
-                <span>
-                  <div class="fou">4<span class="entypo check"></span></div>
-                  <h6>Clusters</h6>
-                </span>
-                <span>
-                  <div class="fif">5<span class="entypo check"></span></div>
-                  <h6>Summary</h6>
-                </span>
-              </div>
-            </div>
+    <div class="preview pullOver">
+      <button id="previewXMLBtn" type="button" class="btn btn-default btn-md pull-right nextBtn"
+      ng-disabled="invalidXml && xmlPreview.edit" ng-click="toggleclick()" >Preview XML</button>
+    </div>
+    <br/>
+    <div>
+      <div class="formBoxContainer detailsBox">
+        <div class="row feedProgressBox" ng-class="{
+          general:isActive('forms.feed.general'),
+          summary:isActive('forms.feed.summary')
+          }">
+          <div class="progressBar col-xs-24">
+              <div class="text-center fir" ng-class="{
+                active:isActive('forms.feed.general'),
+                completed:isCompleted('forms.feed.general')}">General</div>
+              <div class="text-center fif" ng-class="{
+                active:isActive('forms.feed.summary'),
+                completed:isCompleted('forms.feed.summary')}">Summary</div>
           </div>
-
-          <div class="row">
-            <div class="col-xs-offset-1 col-xs-22">
-              <fieldset ng-disabled="!editXmlDisabled">
-                <div ui-view class="formViewContainer"></div>
-              </fieldset>
-            </div>
+        </div>
+        <div class="row customContainer">
+          <div class="col-xs-offset-1 col-xs-22">
+            <fieldset ng-disabled="!editXmlDisabled">
+              <div class="formViewContainer">
+                <div class="col-xs-24">
+                  <label class="title"><span class="entypo download icon-lg entypo-align-sub"></span> NEW FEED</label>
+                </div>
+                <div ui-view></div>
+              </div>
+            </fieldset>
           </div>
         </div>
       </div>
 
-      <div ng-class="{'col-xs-12' : propsOpen, 'col-xs-4' : !propsOpen}">
-        <div class="detailsBox">
-          <div class="row dt">
-
-            <div class="col-xs-13 col-xs-offset-1 noSpecial">
-              <h5><i class="pointer glyphicon" ng-click="propsOpen = !propsOpen" ng-class="propsOpen ? 'glyphicon-minus-sign':'glyphicon-plus-sign'"></i> XML Preview</h5>
+      <div class="hide xmlPreviewContainer detailsBox">
+        <div class="row dt">
+          <div class="col-xs-24 pt15px">
+            <div class="col-xs-13 noSpecial">
+                <h5>XML Preview</h5>
+                <label style="margin-top: -10px;margin-bottom: -2px;" ng-if="invalidXml" class="custom-danger">Invalid Xml</label>
             </div>
 
-            <div ng-if="propsOpen" class="col-xs-9">
+            <div class="pull-right">
               <button type="button"
                       id="feed.editXML"
-                      class="btn btn-default btn-xs pull-right"
+                      class="btn btn-default btn-xs"
                       ng-click="toggleEditXml()"
-                      ng-class="{'btn-warning':!editXmlDisabled}">
+                      ng-class="{'btn-warning':!editXmlDisabled}"
+                      ng-disabled="invalidXml">
                 <div ng-if="editXmlDisabled">Edit XML</div>
                 <div ng-if="!editXmlDisabled">Finish</div>
               </button>
 
+              <button type="button"
+                      id="revertXMLBtn"
+                      class="btn btn-default btn-xs"
+                      ng-if="invalidXml"
+                      ng-click="revertXml()">
+                  <div>Revert</div>
+              </button>
             </div>
-
-            <div ng-show="propsOpen" class="col-sm-24">
-              <div class="row">
-                <div class="col-sm-22 col-sm-offset-1">
-                  <textarea ng-model="prettyXml" elastic class="form-control prettyXml" ng-disabled="editXmlDisabled"></textarea>
-                </div>
-              </div>
-            </div>
+		  </div>
+          <div class="col-sm-24 showValidationStyle">
+            <textarea ng-model="prettyXml"
+                      elastic
+                      class="form-control"
+                      ng-disabled="editXmlDisabled"
+                      ng-class="{fakeInvalid:invalidXml}">
+            </textarea>
+            <!--{{xmlEditValidationError}}-->
+          </div>
 
           </div>
         </div>
-      </div>
-
     </div>
   </div>
 </div>

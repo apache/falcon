@@ -1,0 +1,77 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="row clusterSummaryRow summaryBox" id="clusterSummaryStep">
+  <h5 class="col-sm-24">
+    General
+  </h5>
+  <div class="col-sm-24">
+    <label>Cluster Name</label>:<span> {{cluster.name}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Data Center or Colo Name</label>:<span> {{cluster.colo}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Description</label>:<span> {{cluster.description}}</span>
+  </div>
+
+  <div class="col-sm-24" ng-if="cluster.tags.length != 0">
+    <label>Tags</label>:
+  </div>
+
+  <div class="col-sm-24">
+    <div ng-repeat="tag in cluster.tags | filter:{key: '!!'}">
+      {{tag.key}} = {{tag.value}}
+    </div>
+  </div>
+
+  <h5 class="col-sm-24" ng-if="cluster.ACL">
+    Access Control List
+  </h5>
+  <div class="col-sm-24" ng-if="cluster.ACL" >
+    <label>Owner</label>:<span> {{cluster.ACL.owner}}</span>
+    <label>Group</label>:<span> {{cluster.ACL.group}}</span>
+    <label>Permission</label>:<span> {{cluster.ACL.permission}}</span>
+  </div>
+
+  <h5 class="col-sm-24">
+    Interfaces
+  </h5>
+
+  <div class="col-sm-24" ng-repeat="interface in cluster.interfaces">
+    <label>{{clusterInterfaceLabels(interface.type)}}</label>:<span> {{interface.endpoint}} - {{ interface.version }}<span>
+  </div>
+
+  <h5 class="col-sm-24" ng-if="cluster.properties">
+    Properties
+  </h5>
+
+  <div class="col-sm-24" ng-if="cluster.properties.length > 0"
+    ng-repeat="property in cluster.properties">
+    <label>{{property.key}}</label>:<span> {{property.value}}</span>
+  </div>
+
+  <h5 class="col-sm-24">
+    Locations
+  </h5>
+
+  <div class="col-sm-24" ng-repeat="location in cluster.locations">
+    <label>{{capitalize(location.name)}}</label>:<span> {{location.path}}</span>
+  </div>
+</div>

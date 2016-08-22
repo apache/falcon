@@ -27,10 +27,12 @@
   var clusterModule = angular.module('app.controllers.view', [ 'app.services' ]);
 
   clusterModule.controller('EntityDetailsCtrl', [
-    "$scope", "$timeout", "$interval", "Falcon", "EntityModel", "$state", "X2jsService", 'EntitySerializer', 'InstanceFalcon',
-    function ($scope, $timeout, $interval, Falcon, EntityModel, $state, X2jsService, serializer, InstanceFalcon) {
+    "$scope", "$timeout","$window", "$interval", "Falcon", "EntityModel","EntityScheduler", "$state",
+    "X2jsService", 'EntitySerializer', 'InstanceFalcon', 'entity', 'ExtensionSerializer', '$rootScope',
+    function ($scope, $timeout, $window, $interval, Falcon, EntityModel, EntityScheduler,
+      $state, X2jsService, serializer, InstanceFalcon, entity, extensionSerializer, $rootScope) {
 
-      $scope.entity = EntityModel;
+      $scope.entity = entity;
 
       var resultsPerPage = 10;
       var visiblePages = 3;
@@ -39,7 +41,15 @@
 
       $scope.pages = [];
       $scope.nextPages = false;
-      $scope.mirrorTag = "_falcon_mirroring_type";
+      $scope.mirrorTag = "_falcon_extension_name";
+
+      $scope.isSafeMode = function() {
+        return $rootScope.safeMode;
+      };
+
+      $scope.isSuperUser = function() {
+        return $rootScope.superUser;
+      };
 
       $scope.isMirror = function(tags){
         var flag = false;
@@ -49,22 +59,49 @@
         return flag;
       };
 
+      $scope.getMirrorType = function(tags) {
+        if (tags.search('_falcon_extension_name=HDFS-MIRRORING') !== -1) {
+          return "hdfs-mirror";
+        } else if (tags.search('_falcon_extension_name=HDFS-SNAPSHOT-MIRRORING') !== -1) {
+          return "snapshot";
+        } else if (tags.search('_falcon_extension_name=HIVE-MIRRORING') !== -1) {
+          return "hive-mirror";
+        }
+      };
+
       if($scope.entity.type === "feed"){
+        $scope.entityTypeLabel = "Feed";
         $scope.feed = serializer.preDeserialize($scope.entity.model, "feed");
         $scope.feed.name = $scope.entity.name;
         $scope.feed.type = $scope.entity.type;
         $scope.entity.start = $scope.entity.model.feed.clusters.cluster[0].validity._start;
         $scope.entity.end = $scope.entity.model.feed.clusters.cluster[0].validity._end;
-      }else{
+      } else if($scope.entity.type === "cluster"){
+        $scope.entityTypeLabel = "Cluster";
+        $scope.cluster = serializer.preDeserialize($scope.entity.model, "cluster");
+        $scope.cluster.name = $scope.entity.name;
+        $scope.cluster.type = $scope.entity.type;
+      }else if($scope.entity.type === "process"){
         var tags = $scope.entity.model.process.tags;
         if($scope.isMirror(tags)){
-          $scope.entityTypeLabel = "Mirror";
+          var mirrorType = $scope.getMirrorType(tags);
+          if (mirrorType === "snapshot") {
+            $scope.entityTypeLabel = "Snapshot";
+          } if (mirrorType === "hdfs-mirror") {
+            $scope.entityTypeLabel = "HDFS Mirror";
+          } else if (mirrorType === "hive-mirror") {
+            $scope.entityTypeLabel = "Hive Mirror";
+          }
+          $scope.extension = extensionSerializer.serializeExtensionModel(
+            $scope.entity.model, mirrorType, $rootScope.secureMode);
+        } else {
+          $scope.entityTypeLabel = "Process";
+          $scope.process = serializer.preDeserialize($scope.entity.model, "process");
+          $scope.process.name = $scope.entity.name;
+          $scope.process.type = $scope.entity.type;
+          $scope.entity.start = $scope.entity.model.process.clusters.cluster[0].validity._start;
+          $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
         }
-        $scope.process = serializer.preDeserialize($scope.entity.model, "process");
-        $scope.process.name = $scope.entity.name;
-        $scope.process.type = $scope.entity.type;
-        $scope.entity.start = $scope.entity.model.process.clusters.cluster[0].validity._start;
-        $scope.entity.end = $scope.entity.model.process.clusters.cluster[0].validity._end;
       }
 
       $scope.capitalize = function(input) {
@@ -141,7 +178,10 @@
         if(type === "FEED"){
           $scope.entityTypeLabel = "Feed";
           return "entypo download";
-        }else if(type === "PROCESS"){
+        } else if(type === "CLUSTER"){
+          $scope.entityTypeLabel = "Cluster";
+          return "entypo archive";
+        } else if(type === "PROCESS"){
           var tags = model.process.tags;
           if($scope.isMirror(tags)){
             $scope.entityTypeLabel = "Mirror";
@@ -154,6 +194,62 @@
           $scope.entityTypeLabel = "Process";
           return "entypo cycle";
         }
+      };
+
+      $scope.deleteEntity = function () {
+        EntityScheduler.deleteEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            if(status === "DELETED"){
+                $state.go("main");
+            }
+        });
+      };
+      $scope.cloneEntity = function () {
+        var type = $scope.entity.type.toLowerCase();
+        if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
+            type = $scope.getMirrorType($scope.entity.model.process.tags);
+            if (type === 'hdfs-mirror' || type === 'hive-mirror') {
+              type = 'dataset';
+            }
+        }
+        var state = 'forms.' + type;
+        $state.go(state, {'name' : $scope.entity.name, 'action' : 'clone'});
+      };
+
+      $scope.editEntity = function () {
+        var type = $scope.entity.type.toLowerCase();
+        if (type === 'cluster' && (!$rootScope.safeMode || !$rootScope.superUser)) {
+          return;
+        }
+        if(type === 'process' && $scope.isMirror($scope.entity.model.process.tags)){
+            type = $scope.getMirrorType($scope.entity.model.process.tags);
+            if (type === 'hdfs-mirror' || type === 'hive-mirror') {
+              type = 'dataset';
+            }
+        }
+        var state = 'forms.' + type;
+        $state.go(state, {'name' : $scope.entity.name, 'action' : 'edit'});
+      };
+
+      $scope.resumeEntity = function () {
+        EntityScheduler.resumeEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            $scope.entity.status = status;
+        });
+      };
+
+      $scope.scheduleEntity = function () {
+        EntityScheduler.scheduleEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            $scope.entity.status = status;
+        });
+      };
+
+      $scope.suspendEntity = function () {
+        EntityScheduler.suspendEntity($scope.entity.type, $scope.entity.name).then(function(status){
+            $scope.entity.status = status;
+        });
+      };
+
+      $scope.downloadEntity = function () {
+        EntityScheduler.downloadEntity($scope.entity.type, $scope.entity.name);
       };
 
     }

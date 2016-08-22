@@ -15,8 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.falcon</groupId>
@@ -33,7 +32,7 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>0.0.23</version>
+        <version>0.0.14</version>
         <executions>
 
           <execution>
@@ -76,6 +75,27 @@
               <arguments>test</arguments>
             </configuration>
           </execution>
+
+	  <execution>
+            <id>grunt copy webapp</id>
+            <goals>
+              <goal>grunt</goal>
+            </goals>
+            <configuration>
+              <arguments>copy:webapp</arguments>
+            </configuration>
+          </execution>
+
+	  <execution>
+            <id>grunt copy ambariview</id>
+            <goals>
+              <goal>grunt</goal>
+            </goals>
+            <configuration>
+              <arguments>copy:ambariview</arguments>
+            </configuration>
+          </execution>
+
         </executions>
       </plugin>
 
@@ -84,7 +104,9 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes>
+            <exclude>.git*</exclude>
             <exclude>app/js/lib/**</exclude>
+            <exclude>app/css/*.css</exclude>
             <exclude>app/css/bootstrap/**</exclude>
             <exclude>app/test/lib/**</exclude>
             <exclude>app/css/fonts/**</exclude>
@@ -98,7 +120,6 @@
             <exclude>bower.json</exclude>
             <exclude>karma.conf.js</exclude>
             <exclude>bower.json</exclude>
-            <exclude>app/css/main.css</exclude>
 	    <exclude>app/css/img/**</exclude>
             <exclude>app/test/e2e/protractor.js</exclude>
             <exclude>app/js/directives/ng-tags-input.js</exclude>

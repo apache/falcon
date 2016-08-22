@@ -18,17 +18,16 @@
 (function () {
   'use strict';
 
-	var entitiesListModule = angular.module('app.directives.dependencies-graph', ['app.services' ]);
+  var entitiesListModule = angular.module('app.directives.dependencies-graph', ['app.services' ]);
 
-  entitiesListModule.controller('DependenciesGraphCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService', 'EntityModel',
-                                      function($scope, Falcon, X2jsService, $window, encodeService, EntityModel) {
+  entitiesListModule.controller('DependenciesGraphCtrl', ['$scope', 'Falcon', 'X2jsService', '$window', 'EncodeService',
+    function($scope, Falcon, X2jsService, $window, encodeService) {
 
 
 
-  }]);
+    }]);
 
-  entitiesListModule.directive('dependenciesGraph', ["$timeout", 'Falcon', '$filter', '$state', 'X2jsService', 'EntityModel',
-                                              function($timeout, Falcon, $filter, $state, X2jsService, EntityModel) {
+  entitiesListModule.directive('dependenciesGraph', ["$timeout", 'Falcon', '$filter', function($timeout, Falcon, $filter) {
     return {
       scope: {
         type: "=",
@@ -49,16 +48,17 @@
             return type + '/' + name;
           }
 
-          function getOrCreateNode(type, name) {
+          function getOrCreateNode(type, name, tag) {
             var k = key(type, name);
             if (nodes[k] !== undefined)
               return nodes[k];
 
             var n = {
-              "id": next_node_id++,
+              "guid": next_node_id++,
               "type": type,
               "name": name,
-              "dependency": []
+              "arrowDirections": tag,
+              "children": []
             };
             nodes[k] = n;
             return n;
@@ -81,7 +81,8 @@
                   var l = data.entity.length;
                   for (var i = 0; i < l; ++i) {
                     var e = data.entity[i];
-                    var d = getOrCreateNode(e.type, e.name);
+                    var tag = e.hasOwnProperty('tags') && e.tags !== null ? e.tags.tag : "Input";
+                    var d = getOrCreateNode(e.type, e.name, tag);
                     var src = null, dst = null;
                     if (d.type === "cluster") {
                       src = node; dst = d;
@@ -94,11 +95,10 @@
                         src = node; dst = d;
                       }
                     }
-                    //console.log(src.name + '->' + dst.name);
-                    src.dependency.push(dst.id);
+                    src.children.push(d);
                   }
 
-                  done_callback(nodes);
+                  done_callback(node);
                 })
                 .error(function (err) {
                   Falcon.logResponse('error', err, false, true);
@@ -106,181 +106,141 @@
           }
 
           function load() {
-            var n = getOrCreateNode(entity_type, entity_name);
+            var n = getOrCreateNode(entity_type, entity_name, "Input");
             loadEntry(n);
           }
           load();
         };
 
-        var plotDependencyGraph = function(nodes, element) {
-          var NODE_WIDTH  = 150;
-          var NODE_HEIGHT = 50;
-          var RECT_ROUND  = 10;
-          var SEPARATION  = 40;
-          var UNIVERSAL_SEP = 80;
+        var plotDependencyGraph = function(nodes, container) {
+          var element = d3.select(container.element),
+              width = Math.max(container.width, 960),
+              height = Math.max(container.height, 300);
 
-          var svg = d3.select(element).append("svg");
-
+          var margin = {
+            top: 30,
+            right: 30,
+            bottom: 30,
+            left: 80
+          };
+          width = width - margin.right - margin.left;
+          height = height - margin.top - margin.bottom;
           // Function to draw the lines of the edge
-          var LINE_FUNCTION = d3.svg.line()
-              .x(function(d) { return d.x; })
-              .y(function(d) { return d.y; })
-              .interpolate('basis');
-
-          // Mappining from id to a node
-          var node_by_id = {};
-
-          var layout = null;
-
-          /**
-           * Calculate the intersection point between the point p and the edges of the rectangle rect
-           **/
-          function intersectRect(rect, p) {
-            var cx = rect.x, cy = rect.y, dx = p.x - cx, dy = p.y - cy, w = rect.width / 2, h = rect.height / 2;
-
-            if (dx == 0)
-              return { "x": p.x, "y": rect.y + (dy > 0 ? h : -h) };
-
-            var slope = dy / dx;
-
-            var x0 = null, y0 = null;
-            if (Math.abs(slope) < rect.height / rect.width) {
-              // intersect with the left or right edges of the rect
-              x0 = rect.x + (dx > 0 ? w : -w);
-              y0 = cy + slope * (x0 - cx);
-            } else {
-              y0 = rect.y + (dy > 0 ? h : -h);
-              x0 = cx + (y0 - cy) / slope;
-            }
-
-            return { "x": x0, "y": y0 };
-          }
-
-          function drawNode(u, value) {
-            var root = svg.append('g').classed('node', true)
-                .attr('transform', 'translate(' + -value.width/2 + ',' + -value.height/2 + ')');
-
-            var node = node_by_id[u];
+          var i = 0;
 
 
+          var tree = d3.layout.tree()
+              .size([height, width]);
 
-
-            var fo = root.append('foreignObject')
-                .attr('x', value.x)
-                .attr('y', value.y)
-                .attr('width', value.width)
-                .attr('height', value.height)
-                .attr('class', 'foreignObject');
-
-
-            var txt = fo.append('xhtml:div')
-                .text(node.name)
-                .classed('node-name', true)
-                .classed('node-name-' + node.type, true);
-
-            var rect = root.append('rect')
-              .attr('width', value.width)
-              .attr('height', value.height)
-              .attr('x', value.x)
-              .attr('y', value.y)
-              .attr('rx', RECT_ROUND)
-              .attr('ry', RECT_ROUND)
-
-              .on('click', function () {
-
-                Falcon.logRequest();
-                Falcon.getEntityDefinition(node.type.toLowerCase(), node.name)
-                  .success(function (data) {
-                    Falcon.logResponse('success', data, false, true);
-                    var entityModel = X2jsService.xml_str2json(data);
-                    EntityModel.type = node.type.toLowerCase();
-                    EntityModel.name = node.name;
-                    EntityModel.model = entityModel;
-                    $state.go('entityDetails');
-                  })
-                  .error(function (err) {
-                    Falcon.logResponse('error', err, false, false);
-                  });
-
-
+          var diagonal = d3.svg.diagonal()
+              .projection(function(d) {
+                return [d.y, d.x];
               });
 
-          }
+          var svg = element.select('svg')
+              .attr('width', width + margin.right + margin.left)
+              .attr('height', height + margin.top + margin.bottom)
+              .select('g')
+              .attr('transform',
+              'translate(' + margin.left + ',' + margin.right + ')');
 
-          function drawEdge(e, u, v, value) {
-            var root = svg.append('g').classed('edge', true);
+          svg.append("svg:defs").append("svg:marker").attr("id", "output-arrow").attr("viewBox", "0 0 10 10")
+              .attr("refX", 20).attr("refY", 5).attr("markerUnits", "strokeWidth").attr("markerWidth", 6)
+              .attr("markerHeight", 9).attr("orient", "auto").append("svg:path").attr("d", "M 0 0 L 10 5 L 0 10 z");
 
-            root.append('path')
-                .attr('marker-end', 'url(#arrowhead)')
-                .attr('d', function() {
-                  var points = value.points;
+          //marker for input type graph
+          svg.append("svg:defs")
+              .append("svg:marker")
+              .attr("id", "input-arrow")
+              .attr("viewBox", "0 0 10 10")
+              .attr("refX", -7)
+              .attr("refY", 5)
+              .attr("markerUnits", "strokeWidth")
+              .attr("markerWidth", 6)
+              .attr("markerHeight", 9)
+              .attr("orient", "auto")
+              .append("svg:path")
+              .attr("d", "M -2 5 L 8 0 L 8 10 z");
 
-                  var source = layout.node(u);
-                  var target = layout.node(v);
+          var root = nodes;
+          function update(source) {
 
-                  var p0 = points.length === 0 ? target : points[0];
-                  var p1 = points.length === 0 ? source : points[points.length - 1];
+            // Compute the new tree layout.
+            var nodes1 = tree.nodes(source).reverse(),
+                links = tree.links(nodes1);
+            // Normalize for fixed-depth.
+            nodes1.forEach(function(d) {
+              d.y = d.depth * 180;
+            });
 
-                  points.unshift(intersectRect(source, p0));
-                  points.push(intersectRect(target, p1));
+            // Declare the nodes�
+            var node = svg.selectAll('g.node')
+                .data(nodes1, function(d) {
 
-                  return LINE_FUNCTION(points);
+                  return d.id || (d.id = ++i);
                 });
+            // Enter the nodes.
+            var nodeEnter = node.enter().append('g')
+                .attr('class', 'node')
+                .attr('transform', function(d) {
+                  return 'translate(' + d.y + ',' + d.x + ')';
+                });
+
+            nodeEnter.append("image")
+                .attr("xlink:href", function(d) {
+                  //return d.icon;
+                  return d.type === 'cluster' ? 'css/img/cloud.png' : 'css/img/feed.png';
+                })
+                .attr("x", "-18px")
+                .attr("y", "-18px")
+                .attr("width", "34px")
+                .attr("height", "34px");
+
+            nodeEnter.append('text')
+                .attr('x', function(d) {
+                  return d.children || d._children ?
+                  (5) * -1 : +15;
+                })
+                .attr('dy', '-1.75em')
+                .attr('text-anchor', function(d) {
+                  return d.children || d._children ? 'middle' : 'middle';
+                })
+                .text(function(d) {
+                  return d.name;
+                })
+
+                .style('fill-opacity', 1);
+
+            // Declare the links�
+            var link = svg.selectAll('path.link')
+                .data(links, function(d) {
+                  return d.target.id;
+                });
+
+            link.enter().insert('path', 'g')
+                .attr('class', 'link')
+              //.style('stroke', function(d) { return d.target.level; })
+                .style('stroke', 'green')
+                .attr('d', diagonal);
+            link.attr("marker-start", function (d) {
+              if(d.target.arrowDirections==="Input")
+                return "url(#input-arrow)";
+            }); //if input
+            link.attr("marker-end", function (d) {
+              if(d.target.arrowDirections==="Output")
+                return "url(#output-arrow)";
+            }); //if outPut
+
           }
 
-          function postRender() {
-            svg
-                .append('svg:defs')
-                .append('svg:marker')
-                .attr('id', 'arrowhead')
-                .attr('viewBox', '0 0 10 10')
-                .attr('refX', 8)
-                .attr('refY', 5)
-                .attr('markerUnits', 'strokewidth')
-                .attr('markerWidth', 8)
-                .attr('markerHeight', 5)
-                .attr('orient', 'auto')
-                .attr('style', 'fill: #333')
-                .append('svg:path')
-                .attr('d', 'M 0 0 L 10 5 L 0 10 z');
-          }
+          update(root);
 
-          function plot() {
-            var g = new dagre.Digraph();
 
-            for (var key in nodes) {
-              var n = nodes[key];
-              node_by_id[n.id] = n;
-              g.addNode(n.id, { "width": NODE_WIDTH, "height": NODE_HEIGHT });
-            }
-
-            for (var key in nodes) {
-              var n = nodes[key];
-              for (var i = 0, l = n.dependency.length; i < l; ++i) {
-                var d = n.dependency[i];
-                g.addEdge(null, n.id, d);
-              }
-            }
-
-            layout = dagre.layout()
-                .universalSep(UNIVERSAL_SEP).rankSep(SEPARATION)
-                .run(g);
-            layout.eachEdge(drawEdge);
-            layout.eachNode(drawNode);
-
-            var graph = layout.graph();
-
-            svg.attr("width", graph.width);
-            svg.attr("height", graph.height);
-
-            postRender();
-          }
-          plot();
         };
 
         var visualizeDependencyGraph = function(type, name) {
           loadDependencyGraph(type, name, function(nodes) {
-            plotDependencyGraph(nodes, element[0]);
+            plotDependencyGraph(nodes, {element:element[0], height:element[0].offsetHeight,width:element[0].offsetWidth});
           });
         };
 

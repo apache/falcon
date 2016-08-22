@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+	license agreements. See the NOTICE file distributed with this work for additional
+	information regarding copyright ownership. The ASF licenses this file to
+	You under the Apache License, Version 2.0 (the "License"); you may not use
+	this file except in compliance with the License. You may obtain a copy of
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+	by applicable law or agreed to in writing, software distributed under the
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+	OF ANY KIND, either express or implied. See the License for the specific
+	language governing permissions and limitations under the License. -->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.apache.falcon</groupId>
+		<artifactId>falcon-main</artifactId>
+		<version>0.10</version>
+	</parent>
+
+	<artifactId>falcon-ambari-view</artifactId>
+	<packaging>jar</packaging>
+	<name>Apache Falcon Ambari Views Integration</name>
+	<description>Apache Falcon UI Application</description>
+
+
+
+	<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>${jersey.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<version>1</version>
+		</dependency>
+
+		<!-- Unit testing ====================================================== -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.9.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>com.google.inject</groupId>
+		    <artifactId>guice</artifactId>
+		    <version>4.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ambari.contrib.views</groupId>
+			<artifactId>ambari-views</artifactId>
+			<version>2.4.0.0.1019</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/src/main/lib/ambari-views-2.4.0.0.1019.jar</systemPath>
+		</dependency>
+	</dependencies>
+
+	<build>
+
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.12</version>
+			</plugin>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>package.json</exclude>
+						<exclude>src/main/resources/ui/css/**</exclude>
+						<exclude>src/main/resources/ui/js/**</exclude>
+						<exclude>src/main/resources/ui/config/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources/ui/</directory>
+				<filtering>false</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/resources/</directory>
+				<filtering>false</filtering>
+				<includes>
+					<include>view.xml</include>
+				</includes>
+			</resource>
+			<resource>
+				<targetPath>WEB-INF/lib</targetPath>
+				<filtering>false</filtering>
+				<directory>target/lib</directory>
+			</resource>
+		</resources>
+	</build>
+
+</project>

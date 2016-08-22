@@ -1,0 +1,505 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<form id="snapshotFormGeneralStep" name="datasetForm" novalidate>
+
+  <div class="col-xs-6">
+    <label class="light" tooltip="dataset.name">Name<mandatory-field></mandatory-field></label>
+    <input type="text"
+           name="nameInput"
+           class="form-control"
+           ng-model="snapshot.name"
+           placeholder=""
+           ng-disabled="editingMode"
+           ng-pattern="validations.patterns.name"
+           ng-required="true"
+           check-name="{type:'process', check:!editingMode}"/>
+    </label>
+  </div>
+
+  <div class="col-xs-24">
+    <label class="light">Tags</label>
+  </div>
+
+  <div class="col-xs-12">
+    <div ng-repeat="tag in snapshot.tags">
+      <div class="row dynamic-table-spacer">
+        <div class="col-xs-8">
+          <input type="text" class="form-control" ng-model="tag.key"
+            validation-optional-message="{{validations.messages.key}}"
+              ng-pattern="validations.patterns.alpha" ng-required="tag.value" placeholder="name"/>
+        </div>
+        <div class="col-xs-8">
+          <input type="text" class="form-control" validation-optional-message="{{validations.messages.value}}"
+              ng-model="tag.value" ng-pattern="validations.patterns.alpha"
+              ng-required="tag.key" placeholder="value"/>
+        </div>
+        <div class="col-xs-8">
+          <button type="button" class="btn btn-default btn-xs" ng-click="removeTag($index)" ng-if="!$first || !$last">
+            <span class="entypo minus"></span> delete
+          </button>
+          <button type="button" class="btn btn-default btn-xs" ng-click="addTag()" ng-if="$last">
+            <span class="entypo plus"></span> add tag
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-24 plr0px">
+    <div class="col-xs-12 plr0px">
+      <div class="col-xs-24 plr0px clusterBox">
+        <h3>Source</h3>
+        <div class="runJobOnBox">
+          <input type="radio" id="runJobOnSourceRadio" ng-model="snapshot.runOn" ng-rquired="true" value="source"/>
+          Run job here
+        </div>
+
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-10 mt10">
+              <select ng-model="snapshot.source.cluster"
+                  ng-required="true" validation-message="{{validations.messages.cluster}}"
+                  name="sourceClusterSelect" class="form-control padding0"
+                  ng-change="validateCluster()">
+                <option value="" disabled style='display:none;'>-Select source cluster-</option>
+                <option ng-selected="snapshot.source.cluster === cluster.name"
+                        ng-repeat="cluster in clusterList"
+                        value="{{cluster.name}}">
+                  {{cluster.name}}
+                </option>
+              </select>
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.sourceSnapshotDir">
+              Source Directory<mandatory-field></mandatory-field>
+            </label>
+          </div>
+          <div class="col-xs-10 mt10">
+            <input type="text"
+                   name="sourceDirectoryPath"
+                   ng-model="snapshot.source.directoryPath"
+                   ng-pattern="validations.patterns.path"
+                   class="form-control"
+                   ng-required="true"
+                   validation-message="{{validations.messages.path}}" />
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.sourceSnapshotRetentionAgeLimit">Delete Snapshot After</label>
+          </div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="sourceDeleteFrequency"
+                   ng-model="snapshot.source.deleteFrequency.quantity"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <div class="col-xs-8 mt10">
+            <select ng-model="snapshot.source.deleteFrequency.unit"
+              class="form-control padding0" ng-rquired="true">
+              <option selected value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+              <option value="months">months</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.sourceSnapshotRetentionNumber">Keep Last</label>
+          </div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="sourceRetentionNumber"
+                   ng-model="snapshot.source.retentionNumber"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <label class="light">snapshots</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-12 plr0px pl5">
+      <div class="col-xs-24 plr0px clusterBox">
+        <h3>Target</h3>
+        <div class="runJobOnBox">
+          <input type="radio" id="runJobOnTargetRadio" ng-model="snapshot.runOn" value="target" ng-rquired="true" />
+          Run job here
+        </div>
+
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6"><label class="light">Cluster<mandatory-field></mandatory-field></label></div>
+          <div class="col-xs-10 mt10">
+              <select ng-model="snapshot.target.cluster"
+                  ng-required="true" validation-message="{{validations.messages.cluster}}"
+                  name="targetClusterSelect" class="form-control padding0"
+                  ng-change="validateCluster()">
+                <option value="" disabled style='display:none;'>-Select target cluster-</option>
+                <option ng-selected="snapshot.target.cluster === cluster.name"
+                        ng-repeat="cluster in clusterList"
+                        value="{{cluster.name}}">
+                  {{cluster.name}}
+                </option>
+              </select>
+              <div class="custom-danger" ng-show="clusterErrorMessage != ''">
+                {{clusterErrorMessage}}
+              </div>
+          </div>
+        </div>
+
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.targetSnapshotDir">
+              Target Directory<mandatory-field></mandatory-field>
+            </label>
+          </div>
+          <div class="col-xs-10 mt10">
+            <input type="text"
+                   name="targetDirectoryPath"
+                   ng-model="snapshot.target.directoryPath"
+                   ng-pattern="validations.patterns.path"
+                   class="form-control"
+                   ng-required="true"
+                   validation-message="{{validations.messages.path}}" />
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.targetSnapshotRetentionAgeLimit">Delete Snapshot After</label>
+          </div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="targetDeleteFrequency"
+                   ng-model="snapshot.target.deleteFrequency.quantity"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <div class="col-xs-8 mt10">
+            <select ng-model="snapshot.target.deleteFrequency.unit" class="form-control padding0" ng-rquired="true">
+              <option selected value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+              <option value="months">months</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-xs-24 plr0px">
+          <div class="col-xs-6">
+            <label class="light" tooltip="dataset.snapshot.targetSnapshotRetentionNumber">Keep Last</label>
+          </div>
+          <div class="col-xs-4 mt10">
+            <input type="text"
+                   name="targetRetentionNumber"
+                   ng-model="snapshot.target.retentionNumber"
+                   ng-pattern="validations.patterns.twoDigits"
+                   ng-keydown="validations.acceptOnlyNumber($event)"
+                   class="form-control"
+                   ng-rquired="true"
+                   validation-message="{{validations.messages.number}}" />
+          </div>
+          <label class="light">snapshots</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-24"><label>Run Duration</label></div>
+	<div class="col-xs-24 validityBox plr0px">
+		<div class="col-xs-24 plr0px">
+			<div class="startDateBox col-xs-4">
+				<label class="light">Start</label>
+				<input type="text"
+					name="startDateInput"
+					class="form-control dateInput"
+					placeholder="{{dateFormat | lowercase}}"
+					ng-model="snapshot.validity.start.date"
+					ng-required="true"
+					simple-date-picker />
+
+			</div>
+			<div class="startTimeBox col-xs-4">
+				<label class="light">Begin Time</label>
+				<timepicker ng-change="constructDate()"
+										ng-model="snapshot.validity.start.time"
+										ng-required="true"
+										hour-step="1"
+										minute-step="1"
+										show-meridian="true">
+				</timepicker>
+			</div>
+		</div>
+		<div class="col-xs-24 plr0px">
+			<div class="endDateBox col-xs-4">
+				<label class="light">End</label>
+				<input type="text"
+					name="startDateInput"
+					class="form-control dateInput"
+					placeholder="{{dateFormat | lowercase}}"
+					ng-model="snapshot.validity.end.date"
+					ng-required="true"
+					simple-date-picker />
+
+			</div>
+			<div class="endTimeBox col-xs-4">
+				<label class="light">End Time<mandatory-field></mandatory-field></label>
+				<timepicker ng-change="constructDate()"
+										ng-model="snapshot.validity.end.time"
+										ng-required="true"
+										hour-step="1"
+										minute-step="1"
+										show-meridian="true">
+				</timepicker>
+			</div>
+		</div>
+	</div>
+
+  <div class="col-xs-12 frequencyBox plr0px">
+    <div class="col-xs-24">
+      <label>Frequency</label>
+    </div>
+    <div class="col-xs-24">
+      <label class="light">Repeat Every</label>
+    </div>
+    <div class="col-xs-24 plr0px">
+      <div class="col-xs-8">
+        <input type="text"
+               name="frequencyQuantity"
+               ng-model="snapshot.frequency.quantity"
+               ng-pattern="validations.patterns.twoDigits"
+               ng-keydown="validations.acceptOnlyNumber($event)"
+               ng-keyup="checkMininumFrequency(snapshot.frequency.quantity, snapshot.frequency.unit, datasetForm.frequencyQuantity)"
+               class="form-control"
+               ng-required="true"
+               validation-message="{{validations.messages.number}}" />
+      </div>
+      <div class="col-xs-8">
+        <select ng-model="snapshot.frequency.unit" class="form-control padding0" ng-required="true"
+          ng-change="checkMininumFrequency(snapshot.frequency.quantity, snapshot.frequency.unit, datasetForm.frequencyQuantity)">
+          <option selected value="minutes">minutes</option>
+          <option value="hours">hours</option>
+          <option value="days">days</option>
+          <option value="months">months</option>
+        </select>
+      </div>
+      <div class="col-xs-24 custom-danger" ng-if="!isFrequencyValid">{{validations.messages.frequency.minimum}}</div>
+    </div>
+
+    <div class="col-xs-24">
+      <label class="light">Timezone</label>
+    </div>
+    <div class="col-xs-24">
+      <time-zone-select ng-model="snapshot.validity.timezone"></time-zone-select>
+    </div>
+  </div>
+
+  <div class="col-xs-24 advancedOption" ng-click="expandOptions = !expandOptions" id="snapshotAdvancedOption">
+    <label class="mt15 pointer blink-success">ADVANCED OPTIONS</label>
+    <i class="glyphicon glyphicon-chevron-down mt15" ng-if="!expandOptions"></i>
+    <i class="glyphicon glyphicon-chevron-up mt15" ng-if="expandOptions"></i>
+  </div>
+
+	<div id="advancedOptionsBox" class="col-xs-24 plr0px" ng-class="{expanded:expandOptions}">
+    <div class="col-xs-24">
+		<label tooltip="dataset.tdeEncryptionEnabled">TDE Encryption</label>
+		<input type="checkbox" ng-model="snapshot.tdeEncryptionEnabled" ng-checked="snapshot.tdeEncryptionEnabled"/>
+	</div>
+	<hr class="col-xs-24" />
+
+	<div class="col-xs-24"><label>Retry Policy</label></div>
+    <div class="col-xs-24">
+		<label class="light" tooltip="snapshot.retryPolicy" tooltip-position="up">
+			Type
+		</label>
+	</div>
+	<div class="col-xs-6">
+      <select ng-model="snapshot.retry.policy" ng-required="true" validation-message="{{validations.messages.option}}"
+			ng-change="policyChange()">
+        <option value="" disabled selected style='display:none;'>-Select policy-</option>
+        <option value="periodic">Periodic</option>
+        <option value="exp-backoff">Exponential Backup</option>
+        <option value="final">None</option>
+      </select>
+	</div>
+	<div class="col-xs-24">
+		<label class="light">Delay Up to</label>
+	</div>
+	<div class="col-xs-3">
+		<input type="text" class="form-control"
+					 ng-model="snapshot.retry.delay.quantity" validation-message="{{validations.messages.number}}"
+					 id="delayQuantity" ng-keydown="validations.acceptOnlyNumber($event)"
+					 ng-required="true"
+					 ng-disabled = "snapshot.retry.policy === 'final'"
+					 ng-pattern="validations.patterns.twoDigits"/>
+	</div>
+	<div class="col-xs-3 plr0px">
+		<select ng-model="snapshot.retry.delay.unit" ng-required="true"
+			validation-message="{{validations.messages.option}}"
+			ng-disabled = "snapshot.retry.policy === 'final'">
+			<option value="" disabled selected style='display:none;'>-Select delay-</option>
+			<option value="minutes">minutes</option>
+			<option value="hours">hours</option>
+			<option value="days">days</option>
+			<option value="months">months</option>
+		</select>
+	</div>
+    <div class="col-xs-24">
+      <label class="light">Attempts</label>
+	</div>
+	<div class="col-xs-6">
+      <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
+             ng-model="snapshot.retry.attempts" ng-keydown="validations.acceptOnlyNumber($event)"
+             id="attemptsField"
+					 ng-disabled = "snapshot.retry.policy === 'final'"
+             ng-required="true"
+             ng-pattern="validations.patterns.twoDigits"/>
+    </div>
+	<hr class="col-xs-24" />
+
+	<div class="col-xs-24"><label>Performance & Throttling - Distributed Copy</label></div>
+	<div class="col-xs-12 plr0px">
+		<div class="col-xs-12 plr0px">
+			<div class="col-xs-24 plr0px">
+				<div class="col-xs-24">
+					<label class="light" tooltip="dataset.distcpMapBandwidth">Max Bandwidth</label>
+				</div>
+				<div class="col-xs-20">
+					<input type="text"
+								 name="distcpMapBandwidth"
+								 ng-model="snapshot.allocation.distcpMapBandwidth"
+								 class="form-control" />
+				</div>
+				<label class="light bandwidth-label">MB</label>
+			</div>
+			<div class="col-xs-20">
+				<label class="light" tooltip="dataset.distcpMaxMaps">Max Map Jobs</label>
+				<input type="text"
+							 name="distcpMaxMaps"
+							 ng-model="snapshot.allocation.distcpMaxMaps"
+							 class="form-control" />
+			</div>
+		</div>
+	</div>
+	<hr class="col-xs-24" />
+
+	<div class="col-xs-24">
+      <label>Alerts</label>
+    </div>
+
+	<div class="col-xs-24">
+      <label class="light" tooltip="dataset.jobNotificationReceivers">Send alerts to</label>
+    </div>
+    <div class="col-xs-12 alertsBox plr0px">
+      <div class="emailBox">
+        <div class="col-xs-16">
+          <input class="form-control"
+                 name="emailAlertInput"
+                 ng-model="snapshot.alert.email"
+                 type="text"
+                 placeholder="Email"
+                 ng-pattern="validations.patterns.email"
+                 validation-optional-message="{{validations.messages.email}}">
+        </div>
+      </div>
+      <div class="addAlertBox col-xs-3">
+        <button class="btn btn-default btn-xs"
+                ng-disabled="!snapshot.alert.email"
+                type="button"
+                ng-click="addAlert()">
+          <span class="glyphicon glyphicon-plus"></span>add alert
+        </button>
+      </div>
+	</div>
+	<div class="col-xs-24">
+      <div class="col-xs-12 emailArrayRow mt10" ng-repeat="email in snapshot.alerts">
+        <span class="col-xs-16">{{email}}</span>
+        <div class="col-xs-3"><button class="btn btn-default btn-xs"
+                type="button"
+                ng-click="removeAlert()">
+          <span class="glyphicon glyphicon-minus"></span> delete
+        </button></div>
+      </div>
+    </div>
+	<hr class="col-xs-24" />
+
+	<div class="col-xs-24"><label>Access Control List</label></div>
+	<div class="col-xs-12 plr0px">
+		<div class="col-xs-24 plr0px">
+			<div class="col-xs-12">
+				<label class="light">Owner<mandatory-field></mandatory-field></label>
+				<input type="text"
+							 name="aclOwnerInput"
+							 ng-model="snapshot.ACL.owner"
+							 ng-pattern="validations.patterns.unixId"
+							 class="form-control"
+							 ng-required="true"
+							 validation-message="{{validations.messages.acl.owner}}"/>
+			</div>
+			<div class="col-xs-12 pl0px">
+				<label class="light">Group<mandatory-field></mandatory-field></label>
+				<input type="text"
+							 name="aclGroupInput"
+							 ng-model="snapshot.ACL.group"
+							 ng-pattern="validations.patterns.unixId"
+							 class="form-control"
+							 ng-required="true"
+							 validation-message="{{validations.messages.acl.group}}" />
+			</div>
+		</div>
+		<div class="col-xs-24">
+			<div class="col-xs-8 plr0px">
+				<label class="light">Permissions<mandatory-field></mandatory-field></label>
+				<acl-permissions acl-model="snapshot.ACL.permission"></acl-permissions>
+			</div>
+		</div>
+	</div>
+  </div>
+
+  <div class="col-xs-24 pb15px mt35">
+    <div class="pull-right">
+      <a class="btn cnclBtn" ui-sref="main">
+        CANCEL
+      </a>
+      <button class="btn nextBtn"
+            ng-disabled="buttonSpinners.show"
+            ng-click="goNext(datasetForm.$invalid)" scroll-to-error>
+      NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+      </button>
+      <button class="btn nextBtn"
+            ng-disabled="datasetForm.$invalid || buttonSpinners.saveShow"
+            ng-click="save(datasetForm.$invalid)" scroll-to-error>
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.saveShow" />
+      </button>
+    </div>
+  </div>
+
+</form>

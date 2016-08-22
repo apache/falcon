@@ -19,16 +19,40 @@
 //---------navHeader----------------------//
 
 .navbar {
-  z-index: 2;
-  background-color: @headerNavBG;
+  /*z-index: 2;*/
   margin: 0;
   color: white;
-  padding: 5px 0;
+  /*padding: 5px 0;*/
   border-width: 0;
   border-radius: 0;
-  position: relative;
+  /*position: relative;*/
   &:hover{
     cursor: default;
+  }
+  &.header1 {
+    background-color: @headerNavBG;
+    .loginHeaderBox {
+      /*position: relative;
+      top: 50%;*/
+      /*transform: translateY(80%);*/
+      .btn-link {
+        color: @green-light !important;
+        padding-top: 12px;
+        text-align: left;
+        /*height: 40px;*/
+        &:hover {
+          color: @green-light;
+        }
+      }
+    }
+  }
+  &.header2 {
+    min-height: 42px;
+    background-color: @header2NavBG;
+  }
+  &.header3 {
+    min-height: 32px;
+    background-color: @header3NavBG;
   }
 }
 .logoTitle {
@@ -40,14 +64,14 @@
     display: inline-block;
   }
   .falconLogo{
-    background: url(img/falcon.png) no-repeat center center;
+    background: url(img/falcon-logo.jpg) no-repeat center center;
     background-size: 100%;
-    width: 30px;
-    height: 44px;
+    width: 100px;
+    height: 72px;
   }
 }
 .navbar-header {
-  margin: 5px 15px 5px 5px;
+  margin: 6px;
   font-size: 30px;
   cursor: pointer;
   font-weight: bolder;
@@ -58,23 +82,35 @@
 
 .createNavWrapper, .uploadNavWrapper {
   float: left;
-  margin: 0 10px;
-  > h4 {
+  padding-top:9px;
+  /*margin: 0 10px;*/
+  /*> h4 {
     font-size: 14px;
     font-weight: bold;
     margin: 2px 0;
-  }
-  > button {
-    padding: 5px 10px;
-    border: 1px solid white;
-    border-radius: 3px;
+  }*/
+  button {
+    border: none;
+    /*border: 1px solid white;*/
+    /*border-radius: 3px;*/
     display: inline-block;
     cursor: pointer;
     background-color: transparent;
+    color: @green-light;
+    &:hover {
+      color: #FFFFFF;
+    }
+    &.btn-link {
+      text-decoration: none;
+      color: @green-light;
+      height: 24px;
+      padding-top: 1px;
+    }
   }
   span {
     vertical-align: middle;
-    margin-right: 6px;
+    /*margin-right: 6px;*/
+    font-size: 13px;
     &.entypo, &.glyphicon{
       vertical-align: sub;
       &.up{
@@ -82,56 +118,111 @@
       }
     }
   }
-  .disabled {
-    //color: lighten(@headerNavBG, 30%);
-    //border-color: lighten(@headerNavBG, 10%);
-    cursor: default;
-    .background-opacity(black, 0.2);
+  ul.dropdown-menu {
+    border:none;
+    margin: 0px;
+    border-radius: inherit;
+    color: @green-light;
   }
 }
+
+/*.createNavWrapper {
+  position: relative;
+  left: -80px;
+  top: 25px;
+  height: 60px;
+  margin: 10px 0px 5px;
+}*/
+
+/** Deprecated */
 .uploadNavWrapper {
+  /*height: 35px;*/
   > div {
-    min-width:183px;
-    padding: 5px 10px;
-    border: 1px solid white;
+    width: 120px;
+    height: 20px;
+    float: left;
+    margin-right: 5px;
+    /*padding: 5px 10px;*/
     border-radius: 3px;
-    display: inline-block;
+    /*display: inline-block;*/
     cursor: pointer;
-    &.fakeFocus {
+    background-size: 100%;
+    background: 50% no-repeat;
+    /*&.fakeFocus {
       .box-shadow(0 0 2px white);
+    }*/
+    .btn-upload, .btn-create {
+      width: 120px;
+      color: @white;
+      background-color: @green-light;
+      height: 27px;
     }
   }
 }
-.loginHeaderBox {
-  margin: 0;
-  display: inline-block;
-  //width: 100%;
-  text-align: right;
-  margin-top: 10px;
 
-  .pull-right;
-  >*{
+.loginHeaderBox {
+  /*margin: 0;
+  display: inline-block;*/
+  //width: 100%;
+  /*float: right;*/
+  /*margin-top: 20px;*/
+  color: @green-light;
+  position: absolute;
+  right: 1%;
+  top: 25px;
+  font-size: 18px;
+
+  /*.pull-right;*/
+  /*>* {
     vertical-align: middle;
     display: inline-block;
-    margin-right: 10px;
+    margin-right: 3px;
     >*{
       display: inline-block;
       vertical-align: middle;
+    }
+  }*/
+  .dropdown-toggle {
+    padding-left: 6px;
+  }
+
+  .btn-link {
+    padding: 6px 3px;
+    color: @green-light;
+    text-decoration: none;
+    &:hover {
+      color: #FFFFFF;
+    }
+    .glyphicon {
+      font-size: 1.1em;
     }
   }
   span.entypo{
     vertical-align: sub;
   }
-  span.user{
+  /*span.user {
     background: url(img/user.svg) no-repeat center center;
     background-size: 35px 35px;
     height: 35px;
     width: 35px;
-  }
-  button {
+  }*/
+  /*button {
     border: none;
     cursor: pointer;
     background-color: transparent;
+  }*/
+  button {
+    padding: 5px 10px;
+    border: none;
+    /*border: 1px solid white;*/
+    /*border-radius: 3px;*/
+    display: inline-block;
+    cursor: pointer;
+    background-color: transparent;
+    color: @green-light;
+    &:hover {
+      color: #FFFFFF;
+    }
   }
   a {
     color: white;
@@ -145,6 +236,14 @@
       text-decoration: none;
     }
   }
+  ul.dropdown-menu {
+    border:none;
+    margin: 0px;
+    border-radius: inherit;
+    color: @green-light;
+    text-align: center;
+
+  }
 }
 
 /* NOTIFICATIONS */
@@ -152,26 +251,29 @@
 .notifications .messages {
   display:none;
   position: absolute;
-  top:50px;
-  right:0px;
-  width:280px;
-  max-width:280px;
+  top:35px;
+  right:7%;
+  width:400px;
+  max-width:400px;
   max-height:300px;
   overflow: auto;
+  border: 1px solid @green-light;
+  background-color: white;
+  z-index: 1000;
 }
 
 .messagesArrow {
   content:'.';
   display:none;
   position:absolute;
-  margin-left:-10px;
-  top:30px;
-  right:130px;
+  margin-left:49px;
+  top: 17px;
+  /*right: 166px;*/
   width:0;
   height:0;
-  color:transparent;
+  color:@green-light;
   border:10px solid black;
-  border-color:transparent transparent white;
+  border-color:transparent transparent @green-light;
 }
 
 .notifications .messages:before {
@@ -201,6 +303,16 @@
   padding:10px;
   background-color:white;
   text-decoration:none;
+  font-size:14px;
+  // white-space:nowrap;
+  white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+  white-space: -webkit-pre-wrap; /*Chrome & Safari */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  white-space: pre-wrap;       /* css-3 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+  word-break: break-all;
+  white-space: normal;
   a {
     font-weight: bold;
     text-decoration: underline;
@@ -236,5 +348,17 @@
 }
 
 .unreaded-notif {
-  background-color: #EDEDED !important;
+  background-color: #e6ece1 !important;
+}
+
+.notification-icon {
+  top: 0px;
+}
+
+.listing-icon {
+  top: -1px;
+}
+
+.settings-icon {
+  top: 0px;
 }

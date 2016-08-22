@@ -19,143 +19,132 @@
 -->
 <form name="feedForm" novalidate id="feedFormPropertiesStep">
 
-    <h5 class="col-xs-24 mb10">Timing</h5>
-
-    <div class="col-xs-9 inlineInputsGroup">
-      <div class="light">Frequency</div>
-      <span>Every</span>
-      <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
+	<div class="col-xs-24">
+      <label class="light" tooltip="feed.properties.frequency">
+				Frequency Every<mandatory-field></mandatory-field>
+			</label>
+		<div class="row dynamic-table-spacer">
+          <div class="col-xs-10">
+            <input type="text" class="form-control" validation-message="{{validations.messages.number}}"
              ng-model="feed.frequency.quantity" autofocus
              ng-required="true"
              ng-keydown="validations.acceptOnlyNumber($event)"
              ng-pattern="validations.patterns.twoDigits"/>
-
-      <select
-        ng-model="feed.frequency.unit"
-        ng-required="true">
-        <option selected value="minutes">minutes</option>
-        <option value="hours">hours</option>
-        <option value="days">days</option>
-        <option value="months">months</option>
-      </select>
-    </div>
-
-    <div class="col-xs-9 inlineInputsGroup">
-      <div class="light"><input type="checkbox" ng-model="feed.lateArrival.active" />Late Arrival</div>
-      <span>Up to</span>
-
-      <input type="text" class="form-control" ng-keydown="validations.acceptOnlyNumber($event)"
-        ng-model="feed.lateArrival.cutOff.quantity"
-        ng-disabled="!feed.lateArrival.active"
-        ng-pattern="validations.patterns.twoDigits"
-        ng-required="feed.lateArrival.active"/>
-
-      <select
-        ng-model="feed.lateArrival.cutOff.unit" ng-disabled="!feed.lateArrival.active"
-        ng-required="feed.lateArrival.active">
-        <option selected value="minutes">minutes</option>
-        <option value="hours">hours</option>
-        <option value="days">days</option>
-        <option value="months">months</option>
-      </select>
-    </div>
-    <div class="col-xs-6 inlineInputsGroup">
-      <div class="light">Availability Flag</div>
-      <input type="text" id="availInput" class="form-control"
-        ng-model="feed.availabilityFlag"
-        ng-pattern="validations.patterns.alpha">
-    </div>
-  </div>
-
-  <div class="col-xs-24">
-    <div class="row mt20">
-      <label class="col-xs-5 light">Timezone</label>
-      <time-zone-select ng-model="feed.timezone" class="col-xs-19"></time-zone-select>
-
-      <h5 class="col-xs-24">Properties</h5>
-
-      <div class="col-xs-5">
-        <label class="light">Name</label>
-      </div>
-      <div class="col-xs-19">
-        <label class="light">Value</label>
-      </div>
-      <div class="col-xs-24" id="feedPropertiesBox">
-        <div ng-repeat="property in feed.properties" class="row">
-
-          <label class="col-xs-5">{{property.key}}</label>
-
-          <div class="col-xs-19" ng-if="property.key !== 'timeout' && property.key !== 'jobPriority'">
-            <input type="text" class="form-control" placeholder="{{propPlaceholders[property.key]}}"
-              ng-model="property.value" validation-optional-message="{{validations.messages.value}}"
-              ng-pattern="validations.patterns.alpha"/>
           </div>
-          <div class="col-xs-19 inlineInputsGroup" ng-if="property.key === 'timeout'">
-            At
-            <input type="text" class="form-control" ng-keydown="validations.acceptOnlyNumber($event)"
-                   ng-model="property.value.quantity"
-                   ng-pattern="validations.patterns.twoDigits"/>
+          <div class="col-xs-11">
             <select
-              ng-model="property.value.unit">
-              <option value="" disabled selected style='display:none;'>-Select timeout-</option>
-              <option value="minutes">minutes</option>
-              <option value="hours">hours</option>
-              <option value="days">days</option>
-              <option value="months">months</option>
-            </select>
+				ng-model="feed.frequency.unit"
+				ng-required="true">
+				<option selected value="minutes">minutes</option>
+				<option value="hours">hours</option>
+				<option value="days">days</option>
+				<option value="months">months</option>
+			 </select>
           </div>
-          <div class="col-xs-19" ng-if="property.key === 'jobPriority'">
-            <select ng-model="property.value" class="form-control padding0">
-              <option value="" disabled selected style='display:none;'>-Select job-</option>
-              <option value="VERY_HIGH">Very high</option>
-              <option value="HIGH">High</option>
-              <option value="NORMAL">Normal</option>
-              <option value="LOW">Low</option>
-              <option value="VERY_LOW">Very Low</option>
-            </select>
+          <div class="col-xs-3">
           </div>
         </div>
-      </div>
-      <div class="col-xs-24">
-        <div ng-repeat="property in feed.customProperties" class="row">
-          <div class="col-xs-5 mt10">
-            <input type="text" class="form-control" placeholder="key"
-              ng-model="property.key" validation-optional-message="{{validations.messages.key}}"
-              ng-pattern="validations.patterns.alpha"
-              ng-required="property.value"/>
-          </div>
-
-          <div class="col-xs-15 mt10">
-            <input type="text" class="form-control" placeholder="value"
-              ng-model="property.value" validation-optional-message="{{validations.messages.value}}"
-              ng-pattern="validations.patterns.alpha"
-              ng-required="property.key"/>
-          </div>
-          <div class="col-xs-4 mt10">
-            <button type="button" class="btn btn-default btn-xs mt1" ng-click="removeCustomProperty($index)" ng-if="$index>0">
-              <span class="entypo minus"></span> delete
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="col-xs-24 mt10">
-        <button type="button" class="btn btn-default btn-xs" ng-click="addCustomProperty()">
-          <span class="entypo plus"></span> add property
-        </button>
-      </div>
     </div>
-  </div>
-  <div class="col-xs-24 mt20">
-    <button id="feed.backToStep1" class="btn prevBtn" type="button"
-         ng-click="goBack('forms.feed.general')"
-         ng-disabled="buttonSpinners.backShow">
-      Previous <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
-    </button>
-    <button id="feed.step2" class="btn nextBtn pull-right" ng-click="goNext(feedForm.$invalid, 'forms.feed.location')">
-      Next <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
-    </button>
-    <a class="pull-right" ui-sref="main">
-      Cancel
-    </a>
-  </div>
+    <div class="col-xs-24">
+			<input type="checkbox" ng-model="feed.lateArrival.active" class="labelCheckBox" />
+      <label class="light" tooltip="feed.properties.lateArrival">
+				Late Arrival Upto<mandatory-field></mandatory-field>
+			</label>
+		<div class="row dynamic-table-spacer">
+		  <div class="col-xs-10">
+           <input type="text" class="form-control" ng-keydown="validations.acceptOnlyNumber($event)"
+			ng-model="feed.lateArrival.cutOff.quantity"
+			ng-disabled="!feed.lateArrival.active"
+			ng-pattern="validations.patterns.twoDigits"
+			ng-required="feed.lateArrival.active"/>
+          </div>
+          <div class="col-xs-11">
+            <select
+				ng-model="feed.lateArrival.cutOff.unit" ng-disabled="!feed.lateArrival.active"
+				ng-required="feed.lateArrival.active">
+				<option selected value="minutes">minutes</option>
+				<option value="hours">hours</option>
+				<option value="days">days</option>
+				<option value="months">months</option>
+			</select>
+          </div>
+		</div>
+    </div>
+    <div class="col-xs-24">
+      <label class="light" tooltip="feed.properties.availabilityIndicator">
+				Availability Indicator<mandatory-field></mandatory-field>
+			</label>
+		<div class="row dynamic-table-spacer">
+		  <div class="col-xs-10">
+           <input type="text" id="availInput" class="form-control" ng-model="feed.availabilityFlag"
+				ng-pattern="validations.patterns.alpha"
+				validation-message="{{validations.messages.availabilityFlag}}"
+				ng-required="true">
+		   </div>
+        </div>
+    </div>
+	<div class="col-xs-24">
+      <label class="light" tooltip="feed.properties.timezone">Timezone<mandatory-field></mandatory-field></label>
+	  <div class="row dynamic-table-spacer">
+		  <div class="col-xs-24">
+           <time-zone-select ng-model="feed.timezone" required="true"></time-zone-select>
+          </div>
+	  </div>
+	</div>
+	<div class="col-xs-24"><label class="mt15">PROPERTIES</label></div>
+	</div>
+	<div class="col-xs-24 plr0px mt10">
+		<table class="table properties">
+			<thead>
+			  <tr>
+				<th class="no-border-bottom col-xs-4">Name</th>
+				<th class="no-border-bottom col-xs-20">Value</th>
+			  </tr>
+			</thead>
+			<tbody>
+			  <tr ng-repeat="property in feed.properties" class="">
+				<td class="no-border-top font11px">{{feedPropertiesLabels[property.key]}}</td>
+				<td class="no-border-top"><div ng-if="property.key !== 'timeout' &amp;&amp; property.key !== 'jobPriority'">
+					<input type="text" class="form-control" placeholder="{{propPlaceholders[property.key]}}" ng-model="property.value" validation-optional-message="{{validations.messages.value}}" ng-pattern="validations.patterns.alpha">
+				  </div>
+				  <div class="col-xs-24 plr0px" ng-if="property.key === 'timeout'">
+						<span class="col-xs-1 plr0px pt5px pb5px">at</span>
+						<input type="text" class="col-xs-2 feedFormInputBorder" ng-keydown="validations.acceptOnlyNumber($event)" ng-model="property.value.quantity" ng-pattern="validations.patterns.twoDigits">
+						<div class="col-xs-1"></div>
+						<select ng-model="property.value.unit" class="col-xs-4">
+						  <option value="" disabled="" selected="" style="display:none;">-Select timeout-</option>
+						  <option value="minutes">minutes</option>
+						  <option value="hours">hours</option>
+						  <option value="days">days</option>
+						  <option value="months">months</option>
+						</select>
+				  </div>
+				  <div class="" ng-if="property.key === 'jobPriority'">
+					<select ng-model="property.value" class="form-control padding0">
+					  <option value="" disabled="" selected="" style="display:none;">-Select job-</option>
+					  <option value="VERY_HIGH">Very high</option>
+					  <option value="HIGH">High</option>
+					  <option value="NORMAL">Normal</option>
+					  <option value="LOW">Low</option>
+					  <option value="VERY_LOW">Very Low</option>
+					</select>
+				  </div>
+				</td>
+			  </tr>
+			</tbody>
+		  </table>
+	</div>
+    <div class="col-xs-24 mt35 pb15px plr0px">
+		<button id="feed.backToStep1" class="btn prevBtn" type="button" ng-click="goBack()" ng-disabled="buttonSpinners.backShow">
+		  PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow">
+		</button>
+		<div class="pull-right">
+			<a class="btn cnclBtn" ui-sref="main">
+			  CANCEL
+			</a>
+			<button id="feed.step2" class="btn nextBtn" ng-click="goNext(feedForm.$invalid)" scroll-to-error>
+			  NEXT <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show">
+			</button>
+		</div>
+	</div>
 </form>

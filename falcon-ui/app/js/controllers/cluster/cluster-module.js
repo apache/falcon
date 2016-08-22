@@ -26,19 +26,58 @@
    */
   var clusterModule = angular.module('app.controllers.cluster', [ 'app.services' ]);
 
-  clusterModule.controller('ClusterFormCtrl', [ "$scope", "$interval", "Falcon", "EntityModel", "$state",
-                                                "X2jsService", "ValidationService", "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore",
-                                              function ($scope, $interval, Falcon, EntityModel, $state,
-                                                        X2jsService, validationService, SpinnersFlag, $timeout, $rootScope, $cookieStore) {
+  clusterModule.controller('ClusterFormCtrl', [
+    "$scope", "$interval", "Falcon", "EntityModel", "$state", "FileApi", "X2jsService", "ValidationService",
+    "SpinnersFlag", "$timeout", "$rootScope", "$cookieStore", "$stateParams", "ClusterModel",
+    function ($scope, $interval, Falcon, EntityModel, $state, FileApi, X2jsService, validationService,
+      SpinnersFlag, $timeout, $rootScope, $cookieStore, $stateParams, clusterModel) {
 
-      $scope.clusterEntity = EntityModel;
+      if (clusterModel && $stateParams.action === 'clone') {
+        $scope.cloningMode = true;
+        $scope.editingMode = false;
+        $scope.clusterEntity = { 'clusterModel' : clusterModel };
+        $scope.clusterEntity.clusterModel.name = "";
+      } else if(clusterModel && $stateParams.action === 'edit') {
+        $scope.editingMode = true;
+        $scope.cloningMode = false;
+        $scope.clusterEntity = { 'clusterModel' : clusterModel };
+      } else{
+        $scope.editingMode = false;
+        $scope.cloningMode = false;
+        $scope.clusterEntity = EntityModel;
+      }
+
+      if ($rootScope.secureMode) {
+        $scope.clusterEntity.clusterModel.cluster.properties.property[0]
+          = {_name : 'dfs.namenode.kerberos.principal', _value : 'nn/_HOST@EXAMPLE.COM'}
+      }
+      $scope.$watch("clusterEntity.clusterModel.cluster._name",function(){
+        if ($scope.editingMode) {
+          return;
+        }
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach (function(loc, index) {
+          if (loc._name === "staging") {
+            loc._path = "/apps/falcon/"
+              + ($scope.clusterEntity.clusterModel.cluster._name ? $scope.clusterEntity.clusterModel.cluster._name + "/" : "")
+              + "staging";
+          } else if (loc._name === "working") {
+            loc._path = "/apps/falcon/"
+              + ($scope.clusterEntity.clusterModel.cluster._name ? $scope.clusterEntity.clusterModel.cluster._name + "/" : "")
+              + "working";
+          }
+        });
+      });
+
       $scope.xmlPreview = { edit: false };
       $scope.secondStep = false;
 
+      $scope.enableCustomSparkInterface = function() {
+        $scope.customSparkInterfaceEnabled = !$scope.customSparkInterfaceEnabled;
+      }
       function normalizeModel() {
         //------------INTERFACE-----------//
-        var requiredInterfaceFields = ["readonly", "write", "execute", "workflow", "messaging", "registry"],
-          requiredLocationFields = ["staging", "temp", "working", ""],
+        var requiredInterfaceFields = ["readonly", "write", "execute", "workflow", "messaging", "registry", "spark"],
+          requiredLocationFields = ["staging", "temp", "working"],
           modelInterfaceArray = $scope.clusterEntity.clusterModel.cluster.interfaces.interface,
           modelLocationsArray = $scope.clusterEntity.clusterModel.cluster.locations.location;
 
@@ -47,10 +86,12 @@
             if (element._type === requiredField) { requiredInterfaceFields.splice(requiredField, 1); }
           });
         });
-        $scope.registry = { check: true };
+        $scope.registry = { check: false };
+        $scope.spark = { check: false };
+        $scope.customSparkInterfaceEnabled = false;
         requiredInterfaceFields.forEach(function (fieldToPush) {
           var fieldObject = { _type: fieldToPush, _endpoint: "", _version: "" };
-          if (fieldToPush === "registry") { $scope.registry = { check: false }; }
+          //if (fieldToPush === "registry") { $scope.registry = { check: true }; }
           modelInterfaceArray.push(fieldObject);
         });
         //--------------TAGS--------------//
@@ -64,15 +105,17 @@
         //-------------ACL----------------//
         if (!$scope.clusterEntity.clusterModel.cluster.ACL) {
           angular.copy(EntityModel.defaultValues.cluster.cluster.ACL, $scope.clusterEntity.clusterModel.cluster.ACL);
-          $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
           /*$scope.clusterEntity.clusterModel.cluster.ACL = {
             _owner: "", _group: "", _permission: ""
           };*/
         }
+        if ($cookieStore.get('userToken') && !$scope.clusterEntity.clusterModel.cluster.ACL._owner) {
+          $scope.clusterEntity.clusterModel.cluster.ACL._owner = $cookieStore.get('userToken').user;
+        }
         //------------Location------------//
         modelLocationsArray.forEach(function(element) {
-          requiredLocationFields.forEach(function(requiredField) {
-            if(element._name === requiredField) { requiredLocationFields.splice(requiredField, 1); }
+          requiredLocationFields.forEach(function(requiredField, index) {
+            if(element._name === requiredField) { requiredLocationFields.splice(index, 1); }
           });
         });
         requiredLocationFields.forEach(function(fieldToPush) {
@@ -87,8 +130,13 @@
       }
 
       function cleanModel() {
+
+         if (!$scope.clusterEntity.clusterModel.cluster._description) {
+          $scope.clusterEntity.clusterModel.cluster._description = '';
+        }
+
         //if registry check is false backups the object and removes it from array
-        if (!$scope.registry.check) {
+        if ($scope.registry && !$scope.registry.check) {
           $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(registry, index) {
             if (registry._type === "registry") {
               $scope.backupRegistryObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
@@ -96,20 +144,31 @@
             }
           });
         }
+        if ($scope.spark && !$scope.spark.check) {
+          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.forEach(function(spark, index) {
+            if (spark._type === "spark") {
+              $scope.backupSparkObject = $scope.clusterEntity.clusterModel.cluster.interfaces.interface[index];
+              $scope.clusterEntity.clusterModel.cluster.interfaces.interface.splice(index, 1);
+            }
+          });
+        }
         //deletes property empty last object and array if empty
-        var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
-        if (
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === "" ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === undefined ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === "" ||
-          $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === undefined
-        ) {
+        if($scope.clusterEntity.clusterModel.cluster.properties){
+          var lastOne = $scope.clusterEntity.clusterModel.cluster.properties.property.length - 1;
+          if (
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === "" ||
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._name === undefined ||
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === "" ||
+            $scope.clusterEntity.clusterModel.cluster.properties.property[lastOne]._value === undefined
+          ) {
 
-          $scope.removeProperty(lastOne);
+            $scope.removeProperty(lastOne);
+          }
+          if ($scope.clusterEntity.clusterModel.cluster.properties.property.length === 0) {
+            delete $scope.clusterEntity.clusterModel.cluster.properties;
+          }
         }
-        if ($scope.clusterEntity.clusterModel.cluster.properties.property.length === 0) {
-          delete $scope.clusterEntity.clusterModel.cluster.properties;
-        }
+
         var lastLocationIndex = $scope.clusterEntity.clusterModel.cluster.locations.location.length - 1;
         if (
           $scope.clusterEntity.clusterModel.cluster.locations.location[lastLocationIndex]._name === "" ||
@@ -161,11 +220,13 @@
 
       $scope.convertTags = function () {
         var result = [];
-        $scope.tagsArray.forEach(function(element) {
-          if(element.key && element.value) {
-            result.push(element.key + "=" + element.value);
-          }
-        });
+        if($scope.tagsArray) {
+          $scope.tagsArray.forEach(function(element) {
+            if(element.key && element.value) {
+              result.push(element.key + "=" + element.value);
+            }
+          });
+        }
         result = result.join(",");
         $scope.clusterEntity.clusterModel.cluster.tags = result;
       };
@@ -188,6 +249,14 @@
           $scope.convertTags();
         }
       };
+       $scope.toggleclick = function () {
+         $('.formBoxContainer').toggleClass('col-xs-14 ');
+         $('.xmlPreviewContainer ').toggleClass('col-xs-10 hide');
+         $('.preview').toggleClass('pullOver pullOverXml');
+         ($('.preview').hasClass('pullOver')) ? $('.preview').find('button').html('Preview XML') : $('.preview').find('button').html('Hide XML');
+         ($($("textarea")[0]).attr("ng-model") == "prettyXml" ) ? $($("textarea")[0]).css("min-height", $(".formBoxContainer").height() - 40 ) : '';
+       };
+
       //-------------------------------------//
       //----------LOCATION-------------------//
 
@@ -219,10 +288,45 @@
           $scope.clusterEntity.clusterModel.cluster.properties.property.splice(index, 1);
         }
       };
-      //--------------------------------------//
+
+      $scope.isActive = function (route) {
+          return route === $state.current.name;
+      };
+
+      $scope.isCompleted = function (route) {
+          return $state.get(route).data && $state.get(route).data.completed;
+      };
+
+      $scope.validateLocations = function(){
+        var stagingLoc;
+        var workingLoc;
+        $scope.clusterEntity.clusterModel.cluster.locations.location.forEach(function(location){
+          if(location._name == "staging"){
+            stagingLoc = location._path;
+          }
+          if(location._name == "working"){
+            workingLoc = location._path;
+          }
+        });
+        if(stagingLoc && workingLoc && stagingLoc == workingLoc){
+          $scope.locationsEqualError = true;
+        }else{
+          $scope.locationsEqualError = false;
+        }
+        return $scope.locationsEqualError;
+      };
+                                                  //--------------------------------------//
       $scope.goSummaryStep = function (formInvalid) {
-        SpinnersFlag.show = true;
-        if (!$scope.validations.nameAvailable || formInvalid) {
+          $state.current.data = $state.current.data || {};
+          $state.current.data.completed = !formInvalid;
+
+          SpinnersFlag.show = true;
+          if($scope.validateLocations()){
+          SpinnersFlag.show = false;
+          return;
+        }
+
+          if (!$scope.validations.nameAvailable || formInvalid) {
           validationService.displayValidations.show = true;
           validationService.displayValidations.nameShow = true;
           SpinnersFlag.show = false;
@@ -236,6 +340,12 @@
         }, 500);
 
       };
+
+      $scope.hideMessage = function (){
+        angular.element('.nameValidationMessage').hide();
+      };
+
+
       $scope.goGeneralStep = function () {
         SpinnersFlag.backShow = true;
         $scope.secondStep = false;
@@ -244,7 +354,15 @@
         $scope.validations.nameAvailable = true;
         if(!$scope.registry.check) {
           //recovers previously deleted registry object
-          $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push($scope.backupRegistryObject);
+          if($scope.backupRegistryObject){
+            $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push($scope.backupRegistryObject);
+          }
+        }
+        if(!$scope.spark.check) {
+          //recovers previously deleted spark object
+          if($scope.backupSparkObject){
+            $scope.clusterEntity.clusterModel.cluster.interfaces.interface.push($scope.backupSparkObject);
+          }
         }
         if(!$scope.clusterEntity.clusterModel.cluster.tags) {
           $scope.clusterEntity.clusterModel.cluster.tags = "";
@@ -261,23 +379,48 @@
         SpinnersFlag.show = true;
         $scope.saveModelBuffer();
         Falcon.logRequest();
-        Falcon.postSubmitEntity($scope.jsonString, "cluster").success(function (response) {
-           $scope.skipUndo = true;
-           Falcon.logResponse('success', response, false);
-           $state.go('main');
-         }).error(function (err) {
-           SpinnersFlag.show = false;
-           Falcon.logResponse('error', err, false);
-           angular.element('body, html').animate({scrollTop: 0}, 300);
-         });
+        if($scope.editingMode) {
+          Falcon.postUpdateEntity($scope.jsonString, "cluster", $scope.clusterEntity.clusterModel.cluster._name)
+            .success(function (response) {
+              $scope.skipUndo = true;
+              Falcon.logResponse('success', response, false);
+              $state.go('main');
+            })
+            .error(function(err) {
+              SpinnersFlag.show = false;
+              Falcon.logResponse('error', err, false);
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        } else {
+          Falcon.postSubmitEntity($scope.jsonString, "cluster")
+            .success(function (response) {
+              $scope.skipUndo = true;
+              Falcon.logResponse('success', response, false);
+              $state.go('main');
+            })
+            .error(function(err) {
+              SpinnersFlag.show = false;
+              Falcon.logResponse('error', err, false);
+              angular.element('body, html').animate({scrollTop: 0}, 300);
+            });
+        }
       };
 
       //--------------------------------------//
       //----------XML preview-----------------//
 
       $scope.xmlPreview.editXML = function () {
-        $scope.xmlPreview.edit = !$scope.xmlPreview.edit;
+          $scope.xmlPreview.edit = !$scope.xmlPreview.edit;
       };
+
+      $scope.revertXml = function() {
+        if($scope.clusterEntity.clusterModel.cluster.tags !== undefined) {
+            $scope.convertTags();
+        }
+        $scope.showInPreview();
+        $scope.invalidXml = false;
+      };
+
       $scope.showInPreview = function() {
         var xmlStr = X2jsService.json2xml_str(angular.copy($scope.clusterEntity.clusterModel));
         $scope.prettyXml = X2jsService.prettifyXml(xmlStr);
@@ -290,6 +433,7 @@
 
           if (!xmlObj.cluster.ACL || !xmlObj.cluster.ACL._owner || !xmlObj.cluster.ACL._group || !xmlObj.cluster.ACL._permission) {
             xmlObj.cluster.ACL = angular.copy(EntityModel.defaultValues.cluster.cluster.ACL);
+            xmlObj.cluster.ACL._owner = EntityModel.getUserNameFromCookie();
           }
 
           $scope.arrangeFieldsOrder(xmlObj);
@@ -297,8 +441,10 @@
           if($scope.clusterEntity.clusterModel.cluster.properties && $scope.clusterEntity.clusterModel.cluster.properties.property[0] === '') {
             $scope.clusterEntity.clusterModel.cluster.properties.property=[];
           }
+          $scope.invalidXml = false;
         }
         catch(err) {
+          $scope.invalidXml = true;
           console.log('xml malformed');
         }
 
@@ -310,9 +456,6 @@
         $scope.jsonString = X2jsService.json2xml_str($scope.jsonString);
       };
       function xmlPreviewCallback() {
-        if ($state.current.name !== 'forms.cluster.general' && $state.current.name !== 'forms.cluster.summary') {
-          $interval.cancel(refresher);
-        }
         if(!$scope.xmlPreview.edit) {
           if($scope.clusterEntity.clusterModel.cluster.tags !== undefined) { $scope.convertTags(); }
           $scope.showInPreview();
@@ -322,7 +465,9 @@
           $scope.transformBack();
         }
       }
-      var refresher = $interval(xmlPreviewCallback, 1000);
+      $scope.$watch('clusterEntity.clusterModel.cluster', xmlPreviewCallback, true);
+      $scope.$watch('tagsArray', xmlPreviewCallback, true);
+      $scope.$watch('prettyXml', xmlPreviewCallback, true);
 
       $scope.skipUndo = false;
       $scope.$on('$destroy', function () {
@@ -338,17 +483,29 @@
         model = angular.toJson(model);
 
         if (!$scope.skipUndo && !angular.equals(model, defaultModel)) {
-          $interval.cancel(refresher);
           $scope.$parent.cancel('cluster', $rootScope.previousState);
         }
       });
 
       //------------init------------//
-      normalizeModel();
+      if($state.params && $state.params.action === 'import'){
+          $scope.prettyXml = FileApi.fileRaw;
+          $scope.transformBack();
+      }else{
+        normalizeModel();
+      }
+      if($state.current.name !=="forms.cluster.general"){
+        $state.go("forms.cluster.general");
+      }
+
+      $scope.capitalize = function(input) {
+          return input ? input.charAt(0).toUpperCase() + input.slice(1) : "";
+      };
+
+      $scope.upperCase = function(input) {
+          return input ? input.toUpperCase() : "";
+      };
+
     }
   ]);
 })();
-
-
-
-

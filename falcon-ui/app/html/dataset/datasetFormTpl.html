@@ -17,41 +17,29 @@
  * limitations under the License.
  */
 -->
-<div id="formBox">
-  <div class="formTitol">
-    <a>Falcon Mirrors</a>
-    <h1>New Mirror</h1>
-  </div>
-
+<div id="formBox" class="datasetForm">
   <div class="col-sm-24">
-    <div class="formBoxWrapper">
-
-      <div class="progressBox col-xs-24" ng-class="{ general:isActive('forms.dataset.general'),
+    <div class="formBoxContainer detailsBox">
+      <div class="row datasetProgressBox" ng-class="{ general:isActive('forms.dataset.general'),
                                                  summary:isActive('forms.dataset.summary')}">
-        <div class="progressBar">
-          <div class="bar1"></div>
-          <span>
-            <div class="fir">
-              <b>1</b>
-              <span class="glyphicon glyphicon-ok"></span>
-              <h6>General</h6>
-            </div>
-          </span>
-          <span>
-            <div class="sec">
-              <b>2</b>
-              <span class="glyphicon glyphicon-ok"></span>
-              <h6>Summary</h6>
-            </div>
-          </span>
+        <div class="progressBar col-xs-24">
+          <div class="text-center" ng-class="{
+                active:isActive('forms.dataset.general'),
+                completed:isCompleted('forms.dataset.general')}">General</div>
+          <div class="text-center" ng-class="{
+                active:isActive('forms.dataset.summary'),
+                completed:isCompleted('forms.dataset.summary')}">Summary</div>
         </div>
       </div>
 
-      <div class="row" ui-view></div>
+      <div class="row customContainer">
+        <div class="col-xs-offset-1 col-xs-22">
+          <div class="col-xs-24">
+            <label class="title">NEW {{UIModel.type}} MIRROR</label>
+          </div>
+          <div ui-view></div>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div class="col-sm-24">
-
   </div>
 </div>

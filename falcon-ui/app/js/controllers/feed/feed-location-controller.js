@@ -29,22 +29,9 @@
 
   feedModule.controller('FeedLocationController', [ "$scope", "$timeout", function ($scope, $timeout) {
 
-    function focusOnElement () {
-      $timeout(function () {
-        if ($scope.feed.storage.catalog.active) {
-          angular.element('.catalogStorageInput').trigger('focus');
-        }
-        else {
-          angular.element('.firstInput').trigger('focus');
-        }
-      }, 500);
-    }
-    focusOnElement();
-
     $scope.toggleStorage = function() {
       toggle($scope.feed.storage.fileSystem);
       toggle($scope.feed.storage.catalog);
-      focusOnElement();
     };
 
     function toggle(storage) {

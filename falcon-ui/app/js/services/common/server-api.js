@@ -21,8 +21,8 @@
   var app = angular.module('app.services.server', ['app.services']);
 
   app.factory('ServerAPI', [
-    "Falcon", "$q",
-    function (Falcon, $q) {
+    "Falcon", "$q", "$rootScope",
+    function (Falcon, $q, $rootScope) {
 
       var ServerAPI = {};
 
@@ -33,8 +33,12 @@
           Falcon.logResponse('success', data, false, true);
           ServerAPI.data = data;
           deffered.resolve();
-        }).error(function (err) {
-          Falcon.logResponse('error', err);
+        }).error(function (error, code) {
+          $rootScope.httpError = {
+            error: error,
+            code: code
+          };
+          Falcon.logResponse('error', error);
           deffered.resolve();
         });
         return deffered.promise;
@@ -46,8 +50,12 @@
         Falcon.setOptions(username).success(function (data) {
           Falcon.logResponse('success', data, false, true);
           deffered.resolve();
-        }).error(function (err) {
-          Falcon.logResponse('error', err);
+        }).error(function (error, code) {
+          $rootScope.httpError = {
+            error: error,
+            code: code
+          };
+          Falcon.logResponse('error', error);
           deffered.resolve();
         });
         return deffered.promise;
@@ -60,8 +68,12 @@
           Falcon.logResponse('success', data, false, true);
           ServerAPI.setted = data;
           deffered.resolve();
-        }).error(function (err) {
-          Falcon.logResponse('error', err);
+        }).error(function (error, code) {
+          $rootScope.httpError = {
+            error: error,
+            code: code
+          };
+          Falcon.logResponse('error', error);
           deffered.resolve();
         });
         return deffered.promise;
@@ -74,8 +86,25 @@
           Falcon.logResponse('success', data, false, true);
           ServerAPI.user = data;
           deffered.resolve();
-        }).error(function (err) {
-          Falcon.logResponse('error', err);
+        }).error(function (error, code) {
+          $rootScope.httpError = {
+            error: error,
+            code: code
+          };
+          Falcon.logResponse('error', error);
+          deffered.resolve();
+        });
+        return deffered.promise;
+      };
+
+      ServerAPI.getRuntimeConfig = function(currentUser){
+        var deffered = $q.defer();
+        //Falcon.logRequest();
+        Falcon.getRuntimeConfig(currentUser).success(function (data) {
+          $rootScope.superUser = true;
+          deffered.resolve();
+        }).error(function (error, code) {
+          $rootScope.superUser = false;
           deffered.resolve();
         });
         return deffered.promise;

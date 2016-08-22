@@ -27,15 +27,15 @@
    */
   var feedModule = angular.module('app.controllers.process');
 
-  feedModule.controller('ProcessClustersCtrl', ['$scope', 'clustersList', 'EntityFactory', '$timeout',
-                                              function($scope, clustersList, entityFactory, $timeout) {
+  feedModule.controller('ProcessClustersCtrl', ['$scope', 'clustersList', 'EntityFactory', '$timeout', 'DateHelper',
+                                              function($scope, clustersList, entityFactory, $timeout, DateHelper) {
 
     $timeout(function () {
       angular.element('.firstSelectClusterStep').trigger('focus');
     }, 500);
 
     $scope.init = function() {
-      $scope.dateFormat = 'MM/dd/yyyy';
+      $scope.dateFormat = DateHelper.getLocaleDateFormat();
     };
 
     $scope.openDatePicker = function($event, container) {

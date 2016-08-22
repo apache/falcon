@@ -1,0 +1,113 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="row datasourceSummaryRow" id="datasourceSummaryStep">
+  <h4 class="col-sm-24">
+    General
+  </h4>
+  <div class="col-sm-24">
+    <label>Connection Name</label>: <span>{{datasource.name}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Data Center or Colo Name</label>: <span>{{datasource.colo}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Description</label>: <span>{{datasource.description}}</span>
+  </div>
+  <div class="col-sm-24">
+    <label>Type</label>: <span>{{datasource.type}}</span>
+  </div>
+
+  <h4 class="col-sm-24">
+    Interfaces
+  </h4>
+  <div class="col-sm-24 plr0px" ng-repeat="interface in datasource.interfaces.interfaces">
+    <div class="col-sm-24">
+      <label>Interface Type</label>: <span>{{interface.type}}</span>
+    </div>
+    <div class="col-sm-24">
+      <label>Interface Endpoint</label>: <span>{{interface.endpoint}}</span>
+    </div>
+    <div class="col-sm-24" ng-if="interface.credential.type != ''">
+      <label>Interface Credentials</label>
+    </div>
+    <div class="col-sm-24" ng-if="interface.credential.type != ''">
+      <label>Credential Type</label>: <span>{{interface.credential.type}}</span>
+    </div>
+    <div class="col-sm-24" ng-if="interface.credential.type == 'password-text'">
+      <label>User Name</label>: <span>{{interface.credential.userName}}</span>
+    </div>
+    <div class="col-sm-24" ng-if="interface.credential.type == 'password-text'">
+      <label>Password Text</label>: <span>{{interface.credential.passwordText}}</span>
+    </div>
+    <div class="col-sm-24" ng-if="interface.credential.type == 'password-file'">
+      <label>Password File</label>: <span>{{interface.credential.passwordFile}}</span>
+    </div>
+    <div class="col-sm-24" ng-if="interface.credential.type == 'password-alias'">
+      <label>Password Alias</label>: <span>{{interface.credential.passwordAlias}}</span>
+    </div>
+  </div>
+
+  <h4 class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
+    Default Credentials
+  </h4>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type != ''">
+    <label>Credential Type</label>: <span>{{datasource.interfaces.credential.type}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
+    <label>User Name</label>: <span>{{datasource.interfaces.credential.userName}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-text'">
+    <label>Password Text</label>: <span>{{datasource.interfaces.credential.passwordText}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-file'">
+    <label>Password File</label>: <span>{{datasource.interfaces.credential.passwordFile}}</span>
+  </div>
+  <div class="col-sm-24" ng-if="datasource.interfaces.credential.type == 'password-alias'">
+    <label>Password Alias</label>: <span>{{datasource.interfaces.credential.passwordAlias}}</span>
+  </div>
+
+  <h4 class="col-sm-24">
+    Properties
+  </h4>
+  <div class="col-sm-24" ng-repeat="property in datasource.customProperties | filter: {name: '!!'}">
+    <label>{{property.name}}</label>: <span>{{property.value}}</span>
+  </div>
+  <div ng-repeat="property in datasource.properties">
+    <div class="col-sm-24" ng-if="property.value && property.value !== ''">
+      <label>{{property.name}}</label>: <span>{{property.value}}</span>
+    </div>
+  </div>
+</div>
+
+<div class="col-xs-24 mt35 pb15px pl0px">
+  <button id="datasource.backToStep1" class="btn prevBtn" type="button"
+       ng-click="goBack()"
+       ng-disabled="buttonSpinners.backShow">
+    PREVIOUS <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.backShow" />
+  </button>
+  <div class="pull-right">
+    <a class="btn cnclBtn" ui-sref="main">
+      CANCEL
+    </a>
+    <button id="datasource.step2" class="btn nextBtn" ng-click="saveEntity()" focus-if>
+      SAVE <img src="css/img/ajax-loader.gif" ng-if="buttonSpinners.show" />
+    </button>
+  </div>
+</div>

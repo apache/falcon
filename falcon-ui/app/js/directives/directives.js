@@ -29,8 +29,20 @@
     'app.directives.validation-message',
     'chart-module',
     'app.directives.dependencies-graph',
-    'app.directives.lineage-graph'
+    'app.directives.lineage-graph',
+    'tooltip',
+    'app.directives.feed-cluster-partitions',
+    'app.directives.acl-permissions',
+    'app.directives.interface-endpoint'
   ]);
+
+  directivesModule.directive('errorNav', function () {
+    return {
+      replace: false,
+      restrict: 'A',
+      templateUrl: 'html/error.html'
+    };
+  });
 
   directivesModule.directive('navHeader', function () {
     return {
@@ -74,7 +86,7 @@
       template: '{{output}}',
       link: function (scope) {
         if (scope.value.quantity) {
-          scope.output = scope.prefix + ' ' + scope.value.quantity + ' ' + scope.value.unit;
+          scope.output = (scope.prefix ? scope.prefix + ' ' : '') + scope.value.quantity + ' ' + scope.value.unit;
         } else {
           scope.output = 'Not specified';
         }
@@ -87,16 +99,21 @@
       restrict: 'E',
       replace: false,
       scope: {
-        ngModel: '='
+        ngModel: '=',
+        required: '='
       },
       templateUrl: 'html/directives/timeZoneSelectDv.html'
     };
   });
 
-  directivesModule.directive('simpleDate', ['$filter', function ($filter) {
+  directivesModule.directive('simpleDate', ['$filter','DateHelper', function ($filter, DateHelper) {
     return {
       require: 'ngModel',
       link: function (scope, element, attrs, ngModelController) {
+        var dateFormat = DateHelper.getLocaleDateFormat();
+
+        element.attr('title','Date should be entered in '+ dateFormat.toLowerCase() + ' format.');
+
         ngModelController.$parsers.push(function (data) {
           //convert data from view format to model format
           return data;
@@ -104,7 +121,7 @@
         ngModelController.$formatters.push(function (date) {
           //convert data from model format to view format
           if (date !== "") {
-            date = $filter('date')(date, 'MM/dd/yyyy');
+            date = $filter('date')(date, dateFormat);
           }
           return date;
         });
@@ -135,6 +152,7 @@
           resize();
         });
         var resize = function () {
+          element[0].style.resize = "vertical";
           element[0].style.height = "250px";
           return element[0].style.height = "" + element[0].scrollHeight + "px";
         };
@@ -178,5 +196,260 @@
       }
     };
   }]);
+
+  directivesModule.directive('scrollToError', ['$timeout',function ($timeout) {
+      return {
+          require : "^form",
+          restrict : 'A',
+          link: function (scope, element,attrs,form) {
+              element.on('mousedown',function(event){
+                event.preventDefault();
+              });
+              element.on('click', function () {
+                  var formElement = angular.element('form[name="' + form.$name + '"]');
+                  var firstInvalid = formElement[0].querySelector('.ng-invalid');
+                  $timeout(function() {
+                    if (firstInvalid) {
+                      firstInvalid.blur();
+                      firstInvalid.focus();
+                    }
+                  },0)
+              });
+          }
+      };
+  }]);
+
+  directivesModule.directive('feedFormClusterDetails', function () {
+    return {
+      replace: false,
+      restrict: 'EA',
+      templateUrl: 'html/feed/feedFormClusterDetailsTpl.html',
+      link: function ($scope, $element) {
+        $scope.$on('forms.feed.clusters:submit', function() {
+          $scope.cluster.isAccordionOpened = $element.find('.ng-invalid').length > 0;
+        });
+      }
+    };
+  });
+
+  directivesModule.directive('feedFormDataSource', function () {
+    return {
+      replace: false,
+      restrict: 'EA',
+      templateUrl: 'html/feed/feedFormDataSourceTpl.html',
+      link: function ($scope, $element) {
+        if($scope.feed.dataTransferType === 'import'){
+          $scope.dataSourceType = 'source';
+          $scope.dataTransferAction = 'extract';
+          if ($scope.feed.import === undefined) {
+            $scope.feed.import = { 'source' : {
+              'extract' : {'type' : 'full', 'mergepolicy' : 'snapshot'}, 'columnsType' : 'all', 'fields' : {} } };
+          } else {
+            if ($scope.feed.import.source.fields && $scope.feed.import.source.fields.exlcudes) {
+              $scope.feed.import.source.columnsType = 'exclude';
+            } else if ($scope.feed.import.source.fields && $scope.feed.import.source.fields.includes) {
+              $scope.feed.import.source.columnsType = 'include';
+            } else {
+              $scope.feed.import.source.columnsType = 'all';
+            }
+          }
+        } else {
+          $scope.dataSourceType = 'target';
+          $scope.dataTransferAction = 'load';
+          if ($scope.feed.export === undefined) {
+            $scope.feed.export = { 'target' : {
+              'load' : {'type' : 'updateonly' }, 'columnsType' : 'all', 'fields' : {} } };
+          } else {
+            if ($scope.feed.export.target.fields && $scope.feed.export.target.fields.exlcudes) {
+              $scope.feed.export.target.columnsType = 'exclude';
+            } else if ($scope.feed.export.target.fields && $scope.feed.export.target.fields.includes) {
+              $scope.feed.export.target.columnsType = 'include';
+            } else {
+              $scope.feed.export.target.columnsType = 'all';
+            }
+          }
+        }
+      }
+    };
+  });
+
+  directivesModule.directive('feedFormHiveStorage', ['EntityFactory',function (entityFactory) {
+    return {
+      replace: false,
+      scope: {
+        storageInfo:"=",
+        add:"&",
+        show:'&',
+        toggleAdvancedOptions:'&',
+        openDatePicker:'&',
+        constructDate:'&',
+        reset:'&',
+        validations:'=',
+        required:'='
+      },
+      restrict: 'EA',
+      templateUrl: 'html/directives/feedFormHiveStorage.html',
+      link: function ($scope) {
+        $scope.valiationMessage= JSON.stringify($scope.validations.messages.number);
+        if($scope.storageInfo.type ==='target'){
+          $scope.buttonText = 'Destination';
+        }else{
+          $scope.buttonText = 'Source'
+        }
+        if(!$scope.storageInfo.clusterStorage){
+          $scope.cluster = entityFactory.newCluster($scope.storageInfo.type, 'hive', "", null);
+        }else{
+          $scope.cluster = $scope.storageInfo.clusterStorage;
+        }
+        $scope.toggleAdvancedOptions = function(){
+          $scope.showingAdvancedOptions = !$scope.showingAdvancedOptions;
+        };
+        $scope.reset = function(){
+          $scope.storageInfo.feedClusters.forEach(function (cluster, index) {
+            if (cluster.name === $scope.cluster.name && cluster.type === $scope.cluster.type) {
+              $scope.storageInfo.feedClusters[index]
+                = entityFactory.newCluster($scope.storageInfo.type, 'hive', '', null);
+            }
+          });
+        };
+        $scope.checkDuplicateClusterOnTarget = function() {
+          if ($scope.cluster.type === 'target'
+            && $scope.cluster.name !== ''
+            && $scope.storageInfo.feedClusters.filter(function (cluster) {
+            return cluster.name === $scope.cluster.name && cluster.type === 'source';
+          }).length > 0) {
+            return true;
+          }
+          return false;
+        };
+        $scope.findClusterExists = function(newClusterName, newClusterType, clusterList) {
+          $scope.clusterExists = clusterList.filter(function (cluster) {
+            return cluster.name === newClusterName && cluster.type === newClusterType;
+          }).length > 1;
+        };
+        $scope.addCluster = function(clusterDetails){
+          var cluster = entityFactory.newCluster(clusterDetails.type, clusterDetails.dataTransferType, "", null);
+          $scope.storageInfo.feedClusters.unshift(cluster);
+          //$scope.add({value : clusterDetails});
+          //$scope.reset();
+        };
+        $scope.deleteCluster = function() {
+          $scope.storageInfo.feedClusters.forEach(function (cluster, index) {
+            if (cluster.name === $scope.cluster.name && cluster.type === $scope.cluster.type) {
+              $scope.storageInfo.feedClusters.splice(index, 1);
+            }
+          });
+        };
+      }
+    };
+  }]);
+
+  directivesModule.directive('feedFormHdfsStorage', ['EntityFactory',function (entityFactory) {
+    return {
+      replace: false,
+      scope: {
+        storageInfo:"=",
+        add:"&",
+        show:'&',
+        toggleAdvancedOptions:'&',
+        openDatePicker:'&',
+        constructDate:'&',
+        reset:'&',
+        validations:'=',
+        required:'='
+      },
+      restrict: 'EA',
+      templateUrl: 'html/directives/feedFormHdfsStorage.html',
+      require:"^form",
+      link: function ($scope, $element, $attrs, $form) {
+        $scope.valiationMessage= JSON.stringify($scope.validations.messages.number);
+        if($scope.storageInfo.type ==='target'){
+          $scope.buttonText = 'Destination';
+        }else{
+          $scope.buttonText = 'Source'
+        }
+        if(!$scope.storageInfo.clusterStorage){
+          $scope.cluster = entityFactory.newCluster($scope.storageInfo.type, 'hdfs', "", null);
+        }else{
+          $scope.cluster = $scope.storageInfo.clusterStorage;
+          if (!$scope.cluster.storage.fileSystem) {
+            $scope.cluster.storage = { 'fileSystem' : entityFactory.newClusterFileSystem() };
+          }
+        }
+        $scope.toggleAdvancedOptions = function(){
+          $scope.showingAdvancedOptions = !$scope.showingAdvancedOptions;
+        };
+        $scope.reset = function(){
+          $scope.storageInfo.feedClusters.forEach(function (cluster, index) {
+            if (cluster.name === $scope.cluster.name && cluster.type === $scope.cluster.type) {
+              $scope.storageInfo.feedClusters[index]
+                = entityFactory.newCluster($scope.storageInfo.type, 'hdfs', '', null);
+            }
+          });
+        };
+        $scope.checkDuplicateClusterOnTarget = function() {
+          if ($scope.cluster.type === 'target'
+            && $scope.cluster.name !== ''
+            && $scope.storageInfo.feedClusters.filter(function (cluster) {
+            return cluster.name === $scope.cluster.name && cluster.type === 'source';
+          }).length > 0) {
+            return true;
+          }
+          return false;
+        };
+        $scope.findClusterExists = function(newClusterName, newClusterType, clusterList) {
+          $scope.clusterExists = clusterList.filter(function (cluster) {
+            return cluster.name === newClusterName && cluster.type === newClusterType;
+          }).length > 1;
+        };
+        $scope.addCluster = function(clusterDetails, feedForm){
+          var cluster = entityFactory.newCluster(clusterDetails.type, clusterDetails.dataTransferType, "", null);
+          $scope.storageInfo.feedClusters.unshift(cluster);
+          //$scope.add({value : clusterDetails});
+          //$scope.reset();
+        };
+        $scope.deleteCluster = function() {
+          $scope.storageInfo.feedClusters.forEach(function (cluster, index) {
+            if (cluster.name === $scope.cluster.name && cluster.type === $scope.cluster.type) {
+              $scope.storageInfo.feedClusters.splice(index, 1);
+            }
+          });
+        };
+      }
+    };
+  }]);
+
+  directivesModule.directive('simpleDatePicker', ['$filter','DateHelper', function ($filter, DateHelper) {
+    return {
+      require: 'ngModel',
+      link: function ($scope, $element, $attrs, ngModelController) {
+        $element.datepicker();
+
+        var dateFormat = DateHelper.getLocaleDateFormat();
+
+        $element.attr('title','Date should be entered in '+ dateFormat.toLowerCase() + ' format.');
+
+        ngModelController.$parsers.push(function (date) {
+          //convert data from view format to model format
+          return new Date(date);
+        });
+        ngModelController.$formatters.push(function (date) {
+          //convert data from model format to view format
+          if (date !== "") {
+            date = $filter('date')(date, dateFormat);
+          }
+          return date;
+        });
+      }
+    };
+  }]);
+
+  directivesModule.directive('mandatoryField', function () {
+    return {
+      replace: false,
+      restrict: 'E',
+      template: '<span>*</span>'
+    };
+  });
 
 }());

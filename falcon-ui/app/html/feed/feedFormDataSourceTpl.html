@@ -1,0 +1,148 @@
+<!--
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<div class="datasourceBox">
+  <div class="col-xs-24">
+    <label class="light">Datasource<mandatory-field></mandatory-field></label>
+  </div>
+  <div class="col-xs-10">
+    <select ng-model="feed[feed.dataTransferType][dataSourceType].name"
+        ng-required="true"
+        class="form-control padding0"
+        validation-message="{{validations.messages.datasource}}">
+      <option value="" disabled style='display:none;'>Select transfer datasource</option>
+      <option ng-repeat="datasourceItem in datasourceList"
+              value="{{datasourceItem.name}}">
+        {{datasourceItem.name}}
+      </option>
+    </select>
+  </div>
+
+  <div class="col-xs-24">
+    <label class="light">Table<mandatory-field></mandatory-field></label>
+  </div>
+  <div class="col-xs-10">
+    <input type="text"
+        ng-required="true"
+        placeholder="Enter table name"
+        class="form-control"
+        ng-model="feed[feed.dataTransferType][dataSourceType].tableName"
+        validation-optional-message="{{validations.messages.table}}" />
+  </div>
+  <div class="col-xs-24 plr0px" ng-if="feed.dataTransferType === 'export'">
+    <div class="col-xs-24">
+      <label class="light">Load Method<mandatory-field></mandatory-field></label>
+    </div>
+
+    <div class="col-xs-12 plr0px mt5">
+      <div class="typeButtonsBox">
+        <div class="col-xs-12">
+          <span class="radio-inline">
+            <input type="radio" name="type" value="updateonly" ng-model="feed[feed.dataTransferType][dataSourceType][dataTransferAction].type"/>
+            Update Only
+        </div>
+        <div class="col-xs-12">
+          <span class="radio-inline">
+            <input type="radio" name="type" value="allowinsert" ng-model="feed[feed.dataTransferType][dataSourceType][dataTransferAction].type"/>
+            Allow Insert
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24 plr0px" ng-if="feed.dataTransferType === 'import'">
+    <div class="col-xs-24">
+      <label class="light">Extract Type<mandatory-field></mandatory-field></label>
+    </div>
+
+    <div class="col-xs-12 plr0px mt5">
+      <div class="typeButtonsBox">
+        <div class="col-xs-8">
+          <span class="radio-inline">
+            <input type="radio" name="type" value="full"
+              ng-model="feed[feed.dataTransferType][dataSourceType][dataTransferAction].type"/>
+            Full
+        </div>
+        <div class="col-xs-8">
+          <span class="radio-inline">
+            <input type="radio" name="type" value="incremental" disabled="disabled"
+              ng-model="feed[feed.dataTransferType][dataSourceType][dataTransferAction].type"/>
+            Incremental
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-24">
+      <label class="light">Merge Type<mandatory-field></mandatory-field></label>
+    </div>
+
+    <div class="col-xs-12 plr0px mt5">
+      <div class="typeButtonsBox">
+        <div class="col-xs-8">
+          <span class="radio-inline">
+            <input type="radio" name="mergepolicy" value="snapshot"
+              ng-model="feed[feed.dataTransferType][dataSourceType][dataTransferAction].mergepolicy"/>
+            Snapshot
+        </div>
+        <div class="col-xs-8">
+          <span class="radio-inline">
+            <input type="radio" name="mergepolicy" value="append"
+              ng-model="feed[feed.dataTransferType][dataSourceType][dataTransferAction].mergepolicy"/>
+            Append
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-24">
+    <label class="light">Columns<mandatory-field></mandatory-field></label>
+  </div>
+
+  <div class="col-xs-12 mt5 plr0px">
+    <div class="typeButtonsBox">
+      <div class="col-xs-8">
+        <span class="radio-inline">
+          <input type="radio" name="fieldsType" value="all"
+            ng-model="feed[feed.dataTransferType][dataSourceType].columnsType"/>
+          All
+      </div>
+      <div class="col-xs-8">
+        <span class="radio-inline">
+          <input type="radio" name="fieldsType" value="include"
+            ng-model="feed[feed.dataTransferType][dataSourceType].columnsType"/>
+          Include
+      </div>
+      <div class="col-xs-8">
+        <span class="radio-inline">
+          <input type="radio" name="fieldsType" value="exclude"
+            ng-model="feed[feed.dataTransferType][dataSourceType].columnsType"/>
+          Exclude
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-16 mt5" ng-if="feed[feed.dataTransferType][dataSourceType].columnsType === 'include'">
+    <input type="text"
+        ng-required="true"
+        class="form-control"
+        ng-model="feed[feed.dataTransferType][dataSourceType].includesCSV" />
+  </div>
+  <div class="col-xs-16 mt5" ng-if="feed[feed.dataTransferType][dataSourceType].columnsType === 'exclude'">
+    <input type="text"
+        ng-required="true"
+        class="form-control"
+        ng-model="feed[feed.dataTransferType][dataSourceType].excludesCSV" />
+  </div>
+</div>
