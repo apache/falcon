@@ -47,6 +47,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Retry;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -910,6 +911,14 @@ public final class EntityUtil {
     public static boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
         Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
         return Storage.TYPE.TABLE == storageType;
+    }
+
+    public static void checkUser(Entity entity){
+        if (StringUtils.isNotBlank(entity.getACL().getOwner())) {
+            CurrentUser.authenticate(entity.getACL().getOwner());
+        } else {
+            CurrentUser.authenticate(System.getProperty("user.name"));
+        }
     }
 
     public static List<String> getTags(Entity entity) {
