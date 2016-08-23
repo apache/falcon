@@ -88,7 +88,7 @@ public class LogMoverService implements WorkflowExecutionListener  {
         }
         while(0<blockingQueue.remainingCapacity()){
             try {
-                LOG.info("Sleeing, no capacity in threadpool....");
+                LOG.debug("Sleeping, no capacity in threadpool....");
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
