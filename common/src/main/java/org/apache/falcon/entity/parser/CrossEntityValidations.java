@@ -32,8 +32,6 @@ import org.apache.falcon.util.DateUtil;
 
 import java.util.Date;
 
-import static org.apache.falcon.entity.FeedHelper.getCluster;
-
 /**
  * Validation helper functions to validate across process, feed and cluster definitions.
  */
@@ -95,7 +93,7 @@ public final class CrossEntityValidations {
     public static void validateFeedRetentionPeriod(String startInstance, Feed feed, String clusterName)
         throws FalconException {
 
-        String feedRetention = getCluster(feed, clusterName).getRetention().getLimit().toString();
+        String feedRetention = FeedHelper.getCluster(feed, clusterName).getRetention().getLimit().toString();
         ExpressionHelper evaluator = ExpressionHelper.get();
 
         Date now = new Date();
@@ -156,7 +154,7 @@ public final class CrossEntityValidations {
     }
 
     public static void validateFeedDefinedForCluster(Feed feed, String clusterName) throws FalconException {
-        if (getCluster(feed, clusterName) == null) {
+        if (FeedHelper.getCluster(feed, clusterName) == null) {
             throw new ValidationException("Feed " + feed.getName() + " is not defined for cluster " + clusterName);
         }
     }
