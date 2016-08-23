@@ -32,6 +32,8 @@ import org.apache.falcon.util.DateUtil;
 
 import java.util.Date;
 
+import static org.apache.falcon.entity.FeedHelper.getCluster;
+
 /**
  * Validation helper functions to validate across process, feed and cluster definitions.
  */
@@ -44,8 +46,12 @@ public final class CrossEntityValidations {
         try {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
-                org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
-                        clusterName).getValidity();
+                org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+                if (feedCluster == null) {
+                    throw new ValidationException("Feed " + feed.getName() + " does not exist on cluster "
+                            + clusterName);
+                }
+                org.apache.falcon.entity.v0.feed.Validity feedValidity = feedCluster.getValidity();
 
                 // Optinal end_date
                 if (feedValidity.getEnd() == null) {
@@ -89,7 +95,7 @@ public final class CrossEntityValidations {
     public static void validateFeedRetentionPeriod(String startInstance, Feed feed, String clusterName)
         throws FalconException {
 
-        String feedRetention = FeedHelper.getCluster(feed, clusterName).getRetention().getLimit().toString();
+        String feedRetention = getCluster(feed, clusterName).getRetention().getLimit().toString();
         ExpressionHelper evaluator = ExpressionHelper.get();
 
         Date now = new Date();
@@ -110,8 +116,12 @@ public final class CrossEntityValidations {
         try {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
-                org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
-                        clusterName).getValidity();
+                org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+                if (feedCluster == null) {
+                    throw new ValidationException("Feed " + feed.getName() + " does not exist on cluster "
+                            + clusterName);
+                }
+                org.apache.falcon.entity.v0.feed.Validity feedValidity = feedCluster.getValidity();
                 Date feedStart = feedValidity.getStart();
                 Date feedEnd = feedValidity.getEnd();
 
@@ -146,7 +156,7 @@ public final class CrossEntityValidations {
     }
 
     public static void validateFeedDefinedForCluster(Feed feed, String clusterName) throws FalconException {
-        if (FeedHelper.getCluster(feed, clusterName) == null) {
+        if (getCluster(feed, clusterName) == null) {
             throw new ValidationException("Feed " + feed.getName() + " is not defined for cluster " + clusterName);
         }
     }
