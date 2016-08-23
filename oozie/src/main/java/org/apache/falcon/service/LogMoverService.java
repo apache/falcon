@@ -44,12 +44,13 @@ public class LogMoverService implements WorkflowExecutionListener  {
     public static final String ENABLE_POSTPROCESSING = StartupProperties.get().
             getProperty("falcon.postprocessing.enable");
 
-    private BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(50);
+    private BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(Integer.parseInt(
+            StartupProperties.get().getProperty("falcon.logMoveService.blockingQueue.length", "50")));
     private ExecutorService executorService = new ThreadPoolExecutor(20, getThreadCount(), 120,
             TimeUnit.SECONDS, blockingQueue);
     public int getThreadCount() {
         try{
-            return Integer.parseInt(StartupProperties.get().getProperty("falcon.logMoveService.threadCount"));
+            return Integer.parseInt(StartupProperties.get().getProperty("falcon.logMoveService.threadCount", "200"));
         } catch (NumberFormatException  e){
             LOG.error("Exception in LogMoverService", e);
             return 50;
