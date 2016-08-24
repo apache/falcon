@@ -268,23 +268,20 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     @Test
     public void testPostProcessing() throws Exception{
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
-        OozieEntityBuilder builder = OozieEntityBuilder.get(feed);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(fsReplFeed);
         Path bundlePath = new Path("/projects/falcon/");
-        builder.build(trgCluster, bundlePath);
+        builder.build(alphaTrgCluster, bundlePath);
         BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
         List<COORDINATOR> coords = bundle.getCoordinator();
-        COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
-
-        WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
 
         Boolean foundUserAction = false;
         Boolean foundPostProcessing = false;
         Iterator<COORDINATOR> coordIterator = coords.iterator();
 
         while(coordIterator.hasNext()){
-            COORDINATORAPP coord1 = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
-            WORKFLOWAPP workflow1 = getWorkflowapp(trgMiniDFS.getFileSystem(), coord1);
-            Iterator<Object> workflowIterator = workflow1.getDecisionOrForkOrJoin().iterator();
+            COORDINATORAPP coord = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
+            WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
+            Iterator<Object> workflowIterator = workflow.getDecisionOrForkOrJoin().iterator();
             while (workflowIterator.hasNext()){
                 Object object = workflowIterator.next();
                 if (ACTION.class.isAssignableFrom(object.getClass())){
