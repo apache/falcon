@@ -227,11 +227,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.falcon</groupId>
-            <artifactId>falcon-cli</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-exec</artifactId>
         </dependency>

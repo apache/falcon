@@ -187,13 +187,7 @@
                 <artifactId>falcon-merlin-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.apache.falcon</groupId>
-                <artifactId>falcon-cli</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
+            
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>annotations</artifactId>
