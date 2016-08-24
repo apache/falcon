@@ -588,6 +588,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
+    public InstancesResult ignoreInstances(Entity entity, Date start, Date end, Properties props,
+                                              List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(JobAction.IGNORE, entity, start, end, props, lifeCycles);
+    }
+
+    @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end,
                                           Properties props, List<LifeCycle> lifeCycles,
                                           Boolean isForced) throws FalconException {
@@ -649,7 +655,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private static enum JobAction {
-        KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
+        KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS, IGNORE
     }
 
     private WorkflowJob getWorkflowInfo(String cluster, String wfId) throws FalconException {
@@ -953,6 +959,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             status = Status.KILLED.name();
             break;
 
+        case IGNORE:
+            if (!status.equals(Status.IGNORED.name())) {
+                ignore(cluster, coordinatorAction.getJobId(), coordinatorAction.getActionNumber());
+            }
+            status = mapActionStatus(Status.IGNORED.name());
+            break;
+
         case SUSPEND:
             if (jobInfo == null || !WF_SUSPEND_PRECOND.contains(jobInfo.getStatus())) {
                 break;
@@ -1100,8 +1113,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         } else if (CoordinatorAction.Status.WAITING.toString().equals(status)
             || CoordinatorAction.Status.SUBMITTED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.WAITING.name();
-        } else if (CoordinatorAction.Status.IGNORED.toString().equals(status)) {
+        } else if (CoordinatorAction.Status.KILLED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.KILLED.name();
+        } else if (CoordinatorAction.Status.IGNORED.toString().equals(status)) {
+            return InstancesResult.WorkflowStatus.KILLED_OR_IGNORED.name();
         } else if (CoordinatorAction.Status.TIMEDOUT.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.FAILED.name();
         } else if (WorkflowJob.Status.PREP.toString().equals(status)) {
@@ -1678,6 +1693,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    private void ignore(String cluster, String jobId, int instanceNumber) throws FalconException {
+        try {
+            OozieClientFactory.get(cluster).ignore(jobId, String.valueOf(instanceNumber));
+            assertStatus(cluster, jobId + "@" + instanceNumber,
+                    Status.IGNORED, Status.FAILED, Status.SUCCEEDED, Status.DONEWITHERROR);
+            LOG.info("Ignored job {} on cluster {}", jobId, cluster);
+        } catch (OozieClientException e) {
+            throw new FalconException(e);
+        }
+    }
+
     private void kill(String cluster, String jobId, String rangeType, String scope) throws FalconException {
         try {
             OozieClientFactory.get(cluster).kill(jobId, rangeType, scope);
@@ -1791,11 +1817,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public Boolean isWorkflowKilledByUser(String cluster, String jobId) throws FalconException {
+        // In case of a kill being issued from falcon api, the state will be moved to IGNORE
         // In case of a failure, the Oozie action has an errorCode.
         // In case of no errorCode in any of the actions would mean its killed by user
         try {
-            // Check for error code in all the actions in main workflow
             OozieClient oozieClient = OozieClientFactory.get(cluster);
+            String parentId = oozieClient.getJobInfo(jobId).getParentId();
+            if (oozieClient.getCoordActionInfo(parentId).getStatus().equals(CoordinatorAction.Status.IGNORED)) {
+                return true;
+            }
+            // Check for error code in all the actions in main workflow
             List<WorkflowAction> wfActions = oozieClient.getJobInfo(jobId).getActions();
             for (WorkflowAction subWfAction : wfActions) {
                 if (StringUtils.isNotEmpty(subWfAction.getErrorCode())) {
