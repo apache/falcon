@@ -44,12 +44,9 @@ public final class CrossEntityValidations {
         try {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
-                org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-                if (feedCluster == null) {
-                    throw new ValidationException("Feed " + feed.getName() + " does not exist on cluster "
-                            + clusterName);
-                }
-                org.apache.falcon.entity.v0.feed.Validity feedValidity = feedCluster.getValidity();
+                validateFeedDefinedForCluster(feed, clusterName);
+                org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
+                        clusterName).getValidity();
 
                 // Optinal end_date
                 if (feedValidity.getEnd() == null) {
@@ -114,12 +111,9 @@ public final class CrossEntityValidations {
         try {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
-                org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-                if (feedCluster == null) {
-                    throw new ValidationException("Feed " + feed.getName() + " does not exist on cluster "
-                            + clusterName);
-                }
-                org.apache.falcon.entity.v0.feed.Validity feedValidity = feedCluster.getValidity();
+                validateFeedDefinedForCluster(feed, clusterName);
+                org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
+                        clusterName).getValidity();
                 Date feedStart = feedValidity.getStart();
                 Date feedEnd = feedValidity.getEnd();
 
