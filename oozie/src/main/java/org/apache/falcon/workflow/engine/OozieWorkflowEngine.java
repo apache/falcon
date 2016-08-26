@@ -1118,7 +1118,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         } else if (CoordinatorAction.Status.IGNORED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.KILLED_OR_IGNORED.name();
         } else if (CoordinatorAction.Status.TIMEDOUT.toString().equals(status)) {
-            return InstancesResult.WorkflowStatus.FAILED.name();
+            return InstancesResult.WorkflowStatus.TIMEDOUT.name();
         } else if (WorkflowJob.Status.PREP.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.RUNNING.name();
         } else {
