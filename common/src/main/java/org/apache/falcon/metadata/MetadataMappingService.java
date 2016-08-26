@@ -394,12 +394,14 @@ public class MetadataMappingService
     }
 
     private void updateInstanceStatus(final WorkflowExecutionContext context) throws FalconException {
-        if (context.getContextType() == WorkflowExecutionContext.Type.COORDINATOR_ACTION) {
-            // TODO(yzheng): FALCON-1776 Instance update on titan DB based on JMS notifications on coordinator actions
+        WorkflowExecutionContext.EntityOperations entityOperation = context.getOperation();
+        if (context.getContextType() == WorkflowExecutionContext.Type.COORDINATOR_ACTION
+                && entityOperation != WorkflowExecutionContext.EntityOperations.GENERATE) {
+            // TODO(yzheng): FALCON-2114 Feed Instance update on titan DB
+            //               based on JMS notifications on coordinator actions
             return;
         }
 
-        WorkflowExecutionContext.EntityOperations entityOperation = context.getOperation();
         switch (entityOperation) {
         case GENERATE:
             updateProcessInstance(context);

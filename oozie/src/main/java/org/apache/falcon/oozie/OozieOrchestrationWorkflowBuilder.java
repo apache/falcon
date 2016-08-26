@@ -230,12 +230,20 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         wf.getDecisionOrForkOrJoin().add(kill);
     }
 
+    protected String getFailAction(){
+        if (!isPostProcessingEnabled()){
+            return FAIL_ACTION_NAME;
+        }else{
+            return FAIL_POSTPROCESS_ACTION_NAME;
+        }
+    }
+
     protected void addPostProcessing(WORKFLOWAPP workflow, ACTION action) throws FalconException{
         if (!isPostProcessingEnabled()){
             addTransition(action, OK_ACTION_NAME, FAIL_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(action);
         }else{
-            addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME,  FAIL_POSTPROCESS_ACTION_NAME);
             workflow.getDecisionOrForkOrJoin().add(action);
 
             //Add post-processing actions

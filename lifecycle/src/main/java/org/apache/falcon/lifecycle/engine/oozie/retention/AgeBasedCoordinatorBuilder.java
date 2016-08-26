@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -100,6 +101,13 @@ public final class AgeBasedCoordinatorBuilder {
         Path buildPath = OozieBuilderUtils.getBuildPath(basePath, LifeCycle.EVICTION.getTag());
         Properties props = OozieBuilderUtils.createCoordDefaultConfiguration(coordName, feed);
         props.putAll(OozieBuilderUtils.getProperties(buildPath, coordName));
+        props.putAll(EntityUtil.getEntityProperties(feed));
+        props.put("queueName", FeedHelper.getLifecycleRetentionQueue(feed, cluster.getName()));
+        List<org.apache.falcon.entity.v0.feed.Property> retentionProperties =
+                FeedHelper.getLifecycle(feed, cluster.getName()).getRetentionStage().getProperties().getProperties();
+        for (org.apache.falcon.entity.v0.feed.Property retentionProperty : retentionProperties) {
+            props.put(retentionProperty.getName(), retentionProperty.getValue());
+        }
 
         WORKFLOW workflow = new WORKFLOW();
         String entityPath = wfProp.getProperty(OozieBuilderUtils.ENTITY_PATH);

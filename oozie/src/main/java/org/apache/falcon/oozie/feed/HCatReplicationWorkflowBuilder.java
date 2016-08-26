@@ -73,7 +73,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
                 action.getJava().getConfiguration().getProperty().add(prop);
             }
             addHDFSServersConfig(action, src, target);
-            addTransition(action, EXPORT_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            addTransition(action, EXPORT_ACTION_NAME, getFailAction());
             workflow.getDecisionOrForkOrJoin().add(action);
             start = PREPROCESS_ACTION_NAME;
         }
@@ -95,14 +95,14 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
             hiveExportAction.getConfiguration().getProperty().add(prop);
         }
         OozieUtils.marshalHiveAction(export, exportActionJaxbElement);
-        addTransition(export, REPLICATION_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        addTransition(export, REPLICATION_ACTION_NAME, getFailAction());
         workflow.getDecisionOrForkOrJoin().add(export);
 
         //Add replication
         ACTION replication = unmarshalAction(REPLICATION_ACTION_TEMPLATE);
         addHDFSServersConfig(replication, src, target);
         addAdditionalReplicationProperties(replication);
-        addTransition(replication, IMPORT_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        addTransition(replication, IMPORT_ACTION_NAME, getFailAction());
         workflow.getDecisionOrForkOrJoin().add(replication);
 
         //Add import action
@@ -122,7 +122,7 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
             hiveImportAction.getConfiguration().getProperty().add(prop);
         }
         OozieUtils.marshalHiveAction(importAction, importActionJaxbElement);
-        addTransition(importAction, CLEANUP_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        addTransition(importAction, CLEANUP_ACTION_NAME, getFailAction());
         workflow.getDecisionOrForkOrJoin().add(importAction);
 
         //Add cleanup action

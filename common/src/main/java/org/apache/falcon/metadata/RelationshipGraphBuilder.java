@@ -74,7 +74,7 @@ public abstract class RelationshipGraphBuilder {
         return createVertex(name, type);
     }
 
-    protected Vertex addVertex(String name, RelationshipType type, long timestamp) {
+    protected Vertex addVertex(String name, RelationshipType type, Long timestamp) {
         Vertex vertex = findVertex(name, type);
         if (vertex != null) {
             LOG.debug("Found an existing vertex for: name={}, type={}", name, type);
@@ -98,13 +98,15 @@ public abstract class RelationshipGraphBuilder {
         return createVertex(name, type, System.currentTimeMillis());
     }
 
-    protected Vertex createVertex(String name, RelationshipType type, long timestamp) {
+    protected Vertex createVertex(String name, RelationshipType type, Long timestamp) {
         LOG.debug("Creating a new vertex for: name={}, type={}", name, type);
 
         Vertex vertex = graph.addVertex(null);
         vertex.setProperty(RelationshipProperty.NAME.getName(), name);
         vertex.setProperty(RelationshipProperty.TYPE.getName(), type.getName());
-        vertex.setProperty(RelationshipProperty.TIMESTAMP.getName(), timestamp);
+        if (timestamp != null) {
+            vertex.setProperty(RelationshipProperty.TIMESTAMP.getName(), timestamp);
+        }
 
         return vertex;
     }
