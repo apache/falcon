@@ -166,7 +166,6 @@ public class PageHeader {
             driver.get(oldUrl);
             doCreateProcess();
             driver.get(oldUrl);
-            doCreateMirror();
             driver.get(oldUrl);
         }
         //home button navigation
@@ -230,16 +229,6 @@ public class PageHeader {
         final ProcessWizardPage processPage = PageFactory.initElements(driver, ProcessWizardPage.class);
         processPage.checkPage();
         return processPage;
-    }
-
-    public MirrorWizardPage doCreateMirror() {
-        UIAssert.assertDisplayed(mirrorCreateButton, "Mirror create button");
-        Assert.assertEquals(mirrorCreateButton.getText(), "Mirror",
-            "Unexpected text on create mirror button");
-        mirrorCreateButton.click();
-        final MirrorWizardPage mirrorPage = PageFactory.initElements(driver, MirrorWizardPage.class);
-        mirrorPage.checkPage();
-        return mirrorPage;
     }
 
     private List<String> getHomeUrls() {
