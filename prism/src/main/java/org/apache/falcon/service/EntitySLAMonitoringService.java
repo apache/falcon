@@ -28,6 +28,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.FeedInstanceStatus;
@@ -50,6 +51,7 @@ import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.SchedulableEntityInstance;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -439,10 +441,9 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
 
     // checks whether a given feed instance is available or not
     private boolean checkEntityInstanceAvailability(String entityName, String clusterName, Date nominalTime,
-                                                    String entityType) throws
-        FalconException {
+                                                    String entityType) throws FalconException {
         Entity entity = EntityUtil.getEntity(entityType, entityName);
-
+        authenticateUser(entity);
         try {
             if (entityType.equals(EntityType.PROCESS.toString())){
                 LOG.debug("Checking instance availability status for entity:{}, cluster:{}, "
@@ -647,6 +648,14 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 MONITORING_JDBC_STATE_STORE.deletePendingInstance(entityName, clusterName, nominalTime,
                     entityType);
             }
+        }
+    }
+
+    private void authenticateUser(Entity entity){
+        if (StringUtils.isNotBlank(entity.getACL().getOwner())) {
+            CurrentUser.authenticate(entity.getACL().getOwner());
+        } else {
+            CurrentUser.authenticate(System.getProperty("user.name"));
         }
     }
 }
