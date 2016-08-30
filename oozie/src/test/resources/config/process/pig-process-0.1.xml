@@ -50,4 +50,8 @@
 
     <retry policy="periodic" delay="hours(10)" attempts="3"/>
 
+    <late-process policy="exp-backoff" delay="hours(1)">
+        <late-input input="input" workflow-path="/falcon/test/workflow"/>
+    </late-process>
+
 </process>
