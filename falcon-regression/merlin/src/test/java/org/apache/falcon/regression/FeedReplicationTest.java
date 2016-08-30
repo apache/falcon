@@ -177,7 +177,7 @@ public class FeedReplicationTest extends BaseTestClass {
         //_SUCCESS should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
 
-        if(!MerlinConstants.IS_SECURE){
+        if (!MerlinConstants.IS_SECURE){
             AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
                     cluster2FS, "feed", "Success logs are not present");
         }
@@ -283,7 +283,7 @@ public class FeedReplicationTest extends BaseTestClass {
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster3FS, toTarget, ""), true);
 
-        if(!MerlinConstants.IS_SECURE){
+        if (!MerlinConstants.IS_SECURE){
             AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
                     cluster2FS, "feed", "Success logs are not present");
         }
@@ -395,7 +395,7 @@ public class FeedReplicationTest extends BaseTestClass {
         //availabilityFlag should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, availabilityFlagName), true);
 
-        if(!MerlinConstants.IS_SECURE){
+        if (!MerlinConstants.IS_SECURE){
             AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
                     cluster2FS, "feed", "Success logs are not present");
         }
@@ -570,7 +570,7 @@ public class FeedReplicationTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
                 CoordinatorAction.Status.KILLED, EntityType.FEED);
 
-        if(!MerlinConstants.IS_SECURE){
+        if (!MerlinConstants.IS_SECURE){
             AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
                     cluster2FS, "feed", "Success logs are not present");
         }
