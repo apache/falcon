@@ -48,9 +48,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * Tests for FeedSLAMonitoring Service.
+ * Tests for EntitySLAMonitoring Service.
  */
-public class FeedSLAMonitoringTest extends AbstractTestBase {
+public class EntitySLAMonitoringTest extends AbstractTestBase {
     private static final String CLUSTER_NAME = "testCluster";
     private static final String FEED_NAME = "testFeed";
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
@@ -84,17 +84,17 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
         Assert.assertEquals(result, expected);
     }
 
-    @Test(expectedExceptions = ValidationException.class,
-            expectedExceptionsMessageRegExp = "SLA monitoring is not supported for: PROCESS")
-    public void testInvalidType() throws FalconException {
-        AbstractSchedulableEntityManager.validateSlaParams("process",
-                "in", "2015-05-05T00:00Z", "2015-05-05T00:00Z", "*");
+    @Test(expectedExceptions = EntityNotRegisteredException.class,
+            expectedExceptionsMessageRegExp = ".*\\(FEED\\) not found.*")
+    public void testInvalidFeedName() throws FalconException {
+        AbstractSchedulableEntityManager.validateSlaParams("feed",
+                "non-existent", "2015-05-05T00:00Z", "2015-05-05T00:00Z", "*");
     }
 
     @Test(expectedExceptions = EntityNotRegisteredException.class,
-            expectedExceptionsMessageRegExp = ".*\\(FEED\\) not found.*")
-    public void testInvalidName() throws FalconException {
-        AbstractSchedulableEntityManager.validateSlaParams("feed",
+            expectedExceptionsMessageRegExp = ".*\\(PROCESS\\) not found.*")
+    public void testInvalidProcessName() throws FalconException {
+        AbstractSchedulableEntityManager.validateSlaParams("process",
                 "non-existent", "2015-05-05T00:00Z", "2015-05-05T00:00Z", "*");
     }
 
@@ -102,6 +102,8 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
             expectedExceptionsMessageRegExp = "2015-05-00T00:00Z is not a valid UTC string")
     public void testInvalidStart() throws FalconException {
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-00T00:00Z", "2015-05-05T00:00Z", "*");
+        AbstractSchedulableEntityManager.validateSlaParams("process", null,
+                "2015-05-00T00:00Z", "2015-05-05T00:00Z", "*");
     }
 
     @Test(expectedExceptions = ValidationException.class,
@@ -109,18 +111,26 @@ public class FeedSLAMonitoringTest extends AbstractTestBase {
     public void testInvalidRange() throws FalconException {
         AbstractSchedulableEntityManager.validateSlaParams("feed",
                 null, "2015-05-05T00:00Z", "2014-05-05T00:00Z", "*");
+        AbstractSchedulableEntityManager.validateSlaParams("process",
+                null, "2015-05-05T00:00Z", "2014-05-05T00:00Z", "*");
     }
 
     @Test
     public void testOptionalName() throws FalconException {
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-05T00:00Z", "2015-05-05T00:00Z", "*");
         AbstractSchedulableEntityManager.validateSlaParams("feed", "", "2015-05-05T00:00Z", "2015-05-05T00:00Z", "*");
+        AbstractSchedulableEntityManager.validateSlaParams("process", null, "2015-05-05T00:00Z", "2015-05-05T00:00Z",
+                "*");
+        AbstractSchedulableEntityManager.validateSlaParams("process", "", "2015-05-05T00:00Z", "2015-05-05T00:00Z",
+                "*");
     }
 
     @Test
     public void testOptionalEnd() throws FalconException {
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-05T00:00Z", "", "*");
         AbstractSchedulableEntityManager.validateSlaParams("feed", null, "2015-05-05T00:00Z", null, "*");
+        AbstractSchedulableEntityManager.validateSlaParams("process", null, "2015-05-05T00:00Z", "", "*");
+        AbstractSchedulableEntityManager.validateSlaParams("process", null, "2015-05-05T00:00Z", null, "*");
     }
 
     private Cluster publishCluster() throws FalconException {

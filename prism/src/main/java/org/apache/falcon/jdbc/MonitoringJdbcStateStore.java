@@ -48,7 +48,7 @@ public class MonitoringJdbcStateStore {
 
         MonitoredEntityBean monitoredEntityBean = new MonitoredEntityBean();
         monitoredEntityBean.setEntityName(entityName);
-        monitoredEntityBean.setEntityType(entityType);
+        monitoredEntityBean.setEntityType(entityType.toLowerCase());
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
@@ -62,7 +62,7 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_MONITERED_INSTANCE);
         q.setParameter(MonitoredEntityBean.ENTITYNAME, entityName);
-        q.setParameter(MonitoredEntityBean.ENTITYTYPE, entityType);
+        q.setParameter(MonitoredEntityBean.ENTITYTYPE, entityType.toLowerCase());
         List result = q.getResultList();
         try {
             if (result.isEmpty()) {
@@ -79,7 +79,7 @@ public class MonitoringJdbcStateStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_MONITORED_INSTANCES);
         q.setParameter(MonitoredEntityBean.ENTITYNAME, entityName);
-        q.setParameter(MonitoredEntityBean.ENTITYTYPE, entityType);
+        q.setParameter(MonitoredEntityBean.ENTITYTYPE, entityType.toLowerCase());
         try{
             q.executeUpdate();
         } finally {
@@ -98,7 +98,7 @@ public class MonitoringJdbcStateStore {
     public List<MonitoredEntityBean> getAllMonitoredEntityForEntity(String entityType) throws ResultNotFoundException {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_MONITORING_ENTITY_FOR_TYPE);
-        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType.toLowerCase());
         List result = q.getResultList();
         entityManager.close();
         return result;
@@ -108,7 +108,7 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_LATEST_INSTANCE_TIME, Date.class);
         q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
-        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType.toLowerCase());
         Date result = (Date)q.getSingleResult();
         entityManager.close();
         return result;
@@ -121,7 +121,7 @@ public class MonitoringJdbcStateStore {
         q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
         q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
         q.setParameter(PendingInstanceBean.NOMINALTIME, nominalTime);
-        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType.toLowerCase());
         try{
             q.executeUpdate();
         } finally {
@@ -135,7 +135,7 @@ public class MonitoringJdbcStateStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_INSTANCES_FOR_ENTITY);
         q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
         q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
-        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType.toLowerCase());
         try{
             q.executeUpdate();
         } finally {
@@ -150,7 +150,7 @@ public class MonitoringJdbcStateStore {
         pendingInstanceBean.setEntityName(entity);
         pendingInstanceBean.setClusterName(clusterName);
         pendingInstanceBean.setNominalTime(nominalTime);
-        pendingInstanceBean.setEntityType(entityType);
+        pendingInstanceBean.setEntityType(entityType.toLowerCase());
 
         beginTransaction(entityManager);
         entityManager.persist(pendingInstanceBean);
@@ -162,7 +162,7 @@ public class MonitoringJdbcStateStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_DATE_FOR_PENDING_INSTANCES);
         q.setParameter(PendingInstanceBean.ENTITYNAME, entityName);
         q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
-        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType.toLowerCase());
         List result = q.getResultList();
         entityManager.close();
         return result;
@@ -198,7 +198,7 @@ public class MonitoringJdbcStateStore {
 
         q.setParameter(PendingInstanceBean.CLUSTERNAME, clusterName);
         q.setParameter(PendingInstanceBean.NOMINALTIME, nominalTime);
-        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType);
+        q.setParameter(PendingInstanceBean.ENTITYTYPE, entityType.toLowerCase());
         try {
             return q.getSingleResult();
         } finally {
@@ -215,7 +215,7 @@ public class MonitoringJdbcStateStore {
         q.setParameter(EntitySLAAlertBean.ENTITYNAME, entityName);
         q.setParameter(EntitySLAAlertBean.CLUSTERNAME, clusterName);
         q.setParameter(EntitySLAAlertBean.NOMINALTIME, nominalTime);
-        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType);
+        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType.toLowerCase());
         try {
             return q.getSingleResult();
         } finally {
@@ -232,7 +232,7 @@ public class MonitoringJdbcStateStore {
         entitySLAAlertBean.setNominalTime(nominalTime);
         entitySLAAlertBean.setIsSLALowMissed(isSLALowMissed);
         entitySLAAlertBean.setIsSLAHighMissed(isSLAHighMissed);
-        entitySLAAlertBean.setEntityType(entityType);
+        entitySLAAlertBean.setEntityType(entityType.toLowerCase());
         try {
             beginTransaction(entityManager);
             entityManager.persist(entitySLAAlertBean);
@@ -248,7 +248,7 @@ public class MonitoringJdbcStateStore {
         q.setParameter(EntitySLAAlertBean.ENTITYNAME, entityName);
         q.setParameter(EntitySLAAlertBean.CLUSTERNAME, clusterName);
         q.setParameter(EntitySLAAlertBean.NOMINALTIME, nominalTime);
-        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType);
+        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType.toLowerCase());
         try{
             q.executeUpdate();
         } finally {
@@ -263,7 +263,7 @@ public class MonitoringJdbcStateStore {
         q.setParameter(EntitySLAAlertBean.ENTITYNAME, entityName);
         q.setParameter(EntitySLAAlertBean.CLUSTERNAME, clusterName);
         q.setParameter(EntitySLAAlertBean.NOMINALTIME, nominalTime);
-        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType);
+        q.setParameter(EntitySLAAlertBean.ENTITYTYPE, entityType.toLowerCase());
         try{
             q.executeUpdate();
         } finally {

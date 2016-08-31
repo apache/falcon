@@ -18,7 +18,6 @@
 package org.apache.falcon.persistence;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.EntityType;
 
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
@@ -65,7 +64,7 @@ public class MonitoredEntityBean {
     }
 
     public void setEntityType(String entityType) throws FalconException {
-        checkEntityType(entityType);
+        BeanUtils.checkEntityType(entityType);
         this.entityType = entityType;
     }
 
@@ -94,12 +93,4 @@ public class MonitoredEntityBean {
 
     public static final String ENTITYTYPE = "entityType";
 
-    void checkEntityType(String entityType)throws FalconException {
-        if (entityType.equals(EntityType.PROCESS.toString()) || entityType.equals(EntityType.FEED.toString())){
-            return;
-        } else {
-            throw new FalconException("EntityType"+ entityType
-                    + " is not valid,Feed and Process are the valid input type.");
-        }
-    }
 }

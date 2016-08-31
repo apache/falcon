@@ -202,12 +202,12 @@ public final class HadoopClientFactory {
             // prevent falcon impersonating falcon, no need to use doas
             final String proxyUserName = ugi.getShortUserName();
             if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.info("Creating FS for the login user {}, impersonation not required",
+                LOG.trace("Creating FS for the login user {}, impersonation not required",
                     proxyUserName);
                 return FileSystem.get(uri, conf);
             }
 
-            LOG.info("Creating FS impersonating user {}", proxyUserName);
+            LOG.trace("Creating FS impersonating user {}", proxyUserName);
             return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                 public FileSystem run() throws Exception {
                     return FileSystem.get(uri, conf);

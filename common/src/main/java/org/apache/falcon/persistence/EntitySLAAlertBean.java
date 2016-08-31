@@ -19,7 +19,6 @@
 package org.apache.falcon.persistence;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.EntityType;
 
 import java.util.Date;
 
@@ -70,7 +69,7 @@ public class EntitySLAAlertBean {
     }
 
     public void setEntityType(String entityType) throws FalconException {
-        checkEntityType(entityType);
+        BeanUtils.checkEntityType(entityType);
         this.entityType = entityType;
     }
 
@@ -157,12 +156,4 @@ public class EntitySLAAlertBean {
 
     public static final String NOMINALTIME = "nominalTime";
 
-    void checkEntityType(String entityType)throws FalconException{
-        if (entityType.equals(EntityType.PROCESS.toString()) || entityType.equals(EntityType.FEED.toString())){
-            return;
-        } else {
-            throw new FalconException("EntityType"+ entityType
-                    + " is not valid,Feed and Process are the valid input type.");
-        }
-    }
 }
