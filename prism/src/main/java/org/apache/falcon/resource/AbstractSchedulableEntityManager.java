@@ -112,7 +112,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     }
 
     /**
-     * Validates the parameters wheather SLA is supported or not.
+     * Validates the parameters whether SLA is supported or not.
      *
      * @param entityType currently two entityTypes are supported Process and Feed
      * @param entityName name of the entity
@@ -125,9 +125,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     public static void validateSlaParams(String entityType, String entityName, String start, String end,
                                          String colo) throws FalconException {
         EntityType type = EntityType.getEnum(entityType);
-        LOG.info("EntityName:" + entityName);
-        if (!Arrays.asList(EntityType.FEED.toString().toLowerCase(), EntityType.PROCESS.toString().toLowerCase()).
-                contains(entityType.toLowerCase())){
+        if (!type.isSchedulable()){
             throw new ValidationException("SLA monitoring is not supported for: " + type);
         }
 

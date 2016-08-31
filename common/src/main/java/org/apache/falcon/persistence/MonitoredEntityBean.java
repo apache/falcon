@@ -17,7 +17,7 @@
  */
 package org.apache.falcon.persistence;
 
-import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
 
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
@@ -63,9 +63,9 @@ public class MonitoredEntityBean {
         return entityType;
     }
 
-    public void setEntityType(String entityType) throws FalconException {
-        BeanUtils.checkEntityType(entityType);
-        this.entityType = entityType;
+    public void setEntityType(String entityType) {
+        EntityType.assertSchedulable(entityType);
+        this.entityType = entityType.toLowerCase();
     }
 
     @Basic

@@ -48,7 +48,7 @@ public class MonitoringJdbcStateStore {
 
         MonitoredEntityBean monitoredEntityBean = new MonitoredEntityBean();
         monitoredEntityBean.setEntityName(entityName);
-        monitoredEntityBean.setEntityType(entityType.toLowerCase());
+        monitoredEntityBean.setEntityType(entityType);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
@@ -150,7 +150,7 @@ public class MonitoringJdbcStateStore {
         pendingInstanceBean.setEntityName(entity);
         pendingInstanceBean.setClusterName(clusterName);
         pendingInstanceBean.setNominalTime(nominalTime);
-        pendingInstanceBean.setEntityType(entityType.toLowerCase());
+        pendingInstanceBean.setEntityType(entityType);
 
         beginTransaction(entityManager);
         entityManager.persist(pendingInstanceBean);
@@ -232,7 +232,7 @@ public class MonitoringJdbcStateStore {
         entitySLAAlertBean.setNominalTime(nominalTime);
         entitySLAAlertBean.setIsSLALowMissed(isSLALowMissed);
         entitySLAAlertBean.setIsSLAHighMissed(isSLAHighMissed);
-        entitySLAAlertBean.setEntityType(entityType.toLowerCase());
+        entitySLAAlertBean.setEntityType(entityType);
         try {
             beginTransaction(entityManager);
             entityManager.persist(entitySLAAlertBean);

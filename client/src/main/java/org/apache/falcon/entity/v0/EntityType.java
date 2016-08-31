@@ -101,6 +101,16 @@ public enum EntityType {
         return ((this != EntityType.CLUSTER) && (this != EntityType.DATASOURCE));
     }
 
+    public static void assertSchedulable(String entityType){
+        if (entityType.equalsIgnoreCase(EntityType.PROCESS.toString())
+                || entityType.equalsIgnoreCase(EntityType.FEED.toString())){
+            return;
+        } else {
+            throw new IllegalArgumentException("EntityType "+ entityType
+                    + " is not valid,Feed and Process are the valid input type.");
+        }
+    }
+
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP"})
     public String[] getImmutableProperties() {
         return immutableProperties;
