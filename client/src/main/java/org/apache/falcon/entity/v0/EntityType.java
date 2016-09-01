@@ -102,8 +102,8 @@ public enum EntityType {
     }
 
     public static void assertSchedulable(String entityType){
-        if (entityType.equalsIgnoreCase(EntityType.PROCESS.toString())
-                || entityType.equalsIgnoreCase(EntityType.FEED.toString())){
+        EntityType type = EntityType.getEnum(entityType);
+        if (type.isSchedulable()){
             return;
         } else {
             throw new IllegalArgumentException("EntityType "+ entityType
