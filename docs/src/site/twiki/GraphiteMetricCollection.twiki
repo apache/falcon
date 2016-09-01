@@ -8,15 +8,17 @@ Graphite Metric Collection currently allows to collect the following metrics at 
 
 To send data to graphite we need to intialize metricNotificationService in startup.properties:
 
+<verbatim>
 *.application.services= org.apache.falcon.metrics.MetricNotificationService,
-
+</verbatim>
 
 Add following properties for graphiteNotificationPlugin :
 
-Graphite properties
+*Graphite properties*
+<verbatim>
    * *.falcon.graphite.hostname=localhost
    * *.falcon.graphite.port=2003
    * *.falcon.graphite.frequency=1
    * *.falcon.graphite.prefix=falcon
-
+</verbatim>
 The falcon.graphite.frequency is in seconds and all the time that is being sent to graphite is in seconds.
