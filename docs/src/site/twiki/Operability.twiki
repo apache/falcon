@@ -207,13 +207,16 @@ public class FalconUserJMSClient {
 
 ---++ Alerts
 
-Falcon generates alerts for unrecoverable errors into a log file by default.
+Falcon generates two type of alerts:
+
+1. By default it logs unrecoverable errors into a log file
 Users can view these alerts in the alerts.log file, by default this file is created
 under ${user.dir}/logs/ directory.
 
 Users may also extend the Falcon Alerting plugin to send events to systems like Nagios, etc. by
 extending org.apache.falcon.plugin.AlertingPlugin interface.
 
+2. Alerts on *SLA misses* for feeds and process is detailed in [[EntitySLAAlerting][Entity SLA Alerting]].
 
 ---++ Audits
 
