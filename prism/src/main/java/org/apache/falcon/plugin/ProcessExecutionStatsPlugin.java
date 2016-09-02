@@ -30,10 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FalconDB NotificationPlugin.
+ * This plugin writes process completion time ,number of failures and wait time to DB.
  */
-public class FalconDBNotificationPlugin implements MonitoringPlugin {
-    private static final Logger LOG = LoggerFactory.getLogger(FalconDBNotificationPlugin.class);
+public class ProcessExecutionStatsPlugin implements MonitoringPlugin {
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessExecutionStatsPlugin.class);
 
     private static final MonitoringJdbcStateStore MONITORING_JDBC_STATE_STORE = new MonitoringJdbcStateStore();
 
@@ -47,8 +47,7 @@ public class FalconDBNotificationPlugin implements MonitoringPlugin {
             LOG.debug("message:" + message.getAction());
             if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())
                     && ConfigurationStore.get().get(EntityType.PROCESS, entityName) != null) {
-                Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
-                Process process = (Process) entity;
+                Process process = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
                 String cluster =  message.getDimensions().get("cluster");
                 DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));

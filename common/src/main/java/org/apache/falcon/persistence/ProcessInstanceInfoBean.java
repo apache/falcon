@@ -60,6 +60,7 @@ public class ProcessInstanceInfoBean {
         this.pipeline = pipeline;
     }
 
+    @NotNull
     @Column(name = "pipeline")
     private String pipeline;
 
