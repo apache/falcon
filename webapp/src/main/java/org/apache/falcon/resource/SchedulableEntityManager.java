@@ -168,8 +168,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @GET
     @Path("sla-alert/{type}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Monitored(event = "feed-sla-misses")
-    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(
+    @Monitored(event = "entity-sla-misses")
+    public SchedulableEntityInstanceResult getEntitySLAMissPendingAlerts(
             @Dimension("entityType") @PathParam("type") String entityType,
             @Dimension("entityName") @QueryParam("name") String entityName,
             @Dimension("start") @QueryParam("start") String start,
@@ -177,7 +177,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @Dimension("colo") @QueryParam("colo") final String colo) {
         try {
             validateSlaParams(entityType, entityName, start, end, colo);
-            return super.getFeedSLAMissPendingAlerts(entityName, start, end, colo);
+            return super.getEntitySLAMissPendingAlerts(entityName, entityType, start, end, colo);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e);
         }

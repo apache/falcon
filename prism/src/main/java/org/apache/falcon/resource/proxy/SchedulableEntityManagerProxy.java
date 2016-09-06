@@ -113,8 +113,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @GET
     @Path("sla-alert/{type}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Monitored(event = "feed-sla-misses")
-    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(
+    @Monitored(event = "entity-sla-misses")
+    public SchedulableEntityInstanceResult getEntitySLAMissPendingAlerts(
             @Dimension("entityType") @PathParam("type") final String entityType,
             @Dimension("entityName") @QueryParam("name") final String entityName,
             @Dimension("start") @QueryParam("start") final String start,

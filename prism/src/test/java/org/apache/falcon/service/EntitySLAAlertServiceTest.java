@@ -105,7 +105,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    @Test(expectedExceptions = javax.persistence.NoResultException.class)
     public static void processSLALowCandidates() throws FalconException, InterruptedException{
 
         Date dateOne =  new Date(System.currentTimeMillis()-100000);
@@ -141,7 +141,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
                 dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
     }
 
-    @Test
+    @Test(expectedExceptions = javax.persistence.NoResultException.class)
     public static void processSLACandidateProcess() throws FalconException, InterruptedException{
         Date dateOne =  new Date(System.currentTimeMillis()-130000);
 

@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.persistence;
 
-import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
 
 import javax.persistence.Entity;
@@ -64,9 +63,9 @@ public class MonitoredEntityBean {
         return entityType;
     }
 
-    public void setEntityType(String entityType) throws FalconException {
-        checkEntityType(entityType);
-        this.entityType = entityType;
+    public void setEntityType(String entityType) {
+        EntityType.assertSchedulable(entityType);
+        this.entityType = entityType.toLowerCase();
     }
 
     @Basic
@@ -94,12 +93,4 @@ public class MonitoredEntityBean {
 
     public static final String ENTITYTYPE = "entityType";
 
-    void checkEntityType(String entityType)throws FalconException {
-        if (entityType.equals(EntityType.PROCESS.toString()) || entityType.equals(EntityType.FEED.toString())){
-            return;
-        } else {
-            throw new FalconException("EntityType"+ entityType
-                    + " is not valid,Feed and Process are the valid input type.");
-        }
-    }
 }
