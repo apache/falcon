@@ -34,7 +34,8 @@ public class InstancesResult extends APIResult {
      * Workflow status as being set in result object.
      */
     public static enum WorkflowStatus {
-        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR, SKIPPED, UNDEFINED, READY, KILLED_OR_IGNORED
+        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR, SKIPPED, UNDEFINED, READY, KILLED_OR_IGNORED,
+        TIMEDOUT
     }
 
     /**
