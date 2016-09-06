@@ -20,7 +20,6 @@ package org.apache.falcon.plugin;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.aspect.ResourceMessage;
 import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.jdbc.MonitoringJdbcStateStore;
@@ -48,20 +47,26 @@ public class ProcessExecutionStatsPlugin implements MonitoringPlugin {
             if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())
                     && ConfigurationStore.get().get(EntityType.PROCESS, entityName) != null) {
                 Process process = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
-                String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
+                String pipelines =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines()
+                        : "__untagged";
                 String cluster =  message.getDimensions().get("cluster");
                 DateTime nominalTime = new DateTime(message.getDimensions().get("nominal-time"));
                 DateTime startTime = new DateTime(message.getDimensions().get("start-time"));
                 Long startDelay = (long) Seconds.secondsBetween(nominalTime, startTime).getSeconds();
                 Long timeTaken =  message.getExecutionTime() / 1000000000;
 
-                if ((message.getAction().equals("wf-instance-succeeded"))) {
-                    MONITORING_JDBC_STATE_STORE.putProcessInstance(entityName, cluster, nominalTime.getMillis(),
-                            startDelay, timeTaken, pipeline, "succeeded");
-                }
-                if (message.getAction().equals("wf-instance-failed")){
-                    MONITORING_JDBC_STATE_STORE.putProcessInstance(entityName, cluster, nominalTime.getMillis(),
-                            startDelay, timeTaken, pipeline, "failed");
+                String [] pipelineNames = pipelines.split(",");
+
+                for(String name : pipelineNames){
+
+                    if ((message.getAction().equals("wf-instance-succeeded"))) {
+                        MONITORING_JDBC_STATE_STORE.putProcessInstance(entityName, cluster, nominalTime.getMillis(),
+                                startDelay, timeTaken, name, "succeeded");
+                    }
+                    if (message.getAction().equals("wf-instance-failed")){
+                        MONITORING_JDBC_STATE_STORE.putProcessInstance(entityName, cluster, nominalTime.getMillis(),
+                                startDelay, timeTaken, name, "failed");
+                    }
                 }
             }
         } catch (Exception e) {
