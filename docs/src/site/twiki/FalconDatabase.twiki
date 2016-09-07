@@ -8,7 +8,7 @@ Falcon Server needs to maintain state of the entities and instances in a persist
 *.falcon.statestore.jdbc.driver=org.apache.derby.jdbc.EmbeddedDriver
 *.falcon.statestore.jdbc.url=jdbc:derby:data/falcon.db
 # StateStore credentials file where username,password and other properties can be stored securely.
-# Set this credentials file permission 400 and make sure user who starts falcon should only have read permission.
+# Set this credentials file permission 400 ;the user who starts falcon should only have read permission.
 # Give Absolute path to credentials file along with file name or put in classpath with file name statestore.credentials.
 # Credentials file should be present either in given location or class path, otherwise falcon won't start.
 *.falcon.statestore.credentials.file=
@@ -23,8 +23,8 @@ Falcon Server needs to maintain state of the entities and instances in a persist
 ## The number of objects to examine during each run of the idle object evictor thread.
 *.falcon.statestore.validate.db.connection.eviction.num=10
 ## Creates Falcon DB.
-## If set to true, it creates the DB schema if it does not exist. If the DB schema exists is a NOP.
-## If set to false, it does not create the DB schema. If the DB schema does not exist it fails start up.
+## If set to true, Falcon creates the DB schema if it does not exist. If the DB schema exists is a NOP.
+## If set to false, Falcon does not create the DB schema. If the DB schema does not exist it fails start up.
 *.falcon.statestore.create.db.schema=true
 </verbatim>
 
