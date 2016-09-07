@@ -1,6 +1,6 @@
 ---+Back Log Emitter Service
 
-Back Log Emitter Service periodically calculates the process backlog and send data to graphite.
+Back Log Emitter service keeps track of all the process which have missed an SLA for a particular time and calculates backlog.Once a notification comes that process has completed, it updates the backlog.This service keeps on sending data to Graphite for each process which is missing SLA.
 
 The emission and calculation of backlog are controlled by the below properties in startup.properties :
 
@@ -17,11 +17,10 @@ Back Log Emitter Service is a listener to :
    1. !WorkflowExecutionListener
 
 
-EntitySLAListner service notifies !BacklogEmitter whenever a feed misses highSla or process misses its shouldEndIn sla.
+EntitySLAListner service notifies !BacklogEmitter whenever a feed misses slaHigh or process misses its shouldEndIn sla.
 
 !WorkflowExecutionListener notifies !BacklogEmitter service whenever a process get completed.
 
-Back Log Emitter service keep track of all the process which have missed an SLA for a particular time and calculates backlog.Once a notification comes that process has completed it updates the backlog.This service keeps on sending data to Graphite for each process which is missing SLA.
 
 *Back Log Calculation:*
 
