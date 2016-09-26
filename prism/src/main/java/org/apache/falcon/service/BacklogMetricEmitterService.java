@@ -145,7 +145,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                 List<MetricInfo> metricsInDB = entry.getValue();
                 List<MetricInfo> metricInfoList = Collections.synchronizedList(metricsInDB);
                 entityBacklogs.put(entry.getKey(), metricInfoList);
-                LOG.debug("Backlog of entity " + entry.getKey().getName() + " for instances " + metricInfoList);
+                LOG.debug("Initializing backlog for entity " + entry.getKey().getName());
             }
         }
     }
@@ -204,7 +204,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            LOG.debug("BacklogMetricEmitter running for entities");
+            LOG.trace("BacklogMetricEmitter running for entities");
             executor = new ScheduledThreadPoolExecutor(10);
             List<Future> futures = new ArrayList<>();
             try {
@@ -302,7 +302,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            LOG.debug("BacklogCheckService running for entities");
+            LOG.trace("BacklogCheckService running for entities");
             try {
                 AbstractWorkflowEngine wfEngine = getWorkflowEngine();
                 for (Entity entity : entityBacklogs.keySet()) {
@@ -334,7 +334,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
-                                        LOG.debug("Instance of nominaltime {} of entity {} was succeeded, removing "
+                                        LOG.debug("Instance of nominaltime {} of entity {} has succeeded, removing "
                                                 + "from backlog entries", nominalTimeStr, entity.getName());
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
