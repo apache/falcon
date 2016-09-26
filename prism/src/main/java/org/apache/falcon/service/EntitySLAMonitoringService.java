@@ -399,7 +399,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                                 currentCluster.getName()).getEnd();
                     }
                     while (nextInstanceTime.before(to) && nextInstanceTime.before(endDate)) {
-                        LOG.debug("Adding pending instance={} for <entity,cluster>={}; entityType={}",
+                        LOG.trace("Adding pending instance={} for <entity,cluster>={}; entityType={}",
                                 nextInstanceTime, key, entityType);
                         instances.add(nextInstanceTime);
                         nextInstanceTime = new Date(nextInstanceTime.getTime() + ONE_MS);
