@@ -59,7 +59,7 @@ import static org.apache.falcon.workflow.WorkflowEngineFactory.getWorkflowEngine
  * Backlog Metric Emitter Service to publish metrics to Graphite.
  */
 public final class BacklogMetricEmitterService implements FalconService,
-        EntitySLAListener, WorkflowExecutionListener {
+        EntitySLAListener, WorkflowExecutionListener, ConfigurationChangeListener {
 
     private static final String METRIC_PREFIX = "falcon";
     private static final String METRIC_SEPARATOR = ".";
@@ -99,6 +99,41 @@ public final class BacklogMetricEmitterService implements FalconService,
 
     private static ConcurrentHashMap<Entity, List<MetricInfo>> entityBacklogs = new ConcurrentHashMap<>();
 
+    @Override
+    public void onAdd(Entity entity) throws FalconException{
+        //DO Nothing
+    }
+
+    @Override
+    public void onRemove(Entity entity) throws FalconException{
+        if (entity.getEntityType() != EntityType.PROCESS){
+            return;
+        }
+        synchronized (this){
+            backlogMetricStore.deleteEntityInstance(entity.getName());
+            entityBacklogs.remove(entity);
+        }
+    }
+
+    @Override
+    public void onChange(Entity oldEntity, Entity newEntity) throws FalconException{
+        if (oldEntity.getEntityType() != EntityType.PROCESS){
+            return;
+        }
+        Process newProcess = (Process) newEntity;
+        if (newProcess.getSla() == null || newProcess.getSla().getShouldEndIn() == null){
+            synchronized (this){
+                backlogMetricStore.deleteEntityInstance(newProcess.getName());
+                entityBacklogs.remove(newProcess);
+            }
+        }
+    }
+
+    @Override
+    public void onReload(Entity entity) throws FalconException{
+        // Do Nothing
+    }
+    
     @Override
     public void highSLAMissed(String entityName, String clusterName, EntityType entityType, Date nominalTime)
         throws FalconException {
