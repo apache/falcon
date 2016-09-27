@@ -76,8 +76,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         String processInstanceName = getProcessInstanceName(context);
         LOG.info("Adding process instance: {}", processInstanceName);
 
-        Vertex processInstance = addVertex(processInstanceName,
-                RelationshipType.PROCESS_INSTANCE, context.getTimeStampAsLong());
+        Vertex processInstance = addVertex(processInstanceName, RelationshipType.PROCESS_INSTANCE,
+                context.hasTimeStamp() ? context.getTimeStampAsLong() : null);
         addWorkflowInstanceProperties(processInstance, context);
 
         Map<RelationshipProperty, String> properties = edgePropertiesForIndexing(context);
@@ -123,8 +123,10 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             addProperty(processInstance, context, instanceWorkflowProperty);
         }
 
-        processInstance.setProperty(RelationshipProperty.VERSION.getName(),
-                context.getUserWorkflowVersion());
+        if (context.getUserWorkflowVersion() != null) {
+            processInstance.setProperty(RelationshipProperty.VERSION.getName(),
+                    context.getUserWorkflowVersion());
+        }
     }
 
     private void addProperty(Vertex vertex, WorkflowExecutionContext context,
@@ -169,7 +171,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addOutputFeedInstances(WorkflowExecutionContext context,
                                        Vertex processInstance) throws FalconException {
         String outputFeedNamesArg = context.getOutputFeedNames();
-        if (NONE.equals(outputFeedNamesArg) || IGNORE.equals(outputFeedNamesArg)) {
+        if (outputFeedNamesArg == null || NONE.equals(outputFeedNamesArg) || IGNORE.equals(outputFeedNamesArg)) {
             return; // there are no output feeds for this process
         }
 
@@ -187,7 +189,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addInputFeedInstances(WorkflowExecutionContext context,
                                       Vertex processInstance) throws FalconException {
         String inputFeedNamesArg = context.getInputFeedNames();
-        if (NONE.equals(inputFeedNamesArg) || IGNORE.equals(inputFeedNamesArg)) {
+        if (inputFeedNamesArg == null || NONE.equals(inputFeedNamesArg) || IGNORE.equals(inputFeedNamesArg)) {
             return; // there are no input feeds for this process
         }
 
@@ -311,7 +313,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                                    String clusterName, boolean hasEdgeProperties) throws FalconException {
         LOG.info("Adding feed instance {}", feedInstanceName);
         Vertex feedInstance = addVertex(feedInstanceName, RelationshipType.FEED_INSTANCE,
-                context.getTimeStampAsLong());
+                context.hasTimeStamp() ? context.getTimeStampAsLong() : null);
         feedInstance.setProperty(RelationshipProperty.STATUS.getName(), context.getValue(WorkflowExecutionArgs.STATUS));
 
         if (hasEdgeProperties) {

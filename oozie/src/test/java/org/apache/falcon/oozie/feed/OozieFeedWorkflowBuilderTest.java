@@ -189,6 +189,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertLibExtensions(coord, "retention");
         HashMap<String, String> props = getCoordProperties(coord);
         Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
+        Assert.assertEquals(props.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(17)}");
         Assert.assertEquals(coord.getEnd(), endTime);
         Assert.assertEquals(coord.getTimezone(), "UTC");
@@ -197,7 +198,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(wfProps.get("feedNames"), lifecycleRetentionFeed.getName());
         Assert.assertTrue(StringUtils.equals(wfProps.get("entityType"), EntityType.FEED.name()));
         Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
-        Assert.assertEquals(wfProps.get("queueName"), "retention");
+        Assert.assertEquals(wfProps.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
     }
@@ -267,23 +268,20 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     @Test
     public void testPostProcessing() throws Exception{
         StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
-        OozieEntityBuilder builder = OozieEntityBuilder.get(feed);
+        OozieEntityBuilder builder = OozieEntityBuilder.get(fsReplFeed);
         Path bundlePath = new Path("/projects/falcon/");
-        builder.build(trgCluster, bundlePath);
+        builder.build(alphaTrgCluster, bundlePath);
         BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
         List<COORDINATOR> coords = bundle.getCoordinator();
-        COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
-
-        WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
 
         Boolean foundUserAction = false;
         Boolean foundPostProcessing = false;
         Iterator<COORDINATOR> coordIterator = coords.iterator();
 
         while(coordIterator.hasNext()){
-            COORDINATORAPP coord1 = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
-            WORKFLOWAPP workflow1 = getWorkflowapp(trgMiniDFS.getFileSystem(), coord1);
-            Iterator<Object> workflowIterator = workflow1.getDecisionOrForkOrJoin().iterator();
+            COORDINATORAPP coord = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
+            WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
+            Iterator<Object> workflowIterator = workflow.getDecisionOrForkOrJoin().iterator();
             while (workflowIterator.hasNext()){
                 Object object = workflowIterator.next();
                 if (ACTION.class.isAssignableFrom(object.getClass())){

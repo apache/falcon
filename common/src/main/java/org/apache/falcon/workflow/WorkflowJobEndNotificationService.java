@@ -139,6 +139,9 @@ public class WorkflowJobEndNotificationService implements FalconService {
 
     public void notifyWait(WorkflowExecutionContext context) throws FalconException {
         // Wait notifications can only be from Oozie JMS notifications
+        if (!updateContextFromWFConf(context)) {
+            return;
+        }
         LOG.debug("Sending workflow wait notification to listeners with context : {} ", context);
         for (WorkflowExecutionListener listener : listeners) {
             try {

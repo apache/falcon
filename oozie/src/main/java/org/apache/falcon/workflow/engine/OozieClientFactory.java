@@ -47,7 +47,7 @@ public final class OozieClientFactory {
 
         assert cluster != null : "Cluster cant be null";
         String oozieUrl = ClusterHelper.getOozieUrl(cluster);
-        LOG.info("Creating Oozie client object for {}", oozieUrl);
+        LOG.trace("Creating Oozie client object for {}", oozieUrl);
         return getClientRef(oozieUrl);
     }
 

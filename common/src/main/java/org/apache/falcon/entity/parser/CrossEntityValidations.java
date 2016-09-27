@@ -44,6 +44,7 @@ public final class CrossEntityValidations {
         try {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
+                validateFeedDefinedForCluster(feed, clusterName);
                 org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
                         clusterName).getValidity();
 
@@ -110,6 +111,7 @@ public final class CrossEntityValidations {
         try {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
+                validateFeedDefinedForCluster(feed, clusterName);
                 org.apache.falcon.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed,
                         clusterName).getValidity();
                 Date feedStart = feedValidity.getStart();

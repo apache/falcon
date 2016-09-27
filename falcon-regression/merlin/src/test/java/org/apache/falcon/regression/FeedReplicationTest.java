@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.regression.core.util.AssertUtil;
@@ -176,8 +177,10 @@ public class FeedReplicationTest extends BaseTestClass {
         //_SUCCESS should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
 
-        AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
-            cluster2FS, "feed", "Success logs are not present");
+        if (!MerlinConstants.IS_SECURE){
+            AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                    cluster2FS, "feed", "Success logs are not present");
+        }
 
         ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
         AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, dataFlag);
@@ -280,8 +283,10 @@ public class FeedReplicationTest extends BaseTestClass {
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, ""), true);
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster3FS, toTarget, ""), true);
 
-        AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
-            cluster2FS, "feed", "Success logs are not present");
+        if (!MerlinConstants.IS_SECURE){
+            AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                    cluster2FS, "feed", "Success logs are not present");
+        }
 
         ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
         AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, dataFlag);
@@ -390,8 +395,10 @@ public class FeedReplicationTest extends BaseTestClass {
         //availabilityFlag should exist in target
         Assert.assertEquals(HadoopUtil.getSuccessFolder(cluster2FS, toTarget, availabilityFlagName), true);
 
-        AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
-            cluster2FS, "feed", "Success logs are not present");
+        if (!MerlinConstants.IS_SECURE){
+            AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                    cluster2FS, "feed", "Success logs are not present");
+        }
 
         ExecResult execResult = cluster1.getFeedHelper().getCLIMetrics(feed.getName());
         AssertUtil.assertCLIMetrics(execResult, feed.getName(), 1, dataFlag);
@@ -563,8 +570,11 @@ public class FeedReplicationTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(cluster2OC, feed.getName(), 1,
                 CoordinatorAction.Status.KILLED, EntityType.FEED);
 
-        AssertUtil.assertLogMoverPath(false, Util.readEntityName(feed.toString()),
-                cluster2FS, "feed", "Success logs are not present");
+        if (!MerlinConstants.IS_SECURE){
+            AssertUtil.assertLogMoverPath(true, Util.readEntityName(feed.toString()),
+                    cluster2FS, "feed", "Success logs are not present");
+        }
+
     }
 
     /* Flag value denotes whether to add data for replication or not.

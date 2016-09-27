@@ -79,7 +79,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         //Add pre-processing action
         if (shouldPreProcess()) {
             ACTION preProcessAction = getPreProcessingAction(isTableStorageType, Tag.DEFAULT);
-            addTransition(preProcessAction, USER_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            addTransition(preProcessAction, USER_ACTION_NAME, getFailAction());
             wfApp.getDecisionOrForkOrJoin().add(preProcessAction);
             startAction = PREPROCESS_ACTION_NAME;
         }

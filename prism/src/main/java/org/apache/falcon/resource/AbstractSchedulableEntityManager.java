@@ -111,16 +111,27 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         }
     }
 
+    /**
+     * Validates the parameters whether SLA is supported or not.
+     *
+     * @param entityType currently two entityTypes are supported Process and Feed
+     * @param entityName name of the entity
+     * @param start startDate from which SLA is to be looked at
+     * @param end endDate upto which SLA is to be looked at.
+     * @param colo colo in which entity is to be looked into
+     * @throws FalconException if the validation fails
+     * **/
+
     public static void validateSlaParams(String entityType, String entityName, String start, String end,
                                          String colo) throws FalconException {
         EntityType type = EntityType.getEnum(entityType);
-        if (type != EntityType.FEED) {
+        if (!type.isSchedulable()){
             throw new ValidationException("SLA monitoring is not supported for: " + type);
         }
 
-        // validate valid feed name.
+        // validate valid entity name.
         if (StringUtils.isNotBlank(entityName)) {
-            EntityUtil.getEntity(EntityType.FEED, entityName);
+            EntityUtil.getEntity(entityType, entityName);
         }
 
         Date startTime, endTime;
@@ -146,14 +157,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
     }
 
     /**
-     * Returns the feed instances which are not yet available and have missed either slaLow or slaHigh.
-     * This api doesn't return the feeds which missed SLA but are now available. Purpose of this api is to show feed
-     * instances which you need to attend to.
+     * Returns the entity instances which are not yet available and have missed either slaLow or slaHigh.
+     * This api doesn't return the entitites which missed SLA but are now available. Purpose of this api is to
+     * show entity instances which you need to attend to.
      * @param startStr startTime in
      * @param endStr
      */
-    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(String feedName, String startStr, String endStr,
-                                                                       String colo) {
+    public SchedulableEntityInstanceResult getEntitySLAMissPendingAlerts(String entityName, String entityType,
+                                                                         String startStr, String endStr, String colo) {
 
         Set<SchedulableEntityInstance> instances = new HashSet<>();
         try {
@@ -161,12 +172,12 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             Date start = EntityUtil.parseDateUTC(startStr);
             Date end = (endStr == null) ? new Date() : EntityUtil.parseDateUTC(endStr);
 
-            if (StringUtils.isBlank(feedName)) {
+            if (StringUtils.isBlank(entityName)) {
                 instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(start, end));
             } else {
                 for (String clusterName : DeploymentUtil.getCurrentClusters()) {
-                    instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(feedName,
-                            clusterName, start, end, EntityType.FEED.toString()));
+                    instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(entityName,
+                            clusterName, start, end, entityType));
                 }
             }
         } catch (FalconException e) {
