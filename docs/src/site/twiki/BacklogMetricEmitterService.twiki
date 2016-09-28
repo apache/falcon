@@ -45,7 +45,7 @@ Following services and listeners should be enabled for Backlog Emitter Service i
 *.configstore.listeners=org.apache.falcon.service.BacklogMetricEmitterService
 </verbatim>
 
-Note: MetricNoticationService should be started before org.apache.falcon.entity.store.ConfigurationStore as BacklogEmitterService is listner to this service and it depends upon MetricNotificationService.
+Note: MetricNoticationService should be started before org.apache.falcon.entity.store.ConfigurationStore as BacklogEmitterService is listener to this service and it depends upon MetricNotificationService.
 
 
 

@@ -109,7 +109,7 @@ public final class BacklogMetricEmitterService implements FalconService,
         if (entity.getEntityType() != EntityType.PROCESS){
             return;
         }
-        synchronized (this){
+        synchronized (entityBacklogs){
             backlogMetricStore.deleteEntityInstance(entity.getName());
             entityBacklogs.remove(entity);
         }
@@ -122,7 +122,7 @@ public final class BacklogMetricEmitterService implements FalconService,
         }
         Process newProcess = (Process) newEntity;
         if (newProcess.getSla() == null || newProcess.getSla().getShouldEndIn() == null){
-            synchronized (this){
+            synchronized (entityBacklogs){
                 backlogMetricStore.deleteEntityInstance(newProcess.getName());
                 entityBacklogs.remove(newProcess);
             }

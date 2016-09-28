@@ -39,7 +39,8 @@ import java.util.Date;
 @NamedQueries({
         @NamedQuery(name = PersistenceConstants.GET_ALL_BACKLOG_INSTANCES, query = "select  OBJECT(a) from BacklogMetricBean a "),
         @NamedQuery(name = PersistenceConstants.DELETE_BACKLOG_METRIC_INSTANCE, query = "delete from BacklogMetricBean a where a.entityName = :entityName and a.clusterName = :clusterName and a.nominalTime = :nominalTime and a.entityType = :entityType"),
-        @NamedQuery(name=PersistenceConstants.DELETE_ALL_BACKLOG_ENTITY_INTANCES, query = "delete from BacklogMetricBean a where a.entityName = :entityName")
+
+        @NamedQuery(name = PersistenceConstants.DELETE_ALL_BACKLOG_ENTITY_INSTANCES, query = "delete from BacklogMetricBean a where a.entityName = :entityName")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 
