@@ -823,7 +823,7 @@ Extensions is detailed in [[Extensions][Extensions]].
 
 ---++ Monitoring
 
-Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]] and [[FeedSLAMonitoring][Falcon Feed SLA Monitoring]].
+Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]] and [[EntitySLAMonitoring][Falcon Entity SLA Monitoring]].
 
 ---++ Email Notification
 Notification for instance completion in Falcon is defined in [[FalconEmailNotification][Falcon Email Notification]].

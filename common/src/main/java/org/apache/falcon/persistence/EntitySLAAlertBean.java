@@ -35,7 +35,7 @@ import javax.validation.constraints.NotNull;
 
 //SUSPEND CHECKSTYLE CHECK LineLengthCheck
 /**
- * Feed SLA monitoring.
+ * Entity SLA monitoring.
  * */
 @Entity
 @NamedQueries({
