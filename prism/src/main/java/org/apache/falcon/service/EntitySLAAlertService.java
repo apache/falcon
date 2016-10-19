@@ -148,8 +148,8 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                     }
                     store.updateSLAAlertInstance(entityName, clusterName, nominalTime, entityType);
                     LOG.info("Entity :{} EntityType : {} Cluster: {} Nominal Time: {} missed SLAHigh", entityName,
-                            entityType , clusterName , nominalTime);
-                    highSLAMissed(entityName, clusterName, EntityType.valueOf(entityType), nominalTime);
+                            entityType, clusterName , nominalTime);
+                    highSLAMissed(entityName, clusterName, EntityType.getEnum(entityType), nominalTime);
                 }
             }
         } catch (FalconException e){
