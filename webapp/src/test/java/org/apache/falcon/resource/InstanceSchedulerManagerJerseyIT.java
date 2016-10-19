@@ -87,7 +87,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         Assert.assertEquals(status, InstancesResult.WorkflowStatus.KILLED);
 
         result = falconUnitClient.rerunInstances(EntityType.PROCESS.toString(),
-                processName, START_INSTANCE, END_TIME, colo, null, null, null, null, true, null);
+                processName, START_INSTANCE, END_TIME, colo, null, null, null, null, true, null, null);
         assertStatus(result);
 
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE,

@@ -191,7 +191,7 @@ public class ProcessInstanceManagerIT extends AbstractSchedulerManagerJerseyIT {
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
         context.getClient().rerunInstances(EntityType.PROCESS.name(), context.processName,
-                START_INSTANCE, endTime, null, context.colo, null, null, null, true, null);
+                START_INSTANCE, endTime, null, context.colo, null, null, null, true, null, null);
         waitForStatus(EntityType.PROCESS.name(), context.processName, START_INSTANCE, WorkflowStatus.RUNNING);
 
         response = context.getClient().getStatusOfInstances(EntityType.PROCESS.name(),

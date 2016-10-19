@@ -31,6 +31,7 @@ import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -278,10 +279,19 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.KILLED);
 
         getClient().rerunInstances(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, END_TIME, null, null,
-                CLUSTER_NAME, null, null, true, null);
+                CLUSTER_NAME, null, null, true, null, "testRerunLib");
         waitForStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME, InstancesResult.WorkflowStatus.RUNNING);
-        currentStatus = getClient().getInstanceStatus(EntityType.PROCESS.name(), PROCESS_NAME, SCHEDULE_TIME);
-        Assert.assertEquals(currentStatus, InstancesResult.WorkflowStatus.RUNNING);
+        InstancesResult params = getClient().getParamsOfInstance(EntityType.PROCESS.name(), PROCESS_NAME,
+                SCHEDULE_TIME, null, null, null);
+        Assert.assertEquals(params.getInstances()[0].getStatus(), InstancesResult.WorkflowStatus.RUNNING);
+        String actualLib = null;
+        for (InstancesResult.KeyValuePair property : params.getInstances()[0].getWfParams()) {
+            if (property.getKey().equals(OozieClient.LIBPATH)) {
+                actualLib = property.getValue();
+                break;
+            }
+        }
+        Assert.assertEquals(actualLib, "testRerunLib");
     }
 
     @Test

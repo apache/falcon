@@ -520,6 +520,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
      * @param lifeCycles <optional param> can be Eviction/Replication(default) for feed and Execution(default) for
      *                   process.
      * @param isForced <optional param> can be used to forcefully rerun the entire instance.
+     * @param lib <optional param> can be used to pass specific lib paths to rerun the instance.
      * @return Results of the rerun command.
      */
     @POST
@@ -535,14 +536,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Context HttpServletRequest request,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
-            @Dimension("force") @QueryParam("force") final Boolean isForced) {
+            @Dimension("force") @QueryParam("force") final Boolean isForced,
+            @Dimension("lib") @QueryParam("lib") final String lib) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("reRunInstance",
-                        type, entity, startStr, endStr, bufferedRequest, colo, lifeCycles, isForced);
+                        type, entity, startStr, endStr, bufferedRequest, colo, lifeCycles, isForced, lib);
             }
         }.execute(colo, type, entity);
     }

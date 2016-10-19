@@ -126,9 +126,11 @@ public final class FalconCLIConstants {
             + " process in the range start time and optional end time";
     public static final String RERUN_OPT_DESCRIPTION = "Reruns process instances for a given process in the"
             + " range start time and optional end time and overrides properties present in job.properties file";
+    public static final String LIB_OPT_DESCRIPTION = "List of comma separated lib paths to be used for the rerun "
+            + "of the given instances";
     public static final String LOG_OPT_DESCRIPTION = "Logs print the logs for process instances for a given"
             + " process in the range start time and optional end time";
-    public static final String PARARMS_OPT_DESCRIPTION = "Displays the workflow parameters for a given instance"
+    public static final String PARAMS_OPT_DESCRIPTION = "Displays the workflow parameters for a given instance"
             + " of specified nominal time start time represents nominal time and end time is not considered";
     public static final String LISTING_OPT_DESCRIPTION = "Displays feed listing and their status between a"
             + " start and end time range.";
@@ -145,7 +147,7 @@ public final class FalconCLIConstants {
             + "runid, defaults to 0";
     public static final String CLUSTERS_OPT_DESCRIPTION = "clusters is optional for commands kill, suspend and "
             + "resume, should not be specified for other commands";
-    public static final String SOURCECLUSTER_OPT_DESCRIPTION = " source cluster is optional for commands kill, "
+    public static final String SOURCE_CLUSTER_OPT_DESCRIPTION = " source cluster is optional for commands kill, "
             + "suspend and resume, should not be specified for other commands (required for only feed)";
     public static final String FILE_PATH_OPT_DESCRIPTION = "Path to job.properties file is required for rerun "
             + "command, it should contain name=value pair for properties to override for rerun";
@@ -168,9 +170,10 @@ public final class FalconCLIConstants {
     public static final String RUNNING_OPT = "running";
     public static final String KILL_OPT = "kill";
     public static final String RERUN_OPT = "rerun";
+    public static final String LIB_OPT = "lib";
     public static final String LOG_OPT = "logs";
     public static final String CLUSTERS_OPT = "clusters";
-    public static final String SOURCECLUSTER_OPT = "sourceClusters";
+    public static final String SOURCE_CLUSTER_OPT = "sourceClusters";
     public static final String LIFECYCLE_OPT = "lifecycle";
     public static final String PARARMS_OPT = "params";
     public static final String LISTING_OPT = "listing";
