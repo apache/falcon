@@ -52,6 +52,7 @@ import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+import org.apache.oozie.client.OozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -908,15 +909,18 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     public InstancesResult reRunInstance(String type, String entity, String startStr, String endStr,
                                          HttpServletRequest request, String colo, List<LifeCycle> lifeCycles,
-                                         Boolean isForced) {
+                                         Boolean isForced, String lib) {
         Properties props = getProperties(request);
-        return reRunInstance(type, entity, startStr, endStr, props, colo, lifeCycles, isForced);
+        return reRunInstance(type, entity, startStr, endStr, props, colo, lifeCycles, isForced, lib);
     }
 
     public InstancesResult reRunInstance(String type, String entity, String startStr, String endStr, Properties props,
-                                         String colo, List<LifeCycle> lifeCycles, Boolean isForced) {
+                                         String colo, List<LifeCycle> lifeCycles, Boolean isForced, String lib) {
         checkColo(colo);
         checkType(type);
+        if (StringUtils.isNotBlank(lib)) {
+            props.put(OozieClient.LIBPATH, lib);
+        }
         if (StartupProperties.isServerInSafeMode()) {
             throwSafemodeException("RERUN");
         }

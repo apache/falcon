@@ -52,8 +52,8 @@ public class LocalInstanceManager extends AbstractInstanceManager {
 
     public InstancesResult reRunInstance(String type, String entity, String startStr, String endStr,
                                          Properties properties, String colo, List<LifeCycle> lifeCycles,
-                                         Boolean isForced) {
-        return super.reRunInstance(type, entity, startStr, endStr, properties, colo, lifeCycles, isForced);
+                                         Boolean isForced, String lib) {
+        return super.reRunInstance(type, entity, startStr, endStr, properties, colo, lifeCycles, isForced, lib);
     }
 
     public InstancesResult getStatusOfInstances(String type, String entity, String start, String end,

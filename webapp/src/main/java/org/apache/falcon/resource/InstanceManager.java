@@ -299,9 +299,10 @@ public class InstanceManager extends AbstractInstanceManager {
             @Context HttpServletRequest request,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles,
-            @Dimension("force") @QueryParam("force") Boolean isForced) {
+            @Dimension("force") @QueryParam("force") Boolean isForced,
+            @Dimension("lib") @QueryParam("lib") String lib) {
         try {
-            return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles, isForced);
+            return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles, isForced, lib);
         } catch (Throwable throwable) {
             throw FalconWebException.newAPIException(throwable);
         }

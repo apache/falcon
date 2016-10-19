@@ -311,10 +311,10 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     public InstancesResult rerunInstances(String type, String entity, String start, String end, String filePath,
                                           String colo, String clusters, String sourceClusters,
-                                          List<LifeCycle> lifeCycles, Boolean isForced, String doAsUser) throws
-            IOException {
+                                          List<LifeCycle> lifeCycles, Boolean isForced, String doAsUser,
+                                          String lib) throws IOException {
         Properties props = getProperties(clusters, sourceClusters);
-        return localInstanceManager.reRunInstance(type, entity, start, end, props, colo, lifeCycles, isForced);
+        return localInstanceManager.reRunInstance(type, entity, start, end, props, colo, lifeCycles, isForced, lib);
     }
 
     public InstancesSummaryResult getSummaryOfInstances(String type, String entity, String start, String end,
