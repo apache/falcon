@@ -228,6 +228,8 @@ Users may also extend the Falcon Audit plugin to send audits to systems like Apa
 extending org.apache.falcon.plugin.AuditingPlugin interface.
 
 
----++ Metrics Collection In Graphite
+---++ Metrics Collection In Graphite and Database
 
-Falcon has support to send metrics to graphite more details regarding this can be found on [[GraphiteMetricCollection][Graphite Metric Collection]]
+Falcon has support to send process metrics like waiting time ,exection time and number of failures to graphite and falcon db.
+
+For details go through [[MetricCollection][Metric Collection]]
