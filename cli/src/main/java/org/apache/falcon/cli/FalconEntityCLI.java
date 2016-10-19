@@ -306,10 +306,6 @@ public class FalconEntityCLI extends FalconCLI {
             validateNotEmpty(filePath, FILE_PATH_OPT);
             validateColo(optionsList);
             result = client.validate(entityType, filePath, skipDryRun, doAsUser).getMessage();
-        } else if (optionsList.contains(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT)) {
-            validateNotEmpty(filePath, "file");
-            validateColo(optionsList);
-            result = client.submitAndSchedule(entityType, filePath, skipDryRun, doAsUser, userProps).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
             validateNotEmpty(entityName, FalconCLIConstants.ENTITY_NAME_OPT);
             colo = getColo(colo);
