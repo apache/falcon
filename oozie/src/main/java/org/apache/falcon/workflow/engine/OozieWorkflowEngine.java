@@ -371,7 +371,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                         //Load bundle as coord info is not returned in getBundleJobsInfo()
                         BundleJob bundle = getBundleInfo(clusterName, job.getId());
                         filteredJobs.add(bundle);
-                        LOG.debug("Found bundle {} with app path {} and status {}",
+                        LOG.trace("Found bundle {} with app path {} and status {}",
                                 job.getId(), job.getAppPath(), job.getStatus());
                     }
                 }

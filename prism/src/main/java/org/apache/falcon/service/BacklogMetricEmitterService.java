@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.EntityUtil;
@@ -204,7 +205,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            LOG.debug("BacklogMetricEmitter running for entities");
+            LOG.debug("Starting periodic check for backlog");
             executor = new ScheduledThreadPoolExecutor(10);
             List<Future> futures = new ArrayList<>();
             try {
@@ -316,11 +317,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                 Date nominalTime;
                                 try {
                                     nominalTime = DATE_FORMAT.get().parse(nominalTimeStr);
-                                    if (entity.getACL().getOwner() != null && !entity.getACL().getOwner().isEmpty()) {
-                                        CurrentUser.authenticate(entity.getACL().getOwner());
-                                    } else {
-                                        CurrentUser.authenticate(System.getProperty("user.name"));
-                                    }
+                                    authenticateUser(entity);
                                     if (wfEngine.isMissing(entity)) {
                                         LOG.info("Entity of name {} was deleted so removing instance of "
                                                 + "nominaltime {} ", entity.getName(), nominalTimeStr);
@@ -349,6 +346,16 @@ public final class BacklogMetricEmitterService implements FalconService,
                 }
             } catch (Throwable e) {
                 LOG.error("Error while checking backlog metrics" + e);
+            }
+        }
+    }
+
+    private static void authenticateUser(Entity entity){
+        if (!CurrentUser.isAuthenticated()) {
+            if (StringUtils.isNotBlank(entity.getACL().getOwner())) {
+                CurrentUser.authenticate(entity.getACL().getOwner());
+            } else {
+                CurrentUser.authenticate(System.getProperty("user.name"));
             }
         }
     }

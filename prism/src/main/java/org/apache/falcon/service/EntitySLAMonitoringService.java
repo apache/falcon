@@ -303,14 +303,14 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
 
         freq = StartupProperties.get().getProperty("entity.sla.lookAheadWindow.millis", "900000");
         lookAheadWindowMillis = Integer.parseInt(freq);
-        LOG.debug("No old state exists at: {}, Initializing a clean state.", filePath.toString());
+        LOG.info("Initializing EntitySLAMonitoringService from ", filePath.toString());
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         executor.scheduleWithFixedDelay(new Monitor(), 0, statusCheckFrequencySeconds, TimeUnit.SECONDS);
     }
 
     public void makeFeedInstanceAvailable(String feedName, String clusterName, Date nominalTime)
         throws FalconException {
-        LOG.info("Removing {} feed's instance {} in cluster {} from pendingSLA", feedName,
+        LOG.debug("Removing {} feed's instance {} in cluster {} from pendingSLA", feedName,
                 clusterName, nominalTime);
         List<Date> instances = (MONITORING_JDBC_STATE_STORE.getNominalInstances(feedName, clusterName,
                 EntityType.FEED.toString()));
@@ -369,7 +369,6 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         for(MonitoredEntityBean monitoredEntityBean : entityBeanList) {
             String entityName = monitoredEntityBean.getFeedName();
             Entity entity = EntityUtil.getEntity(entityType, entityName);
-            LOG.debug("entityName:"+ entityName+"entity:"+entity);
             Set<String> clusters =  EntityUtil.getClustersDefined(entity);
             List<org.apache.falcon.entity.v0.cluster.Cluster> cluster = new ArrayList();
             for(String string : clusters){
@@ -391,7 +390,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                     org.apache.falcon.entity.v0.cluster.Cluster currentCluster =
                             EntityUtil.getEntity(EntityType.CLUSTER, entityCluster.getName());
                     nextInstanceTime = EntityUtil.getNextStartTime(entity, currentCluster, nextInstanceTime);
-                    LOG.info("nextInstanceTime:"+ nextInstanceTime + "entityName:"+entityName);
+                    LOG.trace("nextInstanceTime:"+ nextInstanceTime + "entityName:"+entityName);
                     Date endDate;
                     if (entityType.equals(EntityType.FEED.toString())){
                         endDate =  FeedHelper.getClusterValidity((Feed) entity, currentCluster.getName()).getEnd();
@@ -400,7 +399,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                                 currentCluster.getName()).getEnd();
                     }
                     while (nextInstanceTime.before(to) && nextInstanceTime.before(endDate)) {
-                        LOG.info("Adding instance={} for <entity,cluster>={}", nextInstanceTime, key);
+                        LOG.trace("Adding pending instance={} for <entity,cluster>={}; entityType={}",
+                                nextInstanceTime, key, entityType);
                         instances.add(nextInstanceTime);
                         nextInstanceTime = new Date(nextInstanceTime.getTime() + ONE_MS);
                         nextInstanceTime = EntityUtil.getNextStartTime(entity, currentCluster, nextInstanceTime);
@@ -420,7 +420,6 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
      * Checks the availability of all the pendingInstances and removes the ones which have become available.
      */
     private void checkPendingInstanceAvailability(String entityType) throws FalconException {
-        LOG.debug("Size "+MONITORING_JDBC_STATE_STORE.getAllMonitoredEntity().size());
         if (MONITORING_JDBC_STATE_STORE.getAllPendingInstances() == null){
             LOG.info("Returning as size of pending instance is zero");
             return;
@@ -445,26 +444,26 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         authenticateUser(entity);
         try {
             if (entityType.equals(EntityType.PROCESS.toString())){
-                LOG.debug("Checking instance availability status for entity:{}, cluster:{}, "
+                LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
                 AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
                 InstancesResult instancesResult = wfEngine.getStatus(entity, nominalTime, nominalTime, null, null);
                 if (instancesResult.getStatus().equals(APIResult.Status.SUCCEEDED)){
-                    LOG.debug("Entity instance(Process:{}, cluster:{}, instanceTime:{}) is available.",
+                    LOG.trace("Entity instance(Process:{}, cluster:{}, instanceTime:{}) is available.",
                             entity.getName(), clusterName, nominalTime);
                     return true;
                 }
                 return false;
             }
             if (entityType.equals(EntityType.FEED.toString())){
-                LOG.debug("Checking instance availability status for feed:{}, cluster:{}, instanceTime:{}",
+                LOG.trace("Checking instance availability status for feed:{}, cluster:{}, instanceTime:{}",
                         entity.getName(), clusterName, nominalTime);
 
                 FeedInstanceStatus.AvailabilityStatus status = FeedHelper.getFeedInstanceStatus((Feed) entity,
                         clusterName, nominalTime);
                 if (status.equals(FeedInstanceStatus.AvailabilityStatus.AVAILABLE)
                         || status.equals(FeedInstanceStatus.AvailabilityStatus.EMPTY)) {
-                    LOG.debug("Feed instance(feed:{}, cluster:{}, instanceTime:{}) is available.", entity.getName(),
+                    LOG.trace("Feed instance(feed:{}, cluster:{}, instanceTime:{}) is available.", entity.getName(),
                             clusterName, nominalTime);
                     return true;
                 }
