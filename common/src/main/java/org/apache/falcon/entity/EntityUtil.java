@@ -1024,18 +1024,69 @@ public final class EntityUtil {
      */
     public static List<Date> getEntityInstanceTimes(Entity entity, String clusterName, Date startRange, Date endRange) {
         Date start = null;
+        Date end = null;
+
         switch (entity.getEntityType()) {
 
         case FEED:
             Feed feed = (Feed) entity;
-            start = FeedHelper.getCluster(feed, clusterName).getValidity().getStart();
+            org.apache.falcon.entity.v0.feed.Validity feedValidity =
+                    FeedHelper.getCluster(feed, clusterName).getValidity();
+            start = feedValidity.getStart();
+            end = feedValidity.getEnd().before(endRange) ? feedValidity.getEnd() : endRange;
             return getInstanceTimes(start, feed.getFrequency(), feed.getTimezone(),
+                    startRange, end);
+
+        case PROCESS:
+
+            Process process = (Process) entity;
+            org.apache.falcon.entity.v0.process.Validity processValidity =
+                    ProcessHelper.getCluster(process, clusterName).getValidity();
+            start = processValidity.getStart();
+            end = processValidity.getEnd().before(endRange) ? processValidity.getEnd() : endRange;
+            return getInstanceTimes(start, process.getFrequency(),
+                    process.getTimezone(), startRange, end);
+
+        default:
+            throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+        }
+    }
+
+    /**
+     * Find the entity instance times in between the given time range.
+     * <p/>
+     * Both start and end Date are inclusive.
+     *
+     * @param entity      feed or process entity whose instance times are to be found
+     * @param clusterName name of the cluster
+     * @param startRange  start time for the input range
+     * @param endRange    end time for the input range
+     * @return List of instance times in between the given time range
+     */
+    public static List<Date> getEntityInstanceTimesInBetween(Entity entity, String clusterName, Date startRange,
+                                                             Date endRange) {
+        Date start = null;
+        Date end = null;
+
+
+        switch (entity.getEntityType()) {
+        case FEED:
+            Feed feed = (Feed) entity;
+            org.apache.falcon.entity.v0.feed.Validity feedValidity =
+                    FeedHelper.getCluster(feed, clusterName).getValidity();
+            start = feedValidity.getStart();
+            end = feedValidity.getEnd();
+            return getInstancesInBetween(start, end, feed.getFrequency(), feed.getTimezone(),
                     startRange, endRange);
 
         case PROCESS:
             Process process = (Process) entity;
-            start = ProcessHelper.getCluster(process, clusterName).getValidity().getStart();
-            return getInstanceTimes(start, process.getFrequency(),
+            org.apache.falcon.entity.v0.process.Validity processValidity =
+                    ProcessHelper.getCluster(process, clusterName).getValidity();
+            start = processValidity.getStart();
+            end = processValidity.getEnd();
+
+            return getInstancesInBetween(start, end, process.getFrequency(),
                     process.getTimezone(), startRange, endRange);
 
         default:
@@ -1066,13 +1117,37 @@ public final class EntityUtil {
 
         Date current = getPreviousInstanceTime(startTime, frequency, timeZone, startRange);
         while (true) {
-            Date nextStartTime = getNextStartTime(startTime, frequency, timeZone, current);
-            if (nextStartTime.after(endRange)){
+            Date nextInstanceTime = getNextStartTime(startTime, frequency, timeZone, current);
+            if (nextInstanceTime.after(endRange)){
                 break;
             }
-            result.add(nextStartTime);
+            result.add(nextInstanceTime);
             // this is required because getNextStartTime returns greater than or equal to referenceTime
-            current = new Date(nextStartTime.getTime() + ONE_MS); // 1 milli seconds later
+            current = new Date(nextInstanceTime.getTime() + ONE_MS); // 1 milli seconds later
+        }
+        return result;
+    }
+
+
+    public static List<Date> getInstancesInBetween(Date startTime, Date endTime, Frequency frequency, TimeZone timeZone,
+                                                  Date startRange, Date endRange) {
+        List<Date> result = new LinkedList<>();
+        if (endRange.before(startRange)) {
+            return result;
+        }
+        if (timeZone == null) {
+            timeZone = TimeZone.getTimeZone("UTC");
+        }
+        Date current = getPreviousInstanceTime(startTime, frequency, timeZone, startRange);
+        while (true) {
+            if (!current.before(startRange) && !current.after(endRange)
+                    && current.before(endTime) && !current.before(startTime)) {
+                result.add(current);
+            }
+            current = getNextInstanceTime(current, frequency, timeZone, 1);
+            if (current.after(endRange)){
+                break;
+            }
         }
         return result;
     }

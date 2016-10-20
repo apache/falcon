@@ -29,22 +29,26 @@ import javax.persistence.Id;
 import javax.persistence.Column;
 import javax.persistence.Basic;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 //SUSPEND CHECKSTYLE CHECK LineLengthCheck
 /**
-* The Feeds that are to be monitered will be stored in the db.
+* The Entities that are to be monitored will be stored in MONITORED_ENTITY table.
 * */
 
 @Entity
 @NamedQueries({
-        @NamedQuery(name = PersistenceConstants.GET_MONITERED_INSTANCE, query = "select OBJECT(a) from "
+        @NamedQuery(name = PersistenceConstants.GET_MONITORED_ENTITY, query = "select OBJECT(a) from "
                 + "MonitoredEntityBean a where a.entityName = :entityName and a.entityType = :entityType"),
-        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_INSTANCES, query = "delete from MonitoredEntityBean "
+        @NamedQuery(name = PersistenceConstants.DELETE_MONITORED_ENTITIES, query = "delete from MonitoredEntityBean "
                 + "a where a.entityName = :entityName and a.entityType = :entityType"),
-        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_ENTITY_FOR_TYPE, query = "select OBJECT(a) "
+        @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_ENTITIES_FOR_TYPE, query = "select OBJECT(a) "
                 + "from MonitoredEntityBean a where a.entityType = :entityType"),
         @NamedQuery(name = PersistenceConstants.GET_ALL_MONITORING_ENTITY, query = "select OBJECT(a) "
-                + "from MonitoredEntityBean a")
+                + "from MonitoredEntityBean a"),
+        @NamedQuery(name = PersistenceConstants.UPDATE_LAST_MONITORED_TIME, query = "update MonitoredEntityBean a "
+                + "set a.lastMonitoredTime = :lastMonitoredTime where a.entityName = :entityName and a.entityType = "
+                + ":entityType")
 })
 @Table(name="MONITORED_ENTITY")
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
@@ -73,12 +77,25 @@ public class MonitoredEntityBean {
     @Column(name = "entity_type")
     private String entityType;
 
-    public String getFeedName() {
+    public String getEntityName() {
         return entityName;
     }
 
-    public void setEntityName(String feedName) {
-        this.entityName = feedName;
+    public void setEntityName(String entityName) {
+        this.entityName = entityName;
+    }
+
+    @Basic
+    @NotNull
+    @Column(name = "last_monitored_time")
+    private Date lastMonitoredTime;
+
+    public Date getLastMonitoredTime() {
+        return lastMonitoredTime;
+    }
+
+    public void setLastMonitoredTime(Date lastMonitoredTime) {
+        this.lastMonitoredTime = lastMonitoredTime;
     }
 
     public String getId() {
@@ -89,8 +106,10 @@ public class MonitoredEntityBean {
         this.id = id;
     }
 
-    public static final String ENTITYNAME = "entityName";
+    public static final String ENTITY_NAME = "entityName";
 
-    public static final String ENTITYTYPE = "entityType";
+    public static final String ENTITY_TYPE = "entityType";
+
+    public static final String LAST_MONITORED_TIME = "lastMonitoredTime";
 
 }

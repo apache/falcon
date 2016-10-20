@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -91,6 +92,16 @@ public class MetricNotificationService implements FalconService {
     public void publish(String metricsName, Long value){
         synchronized(this){
             createMetric(metricsName).setValue(value);
+        }
+    }
+
+    public void deleteMetric(String metricName){
+        synchronized (this){
+            SortedMap<String, Gauge> gaugeMap = metricRegistry.getGauges();
+            if (gaugeMap.get(metricName) != null){
+                metricRegistry.remove(metricName);
+                metricMap.remove(metricName);
+            }
         }
     }
 

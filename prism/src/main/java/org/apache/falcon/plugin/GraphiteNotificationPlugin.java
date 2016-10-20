@@ -50,14 +50,12 @@ public class GraphiteNotificationPlugin implements MonitoringPlugin {
             String entityName = StringUtils.isNotBlank(message.getDimensions().get("entityName"))
                     ? message.getDimensions().get("entityName") :message.getDimensions().get("entity-name");
             String prefix = StartupProperties.get().getProperty("falcon.graphite.prefix");
-            String separator = ".";
             LOG.debug("message:" + message.getAction());
             if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())
                     && ConfigurationStore.get().get(EntityType.PROCESS, entityName) != null) {
                 Entity entity = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
                 Process process = (Process) entity;
                 String pipeline =  StringUtils.isNotBlank(process.getPipelines()) ? process.getPipelines() : "default";
-                pipeline = pipeline.replaceAll(" ", "-");
 
                 if ((message.getAction().equals("wf-instance-succeeded"))) {
                     Long timeTaken =  message.getExecutionTime() / 1000000000;

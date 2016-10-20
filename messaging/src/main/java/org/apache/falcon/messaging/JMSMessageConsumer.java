@@ -92,8 +92,7 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
 
             topicSession = (TopicSession) connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic destination = topicSession.createTopic(topicName);
-            topicSubscriber = topicSession.createDurableSubscriber(destination, FALCON_CLIENT_ID,
-                    WorkflowNameBuilder.WorkflowName.getJMSFalconSelector(), false);
+            topicSubscriber = topicSession.createDurableSubscriber(destination, FALCON_CLIENT_ID);
             topicSubscriber.setMessageListener(this);
 
             connection.setExceptionListener(this);
@@ -157,7 +156,8 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
             wfProperties.put(WorkflowExecutionArgs.ENTITY_TYPE, entityTypePair.second.name());
             wfProperties.put(WorkflowExecutionArgs.WORKFLOW_USER, message.getStringProperty("user"));
             wfProperties.put(WorkflowExecutionArgs.OPERATION, getOperation(appName).name());
-
+            wfProperties.put(WorkflowExecutionArgs.USER_SUBFLOW_ID,
+                    json.getString("id").concat("@user-action"));
             String appType = message.getStringProperty("appType");
             return WorkflowExecutionContext.create(wfProperties, WorkflowExecutionContext.Type.valueOf(appType));
 
