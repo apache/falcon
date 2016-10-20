@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.EntityUtil;
@@ -145,7 +146,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                 List<MetricInfo> metricsInDB = entry.getValue();
                 List<MetricInfo> metricInfoList = Collections.synchronizedList(metricsInDB);
                 entityBacklogs.put(entry.getKey(), metricInfoList);
-                LOG.debug("Initializing backlog for entity " + entry.getKey().getName());
+                LOG.debug("Backlog of entity " + entry.getKey().getName() + " for instances " + metricInfoList);
             }
         }
     }
@@ -204,7 +205,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            LOG.trace("BacklogMetricEmitter running for entities");
+            LOG.debug("BacklogMetricEmitter running for entities");
             executor = new ScheduledThreadPoolExecutor(10);
             List<Future> futures = new ArrayList<>();
             try {
@@ -302,7 +303,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            LOG.trace("BacklogCheckService running for entities");
+            LOG.debug("BacklogCheckService running for entities");
             try {
                 AbstractWorkflowEngine wfEngine = getWorkflowEngine();
                 for (Entity entity : entityBacklogs.keySet()) {
@@ -316,11 +317,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                 Date nominalTime;
                                 try {
                                     nominalTime = DATE_FORMAT.get().parse(nominalTimeStr);
-                                    if (entity.getACL().getOwner() != null && !entity.getACL().getOwner().isEmpty()) {
-                                        CurrentUser.authenticate(entity.getACL().getOwner());
-                                    } else {
-                                        CurrentUser.authenticate(System.getProperty("user.name"));
-                                    }
+                                    authenticateUser(entity);
                                     if (wfEngine.isMissing(entity)) {
                                         LOG.info("Entity of name {} was deleted so removing instance of "
                                                 + "nominaltime {} ", entity.getName(), nominalTimeStr);
@@ -334,7 +331,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
-                                        LOG.debug("Instance of nominaltime {} of entity {} has succeeded, removing "
+                                        LOG.debug("Instance of nominaltime {} of entity {} was succeeded, removing "
                                                 + "from backlog entries", nominalTimeStr, entity.getName());
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
@@ -349,6 +346,16 @@ public final class BacklogMetricEmitterService implements FalconService,
                 }
             } catch (Throwable e) {
                 LOG.error("Error while checking backlog metrics" + e);
+            }
+        }
+    }
+
+    private static void authenticateUser(Entity entity){
+        if (!CurrentUser.isAuthenticated()) {
+            if (StringUtils.isNotBlank(entity.getACL().getOwner())) {
+                CurrentUser.authenticate(entity.getACL().getOwner());
+            } else {
+                CurrentUser.authenticate(System.getProperty("user.name"));
             }
         }
     }
