@@ -261,7 +261,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
         @Override
         public void run() {
-            LOG.trace("BacklogMetricEmitter running for entities");
+            LOG.debug("BacklogMetricEmitter running for entities");
             executor = new ScheduledThreadPoolExecutor(10);
             List<Future> futures = new ArrayList<>();
             try {
