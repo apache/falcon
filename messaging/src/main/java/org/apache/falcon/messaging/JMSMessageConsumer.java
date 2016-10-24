@@ -157,7 +157,8 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
             wfProperties.put(WorkflowExecutionArgs.ENTITY_TYPE, entityTypePair.second.name());
             wfProperties.put(WorkflowExecutionArgs.WORKFLOW_USER, message.getStringProperty("user"));
             wfProperties.put(WorkflowExecutionArgs.OPERATION, getOperation(appName).name());
-
+            wfProperties.put(WorkflowExecutionArgs.USER_SUBFLOW_ID,
+                    json.getString("id").concat("@user-action"));
             String appType = message.getStringProperty("appType");
             return WorkflowExecutionContext.create(wfProperties, WorkflowExecutionContext.Type.valueOf(appType));
 

@@ -41,6 +41,8 @@ Following services and listeners should be enabled for Backlog Emitter Service i
 #                        org.apache.falcon.service.BacklogMetricEmitterService
 
 *.entityAlert.listeners=org.apache.falcon.service.BacklogMetricEmitterService
+
+*.workflow.execution.listeners=org.apache.falcon.handler.SLAMonitoringHandler
 </verbatim>
 
 

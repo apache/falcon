@@ -35,7 +35,7 @@ import javax.validation.constraints.NotNull;
 
 //SUSPEND CHECKSTYLE CHECK LineLengthCheck
 /**
- * Entity SLA monitoring.
+ * Feed SLA monitoring.
  * */
 @Entity
 @NamedQueries({
@@ -148,12 +148,12 @@ public class EntitySLAAlertBean {
         this.isSLAHighMissed = isSLAHighMissed;
     }
 
-    public static final String ENTITYNAME = "entityName";
+    public static final String ENTITY_NAME = "entityName";
 
-    public static final String CLUSTERNAME = "clusterName";
+    public static final String CLUSTER_NAME = "clusterName";
 
-    public static final String ENTITYTYPE = "entityType";
+    public static final String ENTITY_TYPE = "entityType";
 
-    public static final String NOMINALTIME = "nominalTime";
+    public static final String NOMINAL_TIME = "nominalTime";
 
 }

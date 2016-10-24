@@ -142,7 +142,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                     LOG.info("Entity : {} Cluster : {} Nominal Time : {} missed SLALow", entityName, entityType,
                             clusterName, nominalTime);
                 } else if (schedulableEntityInstance.getTags().contains(EntitySLAMonitoringService.get().TAG_CRITICAL)){
-                    if (entityType.equals(EntityType.PROCESS.name())){
+                    if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())){
                         store.putSLAAlertInstance(entityName, clusterName, entityType,
                                 nominalTime, true, false);
                     }
