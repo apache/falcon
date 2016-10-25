@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.ClusterHelper;
@@ -127,22 +128,27 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
 
     @Override
     public void onAdd(Entity entity) throws FalconException {
+        startEntityMonitoring(entity, false);
+    }
+
+    private void startEntityMonitoring(Entity entity, boolean isEntityUpdated) throws FalconException{
         Set<String> currentClusters = DeploymentUtil.getCurrentClusters();
         Set<String> clustersDefined = EntityUtil.getClustersDefined(entity);
         if (entity.getEntityType() == EntityType.FEED) {
             Feed feed = (Feed) entity;
-            // currently sla service is enabled only for fileSystemStorage
+            // currently sla service for feed is enabled only for fileSystemStorage
             if (feed.getLocations() != null || feed.getSla() != null || checkFeedClusterSLA(feed)) {
                 for (String cluster : clustersDefined) {
                     if (currentClusters.contains(cluster)) {
                         if (FeedHelper.getSLA(cluster, feed) != null) {
                             LOG.debug("Adding feed:{} for monitoring", feed.getName());
-                            MONITORING_JDBC_STATE_STORE.putMonitoredEntity(feed.getName(), EntityType.FEED.toString(),
-                                    new Date(now().getTime() + MINUTE_DELAY));
-                            List<Date> instances = EntityUtil.getEntityInstanceTimesInBetween(entity, cluster,
-                                    getStartTime(entity, cluster), now());
-                            addPendingInstances(entity.getEntityType().name().toLowerCase(), entity, cluster,
-                                    instances);
+                            if (isEntityUpdated) {
+                                MONITORING_JDBC_STATE_STORE.putMonitoredEntity(feed.getName(),
+                                        EntityType.FEED.toString(), now());
+                            } else {
+                                MONITORING_JDBC_STATE_STORE.putMonitoredEntity(feed.getName(),
+                                        EntityType.FEED.toString(), getStartTime(entity, cluster));
+                            }
                         }
                     }
                 }
@@ -153,11 +159,13 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 for (String cluster : clustersDefined) {
                     if (currentClusters.contains(cluster)) {
                         LOG.debug("Adding process:{} for monitoring", process.getName());
-                        MONITORING_JDBC_STATE_STORE.putMonitoredEntity(process.getName(),
-                                EntityType.PROCESS.toString(), new Date(now().getTime() + MINUTE_DELAY));
-                        List<Date> instances = EntityUtil.getEntityInstanceTimesInBetween(entity, cluster,
-                                getStartTime(entity, cluster), now());
-                        addPendingInstances(entity.getEntityType().name().toLowerCase(), entity, cluster, instances);
+                        if (isEntityUpdated) {
+                            MONITORING_JDBC_STATE_STORE.putMonitoredEntity(process.getName(),
+                                    EntityType.PROCESS.toString(), now());
+                        } else {
+                            MONITORING_JDBC_STATE_STORE.putMonitoredEntity(process.getName(),
+                                    EntityType.PROCESS.toString(), getStartTime(entity, cluster));
+                        }
                     }
                 }
             }
@@ -434,7 +442,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
     private boolean checkEntityInstanceAvailability(String entityName, String clusterName, Date nominalTime,
                                                     String entityType) throws FalconException {
         Entity entity = EntityUtil.getEntity(entityType, entityName);
-        authenticateUser();
+        authenticateUser(entity);
         try {
             if (entityType.equals(EntityType.PROCESS.toString())){
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
@@ -509,7 +517,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 org.apache.falcon.entity.v0.process.Cluster cluster = ProcessHelper.getCluster(process,
                         entityClusterPair.second);
                 org.apache.falcon.entity.v0.process.Sla sla = ProcessHelper.getSLA(cluster, process);
-                if (sla != null){
+                if (sla != null && isEntityRunning(process)){
                     Set<Pair<Date, String>> slaStatus = getProcessSLAStatus(sla, start, end,
                             MONITORING_JDBC_STATE_STORE.getNominalInstances(entityClusterPair.first,
                                     entityClusterPair.second, entityType));
@@ -659,9 +667,21 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
     }
 
     // Authenticate user only if not already authenticated.
-    private void authenticateUser(){
+    private void authenticateUser(Entity entity){
         if (!CurrentUser.isAuthenticated()) {
-            CurrentUser.authenticate(System.getProperty("user.name"));
+            if (StringUtils.isNotBlank(entity.getACL().getOwner())) {
+                CurrentUser.authenticate(entity.getACL().getOwner());
+            } else {
+                CurrentUser.authenticate(System.getProperty("user.name"));
+            }
         }
+    }
+
+
+    private boolean isEntityRunning(Entity entity) throws FalconException {
+        authenticateUser(entity);
+        AbstractWorkflowEngine workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
+        return workflowEngine.isActive(entity) && !workflowEngine.isSuspended(entity)
+                && !workflowEngine.isCompleted(entity);
     }
 }
