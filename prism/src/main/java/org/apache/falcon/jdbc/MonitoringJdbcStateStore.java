@@ -187,14 +187,7 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PENDING_INSTANCES);
         List result = q.getResultList();
-
-        try {
-            if (CollectionUtils.isEmpty(result)) {
-                return null;
-            }
-        } finally{
-            entityManager.close();
-        }
+        entityManager.close();
         return result;
     }
 
