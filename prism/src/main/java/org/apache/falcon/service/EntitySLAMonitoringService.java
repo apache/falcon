@@ -361,8 +361,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
         public void run() {
             try {
                 if (MONITORING_JDBC_STATE_STORE.getAllMonitoredEntities().size() > 0) {
-                    checkPendingInstanceAvailability(EntityType.FEED.toString());
-                    checkPendingInstanceAvailability(EntityType.PROCESS.toString());
+                    checkPendingInstanceAvailability();
 
                     // add Instances from last checked time to 10 minutes from now(some buffer for status check)
                     Date newCheckPointTime = new Date(now().getTime() + lookAheadWindowMillis);
@@ -420,20 +419,20 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
     /**
      * Checks the availability of all the pendingInstances and removes the ones which have become available.
      */
-    private void checkPendingInstanceAvailability(String entityType) throws FalconException {
-        if (MONITORING_JDBC_STATE_STORE.getAllPendingInstances() == null){
+    private void checkPendingInstanceAvailability() throws FalconException {
+        List<PendingInstanceBean> pendingInstanceBeans = MONITORING_JDBC_STATE_STORE.getAllPendingInstances();
+        if (pendingInstanceBeans.isEmpty()){
             LOG.info("No pending instances to be checked");
             return;
         }
-        for(PendingInstanceBean pendingInstanceBean : MONITORING_JDBC_STATE_STORE.getAllPendingInstances()){
-            for (Date instanceTime : MONITORING_JDBC_STATE_STORE.getNominalInstances(
-                    pendingInstanceBean.getEntityName(), pendingInstanceBean.getClusterName(), entityType)) {
-                boolean status = checkEntityInstanceAvailability(pendingInstanceBean.getEntityName(),
-                        pendingInstanceBean.getClusterName(), instanceTime, entityType);
-                if (status) {
-                    MONITORING_JDBC_STATE_STORE.deletePendingInstance(pendingInstanceBean.getEntityName(),
-                            pendingInstanceBean.getClusterName(), instanceTime, EntityType.FEED.toString());
-                }
+        for(PendingInstanceBean pendingInstanceBean : pendingInstanceBeans){
+            boolean status = checkEntityInstanceAvailability(pendingInstanceBean.getEntityName(),
+                    pendingInstanceBean.getClusterName(), pendingInstanceBean.getNominalTime(),
+                    pendingInstanceBean.getEntityType());
+            if (status) {
+                MONITORING_JDBC_STATE_STORE.deletePendingInstance(pendingInstanceBean.getEntityName(),
+                        pendingInstanceBean.getClusterName(), pendingInstanceBean.getNominalTime(),
+                        pendingInstanceBean.getEntityType());
             }
         }
     }
