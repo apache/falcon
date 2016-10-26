@@ -163,7 +163,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                               ) throws FalconException {
         for (EntitySLAListener listener : listeners) {
             listener.highSLAMissed(entityName, clusterName, entityType, nominalTime);
-            store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType.name());
         }
+        store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType.name());
     }
 }

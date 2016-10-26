@@ -17,16 +17,16 @@
  */
 package org.apache.falcon.replication;
 
-import org.apache.falcon.cluster.util.EmbeddedCluster;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.Storage;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Test class for FeedReplicator.
@@ -61,7 +61,7 @@ public class FeedReplicatorTest {
         FeedReplicator replicator = new FeedReplicator();
         CommandLine cmd = replicator.getCommand(args);
         replicator.setConf(cluster.getConf());
-        DistCpOptions options = replicator.getDistCpOptions(cmd);
+        DistCpOptions options = replicator.getDistCpOptions(cmd, false);
 
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path(defaultPath));
@@ -116,12 +116,38 @@ public class FeedReplicatorTest {
 
         FeedReplicator replicator = new FeedReplicator();
         CommandLine cmd = replicator.getCommand(optionalArgs);
-        DistCpOptions options = replicator.getDistCpOptions(cmd);
+        DistCpOptions options = replicator.getDistCpOptions(cmd, false);
 
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path(defaultPath));
         validateMandatoryArguments(options, srcPaths, false);
         validateOptionalArguments(options);
+    }
+
+    @Test
+    public void testIncludePath() throws Exception {
+        // Set the include Path so that CustomReplicator is used and the source and targetPaths are modified.
+        String includePath = defaultPath + "/test-colo";
+        // creates jailed cluster in which DistCpOtions command can be tested.
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster("FeedReplicatorTest");
+
+        final String[] args = {
+            "true",
+            "-maxMaps", "3",
+            "-mapBandwidth", "4",
+            "-sourcePaths", defaultPath,
+            "-targetPath", defaultPath,
+            "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
+        };
+
+        FeedReplicator replicator = new FeedReplicator();
+        CommandLine cmd = replicator.getCommand(args);
+        Configuration conf = cluster.getConf();
+        conf.set("falcon.include.path", includePath);
+        replicator.setConf(conf);
+        DistCpOptions options = replicator.getDistCpOptions(cmd, true);
+        Assert.assertEquals(options.getTargetPath().toString(), includePath);
+        Assert.assertEquals(options.getSourcePaths().get(0).toString(), includePath);
     }
 
     private void validateMandatoryArguments(DistCpOptions options, List<Path> srcPaths, boolean shouldSyncFolder) {
