@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.jdbc.BacklogMetricStore;
 import org.apache.falcon.metrics.MetricNotificationService;
@@ -103,7 +104,7 @@ public final class BacklogMetricEmitterService implements FalconService,
 
     @Override
     public void onAdd(Entity entity) throws FalconException{
-        //DO Nothing
+        addToBacklog(entity);
     }
 
     @Override
@@ -148,12 +149,25 @@ public final class BacklogMetricEmitterService implements FalconService,
             for(Cluster cluster : process.getClusters().getClusters()){
                 dropMetric(cluster.getName(), process);
             }
+        }else{
+            addToBacklog(newEntity);
         }
     }
 
     @Override
     public void onReload(Entity entity) throws FalconException{
-        // Do Nothing
+        addToBacklog(entity);
+    }
+
+    public void addToBacklog(Entity entity) {
+        if (entity.getEntityType() != EntityType.PROCESS) {
+            return;
+        }
+        Process process = (Process) entity;
+        if (process.getSla() == null){
+            return;
+        }
+        entityBacklogs.putIfAbsent(entity, Collections.synchronizedList(new ArrayList<MetricInfo>()));
     }
 
     @Override
@@ -306,21 +320,29 @@ public final class BacklogMetricEmitterService implements FalconService,
             MetricInfo metricInfo = null;
             HashMap<String, Long> backLogsCluster = new HashMap<>();
             synchronized (metrics) {
-                long currentTime = System.currentTimeMillis();
-                Iterator iter = metrics.iterator();
-                while (iter.hasNext()) {
-                    try {
-                        metricInfo = (MetricInfo) iter.next();
-                        long time = DATE_FORMAT.get().parse(metricInfo.getNominalTime()).getTime();
-                        long backlog = backLogsCluster.containsKey(metricInfo.getCluster())
-                                ? backLogsCluster.get(metricInfo.getCluster()) : 0;
-                        backlog += (currentTime - time);
-                        backLogsCluster.put(metricInfo.getCluster(), backlog);
-                    } catch (ParseException e) {
-                        LOG.error("Unable to parse nominal time" + metricInfo.getNominalTime());
+                if (metrics.isEmpty()){
+                    Process process = (Process)entityObj;
+                    Clusters clusters = process.getClusters();
+                    for (Cluster cluster : clusters.getClusters()){
+                        publishBacklog(process, cluster.getName(), 0L);
                     }
-                }
+                }else{
+                    long currentTime = System.currentTimeMillis();
+                    Iterator iter = metrics.iterator();
+                    while (iter.hasNext()) {
+                        try {
+                            metricInfo = (MetricInfo) iter.next();
+                            long time = DATE_FORMAT.get().parse(metricInfo.getNominalTime()).getTime();
+                            long backlog = backLogsCluster.containsKey(metricInfo.getCluster())
+                                    ? backLogsCluster.get(metricInfo.getCluster()) : 0;
+                            backlog += (currentTime - time);
+                            backLogsCluster.put(metricInfo.getCluster(), backlog);
+                        } catch (ParseException e) {
+                            LOG.error("Unable to parse nominal time" + metricInfo.getNominalTime());
+                        }
+                    }
 
+                }
             }
             org.apache.falcon.entity.v0.process.Process process = (Process) entityObj;
 

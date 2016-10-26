@@ -418,8 +418,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             return;
         }
         for(PendingInstanceBean pendingInstanceBean : MONITORING_JDBC_STATE_STORE.getAllPendingInstances()){
-            for (Date instanceTime : MONITORING_JDBC_STATE_STORE.getNominalInstances(pendingInstanceBean.getEntityName(),
-                    pendingInstanceBean.getClusterName(), entityType)) {
+            for (Date instanceTime : MONITORING_JDBC_STATE_STORE.getNominalInstances(
+                    pendingInstanceBean.getEntityName(), pendingInstanceBean.getClusterName(), entityType)) {
                 boolean status = checkEntityInstanceAvailability(pendingInstanceBean.getEntityName(),
                         pendingInstanceBean.getClusterName(), instanceTime, entityType);
                 if (status) {
