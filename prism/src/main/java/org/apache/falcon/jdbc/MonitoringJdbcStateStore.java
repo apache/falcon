@@ -17,8 +17,6 @@
  */
 package org.apache.falcon.jdbc;
 
-import org.apache.commons.collections.CollectionUtils;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.persistence.MonitoredEntityBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
