@@ -45,7 +45,7 @@ import java.io.File;
 import java.util.Date;
 
 /**
- * Test for EntitySLAMonitoringService.
+ * Test for SLA Alerts.
  */
 public class EntitySLAAlertServiceTest extends AbstractTestBase {
     private static final String DB_BASE_DIR = "target/test-data/persistancedb";

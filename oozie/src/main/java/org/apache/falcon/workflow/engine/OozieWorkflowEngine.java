@@ -371,7 +371,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                         //Load bundle as coord info is not returned in getBundleJobsInfo()
                         BundleJob bundle = getBundleInfo(clusterName, job.getId());
                         filteredJobs.add(bundle);
-                        LOG.debug("Found bundle {} with app path {} and status {}",
+                        LOG.trace("Found bundle {} with app path {} and status {}",
                                 job.getId(), job.getAppPath(), job.getStatus());
                     }
                 }
@@ -589,10 +589,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     @Override
     public InstancesResult ignoreInstances(Entity entity, Date start, Date end, Properties props,
-                                              List<LifeCycle> lifeCycles) throws FalconException {
+                                           List<LifeCycle> lifeCycles) throws FalconException {
         return doJobAction(JobAction.IGNORE, entity, start, end, props, lifeCycles);
     }
-
     @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end,
                                           Properties props, List<LifeCycle> lifeCycles,
@@ -1111,7 +1110,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         if (CoordinatorAction.Status.READY.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.READY.name();
         } else if (CoordinatorAction.Status.WAITING.toString().equals(status)
-            || CoordinatorAction.Status.SUBMITTED.toString().equals(status)) {
+                || CoordinatorAction.Status.SUBMITTED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.WAITING.name();
         } else if (CoordinatorAction.Status.KILLED.toString().equals(status)) {
             return InstancesResult.WorkflowStatus.KILLED.name();

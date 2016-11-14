@@ -92,7 +92,6 @@ public class JobLogMover {
                 LOG.error("Error getting jobinfo for: {}", context.getUserSubflowId(), e);
                 return 0;
             }
-
             //Assumption is - Each wf run will have a directory
             //the corresponding job logs are stored within the respective dir
             Path path = new Path(context.getLogDir() + "/"

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.replication;
 
+import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -67,7 +68,6 @@ public class FeedReplicator extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
         CommandLine cmd = getCommand(args);
-        DistCpOptions options = getDistCpOptions(cmd);
 
         Configuration conf = this.getConf();
         // inject wf configs
@@ -80,6 +80,8 @@ public class FeedReplicator extends Configured implements Tool {
         String includePathConf = conf.get("falcon.include.path");
         final boolean includePathSet = (includePathConf != null)
                 && !IGNORE.equalsIgnoreCase(includePathConf);
+
+        DistCpOptions options = getDistCpOptions(cmd, includePathSet);
 
         String availabilityFlagOpt = cmd.getOptionValue("availabilityFlag");
         if (StringUtils.isEmpty(availabilityFlagOpt)) {
@@ -95,7 +97,7 @@ public class FeedReplicator extends Configured implements Tool {
         DistCp distCp = (includePathSet)
                 ? new CustomReplicator(conf, options)
                 : new DistCp(conf, options);
-        LOG.info("Started DistCp");
+        LOG.info("Started DistCp with options :" + options);
         Job job = distCp.execute();
 
         if (cmd.hasOption("counterLogDir")
@@ -220,11 +222,31 @@ public class FeedReplicator extends Configured implements Tool {
         return new GnuParser().parse(options, args);
     }
 
-    protected DistCpOptions getDistCpOptions(CommandLine cmd) throws FalconException, IOException {
+    protected DistCpOptions getDistCpOptions(CommandLine cmd, boolean includePathSet)
+        throws FalconException, IOException {
         String[] paths = cmd.getOptionValue("sourcePaths").trim().split(",");
         List<Path> srcPaths = getPaths(paths);
         String targetPathString = cmd.getOptionValue("targetPath").trim();
         Path targetPath = new Path(targetPathString);
+
+        if (includePathSet) {
+            assert srcPaths.size() == 1 : "Source paths more than 1 can't be handled";
+
+            Path sourcePath = srcPaths.get(0);
+            Path includePath = new Path(getConf().get("falcon.include.path"));
+            assert includePath.toString().substring(0, sourcePath.toString().length()).
+                    equals(sourcePath.toString()) : "Source path is not a subset of include path";
+
+            String relativePath = includePath.toString().substring(sourcePath.toString().length());
+            String fixedPath = getFixedPath(relativePath);
+
+            fixedPath = StringUtils.stripStart(fixedPath, "/");
+            if (StringUtils.isNotEmpty(fixedPath)) {
+                sourcePath = new Path(sourcePath, fixedPath);
+                srcPaths = Arrays.asList(new Path[]{sourcePath});
+                targetPath = new Path(targetPath, fixedPath);
+            }
+        }
 
         return DistCPOptionsUtil.getDistCpOptions(cmd, srcPaths, targetPath, false, getConf());
     }
@@ -237,31 +259,14 @@ public class FeedReplicator extends Configured implements Tool {
         return listPaths;
     }
 
-    private void executePostProcessing(Configuration conf, DistCpOptions options) throws IOException, FalconException {
+    private void executePostProcessing(Configuration conf, DistCpOptions options)
+        throws IOException, FalconException {
         Path targetPath = options.getTargetPath();
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
                 targetPath.toUri(), getConf());
-        List<Path> inPaths = options.getSourcePaths();
-        assert inPaths.size() == 1 : "Source paths more than 1 can't be handled";
-
-        Path sourcePath = inPaths.get(0);
-        Path includePath = new Path(getConf().get("falcon.include.path"));
-        assert includePath.toString().substring(0, sourcePath.toString().length()).
-                equals(sourcePath.toString()) : "Source path is not a subset of include path";
-
-        String relativePath = includePath.toString().substring(sourcePath.toString().length());
-        String fixedPath = getFixedPath(relativePath);
-
-        fixedPath = StringUtils.stripStart(fixedPath, "/");
-        Path finalOutputPath;
-        if (StringUtils.isNotEmpty(fixedPath)) {
-            finalOutputPath = new Path(targetPath, fixedPath);
-        } else {
-            finalOutputPath = targetPath;
-        }
 
         final String availabilityFlag = conf.get("falcon.feed.availability.flag");
-        FileStatus[] files = fs.globStatus(finalOutputPath);
+        FileStatus[] files = fs.globStatus(targetPath);
         if (files != null) {
             for (FileStatus file : files) {
                 fs.create(new Path(file.getPath(), availabilityFlag)).close();
@@ -269,8 +274,8 @@ public class FeedReplicator extends Configured implements Tool {
             }
         } else {
             // As distcp is not copying empty directories we are creating availabilityFlag file here
-            fs.create(new Path(finalOutputPath, availabilityFlag)).close();
-            LOG.info("No files present in path: {}", finalOutputPath);
+            fs.create(new Path(targetPath, availabilityFlag)).close();
+            LOG.info("No files present in path: {}", targetPath);
         }
     }
 
