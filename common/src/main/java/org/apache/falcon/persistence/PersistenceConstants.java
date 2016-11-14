@@ -70,4 +70,6 @@ public final class PersistenceConstants {
     public static final String GET_ALL_EXTENSIONS = "GET_ALL_EXTENSIONS";
     public static final String GET_EXTENSION_LOCATION = "GET_EXTENSION_LOCATION";
     public static final String DELETE_EXTENSIONS_OF_TYPE = "DELETE_EXTENSIONS_OF_TYPE";
+    public static final String DELETE_EXTENSION = "DELETE_EXTENSION";
+    public static final String GET_EXTENSION = "GET_EXTENSION";
 }

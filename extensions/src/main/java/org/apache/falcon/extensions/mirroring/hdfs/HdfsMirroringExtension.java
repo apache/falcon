@@ -35,6 +35,9 @@ public class HdfsMirroringExtension extends AbstractExtension {
 
     private static final String COMMA_SEPARATOR = ",";
     private static final String EXTENSION_NAME = "HDFS-MIRRORING";
+    private static final String DESC = "This extension implements replicating arbitrary directories on HDFS from one "
+            + "Hadoop cluster to another Hadoop cluster. This piggy backs on replication solution in Falcon which uses"
+            + " the DistCp tool.";
 
     @Override
     public String getName() {
@@ -48,6 +51,11 @@ public class HdfsMirroringExtension extends AbstractExtension {
                 throw new FalconException("Missing extension property: " + option.getName());
             }
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return DESC;
     }
 
     @Override

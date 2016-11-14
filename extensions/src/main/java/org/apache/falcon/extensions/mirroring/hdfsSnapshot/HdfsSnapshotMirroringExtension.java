@@ -44,6 +44,13 @@ public class HdfsSnapshotMirroringExtension extends AbstractExtension {
     private static final String EXTENSION_NAME = "HDFS-SNAPSHOT-MIRRORING";
     private static final String DEFAULT_RETENTION_POLICY = "delete";
     public static final String EMPTY_KERBEROS_PRINCIPAL = "NA";
+    public static final String DESC ="This extension implements replicating snapshotable directories on HDFS from one"
+            + " Hadoop cluster to another.";
+
+    @Override
+    public String getDescription() {
+        return DESC;
+    }
 
     @Override
     public String getName() {

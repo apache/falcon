@@ -463,7 +463,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return results;
     }
 
-
     private List<Entity> generateEntities(String extensionName, HttpServletRequest request)
         throws FalconException, IOException {
         // get entities for extension job

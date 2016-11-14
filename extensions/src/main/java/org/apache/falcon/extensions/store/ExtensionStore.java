@@ -23,6 +23,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
+import org.apache.falcon.extensions.jdbc.ExtensionMetricStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -63,7 +64,6 @@ public final class ExtensionStore {
     private FileSystem fs;
 
     private Path storePath;
-
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     private static final String SHORT_DESCRIPTION = "shortDescription";
 
