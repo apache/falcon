@@ -445,12 +445,12 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     private static JSONArray buildEnumerateResult(final List<String> extensions) throws FalconException {
         JSONArray results = new JSONArray();
         ExtensionMetricStore metricStore = ExtensionStore.get().getMetricStore();
-        List<ExtensionMetadataBean> beanList = metricStore.getAllRecipe();
+        List<ExtensionMetadataBean> beanList = metricStore.getAllExtensions();
         for (ExtensionMetadataBean bean : beanList) {
             JSONObject resultObject = new JSONObject();
 
             try {
-                resultObject.put(EXTENSION_NAME, bean.getRecipieName().toLowerCase());
+                resultObject.put(EXTENSION_NAME, bean.getExtensionName().toLowerCase());
                 resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
                 resultObject.put(EXTENSION_DESC, bean.getDescription());
             } catch (JSONException e) {

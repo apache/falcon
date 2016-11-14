@@ -36,17 +36,17 @@ import java.util.Date;
 @Table(name = "EXTENSION_METADATA")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = PersistenceConstants.GET_ALL_RECIPES, query = "select OBJECT(a) from ExtensionMetadataBean a "),
-        @NamedQuery(name = PersistenceConstants.GET_RECIPE_LOCATION, query = "select a.location from ExtensionMetadataBean a where a.recipeName = :recipeName"),
-        @NamedQuery(name = PersistenceConstants.DELETE_ALL_RECIPES , query = "delete from ExtensionMetadataBean")
+        @NamedQuery(name = PersistenceConstants.GET_ALL_EXTENSIONS, query = "select OBJECT(a) from ExtensionMetadataBean a "),
+        @NamedQuery(name = PersistenceConstants.GET_EXTENSION_LOCATION, query = "select a.location from ExtensionMetadataBean a where a.extensionName = :extensionName"),
+        @NamedQuery(name = PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS, query = "delete from ExtensionMetadataBean a where a.extensionType = :extensionType ")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class ExtensionMetadataBean {
     @Basic
     @NotNull
     @Id
-    @Column(name = "recipe_name")
-    private String recipeName;
+    @Column(name = "extension_name")
+    private String extensionName;
 
 
     @Basic
@@ -54,8 +54,7 @@ public class ExtensionMetadataBean {
     @Column(name = "extension_type")
     private String extensionType;
 
-    @Basic
-    @NotNull
+    @Basic  
     @Column(name = "description")
     private String description;
 
@@ -87,12 +86,12 @@ public class ExtensionMetadataBean {
     }
 
 
-    public String getRecipieName() {
-        return recipeName;
+    public String getExtensionName() {
+        return extensionName;
     }
 
-    public void setRecipieName(String recipeName) {
-        this.recipeName = recipeName;
+    public void setExtensionName(String recipeName) {
+        this.extensionName = recipeName;
     }
 
     public String getLocation() {

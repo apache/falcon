@@ -92,7 +92,7 @@ public final class ExtensionStore {
 
     private void initializeDbTable() {
         try{
-            metricStore.deleteMetadata();
+            metricStore.deleteTrustedExtensionMetadata(TRUSTED_EXTENSION);
             List<String> extensions = getExtensions();
             for (String extension : extensions) {
                 String extensionType = AbstractExtension.isExtensionTrusted(extension) ? TRUSTED_EXTENSION
@@ -100,7 +100,7 @@ public final class ExtensionStore {
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
-                metricStore.pubMetadataBean(recipeName, location, extensionType, description);
+                metricStore.storeExtensionMetadataBean(recipeName, location, extensionType, description);
             }
         } catch (FalconException e){
             LOG.error("Exception in ExtensionStore:", e);
