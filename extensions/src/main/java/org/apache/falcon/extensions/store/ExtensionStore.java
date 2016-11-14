@@ -19,6 +19,10 @@
 package org.apache.falcon.extensions.store;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.extensions.AbstractExtension;
+import org.apache.falcon.extensions.ExtensionFactory;
+import org.apache.falcon.extensions.jdbc.ExtensionMetricStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -48,9 +52,20 @@ import org.slf4j.LoggerFactory;
 public final class ExtensionStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtensionStore.class);
+
+    public static ExtensionMetricStore getMetricStore() {
+        return metricStore;
+    }
+
+    private static ExtensionMetricStore metricStore = new ExtensionMetricStore();
     private FileSystem fs;
 
     private Path storePath;
+
+    private static final String TRUSTED_EXTENSION = "Trusted extension";
+    private static final String CUSTOM_EXTENSION = "Custom extension";
+    private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
+    private static final String SHORT_DESCRIPTION = "shortDescription";
 
     // Convention over configuration design paradigm
     private static final String RESOURCES_DIR = "resources";
@@ -72,6 +87,32 @@ public final class ExtensionStore {
         }
         storePath = new Path(uri);
         fs = initializeFileSystem();
+        initializeDbTable();
+    }
+
+    private void initializeDbTable() {
+        try{
+            metricStore.deleteMetadata();
+            List<String> extensions = getExtensions();
+            for (String extension : extensions) {
+                String extensionType = AbstractExtension.isExtensionTrusted(extension) ? TRUSTED_EXTENSION
+                        : CUSTOM_EXTENSION;
+                String description = getShortDescription(extension);
+                String recipeName = extension;
+                String location = storePath.toString() + '/' + extension;
+                metricStore.pubMetadataBean(recipeName, location, extensionType, description);
+            }
+        } catch (FalconException e){
+            LOG.error("Exception in ExtensionStore:", e);
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private String getShortDescription(final String extensionName) throws FalconException {
+
+        AbstractExtension extension = ExtensionFactory.getExtensionType(extensionName);
+        return  extension.getDescription();
     }
 
     private FileSystem initializeFileSystem() {
@@ -83,7 +124,6 @@ public final class ExtensionStore {
                 // set permissions so config store dir is owned by falcon alone
                 HadoopClientFactory.mkdirs(fileSystem, storePath, HadoopClientFactory.ALL_PERMISSION);
             }
-
             return fileSystem;
         } catch (Exception e) {
             throw new RuntimeException("Unable to bring up extension store for path: " + storePath, e);

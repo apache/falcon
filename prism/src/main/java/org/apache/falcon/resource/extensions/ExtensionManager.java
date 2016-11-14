@@ -26,11 +26,12 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
+import org.apache.falcon.extensions.jdbc.ExtensionMetricStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.persistence.ExtensionMetadataBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
@@ -84,14 +85,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     private static final String EXTENSION_RESULTS = "extensions";
     private static final String TOTAL_RESULTS = "totalResults";
     private static final String README = "README";
-    private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
-    private static final String SHORT_DESCRIPTION = "shortDescription";
     private static final String EXTENSION_NAME = "name";
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
 
-    private static final String TRUSTED_EXTENSION = "Trusted extension";
-    private static final String CUSTOM_EXTENSION = "Custom extension";
+    private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
@@ -446,17 +444,15 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     private static JSONArray buildEnumerateResult(final List<String> extensions) throws FalconException {
         JSONArray results = new JSONArray();
-
-        for (String extension : extensions) {
-            String extensionType = AbstractExtension.isExtensionTrusted(extension) ? TRUSTED_EXTENSION
-                    : CUSTOM_EXTENSION;
-
+        ExtensionMetricStore metricStore = ExtensionStore.get().getMetricStore();
+        List<ExtensionMetadataBean> beanList = metricStore.getAllRecipe();
+        for (ExtensionMetadataBean bean : beanList) {
             JSONObject resultObject = new JSONObject();
 
             try {
-                resultObject.put(EXTENSION_NAME, extension.toLowerCase());
-                resultObject.put(EXTENSION_TYPE, extensionType);
-                resultObject.put(EXTENSION_DESC, getShortDescription(extension));
+                resultObject.put(EXTENSION_NAME, bean.getRecipieName().toLowerCase());
+                resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
+                resultObject.put(EXTENSION_DESC, bean.getDescription());
             } catch (JSONException e) {
                 throw new FalconException(e);
             }
@@ -466,18 +462,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return results;
     }
 
-    private static String getShortDescription(final String extensionName) throws FalconException {
-        String content = ExtensionStore.get().getResource(extensionName, extensionName.toLowerCase()
-                + EXTENSION_PROPERTY_JSON_SUFFIX);
-        String description;
-        try {
-            JSONObject jsonObject = new JSONObject(content);
-            description = (String) jsonObject.get(SHORT_DESCRIPTION);
-        } catch (JSONException e) {
-            throw new FalconException(e);
-        }
-        return description;
-    }
+
 
     private List<Entity> generateEntities(String extensionName, HttpServletRequest request)
         throws FalconException, IOException {
