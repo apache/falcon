@@ -35,10 +35,11 @@ public class ExtensionMetricStore {
         return FalconJPAService.get().getEntityManager();
     }
 
-    public void pubMetadataBean(String recipeName, String location, String extensionType, String description){
+    public void storeExtensionMetadataBean(String recipeName, String location, String extensionType,
+                                           String description){
         ExtensionMetadataBean extensionMetadataBean = new ExtensionMetadataBean();
         extensionMetadataBean.setLocation(location);
-        extensionMetadataBean.setRecipieName(recipeName);
+        extensionMetadataBean.setExtensionName(recipeName);
         extensionMetadataBean.setExtensionType(extensionType);
         extensionMetadataBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionMetadataBean.setDescription(description);
@@ -51,10 +52,10 @@ public class ExtensionMetricStore {
         }
     }
 
-    public List<ExtensionMetadataBean> getAllRecipe(){
+    public List<ExtensionMetadataBean> getAllExtensions(){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_RECIPES);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSIONS);
         try {
             return q.getResultList();
         } finally {
@@ -62,10 +63,11 @@ public class ExtensionMetricStore {
         }
     }
 
-    public void deleteMetadata(){
+    public void deleteTrustedExtensionMetadata(String extensionType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_RECIPES);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS);
+        q.setParameter("extensionType", extensionType);
         try{
             q.executeUpdate();
         } finally {
@@ -73,11 +75,11 @@ public class ExtensionMetricStore {
         }
     }
 
-    public String getLocation(String recipeName){
+    public String getLocation(String extensionName){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_RECIPE_LOCATION);
-        q.setParameter("recipeName", recipeName);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_LOCATION);
+        q.setParameter("extensionName", extensionName);
         try {
             return (String)q.getSingleResult();
         } finally {
