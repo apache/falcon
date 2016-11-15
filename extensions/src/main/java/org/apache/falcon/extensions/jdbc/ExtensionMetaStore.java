@@ -78,7 +78,7 @@ public class ExtensionMetaStore {
     public void deleteExtensionsOfType(ExtensionType extensionType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS);
         q.setParameter("extensionType", extensionType.toString());
         try{
             q.executeUpdate();
