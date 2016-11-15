@@ -52,6 +52,17 @@ public class ExtensionMetricStore {
         }
     }
 
+    public Boolean checkIfExtensionExists(String extensionName){
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
+        q.setParameter("extensionName", extensionName);
+        if(q.getResultList().size() > 0){
+            return true;
+        }
+        return false;
+    }
+
     public List<ExtensionMetadataBean> getAllExtensions(){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
@@ -82,6 +93,17 @@ public class ExtensionMetricStore {
         q.setParameter("extensionName", extensionName);
         try {
             return (String)q.getSingleResult();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public void deleteExtensionMetadata(String extensionName){
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_NON_TRUSTED_EXTENSION);
+        try{
+            q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
         }

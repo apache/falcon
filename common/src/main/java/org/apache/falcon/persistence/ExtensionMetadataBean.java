@@ -38,7 +38,9 @@ import java.util.Date;
 @NamedQueries({
         @NamedQuery(name = PersistenceConstants.GET_ALL_EXTENSIONS, query = "select OBJECT(a) from ExtensionMetadataBean a "),
         @NamedQuery(name = PersistenceConstants.GET_EXTENSION_LOCATION, query = "select a.location from ExtensionMetadataBean a where a.extensionName = :extensionName"),
-        @NamedQuery(name = PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS, query = "delete from ExtensionMetadataBean a where a.extensionType = :extensionType ")
+        @NamedQuery(name = PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS, query = "delete from ExtensionMetadataBean a where a.extensionType = :extensionType "),
+        @NamedQuery(name = PersistenceConstants.DELETE_NON_TRUSTED_EXTENSION, query = "delete from ExtensionMetadataBean a where a.extensionName = :extensionName "),
+        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionMetadataBean a where a.extensionName = :extensionName")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class ExtensionMetadataBean {
@@ -54,7 +56,7 @@ public class ExtensionMetadataBean {
     @Column(name = "extension_type")
     private String extensionType;
 
-    @Basic  
+    @Basic
     @Column(name = "description")
     private String description;
 

@@ -242,6 +242,20 @@ public final class ExtensionStore {
         return extesnionList;
     }
 
+    public String deleteExtensionMetadata(final String extensionName) throws StoreAccessException{
+        String extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? TRUSTED_EXTENSION
+                : CUSTOM_EXTENSION;
+        if (extensionType.equalsIgnoreCase(TRUSTED_EXTENSION)){
+            throw new StoreAccessException(new Exception(extensionName + " is trusted cannot be deleted."));
+        }
+        if (metricStore.checkIfExtensionExists(extensionName)) {
+            metricStore.deleteTrustedExtensionMetadata(extensionName);
+            return "Deleted entry for:" + extensionName;
+        }else {
+            return "Extension:" + extensionName + " is not registered with falcon.";
+        }
+    }
+
     public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
         Map<String, String> resources = getExtensionArtifacts(extensionName);
         if (resources.isEmpty()) {
