@@ -170,7 +170,7 @@ public class WorkflowExecutionContext {
         return getValue(WorkflowExecutionArgs.LOG_FILE);
     }
 
-    String getNominalTime() {
+    public String getNominalTime() {
         return getValue(WorkflowExecutionArgs.NOMINAL_TIME);
     }
 
