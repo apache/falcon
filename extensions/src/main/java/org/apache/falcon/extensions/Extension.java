@@ -113,22 +113,12 @@ public class Extension implements ExtensionBuilder {
     }
 
     @Override
-    public String getExtensionDescription(String extensionName) throws FalconException {
-        throw new UnsupportedException("Not yet Implemented");
-    }
-
-    @Override
-    public void validateExtension(String extensionName, Properties extensionProperties) throws FalconException {
+    public void validateExtension(String extensionName, InputStream extensionConfigStream) throws FalconException {
         throw new UnsupportedException("Not yet Implemented");
     }
 
     @Override
     public List<Pair<String, Schema>> getOutputSchemas(String extensionName) throws FalconException {
-        throw new UnsupportedException("Not yet Implemented");
-    }
-
-    @Override
-    public String getDefaultTemplate(String extensionName) throws FalconException {
         throw new UnsupportedException("Not yet Implemented");
     }
 }

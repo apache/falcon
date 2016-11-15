@@ -34,25 +34,19 @@ public interface ExtensionBuilder {
 
     /**
      * @param extensionName extension name.
-     * @param extensionStream stream comprising of the extension properties.
+     * @param extensionConfigStream stream comprising of the extension properties.
      * @return List of the entities that are involved in the extension.
      * @throws FalconException
      */
-    List<Entity> getEntities(final String extensionName, final InputStream extensionStream) throws FalconException;
+    List<Entity> getEntities(final String extensionName, final InputStream extensionConfigStream)
+        throws FalconException;
 
     /**
      * @param extensionName extension name.
-     * @return A graph comprising of the whole dag details of the extension.
+     * @param extensionConfigStream Properties supplied will be validated.
      * @throws FalconException
      */
-    String getExtensionDescription(final String extensionName) throws FalconException;
-
-    /**
-     * @param extensionName extension name.
-     * @param extensionProperties Properties supplied will be validated.
-     * @throws FalconException
-     */
-    void validateExtension(final String extensionName, final Properties extensionProperties) throws FalconException;
+    void validateExtension(final String extensionName, final InputStream extensionConfigStream) throws FalconException;
 
     /**
      * @param extensionName extension name.
@@ -60,11 +54,4 @@ public interface ExtensionBuilder {
      * @throws FalconException
      */
     List<Pair<String, Schema>> getOutputSchemas(final String extensionName) throws FalconException;
-
-    /**
-     * @param extensionName extension name.
-     * @return Default template for the given extension.
-     * @throws FalconException
-     */
-    String getDefaultTemplate(final String extensionName) throws FalconException;
 }
