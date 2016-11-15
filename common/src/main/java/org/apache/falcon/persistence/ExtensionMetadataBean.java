@@ -30,7 +30,7 @@ import java.util.Date;
 
 //SUSPEND CHECKSTYLE CHECK LineLengthCheck
 /**
- * Table to store recipe metadata.
+ * Table to store extension metadata.
  */
 
 @Table(name = "EXTENSION_METADATA")
@@ -90,8 +90,8 @@ public class ExtensionMetadataBean {
         return extensionName;
     }
 
-    public void setExtensionName(String recipeName) {
-        this.extensionName = recipeName;
+    public void setExtensionName(String extensionName) {
+        this.extensionName = extensionName;
     }
 
     public String getLocation() {

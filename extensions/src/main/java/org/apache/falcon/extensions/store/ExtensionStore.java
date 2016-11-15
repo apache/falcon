@@ -21,8 +21,7 @@ package org.apache.falcon.extensions.store;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.AbstractExtension;
-import org.apache.falcon.extensions.ExtensionFactory;
-import org.apache.falcon.extensions.jdbc.ExtensionMetricStore;
+import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -43,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,19 +54,28 @@ public final class ExtensionStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtensionStore.class);
 
-    public static ExtensionMetricStore getMetricStore() {
+    public static ExtensionMetaStore getMetricStore() {
         return metricStore;
     }
 
-    private static ExtensionMetricStore metricStore = new ExtensionMetricStore();
+    private static ExtensionMetaStore metricStore = new ExtensionMetaStore();
     private FileSystem fs;
 
     private Path storePath;
 
-    private static final String TRUSTED_EXTENSION = "Trusted extension";
-    private static final String CUSTOM_EXTENSION = "Custom extension";
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     private static final String SHORT_DESCRIPTION = "shortDescription";
+
+    enum ExtensionType {
+        TRUSTED("Trusted extension") ,
+        CUSTOM("Custom extension");
+
+        private final String text;
+
+        private ExtensionType (final String text) {
+            this.text = text;
+        }
+    };
 
     // Convention over configuration design paradigm
     private static final String RESOURCES_DIR = "resources";
@@ -74,6 +84,7 @@ public final class ExtensionStore {
     public static final String EXTENSION_STORE_URI = "extension.store.uri";
 
     private static final ExtensionStore STORE = new ExtensionStore();
+
 
     public static ExtensionStore get() {
         return STORE;
@@ -92,11 +103,11 @@ public final class ExtensionStore {
 
     private void initializeDbTable() {
         try{
-            metricStore.deleteTrustedExtensionMetadata(TRUSTED_EXTENSION);
+            metricStore.deleteTrustedExtensionMetadata(ExtensionType.TRUSTED.toString());
             List<String> extensions = getExtensions();
             for (String extension : extensions) {
-                String extensionType = AbstractExtension.isExtensionTrusted(extension) ? TRUSTED_EXTENSION
-                        : CUSTOM_EXTENSION;
+                String extensionType = AbstractExtension.isExtensionTrusted(extension) ? ExtensionType.TRUSTED.toString()
+                        : ExtensionType.CUSTOM.toString();
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
@@ -109,10 +120,17 @@ public final class ExtensionStore {
 
     }
 
-    private String getShortDescription(final String extensionName) throws FalconException {
-
-        AbstractExtension extension = ExtensionFactory.getExtensionType(extensionName);
-        return  extension.getDescription();
+    private static String getShortDescription(final String extensionName) throws FalconException {
+        String content = ExtensionStore.get().getResource(extensionName, extensionName.toLowerCase()
+                + EXTENSION_PROPERTY_JSON_SUFFIX);
+        String description;
+        try {
+            JSONObject jsonObject = new JSONObject(content);
+            description = (String) jsonObject.get(SHORT_DESCRIPTION);
+        } catch (JSONException e) {
+            throw new FalconException(e);
+        }
+        return description;
     }
 
     private FileSystem initializeFileSystem() {

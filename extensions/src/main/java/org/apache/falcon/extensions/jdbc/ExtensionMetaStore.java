@@ -27,19 +27,19 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Statestore for recipe framework.
+ * Statestore for extension framework.
  */
-public class ExtensionMetricStore {
+public class ExtensionMetaStore {
 
     private EntityManager getEntityManager() {
         return FalconJPAService.get().getEntityManager();
     }
 
-    public void storeExtensionMetadataBean(String recipeName, String location, String extensionType,
+    public void storeExtensionMetadataBean(String extensionName, String location, String extensionType,
                                            String description){
         ExtensionMetadataBean extensionMetadataBean = new ExtensionMetadataBean();
         extensionMetadataBean.setLocation(location);
-        extensionMetadataBean.setExtensionName(recipeName);
+        extensionMetadataBean.setExtensionName(extensionName);
         extensionMetadataBean.setExtensionType(extensionType);
         extensionMetadataBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionMetadataBean.setDescription(description);

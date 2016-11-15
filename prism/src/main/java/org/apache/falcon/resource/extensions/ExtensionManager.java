@@ -29,7 +29,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
-import org.apache.falcon.extensions.jdbc.ExtensionMetricStore;
+import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionMetadataBean;
 import org.apache.falcon.resource.APIResult;
@@ -90,7 +90,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     private static final String EXTENSION_DESC = "description";
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
-
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
     @Path("list/{extension-name}")
@@ -444,7 +443,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     private static JSONArray buildEnumerateResult(final List<String> extensions) throws FalconException {
         JSONArray results = new JSONArray();
-        ExtensionMetricStore metricStore = ExtensionStore.get().getMetricStore();
+        ExtensionMetaStore metricStore = ExtensionStore.get().getMetricStore();
         List<ExtensionMetadataBean> beanList = metricStore.getAllExtensions();
         for (ExtensionMetadataBean bean : beanList) {
             JSONObject resultObject = new JSONObject();
@@ -461,7 +460,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         }
         return results;
     }
-
 
 
     private List<Entity> generateEntities(String extensionName, HttpServletRequest request)

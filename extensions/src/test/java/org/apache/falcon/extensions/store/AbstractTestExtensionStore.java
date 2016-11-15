@@ -22,6 +22,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -49,6 +50,7 @@ public class AbstractTestExtensionStore {
     public void initExtensionStore(Class resourceClass) throws Exception {
         new ExtensionService().init();
         store = ExtensionService.getExtensionStore();
+        FalconJPAService falconJPAService = FalconJPAService.get();
         fileSystem = HadoopClientFactory.get().createFalconFileSystem(new Configuration(true));
         extensionStorePath = new URI(StartupProperties.get().getProperty(ExtensionStore.EXTENSION_STORE_URI)).getPath();
         extensionStoreSetup(resourceClass);
