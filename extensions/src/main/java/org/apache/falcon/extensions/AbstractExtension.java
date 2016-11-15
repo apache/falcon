@@ -56,6 +56,8 @@ public abstract class AbstractExtension {
     /* Name cannot be null */
     public abstract String getName();
 
+    public abstract String getDescription();
+
     public abstract void validate(final Properties extensionProperties) throws FalconException;
 
     public abstract Properties getAdditionalProperties(final Properties extensionProperties) throws FalconException;

@@ -40,6 +40,13 @@ public class HiveMirroringExtension extends AbstractExtension {
     private static final String COMMA_DELIMITER = ",";
     private static final String SECURE_RESOURCE = "-secure";
     private static final String NOT_APPLICABLE = "NA";
+    public static final String DESC ="This extension implements replicating hive metadata and data from one Hadoop"
+            + " cluster to another Hadoop cluster.";
+
+    @Override
+    public String getDescription() {
+        return DESC;
+    }
 
     @Override
     public String getName() {
