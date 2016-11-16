@@ -54,7 +54,7 @@ public class ExtensionMetadataBean {
     @Column(name = "extension_type")
     private String extensionType;
 
-    @Basic  
+    @Basic
     @Column(name = "description")
     private String description;
 

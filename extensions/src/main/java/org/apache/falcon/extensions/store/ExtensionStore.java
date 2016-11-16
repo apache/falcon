@@ -72,7 +72,7 @@ public final class ExtensionStore {
 
         private final String text;
 
-        private ExtensionType (final String text) {
+        private ExtensionType(final String text) {
             this.text = text;
         }
     };
@@ -106,8 +106,8 @@ public final class ExtensionStore {
             metricStore.deleteTrustedExtensionMetadata(ExtensionType.TRUSTED.toString());
             List<String> extensions = getExtensions();
             for (String extension : extensions) {
-                String extensionType = AbstractExtension.isExtensionTrusted(extension) ? ExtensionType.TRUSTED.toString()
-                        : ExtensionType.CUSTOM.toString();
+                String extensionType = AbstractExtension.isExtensionTrusted(extension)
+                        ? ExtensionType.TRUSTED.toString() : ExtensionType.CUSTOM.toString();
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
@@ -120,8 +120,8 @@ public final class ExtensionStore {
 
     }
 
-    private static String getShortDescription(final String extensionName) throws FalconException {
-        String content = ExtensionStore.get().getResource(extensionName, extensionName.toLowerCase()
+    private String getShortDescription(final String extensionName) throws FalconException {
+        String content = getResource(extensionName, extensionName.toLowerCase()
                 + EXTENSION_PROPERTY_JSON_SUFFIX);
         String description;
         try {

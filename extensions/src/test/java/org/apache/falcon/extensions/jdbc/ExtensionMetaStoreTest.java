@@ -1,55 +1,50 @@
+
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.falcon.extensions.jdbc;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
 import org.apache.falcon.service.FalconJPAService;
-import org.apache.falcon.tools.FalconStateStoreDBCLI;
-import org.apache.falcon.util.StateStoreProperties;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.LocalFileSystem;
-import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.File;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
- * Created by praveen on 15/11/16.
+ * Test Cases for ExtensionMetaStore.
  */
-public class ExtensionMetaStoreTest {
-    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
-    protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
-    protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
-    protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
-    protected LocalFileSystem fs = new LocalFileSystem();
+
+
+public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     protected EmbeddedCluster dfsCluster;
     protected Configuration conf = new Configuration();
-
     private static ExtensionMetaStore stateStore;
-    private static FalconJPAService falconJPAService = FalconJPAService.get();
-
-    protected int execDBCLICommands(String[] args) {
-        return new FalconStateStoreDBCLI().run(args);
-    }
-
-    public void createDB(String file) {
-        File sqlFile = new File(file);
-        String[] argsCreate = { "create", "-sqlfile", sqlFile.getAbsolutePath(), "-run" };
-        int result = execDBCLICommands(argsCreate);
-        Assert.assertEquals(0, result);
-        Assert.assertTrue(sqlFile.exists());
-
-    }
 
     @BeforeClass
     public void setup() throws Exception{
-        StateStoreProperties.get().setProperty(FalconJPAService.URL, url);
-        Configuration localConf = new Configuration();
-        fs.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
-        fs.mkdirs(new Path(DB_BASE_DIR));
-        createDB(DB_SQL_FILE);
-        falconJPAService.init();
+        initExtensionStore();
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
         stateStore = new ExtensionMetaStore();
@@ -57,12 +52,30 @@ public class ExtensionMetaStoreTest {
 
     @BeforeMethod
     public void init() {
+        clear();
     }
 
     @Test
     public void dbOpertaions(){
         //insert
-        stateStore.storeExtensionMetadataBean("test","test_location","custom","test_description");
-        Assert.assertEquals(stateStore.getAllExtensions(),1);
+        stateStore.storeExtensionMetadataBean("test1", "test_location", "Trusted extension", "test_description");
+        Assert.assertEquals(stateStore.getAllExtensions().size(), 1);
+        //check data
+        Assert.assertEquals(stateStore.getLocation("test1"), "test_location");
+        //delete
+        stateStore.deleteTrustedExtensionMetadata("Trusted extension");
+        Assert.assertEquals(stateStore.getAllExtensions().size(), 0);
+    }
+
+    private void clear() {
+        EntityManager em = FalconJPAService.get().getEntityManager();
+        em.getTransaction().begin();
+        try {
+            Query query = em.createNativeQuery("delete from EXTENSION_METADATA");
+            query.executeUpdate();
+        } finally {
+            em.getTransaction().commit();
+            em.close();
+        }
     }
 }
