@@ -24,7 +24,6 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.feed.Schema;
 
 import java.io.InputStream;
-import java.util.Properties;
 import java.util.List;
 
 /**
@@ -46,7 +45,8 @@ public interface ExtensionBuilder {
      * @param extensionConfigStream Properties supplied will be validated.
      * @throws FalconException
      */
-    void validateExtension(final String extensionName, final InputStream extensionConfigStream) throws FalconException;
+    void validateExtensionConfig(final String extensionName, final InputStream extensionConfigStream)
+        throws FalconException;
 
     /**
      * @param extensionName extension name.

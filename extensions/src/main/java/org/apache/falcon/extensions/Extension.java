@@ -113,8 +113,16 @@ public class Extension implements ExtensionBuilder {
     }
 
     @Override
-    public void validateExtension(String extensionName, InputStream extensionConfigStream) throws FalconException {
-        throw new UnsupportedException("Not yet Implemented");
+    public void validateExtensionConfig(String extensionName, InputStream extensionConfigStream)
+        throws FalconException {
+        Properties configProperties = new Properties();
+        try {
+            configProperties.load(extensionConfigStream);
+        } catch (IOException e) {
+            LOG.error("Error in reading the config stream");
+            throw new FalconException("Error while reading the config stream", e);
+        }
+        validateProperties(configProperties);
     }
 
     @Override
