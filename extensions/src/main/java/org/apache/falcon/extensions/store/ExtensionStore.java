@@ -84,7 +84,7 @@ public final class ExtensionStore {
 
         private final String text;
 
-        private ExtensionType (final String text) {
+        private ExtensionType(final String text) {
             this.text = text;
         }
     };
