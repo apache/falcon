@@ -23,7 +23,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
-import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -65,28 +64,8 @@ public final class ExtensionStore {
 
     private Path storePath;
 
-    public static ExtensionMetaStore getMetricStore() {
-        return metricStore;
-    }
-
-    private static ExtensionMetaStore metricStore = new ExtensionMetaStore();
-    private FileSystem fs;
-
-    private Path storePath;
-
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     private static final String SHORT_DESCRIPTION = "shortDescription";
-
-    enum ExtensionType {
-        TRUSTED("Trusted extension") ,
-        CUSTOM("Custom extension");
-
-        private final String text;
-
-        private ExtensionType(final String text) {
-            this.text = text;
-        }
-    };
 
     // Convention over configuration design paradigm
     private static final String RESOURCES_DIR = "resources";
