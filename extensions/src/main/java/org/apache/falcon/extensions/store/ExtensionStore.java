@@ -21,6 +21,7 @@ package org.apache.falcon.extensions.store;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.extensions.AbstractExtension;
+import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -54,28 +55,17 @@ public final class ExtensionStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtensionStore.class);
 
-    public static ExtensionMetaStore getMetricStore() {
-        return metricStore;
+    public static ExtensionMetaStore getMetaStore() {
+        return metaStore;
     }
 
-    private static ExtensionMetaStore metricStore = new ExtensionMetaStore();
+    private static ExtensionMetaStore metaStore = new ExtensionMetaStore();
     private FileSystem fs;
 
     private Path storePath;
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     private static final String SHORT_DESCRIPTION = "shortDescription";
-
-    enum ExtensionType {
-        TRUSTED("Trusted extension") ,
-        CUSTOM("Custom extension");
-
-        private final String text;
-
-        private ExtensionType(final String text) {
-            this.text = text;
-        }
-    };
 
     // Convention over configuration design paradigm
     private static final String RESOURCES_DIR = "resources";
@@ -103,15 +93,15 @@ public final class ExtensionStore {
 
     private void initializeDbTable() {
         try{
-            metricStore.deleteTrustedExtensionMetadata(ExtensionType.TRUSTED.toString());
+            metaStore.deleteExtensionsOfType(ExtensionType.TRUSTED);
             List<String> extensions = getExtensions();
             for (String extension : extensions) {
-                String extensionType = AbstractExtension.isExtensionTrusted(extension)
-                        ? ExtensionType.TRUSTED.toString() : ExtensionType.CUSTOM.toString();
+                ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extension)
+                        ? ExtensionType.TRUSTED : ExtensionType.CUSTOM;
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
-                metricStore.storeExtensionMetadataBean(recipeName, location, extensionType, description);
+                metaStore.storeExtensionMetadataBean(recipeName, location, extensionType, description);
             }
         } catch (FalconException e){
             LOG.error("Exception in ExtensionStore:", e);

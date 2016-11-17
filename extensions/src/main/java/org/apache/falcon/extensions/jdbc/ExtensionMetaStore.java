@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.extensions.jdbc;
 
+import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.persistence.ExtensionMetadataBean;
 import org.apache.falcon.persistence.PersistenceConstants;
 import org.apache.falcon.service.FalconJPAService;
@@ -35,12 +36,12 @@ public class ExtensionMetaStore {
         return FalconJPAService.get().getEntityManager();
     }
 
-    public void storeExtensionMetadataBean(String extensionName, String location, String extensionType,
+    public void storeExtensionMetadataBean(String extensionName, String location, ExtensionType extensionType,
                                            String description){
         ExtensionMetadataBean extensionMetadataBean = new ExtensionMetadataBean();
         extensionMetadataBean.setLocation(location);
         extensionMetadataBean.setExtensionName(extensionName);
-        extensionMetadataBean.setExtensionType(extensionType);
+        extensionMetadataBean.setExtensionType(extensionType.toString());
         extensionMetadataBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionMetadataBean.setDescription(description);
         EntityManager entityManager = getEntityManager();
@@ -63,11 +64,11 @@ public class ExtensionMetaStore {
         }
     }
 
-    public void deleteTrustedExtensionMetadata(String extensionType){
+    public void deleteExtensionsOfType(ExtensionType extensionType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS);
-        q.setParameter("extensionType", extensionType);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE);
+        q.setParameter("extensionType", extensionType.toString());
         try{
             q.executeUpdate();
         } finally {

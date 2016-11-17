@@ -88,6 +88,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     private static final String EXTENSION_NAME = "name";
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
+    public static final String EXTENSION_LOCATION = "location";
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -443,7 +444,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     private static JSONArray buildEnumerateResult(final List<String> extensions) throws FalconException {
         JSONArray results = new JSONArray();
-        ExtensionMetaStore metricStore = ExtensionStore.get().getMetricStore();
+        ExtensionMetaStore metricStore = ExtensionStore.get().getMetaStore();
         List<ExtensionMetadataBean> beanList = metricStore.getAllExtensions();
         for (ExtensionMetadataBean bean : beanList) {
             JSONObject resultObject = new JSONObject();
@@ -452,6 +453,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                 resultObject.put(EXTENSION_NAME, bean.getExtensionName().toLowerCase());
                 resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
                 resultObject.put(EXTENSION_DESC, bean.getDescription());
+                resultObject.put(EXTENSION_LOCATION, bean.getLocation());
             } catch (JSONException e) {
                 throw new FalconException(e);
             }
