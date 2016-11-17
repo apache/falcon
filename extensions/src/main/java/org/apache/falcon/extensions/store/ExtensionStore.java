@@ -250,7 +250,7 @@ public final class ExtensionStore {
         }
         return extesnionList;
     }
-
+    
     public String deleteExtensionMetadata(final String extensionName) throws ValidationException{
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
