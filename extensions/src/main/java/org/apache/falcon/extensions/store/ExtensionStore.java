@@ -250,6 +250,20 @@ public final class ExtensionStore {
         return extesnionList;
     }
 
+    public String deleteExtensionMetadata(final String extensionName) throws StoreAccessException{
+        ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
+                : ExtensionType.CUSTOM;
+        if (extensionType.toString().equalsIgnoreCase(ExtensionType.TRUSTED.toString())){
+            throw new StoreAccessException(new Exception(extensionName + " is trusted cannot be deleted."));
+        }
+        if (metaStore.checkIfExtensionExists(extensionName)) {
+            metaStore.deleteExtensionMetadata(extensionName);
+            return "Deleted entry for:" + extensionName;
+        }else {
+            return "Extension:" + extensionName + " is not registered with falcon.";
+        }
+    }
+
     public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
         Map<String, String> resources = getExtensionArtifacts(extensionName);
         if (resources.isEmpty()) {

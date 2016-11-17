@@ -53,6 +53,17 @@ public class ExtensionMetaStore {
         }
     }
 
+    public Boolean checkIfExtensionExists(String extensionName){
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
+        q.setParameter("extensionName", extensionName);
+        if(q.getResultList().size() > 0){
+            return true;
+        }
+        return false;
+    }
+
     public List<ExtensionMetadataBean> getAllExtensions(){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
@@ -67,11 +78,7 @@ public class ExtensionMetaStore {
     public void deleteExtensionsOfType(ExtensionType extensionType){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-<<<<<<< a15899355a9e1e57292ba5e35e27924031159c9a
-        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_TRUSTED_EXTENSIONS);
-=======
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE);
->>>>>>> comments addressed
         q.setParameter("extensionType", extensionType.toString());
         try{
             q.executeUpdate();
@@ -87,6 +94,18 @@ public class ExtensionMetaStore {
         q.setParameter("extensionName", extensionName);
         try {
             return (String)q.getSingleResult();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public void deleteExtensionMetadata(String extensionName){
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSION);
+        q.setParameter("extensionName", extensionName);
+        try{
+            q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
         }

@@ -217,4 +217,5 @@ public final class FalconCLIConstants {
     public static final String DIRECTION_OPT_DESCRIPTION = "edge direction property";
     public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
     public static final String DO_AS_DESCRIPTION = "doAs user";
+    public static final String UREGISTER = "unregister";
 }
