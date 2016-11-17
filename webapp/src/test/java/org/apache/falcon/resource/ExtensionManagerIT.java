@@ -158,6 +158,12 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
         System.out.println("extension -submitAndSchedule -extensionName hdfs-mirroring");
         Assert.assertEquals(TestContext.executeWithURL(
                 "extension -submitAndSchedule -extensionName hdfs-mirroring"), -1);
+
+        // enumerate
+
+        System.out.println("extension -enumerate");
+        Assert.assertEquals(TestContext.executeWithURL(
+                "extension -enumerate"), 3);
     }
 
     private Map<String, String> getHDFSMirroringProperty(String jobName, String start, String end) {

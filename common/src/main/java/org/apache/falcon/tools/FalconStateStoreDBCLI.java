@@ -247,6 +247,7 @@ public class FalconStateStoreDBCLI {
         args.add("org.apache.falcon.persistence.MonitoredEntityBean");
         args.add("org.apache.falcon.persistence.EntitySLAAlertBean");
         args.add("org.apache.falcon.persistence.BacklogMetricBean");
+        args.add("org.apache.falcon.persistence.ExtensionMetadataBean");
         return args.toArray(new String[args.size()]);
     }
 
