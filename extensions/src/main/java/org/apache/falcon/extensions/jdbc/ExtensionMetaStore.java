@@ -58,7 +58,7 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter("extensionName", extensionName);
-        if(q.getResultList().size() > 0){
+        if (q.getResultList().size() > 0){
             return true;
         }
         return false;
