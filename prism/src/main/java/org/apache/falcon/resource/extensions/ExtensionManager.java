@@ -420,6 +420,20 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    @GET
+    @Path("location/{extension-name}")
+    @Produces({MediaType.TEXT_PLAIN})
+    public String getLocation(@PathParam("extension-name") String extensionName){
+        checkIfExtensionServiceIsEnabled();
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().getLocation(extensionName);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
     @POST
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})

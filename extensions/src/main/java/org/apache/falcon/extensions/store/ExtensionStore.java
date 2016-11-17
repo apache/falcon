@@ -274,6 +274,13 @@ public final class ExtensionStore {
         return getExtensionResource(resources.get(resourceName));
     }
 
+    public String getLocation(final String extensionName) throws StoreAccessException{
+        if (!metaStore.checkIfExtensionExists(extensionName)){
+            throw new StoreAccessException(new Exception("No extension resources found for " + extensionName));
+        }
+        return metaStore.getLocation(extensionName);
+    }
+
     public Path getExtensionStorePath() {
         return storePath;
     }

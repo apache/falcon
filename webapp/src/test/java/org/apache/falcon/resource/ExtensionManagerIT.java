@@ -164,6 +164,15 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
         System.out.println("extension -enumerate");
         Assert.assertEquals(TestContext.executeWithURL(
                 "extension -enumerate"), 3);
+
+        //location
+        filePath = TestContext.overlayParametersOverTemplate(
+                TestContext.getTempFile("property", "txt"),
+                HDFS_MIRRORING_PROPERTY_TEMPLATE,
+                getHDFSMirroringProperty(JOB_NAME_2, START_TIME_1, endTime));
+
+        System.out.println("extension -location -extensionName hdfs-mirroring");
+        Assert.assertEquals(TestContext.executeWithURL("extension -location -extensionName hdfs-mirroring"), filePath);
     }
 
     private Map<String, String> getHDFSMirroringProperty(String jobName, String start, String end) {
