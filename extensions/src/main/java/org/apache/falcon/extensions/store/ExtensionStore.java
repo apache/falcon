@@ -253,14 +253,14 @@ public final class ExtensionStore {
     public String deleteExtensionMetadata(final String extensionName) throws StoreAccessException{
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
-        if (extensionType.toString().equalsIgnoreCase(ExtensionType.TRUSTED.toString())){
+        if (extensionType.equals(ExtensionType.TRUSTED)){
             throw new StoreAccessException(new Exception(extensionName + " is trusted cannot be deleted."));
         }
         if (metaStore.checkIfExtensionExists(extensionName)) {
             metaStore.deleteExtensionMetadata(extensionName);
-            return "Deleted entry for:" + extensionName;
+            return "Deleted extension:" + extensionName;
         }else {
-            return "Extension:" + extensionName + " is not registered with falcon.";
+            return "Extension:" + extensionName + " is not registered with Falcon.";
         }
     }
 
