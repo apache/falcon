@@ -27,9 +27,9 @@
         <artifactId>falcon-main</artifactId>
         <version>0.11-SNAPSHOT</version>
     </parent>
-    <artifactId>falcon-client</artifactId>
-    <description>Apache Falcon Java client</description>
-    <name>Apache Falcon Java client</name>
+    <artifactId>falcon-common-types</artifactId>
+    <description>Apache Falcon Java common types</description>
+    <name>Apache Falcon Java common types</name>
     <packaging>jar</packaging>
 
 
@@ -38,12 +38,6 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.falcon</groupId>
-            <artifactId>falcon-common-types</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -129,6 +123,33 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>0.8.0</version>
+                <executions>
+                    <execution>
+                        <id>1</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <args>
+                        <arg>-extension</arg>
+                        <arg>-Xinheritance</arg>
+                    </args>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.jvnet.jaxb2_commons</groupId>
+                            <artifactId>jaxb2-basics</artifactId>
+                            <version>0.6.3</version>
+                        </plugin>
+                    </plugins>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
