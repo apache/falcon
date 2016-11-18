@@ -483,7 +483,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         // get entities for extension job
         Properties properties = new Properties();
         properties.load(request.getInputStream());
-        List<Entity> entities = extension.getEntities(extensionName, properties);
+        List<Entity> entities = extension.getEntities(extensionName, request.getInputStream());
 
         // add tags on extension name and job
         for (Entity entity : entities) {
