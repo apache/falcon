@@ -24,6 +24,7 @@ import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -47,6 +48,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.tools.nsc.interactive.RangePositions;
 
 /**
  * Store for Falcon extensions.
@@ -250,11 +252,11 @@ public final class ExtensionStore {
         return extesnionList;
     }
 
-    public String deleteExtensionMetadata(final String extensionName) throws StoreAccessException{
+    public String deleteExtensionMetadata(final String extensionName) throws ValidationException{
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
         if (extensionType.equals(ExtensionType.TRUSTED)){
-            throw new StoreAccessException(new Exception(extensionName + " is trusted cannot be deleted."));
+            throw new ValidationException(extensionName + " is trusted cannot be deleted.");
         }
         if (metaStore.checkIfExtensionExists(extensionName)) {
             metaStore.deleteExtensionMetadata(extensionName);
