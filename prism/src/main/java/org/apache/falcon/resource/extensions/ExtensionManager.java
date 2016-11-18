@@ -420,6 +420,21 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    @POST
+    @Path("unregister/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.TEXT_PLAIN)
+    public String deleteExtensionMetadata(
+            @PathParam("extension-name") String extensionName){
+        checkIfExtensionServiceIsEnabled();
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().deleteExtensionMetadata(extensionName);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GET
     @Path("definition/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
@@ -462,7 +477,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         }
         return results;
     }
-
 
     private List<Entity> generateEntities(String extensionName, HttpServletRequest request)
         throws FalconException, IOException {
