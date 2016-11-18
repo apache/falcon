@@ -1,4 +1,3 @@
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -60,6 +59,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     public void dbOpertaions(){
         //insert
         stateStore.storeExtensionMetadataBean("test1", "test_location", ExtensionType.TRUSTED, "test_description");
+
         Assert.assertEquals(stateStore.getAllExtensions().size(), 1);
         //check data
         Assert.assertEquals(stateStore.getLocation("test1"), "test_location");

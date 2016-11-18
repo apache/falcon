@@ -83,7 +83,6 @@ public class AbstractTestExtensionStore {
         falconJPAService.init();
         new ExtensionService().init();
         store = ExtensionService.getExtensionStore();
-        FalconJPAService falconJPAService = FalconJPAService.get();
         fileSystem = HadoopClientFactory.get().createFalconFileSystem(new Configuration(true));
         extensionStorePath = new URI(StartupProperties.get().getProperty(ExtensionStore.EXTENSION_STORE_URI)).getPath();
         extensionStoreSetup(resourceClass);

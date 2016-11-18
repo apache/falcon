@@ -24,6 +24,7 @@ import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -248,6 +249,20 @@ public final class ExtensionStore {
             throw new StoreAccessException(e);
         }
         return extesnionList;
+    }
+
+    public String deleteExtensionMetadata(final String extensionName) throws ValidationException{
+        ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
+                : ExtensionType.CUSTOM;
+        if (extensionType.equals(ExtensionType.TRUSTED)){
+            throw new ValidationException(extensionName + " is trusted cannot be deleted.");
+        }
+        if (metaStore.checkIfExtensionExists(extensionName)) {
+            metaStore.deleteExtensionMetadata(extensionName);
+            return "Deleted extension:" + extensionName;
+        }else {
+            return "Extension:" + extensionName + " is not registered with Falcon.";
+        }
     }
 
     public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
