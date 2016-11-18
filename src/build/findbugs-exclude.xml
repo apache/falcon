@@ -70,6 +70,11 @@
     </Match>
 
     <Match>
+        <Class name="org.apache.falcon.persistence.ExtensionMetadataBean" />
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
+    </Match>
+
+    <Match>
         <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
     </Match>
 </FindBugsFilter>

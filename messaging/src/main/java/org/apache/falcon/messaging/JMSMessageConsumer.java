@@ -18,6 +18,25 @@
 
 package org.apache.falcon.messaging;
 
+import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
@@ -34,26 +53,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
-import java.lang.reflect.InvocationTargetException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
 
 /**
  * Subscribes to the falcon topic for handling retries and alerts.
@@ -156,9 +155,12 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
             wfProperties.put(WorkflowExecutionArgs.ENTITY_NAME, entityTypePair.first);
             wfProperties.put(WorkflowExecutionArgs.ENTITY_TYPE, entityTypePair.second.name());
             wfProperties.put(WorkflowExecutionArgs.WORKFLOW_USER, message.getStringProperty("user"));
-            wfProperties.put(WorkflowExecutionArgs.OPERATION, getOperation(appName).name());
+            WorkflowExecutionContext.EntityOperations operation = getOperation(appName);
+            wfProperties.put(WorkflowExecutionArgs.OPERATION, operation.name());
+            String subflowId = (operation.equals(WorkflowExecutionContext.EntityOperations.GENERATE))
+                    ? "@user-action" : "";
             wfProperties.put(WorkflowExecutionArgs.USER_SUBFLOW_ID,
-                    json.getString("id").concat("@user-action"));
+                    json.getString("id").concat(subflowId));
             String appType = message.getStringProperty("appType");
             return WorkflowExecutionContext.create(wfProperties, WorkflowExecutionContext.Type.valueOf(appType));
 
