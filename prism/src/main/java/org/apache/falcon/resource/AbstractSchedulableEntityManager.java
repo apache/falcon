@@ -235,7 +235,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             if (getWorkflowEngine(entityObj).isActive(entityObj)) {
                 getWorkflowEngine(entityObj).suspend(entityObj);
             } else {
-                throw  FalconWebException.newAPIException(entity + "(" + type + ") is not scheduled");
+                throw  FalconWebException.newAPIException("Status of " + entity + "(" + type + ") is "
+                        + getStatusString(entityObj) + ". Only scheduled entities can be suspended.");
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {

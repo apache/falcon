@@ -22,10 +22,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.service.FalconJPAService;
+import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 
 import java.io.File;
@@ -41,14 +46,44 @@ public class AbstractTestExtensionStore {
     protected String extensionStorePath;
     protected ExtensionStore store;
     private FileSystem fileSystem;
+    protected LocalFileSystem fs = new LocalFileSystem();
+    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
+    protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
+    protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
+    protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
+    private static FalconJPAService falconJPAService = FalconJPAService.get();
 
     public void initExtensionStore() throws Exception {
         initExtensionStore(this.getClass());
     }
 
+    protected int execDBCLICommands(String[] args) {
+        return new FalconStateStoreDBCLI().run(args);
+    }
+
+    public void createDB(String file) {
+        File sqlFile = new File(file);
+        String[] argsCreate = { "create", "-sqlfile", sqlFile.getAbsolutePath(), "-run" };
+        int result = execDBCLICommands(argsCreate);
+        Assert.assertEquals(0, result);
+        Assert.assertTrue(sqlFile.exists());
+
+    }
+
     public void initExtensionStore(Class resourceClass) throws Exception {
+        String configPath = new URI(StartupProperties.get().getProperty("config.store.uri")).getPath();
+        String location = configPath + "-" + getClass().getName();
+        StartupProperties.get().setProperty("config.store.uri", location);
+        FileUtils.deleteDirectory(new File(location));
+        StateStoreProperties.get().setProperty(FalconJPAService.URL, url);
+        Configuration localConf = new Configuration();
+        fs.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
+        fs.mkdirs(new Path(DB_BASE_DIR));
+        createDB(DB_SQL_FILE);
+        falconJPAService.init();
         new ExtensionService().init();
         store = ExtensionService.getExtensionStore();
+        FalconJPAService falconJPAService = FalconJPAService.get();
         fileSystem = HadoopClientFactory.get().createFalconFileSystem(new Configuration(true));
         extensionStorePath = new URI(StartupProperties.get().getProperty(ExtensionStore.EXTENSION_STORE_URI)).getPath();
         extensionStoreSetup(resourceClass);

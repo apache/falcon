@@ -67,4 +67,7 @@ public final class PersistenceConstants {
     public static final String DELETE_BACKLOG_METRIC_INSTANCE = "DELETE_BACKLOG_METRIC_INSTANCE";
     public static final String GET_ALL_BACKLOG_INSTANCES = "GET_ALL_BACKLOG_INSTANCES";
     public static final String DELETE_ALL_BACKLOG_ENTITY_INSTANCES ="DELETE_ALL_BACKLOG_ENTITY_INSTANCES";
+    public static final String GET_ALL_EXTENSIONS = "GET_ALL_EXTENSIONS";
+    public static final String GET_EXTENSION_LOCATION = "GET_EXTENSION_LOCATION";
+    public static final String DELETE_EXTENSIONS_OF_TYPE = "DELETE_EXTENSIONS_OF_TYPE";
 }
