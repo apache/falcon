@@ -348,7 +348,7 @@ public class FalconClient extends AbstractFalconClient {
         RESUME("api/extension/resume", HttpMethod.POST, MediaType.TEXT_XML),
         DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML),
         UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_PLAIN),
-        LOCATION("api/extension/location/", HttpMethod.GET, MediaType.TEXT_PLAIN);;
+        DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON);;
 
         private String path;
         private String method;
@@ -1030,9 +1030,9 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(String.class, clientResponse);
     }
 
-    public String getExtensionLocation(final String extensionName) {
-        ClientResponse clientResponse = new ResourceBuilder().path(ExtensionOperations.LOCATION.path, extensionName)
-                .call(ExtensionOperations.LOCATION);
+    public String getExtensionDetail(final String extensionName) {
+        ClientResponse clientResponse = new ResourceBuilder().path(ExtensionOperations.DETAIL.path, extensionName)
+                .call(ExtensionOperations.DETAIL);
         return getResponse(String.class, clientResponse);
     }
 
