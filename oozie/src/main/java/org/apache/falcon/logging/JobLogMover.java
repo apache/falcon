@@ -18,6 +18,7 @@
 
 package org.apache.falcon.logging;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -84,17 +85,23 @@ public class JobLogMover {
 
     public int run(WorkflowExecutionContext context) {
         try {
-            OozieClient client = new OozieClient(context.getWorkflowEngineUrl());
+            String engineUrl = context.getWorkflowEngineUrl();
+            if (StringUtils.isBlank(engineUrl)) {
+                LOG.warn("Unable to retrieve workflow url for {} with status {} ",
+                        context.getWorkflowId(), context.getWorkflowStatus());
+                return 0;
+            }
+            OozieClient client = new OozieClient(engineUrl);
             WorkflowJob jobInfo;
             try {
-                jobInfo = client.getJobInfo(context.getUserSubflowId());
+                jobInfo = client.getJobInfo(context.getWorkflowId());
             } catch (OozieClientException e) {
                 LOG.error("Error getting jobinfo for: {}", context.getUserSubflowId(), e);
                 return 0;
             }
             //Assumption is - Each wf run will have a directory
             //the corresponding job logs are stored within the respective dir
-            Path path = new Path(context.getLogDir() + "/"
+            Path path = new Path(context.getLogDir() + "/" + context.getNominalTime() + "/"
                     + String.format("%03d", context.getWorkflowRunId()));
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri(), getConf());
 
@@ -117,6 +124,7 @@ public class JobLogMover {
                         ||context.getUserWorkflowEngine().equals("hive")) {
                     flowId = jobInfo.getId();
                 } else {
+                    jobInfo = client.getJobInfo(context.getUserSubflowId());
                     // if process wf with oozie engine
                     flowId = jobInfo.getExternalId();
                 }
