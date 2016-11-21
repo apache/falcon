@@ -275,10 +275,10 @@ public final class ExtensionStore {
         conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem =  HadoopClientFactory.get().createFalconFileSystem(uri);
         try {
-          fileSystem.listStatus(new Path(uri.getPath() + "/README"));
+            fileSystem.listStatus(new Path(uri.getPath() + "/README"));
         } catch (IOException e){
             LOG.error("Exception in registerExtensionMetadata:", e);
-            throw new ValidationException("README file is not present in the" + uri.getPath());
+            throw new ValidationException("README file is not present in the " + path);
         }
         PathFilter filter=new PathFilter(){
             public boolean accept(Path file){
@@ -302,7 +302,7 @@ public final class ExtensionStore {
         if (!metaStore.checkIfExtensionExists(extensionName)){
             metaStore.storeExtensionMetadataBean(extensionName, path, ExtensionType.CUSTOM, description);
         }else{
-            throw new ValidationException( extensionName + " already exsists.");
+            throw new ValidationException(extensionName + " already exsists.");
         }
         return "Extension :" + extensionName + " registered succesfully.";
     }

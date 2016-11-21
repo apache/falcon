@@ -101,10 +101,10 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
 
     @Test
     public void testRegisterExtensionMetadata() throws IOException, URISyntaxException, FalconException{
-        store = ExtensionStore.get();
         createlibs();
         createReadmeAndJar();
         createMETA();
+        store = ExtensionStore.get();
         store.registerExtensionMetadata("test", STORAGE_URL + EXTENSION_PATH, "test desc");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 1);
@@ -122,14 +122,15 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         if (fs.exists(path)){
             fs.delete(path, true);
         }
+        fs.mkdirs(path);
+        path = new Path(EXTENSION_PATH + "/META/test.properties");
         OutputStream os = fs.create(path);
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         br.write("Hello World");
-        path = new Path(EXTENSION_PATH + "/META/test.properties");
         if (fs.exists(path)){
             fs.delete(path, true);
         }
-        br.write("test jar");
+        br.write("test properties");
         fs.create(path);
         br.close();
     }
@@ -140,7 +141,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
             fs.delete(path, true);
         }
         fs.mkdirs(path);
-        path = new Path(EXTENSION_PATH + "/libs");
+        path = new Path(EXTENSION_PATH + "/libs//libs/build");
         fs.mkdirs(path);
     }
 
@@ -149,13 +150,11 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         if (fs.exists(path)){
             fs.delete(path, true);
         }
+        fs.create(path);
+        path = new Path(EXTENSION_PATH + "/libs/build/test.jar");
         OutputStream os = fs.create(path);
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         br.write("Hello World");
-        path = new Path(EXTENSION_PATH + "/libs/test.jar");
-        if (fs.exists(path)){
-            fs.delete(path, true);
-        }
         br.write("test jar");
         fs.create(path);
         br.close();
