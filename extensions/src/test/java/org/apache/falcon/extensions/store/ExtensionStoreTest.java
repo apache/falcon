@@ -104,6 +104,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         store = ExtensionStore.get();
         createlibs();
         createReadmeAndJar();
+        createMETA();
         store.registerExtensionMetadata("test", STORAGE_URL + EXTENSION_PATH, "test desc");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 1);
@@ -114,6 +115,23 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         store = ExtensionStore.get();
         createlibs();
         store.registerExtensionMetadata("test", STORAGE_URL + EXTENSION_PATH, "test desc");
+    }
+
+    private void createMETA() throws IOException{
+        Path path = new Path(EXTENSION_PATH + "/META");
+        if (fs.exists(path)){
+            fs.delete(path, true);
+        }
+        OutputStream os = fs.create(path);
+        BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        br.write("Hello World");
+        path = new Path(EXTENSION_PATH + "/META/test.properties");
+        if (fs.exists(path)){
+            fs.delete(path, true);
+        }
+        br.write("test jar");
+        fs.create(path);
+        br.close();
     }
 
     private void createlibs() throws IOException{
@@ -127,8 +145,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
     }
 
     private void createReadmeAndJar() throws IOException{
-        Path path = new Path(EXTENSION_PATH);
-        path = new Path(EXTENSION_PATH + "/README");
+        Path path = new Path(EXTENSION_PATH + "/README");
         if (fs.exists(path)){
             fs.delete(path, true);
         }

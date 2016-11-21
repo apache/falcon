@@ -269,23 +269,40 @@ public final class ExtensionStore {
     }
 
     public String registerExtensionMetadata(final String extensionName, final String path, final String description)
-        throws URISyntaxException, FalconException, IOException{
+        throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
         conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem =  HadoopClientFactory.get().createFalconFileSystem(uri);
-        FileStatus[] fileStatusReadMe = fileSystem.listStatus(new Path(uri.getPath() + "/README"));
+        try {
+          fileSystem.listStatus(new Path(uri.getPath() + "/README"));
+        } catch (IOException e){
+            LOG.error("Exception in registerExtensionMetadata:", e);
+            throw new ValidationException("README file is not present in the" + uri.getPath());
+        }
         PathFilter filter=new PathFilter(){
             public boolean accept(Path file){
                 return file.getName().endsWith(".jar");
             }
         };
-        FileStatus[] fileStatusJar = fileSystem.listStatus(new Path(uri.getPath() + "/libs"), filter);
+        try {
+            fileSystem.listStatus(new Path(uri.getPath() + "/libs/build"), filter);
+        } catch (IOException e){
+            LOG.error("Exception in registerExtensionMetadata:", e);
+            throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
+        }
+        try{
+            fileSystem.listStatus(new Path(uri.getPath() + "/META"));
+        } catch (IOException e){
+            LOG.error("Exception in registerExtensionMetadata:", e);
+            throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
+                    + " structure.");
+        }
 
-        if (fileStatusReadMe.length == 1 && fileStatusJar.length >0){
+        if (!metaStore.checkIfExtensionExists(extensionName)){
             metaStore.storeExtensionMetadataBean(extensionName, path, ExtensionType.CUSTOM, description);
         }else{
-            throw new ValidationException("Packaging structure is not currect please refer to documentation");
+            throw new ValidationException( extensionName + " already exsists.");
         }
         return "Extension :" + extensionName + " registered succesfully.";
     }

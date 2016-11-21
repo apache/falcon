@@ -50,11 +50,8 @@ public class FalconExtensionCLI {
     public static final String DESCRIBE_OPT = "describe";
     public static final String INSTANCES_OPT = "instances";
     public static final String UNREGISTER_OPT = "unregister";
-<<<<<<< 3d61e96fa2076171f016529502f7c15dec2cb4a0
     public static final String DETAIL_OPT = "detail";
-=======
     public static final String REGISTER_OPT = "register";
->>>>>>> FALCON-2188 Rest api to register extension
 
     // Input parameters
     public static final String ENTENSION_NAME_OPT = "extensionName";
@@ -177,7 +174,8 @@ public class FalconExtensionCLI {
         Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Un-register an extension. This will make"
                 + " the extension unavailable for instantiation");
         Option detail = new Option(FalconCLIConstants.DETAIL, false, "Show details of a given extension");
-        Option register = new Option(FalconCLIConstants.REGISTER, false, "Add metadata of extension job");
+        Option register = new Option(FalconCLIConstants.REGISTER, false, "Register an extension with Falcon. This will "
+                + "make the extension available for instantiation for all users.");
 
         OptionGroup group = new OptionGroup();
         group.addOption(enumerate);
