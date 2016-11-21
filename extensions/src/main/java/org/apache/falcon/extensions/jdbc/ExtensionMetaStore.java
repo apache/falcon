@@ -87,13 +87,13 @@ public class ExtensionMetaStore {
         }
     }
 
-    public String getLocation(String extensionName){
+    public ExtensionMetadataBean getDetail(String extensionName){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_LOCATION);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter("extensionName", extensionName);
         try {
-            return (String)q.getSingleResult();
+            return (ExtensionMetadataBean)q.getSingleResult();
         } finally {
             commitAndCloseTransaction(entityManager);
         }

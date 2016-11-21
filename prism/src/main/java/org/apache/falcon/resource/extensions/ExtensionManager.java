@@ -21,6 +21,7 @@ package org.apache.falcon.resource.extensions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -420,6 +421,20 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    @GET
+    @Path("detail/{extension-name}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getDetail(@PathParam("extension-name") String extensionName){
+        checkIfExtensionServiceIsEnabled();
+        validateExtensionName(extensionName);
+        try {
+            return Response.ok(buildDetailResult(extensionName)).build();
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
     @POST
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
@@ -522,6 +537,27 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         default:
             LOG.error("Unknown entity type: {}", entity.getEntityType().name());
         }
+    }
+
+    private  JSONObject buildDetailResult(final String extensionName) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+
+        if (!metaStore.checkIfExtensionExists(extensionName)){
+            throw new ValidationException("No extension resources found for " + extensionName);
+        }
+
+        ExtensionMetadataBean bean = metaStore.getDetail(extensionName);
+        JSONObject resultObject = new JSONObject();
+        try {
+            resultObject.put(EXTENSION_NAME, bean.getExtensionName());
+            resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
+            resultObject.put(EXTENSION_DESC, bean.getDescription());
+            resultObject.put(EXTENSION_LOCATION, bean.getLocation());
+        } catch (JSONException e) {
+            LOG.error("Exception in buildDetailResults:", e);
+            throw new FalconException(e);
+        }
+        return resultObject;
     }
 
     private Map<String, List<Entity>> groupEntitiesByJob(List<Entity> entities) {

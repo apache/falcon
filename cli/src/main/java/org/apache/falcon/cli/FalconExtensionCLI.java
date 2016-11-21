@@ -50,6 +50,7 @@ public class FalconExtensionCLI {
     public static final String DESCRIBE_OPT = "describe";
     public static final String INSTANCES_OPT = "instances";
     public static final String UNREGISTER_OPT = "unregister";
+    public static final String DETAIL_OPT = "detail";
 
     // Input parameters
     public static final String ENTENSION_NAME_OPT = "extensionName";
@@ -83,6 +84,9 @@ public class FalconExtensionCLI {
         } else if (optionsList.contains(UNREGISTER_OPT)) {
             validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
             result = client.unregisterExtension(extensionName);
+        }else if (optionsList.contains(DETAIL_OPT)) {
+            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            result = client.getExtensionDetail(extensionName);
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
             validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
@@ -157,7 +161,9 @@ public class FalconExtensionCLI {
         Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false, "Suspend an extension job");
         Option resume = new Option(FalconCLIConstants.RESUME_OPT, false, "Resume an extension job");
         Option delete = new Option(FalconCLIConstants.DELETE_OPT, false, "Delete an extension job");
-        Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Delete metadata of extension job");
+        Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Un-register an extension. This will make"
+                + " the extension unavailable for instantiation");
+        Option detail = new Option(FalconCLIConstants.DETAIL, false, "Show details of a given extension");
 
         OptionGroup group = new OptionGroup();
         group.addOption(enumerate);
@@ -174,6 +180,7 @@ public class FalconExtensionCLI {
         group.addOption(resume);
         group.addOption(delete);
         group.addOption(unregister);
+        group.addOption(detail);
         extensionOptions.addOptionGroup(group);
 
         Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
