@@ -285,17 +285,26 @@ public final class ExtensionStore {
                 return file.getName().endsWith(".jar");
             }
         };
+        FileStatus[] jarStatus;
         try {
-            fileSystem.listStatus(new Path(uri.getPath() + "/libs/build"), filter);
+            jarStatus = fileSystem.listStatus(new Path(uri.getPath() + "/libs/build"), filter);
+            if (jarStatus.length <=0) {
+                throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
+            }
         } catch (IOException e){
             LOG.error("Exception in registerExtensionMetadata:", e);
             throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
         }
+        FileStatus[] propStatus;
         try{
-            fileSystem.listStatus(new Path(uri.getPath() + "/META"));
+            propStatus = fileSystem.listStatus(new Path(uri.getPath() + "/META"));
+            if (propStatus.length <=0){
+                throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
+                        + " structure.");
+            }
         } catch (IOException e){
             LOG.error("Exception in registerExtensionMetadata:", e);
-            throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
+            throw new ValidationException("Directory is not present in the " + uri.getPath() + "/META"
                     + " structure.");
         }
 

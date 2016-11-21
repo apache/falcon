@@ -93,6 +93,9 @@ public class FalconExtensionCLI {
             validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
             result = client.getExtensionDetail(extensionName);
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
+            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
+            result = client.submitExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(REGISTER_OPT)) {
             validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
             validateRequiredParameter(path, PATH);
