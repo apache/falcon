@@ -108,7 +108,7 @@ public final class ValidationUtil {
     public static List<LifeCycle> getLifeCycle(String lifeCycleValue) {
         if (lifeCycleValue != null) {
             String[] lifeCycleValues = lifeCycleValue.split(",");
-            List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
+            List<LifeCycle> lifeCycles = new ArrayList<>();
             try {
                 for (String lifeCycle : lifeCycleValues) {
                     lifeCycles.add(LifeCycle.valueOf(lifeCycle.toUpperCase().trim()));
