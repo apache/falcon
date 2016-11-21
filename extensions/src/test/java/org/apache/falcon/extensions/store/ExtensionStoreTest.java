@@ -99,7 +99,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
     }
 
 
-    @Test
+    @Test(enabled = false)
     public void testRegisterExtensionMetadata() throws IOException, URISyntaxException, FalconException{
         createlibs();
         createReadmeAndJar();
