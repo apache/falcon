@@ -161,8 +161,9 @@ public class FalconExtensionCLI {
         Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false, "Suspend an extension job");
         Option resume = new Option(FalconCLIConstants.RESUME_OPT, false, "Resume an extension job");
         Option delete = new Option(FalconCLIConstants.DELETE_OPT, false, "Delete an extension job");
-        Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Delete metadata of extension job");
-        Option detail = new Option(FalconCLIConstants.DETAIL, false, "Give location of extension job");
+        Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Un-register an extension. This will make"
+                + " the extension unavailable for instantiation");
+        Option detail = new Option(FalconCLIConstants.DETAIL, false, "Show details of a given extension");
 
         OptionGroup group = new OptionGroup();
         group.addOption(enumerate);
