@@ -27,9 +27,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
+import org.apache.falcon.ExtensionUtil;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
@@ -47,6 +49,8 @@ import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -118,6 +122,7 @@ public class FalconClient extends AbstractFalconClient {
 
 
     public static final String DO_AS_OPT = "doAs";
+    public static final String ENTITIES_OPT = "entities";
     /**
      * Name of the HTTP cookie used for the authentication token between the client and the server.
      */
@@ -134,6 +139,7 @@ public class FalconClient extends AbstractFalconClient {
             return true;
         }
     };
+    private static final String TAG_SEPARATOR = ",";
     private final WebResource service;
     private final AuthenticatedURL.Token authenticationToken;
 
@@ -817,6 +823,15 @@ public class FalconClient extends AbstractFalconClient {
             return this;
         }
 
+        public ResourceBuilder addQueryParam(String paramName, List<Entity> entities) {
+            if (entities != null && !entities.isEmpty()) {
+                for (Entity entity : entities) {
+                    resource = resource.queryParam(paramName, entity.toString());
+                }
+            }
+            return this;
+        }
+
         private ClientResponse call(Entities entities) {
             return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
@@ -1059,12 +1074,54 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(String.class, clientResponse);
     }
 
-    public APIResult submitExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
-        InputStream entityStream = getServletInputStream(filePath);
+    @Override
+    public APIResult submitExtensionJob(final String extensionName, final String jobName, final String configPath,
+                                        final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.DETAIL.path)
+                .call(ExtensionOperations.DETAIL);
+        JSONObject responseJson = clientResponse.getEntity(JSONObject.class);
+        ExtensionType extensionType;
+        String extensionBuildLocation;
+        try {
+            JSONObject extensionDetailsJson = new JSONObject(responseJson.get("detail").toString());
+            extensionType = ExtensionType.valueOf(extensionDetailsJson.get("type").toString().toUpperCase());
+            extensionBuildLocation = extensionDetailsJson.get("location").toString();
+        } catch (JSONException e) {
+            OUT.get().print("Error. " + extensionName + " not found ");
+            return null;
+        }
+        InputStream configStream = getServletInputStream(configPath);
+
+        List<Entity> entities = null;
+        if (extensionType.equals(ExtensionType.CUSTOM)) {
+            try {
+                entities = ExtensionUtil.loadAndPrepare(extensionName, jobName, configStream, extensionBuildLocation);
+            } catch (Exception e) {
+                OUT.get().println("Error in building the extension");
+                return null;
+            }
+            if (entities == null || entities.isEmpty()) {
+                OUT.get().println("No entities got built");
+                return null;
+            }
+            String extensionTag = extensionName + "_" + jobName;
+            for (Entity entity : entities) {
+                String tags = entity.getTags();
+
+                if (StringUtils.isNotBlank(tags)) {
+                    ExtensionUtil.setEntityTags(entity, tags + TAG_SEPARATOR + extensionTag);
+                } else {
+                    ExtensionUtil.setEntityTags(entity, extensionTag);
+                }
+            }
+        }
+
+        clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.SUBMIT, entityStream);
+                .addQueryParam(ENTITIES_OPT, entities)
+                .call(ExtensionOperations.SUBMIT, configStream);
         return getResponse(APIResult.class, clientResponse);
     }
 
