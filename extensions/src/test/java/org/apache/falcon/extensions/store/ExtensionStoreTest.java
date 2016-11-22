@@ -19,7 +19,16 @@
 package org.apache.falcon.extensions.store;
 
 import com.google.common.collect.ImmutableMap;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.URISyntaxException;
+import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
@@ -32,16 +41,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import java.io.OutputStreamWriter;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.util.Map;
 
 /**
  *  Tests for extension store.
@@ -95,11 +94,17 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
 
     @BeforeMethod
     public void clean() {
-        clear();
+        clearDB();
+        // Clean up FS
+        try {
+            fs.delete(new Path(extensionStorePath + "/hdfs-mirroring"), true);
+        } catch (IOException e) {
+            // Ignore
+        }
     }
 
 
-    @Test(enabled = false)
+    @Test
     public void testRegisterExtensionMetadata() throws IOException, URISyntaxException, FalconException{
         createlibs();
         createReadmeAndJar();
@@ -110,7 +115,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         Assert.assertEquals(metaStore.getAllExtensions().size(), 1);
     }
 
-    @Test(expectedExceptions=FileNotFoundException.class)
+    @Test(expectedExceptions=ValidationException.class)
     public void testFailureCaseRegisterExtensionMetadata() throws IOException, URISyntaxException, FalconException{
         store = ExtensionStore.get();
         createlibs();
@@ -160,7 +165,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         br.close();
     }
 
-    private void clear() {
+    private void clearDB() {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
         try {
