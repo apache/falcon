@@ -219,4 +219,7 @@ public final class FalconCLIConstants {
     public static final String DO_AS_DESCRIPTION = "doAs user";
     public static final String UREGISTER = "unregister";
     public static final String DETAIL = "detail";
+    public static final String REGISTER = "register";
+    public static final String PATH = "path";
+    public static final String DESCRIPTION = "description";
 }

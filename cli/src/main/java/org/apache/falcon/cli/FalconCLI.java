@@ -101,7 +101,7 @@ public class FalconCLI {
         parser.addCommand(FalconCLIConstants.EXTENSION_CMD, "",
                 "Extension operations like enumerate, definition, describe, list, instances, "
                         + "submit, submitAndSchedule, schedule, suspend, resume, delete, update, validate,unregister"
-                        + ",detail",
+                        + ",detail,register",
                 extensionCLI.createExtensionOptions(), true);
         parser.addCommand(FalconCLIConstants.VERSION_OPT, "", "show client version", new Options(), false);
 

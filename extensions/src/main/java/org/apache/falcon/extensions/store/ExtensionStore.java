@@ -25,12 +25,14 @@ import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,6 +41,8 @@ import java.io.InputStream;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.entity.store.StoreAccessException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -262,6 +266,54 @@ public final class ExtensionStore {
         }else {
             return "Extension:" + extensionName + " is not registered with Falcon.";
         }
+    }
+
+    public String registerExtensionMetadata(final String extensionName, final String path, final String description)
+        throws URISyntaxException, FalconException {
+        Configuration conf = new Configuration();
+        URI uri = new URI(path);
+        conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
+        FileSystem fileSystem =  HadoopClientFactory.get().createFalconFileSystem(uri);
+        try {
+            fileSystem.listStatus(new Path(uri.getPath() + "/README"));
+        } catch (IOException e){
+            LOG.error("Exception in registerExtensionMetadata:", e);
+            throw new ValidationException("README file is not present in the " + path);
+        }
+        PathFilter filter=new PathFilter(){
+            public boolean accept(Path file){
+                return file.getName().endsWith(".jar");
+            }
+        };
+        FileStatus[] jarStatus;
+        try {
+            jarStatus = fileSystem.listStatus(new Path(uri.getPath() + "/libs/build"), filter);
+            if (jarStatus.length <=0) {
+                throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
+            }
+        } catch (IOException e){
+            LOG.error("Exception in registerExtensionMetadata:", e);
+            throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
+        }
+        FileStatus[] propStatus;
+        try{
+            propStatus = fileSystem.listStatus(new Path(uri.getPath() + "/META"));
+            if (propStatus.length <=0){
+                throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
+                        + " structure.");
+            }
+        } catch (IOException e){
+            LOG.error("Exception in registerExtensionMetadata:", e);
+            throw new ValidationException("Directory is not present in the " + uri.getPath() + "/META"
+                    + " structure.");
+        }
+
+        if (!metaStore.checkIfExtensionExists(extensionName)){
+            metaStore.storeExtensionMetadataBean(extensionName, path, ExtensionType.CUSTOM, description);
+        }else{
+            throw new ValidationException(extensionName + " already exsists.");
+        }
+        return "Extension :" + extensionName + " registered succesfully.";
     }
 
     public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
