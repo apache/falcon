@@ -22,9 +22,10 @@ import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test Class for validating Extension Class Loader.
@@ -34,15 +35,21 @@ public class ExtensionClassLoaderTest {
 
     @Test
     public void testManuallyLoadedClass() throws Exception{
-        File path = new File(JARS_DIR);
-        URL[] urls = {new Path(path.toString()).toUri().toURL()};
-        ExtensionClassLoader loader = new ExtensionClassLoader(urls, Thread.currentThread().getContextClassLoader());
+
+        List<URL> urls = new ArrayList<>();
+
+        urls.addAll(ExtensionUtil.getFilesInPath(new Path(JARS_DIR).toUri().toURL()));
+
+        ClassLoader loader = ExtensionClassLoader.load(urls);
+        ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(loader);
         Class<?> classManuallyLoaded = loader.loadClass("org.apache.falcon.ExtensionExample");
 
-        Object myBeanInstanceFromReflection = classManuallyLoaded.newInstance();
+        Object exampleExtension = classManuallyLoaded.newInstance();
 
         Method methodToString = classManuallyLoaded.getMethod("toString", String.class);
 
-        Assert.assertEquals("test", methodToString.invoke(myBeanInstanceFromReflection, "test"));
+        Thread.currentThread().setContextClassLoader(previousClassLoader);
+        Assert.assertEquals("test", methodToString.invoke(exampleExtension, "test"));
     }
 }

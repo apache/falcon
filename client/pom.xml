@@ -124,31 +124,12 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>packaging</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>test</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>falcon-client</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                </artifactItem>
-                            </artifactItems>
-                        <outputDirectory>${basedir}/src/test/resources</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

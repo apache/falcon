@@ -26,7 +26,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.ExtensionBuilder;
-import org.apache.falcon.util.ReflectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -79,7 +78,7 @@ public final class ExtensionUtil {
 
         ExtensionBuilder extensionBuilder = null;
         try {
-            Class<ExtensionBuilder> clazz = (Class<ExtensionBuilder>) ReflectionUtils.class.getClassLoader()
+            Class<ExtensionBuilder> clazz = (Class<ExtensionBuilder>) extensionClassloader
                     .loadClass(result.get(0).getCanonicalName());
             extensionBuilder = clazz.newInstance();
         } catch (ClassNotFoundException e) {
@@ -179,7 +178,7 @@ public final class ExtensionUtil {
 //        return ExtensionClassLoader.load(getFilesInPath(localBuildLibsPath.toUri().toURL()));
     }
 
-    private static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
+    public static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
         List<URL> urls = new ArrayList<>();
 
         File file = new File(fileURL.getPath());

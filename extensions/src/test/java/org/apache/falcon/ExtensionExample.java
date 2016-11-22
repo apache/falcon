@@ -32,12 +32,15 @@ import java.util.List;
  * Extension Example for testing extension loading and preparing entities.
  */
 public class ExtensionExample implements ExtensionBuilder{
+
+    public static final String PROCESS_XML = "/process.xml";
+
     @Override
     public List<Entity> getEntities(String extensionName, InputStream extensionConfigStream) throws FalconException {
         Entity process;
         try {
             process = (Entity) EntityType.PROCESS.getUnmarshaller().unmarshal(
-                    getClass().getResourceAsStream(ExtensionUtilTest.PROCESS_XML));
+                    getClass().getResourceAsStream(PROCESS_XML));
         } catch (JAXBException e) {
             throw new FalconException("Failed in unmarshalling the entity");
         }

@@ -25,7 +25,6 @@ import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -50,7 +49,6 @@ public class ExtensionUtilTest {
         Assert.assertTrue(EntityUtil.getTags(process).contains("testTag"));
 
         List<URL> urls = new ArrayList<>();
-        File libPath = new File(JARS_DIR);
 
         InputStream configStream = null;
         try {
@@ -59,7 +57,7 @@ public class ExtensionUtilTest {
             //ignore
         }
 
-        urls.add(new Path(libPath.toString()).toUri().toURL());
+        urls.addAll(ExtensionUtil.getFilesInPath(new Path(JARS_DIR).toUri().toURL()));
         List<Entity> entities = ExtensionUtil.prepare("extensionName", "jobName", configStream, urls);
         Assert.assertEquals(entities.size(), 1);
         Assert.assertEquals(entities.get(0), process);
