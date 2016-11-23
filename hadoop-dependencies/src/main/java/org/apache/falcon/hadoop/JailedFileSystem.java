@@ -90,6 +90,11 @@ public class JailedFileSystem extends FileSystem {
     }
 
     @Override
+    public FSDataOutputStream create(Path f) throws IOException {
+        return localFS.create(toLocalPath(f));
+    }
+
+    @Override
     public FSDataOutputStream append(Path f, int bufferSize, Progressable progress) throws IOException {
         return localFS.append(toLocalPath(f), bufferSize, progress);
     }

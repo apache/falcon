@@ -20,6 +20,7 @@ package org.apache.falcon.extensions.jdbc;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
+import org.apache.falcon.persistence.ExtensionMetadataBean;
 import org.apache.falcon.service.FalconJPAService;
 
 import org.apache.hadoop.conf.Configuration;
@@ -62,7 +63,8 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
 
         Assert.assertEquals(stateStore.getAllExtensions().size(), 1);
         //check data
-        Assert.assertEquals(stateStore.getLocation("test1"), "test_location");
+        ExtensionMetadataBean bean = stateStore.getDetail("test1");
+        Assert.assertEquals(bean.getLocation(), "test_location");
         //delete
         stateStore.deleteExtensionsOfType(ExtensionType.TRUSTED);
         Assert.assertEquals(stateStore.getAllExtensions().size(), 0);
