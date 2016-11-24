@@ -266,9 +266,9 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public APIResult submitExtensionJob(String extensionName, String buildExtensionName, String configPath, String doAsUser) {
+    public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
         //TODO Make falcon unit client changes for submitting recipe too.
-        return null;
+        throw new UnsupportedOperationException("Not yet Implemented");
     }
 
     @Override

@@ -45,7 +45,7 @@ public class ExtensionUtilTest {
     public void testPrepareAndSetEntityTags() throws Exception {
         Entity process = (Entity) EntityType.PROCESS.getUnmarshaller().unmarshal(
                 getClass().getResourceAsStream(PROCESS_XML));
-        ExtensionUtil.setEntityTags(process, "testTag");
+        EntityUtil.setEntityTags(process, "testTag");
         Assert.assertTrue(EntityUtil.getTags(process).contains("testTag"));
 
         List<URL> urls = new ArrayList<>();

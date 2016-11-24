@@ -26,8 +26,10 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.ExtensionUtil;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -824,12 +826,13 @@ public class FalconClient extends AbstractFalconClient {
         }
 
         public ResourceBuilder addQueryParam(String paramName, List<Entity> entities) {
+            ResourceBuilder resourceBuilder = new ResourceBuilder();
             if (entities != null && !entities.isEmpty()) {
                 for (Entity entity : entities) {
-                    resource = resource.queryParam(paramName, entity.toString());
+                    resourceBuilder.addQueryParam(paramName, entity.toString());
                 }
             }
-            return this;
+            return resourceBuilder;
         }
 
         private ClientResponse call(Entities entities) {
@@ -1105,15 +1108,10 @@ public class FalconClient extends AbstractFalconClient {
                 OUT.get().println("No entities got built");
                 return null;
             }
-            String extensionTag = extensionName + "_" + jobName;
-            for (Entity entity : entities) {
-                String tags = entity.getTags();
-
-                if (StringUtils.isNotBlank(tags)) {
-                    ExtensionUtil.setEntityTags(entity, tags + TAG_SEPARATOR + extensionTag);
-                } else {
-                    ExtensionUtil.setEntityTags(entity, extensionTag);
-                }
+            try {
+                EntityUtil.applyTags(extensionName, jobName, entities);
+            } catch (FalconException e) {
+                OUT.get().println("Error in applying tags to generated entities");
             }
         }
 

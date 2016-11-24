@@ -23,8 +23,6 @@ import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconExtensionConstants;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.ExtensionBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -81,14 +79,11 @@ public final class ExtensionUtil {
             Class<ExtensionBuilder> clazz = (Class<ExtensionBuilder>) extensionClassloader
                     .loadClass(result.get(0).getCanonicalName());
             extensionBuilder = clazz.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new FalconCLIException("Extension Implementation class not found", e);
-        } catch (InstantiationException e) {
-            throw new FalconCLIException("Failed to instantiate extension implementation", e);
-        } catch (IllegalAccessException e) {
-            throw new FalconCLIException("Failed to instantiate extension implementation", e);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new FalconCLIException("Failed to instantiate extension implementation " + extensionName, e);
         }
 
+        extensionBuilder.validateExtensionConfig(extensionName, configStream);
         List<Entity> entities = extensionBuilder.getEntities(jobName, configStream);
 
         Thread.currentThread().setContextClassLoader(previousClassLoader);
@@ -113,13 +108,15 @@ public final class ExtensionUtil {
         return ExtensionUtil.getEntities(extensionClassLoader, extensionName, jobName, configStream);
     }
 
+    // This method is only for debugging, the staged entities can be found in /tmp path.
     public static void stageEntities(List<Entity> entities, String stagePath)
         throws IOException, FalconException {
         File entityFile;
         EntityType type;
         for (Entity entity : entities) {
             type = entity.getEntityType();
-            entityFile = new File(stagePath + File.separator + URLEncoder.encode(entity.getName(), UTF_8));
+            entityFile = new File(stagePath + File.separator + entity.getEntityType().toString() + "_"
+                    + URLEncoder.encode(entity.getName(), UTF_8));
             if (!entityFile.createNewFile()) {
                 throw new FalconCLIException("Failed to create the file" + entityFile.toString());
             }
@@ -163,7 +160,7 @@ public final class ExtensionUtil {
         LOG.info("Copying build time resources from {} to {}", buildLibsPath, localBuildResourcesPath);
         fs.copyToLocalFile(buildResourcesPath, localBuildResourcesPath);
 
-        Path metaPath = new Path(extensionBuildUrl, FalconExtensionConstants.META);
+        Path metaPath = new Path(extensionBuildUrl, FalconExtensionConstants.META_INF);
         Path metaServicesPath = new Path(metaPath, FalconExtensionConstants.SERVICES);
         Path localMetaServicesPath = new Path(localStagePath, FalconExtensionConstants.RESOURCES);
         LOG.info("Copying meta services from {} to {}", metaServicesPath, localMetaServicesPath);
@@ -172,10 +169,9 @@ public final class ExtensionUtil {
 
         List<URL> urls = new ArrayList<>();
         urls.addAll(getFilesInPath(localBuildLibsPath.toUri().toURL()));
-        urls.addAll(getFilesInPath(localBuildResourcesPath.toUri().toURL()));
-        urls.addAll(getFilesInPath(localMetaServicesPath.toUri().toURL()));
+        urls.add(localBuildResourcesPath.toUri().toURL());
+        urls.add(localMetaServicesPath.toUri().toURL());
         return urls;
-//        return ExtensionClassLoader.load(getFilesInPath(localBuildLibsPath.toUri().toURL()));
     }
 
     public static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
@@ -203,21 +199,5 @@ public final class ExtensionUtil {
 
         urls.add(fileURL);
         return urls;
-    }
-
-    public static void setEntityTags(Entity entity, String tags) {
-        switch (entity.getEntityType()) {
-        case PROCESS:
-            ((Process) entity).setTags(tags);
-            break;
-        case FEED:
-            ((Feed) entity).setTags(tags);
-            break;
-        case CLUSTER:
-            LOG.error("Cluster entity not allowed in user extensions");
-            break;
-        default:
-            LOG.error("Unknown entity type: {}", entity.getEntityType().name());
-        }
     }
 }

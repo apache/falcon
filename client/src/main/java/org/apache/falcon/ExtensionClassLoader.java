@@ -49,8 +49,7 @@ public class ExtensionClassLoader extends URLClassLoader{
                     }
                 }
         );
-        LOG.info("Created a new ExtensionClassLoader with parent = {} using classpath = {}",
-                parentClassLoader.toString(), Arrays.toString(urls.toArray()));
+        LOG.info("Created a new ExtensionClassLoader using classpath = {}", Arrays.toString(urls.toArray()));
         return extensionClassLoader;
     }
 

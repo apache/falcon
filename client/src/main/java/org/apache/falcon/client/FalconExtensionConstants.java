@@ -27,7 +27,7 @@ public final class FalconExtensionConstants {
     }
 
     public static final String SERVICES = "SERVICES";
-    public static final String META = "META";
+    public static final String META_INF = "META-INF";
     public static final String LIBS = "libs";
     public static final String RESOURCES = "resources";
     public static final String BUILD = "build";
