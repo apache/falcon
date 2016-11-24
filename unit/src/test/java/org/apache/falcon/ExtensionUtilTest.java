@@ -57,8 +57,8 @@ public class ExtensionUtilTest {
             //ignore
         }
 
-        urls.addAll(ExtensionUtil.getFilesInPath(new Path(JARS_DIR).toUri().toURL()));
-        List<Entity> entities = ExtensionUtil.prepare("extensionName", "jobName", configStream, urls);
+        urls.addAll(ExtensionHandler.getFilesInPath(new Path(JARS_DIR).toUri().toURL()));
+        List<Entity> entities = ExtensionHandler.prepare("extensionName", "jobName", configStream, urls);
         Assert.assertEquals(entities.size(), 1);
         Assert.assertEquals(entities.get(0), process);
     }

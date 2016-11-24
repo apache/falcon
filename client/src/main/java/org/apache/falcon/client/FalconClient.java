@@ -28,7 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
-import org.apache.falcon.ExtensionUtil;
+import org.apache.falcon.ExtensionHandler;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
@@ -825,16 +825,6 @@ public class FalconClient extends AbstractFalconClient {
             return this;
         }
 
-        public ResourceBuilder addQueryParam(String paramName, List<Entity> entities) {
-            ResourceBuilder resourceBuilder = new ResourceBuilder();
-            if (entities != null && !entities.isEmpty()) {
-                for (Entity entity : entities) {
-                    resourceBuilder.addQueryParam(paramName, entity.toString());
-                }
-            }
-            return resourceBuilder;
-        }
-
         private ClientResponse call(Entities entities) {
             return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
@@ -1096,10 +1086,10 @@ public class FalconClient extends AbstractFalconClient {
         }
         InputStream configStream = getServletInputStream(configPath);
 
-        List<Entity> entities = null;
+        List<Entity> entities;
         if (extensionType.equals(ExtensionType.CUSTOM)) {
             try {
-                entities = ExtensionUtil.loadAndPrepare(extensionName, jobName, configStream, extensionBuildLocation);
+                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream, extensionBuildLocation);
             } catch (Exception e) {
                 OUT.get().println("Error in building the extension");
                 return null;
@@ -1118,7 +1108,6 @@ public class FalconClient extends AbstractFalconClient {
         clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .addQueryParam(ENTITIES_OPT, entities)
                 .call(ExtensionOperations.SUBMIT, configStream);
         return getResponse(APIResult.class, clientResponse);
     }

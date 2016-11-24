@@ -30,9 +30,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,18 +43,16 @@ import java.util.List;
 import java.util.ServiceLoader;
 
 /**
- * Helper methods to prepare Extension entities.
+ * Handler class that is responsible for preparing Extension entities.
  */
-public final class ExtensionUtil {
-    private ExtensionUtil() {}
+public final class ExtensionHandler {
 
-    public static final Logger LOG = LoggerFactory.getLogger(ExtensionUtil.class);
+    public static final Logger LOG = LoggerFactory.getLogger(ExtensionHandler.class);
     private static final String UTF_8 = CharEncoding.UTF_8;
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
 
-    public static List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
+    public List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
                                            InputStream configStream) throws IOException, FalconException {
-        ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(extensionClassloader);
 
         ServiceLoader<ExtensionBuilder> extensionBuilders = ServiceLoader.load(ExtensionBuilder.class);
@@ -86,7 +82,6 @@ public final class ExtensionUtil {
         extensionBuilder.validateExtensionConfig(extensionName, configStream);
         List<Entity> entities = extensionBuilder.getEntities(jobName, configStream);
 
-        Thread.currentThread().setContextClassLoader(previousClassLoader);
         return entities;
     }
 
@@ -95,41 +90,41 @@ public final class ExtensionUtil {
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
         String stagePath = createStagePath(extensionName, jobName);
-        List<URL> urls = ExtensionUtil.copyExtensionPackage(extensionBuildLocation, fs, stagePath);
+        List<URL> urls = ExtensionHandler.copyExtensionPackage(extensionBuildLocation, fs, stagePath);
 
         List<Entity> entities = prepare(extensionName, jobName, configStream, urls);
-        ExtensionUtil.stageEntities(entities, stagePath);
+        ExtensionHandler.stageEntities(entities, stagePath);
         return entities;
     }
 
     public static List<Entity> prepare(String extensionName, String jobName, InputStream configStream, List<URL> urls)
         throws IOException, FalconException {
         ClassLoader extensionClassLoader = ExtensionClassLoader.load(urls);
-        return ExtensionUtil.getEntities(extensionClassLoader, extensionName, jobName, configStream);
+        ExtensionHandler extensionHandler = new ExtensionHandler();
+
+        return extensionHandler.getEntities(extensionClassLoader, extensionName, jobName, configStream);
     }
 
     // This method is only for debugging, the staged entities can be found in /tmp path.
-    public static void stageEntities(List<Entity> entities, String stagePath)
-        throws IOException, FalconException {
+    public static void stageEntities(List<Entity> entities, String stagePath) {
         File entityFile;
         EntityType type;
         for (Entity entity : entities) {
             type = entity.getEntityType();
-            entityFile = new File(stagePath + File.separator + entity.getEntityType().toString() + "_"
-                    + URLEncoder.encode(entity.getName(), UTF_8));
-            if (!entityFile.createNewFile()) {
-                throw new FalconCLIException("Failed to create the file" + entityFile.toString());
-            }
-            OutputStream out = new FileOutputStream(entityFile);
+            OutputStream out;
             try {
+                entityFile = new File(stagePath + File.separator + entity.getEntityType().toString() + "_"
+                    + URLEncoder.encode(entity.getName(), UTF_8));
+                if (!entityFile.createNewFile()) {
+                    LOG.debug("Not able to stage the entities in the tmp path");
+                    return;
+                }
+                out = new FileOutputStream(entityFile);
                 type.getMarshaller().marshal(entity, out);
                 LOG.debug("Staged configuration {}/{}", type, entity.getName());
-            } catch (JAXBException e) {
-                LOG.error("Unable to serialize the entity object {}/{}", type, entity.getName(), e);
-                throw new FalconException("Error in staging entity: " + entity.getName() + "to "
-                        + entityFile.toString());
-            } finally {
                 out.close();
+            } catch (Exception e) {
+                LOG.error("Unable to serialize the entity object {}/{}", type, entity.getName(), e);
             }
         }
     }
@@ -160,17 +155,9 @@ public final class ExtensionUtil {
         LOG.info("Copying build time resources from {} to {}", buildLibsPath, localBuildResourcesPath);
         fs.copyToLocalFile(buildResourcesPath, localBuildResourcesPath);
 
-        Path metaPath = new Path(extensionBuildUrl, FalconExtensionConstants.META_INF);
-        Path metaServicesPath = new Path(metaPath, FalconExtensionConstants.SERVICES);
-        Path localMetaServicesPath = new Path(localStagePath, FalconExtensionConstants.RESOURCES);
-        LOG.info("Copying meta services from {} to {}", metaServicesPath, localMetaServicesPath);
-        fs.copyToLocalFile(metaServicesPath, localMetaServicesPath);
-
-
         List<URL> urls = new ArrayList<>();
         urls.addAll(getFilesInPath(localBuildLibsPath.toUri().toURL()));
         urls.add(localBuildResourcesPath.toUri().toURL());
-        urls.add(localMetaServicesPath.toUri().toURL());
         return urls;
     }
 
@@ -179,16 +166,15 @@ public final class ExtensionUtil {
 
         File file = new File(fileURL.getPath());
         if (file.isDirectory()) {
-            File[] files = file.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isFile();
-                }
-            });
+            File[] files = file.listFiles();
 
             if (files != null) {
                 for (File innerFile : files) {
-                    urls.add(innerFile.toURI().toURL());
+                    if (innerFile.isFile()) {
+                        urls.add(innerFile.toURI().toURL());
+                    } else {
+                        urls.addAll(getFilesInPath(file.toURI().toURL()));
+                    }
                 }
             }
 

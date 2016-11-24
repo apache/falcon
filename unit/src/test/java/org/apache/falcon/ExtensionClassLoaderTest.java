@@ -38,7 +38,7 @@ public class ExtensionClassLoaderTest {
 
         List<URL> urls = new ArrayList<>();
 
-        urls.addAll(ExtensionUtil.getFilesInPath(new Path(JARS_DIR).toUri().toURL()));
+        urls.addAll(ExtensionHandler.getFilesInPath(new Path(JARS_DIR).toUri().toURL()));
 
         ClassLoader loader = ExtensionClassLoader.load(urls);
         ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
