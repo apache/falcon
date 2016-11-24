@@ -70,7 +70,12 @@
     </Match>
 
     <Match>
-        <Class name="org.apache.falcon.persistence.ExtensionMetadataBean" />
+        <Class name="org.apache.falcon.persistence.ExtensionBean" />
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
+    </Match>
+
+    <Match>
+        <Class name="org.apache.falcon.persistence.ExtensionJobsBean" />
         <Bug pattern="NP_BOOLEAN_RETURN_NULL,UWF_UNWRITTEN_FIELD" />
     </Match>
 

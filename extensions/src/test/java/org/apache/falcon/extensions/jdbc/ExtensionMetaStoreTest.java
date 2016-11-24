@@ -20,7 +20,7 @@ package org.apache.falcon.extensions.jdbc;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
-import org.apache.falcon.persistence.ExtensionMetadataBean;
+import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.service.FalconJPAService;
 
 import org.apache.hadoop.conf.Configuration;
@@ -29,9 +29,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test Cases for ExtensionMetaStore.
@@ -57,28 +58,41 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     }
 
     @Test
-    public void dbOpertaions(){
+    public void testDBOperations(){
         //insert
-        stateStore.storeExtensionMetadataBean("test1", "test_location", ExtensionType.TRUSTED, "test_description");
+        stateStore.storeExtensionBean("test1", "test_location", ExtensionType.TRUSTED, "test_description");
 
         Assert.assertEquals(stateStore.getAllExtensions().size(), 1);
         //check data
-        ExtensionMetadataBean bean = stateStore.getDetail("test1");
+        ExtensionBean bean = stateStore.getDetail("test1");
         Assert.assertEquals(bean.getLocation(), "test_location");
         //delete
         stateStore.deleteExtensionsOfType(ExtensionType.TRUSTED);
         Assert.assertEquals(stateStore.getAllExtensions().size(), 0);
+
+        stateStore.storeExtensionBean("test2", "test_location", ExtensionType.CUSTOM, "test2_description");
+        List<String> entities = new ArrayList<>();
+        entities.add("testEntity");
+
+        byte[] config = new byte[0];
+        stateStore.storeExtensionJob("job1", "test2", ExtensionType.CUSTOM, entities, config);
+
+        Assert.assertEquals(stateStore.getAllExtensionJobs().size(), 1);
+        stateStore.deleteExtensionJob("job1");
+        Assert.assertEquals(stateStore.getAllExtensionJobs().size(), 0);
     }
 
     private void clear() {
-        EntityManager em = FalconJPAService.get().getEntityManager();
-        em.getTransaction().begin();
+        EntityManager entityManager = FalconJPAService.get().getEntityManager();
+        entityManager.getTransaction().begin();
         try {
-            Query query = em.createNativeQuery("delete from EXTENSION_METADATA");
+            Query query = entityManager.createNativeQuery("delete from EXTENSIONS");
+            query.executeUpdate();
+            query = entityManager.createNativeQuery("delete from EXTENSION_JOBS");
             query.executeUpdate();
         } finally {
-            em.getTransaction().commit();
-            em.close();
+            entityManager.getTransaction().commit();
+            entityManager.close();
         }
     }
 }
