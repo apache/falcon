@@ -21,12 +21,10 @@ package org.apache.falcon.resource.extensions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
@@ -517,42 +515,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         List<Entity> entities = extension.getEntities(extensionName, request.getInputStream());
 
         // add tags on extension name and job
-        for (Entity entity : entities) {
-            String tags = entity.getTags();
-            if (StringUtils.isNotEmpty(tags)) {
-                if (tags.contains(TAG_PREFIX_EXTENSION_NAME)) {
-                    throw new FalconException("Generated extention entity " + entity.getName()
-                            + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_NAME);
-                }
-                if (tags.contains(TAG_PREFIX_EXTENSION_JOB)) {
-                    throw new FalconException("Generated extention entity " + entity.getName()
-                            + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_JOB);
-                }
-                setEntityTags(entity, tags + TAG_SEPARATOR + TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
-                        + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
-            } else {
-                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
-                        + TAG_PREFIX_EXTENSION_JOB + properties.getProperty(ExtensionProperties.JOB_NAME.getName()));
-            }
-        }
+        String jobName = properties.getProperty(ExtensionProperties.JOB_NAME.getName());
+        EntityUtil.applyTags(extensionName, jobName, entities);
 
         return entities;
-    }
-
-    private void setEntityTags(Entity entity, String tags) {
-        switch (entity.getEntityType()) {
-        case PROCESS:
-            ((Process) entity).setTags(tags);
-            break;
-        case FEED:
-            ((Feed) entity).setTags(tags);
-            break;
-        case CLUSTER:
-            ((Cluster) entity).setTags(tags);
-            break;
-        default:
-            LOG.error("Unknown entity type: {}", entity.getEntityType().name());
-        }
     }
 
     private  JSONObject buildDetailResult(final String extensionName) throws FalconException {
