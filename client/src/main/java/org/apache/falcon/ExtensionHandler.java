@@ -106,7 +106,7 @@ public final class ExtensionHandler {
     }
 
     // This method is only for debugging, the staged entities can be found in /tmp path.
-    public static void stageEntities(List<Entity> entities, String stagePath) {
+    private static void stageEntities(List<Entity> entities, String stagePath) {
         File entityFile;
         EntityType type;
         for (Entity entity : entities) {
