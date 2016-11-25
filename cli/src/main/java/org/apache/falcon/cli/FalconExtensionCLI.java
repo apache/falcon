@@ -54,7 +54,7 @@ public class FalconExtensionCLI {
     public static final String REGISTER_OPT = "register";
 
     // Input parameters
-    public static final String ENTENSION_NAME_OPT = "extensionName";
+    public static final String EXTENSION_NAME_OPT = "extensionName";
     public static final String JOB_NAME_OPT = "jobName";
     public static final String DESCRIPTION = "description";
     public static final String PATH = "path";
@@ -69,7 +69,7 @@ public class FalconExtensionCLI {
         }
 
         String result;
-        String extensionName = commandLine.getOptionValue(ENTENSION_NAME_OPT);
+        String extensionName = commandLine.getOptionValue(EXTENSION_NAME_OPT);
         String jobName = commandLine.getOptionValue(JOB_NAME_OPT);
         String filePath = commandLine.getOptionValue(FalconCLIConstants.FILE_PATH_OPT);
         String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
@@ -80,40 +80,36 @@ public class FalconExtensionCLI {
             result = client.enumerateExtensions();
             result = prettyPrintJson(result);
         } else if (optionsList.contains(DEFINITION_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDefinition(extensionName);
             result = prettyPrintJson(result);
         } else if (optionsList.contains(DESCRIBE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDescription(extensionName);
         } else if (optionsList.contains(UNREGISTER_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.unregisterExtension(extensionName);
         }else if (optionsList.contains(DETAIL_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDetail(extensionName);
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
-            result = client.submitExtensionJob(extensionName, filePath, doAsUser).getMessage();
+            result = client.submitExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(REGISTER_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(path, PATH);
             result = client.registerExtension(extensionName, path, description);
-        }else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
-            validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
-            result = client.submitExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.submitAndScheduleExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.UPDATE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.updateExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.VALIDATE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.validateExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
@@ -129,7 +125,7 @@ public class FalconExtensionCLI {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.deleteExtensionJob(jobName, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             ExtensionJobList jobs = client.listExtensionJob(extensionName, doAsUser,
                     commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT),
                     commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT),
@@ -203,7 +199,7 @@ public class FalconExtensionCLI {
         Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
         Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
                 "Use debug mode to see debugging statements on stdout");
-        Option extensionName = new Option(ENTENSION_NAME_OPT, true, "Extension name");
+        Option extensionName = new Option(EXTENSION_NAME_OPT, true, "Extension name");
         Option jobName = new Option(JOB_NAME_OPT, true, "Extension job name");
         Option instanceStatus = new Option(FalconCLIConstants.INSTANCE_STATUS_OPT, true, "Instance status");
         Option sortOrder = new Option(FalconCLIConstants.SORT_ORDER_OPT, true, "asc or desc order for results");

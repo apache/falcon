@@ -5,7 +5,7 @@
 Submit and schedule an extension job.
 
 Usage:
-$FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName <<extension-name>> -file <<path-to-file>>
+$FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName <<extension-name>> -jobName <<job-name>> -file <<path-to-file>>
 
 Optional Args : -doAs <<user-name>>
 
