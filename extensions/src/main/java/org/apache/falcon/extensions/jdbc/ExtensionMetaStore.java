@@ -18,7 +18,8 @@
 package org.apache.falcon.extensions.jdbc;
 
 import org.apache.falcon.extensions.ExtensionType;
-import org.apache.falcon.persistence.ExtensionMetadataBean;
+import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.persistence.PersistenceConstants;
 import org.apache.falcon.service.FalconJPAService;
 
@@ -32,39 +33,43 @@ import java.util.List;
  */
 public class ExtensionMetaStore {
 
+    private static final String EXTENSION_NAME = "extensionName";
+    private static final String JOB_NAME = "jobName";
+    private static final String EXTENSION_TYPE = "extensionType";
+
     private EntityManager getEntityManager() {
         return FalconJPAService.get().getEntityManager();
     }
 
-    public void storeExtensionMetadataBean(String extensionName, String location, ExtensionType extensionType,
-                                           String description){
-        ExtensionMetadataBean extensionMetadataBean = new ExtensionMetadataBean();
-        extensionMetadataBean.setLocation(location);
-        extensionMetadataBean.setExtensionName(extensionName);
-        extensionMetadataBean.setExtensionType(extensionType.toString());
-        extensionMetadataBean.setCreationTime(new Date(System.currentTimeMillis()));
-        extensionMetadataBean.setDescription(description);
+    public void storeExtensionBean(String extensionName, String location, ExtensionType extensionType,
+                                   String description){
+        ExtensionBean extensionBean = new ExtensionBean();
+        extensionBean.setLocation(location);
+        extensionBean.setExtensionName(extensionName);
+        extensionBean.setExtensionType(extensionType);
+        extensionBean.setCreationTime(new Date(System.currentTimeMillis()));
+        extensionBean.setDescription(description);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
-            entityManager.persist(extensionMetadataBean);
+            entityManager.persist(extensionBean);
         } finally {
             commitAndCloseTransaction(entityManager);
         }
     }
 
-    public Boolean checkIfExtensionExists(String extensionName){
+    public Boolean checkIfExtensionExists(String extensionName) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
-        q.setParameter("extensionName", extensionName);
+        q.setParameter(EXTENSION_NAME, extensionName);
         if (q.getResultList().size() > 0){
             return true;
         }
         return false;
     }
 
-    public List<ExtensionMetadataBean> getAllExtensions(){
+    public List<ExtensionBean> getAllExtensions() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSIONS);
@@ -75,11 +80,11 @@ public class ExtensionMetaStore {
         }
     }
 
-    public void deleteExtensionsOfType(ExtensionType extensionType){
+    public void deleteExtensionsOfType(ExtensionType extensionType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE);
-        q.setParameter("extensionType", extensionType.toString());
+        q.setParameter(EXTENSION_TYPE, extensionType);
         try{
             q.executeUpdate();
         } finally {
@@ -87,29 +92,73 @@ public class ExtensionMetaStore {
         }
     }
 
-    public ExtensionMetadataBean getDetail(String extensionName){
+    public ExtensionBean getDetail(String extensionName) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
-        q.setParameter("extensionName", extensionName);
+        q.setParameter(EXTENSION_NAME, extensionName);
         try {
-            return (ExtensionMetadataBean)q.getSingleResult();
+            return (ExtensionBean)q.getSingleResult();
         } finally {
             commitAndCloseTransaction(entityManager);
         }
     }
 
-    public void deleteExtensionMetadata(String extensionName){
+    public void deleteExtension(String extensionName){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSION);
-        q.setParameter("extensionName", extensionName);
+        q.setParameter(EXTENSION_NAME, extensionName);
         try{
             q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
         }
     }
+
+    public void storeExtensionJob(String jobName, String extensionName, List<String> feeds, List<String> processes,
+                                  byte[] config) {
+        ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
+        Date currentTime = new Date(System.currentTimeMillis());
+        extensionJobsBean.setJobName(jobName);
+        extensionJobsBean.setExtensionName(extensionName);
+        extensionJobsBean.setCreationTime(currentTime);
+        extensionJobsBean.setFeeds(feeds);
+        extensionJobsBean.setProcesses(processes);
+        extensionJobsBean.setConfig(config);
+        extensionJobsBean.setLastUpdatedTime(currentTime);
+        EntityManager entityManager = getEntityManager();
+        try {
+            beginTransaction(entityManager);
+            entityManager.persist(extensionJobsBean);
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public void deleteExtensionJob(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSION_JOB);
+        query.setParameter(JOB_NAME, jobName);
+        try{
+            query.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public List<ExtensionJobsBean> getAllExtensionJobs() {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSION_JOBS);
+        try {
+            return q.getResultList();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
 
     private void beginTransaction(EntityManager entityManager) {
         entityManager.getTransaction().begin();

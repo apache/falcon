@@ -93,7 +93,11 @@ public final class EntityUtil {
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
     public static final String WF_LIB_SEPARATOR = ",";
+    public static final String TAG_SEPARATOR = ",";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
+
+    public static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
+    public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
 
     public static final ThreadLocal<SimpleDateFormat> PATH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -1191,6 +1195,48 @@ public final class EntityUtil {
 
         default:
             throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+        }
+    }
+
+    /**
+     * Set the tags to a given entity.
+     * @param entity
+     * @param tags
+     */
+    public static void setEntityTags(Entity entity, String tags) {
+        switch (entity.getEntityType()) {
+        case PROCESS:
+            ((Process) entity).setTags(tags);
+            break;
+        case FEED:
+            ((Feed) entity).setTags(tags);
+            break;
+        case CLUSTER:
+            ((Cluster) entity).setTags(tags);
+            break;
+        default:
+            throw new IllegalArgumentException("Unhandled entity type " + entity.getEntityType());
+        }
+    }
+
+    public static void applyTags(String extensionName, String jobName, List<Entity> entities) throws FalconException {
+        for (Entity entity : entities) {
+            String tags = entity.getTags();
+            if (StringUtils.isNotEmpty(tags)) {
+                if (tags.contains(TAG_PREFIX_EXTENSION_NAME)) {
+                    throw new FalconException("Generated extension entity " + entity.getName()
+                            + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_NAME);
+                }
+                if (tags.contains(TAG_PREFIX_EXTENSION_JOB)) {
+                    throw new FalconException("Generated extension entity " + entity.getName()
+                            + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_JOB);
+                }
+                setEntityTags(entity, tags + TAG_SEPARATOR + TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
+                        + TAG_PREFIX_EXTENSION_JOB + jobName);
+            } else {
+                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
+                        + TAG_PREFIX_EXTENSION_JOB + jobName);
+            }
         }
     }
 
