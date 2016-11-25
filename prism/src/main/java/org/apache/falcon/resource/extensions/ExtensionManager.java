@@ -18,6 +18,8 @@
 
 package org.apache.falcon.resource.extensions;
 
+import com.sun.jersey.multipart.FormDataParam;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -25,12 +27,14 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
+import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
-import org.apache.falcon.persistence.ExtensionMetadataBean;
+import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
@@ -58,6 +62,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,7 +81,6 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     public static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
     public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
-    public static final String TAG_SEPARATOR = ",";
     public static final String ASCENDING_SORT_ORDER = "asc";
     public static final String DESCENDING_SORT_ORDER = "desc";
 
@@ -290,18 +294,19 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("submit/{extension-name}")
-    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult submit(
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
-            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+            @DefaultValue("") @QueryParam("doAs") String doAsUser,
+            @QueryParam("jobName") String jobName,
+            @FormDataParam("entities") List<Entity> entities,
+            @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         try {
-            List<Entity> entities = generateEntities(extensionName, request);
-            for (Entity entity : entities) {
-                submitInternal(entity, doAsUser);
-            }
+            entities = getEntityList(extensionName, entities, config);
+            submitEntities(extensionName, doAsUser, jobName, entities, config);
         } catch (FalconException | IOException e) {
             LOG.error("Error when submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -309,20 +314,37 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully");
     }
 
+    private void validateEntities(List<Entity> entities) throws FalconException {
+        for (Entity entity : entities) {
+            if (!EntityType.FEED.equals(entity.getEntityType()) && !EntityType.FEED.equals(entity.getEntityType())) {
+                LOG.error("Cluster entity is not allowed for submission via submitEntities: {}", entity.getName());
+                throw new FalconException("Cluster entity is not allowed for submission in extensions submission");
+            }
+            super.validate(entity);
+        }
+    }
+
+    private ExtensionType getExtensionType(String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
+        return extensionDetails.getExtensionType();
+    }
+
     @POST
     @Path("submitAndSchedule/{extension-name}")
-    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult submitAndSchedule(
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
-            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+            @DefaultValue("") @QueryParam("doAs") String doAsUser,
+            @QueryParam("jobName") String jobName,
+            @FormDataParam("entities") List<Entity> entities,
+            @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         try {
-            List<Entity> entities = generateEntities(extensionName, request);
-            for (Entity entity : entities) {
-                submitInternal(entity, doAsUser);
-            }
+            entities = getEntityList(extensionName, entities, config);
+            submitEntities(extensionName, doAsUser, jobName, entities, config);
             for (Entity entity : entities) {
                 scheduleInternal(entity.getEntityType().name(), entity.getName(), null, null);
             }
@@ -331,6 +353,33 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted and scheduled successfully");
+    }
+
+    private void submitEntities(String extensionName, String doAsUser, String jobName, List<Entity> entities,
+                                InputStream configStream) throws FalconException, IOException {
+        validateEntities(entities);
+        List<String> feeds = new ArrayList<>();
+        List<String> processes = new ArrayList<>();
+        for (Entity entity : entities) {
+            submitInternal(entity, doAsUser);
+            if (EntityType.FEED.equals(entity.getEntityType())) {
+                feeds.add(entity.getName());
+            } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                processes.add(entity.getName());
+            }
+        }
+        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        byte[] configBytes = IOUtils.toByteArray(configStream);
+        metaStore.storeExtensionJob(jobName, extensionName, feeds, processes, configBytes);
+    }
+
+    private List<Entity> getEntityList(String extensionName, List<Entity> entities, InputStream config)
+        throws FalconException, IOException {
+        ExtensionType extensionType = getExtensionType(extensionName);
+        if (ExtensionType.TRUSTED.equals(extensionType)) {
+            entities = generateEntities(extensionName, config);
+        }
+        return entities;
     }
 
     @POST
@@ -343,7 +392,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
         try {
-            List<Entity> entities = generateEntities(extensionName, request);
+            List<Entity> entities = generateEntities(extensionName, request.getInputStream());
             for (Entity entity : entities) {
                 super.update(entity, entity.getEntityType().name(), entity.getName(), null);
             }
@@ -364,7 +413,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
         try {
-            List<Entity> entities = generateEntities(extensionName, request);
+            List<Entity> entities = generateEntities(extensionName, request.getInputStream());
             for (Entity entity : entities) {
                 super.validate(entity);
             }
@@ -385,8 +434,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         JSONArray results;
 
         try {
-            List<String> extensions = ExtensionStore.get().getExtensions();
-            results = buildEnumerateResult(extensions);
+            results = buildEnumerateResult();
         } catch (StoreAccessException e) {
             LOG.error("Failed when accessing extension store.", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -442,7 +490,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().deleteExtensionMetadata(extensionName);
+            return ExtensionStore.get().deleteExtension(extensionName);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -454,11 +502,12 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @Produces(MediaType.TEXT_PLAIN)
     public String registerExtensionMetadata(
             @PathParam("extension-name") String extensionName,
-        @QueryParam("path") String path, @QueryParam("description") String description){
+            @QueryParam("path") String path,
+            @QueryParam("description") String description){
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().registerExtensionMetadata(extensionName, path, description);
+            return ExtensionStore.get().registerExtension(extensionName, path, description);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -486,18 +535,18 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    private static JSONArray buildEnumerateResult(final List<String> extensions) throws FalconException {
+    private static JSONArray buildEnumerateResult() throws FalconException {
         JSONArray results = new JSONArray();
-        ExtensionMetaStore metricStore = ExtensionStore.get().getMetaStore();
-        List<ExtensionMetadataBean> beanList = metricStore.getAllExtensions();
-        for (ExtensionMetadataBean bean : beanList) {
+        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        List<ExtensionBean> extensionBeanList = metaStore.getAllExtensions();
+        for (ExtensionBean extensionBean : extensionBeanList) {
             JSONObject resultObject = new JSONObject();
 
             try {
-                resultObject.put(EXTENSION_NAME, bean.getExtensionName().toLowerCase());
-                resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
-                resultObject.put(EXTENSION_DESC, bean.getDescription());
-                resultObject.put(EXTENSION_LOCATION, bean.getLocation());
+                resultObject.put(EXTENSION_NAME, extensionBean.getExtensionName().toLowerCase());
+                resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
+                resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
+                resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
             } catch (JSONException e) {
                 throw new FalconException(e);
             }
@@ -507,12 +556,12 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return results;
     }
 
-    private List<Entity> generateEntities(String extensionName, HttpServletRequest request)
+    private List<Entity> generateEntities(String extensionName, InputStream configStream)
         throws FalconException, IOException {
         // get entities for extension job
         Properties properties = new Properties();
-        properties.load(request.getInputStream());
-        List<Entity> entities = extension.getEntities(extensionName, request.getInputStream());
+        properties.load(configStream);
+        List<Entity> entities = extension.getEntities(extensionName, configStream);
 
         // add tags on extension name and job
         String jobName = properties.getProperty(ExtensionProperties.JOB_NAME.getName());
@@ -528,7 +577,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             throw new ValidationException("No extension resources found for " + extensionName);
         }
 
-        ExtensionMetadataBean bean = metaStore.getDetail(extensionName);
+        ExtensionBean bean = metaStore.getDetail(extensionName);
         JSONObject resultObject = new JSONObject();
         try {
             resultObject.put(EXTENSION_NAME, bean.getExtensionName());
