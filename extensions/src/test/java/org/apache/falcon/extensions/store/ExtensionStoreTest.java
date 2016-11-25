@@ -107,7 +107,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
 
     @Test
     public void testRegisterExtension() throws IOException, URISyntaxException, FalconException{
-        createlibs();
+        createLibs();
         createReadmeAndJar();
         createMETA();
         store = ExtensionStore.get();
@@ -119,7 +119,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
     @Test(expectedExceptions=ValidationException.class)
     public void testFailureCaseRegisterExtension() throws IOException, URISyntaxException, FalconException{
         store = ExtensionStore.get();
-        createlibs();
+        createLibs();
         store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc");
     }
 
@@ -141,7 +141,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         br.close();
     }
 
-    private void createlibs() throws IOException{
+    private void createLibs() throws IOException{
         Path path = new Path(EXTENSION_PATH);
         if (fs.exists(path)){
             fs.delete(path, true);

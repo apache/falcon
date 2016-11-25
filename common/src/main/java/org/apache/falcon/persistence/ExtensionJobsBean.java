@@ -21,13 +21,9 @@ package org.apache.falcon.persistence;
 
 //SUSPEND CHECKSTYLE CHECK LineLengthCheck
 
-import org.apache.falcon.extensions.ExtensionType;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -66,9 +62,19 @@ public class ExtensionJobsBean {
 
     @Basic
     @NotNull
-    @Column(name = "extension_type")
-    @Enumerated(EnumType.STRING)
-    private ExtensionType extensionType;
+    @Column(name = "feeds")
+    private String[] feeds;
+
+    @Basic
+    @NotNull
+    @Column(name = "processes")
+    private String[] processes;
+
+    @Lob
+    @Basic(fetch= FetchType.LAZY)
+    @Column(name = "config")
+    private byte[] config;
+
 
     @Basic
     @NotNull
@@ -77,13 +83,8 @@ public class ExtensionJobsBean {
 
     @Basic
     @NotNull
-    @Column(name = "entities")
-    private String[] entities;
-
-    @Lob
-    @Basic(fetch= FetchType.LAZY)
-    @Column(name = "config")
-    private byte[] config;
+    @Column(name = "last_updated_time")
+    private Date lastUpdatedTime;
 
     public String getJobName() {
         return jobName;
@@ -91,15 +92,6 @@ public class ExtensionJobsBean {
 
     public void setJobName(String jobName) {
         this.jobName = jobName;
-    }
-
-    public ExtensionType getExtensionType() {
-        return extensionType;
-    }
-
-
-    public void setExtensionType(ExtensionType extensionType) {
-        this.extensionType = extensionType;
     }
 
     public Date getCreationTime() {
@@ -119,19 +111,35 @@ public class ExtensionJobsBean {
         this.config = config;
     }
 
-    public List<String> getEntities() {
-        return Arrays.asList(entities);
-    }
-
-    public void setEntities(List<String> entities) {
-        this.entities = entities.toArray(new String[entities.size()]);
-    }
-
     public String getExtensionName() {
         return extensionName;
     }
 
     public void setExtensionName(String extensionName) {
         this.extensionName = extensionName;
+    }
+
+    public Date getLastUpdatedTime() {
+        return lastUpdatedTime;
+    }
+
+    public void setLastUpdatedTime(Date lastUpdatedTime) {
+        this.lastUpdatedTime = lastUpdatedTime;
+    }
+
+    public List<String> getFeeds() {
+        return Arrays.asList(feeds);
+    }
+
+    public void setFeeds(List<String> feeds) {
+        this.feeds = feeds.toArray(new String[feeds.size()]);
+    }
+
+    public List<String> getProcesses() {
+        return Arrays.asList(processes);
+    }
+
+    public void setProcesses(List<String> processes) {
+        this.processes = processes.toArray(new String[processes.size()]);
     }
 }

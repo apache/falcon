@@ -116,15 +116,17 @@ public class ExtensionMetaStore {
         }
     }
 
-    public void storeExtensionJob(String jobName, String extensionName, ExtensionType extensionType,
-                                  List<String> entities, byte[] config) {
+    public void storeExtensionJob(String jobName, String extensionName, List<String> feeds, List<String> processes,
+                                  byte[] config) {
         ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
+        Date currentTime = new Date(System.currentTimeMillis());
         extensionJobsBean.setJobName(jobName);
         extensionJobsBean.setExtensionName(extensionName);
-        extensionJobsBean.setExtensionType(extensionType);
-        extensionJobsBean.setCreationTime(new Date(System.currentTimeMillis()));
-        extensionJobsBean.setEntities(entities);
+        extensionJobsBean.setCreationTime(currentTime);
+        extensionJobsBean.setFeeds(feeds);
+        extensionJobsBean.setProcesses(processes);
         extensionJobsBean.setConfig(config);
+        extensionJobsBean.setLastUpdatedTime(currentTime);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);

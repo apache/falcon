@@ -58,7 +58,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     }
 
     @Test
-    public void testDBOperations(){
+    public void testExtension(){
         //insert
         stateStore.storeExtensionBean("test1", "test_location", ExtensionType.TRUSTED, "test_description");
 
@@ -69,13 +69,18 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
         //delete
         stateStore.deleteExtensionsOfType(ExtensionType.TRUSTED);
         Assert.assertEquals(stateStore.getAllExtensions().size(), 0);
+    }
 
+    @Test
+    public void testExtensionJob() {
         stateStore.storeExtensionBean("test2", "test_location", ExtensionType.CUSTOM, "test2_description");
-        List<String> entities = new ArrayList<>();
-        entities.add("testEntity");
+        List<String> processes = new ArrayList<>();
+        processes.add("testProcess");
+        List<String> feeds = new ArrayList<>();
+        feeds.add("testFeed");
 
         byte[] config = new byte[0];
-        stateStore.storeExtensionJob("job1", "test2", ExtensionType.CUSTOM, entities, config);
+        stateStore.storeExtensionJob("job1", "test2", feeds, processes, config);
 
         Assert.assertEquals(stateStore.getAllExtensionJobs().size(), 1);
         stateStore.deleteExtensionJob("job1");
