@@ -319,6 +319,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     private void validateEntities(List<Entity> entities) throws FalconException {
         for (Entity entity : entities) {
+            if (!EntityType.FEED.equals(entity.getEntityType()) && !EntityType.FEED.equals(entity.getEntityType())) {
+                LOG.error("Cluster entity is not allowed for submission via submitEntities: {}", entity.getName());
+                throw new FalconException("Cluster entity is not allowed for submission in extensions submission");
+            }
             super.validate(entity);
         }
     }
