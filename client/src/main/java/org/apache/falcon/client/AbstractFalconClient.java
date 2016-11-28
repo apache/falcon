@@ -179,6 +179,22 @@ public abstract class AbstractFalconClient {
                                                 String properties);
 
     /**
+     * Registers an extension.
+     * @param extensionName extensionName of the extension.
+     * @param packagePath Package location for the extension.
+     * @param description description of the extension.
+     * @return Result of the registerExtension command.
+     */
+    public abstract String registerExtension(String extensionName, String packagePath, String description);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be unregistered
+     * @return Result of the unregisterExtension operation
+     */
+    public abstract String unregisterExtension(String extensionName);
+
+    /**
      * Prepare set of entities the extension has implemented and stage them to a local directory and submit them too.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of
@@ -189,6 +205,19 @@ public abstract class AbstractFalconClient {
      */
     public abstract APIResult submitExtensionJob(String extensionName, String jobName, String configPath,
                                                 String doAsUser);
+
+    /**
+     * Prepare set of entities the extension has implemented and stage them to a local directory and submits and
+     * schedules them.
+     * @param extensionName extension which is available in the store.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                 String doAsUser);
 
     /**
      *

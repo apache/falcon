@@ -753,7 +753,7 @@ public class FalconClient extends AbstractFalconClient {
      * @param filePath - Path of file to stream
      * @return ServletInputStream
      */
-    private InputStream getServletInputStream(String filePath) {
+    public static InputStream getServletInputStream(String filePath) {
 
         if (filePath == null) {
             return null;
@@ -1045,9 +1045,9 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(String.class, clientResponse);
     }
 
-    public String registerExtension(final String extensionName, final String path, final String description) {
+    public String registerExtension(final String extensionName, final String packagePath, final String description) {
         ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, path)
+                .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, packagePath)
                 .addQueryParam(FalconCLIConstants.DESCRIPTION, description)
                 .call(ExtensionOperations.REGISTER);
         return getResponse(String.class, clientResponse);
@@ -1070,6 +1070,18 @@ public class FalconClient extends AbstractFalconClient {
     @Override
     public APIResult submitExtensionJob(final String extensionName, final String jobName, final String configPath,
                                         final String doAsUser) {
+        InputStream configStream = getServletInputStream(configPath);
+        if (!validateExtension(extensionName, jobName, configStream)) {
+            return null;
+        }
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.SUBMIT.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.SUBMIT, configStream);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    private boolean validateExtension(String extensionName, String jobName, InputStream configStream) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DETAIL.path)
                 .call(ExtensionOperations.DETAIL);
@@ -1082,43 +1094,42 @@ public class FalconClient extends AbstractFalconClient {
             extensionBuildLocation = extensionDetailsJson.get("location").toString();
         } catch (JSONException e) {
             OUT.get().print("Error. " + extensionName + " not found ");
-            return null;
+            return false;
         }
-        InputStream configStream = getServletInputStream(configPath);
 
         List<Entity> entities;
         if (extensionType.equals(ExtensionType.CUSTOM)) {
             try {
-                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream, extensionBuildLocation);
+                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+                        extensionBuildLocation);
             } catch (Exception e) {
                 OUT.get().println("Error in building the extension");
-                return null;
+                return false;
             }
             if (entities == null || entities.isEmpty()) {
                 OUT.get().println("No entities got built");
-                return null;
+                return false;
             }
             try {
                 EntityUtil.applyTags(extensionName, jobName, entities);
             } catch (FalconException e) {
                 OUT.get().println("Error in applying tags to generated entities");
+                return false;
             }
         }
-
-        clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.SUBMIT.path, extensionName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.SUBMIT, configStream);
-        return getResponse(APIResult.class, clientResponse);
+        return true;
     }
 
-    public APIResult submitAndScheduleExtensionJob(final String extensionName, final String filePath,
-                                                   final String doAsUser)  {
-        InputStream entityStream = getServletInputStream(filePath);
+    public APIResult submitAndScheduleExtensionJob(final String extensionName, final String jobName,
+                                                   final String configPath, final String doAsUser)  {
+        InputStream configStream = getServletInputStream(configPath);
+        if (!validateExtension(extensionName, jobName, configStream)) {
+            return null;
+        }
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT_AND_SCHEDULE.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.SUBMIT_AND_SCHEDULE, entityStream);
+                .call(ExtensionOperations.SUBMIT_AND_SCHEDULE, configStream);
         return getResponse(APIResult.class, clientResponse);
     }
 

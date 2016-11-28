@@ -63,7 +63,13 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter(EXTENSION_NAME, extensionName);
-        if (q.getResultList().size() > 0){
+        int resultSize = 0;
+        try {
+            resultSize = q.getResultList().size();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (resultSize > 0){
             return true;
         }
         return false;

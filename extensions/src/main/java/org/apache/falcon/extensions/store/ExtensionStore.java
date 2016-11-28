@@ -260,7 +260,7 @@ public final class ExtensionStore {
         if (metaStore.checkIfExtensionExists(extensionName)) {
             metaStore.deleteExtension(extensionName);
             return "Deleted extension:" + extensionName;
-        }else {
+        } else {
             return "Extension:" + extensionName + " is not registered with Falcon.";
         }
     }
@@ -269,7 +269,7 @@ public final class ExtensionStore {
         throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
-        conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
+        conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem =  HadoopClientFactory.get().createFalconFileSystem(uri);
         try {
             fileSystem.listStatus(new Path(uri.getPath() + "/README"));
@@ -284,13 +284,13 @@ public final class ExtensionStore {
         };
         FileStatus[] jarStatus;
         try {
-            jarStatus = fileSystem.listStatus(new Path(uri.getPath() + "/libs/build"), filter);
+            jarStatus = fileSystem.listStatus(new Path(uri.getPath(), "libs/build"), filter);
             if (jarStatus.length <=0) {
-                throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
+                throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
             }
         } catch (IOException e){
             LOG.error("Exception in registering Extension:{}", extensionName, e);
-            throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
+            throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
         }
         FileStatus[] propStatus;
         try{
@@ -308,9 +308,9 @@ public final class ExtensionStore {
         if (!metaStore.checkIfExtensionExists(extensionName)){
             metaStore.storeExtensionBean(extensionName, path, ExtensionType.CUSTOM, description);
         }else{
-            throw new ValidationException(extensionName + " already exsists.");
+            throw new ValidationException(extensionName + " already exists.");
         }
-        return "Extension :" + extensionName + " registered succesfully.";
+        return "Extension :" + extensionName + " registered successfully.";
     }
 
     public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
