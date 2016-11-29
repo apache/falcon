@@ -153,7 +153,7 @@ public final class BacklogMetricEmitterService implements FalconService,
             addToBacklog(newEntity);
         }
     }
-    
+
     @Override
     public void onReload(Entity entity) throws FalconException{
         addToBacklog(entity);
