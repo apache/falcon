@@ -25,6 +25,7 @@ import org.apache.falcon.persistence.PendingInstanceBean;
 import org.apache.falcon.persistence.PersistenceConstants;
 import org.apache.falcon.persistence.ResultNotFoundException;
 import org.apache.falcon.persistence.EntitySLAAlertBean;
+import org.apache.falcon.persistence.ProcessInstanceInfoBean;
 import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
@@ -186,6 +187,41 @@ public class MonitoringJdbcStateStore {
     public List<PendingInstanceBean> getAllPendingInstances(){
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PENDING_INSTANCES);
+        List result = q.getResultList();
+
+        try {
+            if (CollectionUtils.isEmpty(result)) {
+                return null;
+            }
+        } finally{
+            entityManager.close();
+        }
+        return result;
+    }
+
+    public void putProcessInstance(String processName, String colo, Long nominalTime, Long startDelay,
+                                   Long processingTime, String pipeline, String status){
+        ProcessInstanceInfoBean processInstanceInfoBean = new ProcessInstanceInfoBean();
+        processInstanceInfoBean.setProcessName(processName);
+        processInstanceInfoBean.setColo(colo);
+        processInstanceInfoBean.setNominalTime(new Date(nominalTime));
+        processInstanceInfoBean.setStartDelay(startDelay);
+        processInstanceInfoBean.setProcessingTime(processingTime);
+        processInstanceInfoBean.setPipeline(pipeline);
+        processInstanceInfoBean.setStatus(status);
+
+        EntityManager entityManager = getEntityManager();
+        try {
+            beginTransaction(entityManager);
+            entityManager.persist(processInstanceInfoBean);
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public List<ProcessInstanceInfoBean> getAllInstancesProcessInstance(){
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PROCESS_INFO_INSTANCES);
         List result = q.getResultList();
 
         try {
