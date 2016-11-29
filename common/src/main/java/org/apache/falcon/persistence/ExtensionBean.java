@@ -15,11 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.falcon.persistence;
+
+import org.apache.falcon.extensions.ExtensionType;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -30,30 +35,30 @@ import java.util.Date;
 
 //SUSPEND CHECKSTYLE CHECK LineLengthCheck
 /**
- * Table to store extension metadata.
+ * Table to store extensions.
  */
 
-@Table(name = "EXTENSION_METADATA")
+@Table(name = "EXTENSIONS")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = PersistenceConstants.GET_ALL_EXTENSIONS, query = "select OBJECT(a) from ExtensionMetadataBean a "),
-        @NamedQuery(name = PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE, query = "delete from ExtensionMetadataBean a where a.extensionType = :extensionType "),
-        @NamedQuery(name = PersistenceConstants.DELETE_EXTENSION, query = "delete from ExtensionMetadataBean a where a.extensionName = :extensionName "),
-        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionMetadataBean a where a.extensionName = :extensionName")
+        @NamedQuery(name = PersistenceConstants.GET_ALL_EXTENSIONS, query = "select OBJECT(a) from ExtensionBean a "),
+        @NamedQuery(name = PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE, query = "delete from ExtensionBean a where a.extensionType = :extensionType "),
+        @NamedQuery(name = PersistenceConstants.DELETE_EXTENSION, query = "delete from ExtensionBean a where a.extensionName = :extensionName "),
+        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionBean a where a.extensionName = :extensionName")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
-public class ExtensionMetadataBean {
+public class ExtensionBean {
     @Basic
     @NotNull
     @Id
     @Column(name = "extension_name")
     private String extensionName;
 
-
     @Basic
     @NotNull
     @Column(name = "extension_type")
-    private String extensionType;
+    @Enumerated(EnumType.STRING)
+    private ExtensionType extensionType;
 
     @Basic
     @Column(name = "description")
@@ -64,17 +69,16 @@ public class ExtensionMetadataBean {
     @Column(name = "location")
     private String location;
 
-
     @Basic
     @NotNull
     @Column(name = "creation_time")
     private Date creationTime;
 
-    public String getExtensionType() {
+    public ExtensionType getExtensionType() {
         return extensionType;
     }
 
-    public void setExtensionType(String extensionType) {
+    public void setExtensionType(ExtensionType extensionType) {
         this.extensionType = extensionType;
     }
 

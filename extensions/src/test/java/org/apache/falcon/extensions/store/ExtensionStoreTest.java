@@ -19,14 +19,6 @@
 package org.apache.falcon.extensions.store;
 
 import com.google.common.collect.ImmutableMap;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.URISyntaxException;
-import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
@@ -41,6 +33,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.URISyntaxException;
+import java.util.Map;
 
 /**
  *  Tests for extension store.
@@ -105,21 +106,21 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
 
 
     @Test
-    public void testRegisterExtensionMetadata() throws IOException, URISyntaxException, FalconException{
-        createlibs();
+    public void testRegisterExtension() throws IOException, URISyntaxException, FalconException{
+        createLibs();
         createReadmeAndJar();
         createMETA();
         store = ExtensionStore.get();
-        store.registerExtensionMetadata("test", STORAGE_URL + EXTENSION_PATH, "test desc");
+        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 1);
     }
 
     @Test(expectedExceptions=ValidationException.class)
-    public void testFailureCaseRegisterExtensionMetadata() throws IOException, URISyntaxException, FalconException{
+    public void testFailureCaseRegisterExtension() throws IOException, URISyntaxException, FalconException{
         store = ExtensionStore.get();
-        createlibs();
-        store.registerExtensionMetadata("test", STORAGE_URL + EXTENSION_PATH, "test desc");
+        createLibs();
+        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc");
     }
 
     private void createMETA() throws IOException{
@@ -140,7 +141,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         br.close();
     }
 
-    private void createlibs() throws IOException{
+    private void createLibs() throws IOException{
         Path path = new Path(EXTENSION_PATH);
         if (fs.exists(path)){
             fs.delete(path, true);
@@ -169,7 +170,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         EntityManager em = FalconJPAService.get().getEntityManager();
         em.getTransaction().begin();
         try {
-            Query query = em.createNativeQuery("delete from EXTENSION_METADATA");
+            Query query = em.createNativeQuery("delete from EXTENSIONS");
             query.executeUpdate();
         } finally {
             em.getTransaction().commit();
