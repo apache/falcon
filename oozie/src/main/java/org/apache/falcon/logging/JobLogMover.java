@@ -23,7 +23,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
@@ -93,7 +92,7 @@ public class JobLogMover {
                         context.getWorkflowId(), context.getWorkflowStatus());
                 return 0;
             }
-            String instanceOwner = context.getValue(WorkflowExecutionArgs.WORKFLOW_USER);
+            String instanceOwner = context.getWorkflowUser();
             if (StringUtils.isNotBlank(instanceOwner)) {
                 CurrentUser.authenticate(instanceOwner);
             } else {
