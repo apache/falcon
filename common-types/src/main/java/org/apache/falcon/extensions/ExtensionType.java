@@ -27,7 +27,7 @@ public enum ExtensionType {
 
     private final String text;
 
-    private ExtensionType(final String text) {
+    ExtensionType(final String text) {
         this.text = text;
     }
     @Override

@@ -33,6 +33,8 @@ import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.TriageResult;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -495,6 +497,26 @@ public abstract class AbstractFalconClient {
         }
         stream = new ByteArrayInputStream(buffer.toString().getBytes());
         return (buffer.length() == 0) ? null : stream;
+    }
+
+    /**
+     * Converts a InputStream into ServletInputStream.
+     *
+     * @param filePath - Path of file to stream
+     * @return ServletInputStream
+     */
+    protected InputStream getServletInputStream(String filePath) {
+
+        if (filePath == null) {
+            return null;
+        }
+        InputStream stream;
+        try {
+            stream = new FileInputStream(filePath);
+        } catch (FileNotFoundException e) {
+            throw new FalconCLIException("File not found:", e);
+        }
+        return stream;
     }
 
     public abstract SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,

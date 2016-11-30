@@ -23,7 +23,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.AbstractFalconClient;
 import org.apache.falcon.client.FalconCLIException;
-import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
@@ -283,24 +282,33 @@ public class FalconUnitClient extends AbstractFalconClient {
     @Override
     public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
 
-        InputStream configStream = FalconClient.getServletInputStream(configPath);
-        String packagePath = ExtensionStore.get().getMetaStore().getDetail(extensionName).getLocation();
+        InputStream configStream = getServletInputStream(configPath);
         try {
-            List<Entity> entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
-                    packagePath);
+            List<Entity> entities = getEntities(extensionName, jobName, configStream);
             return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entities);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }
     }
 
-    @Override
-    public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
-        InputStream configStream = FalconClient.getServletInputStream(configPath);
+    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream) {
         String packagePath = ExtensionStore.get().getMetaStore().getDetail(extensionName).getLocation();
+        List<Entity> entities;
         try {
-            List<Entity> entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+            entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                     packagePath);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in generating entties" + jobName);
+        }
+        return entities;
+    }
+
+    @Override
+    public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                   String doAsUser) {
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            List<Entity> entities = getEntities(extensionName, jobName, configStream);
             return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
                     entities);
         } catch (FalconException | IOException e) {

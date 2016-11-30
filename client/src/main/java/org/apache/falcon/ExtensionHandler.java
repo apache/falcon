@@ -171,9 +171,7 @@ public final class ExtensionHandler {
             if (files != null) {
                 for (File innerFile : files) {
                     if (innerFile.isFile()) {
-                        if (!innerFile.toString().endsWith("crc")) {
-                            urls.add(innerFile.toURI().toURL());
-                        }
+                        urls.add(innerFile.toURI().toURL());
                     } else {
                         urls.addAll(getFilesInPath(file.toURI().toURL()));
                     }

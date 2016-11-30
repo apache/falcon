@@ -71,7 +71,7 @@ public final class FalconUnit {
     protected static final String DB_LOCATION = DB_BASE_DIR + File.separator + "data.db";
     protected static final String URL = "jdbc:derby:"+ DB_LOCATION +";create=true";
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
-    protected static final  LocalFileSystem FS = new LocalFileSystem();
+    protected static final  LocalFileSystem LOCAL_FS = new LocalFileSystem();
 
     private FalconUnit() {
     }
@@ -108,8 +108,8 @@ public final class FalconUnit {
         FileUtils.deleteDirectory(new File(location));
         StateStoreProperties.get().setProperty(FalconJPAService.URL, URL);
         Configuration localConf = new Configuration();
-        FS.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
-        FS.mkdirs(new Path(DB_BASE_DIR));
+        LOCAL_FS.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
+        LOCAL_FS.mkdirs(new Path(DB_BASE_DIR));
         createDB(DB_SQL_FILE);
     }
 
@@ -121,7 +121,7 @@ public final class FalconUnit {
 
     private static void initFileSystem() throws IOException {
         Configuration conf = new Configuration();
-        conf.set("FS.defaultFS", STORAGE_URL);
+        conf.set("fs.defaultFS", STORAGE_URL);
         jailedFileSystem.initialize(LocalFileSystem.getDefaultUri(conf), conf);
     }
 
@@ -134,12 +134,12 @@ public final class FalconUnit {
         String oozieLogsDir = oozieHomeDir + "/logs";
         String oozieDataDir = oozieHomeDir + "/data";
 
-        FS.mkdirs(new Path(oozieHomeDir));
-        FS.mkdirs(new Path(oozieConfDir));
-        FS.mkdirs(new Path(oozieHadoopConfDir));
-        FS.mkdirs(new Path(oozieActionConfDir));
-        FS.mkdirs(new Path(oozieLogsDir));
-        FS.close();
+        LOCAL_FS.mkdirs(new Path(oozieHomeDir));
+        LOCAL_FS.mkdirs(new Path(oozieConfDir));
+        LOCAL_FS.mkdirs(new Path(oozieHadoopConfDir));
+        LOCAL_FS.mkdirs(new Path(oozieActionConfDir));
+        LOCAL_FS.mkdirs(new Path(oozieLogsDir));
+        LOCAL_FS.close();
 
         setSystemProperty("oozie.home.dir", oozieHomeDir);
         setSystemProperty("oozie.data.dir", oozieDataDir);

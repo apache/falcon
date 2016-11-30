@@ -424,8 +424,12 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         createDir(PROCESS_APP_PATH);
         copyExtensionJar(packageBuildLib);
-        APIResult submitResult = submitAndScheduleExtensionJob("testExtension", "testJob", null, null);
-        assertStatus(submitResult);
+        APIResult apiResult = submitAndScheduleExtensionJob("testExtension", "testJob", null, null);
+        assertStatus(apiResult);
+
+        apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
+        assertStatus(apiResult);
+        Assert.assertEquals(apiResult.getMessage(), "RUNNING");
     }
 
 
