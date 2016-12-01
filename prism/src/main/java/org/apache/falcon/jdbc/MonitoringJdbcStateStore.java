@@ -17,20 +17,20 @@
  */
 package org.apache.falcon.jdbc;
 
-import org.apache.falcon.FalconException;
-import org.apache.falcon.persistence.MonitoredEntityBean;
-import org.apache.falcon.persistence.PendingInstanceBean;
-import org.apache.falcon.persistence.PersistenceConstants;
-import org.apache.falcon.persistence.ResultNotFoundException;
-import org.apache.falcon.persistence.EntitySLAAlertBean;
-import org.apache.falcon.persistence.ProcessInstanceInfoBean;
-import org.apache.falcon.service.FalconJPAService;
-
+import java.util.Date;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.util.Date;
-import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.persistence.EntitySLAAlertBean;
+import org.apache.falcon.persistence.MonitoredEntityBean;
+import org.apache.falcon.persistence.PendingInstanceBean;
+import org.apache.falcon.persistence.PersistenceConstants;
+import org.apache.falcon.persistence.ProcessInstanceInfoBean;
+import org.apache.falcon.persistence.ResultNotFoundException;
+import org.apache.falcon.service.FalconJPAService;
 
 /**
 * StateStore for MonitoringEntity and PendingEntityInstances.
