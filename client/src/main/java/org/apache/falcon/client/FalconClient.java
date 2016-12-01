@@ -29,11 +29,14 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.ExtensionHandler;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
@@ -51,6 +54,8 @@ import org.apache.falcon.resource.TriageResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -1092,7 +1097,49 @@ public class FalconClient extends AbstractFalconClient {
     private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
                                                          InputStream configStream) {
         ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
-        List<Entity> entities = ExtensionHandler.getEntities(extensionName, jobName, configStream, clientResponse);
+        List<Entity> entities = getEntities(extensionName, jobName, configStream, clientResponse);
+        return entities;
+    }
+
+    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
+                                           ClientResponse clientResponse) {
+        JSONObject responseJson;
+        try {
+            responseJson = new JSONObject(clientResponse.getEntity(String.class));
+        } catch (JSONException e) {
+            OUT.get().print("Submit failed. Failed to get details for the given extension");
+            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+        }
+        String extensionType;
+        String extensionBuildLocation;
+        try {
+            extensionType = responseJson.get("type").toString();
+            extensionBuildLocation = responseJson.get("location").toString();
+        } catch (JSONException e) {
+            OUT.get().print("Error. " + extensionName + " not found ");
+            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+        }
+
+        List<Entity> entities = null;
+        if (!extensionType.equals(ExtensionType.CUSTOM.name())) {
+            try {
+                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+                        extensionBuildLocation);
+            } catch (Exception e) {
+                OUT.get().println("Error in building the extension");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+            if (entities == null || entities.isEmpty()) {
+                OUT.get().println("No entities got built");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+            try {
+                EntityUtil.applyTags(extensionName, jobName, entities);
+            } catch (FalconException e) {
+                OUT.get().println("Error in applying tags to generated entities");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+        }
         return entities;
     }
 
