@@ -194,7 +194,8 @@ public final class ExtensionHandler {
         return urls;
     }
 
-    public static List<Entity> getEntities(String extensionName, String jobName, InputStream configStream, ClientResponse clientResponse) {
+    public static List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
+                                           ClientResponse clientResponse) {
         JSONObject responseJson;
         try {
             responseJson = new JSONObject(clientResponse.getEntity(String.class));
