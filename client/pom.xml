@@ -112,6 +112,10 @@
             <artifactId>hive-webhcat-java-client</artifactId>
             <version>${hive.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-extensions</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

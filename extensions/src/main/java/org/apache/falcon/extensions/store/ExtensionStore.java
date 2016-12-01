@@ -20,38 +20,35 @@ package org.apache.falcon.extensions.store;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.IOUtils;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.apache.falcon.util.StartupProperties;
-import org.apache.falcon.entity.store.StoreAccessException;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Store for Falcon extensions.
@@ -106,10 +103,10 @@ public final class ExtensionStore {
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
-                metaStore.storeExtensionMetadataBean(recipeName, location, extensionType, description);
+                metaStore.storeExtensionBean(recipeName, location, extensionType, description);
             }
         } catch (FalconException e){
-            LOG.error("Exception in ExtensionStore:", e);
+            LOG.error("Exception in ExtensionMetaStore:", e);
             throw new RuntimeException(e);
         }
 
@@ -239,36 +236,36 @@ public final class ExtensionStore {
     }
 
     public List<String> getExtensions() throws StoreAccessException {
-        List<String> extesnionList = new ArrayList<>();
+        List<String> extensionList = new ArrayList<>();
         try {
             FileStatus[] fileStatuses = fs.listStatus(storePath);
 
             for (FileStatus fileStatus : fileStatuses) {
                 if (fileStatus.isDirectory()) {
                     Path filePath = Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath());
-                    extesnionList.add(filePath.getName());
+                    extensionList.add(filePath.getName());
                 }
             }
         } catch (IOException e) {
             throw new StoreAccessException(e);
         }
-        return extesnionList;
+        return extensionList;
     }
-    public String deleteExtensionMetadata(final String extensionName) throws ValidationException{
+    public String deleteExtension(final String extensionName) throws ValidationException{
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
         if (extensionType.equals(ExtensionType.TRUSTED)){
             throw new ValidationException(extensionName + " is trusted cannot be deleted.");
         }
         if (metaStore.checkIfExtensionExists(extensionName)) {
-            metaStore.deleteExtensionMetadata(extensionName);
+            metaStore.deleteExtension(extensionName);
             return "Deleted extension:" + extensionName;
         }else {
             return "Extension:" + extensionName + " is not registered with Falcon.";
         }
     }
 
-    public String registerExtensionMetadata(final String extensionName, final String path, final String description)
+    public String registerExtension(final String extensionName, final String path, final String description)
         throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
@@ -277,7 +274,7 @@ public final class ExtensionStore {
         try {
             fileSystem.listStatus(new Path(uri.getPath() + "/README"));
         } catch (IOException e){
-            LOG.error("Exception in registerExtensionMetadata:", e);
+            LOG.error("Exception in registering Extension:{}", extensionName, e);
             throw new ValidationException("README file is not present in the " + path);
         }
         PathFilter filter=new PathFilter(){
@@ -292,7 +289,7 @@ public final class ExtensionStore {
                 throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
             }
         } catch (IOException e){
-            LOG.error("Exception in registerExtensionMetadata:", e);
+            LOG.error("Exception in registering Extension:{}", extensionName, e);
             throw new ValidationException("Jars are not present in the " + uri.getPath() + "libs/build.");
         }
         FileStatus[] propStatus;
@@ -303,13 +300,13 @@ public final class ExtensionStore {
                         + " structure.");
             }
         } catch (IOException e){
-            LOG.error("Exception in registerExtensionMetadata:", e);
+            LOG.error("Exception in registering Extension:{}", extensionName, e);
             throw new ValidationException("Directory is not present in the " + uri.getPath() + "/META"
                     + " structure.");
         }
 
         if (!metaStore.checkIfExtensionExists(extensionName)){
-            metaStore.storeExtensionMetadataBean(extensionName, path, ExtensionType.CUSTOM, description);
+            metaStore.storeExtensionBean(extensionName, path, ExtensionType.CUSTOM, description);
         }else{
             throw new ValidationException(extensionName + " already exsists.");
         }

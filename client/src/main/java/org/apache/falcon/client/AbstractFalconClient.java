@@ -179,6 +179,18 @@ public abstract class AbstractFalconClient {
                                                 String properties);
 
     /**
+     * Prepare set of entities the extension has implemented and stage them to a local directory and submit them too.
+     * @param extensionName extension which is available in the store.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract APIResult submitExtensionJob(String extensionName, String jobName, String configPath,
+                                                String doAsUser);
+
+    /**
      *
      * Get list of the entities.
      * We have two filtering parameters for entity tags: "tags" and "tagkeys".
