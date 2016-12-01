@@ -18,15 +18,20 @@
 
 package org.apache.falcon;
 
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconExtensionConstants;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.ExtensionBuilder;
+import org.apache.falcon.extensions.ExtensionType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +46,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+
+import static org.apache.falcon.client.FalconClient.OUT;
 
 /**
  * Handler class that is responsible for preparing Extension entities.
@@ -185,5 +192,46 @@ public final class ExtensionHandler {
 
         urls.add(fileURL);
         return urls;
+    }
+
+    public static List<Entity> getEntities(String extensionName, String jobName, InputStream configStream, ClientResponse clientResponse) {
+        JSONObject responseJson;
+        try {
+            responseJson = new JSONObject(clientResponse.getEntity(String.class));
+        } catch (JSONException e) {
+            OUT.get().print("Submit failed. Failed to get details for the given extension");
+            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+        }
+        String extensionType;
+        String extensionBuildLocation;
+        try {
+            extensionType = responseJson.get("type").toString();
+            extensionBuildLocation = responseJson.get("location").toString();
+        } catch (JSONException e) {
+            OUT.get().print("Error. " + extensionName + " not found ");
+            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+        }
+
+        List<Entity> entities = null;
+        if (!extensionType.equals(ExtensionType.CUSTOM.name())) {
+            try {
+                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+                        extensionBuildLocation);
+            } catch (Exception e) {
+                OUT.get().println("Error in building the extension");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+            if (entities == null || entities.isEmpty()) {
+                OUT.get().println("No entities got built");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+            try {
+                EntityUtil.applyTags(extensionName, jobName, entities);
+            } catch (FalconException e) {
+                OUT.get().println("Error in applying tags to generated entities");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+        }
+        return entities;
     }
 }
