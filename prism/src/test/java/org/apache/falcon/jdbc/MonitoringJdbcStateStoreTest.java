@@ -19,6 +19,7 @@ package org.apache.falcon.jdbc;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -27,6 +28,7 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.persistence.ProcessInstanceInfoBean;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.StateStoreProperties;
@@ -171,6 +173,15 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         store.updateSLAAlertInstance("test-process", "test-cluster", dateOne, EntityType.PROCESS.toString());
         Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-process",
                 "test-cluster", dateOne, EntityType.PROCESS.toString()).getIsSLAHighMissed());
+    }
+
+    @Test
+    public void putProcessInstance() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        store.putProcessInstance("test-process", "test-colo", 1466602429423L, 99999999L, 99999999L, "test", "failed");
+        List<ProcessInstanceInfoBean> list =  store.getAllInstancesProcessInstance();
+        ProcessInstanceInfoBean processInstanceInfoBean =  list.get(0);
+        Assert.assertEquals("test-process", processInstanceInfoBean.getProcessName());
     }
 
     private void clear() {

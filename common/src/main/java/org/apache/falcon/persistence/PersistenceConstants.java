@@ -79,5 +79,5 @@ public final class PersistenceConstants {
     public static final String GET_ALL_EXTENSION_JOBS = "GET_ALL_EXTENSION_JOBS";
     public static final String DELETE_EXTENSION_JOB = "DELETE_EXTENSION_JOB";
     public static final String GET_EXTENSION_JOB = "GET_EXTENSION_JOB";
-
+    public static final String GET_ALL_PROCESS_INFO_INSTANCES = "GET_ALL_PROCESS_INFO_INSTANCES";
 }

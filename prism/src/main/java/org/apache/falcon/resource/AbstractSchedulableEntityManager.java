@@ -164,27 +164,32 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
      * @param endStr
      */
     public SchedulableEntityInstanceResult getEntitySLAMissPendingAlerts(String entityName, String entityType,
-                                                                         String startStr, String endStr, String colo) {
-
+                                                                         String startStr, String endStr,
+                                                                         String colo) {
         Set<SchedulableEntityInstance> instances = new HashSet<>();
+        String resultMessage = "Success!";
         try {
             checkColo(colo);
             Date start = EntityUtil.parseDateUTC(startStr);
             Date end = (endStr == null) ? new Date() : EntityUtil.parseDateUTC(endStr);
-
             if (StringUtils.isBlank(entityName)) {
-                instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(start, end));
+                instances = EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(start, end);
             } else {
-                for (String clusterName : DeploymentUtil.getCurrentClusters()) {
-                    instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(entityName,
-                            clusterName, start, end, entityType));
+                String status = getStatusString(EntityUtil.getEntity(entityType, entityName));
+                if (status.equals(EntityStatus.RUNNING.name())) {
+                    for (String clusterName : DeploymentUtil.getCurrentClusters()) {
+                        instances.addAll(EntitySLAMonitoringService.get().getEntitySLAMissPendingAlerts(entityName,
+                                clusterName, start, end, entityType));
+                    }
+                } else {
+                    resultMessage = entityName + " is " + status;
                 }
             }
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e);
         }
         SchedulableEntityInstanceResult result = new SchedulableEntityInstanceResult(APIResult.Status.SUCCEEDED,
-                "Success!");
+                resultMessage);
         result.setCollection(instances.toArray());
         return result;
     }
