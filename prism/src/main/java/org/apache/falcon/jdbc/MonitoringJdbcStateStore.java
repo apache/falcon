@@ -17,8 +17,6 @@
  */
 package org.apache.falcon.jdbc;
 
-import org.apache.commons.collections.CollectionUtils;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.persistence.MonitoredEntityBean;
 import org.apache.falcon.persistence.PendingInstanceBean;
@@ -188,14 +186,7 @@ public class MonitoringJdbcStateStore {
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PENDING_INSTANCES);
         List result = q.getResultList();
-
-        try {
-            if (CollectionUtils.isEmpty(result)) {
-                return null;
-            }
-        } finally{
-            entityManager.close();
-        }
+        entityManager.close();
         return result;
     }
 
