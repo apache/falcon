@@ -23,13 +23,14 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataBodyPart;
+import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
-import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.ExtensionHandler;
-import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.DateValidator;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -64,8 +65,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -124,6 +123,7 @@ public class FalconClient extends AbstractFalconClient {
 
 
     public static final String DO_AS_OPT = "doAs";
+    public static final String JOB_NAME_OPT = "jobName";
     public static final String ENTITIES_OPT = "entities";
     /**
      * Name of the HTTP cookie used for the authentication token between the client and the server.
@@ -747,26 +747,6 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataDiscoveryRequest(MetadataOperations.RELATIONS, dimensionType, dimensionName, null, doAsUser);
     }
 
-    /**
-     * Converts a InputStream into ServletInputStream.
-     *
-     * @param filePath - Path of file to stream
-     * @return ServletInputStream
-     */
-    private InputStream getServletInputStream(String filePath) {
-
-        if (filePath == null) {
-            return null;
-        }
-        InputStream stream;
-        try {
-            stream = new FileInputStream(filePath);
-        } catch (FileNotFoundException e) {
-            throw new FalconCLIException("File not found:", e);
-        }
-        return stream;
-    }
-
     private <T> T getResponse(Class<T> clazz, ClientResponse clientResponse) {
         printClientResponse(clientResponse);
         checkIfSuccessful(clientResponse);
@@ -871,6 +851,12 @@ public class FalconClient extends AbstractFalconClient {
             return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                     .accept(operation.mimeType).type(MediaType.TEXT_XML)
                     .method(operation.method, ClientResponse.class, entityStream);
+        }
+
+        public ClientResponse call(ExtensionOperations submit, FormDataMultiPart formDataMultiPart) {
+            return resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(submit.mimeType).type(MediaType.MULTIPART_FORM_DATA)
+                    .method(submit.method, ClientResponse.class, formDataMultiPart);
         }
     }
 
@@ -1040,14 +1026,17 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public String getExtensionDetail(final String extensionName) {
-        ClientResponse clientResponse = new ResourceBuilder().path(ExtensionOperations.DETAIL.path, extensionName)
-                .call(ExtensionOperations.DETAIL);
-        return getResponse(String.class, clientResponse);
+        return getResponse(String.class, getExtensionDetailResponse(extensionName));
     }
 
-    public String registerExtension(final String extensionName, final String path, final String description) {
+    public ClientResponse getExtensionDetailResponse(final String extensionName) {
+        return  new ResourceBuilder().path(ExtensionOperations.DETAIL.path, extensionName)
+                .call(ExtensionOperations.DETAIL);
+    }
+
+    public String registerExtension(final String extensionName, final String packagePath, final String description) {
         ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, path)
+                .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, packagePath)
                 .addQueryParam(FalconCLIConstants.DESCRIPTION, description)
                 .call(ExtensionOperations.REGISTER);
         return getResponse(String.class, clientResponse);
@@ -1070,55 +1059,89 @@ public class FalconClient extends AbstractFalconClient {
     @Override
     public APIResult submitExtensionJob(final String extensionName, final String jobName, final String configPath,
                                         final String doAsUser) {
+        FormDataMultiPart entitiesForm = getEntitiesForm(extensionName, jobName, configPath);
         ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.DETAIL.path)
-                .call(ExtensionOperations.DETAIL);
-        JSONObject responseJson = clientResponse.getEntity(JSONObject.class);
-        ExtensionType extensionType;
-        String extensionBuildLocation;
-        try {
-            JSONObject extensionDetailsJson = new JSONObject(responseJson.get("detail").toString());
-            extensionType = ExtensionType.valueOf(extensionDetailsJson.get("type").toString().toUpperCase());
-            extensionBuildLocation = extensionDetailsJson.get("location").toString();
-        } catch (JSONException e) {
-            OUT.get().print("Error. " + extensionName + " not found ");
-            return null;
-        }
-        InputStream configStream = getServletInputStream(configPath);
-
-        List<Entity> entities;
-        if (extensionType.equals(ExtensionType.CUSTOM)) {
-            try {
-                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream, extensionBuildLocation);
-            } catch (Exception e) {
-                OUT.get().println("Error in building the extension");
-                return null;
-            }
-            if (entities == null || entities.isEmpty()) {
-                OUT.get().println("No entities got built");
-                return null;
-            }
-            try {
-                EntityUtil.applyTags(extensionName, jobName, entities);
-            } catch (FalconException e) {
-                OUT.get().println("Error in applying tags to generated entities");
-            }
-        }
-
-        clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.SUBMIT, configStream);
+                .addQueryParam(JOB_NAME_OPT, jobName)
+                .call(ExtensionOperations.SUBMIT, entitiesForm);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult submitAndScheduleExtensionJob(final String extensionName, final String filePath,
-                                                   final String doAsUser)  {
-        InputStream entityStream = getServletInputStream(filePath);
+    private FormDataMultiPart getEntitiesForm(String extensionName, String jobName, String configPath) {
+        InputStream configStream = getServletInputStream(configPath);
+        List<Entity> entities = validateExtensionAndGetEntities(extensionName, jobName, configStream);
+        FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
+
+        for (Entity entity : entities) {
+            if (EntityType.FEED.equals(entity.getEntityType())) {
+                formDataMultiPart.field("feeds", entity, MediaType.APPLICATION_XML_TYPE);
+            } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                formDataMultiPart.field("processes", entity, MediaType.APPLICATION_XML_TYPE);
+            }
+        }
+
+        formDataMultiPart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("config").build(), configStream,
+                MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        try {
+            formDataMultiPart.close();
+        } catch (IOException e) {
+            OUT.get().print("Submit failed. Failed to submit entities");
+            throw new FalconCLIException("Submit failed. Failed to submit entities", e);
+        }
+        return formDataMultiPart;
+    }
+
+    private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
+                                                         InputStream configStream) {
+        ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
+        List<Entity> entities = getEntities(extensionName, jobName, configStream, clientResponse);
+        return entities;
+    }
+
+    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
+                                           ClientResponse clientResponse) {
+        JSONObject responseJson;
+        try {
+            responseJson = new JSONObject(clientResponse.getEntity(String.class));
+        } catch (JSONException e) {
+            OUT.get().print("Submit failed. Failed to get details for the given extension");
+            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+        }
+        String extensionType;
+        String extensionBuildLocation;
+        try {
+            extensionType = responseJson.get("type").toString();
+            extensionBuildLocation = responseJson.get("location").toString();
+        } catch (JSONException e) {
+            OUT.get().print("Error. " + extensionName + " not found ");
+            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+        }
+
+        List<Entity> entities = null;
+        if (!extensionType.equals(ExtensionType.CUSTOM.name())) {
+            try {
+                entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+                        extensionBuildLocation);
+            } catch (Exception e) {
+                OUT.get().println("Error in building the extension");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+            if (entities == null || entities.isEmpty()) {
+                OUT.get().println("No entities got built");
+                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            }
+        }
+        return entities;
+    }
+
+    public APIResult submitAndScheduleExtensionJob(final String extensionName, final String jobName,
+                                                   final String configPath, final String doAsUser)  {
+        FormDataMultiPart entitiesForm = getEntitiesForm(extensionName, jobName, configPath);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT_AND_SCHEDULE.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.SUBMIT_AND_SCHEDULE, entityStream);
+                .call(ExtensionOperations.SUBMIT_AND_SCHEDULE, entitiesForm);
         return getResponse(APIResult.class, clientResponse);
     }
 

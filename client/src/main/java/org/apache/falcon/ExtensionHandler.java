@@ -113,8 +113,8 @@ public final class ExtensionHandler {
             type = entity.getEntityType();
             OutputStream out;
             try {
-                entityFile = new File(stagePath + File.separator + entity.getEntityType().toString() + "_"
-                    + URLEncoder.encode(entity.getName(), UTF_8));
+                entityFile = new File(new Path(stagePath + File.separator + entity.getEntityType().toString() + "_"
+                    + URLEncoder.encode(entity.getName(), UTF_8)).toUri().toURL().getPath());
                 if (!entityFile.createNewFile()) {
                     LOG.debug("Not able to stage the entities in the tmp path");
                     return;

@@ -48,7 +48,7 @@ import java.util.Date;
  * Test for SLA Alerts.
  */
 public class EntitySLAAlertServiceTest extends AbstractTestBase {
-    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
+    private static final String DB_BASE_DIR = "target/test-data/persistencedb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
