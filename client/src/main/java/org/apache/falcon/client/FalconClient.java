@@ -1133,12 +1133,6 @@ public class FalconClient extends AbstractFalconClient {
                 OUT.get().println("No entities got built");
                 throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
             }
-            try {
-                EntityUtil.applyTags(extensionName, jobName, entities);
-            } catch (FalconException e) {
-                OUT.get().println("Error in applying tags to generated entities");
-                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
-            }
         }
         return entities;
     }
