@@ -26,6 +26,7 @@ import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -141,11 +142,21 @@ public final class ExtensionStore {
         }
     }
 
-    public Map<String, String> getExtensionArtifacts(final String extensionName) throws StoreAccessException {
+    public Map<String, String> getExtensionArtifacts(final String extensionName) throws
+             FalconException {
         Map<String, String> extensionFileMap = new HashMap<>();
+        Path extensionPath;
         try {
-            Path extensionPath = new Path(storePath, extensionName.toLowerCase());
-            RemoteIterator<LocatedFileStatus> fileStatusListIterator = fs.listFiles(extensionPath, true);
+            RemoteIterator<LocatedFileStatus> fileStatusListIterator;
+            if (AbstractExtension.isExtensionTrusted(extensionName)){
+                extensionPath = new Path(storePath, extensionName.toLowerCase());
+                fileStatusListIterator = fs.listFiles(extensionPath, true);
+            }else{
+                ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+                extensionPath = new Path(extensionBean.getLocation());
+                FileSystem fileSystem = getHdfsFileSystem(extensionBean.getLocation());
+                fileStatusListIterator = fileSystem.listFiles(extensionPath, true);
+            }
 
             if (!fileStatusListIterator.hasNext()) {
                 throw new StoreAccessException(new Exception(" For extension " + extensionName
@@ -153,7 +164,7 @@ public final class ExtensionStore {
             }
             while (fileStatusListIterator.hasNext()) {
                 LocatedFileStatus fileStatus = fileStatusListIterator.next();
-                Path filePath = Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath());
+                Path filePath = fileStatus.getPath();
                 extensionFileMap.put(filePath.getName(), filePath.toString());
             }
         } catch (IOException e) {
@@ -219,17 +230,24 @@ public final class ExtensionStore {
         }
     }
 
-    public String getExtensionResource(final String resourcePath) throws StoreAccessException {
+    public String getExtensionResource(final String resourcePath) throws FalconException {
         if (StringUtils.isBlank(resourcePath)) {
             throw new StoreAccessException(new Exception("Resource path cannot be null or empty"));
         }
 
         try {
             Path resourceFile = new Path(resourcePath);
+            InputStream data;
 
             ByteArrayOutputStream writer = new ByteArrayOutputStream();
-            InputStream data = fs.open(resourceFile);
-            IOUtils.copyBytes(data, writer, fs.getConf(), true);
+            if (resourcePath.startsWith("hdfs")){
+                FileSystem fileSystem = getHdfsFileSystem(resourcePath);
+                data = fileSystem.open(resourceFile);
+                IOUtils.copyBytes(data, writer, fileSystem.getConf(), true);
+            }else{
+                data = fs.open(resourceFile);
+                IOUtils.copyBytes(data, writer, fs.getConf(), true);
+            }
             return writer.toString();
         } catch (IOException e) {
             throw new StoreAccessException(e);
@@ -277,15 +295,28 @@ public final class ExtensionStore {
         }
     }
 
-    public String registerExtension(final String extensionName, final String path, final String description,
-                                    String extensionOwner) throws URISyntaxException, FalconException {
+ 
+    private FileSystem getHdfsFileSystem(String path)  throws  FalconException {
         Configuration conf = new Configuration();
+        URI uri;
+        try {
+            uri = new URI(path);
+        } catch (URISyntaxException e){
+            LOG.error("Exception : ", e);
+            throw new FalconException(e);
+        }
+        conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
+        return  HadoopClientFactory.get().createFalconFileSystem(uri);
+    }
+
+    public String registerExtension(final String extensionName, final String path, final String description,
+                                    final String extensionOwner)
+        throws URISyntaxException, FalconException {
         URI uri = new URI(path);
         assertURI("Scheme", uri.getScheme());
         assertURI("Authority", uri.getAuthority());
         assertURI("Path", uri.getPath());
-        conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
-        FileSystem fileSystem = HadoopClientFactory.get().createFalconFileSystem(uri);
+        FileSystem fileSystem =  getHdfsFileSystem(path);
         try {
             fileSystem.listStatus(new Path(uri.getPath() + "/README"));
         } catch (IOException e) {
@@ -329,7 +360,7 @@ public final class ExtensionStore {
         return "Extension :" + extensionName + " registered successfully.";
     }
 
-    public String getResource(final String extensionName, final String resourceName) throws StoreAccessException {
+    public String getResource(final String extensionName, final String resourceName) throws  FalconException {
         Map<String, String> resources = getExtensionArtifacts(extensionName);
         if (resources.isEmpty()) {
             throw new StoreAccessException(new Exception("No extension resources found for " + extensionName));
