@@ -19,7 +19,9 @@
 package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.Pair;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.extensions.ExtensionManager;
 
@@ -33,18 +35,16 @@ import java.util.List;
 public class LocalExtensionManager extends ExtensionManager {
     public LocalExtensionManager() {}
 
-    public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config, List<Entity> entities)
-        throws FalconException, IOException {
-        submitEntities(extensionName, null, jobName, entities, config);
+    public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config, List<Feed> feeds,
+                                        List<Process> processes) throws FalconException, IOException {
+        submitEntities(extensionName, null, jobName, feeds, processes, config);
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
     public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream config,
-                                                      List<Entity> entities) throws FalconException, IOException {
-        submitEntities(extensionName, null, jobName, entities, config);
-        for (Entity entity : entities) {
-            scheduleInternal(entity.getEntityType().name(), entity.getName(), null, null);
-        }
+        List<Feed> feeds, List<Process> processes) throws FalconException, IOException {
+        submitEntities(extensionName, null, jobName, feeds, processes, config);
+        scheduleEntities(new Pair(feeds, processes));
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 

@@ -285,7 +285,16 @@ public class FalconUnitClient extends AbstractFalconClient {
         InputStream configStream = getServletInputStream(configPath);
         try {
             List<Entity> entities = getEntities(extensionName, jobName, configStream);
-            return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entities);
+            List<Feed> feeds = new ArrayList<>();
+            List<Process> processes = new ArrayList<>();
+            for (Entity entity : entities) {
+                if (EntityType.FEED.equals(entity.getEntityType())) {
+                    feeds.add((Feed)entity);
+                } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                    processes.add((Process)entity);
+                }
+            }
+            return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, feeds, processes);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }
@@ -309,8 +318,17 @@ public class FalconUnitClient extends AbstractFalconClient {
         InputStream configStream = getServletInputStream(configPath);
         try {
             List<Entity> entities = getEntities(extensionName, jobName, configStream);
+            List<Feed> feeds = new ArrayList<>();
+            List<Process> processes = new ArrayList<>();
+            for (Entity entity : entities) {
+                if (EntityType.FEED.equals(entity.getEntityType())) {
+                    feeds.add((Feed)entity);
+                } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                    processes.add((Process)entity);
+                }
+            }
             return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
-                    entities);
+                    feeds, processes);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }

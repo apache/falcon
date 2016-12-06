@@ -89,7 +89,7 @@ public class FalconExtensionCLI {
         } else if (optionsList.contains(UNREGISTER_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.unregisterExtension(extensionName);
-        }else if (optionsList.contains(DETAIL_OPT)) {
+        } else if (optionsList.contains(DETAIL_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDetail(extensionName);
             result = prettyPrintJson(result);
