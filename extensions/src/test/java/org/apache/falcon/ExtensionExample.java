@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class ExtensionExample implements ExtensionBuilder{
 
-    public static final String PROCESS_XML = "/process.xml";
+    public static final String PROCESS_XML = "/extension-example.xml";
 
     @Override
     public List<Entity> getEntities(String extensionName, InputStream extensionConfigStream) throws FalconException {
@@ -42,7 +42,7 @@ public class ExtensionExample implements ExtensionBuilder{
             process = (Entity) EntityType.PROCESS.getUnmarshaller().unmarshal(
                     getClass().getResourceAsStream(PROCESS_XML));
         } catch (JAXBException e) {
-            throw new FalconException("Failed in unmarshalling the entity");
+            throw new FalconException("Failed in un-marshalling the entity");
         }
         List<Entity> entities = new ArrayList<>();
         entities.add(process);

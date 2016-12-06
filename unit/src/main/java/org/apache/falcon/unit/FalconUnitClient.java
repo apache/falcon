@@ -18,6 +18,7 @@
 package org.apache.falcon.unit;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.ExtensionHandler;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.AbstractFalconClient;
@@ -31,6 +32,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
@@ -52,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,13 +72,14 @@ public class FalconUnitClient extends AbstractFalconClient {
     private static final Logger LOG = LoggerFactory.getLogger(FalconUnitClient.class);
     protected static final int XML_DEBUG_LEN = 10 * 1024;
 
-    private static final String DEFAULT_ORDERBY = "status";
+    private static final String DEFAULT_ORDER_BY = "status";
     private static final String DEFAULT_SORTED_ORDER = "asc";
 
     protected ConfigurationStore configStore;
     private AbstractWorkflowEngine workflowEngine;
     private LocalSchedulableEntityManager localSchedulableEntityManager;
     private LocalInstanceManager localInstanceManager;
+    private LocalExtensionManager localExtensionManager;
 
 
     public FalconUnitClient() throws FalconException {
@@ -83,6 +87,7 @@ public class FalconUnitClient extends AbstractFalconClient {
         workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
         localSchedulableEntityManager = new LocalSchedulableEntityManager();
         localInstanceManager = new LocalInstanceManager();
+        localExtensionManager = new LocalExtensionManager();
     }
 
     public ConfigurationStore getConfigStore() {
@@ -167,7 +172,7 @@ public class FalconUnitClient extends AbstractFalconClient {
                                                 String sortOrder, Integer offset, Integer numResults, String doAsUser,
                                                 Boolean allAttempts) {
         if (orderBy == null) {
-            orderBy = DEFAULT_ORDERBY;
+            orderBy = DEFAULT_ORDER_BY;
         }
         if (sortOrder == null) {
             sortOrder = DEFAULT_SORTED_ORDER;
@@ -182,7 +187,6 @@ public class FalconUnitClient extends AbstractFalconClient {
                 sortOrder, offset, numResults, allAttempts);
 
     }
-
 
     /**
      * Schedules an submitted process entity immediately.
@@ -266,9 +270,50 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
+    public String registerExtension(String extensionName, String packagePath, String description) {
+        return localExtensionManager.registerExtensionMetadata(extensionName, packagePath, description);
+    }
+
+    @Override
+    public String unregisterExtension(String extensionName) {
+        return localExtensionManager.unRegisterExtension(extensionName);
+    }
+
+    @Override
     public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
-        //TODO Make falcon unit client changes for submitting recipe too.
-        throw new UnsupportedOperationException("Not yet Implemented");
+
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            List<Entity> entities = getEntities(extensionName, jobName, configStream);
+            return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entities);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in submitting extension job " + jobName);
+        }
+    }
+
+    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream) {
+        String packagePath = ExtensionStore.get().getMetaStore().getDetail(extensionName).getLocation();
+        List<Entity> entities;
+        try {
+            entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+                    packagePath);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in generating entties" + jobName);
+        }
+        return entities;
+    }
+
+    @Override
+    public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                   String doAsUser) {
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            List<Entity> entities = getEntities(extensionName, jobName, configStream);
+            return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
+                    entities);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in submitting extension job " + jobName);
+        }
     }
 
     @Override
@@ -327,7 +372,7 @@ public class FalconUnitClient extends AbstractFalconClient {
                                                         String colo, List<LifeCycle> lifeCycles, String filterBy,
                                                         String orderBy, String sortOrder, String doAsUser) {
         if (StringUtils.isBlank(orderBy)) {
-            orderBy = DEFAULT_ORDERBY;
+            orderBy = DEFAULT_ORDER_BY;
         }
         if (StringUtils.isBlank(sortOrder)) {
             sortOrder = DEFAULT_SORTED_ORDER;
