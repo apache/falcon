@@ -58,6 +58,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -294,7 +295,10 @@ public class FalconUnitClient extends AbstractFalconClient {
                     processes.add((Process)entity);
                 }
             }
-            return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, feeds, processes);
+            Map<EntityType, List> entityMap = new HashMap<>();
+            entityMap.put(EntityType.PROCESS, processes);
+            entityMap.put(EntityType.FEED, feeds);
+            return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entityMap);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }
@@ -327,8 +331,11 @@ public class FalconUnitClient extends AbstractFalconClient {
                     processes.add((Process)entity);
                 }
             }
+            Map<EntityType, List> entityMap = new HashMap<>();
+            entityMap.put(EntityType.PROCESS, processes);
+            entityMap.put(EntityType.FEED, feeds);
             return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
-                    feeds, processes);
+                    entityMap);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }

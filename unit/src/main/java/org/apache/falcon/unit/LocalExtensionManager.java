@@ -19,15 +19,14 @@
 package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Pair;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.extensions.ExtensionManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A proxy implementation of the extension operations in local mode.
@@ -35,16 +34,17 @@ import java.util.List;
 public class LocalExtensionManager extends ExtensionManager {
     public LocalExtensionManager() {}
 
-    public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config, List<Feed> feeds,
-                                        List<Process> processes) throws FalconException, IOException {
-        submitEntities(extensionName, null, jobName, feeds, processes, config);
+    public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config,
+                                        Map<EntityType, List> entityMap) throws FalconException, IOException {
+        submitEntities(extensionName, null, jobName, entityMap, config);
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
     public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream config,
-        List<Feed> feeds, List<Process> processes) throws FalconException, IOException {
-        submitEntities(extensionName, null, jobName, feeds, processes, config);
-        scheduleEntities(new Pair(feeds, processes));
+                                                      Map<EntityType, List> entityMap)
+        throws FalconException, IOException {
+        submitEntities(extensionName, null, jobName, entityMap, config);
+        scheduleEntities(entityMap);
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 

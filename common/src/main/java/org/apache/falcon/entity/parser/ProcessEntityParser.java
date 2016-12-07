@@ -77,7 +77,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         validate(process, true);
     }
 
-    public void validate(Process process, boolean checkDependantFeeds) throws FalconException {
+    public void validate(Process process, boolean checkDependentFeeds) throws FalconException {
         if (process.getTimezone() == null) {
             process.setTimezone(TimeZone.getTimeZone("UTC"));
         }
@@ -110,7 +110,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
             validateHDFSPaths(process, clusterName);
             validateProperties(process);
 
-            if (checkDependantFeeds) {
+            if (checkDependentFeeds) {
                 if (process.getInputs() != null) {
                     for (Input input : process.getInputs().getInputs()) {
                         validateEntityExists(EntityType.FEED, input.getFeed());

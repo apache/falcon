@@ -24,7 +24,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.Pair;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.parser.ValidationException;
@@ -312,13 +311,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
-        List<Process> processes = getProcesses(processForms);
-        List<Feed> feeds = getFeeds(feedForms);
-        Pair<List<Feed>, List<Process>> entityPairs;
+        Map<EntityType, List> entityMap;
 
         try {
-            entityPairs = getEntityList(extensionName, feeds, processes, config);
-            submitEntities(extensionName, doAsUser, jobName, entityPairs.first, entityPairs.second, config);
+            entityMap = getEntityList(extensionName, feedForms, processForms, config);
+            submitEntities(extensionName, doAsUser, jobName, entityMap, config);
         } catch (FalconException | IOException e) {
             LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -326,11 +323,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
-    private Pair<List<Feed>, List<Process>> getEntityList(String extensionName, List<Feed> feeds,
-                                                          List<Process> processes, InputStream config)
+    private Map<EntityType, List> getEntityList(String extensionName, List<FormDataBodyPart> feedForms,
+                                                          List<FormDataBodyPart> processForms, InputStream config)
         throws FalconException, IOException{
+        List<Process> processes = getProcesses(processForms);
+        List<Feed> feeds = getFeeds(feedForms);
         ExtensionType extensionType = getExtensionType(extensionName);
         List<Entity> entities;
+        Map<EntityType, List> entityMap = new HashMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
             entities = generateEntities(extensionName, config);
             List<Feed> trustedFeeds = new ArrayList<>();
@@ -342,9 +342,13 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                     trustedProcesses.add((Process)entity);
                 }
             }
-            return new Pair<>(trustedFeeds, trustedProcesses);
+            entityMap.put(EntityType.PROCESS, trustedProcesses);
+            entityMap.put(EntityType.FEED, trustedFeeds);
+            return entityMap;
         } else {
-            return new Pair<>(feeds, processes);
+            entityMap.put(EntityType.PROCESS, processes);
+            entityMap.put(EntityType.FEED, feeds);
+            return entityMap;
         }
     }
 
@@ -368,13 +372,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
-        List<Process> processes = getProcesses(processForms);
-        List<Feed> feeds = getFeeds(feedForms);
-        Pair<List<Feed>, List<Process>> entityPairs;
+        Map<EntityType, List> entityMap;
         try {
-            entityPairs = getEntityList(extensionName, feeds, processes, config);
-            submitEntities(extensionName, doAsUser, jobName, entityPairs.first, entityPairs.second, config);
-            scheduleEntities(entityPairs);
+            entityMap = getEntityList(extensionName, feedForms, processForms, config);
+            submitEntities(extensionName, doAsUser, jobName, entityMap, config);
+            scheduleEntities(entityMap);
         } catch (FalconException | IOException e) {
             LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -402,8 +404,11 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return processes;
     }
 
-    protected void submitEntities(String extensionName, String doAsUser, String jobName, List<Feed> feeds,
-                                  List<Process> processes, InputStream configStream) throws FalconException, IOException {
+    protected void submitEntities(String extensionName, String doAsUser, String jobName,
+                                  Map<EntityType, List> entityMap, InputStream configStream)
+        throws FalconException, IOException {
+        List<Feed> feeds = entityMap.get(EntityType.FEED);
+        List<Process> processes = entityMap.get(EntityType.PROCESS);
         validateFeeds(feeds);
         validateProcesses(processes);
         List<String> feedNames = new ArrayList<>();
@@ -417,7 +422,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             processNames.add(process.getName());
         }
 
-        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         byte[] configBytes = null;
         if (configStream != null) {
             configBytes = IOUtils.toByteArray(configStream);
@@ -425,13 +430,13 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
     }
 
-    protected void scheduleEntities(Pair<List<Feed>, List<Process>> entityPairs) throws FalconException,
+    protected void scheduleEntities(Map<EntityType, List> entityMap) throws FalconException,
             AuthorizationException {
-        for (Feed feed: entityPairs.first) {
-            scheduleInternal(EntityType.FEED.name(), feed.getName(), null, null);
+        for (Object feed: entityMap.get(EntityType.FEED)) {
+            scheduleInternal(EntityType.FEED.name(), ((Feed)feed).getName(), null, null);
         }
-        for (Process process: entityPairs.second) {
-            scheduleInternal(EntityType.PROCESS.name(), process.getName(), null, null);
+        for (Object process: entityMap.get(EntityType.PROCESS)) {
+            scheduleInternal(EntityType.PROCESS.name(), ((Process)process).getName(), null, null);
         }
     }
 
@@ -441,6 +446,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             super.validate(feed);
         }
     }
+
     private void validateProcesses(List<Process> processes) throws FalconException {
         ProcessEntityParser processEntityParser = new ProcessEntityParser();
         for (Process process : processes) {
