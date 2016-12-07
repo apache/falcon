@@ -1094,7 +1094,7 @@ public class FalconClient extends AbstractFalconClient {
 
     private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
                                                          InputStream configStream) {
-        JSONObject extensionDetailJson = getExtensionJobDetail(extensionName);
+        JSONObject extensionDetailJson = getExtensionDetailJson(extensionName);
         String extensionType = ExtensionHandler.getExtensionType(extensionName, extensionDetailJson);
         String extensionBuildLocation = ExtensionHandler.getExtensionLocation(extensionName, extensionDetailJson);
         List<Entity> entities = getEntities(extensionName, jobName, configStream, extensionType,
@@ -1102,7 +1102,7 @@ public class FalconClient extends AbstractFalconClient {
         return entities;
     }
 
-    private JSONObject getExtensionJobDetail(String extensionName) {
+    private JSONObject getExtensionDetailJson(String extensionName) {
         ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
         JSONObject extensionDetailJson;
         try {
@@ -1154,7 +1154,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public APIResult validateExtensionJob(final String extensionName, final String jobName,
                                           final String configPath, final String doAsUser) {
-        String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionJobDetail(extensionName));
+        String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionDetailJson(extensionName));
         InputStream configStream = getServletInputStream(configPath);
         if (ExtensionType.TRUSTED.name().equalsIgnoreCase(extensionType)) {
             ClientResponse clientResponse = new ResourceBuilder()

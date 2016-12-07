@@ -76,7 +76,7 @@ public final class ExtensionHandler {
                     + extensionName);
         }
 
-        ExtensionBuilder extensionBuilder;
+        ExtensionBuilder extensionBuilder = null;
         try {
             Class<ExtensionBuilder> clazz = (Class<ExtensionBuilder>) extensionClassloader
                     .loadClass(result.get(0).getCanonicalName());
@@ -195,14 +195,14 @@ public final class ExtensionHandler {
 
 
     public static String getExtensionLocation(String extensionName, JSONObject extensionDetailJson) {
-        String extensionType;
+        String extensionBuildPath;
         try {
-            extensionType = extensionDetailJson.get(LOCATION).toString();
+            extensionBuildPath = extensionDetailJson.get(LOCATION).toString();
         } catch (JSONException e) {
             OUT.get().print("Error. " + extensionName + " not found ");
             throw new FalconCLIException("Failed to get extension type for the given extension");
         }
-        return extensionType;
+        return extensionBuildPath;
     }
 
     public static  String getExtensionType(String extensionName, JSONObject extensionDetailJson) {
