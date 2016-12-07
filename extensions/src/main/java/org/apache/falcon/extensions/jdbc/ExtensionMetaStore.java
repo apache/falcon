@@ -25,7 +25,6 @@ import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 

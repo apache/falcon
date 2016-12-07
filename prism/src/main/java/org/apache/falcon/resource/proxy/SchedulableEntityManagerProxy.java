@@ -57,7 +57,6 @@ import javax.ws.rs.core.MediaType;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -395,8 +394,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         String jobName = ExtensionManager.getJobNameFromTag(tags);
         ExtensionMetaStore extensionMetaStore = ExtensionStore.getMetaStore();
         if (jobName != null && extensionMetaStore.checkIfExtensionJobExists(jobName)) {
-            throw FalconWebException.newAPIException("Entity operation is not allowed on this entity as it is " +
-                    "part of an extension job:" + jobName);
+            throw FalconWebException.newAPIException("Entity operation is not allowed on this entity as it is "
+                    + "part of an extension job:" + jobName);
         }
     }
 
