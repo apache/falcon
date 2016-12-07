@@ -41,7 +41,7 @@ public enum WorkflowExecutionArgs {
     DATASOURCE_NAME("datasource", "name of the datasource", false),
 
     // who
-    WORKFLOW_USER("workflowUser", "user who owns the feed instance (partition)"),
+    WORKFLOW_USER("workflowUser", "user who ran the instance"),
 
     // what
     // workflow details

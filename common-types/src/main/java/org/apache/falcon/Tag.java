@@ -16,22 +16,27 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.extensions;
+package org.apache.falcon;
+
+import org.apache.falcon.entity.v0.EntityType;
 
 /**
- * Enum to store ExtensionType.
+ * Tag to include in the entity type.
  */
-public enum ExtensionType {
-    TRUSTED("Trusted extension") ,
-    CUSTOM("Custom extension");
+public enum Tag {
+    DEFAULT(EntityType.PROCESS),
+    RETENTION(EntityType.FEED),
+    REPLICATION(EntityType.FEED),
+    IMPORT(EntityType.FEED),
+    EXPORT(EntityType.FEED);
 
-    private final String text;
+    private final EntityType entityType;
 
-    private ExtensionType(final String text) {
-        this.text = text;
+    Tag(EntityType entityType) {
+        this.entityType = entityType;
     }
-    @Override
-    public String toString(){
-        return text;
+
+    public EntityType getType() {
+        return entityType;
     }
 }

@@ -16,24 +16,19 @@
  * limitations under the License.
  */
 
-package org.apache.falcon;
-
-import org.apache.falcon.entity.v0.EntityType;
+package org.apache.falcon.client;
 
 /**
- * Tag to include in the entity type.
+ * Falcon Extensions Constants.
  */
-public enum Tag {
-    DEFAULT(EntityType.PROCESS), RETENTION(EntityType.FEED), REPLICATION(EntityType.FEED),
-        IMPORT(EntityType.FEED), EXPORT(EntityType.FEED);
+public final class FalconExtensionConstants {
+    private FalconExtensionConstants() {
 
-    private final EntityType entityType;
-
-    private Tag(EntityType entityType) {
-        this.entityType = entityType;
     }
 
-    public EntityType getType() {
-        return entityType;
-    }
+    public static final String SERVICES = "SERVICES";
+    public static final String META_INF = "META-INF";
+    public static final String LIBS = "libs";
+    public static final String RESOURCES = "resources";
+    public static final String BUILD = "build";
 }

@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Integration tests for Processing Engines, Pig & Hive with both FS and table storage.
+ * Integration tests for Processing Engines, Pig & Hive with both fs and table storage.
  *
  * This test is disabled as it heavily depends on oozie sharelibs for
  * pig and hcatalog being made available on HDFS. captured in FALCON-139.

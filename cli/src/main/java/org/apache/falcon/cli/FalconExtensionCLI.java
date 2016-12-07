@@ -50,10 +50,14 @@ public class FalconExtensionCLI {
     public static final String DESCRIBE_OPT = "describe";
     public static final String INSTANCES_OPT = "instances";
     public static final String UNREGISTER_OPT = "unregister";
+    public static final String DETAIL_OPT = "detail";
+    public static final String REGISTER_OPT = "register";
 
     // Input parameters
-    public static final String ENTENSION_NAME_OPT = "extensionName";
+    public static final String EXTENSION_NAME_OPT = "extensionName";
     public static final String JOB_NAME_OPT = "jobName";
+    public static final String DESCRIPTION = "description";
+    public static final String PATH = "path";
 
     public FalconExtensionCLI() {
     }
@@ -65,38 +69,49 @@ public class FalconExtensionCLI {
         }
 
         String result;
-        String extensionName = commandLine.getOptionValue(ENTENSION_NAME_OPT);
+        String extensionName = commandLine.getOptionValue(EXTENSION_NAME_OPT);
         String jobName = commandLine.getOptionValue(JOB_NAME_OPT);
         String filePath = commandLine.getOptionValue(FalconCLIConstants.FILE_PATH_OPT);
         String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
+        String path = commandLine.getOptionValue(FalconCLIConstants.PATH);
+        String description = commandLine.getOptionValue(FalconCLIConstants.DESCRIPTION);
 
         if (optionsList.contains(ENUMERATE_OPT)) {
             result = client.enumerateExtensions();
             result = prettyPrintJson(result);
         } else if (optionsList.contains(DEFINITION_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDefinition(extensionName);
             result = prettyPrintJson(result);
         } else if (optionsList.contains(DESCRIBE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDescription(extensionName);
         } else if (optionsList.contains(UNREGISTER_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.unregisterExtension(extensionName);
+        }else if (optionsList.contains(DETAIL_OPT)) {
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            result = client.getExtensionDetail(extensionName);
+            result = prettyPrintJson(result);
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            validateRequiredParameter(jobName, JOB_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
-            result = client.submitExtensionJob(extensionName, filePath, doAsUser).getMessage();
+            result = client.submitExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
+        } else if (optionsList.contains(REGISTER_OPT)) {
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            validateRequiredParameter(path, PATH);
+            result = client.registerExtension(extensionName, path, description);
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
-            result = client.submitAndScheduleExtensionJob(extensionName, filePath, doAsUser).getMessage();
+            result = client.submitAndScheduleExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.UPDATE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.updateExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.VALIDATE_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.validateExtensionJob(extensionName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
@@ -112,7 +127,7 @@ public class FalconExtensionCLI {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.deleteExtensionJob(jobName, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
-            validateRequiredParameter(extensionName, ENTENSION_NAME_OPT);
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             ExtensionJobList jobs = client.listExtensionJob(extensionName, doAsUser,
                     commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT),
                     commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT),
@@ -157,7 +172,11 @@ public class FalconExtensionCLI {
         Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false, "Suspend an extension job");
         Option resume = new Option(FalconCLIConstants.RESUME_OPT, false, "Resume an extension job");
         Option delete = new Option(FalconCLIConstants.DELETE_OPT, false, "Delete an extension job");
-        Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Delete metadata of extension job");
+        Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Un-register an extension. This will make"
+                + " the extension unavailable for instantiation");
+        Option detail = new Option(FalconCLIConstants.DETAIL, false, "Show details of a given extension");
+        Option register = new Option(FalconCLIConstants.REGISTER, false, "Register an extension with Falcon. This will "
+                + "make the extension available for instantiation for all users.");
 
         OptionGroup group = new OptionGroup();
         group.addOption(enumerate);
@@ -174,13 +193,15 @@ public class FalconExtensionCLI {
         group.addOption(resume);
         group.addOption(delete);
         group.addOption(unregister);
+        group.addOption(detail);
+        group.addOption(register);
         extensionOptions.addOptionGroup(group);
 
         Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");
         Option doAs = new Option(FalconCLIConstants.DO_AS_OPT, true, "doAs user");
         Option debug = new Option(FalconCLIConstants.DEBUG_OPTION, false,
                 "Use debug mode to see debugging statements on stdout");
-        Option extensionName = new Option(ENTENSION_NAME_OPT, true, "Extension name");
+        Option extensionName = new Option(EXTENSION_NAME_OPT, true, "Extension name");
         Option jobName = new Option(JOB_NAME_OPT, true, "Extension job name");
         Option instanceStatus = new Option(FalconCLIConstants.INSTANCE_STATUS_OPT, true, "Instance status");
         Option sortOrder = new Option(FalconCLIConstants.SORT_ORDER_OPT, true, "asc or desc order for results");
@@ -193,6 +214,8 @@ public class FalconExtensionCLI {
         Option status = new Option(FalconCLIConstants.STATUS_OPT, true, "Filter returned instances by status");
         Option orderBy = new Option(FalconCLIConstants.ORDER_BY_OPT, true, "Order returned instances by this field");
         Option filePath = new Option(FalconCLIConstants.FILE_PATH_OPT, true, "File path of extension parameters");
+        Option path = new Option(FalconCLIConstants.PATH, true, "Path of hdfs location for extension");
+        Option description = new Option(FalconCLIConstants.DESCRIPTION, true, "Short Description for extension");
 
         extensionOptions.addOption(url);
         extensionOptions.addOption(doAs);
@@ -209,6 +232,8 @@ public class FalconExtensionCLI {
         extensionOptions.addOption(status);
         extensionOptions.addOption(orderBy);
         extensionOptions.addOption(filePath);
+        extensionOptions.addOption(path);
+        extensionOptions.addOption(description);
 
         return extensionOptions;
     }

@@ -49,7 +49,7 @@ public class ExtensionServiceTest extends AbstractTestExtensionStore {
     }
 
     @Test
-    public void testGetextensionStore() throws Exception {
+    public void testGetExtensionStore() throws Exception {
         Assert.assertNotNull(ExtensionService.getExtensionStore());
     }
 }

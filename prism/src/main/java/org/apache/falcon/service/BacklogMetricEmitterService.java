@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -79,6 +80,9 @@ public final class BacklogMetricEmitterService implements FalconService,
 
     private static MetricNotificationService metricNotificationService =
             Services.get().getService(MetricNotificationService.SERVICE_NAME);
+
+    private static final List<LifeCycle> PROCESS_LIFE_CYCLE =
+            Arrays.asList(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
 
     public static BacklogMetricEmitterService get() {
         return SERVICE;
@@ -149,7 +153,7 @@ public final class BacklogMetricEmitterService implements FalconService,
             for(Cluster cluster : process.getClusters().getClusters()){
                 dropMetric(cluster.getName(), process);
             }
-        }else{
+        } else {
             addToBacklog(newEntity);
         }
     }
@@ -412,7 +416,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                         continue;
                                     }
                                     InstancesResult status = wfEngine.getStatus(entity, nominalTime,
-                                            nominalTime, null, null);
+                                            new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {

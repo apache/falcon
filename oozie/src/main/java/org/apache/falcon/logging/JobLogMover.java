@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
@@ -90,6 +91,12 @@ public class JobLogMover {
                 LOG.warn("Unable to retrieve workflow url for {} with status {} ",
                         context.getWorkflowId(), context.getWorkflowStatus());
                 return 0;
+            }
+            String instanceOwner = context.getWorkflowUser();
+            if (StringUtils.isNotBlank(instanceOwner)) {
+                CurrentUser.authenticate(instanceOwner);
+            } else {
+                CurrentUser.authenticate(System.getProperty("user.name"));
             }
             OozieClient client = new OozieClient(engineUrl);
             WorkflowJob jobInfo;

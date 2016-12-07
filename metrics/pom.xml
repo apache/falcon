@@ -52,7 +52,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.falcon</groupId>
-            <artifactId>falcon-client</artifactId>
+            <artifactId>falcon-common-types</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

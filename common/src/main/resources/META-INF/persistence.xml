@@ -29,8 +29,9 @@
         <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
         <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
         <class>org.apache.falcon.persistence.BacklogMetricBean</class>
-        <class>org.apache.falcon.persistence.ExtensionMetadataBean</class>
-
+        <class>org.apache.falcon.persistence.ExtensionBean</class>
+        <class>org.apache.falcon.persistence.ExtensionJobsBean</class>
+        <class>org.apache.falcon.persistence.ProcessInstanceInfoBean</class>
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
 
@@ -40,8 +41,8 @@
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
                 org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean;
-                org.apache.falcon.persistence.ExtensionMetadataBean)"></property>
-
+                org.apache.falcon.persistence.ExtensionBean;org.apache.falcon.persistence.ExtensionJobsBean;
+                org.apache.falcon.persistence.ProcessInstanceInfoBean)"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>
@@ -64,7 +65,9 @@
         <class>org.apache.falcon.persistence.MonitoredEntityBean</class>
         <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
         <class>org.apache.falcon.persistence.BacklogMetricBean</class>
-        <class>org.apache.falcon.persistence.ExtensionMetadataBean</class>
+        <class>org.apache.falcon.persistence.ExtensionBean</class>
+        <class>org.apache.falcon.persistence.ExtensionJobsBean</class>
+        <class>org.apache.falcon.persistence.ProcessInstanceInfoBean</class>
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
 
@@ -74,8 +77,8 @@
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
                 org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean;
-                org.apache.falcon.persistence.ExtensionMetadataBean)"></property>
-
+                org.apache.falcon.persistence.ExtensionBean;org.apache.falcon.persistence.ExtensionJobsBean;
+                org.apache.falcon.persistence.ProcessInstanceInfoBean)"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>
@@ -97,7 +100,9 @@
         <class>org.apache.falcon.persistence.PendingInstanceBean</class>
         <class>org.apache.falcon.persistence.EntitySLAAlertBean</class>
         <class>org.apache.falcon.persistence.BacklogMetricBean</class>
-        <class>org.apache.falcon.persistence.ExtensionMetadataBean</class>
+        <class>org.apache.falcon.persistence.ExtensionBean</class>
+        <class>org.apache.falcon.persistence.ExtensionJobsBean</class>
+        <class>org.apache.falcon.persistence.ProcessInstanceInfoBean</class>
         <properties>
             <property name="openjpa.ConnectionDriverName" value="org.apache.commons.dbcp.BasicDataSource"/>
 
@@ -107,7 +112,8 @@
                       value="jpa(Types=org.apache.falcon.persistence.EntityBean;
                 org.apache.falcon.persistence.InstanceBean;org.apache.falcon.persistence.PendingInstanceBean;
                 org.apache.falcon.persistence.MonitoredEntityBean;org.apache.falcon.persistence.EntitySLAAlertBean;
-                org.apache.falcon.persistence.BacklogMetricBean;org.apache.falcon.persistence.ExtensionMetadataBean)"/>
+                org.apache.falcon.persistence.ExtensionBean;org.apache.falcon.persistence.ExtensionJobsBean;
+                org.apache.falcon.persistence.ProcessInstanceInfoBean)"/>
             <property name="openjpa.DetachState" value="fetch-groups(DetachedStateField=true)"/>
             <property name="openjpa.LockManager" value="pessimistic"/>
             <property name="openjpa.ReadLockLevel" value="read"/>

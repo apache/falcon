@@ -218,6 +218,25 @@ public class FalconUnitTestBase {
         return props;
     }
 
+    public String registerExtension(String extensionName, String packagePath, String description)
+        throws IOException, FalconException {
+
+        return falconUnitClient.registerExtension(extensionName, packagePath, description);
+    }
+
+    public String unregisterExtension(String extensionName) {
+        return falconUnitClient.unregisterExtension(extensionName);
+    }
+
+    public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
+        return falconUnitClient.submitExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                   String doAsUser) {
+        return falconUnitClient.submitAndScheduleExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
     public static String overlayParametersOverTemplate(String template,
                                                        Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();

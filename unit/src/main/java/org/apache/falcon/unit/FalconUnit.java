@@ -22,9 +22,12 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.service.ServiceInitializer;
+import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.util.StateStoreProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
@@ -40,6 +43,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -63,11 +67,17 @@ public final class FalconUnit {
     private static boolean isLocalMode;
     private static boolean isFalconUnitActive = false;
 
+    private static final String DB_BASE_DIR = "target/test-data/persistenceDB";
+    protected static final String DB_LOCATION = DB_BASE_DIR + File.separator + "data.db";
+    protected static final String URL = "jdbc:derby:"+ DB_LOCATION +";create=true";
+    protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
+    protected static final  LocalFileSystem LOCAL_FS = new LocalFileSystem();
+
     private FalconUnit() {
     }
 
 
-    public static synchronized void start(boolean isLocal) throws FalconException, IOException {
+    public static synchronized void start(boolean isLocal) throws Exception {
         if (isFalconUnitActive) {
             throw new IllegalStateException("Falcon Unit is already initialized");
         }
@@ -79,6 +89,7 @@ public final class FalconUnit {
         LOG.info("Initializing runtime properties ...");
         RuntimeProperties.get();
 
+        setupExtensionConfigs();
         //Initializing Services
         STARTUP_SERVICES.initialize();
         ConfigurationStore.get();
@@ -88,7 +99,24 @@ public final class FalconUnit {
             initFileSystem();
         }
         isFalconUnitActive = true;
+    }
 
+    public static void setupExtensionConfigs() throws Exception {
+        String configPath = new URI(StartupProperties.get().getProperty("config.store.uri")).getPath();
+        String location = configPath + "-extensionSore";
+        StartupProperties.get().setProperty("config.store.uri", location);
+        FileUtils.deleteDirectory(new File(location));
+        StateStoreProperties.get().setProperty(FalconJPAService.URL, URL);
+        Configuration localConf = new Configuration();
+        LOCAL_FS.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
+        LOCAL_FS.mkdirs(new Path(DB_BASE_DIR));
+        createDB(DB_SQL_FILE);
+    }
+
+    public static void createDB(String file) {
+        File sqlFile = new File(file);
+        String[] argsCreate = {"create", "-sqlfile", sqlFile.getAbsolutePath(), "-run"};
+        new FalconStateStoreDBCLI().run(argsCreate);
     }
 
     private static void initFileSystem() throws IOException {
@@ -106,13 +134,12 @@ public final class FalconUnit {
         String oozieLogsDir = oozieHomeDir + "/logs";
         String oozieDataDir = oozieHomeDir + "/data";
 
-        LocalFileSystem fs = new LocalFileSystem();
-        fs.mkdirs(new Path(oozieHomeDir));
-        fs.mkdirs(new Path(oozieConfDir));
-        fs.mkdirs(new Path(oozieHadoopConfDir));
-        fs.mkdirs(new Path(oozieActionConfDir));
-        fs.mkdirs(new Path(oozieLogsDir));
-        fs.close();
+        LOCAL_FS.mkdirs(new Path(oozieHomeDir));
+        LOCAL_FS.mkdirs(new Path(oozieConfDir));
+        LOCAL_FS.mkdirs(new Path(oozieHadoopConfDir));
+        LOCAL_FS.mkdirs(new Path(oozieActionConfDir));
+        LOCAL_FS.mkdirs(new Path(oozieLogsDir));
+        LOCAL_FS.close();
 
         setSystemProperty("oozie.home.dir", oozieHomeDir);
         setSystemProperty("oozie.data.dir", oozieDataDir);
