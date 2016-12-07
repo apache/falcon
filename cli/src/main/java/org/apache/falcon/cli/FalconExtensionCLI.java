@@ -89,10 +89,16 @@ public class FalconExtensionCLI {
         } else if (optionsList.contains(UNREGISTER_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.unregisterExtension(extensionName);
-        }else if (optionsList.contains(DETAIL_OPT)) {
-            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
-            result = client.getExtensionDetail(extensionName);
-            result = prettyPrintJson(result);
+        } else if (optionsList.contains(DETAIL_OPT)) {
+            if (optionsList.contains(JOB_NAME_OPT)) {
+                validateRequiredParameter(jobName, JOB_NAME_OPT);
+                result = client.getExtensionJobDetails(jobName);
+                result = prettyPrintJson(result);
+            } else {
+                validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+                result = client.getExtensionDetail(extensionName);
+                result = prettyPrintJson(result);
+            }
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(jobName, JOB_NAME_OPT);

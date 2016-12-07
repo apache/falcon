@@ -35,6 +35,7 @@ import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
@@ -92,6 +93,14 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
     public static final String EXTENSION_LOCATION = "location";
+
+    private static final String JOB_NAME = "jobName";
+    private static final String FEEDS = "feeds";
+    private static final String PROCESSES = "processes";
+    private static final String CONFIG  = "config";
+    private static final String CREATION_TIME  = "creationTime";
+    private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
+
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -325,7 +334,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     private ExtensionType getExtensionType(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
         return extensionDetails.getExtensionType();
     }
@@ -368,7 +377,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
                 processes.add(entity.getName());
             }
         }
-        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         byte[] configBytes = null;
         if (configStream != null) {
             configBytes = IOUtils.toByteArray(configStream);
@@ -473,16 +482,27 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @GET
     @Path("detail/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getDetail(@PathParam("extension-name") String extensionName){
+    public Response getDetail(@PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return Response.ok(buildDetailResult(extensionName)).build();
+            return Response.ok(buildExtensionDetailResult(extensionName)).build();
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
+    @GET
+    @Path("extensionJobDetails/{job-name}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getExtensionJobDetail(@PathParam("job-name") String jobName) {
+        checkIfExtensionServiceIsEnabled();
+        try {
+            return Response.ok(buildExtensionJobDetailResult(jobName)).build();
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @POST
     @Path("unregister/{extension-name}")
@@ -506,7 +526,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     public String registerExtensionMetadata(
             @PathParam("extension-name") String extensionName,
             @QueryParam("path") String path,
-            @QueryParam("description") String description){
+            @QueryParam("description") String description) {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
@@ -540,7 +560,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     private static JSONArray buildEnumerateResult() throws FalconException {
         JSONArray results = new JSONArray();
-        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         List<ExtensionBean> extensionBeanList = metaStore.getAllExtensions();
         for (ExtensionBean extensionBean : extensionBeanList) {
             JSONObject resultObject = new JSONObject();
@@ -573,8 +593,29 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return entities;
     }
 
-    private JSONObject buildDetailResult(final String extensionName) throws FalconException {
-        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+    private JSONObject buildExtensionJobDetailResult(final String jobName) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean jobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (jobsBean == null) {
+            throw new ValidationException("Job name not found:" + jobName);
+        }
+        JSONObject detailsObject = new JSONObject();
+        try {
+            detailsObject.put(JOB_NAME, jobsBean.getJobName());
+            detailsObject.put(EXTENSION_NAME, jobsBean.getExtensionName());
+            detailsObject.put(FEEDS, StringUtils.join(jobsBean.getFeeds(), ","));
+            detailsObject.put(PROCESSES, StringUtils.join(jobsBean.getProcesses(), ","));
+            detailsObject.put(CONFIG, jobsBean.getConfig());
+            detailsObject.put(CREATION_TIME, jobsBean.getCreationTime());
+            detailsObject.put(LAST_UPDATE_TIME, jobsBean.getLastUpdatedTime());
+        } catch (JSONException e) {
+            LOG.error("Exception while building extension jon details for job {}", jobName, e);
+        }
+        return detailsObject;
+    }
+
+    private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
 
         if (!metaStore.checkIfExtensionExists(extensionName)){
             throw new ValidationException("No extension resources found for " + extensionName);
