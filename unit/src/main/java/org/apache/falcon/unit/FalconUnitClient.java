@@ -317,6 +317,11 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
+    public String getExtensionJobDetails(final String jobName) {
+        return localExtensionManager.getExtensionJobDetails(jobName);
+    }
+
+    @Override
     public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
                                     Integer offset, Integer numResults, String doAsUser) {

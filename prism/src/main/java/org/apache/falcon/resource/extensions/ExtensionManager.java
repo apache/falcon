@@ -84,17 +84,18 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
     public static final String ASCENDING_SORT_ORDER = "asc";
     public static final String DESCENDING_SORT_ORDER = "desc";
-
     private Extension extension = new Extension();
+
     private static final String EXTENSION_RESULTS = "extensions";
     private static final String TOTAL_RESULTS = "totalResults";
     private static final String README = "README";
-    private static final String EXTENSION_NAME = "name";
+    private static final String NAME = "name";
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
     public static final String EXTENSION_LOCATION = "location";
-
     private static final String JOB_NAME = "jobName";
+
+    private static final String EXTENSION_NAME = "extensionName";
     private static final String FEEDS = "feeds";
     private static final String PROCESSES = "processes";
     private static final String CONFIG  = "config";
@@ -495,10 +496,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     @GET
     @Path("extensionJobDetails/{job-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getExtensionJobDetail(@PathParam("job-name") String jobName) {
+    public String getExtensionJobDetail(@PathParam("job-name") String jobName) {
         checkIfExtensionServiceIsEnabled();
         try {
-            return Response.ok(buildExtensionJobDetailResult(jobName)).build();
+            return buildExtensionJobDetailResult(jobName).toString();
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -566,7 +567,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             JSONObject resultObject = new JSONObject();
 
             try {
-                resultObject.put(EXTENSION_NAME, extensionBean.getExtensionName().toLowerCase());
+                resultObject.put(NAME, extensionBean.getExtensionName().toLowerCase());
                 resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
                 resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
                 resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
@@ -624,7 +625,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         ExtensionBean bean = metaStore.getDetail(extensionName);
         JSONObject resultObject = new JSONObject();
         try {
-            resultObject.put(EXTENSION_NAME, bean.getExtensionName());
+            resultObject.put(NAME, bean.getExtensionName());
             resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
             resultObject.put(EXTENSION_DESC, bean.getDescription());
             resultObject.put(EXTENSION_LOCATION, bean.getLocation());
