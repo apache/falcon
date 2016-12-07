@@ -606,7 +606,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return groupedEntities;
     }
 
-    private String getJobNameFromTag(String tags) {
+    public static String getJobNameFromTag(String tags) {
         int nameStart = tags.indexOf(TAG_PREFIX_EXTENSION_JOB);
         if (nameStart == -1) {
             return null;

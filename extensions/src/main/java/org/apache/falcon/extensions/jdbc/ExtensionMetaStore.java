@@ -25,6 +25,7 @@ import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -63,6 +64,23 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter(EXTENSION_NAME, extensionName);
+        int resultSize = 0;
+        try {
+            resultSize = q.getResultList().size();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (resultSize > 0){
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean checkIfExtensionJobExists(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        q.setParameter(JOB_NAME, jobName);
         int resultSize = 0;
         try {
             resultSize = q.getResultList().size();
