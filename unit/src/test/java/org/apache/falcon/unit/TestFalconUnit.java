@@ -29,11 +29,14 @@ import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -61,6 +64,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String END_TIME = "2013-11-18T00:07Z";
     private static final String WORKFLOW = "workflow.xml";
     private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
+    private static final String EXTENSION_PATH = "/projects/falcon/extension/testExtension";
+    public static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
 
     @Test
     public void testProcessInstanceExecution() throws Exception {
@@ -379,5 +384,93 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(summaryResult.getStatus(), APIResult.Status.SUCCEEDED);
         Assert.assertNotNull(summaryResult.getEntitySummaries());
         Assert.assertEquals(summaryResult.getEntitySummaries().length, 1);
+    }
+
+    private void clearDB() {
+        EntityManager em = FalconJPAService.get().getEntityManager();
+        em.getTransaction().begin();
+        try {
+            Query query = em.createNativeQuery("delete from EXTENSIONS");
+            query.executeUpdate();
+            query = em.createNativeQuery("delete from EXTENSION_JOBS");
+            query.executeUpdate();
+        } finally {
+            em.getTransaction().commit();
+            em.close();
+        }
+    }
+
+    @Test
+    public void testRegisterAndUnregisterExtension() throws Exception {
+        clearDB();
+        submitCluster();
+        createExtensionPackage();
+
+        String result = registerExtension("testExtension", new Path(EXTENSION_PATH).toString(), "testExtension");
+        Assert.assertEquals(result, "Extension :testExtension registered successfully.");
+
+        result = unregisterExtension("testExtension");
+        Assert.assertEquals(result, "Deleted extension:testExtension");
+    }
+
+    @Test
+    public void testSubmitAndScheduleExtensionJob() throws Exception {
+        clearDB();
+        submitCluster();
+        createExtensionPackage();
+        String packageBuildLib = new Path(EXTENSION_PATH, "libs/build/").toString();
+        String result = registerExtension("testExtension", EXTENSION_PATH, "testExtension");
+        Assert.assertEquals(result, "Extension :testExtension registered successfully.");
+
+        createDir(PROCESS_APP_PATH);
+        copyExtensionJar(packageBuildLib);
+        APIResult apiResult = submitAndScheduleExtensionJob("testExtension", "testJob", null, null);
+        assertStatus(apiResult);
+
+        apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
+        assertStatus(apiResult);
+        Assert.assertEquals(apiResult.getMessage(), "RUNNING");
+    }
+
+
+    void copyExtensionJar(String destDirPath) throws IOException {
+        File dir = new File(new Path(JARS_DIR).toUri().toURL().getPath());
+        for (File file : dir.listFiles()) {
+            if (file.toString().endsWith(".jar")) {
+                fs.copyFromLocalFile(new Path(file.getPath()),
+                        new Path(destDirPath, file.getName()));
+            }
+        }
+        // empty jar file , hence deleting it and copying the actual build package jar.
+        fs.delete(new Path(EXTENSION_PATH, "libs/build/test.jar"), true);
+    }
+
+    private void createExtensionPackage() throws IOException{
+        Path basePath = new Path(EXTENSION_PATH);
+        if (fs.exists(basePath)){
+            fs.delete(basePath, true);
+        }
+        Path buildLibs = new Path(EXTENSION_PATH, "libs/build");
+        fs.mkdirs(buildLibs);
+        fs.create(new Path(buildLibs, "test.jar"));
+        fs.close();
+        fs.mkdirs(new Path(EXTENSION_PATH, "libs/runtime"));
+
+        Path readMePath = new Path(EXTENSION_PATH, "README");
+        if (fs.exists(readMePath)) {
+            fs.delete(readMePath, true);
+        }
+        fs.create(readMePath);
+        fs.close();
+        Path metaPath = new Path(EXTENSION_PATH , "META");
+        if (fs.exists(metaPath)){
+            fs.delete(metaPath, true);
+        }
+        fs.mkdirs(metaPath);
+        fs.create(new Path(metaPath, "config"));
+        fs.close();
+
+        fs.mkdirs(new Path(EXTENSION_PATH, "resources/build"));
+        fs.mkdirs(new Path(EXTENSION_PATH, "resources/runtime"));
     }
 }
