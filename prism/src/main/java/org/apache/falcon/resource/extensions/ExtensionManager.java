@@ -314,7 +314,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         Map<EntityType, List<Entity>> entityMap;
 
         try {
-            entityMap = getEntityList(extensionName, feedForms, processForms, config);
+            entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             submitEntities(extensionName, doAsUser, jobName, entityMap, config);
         } catch (FalconException | IOException e) {
             LOG.error("Error while submitting extension job: ", e);
@@ -323,8 +323,9 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
-    private Map<EntityType, List<Entity>> getEntityList(String extensionName, List<FormDataBodyPart> feedForms,
-                                                          List<FormDataBodyPart> processForms, InputStream config)
+    private Map<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
+                                                        List<FormDataBodyPart> feedForms,
+                                                        List<FormDataBodyPart> processForms, InputStream config)
         throws FalconException, IOException{
         List<Entity> processes = getProcesses(processForms);
         List<Entity> feeds = getFeeds(feedForms);
@@ -346,6 +347,8 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             entityMap.put(EntityType.FEED, trustedFeeds);
             return entityMap;
         } else {
+            EntityUtil.applyTags(extensionName, jobName, processes);
+            EntityUtil.applyTags(extensionName, jobName, feeds);
             entityMap.put(EntityType.PROCESS, processes);
             entityMap.put(EntityType.FEED, feeds);
             return entityMap;
@@ -374,7 +377,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         checkIfExtensionServiceIsEnabled();
         Map<EntityType, List<Entity>> entityMap;
         try {
-            entityMap = getEntityList(extensionName, feedForms, processForms, config);
+            entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             submitEntities(extensionName, doAsUser, jobName, entityMap, config);
             scheduleEntities(entityMap);
         } catch (FalconException | IOException e) {
