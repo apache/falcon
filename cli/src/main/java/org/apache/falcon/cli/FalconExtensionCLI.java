@@ -92,8 +92,10 @@ public class FalconExtensionCLI {
         }else if (optionsList.contains(DETAIL_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDetail(extensionName);
+            result = prettyPrintJson(result);
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            validateRequiredParameter(jobName, JOB_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.submitExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(REGISTER_OPT)) {
@@ -103,7 +105,7 @@ public class FalconExtensionCLI {
         } else if (optionsList.contains(FalconCLIConstants.SUBMIT_AND_SCHEDULE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
-            result = client.submitAndScheduleExtensionJob(extensionName, filePath, doAsUser).getMessage();
+            result = client.submitAndScheduleExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.UPDATE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);

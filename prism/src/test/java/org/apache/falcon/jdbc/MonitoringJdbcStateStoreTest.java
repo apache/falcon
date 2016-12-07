@@ -48,7 +48,7 @@ import static org.apache.falcon.util.DateUtil.now;
  * */
 
 public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
-    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
+    private static final String DB_BASE_DIR = "target/test-data/persistenceDB";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";

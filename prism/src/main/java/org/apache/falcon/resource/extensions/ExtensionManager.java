@@ -311,12 +311,12 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             LOG.error("Error when submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully");
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
     private void validateEntities(List<Entity> entities) throws FalconException {
         for (Entity entity : entities) {
-            if (!EntityType.FEED.equals(entity.getEntityType()) && !EntityType.FEED.equals(entity.getEntityType())) {
+            if (!EntityType.FEED.equals(entity.getEntityType()) && !EntityType.PROCESS.equals(entity.getEntityType())) {
                 LOG.error("Cluster entity is not allowed for submission via submitEntities: {}", entity.getName());
                 throw new FalconException("Cluster entity is not allowed for submission in extensions submission");
             }
@@ -355,7 +355,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted and scheduled successfully");
     }
 
-    private void submitEntities(String extensionName, String doAsUser, String jobName, List<Entity> entities,
+    protected void submitEntities(String extensionName, String doAsUser, String jobName, List<Entity> entities,
                                 InputStream configStream) throws FalconException, IOException {
         validateEntities(entities);
         List<String> feeds = new ArrayList<>();
@@ -369,7 +369,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             }
         }
         ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
-        byte[] configBytes = IOUtils.toByteArray(configStream);
+        byte[] configBytes = null;
+        if (configStream != null) {
+            configBytes = IOUtils.toByteArray(configStream);
+        }
         metaStore.storeExtensionJob(jobName, extensionName, feeds, processes, configBytes);
     }
 
@@ -570,7 +573,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         return entities;
     }
 
-    private  JSONObject buildDetailResult(final String extensionName) throws FalconException {
+    private JSONObject buildDetailResult(final String extensionName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
 
         if (!metaStore.checkIfExtensionExists(extensionName)){
