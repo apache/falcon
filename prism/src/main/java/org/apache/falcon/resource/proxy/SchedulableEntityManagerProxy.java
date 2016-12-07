@@ -391,11 +391,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
     private void checkExtensionJobExist(String tags) {
-        String jobName = ExtensionManager.getJobNameFromTag(tags);
-        ExtensionMetaStore extensionMetaStore = ExtensionStore.getMetaStore();
-        if (jobName != null && extensionMetaStore.checkIfExtensionJobExists(jobName)) {
-            throw FalconWebException.newAPIException("Entity operation is not allowed on this entity as it is "
-                    + "part of an extension job:" + jobName);
+        if (tags != null) {
+            String jobName = ExtensionManager.getJobNameFromTag(tags);
+            ExtensionMetaStore extensionMetaStore = ExtensionStore.getMetaStore();
+            if (jobName != null && extensionMetaStore.checkIfExtensionJobExists(jobName)) {
+                throw FalconWebException.newAPIException("Entity operation is not allowed on this entity as it is"
+                        + "part of an extension job:" + jobName);
+            }
         }
     }
 
