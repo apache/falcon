@@ -19,6 +19,7 @@
 package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.extensions.ExtensionManager;
@@ -35,13 +36,13 @@ public class LocalExtensionManager extends ExtensionManager {
     public LocalExtensionManager() {}
 
     public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config,
-                                        Map<EntityType, List> entityMap) throws FalconException, IOException {
+                                        Map<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
         submitEntities(extensionName, null, jobName, entityMap, config);
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
     public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream config,
-                                                      Map<EntityType, List> entityMap)
+                                                      Map<EntityType, List<Entity>> entityMap)
         throws FalconException, IOException {
         submitEntities(extensionName, null, jobName, entityMap, config);
         scheduleEntities(entityMap);

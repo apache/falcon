@@ -285,23 +285,28 @@ public class FalconUnitClient extends AbstractFalconClient {
 
         InputStream configStream = getServletInputStream(configPath);
         try {
-            List<Entity> entities = getEntities(extensionName, jobName, configStream);
-            List<Feed> feeds = new ArrayList<>();
-            List<Process> processes = new ArrayList<>();
-            for (Entity entity : entities) {
-                if (EntityType.FEED.equals(entity.getEntityType())) {
-                    feeds.add((Feed)entity);
-                } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
-                    processes.add((Process)entity);
-                }
-            }
-            Map<EntityType, List> entityMap = new HashMap<>();
-            entityMap.put(EntityType.PROCESS, processes);
-            entityMap.put(EntityType.FEED, feeds);
+            Map<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
             return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entityMap);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }
+    }
+
+    private Map<EntityType, List<Entity>> getEntityTypeListMap(String extensionName, String jobName, InputStream configStream) {
+        List<Entity> entities = getEntities(extensionName, jobName, configStream);
+        List<Entity> feeds = new ArrayList<>();
+        List<Entity> processes = new ArrayList<>();
+        for (Entity entity : entities) {
+            if (EntityType.FEED.equals(entity.getEntityType())) {
+                feeds.add(entity);
+            } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                processes.add(entity);
+            }
+        }
+        Map<EntityType, List<Entity>> entityMap = new HashMap<>();
+        entityMap.put(EntityType.PROCESS, processes);
+        entityMap.put(EntityType.FEED, feeds);
+        return entityMap;
     }
 
     private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream) {
@@ -321,19 +326,7 @@ public class FalconUnitClient extends AbstractFalconClient {
                                                    String doAsUser) {
         InputStream configStream = getServletInputStream(configPath);
         try {
-            List<Entity> entities = getEntities(extensionName, jobName, configStream);
-            List<Feed> feeds = new ArrayList<>();
-            List<Process> processes = new ArrayList<>();
-            for (Entity entity : entities) {
-                if (EntityType.FEED.equals(entity.getEntityType())) {
-                    feeds.add((Feed)entity);
-                } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
-                    processes.add((Process)entity);
-                }
-            }
-            Map<EntityType, List> entityMap = new HashMap<>();
-            entityMap.put(EntityType.PROCESS, processes);
-            entityMap.put(EntityType.FEED, feeds);
+            Map<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
             return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
                     entityMap);
         } catch (FalconException | IOException e) {
