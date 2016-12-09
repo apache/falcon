@@ -273,6 +273,18 @@ public final class ExtensionStore {
                                     String extensionOwner) throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
+        if (uri.getScheme() == null){
+            LOG.error("Folder path is not proper scheme name i.e. hdfs is missing");
+            throw new ValidationException("Folder path is not proper scheme name i.e. hdfs is missing.");
+        }
+        if (uri.getAuthority() == null){
+            LOG.error("Folder path is not proper scheme name host name and port name are missing");
+            throw new ValidationException("Folder path is not proper host name and port name are missing.");
+        }
+        if (uri.getPath() == null){
+            LOG.error("Folder path is not proper, path is missing.");
+            throw new ValidationException("Folder path is not proper, path is missing.");
+        }
         conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem = HadoopClientFactory.get().createFalconFileSystem(uri);
         try {
@@ -314,6 +326,7 @@ public final class ExtensionStore {
         } else {
             throw new ValidationException(extensionName + " already exists.");
         }
+        LOG.info("Extension :" + extensionName + " registered successfully.");
         return "Extension :" + extensionName + " registered successfully.";
     }
 
