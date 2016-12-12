@@ -18,16 +18,20 @@
 
 package org.apache.falcon.resource.extensions;
 
+import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
 import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
@@ -43,6 +47,7 @@ import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -79,10 +84,10 @@ import java.util.Properties;
 public class ExtensionManager extends AbstractSchedulableEntityManager {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionManager.class);
 
-    public static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
-    public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
-    public static final String ASCENDING_SORT_ORDER = "asc";
-    public static final String DESCENDING_SORT_ORDER = "desc";
+    private static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
+    private static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
+    private static final String ASCENDING_SORT_ORDER = "asc";
+    private static final String DESCENDING_SORT_ORDER = "desc";
 
     private Extension extension = new Extension();
     private static final String EXTENSION_RESULTS = "extensions";
@@ -91,7 +96,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
     private static final String EXTENSION_NAME = "name";
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
-    public static final String EXTENSION_LOCATION = "location";
+    private static final String EXTENSION_LOCATION = "location";
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
@@ -294,35 +299,62 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("submit/{extension-name}")
-    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA})
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA,
+            MediaType.APPLICATION_OCTET_STREAM})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult submit(
             @PathParam("extension-name") String extensionName,
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser,
             @QueryParam("jobName") String jobName,
-            @FormDataParam("entities") List<Entity> entities,
+            @FormDataParam("processes") List<FormDataBodyPart> processForms,
+            @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
+        Map<EntityType, List<Entity>> entityMap;
+
         try {
-            entities = getEntityList(extensionName, entities, config);
-            submitEntities(extensionName, doAsUser, jobName, entities, config);
+            entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
+            submitEntities(extensionName, doAsUser, jobName, entityMap, config);
         } catch (FalconException | IOException e) {
-            LOG.error("Error when submitting extension job: ", e);
+            LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
-    private void validateEntities(List<Entity> entities) throws FalconException {
-        for (Entity entity : entities) {
-            if (!EntityType.FEED.equals(entity.getEntityType()) && !EntityType.PROCESS.equals(entity.getEntityType())) {
-                LOG.error("Cluster entity is not allowed for submission via submitEntities: {}", entity.getName());
-                throw new FalconException("Cluster entity is not allowed for submission in extensions submission");
+    private Map<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
+                                                        List<FormDataBodyPart> feedForms,
+                                                        List<FormDataBodyPart> processForms, InputStream config)
+        throws FalconException, IOException{
+        List<Entity> processes = getProcesses(processForms);
+        List<Entity> feeds = getFeeds(feedForms);
+        ExtensionType extensionType = getExtensionType(extensionName);
+        List<Entity> entities;
+        Map<EntityType, List<Entity>> entityMap = new HashMap<>();
+        if (ExtensionType.TRUSTED.equals(extensionType)) {
+            entities = generateEntities(extensionName, config);
+            List<Entity> trustedFeeds = new ArrayList<>();
+            List<Entity> trustedProcesses = new ArrayList<>();
+            for (Entity entity : entities) {
+                if (EntityType.FEED.equals(entity.getEntityType())) {
+                    trustedFeeds.add(entity);
+                } else {
+                    trustedProcesses.add(entity);
+                }
             }
-            super.validate(entity);
+            entityMap.put(EntityType.PROCESS, trustedProcesses);
+            entityMap.put(EntityType.FEED, trustedFeeds);
+            return entityMap;
+        } else {
+            EntityUtil.applyTags(extensionName, jobName, processes);
+            EntityUtil.applyTags(extensionName, jobName, feeds);
+            entityMap.put(EntityType.PROCESS, processes);
+            entityMap.put(EntityType.FEED, feeds);
+            return entityMap;
         }
     }
+
 
     private ExtensionType getExtensionType(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
@@ -339,50 +371,90 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser,
             @QueryParam("jobName") String jobName,
-            @FormDataParam("entities") List<Entity> entities,
+            @FormDataParam("processes") List<FormDataBodyPart> processForms,
+            @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
+        Map<EntityType, List<Entity>> entityMap;
         try {
-            entities = getEntityList(extensionName, entities, config);
-            submitEntities(extensionName, doAsUser, jobName, entities, config);
-            for (Entity entity : entities) {
-                scheduleInternal(entity.getEntityType().name(), entity.getName(), null, null);
-            }
+            entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
+            submitEntities(extensionName, doAsUser, jobName, entityMap, config);
+            scheduleEntities(entityMap);
         } catch (FalconException | IOException e) {
-            LOG.error("Error when submitting extension job: ", e);
+            LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted and scheduled successfully");
     }
 
-    protected void submitEntities(String extensionName, String doAsUser, String jobName, List<Entity> entities,
-                                InputStream configStream) throws FalconException, IOException {
-        validateEntities(entities);
-        List<String> feeds = new ArrayList<>();
-        List<String> processes = new ArrayList<>();
-        for (Entity entity : entities) {
-            submitInternal(entity, doAsUser);
-            if (EntityType.FEED.equals(entity.getEntityType())) {
-                feeds.add(entity.getName());
-            } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
-                processes.add(entity.getName());
+    private List<Entity> getFeeds(List<FormDataBodyPart> feedForms) {
+        List<Entity> feeds = new ArrayList<>();
+        if (feedForms != null && !feedForms.isEmpty()) {
+            for (FormDataBodyPart formDataBodyPart : feedForms) {
+                feeds.add(formDataBodyPart.getValueAs(Feed.class));
             }
         }
-        ExtensionMetaStore metaStore = ExtensionStore.get().getMetaStore();
+        return feeds;
+    }
+
+    private List<Entity> getProcesses(List<FormDataBodyPart> processForms) {
+        List<Entity> processes = new ArrayList<>();
+        if (processForms != null && !processForms.isEmpty()) {
+            for (FormDataBodyPart formDataBodyPart : processForms) {
+                processes.add(formDataBodyPart.getValueAs(Process.class));
+            }
+        }
+        return processes;
+    }
+
+    protected void submitEntities(String extensionName, String doAsUser, String jobName,
+                                  Map<EntityType, List<Entity>> entityMap, InputStream configStream)
+        throws FalconException, IOException {
+        List<Entity> feeds = entityMap.get(EntityType.FEED);
+        List<Entity> processes = entityMap.get(EntityType.PROCESS);
+        validateFeeds(feeds);
+        validateProcesses(processes);
+        List<String> feedNames = new ArrayList<>();
+        List<String> processNames = new ArrayList<>();
+        for (Entity feed : feeds) {
+            submitInternal(feed, doAsUser);
+            feedNames.add(feed.getName());
+        }
+        for (Entity process: processes) {
+            submitInternal(process, doAsUser);
+            processNames.add(process.getName());
+        }
+
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         byte[] configBytes = null;
         if (configStream != null) {
             configBytes = IOUtils.toByteArray(configStream);
         }
-        metaStore.storeExtensionJob(jobName, extensionName, feeds, processes, configBytes);
+        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
     }
 
-    private List<Entity> getEntityList(String extensionName, List<Entity> entities, InputStream config)
-        throws FalconException, IOException {
-        ExtensionType extensionType = getExtensionType(extensionName);
-        if (ExtensionType.TRUSTED.equals(extensionType)) {
-            entities = generateEntities(extensionName, config);
+    protected void scheduleEntities(Map<EntityType, List<Entity>> entityMap) throws FalconException,
+            AuthorizationException {
+        for (Object feed: entityMap.get(EntityType.FEED)) {
+            scheduleInternal(EntityType.FEED.name(), ((Feed)feed).getName(), null, null);
         }
-        return entities;
+        for (Object process: entityMap.get(EntityType.PROCESS)) {
+            scheduleInternal(EntityType.PROCESS.name(), ((Process)process).getName(), null, null);
+        }
+    }
+
+
+    private void validateFeeds(List<Entity> feeds) throws FalconException {
+        for (Entity feed : feeds) {
+            super.validate(feed);
+        }
+    }
+
+    private void validateProcesses(List<Entity> processes) throws FalconException {
+        ProcessEntityParser processEntityParser = new ProcessEntityParser();
+        for (Entity process : processes) {
+            processEntityParser.validate((Process)process, false);
+        }
     }
 
     @POST
