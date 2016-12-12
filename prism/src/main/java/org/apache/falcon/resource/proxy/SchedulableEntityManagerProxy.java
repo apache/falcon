@@ -166,7 +166,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         final Set<String> colos = getApplicableColos(type, entity);
 
-        isEntityPartOfAnExtension(entity);
+        doesEntityHasExtensionJobTag(entity);
         validateEntity(entity, colos);
 
         results.put(FALCON_TAG, new EntityProxy(type, entity.getName()) {
@@ -264,7 +264,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("entityName") @PathParam("entity") final String entityName,
             @Dimension("colo") @QueryParam("colo") String ignore) {
 
-        isEntityPartOfAnExtension(type, entityName);
+        try {
+            isEntityPartOfAnExtension(EntityUtil.getEntity(type, entityName));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e);
+        }
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         Map<String, APIResult> results = new HashMap<String, APIResult>();
 
@@ -315,7 +319,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("colo") @QueryParam("colo") String ignore,
             @QueryParam("skipDryRun") final Boolean skipDryRun) {
 
-        isEntityPartOfAnExtension(type, entityName);
+        try {
+            isEntityPartOfAnExtension(EntityUtil.getEntity(type, entityName));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e);
+        }
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         final Set<String> oldColos = getApplicableColos(type, entityName);
@@ -390,6 +398,15 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         checkExtensionJobExist(tags);
     }
 
+
+    private void doesEntityHasExtensionJobTag(Entity entity) {
+        String jobName = ExtensionManager.getJobNameFromTag(entity.getTags());
+        if (StringUtils.isNotBlank(jobName)) {
+            throw FalconWebException.newAPIException("Entity submit is not allowed on an entity having extension job "
+                    + "name as tag:" + jobName);
+        }
+    }
+
     private void checkExtensionJobExist(String tags) {
         if (tags != null) {
             String jobName = ExtensionManager.getJobNameFromTag(tags);
@@ -399,16 +416,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                         + "part of an extension job:" + jobName);
             }
         }
-    }
-
-    private void isEntityPartOfAnExtension(String type, String entityName) {
-        String tags;
-        try {
-            tags = EntityUtil.getEntity(type, entityName).getTags();
-        } catch (FalconException e) {
-            throw FalconWebException.newAPIException(e);
-        }
-        checkExtensionJobExist(tags);
     }
 
     /**
@@ -610,7 +617,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         final Entity entity = getEntity(bufferedRequest, type);
         String entityName = entity.getName();
-        isEntityPartOfAnExtension(entity);
+        doesEntityHasExtensionJobTag(entity);
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         results.put("submit", submit(bufferedRequest, type, coloExpr));
         results.put("schedule", schedule(bufferedRequest, type, entityName, coloExpr, skipDryRun, properties));
