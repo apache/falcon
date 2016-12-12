@@ -400,10 +400,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
 
     private void doesEntityHasExtensionJobTag(Entity entity) {
-        String jobName = ExtensionManager.getJobNameFromTag(entity.getTags());
-        if (StringUtils.isNotBlank(jobName)) {
-            throw FalconWebException.newAPIException("Entity submit is not allowed on an entity having extension job "
-                    + "name as tag:" + jobName);
+        String tags = entity.getTags();
+        if (StringUtils.isNotBlank(tags)) {
+            String jobName = ExtensionManager.getJobNameFromTag(tags);
+            if (StringUtils.isNotBlank(jobName)) {
+                throw FalconWebException.newAPIException("Entity submit is not allowed on an entity having extension "
+                        + "job name as tag:" + jobName);
+            }
         }
     }
 
