@@ -366,13 +366,14 @@ public abstract class AbstractFalconClient {
      *                   process.
      * @param isForced <optional param> can be used to forcefully rerun the entire instance.
      * @param doAsUser proxy user
+     * @param lib can be used to rerun the instance with comma separated lib paths.
      * @return Results of the rerun command.
      * @throws IOException
      */
     public abstract InstancesResult rerunInstances(String type, String entity, String start, String end,
                                                    String filePath, String colo, String clusters,
                                                    String sourceClusters, List<LifeCycle> lifeCycles, Boolean isForced,
-                                                   String doAsUser) throws IOException;
+                                                   String doAsUser, String lib) throws IOException;
 
     /**
      * Get summary of instance/instances of an entity.

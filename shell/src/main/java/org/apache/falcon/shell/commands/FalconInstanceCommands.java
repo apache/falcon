@@ -41,6 +41,8 @@ import static org.apache.falcon.client.FalconCLIConstants.FILE_PATH_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.FILE_PATH_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.FILTER_BY_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.FILTER_BY_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.LIB_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.LIB_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.LIST_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.NUM_RESULTS_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.NUM_RESULTS_OPT_DESCRIPTION;
@@ -81,15 +83,15 @@ import static org.apache.falcon.client.FalconCLIConstants.LOG_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.LOG_OPT_DESCRIPTION;
 
 import static org.apache.falcon.client.FalconCLIConstants.PARARMS_OPT;
-import static org.apache.falcon.client.FalconCLIConstants.PARARMS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.PARAMS_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.RERUN_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.RERUN_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.RUNID_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.RUNID_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.RUNNING_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.RUNNING_OPT_DESCRIPTION;
-import static org.apache.falcon.client.FalconCLIConstants.SOURCECLUSTER_OPT;
-import static org.apache.falcon.client.FalconCLIConstants.SOURCECLUSTER_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SOURCE_CLUSTER_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SOURCE_CLUSTER_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.TRIAGE_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.TRIAGE_OPT_DESCRIPTION;
 import static org.apache.falcon.ValidationUtil.getLifeCycle;
@@ -220,7 +222,7 @@ public class FalconInstanceCommands extends BaseFalconCommands {
             @CliOption(key = {START_OPT}, mandatory = true, help = START_OPT_DESCRIPTION) final String start,
             @CliOption(key = {END_OPT}, mandatory = true, help = END_OPT_DESCRIPTION) final String end,
             @CliOption(key = {CLUSTERS_OPT}, mandatory = false, help = CLUSTERS_OPT_DESCRIPTION) final String clusters,
-            @CliOption(key = {SOURCECLUSTER_OPT}, mandatory = false, help = SOURCECLUSTER_OPT_DESCRIPTION)
+            @CliOption(key = {SOURCE_CLUSTER_OPT}, mandatory = false, help = SOURCE_CLUSTER_OPT_DESCRIPTION)
             final String sourceClusters,
             @CliOption(key = {LIFECYCLE_OPT}, mandatory = false, help = LIFECYCLE_OPT_DESCRIPTION)
             final String lifeCycle
@@ -240,7 +242,7 @@ public class FalconInstanceCommands extends BaseFalconCommands {
             @CliOption(key = {START_OPT}, mandatory = true, help = START_OPT_DESCRIPTION) final String start,
             @CliOption(key = {END_OPT}, mandatory = true, help = END_OPT_DESCRIPTION) final String end,
             @CliOption(key = {CLUSTERS_OPT}, mandatory = false, help = CLUSTERS_OPT_DESCRIPTION) final String clusters,
-            @CliOption(key = {SOURCECLUSTER_OPT}, mandatory = false, help = SOURCECLUSTER_OPT_DESCRIPTION)
+            @CliOption(key = {SOURCE_CLUSTER_OPT}, mandatory = false, help = SOURCE_CLUSTER_OPT_DESCRIPTION)
             final String sourceClusters,
             @CliOption(key = {LIFECYCLE_OPT}, mandatory = false, help = LIFECYCLE_OPT_DESCRIPTION)
             final String lifeCycle
@@ -260,7 +262,7 @@ public class FalconInstanceCommands extends BaseFalconCommands {
             @CliOption(key = {START_OPT}, mandatory = true, help = START_OPT_DESCRIPTION) final String start,
             @CliOption(key = {END_OPT}, mandatory = true, help = END_OPT_DESCRIPTION) final String end,
             @CliOption(key = {CLUSTERS_OPT}, mandatory = false, help = CLUSTERS_OPT_DESCRIPTION) final String clusters,
-            @CliOption(key = {SOURCECLUSTER_OPT}, mandatory = false, help = SOURCECLUSTER_OPT_DESCRIPTION)
+            @CliOption(key = {SOURCE_CLUSTER_OPT}, mandatory = false, help = SOURCE_CLUSTER_OPT_DESCRIPTION)
             final String sourceClusters,
             @CliOption(key = {LIFECYCLE_OPT}, mandatory = false, help = LIFECYCLE_OPT_DESCRIPTION)
             final String lifeCycle
@@ -282,16 +284,18 @@ public class FalconInstanceCommands extends BaseFalconCommands {
             @CliOption(key = {FILE_PATH_OPT}, mandatory = false, help = FILE_PATH_OPT_DESCRIPTION)
             final String filePath,
             @CliOption(key = {CLUSTERS_OPT}, mandatory = false, help = CLUSTERS_OPT_DESCRIPTION) final String clusters,
-            @CliOption(key = {SOURCECLUSTER_OPT}, mandatory = false, help = SOURCECLUSTER_OPT_DESCRIPTION)
+            @CliOption(key = {SOURCE_CLUSTER_OPT}, mandatory = false, help = SOURCE_CLUSTER_OPT_DESCRIPTION)
             final String sourceClusters,
             @CliOption(key = {LIFECYCLE_OPT}, mandatory = false, help = LIFECYCLE_OPT_DESCRIPTION)
             final String lifeCycle,
             @CliOption(key = {FORCE_RERUN_FLAG}, mandatory = false, specifiedDefaultValue = "true",
-                    help = FORCE_RERUN_FLAG_DESCRIPTION) final Boolean forceRerun
+                    help = FORCE_RERUN_FLAG_DESCRIPTION) final Boolean forceRerun,
+            @CliOption(key = {LIB_OPT}, mandatory = false, help = LIB_OPT_DESCRIPTION)
+            final String lib
     ) throws IOException {
         return ResponseHelper.getString(getFalconClient().rerunInstances(entityType.name(),
                 entityName, start, end, filePath, getColo(colo), clusters, sourceClusters, getLifeCycle(lifeCycle),
-                forceRerun, getDoAs()));
+                forceRerun, getDoAs(), lib));
     }
 
     @CliCommand(value = {INSTANCE_COMMAND_PREFIX + LOG_OPT},
@@ -326,7 +330,7 @@ public class FalconInstanceCommands extends BaseFalconCommands {
     }
     // RESUME CHECKSTYLE CHECK ParameterNumberCheck
     @CliCommand(value = {INSTANCE_COMMAND_PREFIX + PARARMS_OPT},
-            help = PARARMS_OPT_DESCRIPTION)
+            help = PARAMS_OPT_DESCRIPTION)
     public String params(
             @CliOption(key = {TYPE_OPT}, mandatory = true, help = TYPE_OPT_DESCRIPTION) final EntityType entityType,
             @CliOption(key = {ENTITY_NAME_OPT}, mandatory = true, help = ENTITY_NAME_OPT_DESCRIPTION)

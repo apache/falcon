@@ -15,6 +15,7 @@ Rerun instances of an entity. On issuing a rerun, by default the execution resum
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
    * force <optional param> can be used to forcefully rerun the entire instance.
    * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
+   * lib <optional query param> allows the user to rerun the instance with specified comma separated lib paths.
 
 ---++ Results
 Results of the rerun command.
@@ -44,7 +45,7 @@ POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&star
 </verbatim>
 
 <verbatim>
-POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2013-04-03T07:00Z&end=2014-04-03T07:00Z&force=true&doAs=joe
+POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2013-04-03T07:00Z&end=2014-04-03T07:00Z&force=true&doAs=joe&lib=lib1,lib2
 </verbatim>
 ---+++ Result
 <verbatim>

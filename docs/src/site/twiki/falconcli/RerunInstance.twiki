@@ -4,6 +4,7 @@
 
 Rerun option is used to rerun instances of a given process. On issuing a rerun, by default the execution resumes from the last failed node in the workflow. This option is valid only for process instances in terminal state, i.e. SUCCEEDED, KILLED or FAILED.
 If one wants to forcefully rerun the entire workflow, -force should be passed along with -rerun
+If one wants to pass specific lib paths to be used for rerunning specified instances, -lib should be passed along with -rerun passing comma separated lib paths with -lib option.
 Additionally, you can also specify properties to override via a properties file.
 
 Usage:

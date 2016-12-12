@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.apache.falcon.client.FalconCLIConstants.LIB_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.RUNNING_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.RUNNING_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.LIST_OPT;
@@ -53,7 +54,7 @@ import static org.apache.falcon.client.FalconCLIConstants.RERUN_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.LOG_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.LOG_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.PARARMS_OPT;
-import static org.apache.falcon.client.FalconCLIConstants.PARARMS_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.PARAMS_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.LISTING_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.LISTING_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.DEPENDENCY_OPT_DESCRIPTION;
@@ -69,8 +70,8 @@ import static org.apache.falcon.client.FalconCLIConstants.END_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.RUNID_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.CLUSTERS_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.CLUSTERS_OPT_DESCRIPTION;
-import static org.apache.falcon.client.FalconCLIConstants.SOURCECLUSTER_OPT;
-import static org.apache.falcon.client.FalconCLIConstants.SOURCECLUSTER_OPT_DESCRIPTION;
+import static org.apache.falcon.client.FalconCLIConstants.SOURCE_CLUSTER_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.SOURCE_CLUSTER_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.FILE_PATH_OPT;
 import static org.apache.falcon.client.FalconCLIConstants.FILE_PATH_OPT_DESCRIPTION;
 import static org.apache.falcon.client.FalconCLIConstants.TYPE_OPT;
@@ -130,7 +131,7 @@ public class FalconInstanceCLI extends FalconCLI {
         Option resume = new Option(RESUME_OPT, false, RESUME_OPT_DESCRIPTION);
         Option rerun = new Option(RERUN_OPT, false, RERUN_OPT_DESCRIPTION);
         Option logs = new Option(LOG_OPT, false, LOG_OPT_DESCRIPTION);
-        Option params = new Option(PARARMS_OPT, false, PARARMS_OPT_DESCRIPTION);
+        Option params = new Option(PARARMS_OPT, false, PARAMS_OPT_DESCRIPTION);
         Option listing = new Option(LISTING_OPT, false, LISTING_OPT_DESCRIPTION);
         Option dependency = new Option(DEPENDENCY_OPT, false, DEPENDENCY_OPT_DESCRIPTION);
         Option triage = new Option(TRIAGE_OPT, false, TRIAGE_OPT_DESCRIPTION);
@@ -156,9 +157,9 @@ public class FalconInstanceCLI extends FalconCLI {
         Option url = new Option(URL_OPTION, true, URL_OPTION_DESCRIPTION);
         Option start = new Option(START_OPT, true, START_OPT_DESCRIPTION);
         Option end = new Option(END_OPT, true, END_OPT_DESCRIPTION);
-        Option runid = new Option(RUNID_OPT, true, RUNID_OPT_DESCRIPTION);
+        Option runId = new Option(RUNID_OPT, true, RUNID_OPT_DESCRIPTION);
         Option clusters = new Option(CLUSTERS_OPT, true, CLUSTERS_OPT_DESCRIPTION);
-        Option sourceClusters = new Option(SOURCECLUSTER_OPT, true, SOURCECLUSTER_OPT_DESCRIPTION);
+        Option sourceClusters = new Option(SOURCE_CLUSTER_OPT, true, SOURCE_CLUSTER_OPT_DESCRIPTION);
         Option filePath = new Option(FILE_PATH_OPT, true, FILE_PATH_OPT_DESCRIPTION);
         Option entityType = new Option(TYPE_OPT, true, TYPE_OPT_DESCRIPTION);
         Option entityName = new Option(ENTITY_NAME_OPT, true, ENTITY_NAME_OPT_DESCRIPTION);
@@ -177,7 +178,7 @@ public class FalconInstanceCLI extends FalconCLI {
 
         Option allAttempts = new Option(ALL_ATTEMPTS, false, ALL_ATTEMPTS_DESCRIPTION);
         Option instanceStatus = new Option(FalconCLIConstants.INSTANCE_STATUS_OPT, true, "Instance status");
-        Option nameSubsequence = new Option(FalconCLIConstants.NAMESEQ_OPT, true, "Subsequence of entity name");
+        Option nameSubSequence = new Option(FalconCLIConstants.NAMESEQ_OPT, true, "SubSequence of entity name");
         Option tagKeywords = new Option(FalconCLIConstants.TAGKEYS_OPT, true, "Keywords in tags");
 
         instanceOptions.addOption(url);
@@ -187,7 +188,7 @@ public class FalconInstanceCLI extends FalconCLI {
         instanceOptions.addOption(filePath);
         instanceOptions.addOption(entityType);
         instanceOptions.addOption(entityName);
-        instanceOptions.addOption(runid);
+        instanceOptions.addOption(runId);
         instanceOptions.addOption(clusters);
         instanceOptions.addOption(sourceClusters);
         instanceOptions.addOption(colo);
@@ -202,7 +203,7 @@ public class FalconInstanceCLI extends FalconCLI {
         instanceOptions.addOption(debug);
         instanceOptions.addOption(instanceTime);
         instanceOptions.addOption(instanceStatus);
-        instanceOptions.addOption(nameSubsequence);
+        instanceOptions.addOption(nameSubSequence);
         instanceOptions.addOption(tagKeywords);
         instanceOptions.addOption(allAttempts);
 
@@ -221,6 +222,7 @@ public class FalconInstanceCLI extends FalconCLI {
         String instanceTime = commandLine.getOptionValue(INSTANCE_TIME_OPT);
         String start = commandLine.getOptionValue(FalconCLIConstants.START_OPT);
         String end = commandLine.getOptionValue(FalconCLIConstants.END_OPT);
+        String lib = commandLine.getOptionValue(FalconCLIConstants.LIB_OPT);
         String status = commandLine.getOptionValue(FalconCLIConstants.INSTANCE_STATUS_OPT);
         String nameSubsequence = commandLine.getOptionValue(FalconCLIConstants.NAMESEQ_OPT);
         String tagKeywords = commandLine.getOptionValue(FalconCLIConstants.TAGKEYS_OPT);
@@ -228,7 +230,7 @@ public class FalconInstanceCLI extends FalconCLI {
         String runId = commandLine.getOptionValue(RUNID_OPT);
         String colo = commandLine.getOptionValue(FalconCLIConstants.COLO_OPT);
         String clusters = commandLine.getOptionValue(CLUSTERS_OPT);
-        String sourceClusters = commandLine.getOptionValue(SOURCECLUSTER_OPT);
+        String sourceClusters = commandLine.getOptionValue(SOURCE_CLUSTER_OPT);
         List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
         String filterBy = commandLine.getOptionValue(FalconCLIConstants.FILTER_BY_OPT);
         String orderBy = commandLine.getOptionValue(FalconCLIConstants.ORDER_BY_OPT);
@@ -243,6 +245,9 @@ public class FalconInstanceCLI extends FalconCLI {
         validateSortOrder(sortOrder);
         if (!optionsList.contains(SEARCH_OPT)) {
             validateInstanceCommands(optionsList, entity, type, colo);
+        }
+        if (optionsList.contains(LIB_OPT)) {
+            validateNotEmpty(lib, LIB_OPT);
         }
 
         if (optionsList.contains(TRIAGE_OPT)) {
@@ -300,7 +305,7 @@ public class FalconInstanceCLI extends FalconCLI {
                 isForced = true;
             }
             result = ResponseHelper.getString(client.rerunInstances(type, entity, start, end, filePath, colo,
-                    clusters, sourceClusters, lifeCycles, isForced, doAsUser));
+                    clusters, sourceClusters, lifeCycles, isForced, doAsUser, lib));
         } else if (optionsList.contains(LOG_OPT)) {
             ValidationUtil.validateOrderBy(orderBy, instanceAction);
             ValidationUtil.validateFilterBy(filterBy, instanceAction);
@@ -341,7 +346,7 @@ public class FalconInstanceCLI extends FalconCLI {
             }
         }
 
-        if (optionsList.contains(SOURCECLUSTER_OPT)) {
+        if (optionsList.contains(SOURCE_CLUSTER_OPT)) {
             if (optionsList.contains(RUNNING_OPT)
                     || optionsList.contains(LOG_OPT)
                     || optionsList.contains(FalconCLIConstants.STATUS_OPT)

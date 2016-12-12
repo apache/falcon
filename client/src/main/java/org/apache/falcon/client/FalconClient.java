@@ -89,6 +89,7 @@ public class FalconClient extends AbstractFalconClient {
 
 
     public static final String PATH = "path";
+    public static final String LIB = "lib";
     public static final String COLO = "colo";
     private static final String KEY = "key";
     private static final String VALUE = "value";
@@ -643,7 +644,7 @@ public class FalconClient extends AbstractFalconClient {
     public InstancesResult rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
                                  String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                 Boolean isForced, String doAsUser) throws IOException {
+                                 Boolean isForced, String doAsUser, String lib) throws IOException {
 
         StringBuilder buffer = new StringBuilder();
         if (filePath != null) {
@@ -664,7 +665,7 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse clientResponse = new ResourceBuilder().path(Instances.RERUN.path, type, entity)
             .addQueryParam(START, start).addQueryParam(END, end).addQueryParam(COLO, colo)
             .addQueryParam(LIFECYCLE, lifeCycles, type).addQueryParam(FORCE, isForced)
-            .addQueryParam(USER, doAsUser).call(Instances.RERUN, props);
+            .addQueryParam(USER, doAsUser).addQueryParam(LIB, lib).call(Instances.RERUN, props);
         return getResponse(InstancesResult.class, clientResponse);
     }
 
