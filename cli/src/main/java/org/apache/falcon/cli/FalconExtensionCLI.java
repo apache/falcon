@@ -113,7 +113,7 @@ public class FalconExtensionCLI {
         } else if (optionsList.contains(FalconCLIConstants.VALIDATE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
-            result = client.validateExtensionJob(extensionName, filePath, doAsUser).getMessage();
+            result = client.validateExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.scheduleExtensionJob(jobName, doAsUser).getMessage();

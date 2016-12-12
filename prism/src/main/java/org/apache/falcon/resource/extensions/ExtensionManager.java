@@ -487,6 +487,10 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
+        ExtensionType extensionType = getExtensionType(extensionName);
+        if (!ExtensionType.TRUSTED.equals(extensionType)) {
+            throw FalconWebException.newAPIException("Extension validation is supported only for trusted extensions");
+        }
         try {
             List<Entity> entities = generateEntities(extensionName, request.getInputStream());
             for (Entity entity : entities) {

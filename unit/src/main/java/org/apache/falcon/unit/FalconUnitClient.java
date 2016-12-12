@@ -316,7 +316,7 @@ public class FalconUnitClient extends AbstractFalconClient {
             entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                     packagePath);
         } catch (FalconException | IOException e) {
-            throw new FalconCLIException("Failed in generating entties" + jobName);
+            throw new FalconCLIException("Failed in generating entities" + jobName);
         }
         return entities;
     }
