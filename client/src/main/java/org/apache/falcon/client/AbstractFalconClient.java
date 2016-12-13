@@ -222,6 +222,13 @@ public abstract class AbstractFalconClient {
                                                  String doAsUser);
 
     /**
+     *  Prepares set of entities the extension has implemented to validate the extension job.
+     * @param jobName job name of the extension job.
+     * @return
+     */
+    public abstract String getExtensionJobDetails(final String jobName);
+
+    /**
      *
      * Get list of the entities.
      * We have two filtering parameters for entity tags: "tags" and "tagkeys".

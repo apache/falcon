@@ -154,6 +154,24 @@ public class ExtensionMetaStore {
         }
     }
 
+    public ExtensionJobsBean getExtensionJobDetails(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        query.setParameter(JOB_NAME, jobName);
+        List<ExtensionJobsBean> jobsBeanList;
+        try {
+            jobsBeanList = query.getResultList();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (jobsBeanList != null && !jobsBeanList.isEmpty()) {
+            return jobsBeanList.get(0);
+        } else {
+            return null;
+        }
+    }
+
     public List<ExtensionJobsBean> getAllExtensionJobs() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);

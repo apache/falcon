@@ -58,4 +58,8 @@ public class LocalExtensionManager extends ExtensionManager {
         return super.deleteExtensionMetadata(extensionName);
     }
 
+    public String getExtensionJobDetails(String jobName){
+        return super.getExtensionJobDetail(jobName);
+    }
+
 }
