@@ -310,7 +310,7 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream) {
-        String packagePath = ExtensionStore.get().getMetaStore().getDetail(extensionName).getLocation();
+        String packagePath = ExtensionStore.getMetaStore().getDetail(extensionName).getLocation();
         List<Entity> entities;
         try {
             entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
@@ -332,6 +332,11 @@ public class FalconUnitClient extends AbstractFalconClient {
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }
+    }
+
+    @Override
+    public String getExtensionJobDetails(final String jobName) {
+        return localExtensionManager.getExtensionJobDetails(jobName);
     }
 
     @Override
