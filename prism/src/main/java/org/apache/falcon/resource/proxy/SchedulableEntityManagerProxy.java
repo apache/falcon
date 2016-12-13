@@ -166,7 +166,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         final Set<String> colos = getApplicableColos(type, entity);
 
-        doesEntityHasExtensionJobTag(entity);
+        entityHasExtensionJobTag(entity);
         validateEntity(entity, colos);
 
         results.put(FALCON_TAG, new EntityProxy(type, entity.getName()) {
@@ -399,13 +399,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
 
-    private void doesEntityHasExtensionJobTag(Entity entity) {
+    private void entityHasExtensionJobTag(Entity entity) {
         String tags = entity.getTags();
         if (StringUtils.isNotBlank(tags)) {
             String jobName = ExtensionManager.getJobNameFromTag(tags);
             if (StringUtils.isNotBlank(jobName)) {
-                throw FalconWebException.newAPIException("Entity submit is not allowed on an entity having extension "
-                        + "job name as tag:" + jobName);
+                throw FalconWebException.newAPIException("Entity has extension job name in the tag. Such entities need "
+                        + "to be submitted as extension jobs:" + jobName);
             }
         }
     }
@@ -620,7 +620,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         final Entity entity = getEntity(bufferedRequest, type);
         String entityName = entity.getName();
-        doesEntityHasExtensionJobTag(entity);
+        entityHasExtensionJobTag(entity);
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         results.put("submit", submit(bufferedRequest, type, coloExpr));
         results.put("schedule", schedule(bufferedRequest, type, entityName, coloExpr, skipDryRun, properties));

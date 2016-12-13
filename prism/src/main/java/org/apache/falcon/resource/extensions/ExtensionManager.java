@@ -320,7 +320,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
             LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully:" + jobName);
     }
 
     private Map<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
