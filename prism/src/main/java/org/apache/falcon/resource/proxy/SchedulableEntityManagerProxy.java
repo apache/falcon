@@ -324,10 +324,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e);
         }
-
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        Entity newEntity = getEntity(bufferedRequest, type);
+        entityHasExtensionJobTag(newEntity);
         final Set<String> oldColos = getApplicableColos(type, entityName);
-        final Set<String> newColos = getApplicableColos(type, getEntity(bufferedRequest, type));
+        final Set<String> newColos = getApplicableColos(type, newEntity);
         final Set<String> mergedColos = new HashSet<String>();
         mergedColos.addAll(oldColos);
         mergedColos.retainAll(newColos);    //Common colos where update should be called
