@@ -86,11 +86,6 @@ public class ExtensionJobsBean {
     @Column(name = "last_updated_time")
     private Date lastUpdatedTime;
 
-    @Basic
-    @NotNull
-    @Column(name = "extension_owner")
-    private String extensionOwner;
-
     public String getJobName() {
         return jobName;
     }
@@ -145,13 +140,5 @@ public class ExtensionJobsBean {
 
     public void setProcesses(List<String> processes) {
         this.processes = processes.toArray(new String[processes.size()]);
-    }
-
-    public String getExtensionOwner() {
-        return extensionOwner;
-    }
-
-    public void setExtensionOwner(String extensionOwner) {
-        this.extensionOwner = extensionOwner;
     }
 }

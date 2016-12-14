@@ -124,7 +124,7 @@ public class ExtensionMetaStore {
     }
 
     public void storeExtensionJob(String jobName, String extensionName, List<String> feeds, List<String> processes,
-                                  byte[] config, String extensionOwner) {
+                                  byte[] config) {
         ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
         Date currentTime = new Date(System.currentTimeMillis());
         extensionJobsBean.setJobName(jobName);
@@ -134,7 +134,6 @@ public class ExtensionMetaStore {
         extensionJobsBean.setProcesses(processes);
         extensionJobsBean.setConfig(config);
         extensionJobsBean.setLastUpdatedTime(currentTime);
-        extensionJobsBean.setExtensionOwner(extensionOwner);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);

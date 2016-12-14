@@ -26,6 +26,7 @@ import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -103,7 +104,8 @@ public final class ExtensionStore {
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
-                metaStore.storeExtensionBean(recipeName, location, extensionType, description);
+                String extensionOwner = CurrentUser.getUser();
+                metaStore.storeExtensionBean(recipeName, location, extensionType, description, extensionOwner);
             }
         } catch (FalconException e){
             LOG.error("Exception in ExtensionMetaStore:", e);
@@ -251,21 +253,25 @@ public final class ExtensionStore {
         }
         return extensionList;
     }
-    public String deleteExtension(final String extensionName) throws ValidationException{
+
+    public String deleteExtension(final String extensionName, String currentUser) throws ValidationException,
+            FalconException{
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
         if (extensionType.equals(ExtensionType.TRUSTED)){
             throw new ValidationException(extensionName + " is trusted cannot be deleted.");
-        }
-        if (metaStore.checkIfExtensionExists(extensionName)) {
+        } else if (!metaStore.checkIfExtensionExists(extensionName)){
+            throw new FalconException("Extension:" + extensionName + " is not registered with Falcon.");
+        } else if (!metaStore.getDetail(extensionName).getExtensionOwner().equals(currentUser)) {
+            throw new FalconException("User: " + currentUser + " is not allowed to delete extension: " + extensionName);
+        } else {
             metaStore.deleteExtension(extensionName);
             return "Deleted extension:" + extensionName;
-        } else {
-            return "Extension:" + extensionName + " is not registered with Falcon.";
         }
     }
 
-    public String registerExtension(final String extensionName, final String path, final String description)
+    public String registerExtension(final String extensionName, final String path, final String description,
+                                    String extensionOwner)
         throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
@@ -306,7 +312,7 @@ public final class ExtensionStore {
         }
 
         if (!metaStore.checkIfExtensionExists(extensionName)){
-            metaStore.storeExtensionBean(extensionName, path, ExtensionType.CUSTOM, description);
+            metaStore.storeExtensionBean(extensionName, path, ExtensionType.CUSTOM, description, extensionOwner);
         }else{
             throw new ValidationException(extensionName + " already exists.");
         }

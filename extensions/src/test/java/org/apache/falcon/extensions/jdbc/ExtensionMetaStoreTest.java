@@ -21,6 +21,7 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.FalconJPAService;
 
 import org.apache.hadoop.conf.Configuration;
@@ -60,7 +61,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     @Test
     public void testExtension(){
         //insert
-        stateStore.storeExtensionBean("test1", "test_location", ExtensionType.TRUSTED, "test_description");
+        stateStore.storeExtensionBean("test1", "test_location", ExtensionType.TRUSTED, "test_description", "falcon");
 
         Assert.assertEquals(stateStore.getAllExtensions().size(), 1);
         //check data
@@ -73,7 +74,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
 
     @Test
     public void testExtensionJob() {
-        stateStore.storeExtensionBean("test2", "test_location", ExtensionType.CUSTOM, "test2_description");
+        stateStore.storeExtensionBean("test2", "test_location", ExtensionType.CUSTOM, "test2_description", "falcon");
         List<String> processes = new ArrayList<>();
         processes.add("testProcess");
         List<String> feeds = new ArrayList<>();
