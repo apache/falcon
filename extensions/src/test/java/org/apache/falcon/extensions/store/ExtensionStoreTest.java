@@ -25,7 +25,6 @@ import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
 import org.apache.falcon.hadoop.JailedFileSystem;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocalFileSystem;

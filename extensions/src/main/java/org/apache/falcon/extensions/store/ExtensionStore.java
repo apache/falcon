@@ -254,8 +254,7 @@ public final class ExtensionStore {
         return extensionList;
     }
 
-    public String deleteExtension(final String extensionName, String currentUser) throws ValidationException,
-            FalconException{
+    public String deleteExtension(final String extensionName, String currentUser) throws FalconException{
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
         if (extensionType.equals(ExtensionType.TRUSTED)){

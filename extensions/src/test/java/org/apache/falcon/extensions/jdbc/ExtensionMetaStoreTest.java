@@ -21,7 +21,6 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.FalconJPAService;
 
 import org.apache.hadoop.conf.Configuration;
