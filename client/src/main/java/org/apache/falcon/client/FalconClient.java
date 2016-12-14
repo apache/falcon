@@ -23,8 +23,6 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -141,7 +139,9 @@ public class FalconClient extends AbstractFalconClient {
             return true;
         }
     };
-    private static final String TAG_SEPARATOR = ",";
+    private static final String FEEDS = "feeds";
+    private static final String PROCESSES = "processes";
+    private static final String CONFIG = "config";
     private final WebResource service;
     private final AuthenticatedURL.Token authenticationToken;
 
@@ -357,6 +357,7 @@ public class FalconClient extends AbstractFalconClient {
         DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML),
         UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_PLAIN),
         DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_PLAIN);
 
         private String path;
@@ -1029,6 +1030,12 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(String.class, getExtensionDetailResponse(extensionName));
     }
 
+    public String getExtensionJobDetails(final String jobName) {
+        ClientResponse clientResponse = new ResourceBuilder().path(ExtensionOperations.JOB_DETAILS.path, jobName)
+                .call(ExtensionOperations.JOB_DETAILS);
+        return getResponse(String.class, clientResponse);
+    }
+
     public ClientResponse getExtensionDetailResponse(final String extensionName) {
         return  new ResourceBuilder().path(ExtensionOperations.DETAIL.path, extensionName)
                 .call(ExtensionOperations.DETAIL);
@@ -1073,16 +1080,16 @@ public class FalconClient extends AbstractFalconClient {
         List<Entity> entities = validateExtensionAndGetEntities(extensionName, jobName, configStream);
         FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
 
-        for (Entity entity : entities) {
-            if (EntityType.FEED.equals(entity.getEntityType())) {
-                formDataMultiPart.field("feeds", entity, MediaType.APPLICATION_XML_TYPE);
-            } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
-                formDataMultiPart.field("processes", entity, MediaType.APPLICATION_XML_TYPE);
+        if (entities != null && !entities.isEmpty()) {
+            for (Entity entity : entities) {
+                if (EntityType.FEED.equals(entity.getEntityType())) {
+                    formDataMultiPart.field(FEEDS, entity, MediaType.APPLICATION_XML_TYPE);
+                } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                    formDataMultiPart.field(PROCESSES, entity, MediaType.APPLICATION_XML_TYPE);
+                }
             }
         }
-
-        formDataMultiPart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("config").build(), configStream,
-                MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        formDataMultiPart.field(CONFIG, configStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
         try {
             formDataMultiPart.close();
         } catch (IOException e) {
@@ -1094,30 +1101,28 @@ public class FalconClient extends AbstractFalconClient {
 
     private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
                                                          InputStream configStream) {
-        ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
-        List<Entity> entities = getEntities(extensionName, jobName, configStream, clientResponse);
+        JSONObject extensionDetailJson = getExtensionDetailJson(extensionName);
+        String extensionType = ExtensionHandler.getExtensionType(extensionName, extensionDetailJson);
+        String extensionBuildLocation = ExtensionHandler.getExtensionLocation(extensionName, extensionDetailJson);
+        List<Entity> entities = getEntities(extensionName, jobName, configStream, extensionType,
+                extensionBuildLocation);
         return entities;
     }
 
-    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
-                                           ClientResponse clientResponse) {
-        JSONObject responseJson;
+    private JSONObject getExtensionDetailJson(String extensionName) {
+        ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
+        JSONObject extensionDetailJson;
         try {
-            responseJson = new JSONObject(clientResponse.getEntity(String.class));
+            extensionDetailJson = new JSONObject(clientResponse.getEntity(String.class));
         } catch (JSONException e) {
-            OUT.get().print("Submit failed. Failed to get details for the given extension");
-            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+            OUT.get().print("Failed to get details for the given extension");
+            throw new FalconCLIException("Failed to get details for the given extension");
         }
-        String extensionType;
-        String extensionBuildLocation;
-        try {
-            extensionType = responseJson.get("type").toString();
-            extensionBuildLocation = responseJson.get("location").toString();
-        } catch (JSONException e) {
-            OUT.get().print("Error. " + extensionName + " not found ");
-            throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
-        }
+        return extensionDetailJson;
+    }
 
+    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
+                                     String extensionType, String extensionBuildLocation) {
         List<Entity> entities = null;
         if (!extensionType.equals(ExtensionType.CUSTOM.name())) {
             try {
@@ -1125,11 +1130,11 @@ public class FalconClient extends AbstractFalconClient {
                         extensionBuildLocation);
             } catch (Exception e) {
                 OUT.get().println("Error in building the extension");
-                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+                throw new FalconCLIException("Failed to prepare entities for the given extension");
             }
             if (entities == null || entities.isEmpty()) {
                 OUT.get().println("No entities got built");
-                throw new FalconCLIException("Submit failed. Failed to get details for the given extension");
+                throw new FalconCLIException("Failed to prepare entities for the given extension");
             }
         }
         return entities;
@@ -1154,13 +1159,20 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult validateExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
-        InputStream entityStream = getServletInputStream(filePath);
-        ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.VALIDATE.path, extensionName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.VALIDATE, entityStream);
-        return getResponse(APIResult.class, clientResponse);
+    public APIResult validateExtensionJob(final String extensionName, final String jobName,
+                                          final String configPath, final String doAsUser) {
+        String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionDetailJson(extensionName));
+        InputStream configStream = getServletInputStream(configPath);
+        if (ExtensionType.TRUSTED.name().equalsIgnoreCase(extensionType)) {
+            ClientResponse clientResponse = new ResourceBuilder()
+                    .path(ExtensionOperations.VALIDATE.path, extensionName)
+                    .addQueryParam(DO_AS_OPT, doAsUser)
+                    .call(ExtensionOperations.VALIDATE, configStream);
+            return getResponse(APIResult.class, clientResponse);
+        } else {
+            validateExtensionAndGetEntities(extensionName, jobName, configStream);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully");
+        }
     }
 
     public APIResult scheduleExtensionJob(final String jobName, final String doAsUser)  {

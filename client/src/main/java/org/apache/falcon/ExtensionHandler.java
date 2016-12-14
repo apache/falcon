@@ -27,6 +27,8 @@ import org.apache.falcon.extensions.ExtensionBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import static org.apache.falcon.client.FalconClient.OUT;
+
 /**
  * Handler class that is responsible for preparing Extension entities.
  */
@@ -50,6 +54,8 @@ public final class ExtensionHandler {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionHandler.class);
     private static final String UTF_8 = CharEncoding.UTF_8;
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
+    private static final String LOCATION = "location";
+    private static final String TYPE = "type";
 
     public List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
                                            InputStream configStream) throws IOException, FalconException {
@@ -185,5 +191,28 @@ public final class ExtensionHandler {
 
         urls.add(fileURL);
         return urls;
+    }
+
+
+    public static String getExtensionLocation(String extensionName, JSONObject extensionDetailJson) {
+        String extensionBuildPath;
+        try {
+            extensionBuildPath = extensionDetailJson.get(LOCATION).toString();
+        } catch (JSONException e) {
+            OUT.get().print("Error. " + extensionName + " not found ");
+            throw new FalconCLIException("Failed to get extension type for the given extension");
+        }
+        return extensionBuildPath;
+    }
+
+    public static  String getExtensionType(String extensionName, JSONObject extensionDetailJson) {
+        String extensionType;
+        try {
+            extensionType = extensionDetailJson.get(TYPE).toString();
+        } catch (JSONException e) {
+            OUT.get().print("Error. " + extensionName + " not found ");
+            throw new FalconCLIException("Failed to get extension type for the given extension");
+        }
+        return extensionType;
     }
 }

@@ -248,16 +248,6 @@
         </fileSet>
 
         <fileSet>
-            <directory>../</directory>
-            <outputDirectory>extensions/mirroring</outputDirectory>
-            <excludes>
-                <exclude>*/**</exclude>
-            </excludes>
-            <fileMode>0770</fileMode>
-            <directoryMode>0770</directoryMode>
-        </fileSet>
-
-        <fileSet>
             <directory>../examples/app</directory>
             <outputDirectory>examples/app</outputDirectory>
             <directoryMode>0755</directoryMode>
