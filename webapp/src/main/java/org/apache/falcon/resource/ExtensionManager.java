@@ -41,9 +41,9 @@ public class ExtensionManager {
     @Path("enumerate")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getExtensions() {
-        LOG.error("Enumerate is not supported on Server.Please run your operation on prism ");
-        throw FalconWebException.newAPIException("Enumerate is not supported on Server.Please run your operation "
-                + "on prism.");
+        LOG.error("Enumerate is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Enumerate is not supported on Server. Please run your operation "
+                + "on Prism.");
     }
 
     @GET
@@ -51,18 +51,18 @@ public class ExtensionManager {
     @Produces(MediaType.TEXT_PLAIN)
     public String getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
-        LOG.error("Describe is not supported on Server.Please run your operation on prism ");
-        throw FalconWebException.newAPIException("Describe is not supported on Server.Please run your operation "
-                + "on prism.");
+        LOG.error("Describe is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Describe is not supported on Server. Please run your operation "
+                + "on Prism.");
     }
 
     @GET
     @Path("detail/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getDetail(@PathParam("extension-name") String extensionName) {
-        LOG.error("Detail is not supported on Server.Please run your operation on prism ");
-        throw FalconWebException.newAPIException("Detail is not supported on Server.Please run your operation "
-                + "on prism.");
+        LOG.error("Detail is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Detail is not supported on Server. Please run your operation "
+                + "on Prism.");
     }
 
     @POST
@@ -71,9 +71,9 @@ public class ExtensionManager {
     @Produces(MediaType.TEXT_PLAIN)
     public String deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName){
-        LOG.error("Unregister is not supported on Server.Please run your operation on prism ");
-        throw FalconWebException.newAPIException("Unregister is not supported on Server.Please run your operation "
-                + "on prism.");
+        LOG.error("Unregister is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Unregister is not supported on Server. Please run your operation "
+                + "on Prism.");
     }
 
     @GET
@@ -81,8 +81,8 @@ public class ExtensionManager {
     @Produces({MediaType.APPLICATION_JSON})
     public String getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
-        LOG.error("Definition is not supported on Server.Please run your operation on prism ");
-        throw FalconWebException.newAPIException("Definition is not supported on Server.Please run your operation "
-                + "on prism.");
+        LOG.error("Definition is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Definition is not supported on Server. Please run your operation "
+                + "on Prism.");
     }
 }
