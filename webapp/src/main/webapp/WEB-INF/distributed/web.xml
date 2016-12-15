@@ -119,7 +119,7 @@
                 org.apache.falcon.resource.InstanceManager,
                 org.apache.falcon.resource.metadata.MetadataDiscoveryResource,
                 org.apache.falcon.resource.metadata.LineageMetadataResource,
-                org.apache.falcon.resource.extensions.ExtensionManager
+                org.apache.falcon.resource.ExtensionManager
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

@@ -94,8 +94,7 @@
             <param-name>com.sun.jersey.config.property.packages</param-name>
             <param-value>
                 org.apache.falcon.resource.admin,org.apache.falcon.resource.provider,
-                org.apache.falcon.resource.proxy,org.apache.falcon.resource.metadata,
-                org.apache.falcon.resource.extensions
+                org.apache.falcon.resource.proxy,org.apache.falcon.resource.metadata
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
