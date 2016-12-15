@@ -409,56 +409,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return processes;
     }
 
-    protected void submitEntities(String extensionName, String doAsUser, String jobName,
-                                  Map<EntityType, List<Entity>> entityMap, InputStream configStream)
-        throws FalconException, IOException {
-        List<Entity> feeds = entityMap.get(EntityType.FEED);
-        List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
-        List<String> feedNames = new ArrayList<>();
-        List<String> processNames = new ArrayList<>();
-        for (Entity feed : feeds) {
-            submitInternal(feed, doAsUser);
-            feedNames.add(feed.getName());
-        }
-        for (Entity process: processes) {
-            submitInternal(process, doAsUser);
-            processNames.add(process.getName());
-        }
-
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        byte[] configBytes = null;
-        if (configStream != null) {
-            configBytes = IOUtils.toByteArray(configStream);
-        }
-        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
-    }
-
-    protected void scheduleEntities(Map<EntityType, List<Entity>> entityMap) throws FalconException,
-            AuthorizationException {
-        for (Object feed: entityMap.get(EntityType.FEED)) {
-            scheduleInternal(EntityType.FEED.name(), ((Feed)feed).getName(), null, null);
-        }
-        for (Object process: entityMap.get(EntityType.PROCESS)) {
-            scheduleInternal(EntityType.PROCESS.name(), ((Process)process).getName(), null, null);
-        }
-    }
-
-
-    private void validateFeeds(List<Entity> feeds) throws FalconException {
-        for (Entity feed : feeds) {
-            super.validate(feed);
-        }
-    }
-
-    private void validateProcesses(List<Entity> processes) throws FalconException {
-        ProcessEntityParser processEntityParser = new ProcessEntityParser();
-        for (Entity process : processes) {
-            processEntityParser.validate((Process)process, false);
-        }
-    }
-
     @POST
     @Path("update/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
