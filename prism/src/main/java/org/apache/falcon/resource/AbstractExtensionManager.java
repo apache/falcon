@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionJobsBean;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -50,7 +51,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     public static final Logger LOG = LoggerFactory.getLogger(AbstractExtensionManager.class);
 
     private static final String JOB_NAME = "jobName";
-
+    public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
     private static final String EXTENSION_NAME = "extensionName";
     private static final String FEEDS = "feeds";
     private static final String PROCESSES = "processes";
@@ -65,10 +66,10 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public String registerExtensionMetadata(String extensionName, String path, String description) {
+    public String registerExtensionMetadata(String extensionName, String path, String description, String owner) {
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().registerExtension(extensionName, path, description);
+            return ExtensionStore.get().registerExtension(extensionName, path, description, owner);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -85,7 +86,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     public String deleteExtensionMetadata(String extensionName){
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().deleteExtension(extensionName);
+            return ExtensionStore.get().deleteExtension(extensionName, CurrentUser.getUser());
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -161,5 +162,19 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         for (Object process: entityMap.get(EntityType.PROCESS)) {
             scheduleInternal(EntityType.PROCESS.name(), ((Process)process).getName(), null, null);
         }
+    }
+
+    public static String getJobNameFromTag(String tags) {
+        int nameStart = tags.indexOf(TAG_PREFIX_EXTENSION_JOB);
+        if (nameStart == -1) {
+            return null;
+        }
+
+        nameStart = nameStart + TAG_PREFIX_EXTENSION_JOB.length();
+        int nameEnd = tags.indexOf(',', nameStart);
+        if (nameEnd == -1) {
+            nameEnd = tags.length();
+        }
+        return tags.substring(nameStart, nameEnd);
     }
 }

@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
+import org.apache.falcon.security.CurrentUser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +52,7 @@ public class LocalExtensionManager extends AbstractExtensionManager {
 
 
     public String registerExtensionMetadata(String extensionName, String packagePath , String description) {
-        return super.registerExtensionMetadata(extensionName, packagePath, description);
+        return super.registerExtensionMetadata(extensionName, packagePath, description, CurrentUser.getUser());
     }
 
     public String unRegisterExtension(String extensionName) {

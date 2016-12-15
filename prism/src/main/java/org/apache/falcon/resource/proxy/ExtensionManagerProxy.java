@@ -85,7 +85,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionManagerProxy.class);
 
     private static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
-    private static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
     private static final String ASCENDING_SORT_ORDER = "asc";
     private static final String DESCENDING_SORT_ORDER = "desc";
 
@@ -581,9 +580,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public String deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName){
         checkIfExtensionServiceIsEnabled();
-        validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().deleteExtension(extensionName, CurrentUser.getUser());
+            return super.deleteExtensionMetadata(extensionName);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -598,9 +596,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @QueryParam("path") String path,
             @QueryParam("description") String description) {
         checkIfExtensionServiceIsEnabled();
-        validateExtensionName(extensionName);
         try {
-            return super.registerExtensionMetadata(extensionName, path, description,  CurrentUser.getUser());
+            return super.registerExtensionMetadata(extensionName, path, description, CurrentUser.getUser());
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -612,7 +609,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public String getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
-        validateExtensionName(extensionName);
         try {
             return ExtensionStore.get().getResource(extensionName,
                     extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
@@ -687,20 +683,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             groupedEntities.get(jobName).add(entity);
         }
         return groupedEntities;
-    }
-
-    public static String getJobNameFromTag(String tags) {
-        int nameStart = tags.indexOf(TAG_PREFIX_EXTENSION_JOB);
-        if (nameStart == -1) {
-            return null;
-        }
-
-        nameStart = nameStart + TAG_PREFIX_EXTENSION_JOB.length();
-        int nameEnd = tags.indexOf(',', nameStart);
-        if (nameEnd == -1) {
-            nameEnd = tags.length();
-        }
-        return tags.substring(nameStart, nameEnd);
     }
 
     private static void checkIfExtensionServiceIsEnabled() {
