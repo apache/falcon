@@ -32,6 +32,7 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.codehaus.jettison.json.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -426,6 +427,9 @@ public class TestFalconUnit extends FalconUnitTestBase {
         copyExtensionJar(packageBuildLib);
         APIResult apiResult = submitAndScheduleExtensionJob("testExtension", "testJob", null, null);
         assertStatus(apiResult);
+        result = getExtensionJobDetails("testJob");
+        JSONObject resultJson = new JSONObject(result);
+        Assert.assertEquals(resultJson.get("extensionName"), "testExtension");
 
         apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
         assertStatus(apiResult);

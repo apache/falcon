@@ -75,6 +75,23 @@ public class ExtensionMetaStore {
         return false;
     }
 
+    public Boolean checkIfExtensionJobExists(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        q.setParameter(JOB_NAME, jobName);
+        int resultSize = 0;
+        try {
+            resultSize = q.getResultList().size();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (resultSize > 0){
+            return true;
+        }
+        return false;
+    }
+
     public List<ExtensionBean> getAllExtensions() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
@@ -151,6 +168,24 @@ public class ExtensionMetaStore {
             query.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public ExtensionJobsBean getExtensionJobDetails(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        query.setParameter(JOB_NAME, jobName);
+        List<ExtensionJobsBean> jobsBeanList;
+        try {
+            jobsBeanList = query.getResultList();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (jobsBeanList != null && !jobsBeanList.isEmpty()) {
+            return jobsBeanList.get(0);
+        } else {
+            return null;
         }
     }
 

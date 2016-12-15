@@ -224,6 +224,10 @@ public class FalconUnitTestBase {
         return falconUnitClient.registerExtension(extensionName, packagePath, description);
     }
 
+    public String getExtensionJobDetails(String jobName) {
+        return falconUnitClient.getExtensionJobDetails(jobName);
+    }
+
     public String unregisterExtension(String extensionName) {
         return falconUnitClient.unregisterExtension(extensionName);
     }

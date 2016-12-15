@@ -197,7 +197,7 @@ public abstract class AbstractFalconClient {
     public abstract String unregisterExtension(String extensionName);
 
     /**
-     * Prepare set of entities the extension has implemented and stage them to a local directory and submit them too.
+     * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of
      *                           loadAndPrepare.
@@ -209,7 +209,7 @@ public abstract class AbstractFalconClient {
                                                 String doAsUser);
 
     /**
-     * Prepare set of entities the extension has implemented and stage them to a local directory and submits and
+     * Prepares set of entities the extension has implemented and stage them to a local directory and submits and
      * schedules them.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of
@@ -220,6 +220,13 @@ public abstract class AbstractFalconClient {
      */
     public abstract APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
                                                  String doAsUser);
+
+    /**
+     *  Prepares set of entities the extension has implemented to validate the extension job.
+     * @param jobName job name of the extension job.
+     * @return
+     */
+    public abstract String getExtensionJobDetails(final String jobName);
 
     /**
      *
@@ -514,7 +521,7 @@ public abstract class AbstractFalconClient {
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
-            throw new FalconCLIException("File not found:", e);
+            throw new FalconCLIException("File not found:" + filePath, e);
         }
         return stream;
     }
