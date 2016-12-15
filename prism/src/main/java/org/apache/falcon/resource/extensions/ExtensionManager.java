@@ -46,6 +46,7 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -591,7 +592,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().deleteExtension(extensionName);
+            return ExtensionStore.get().deleteExtension(extensionName, CurrentUser.getUser());
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -608,7 +609,7 @@ public class ExtensionManager extends AbstractSchedulableEntityManager {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().registerExtension(extensionName, path, description);
+            return ExtensionStore.get().registerExtension(extensionName, path, description, CurrentUser.getUser());
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }

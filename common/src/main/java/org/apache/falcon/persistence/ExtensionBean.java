@@ -74,6 +74,11 @@ public class ExtensionBean {
     @Column(name = "creation_time")
     private Date creationTime;
 
+    @Basic
+    @NotNull
+    @Column(name = "extension_owner")
+    private String extensionOwner;
+
     public ExtensionType getExtensionType() {
         return extensionType;
     }
@@ -89,7 +94,6 @@ public class ExtensionBean {
     public void setCreationTime(Date creationTime) {
         this.creationTime = creationTime;
     }
-
 
     public String getExtensionName() {
         return extensionName;
@@ -114,4 +118,13 @@ public class ExtensionBean {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getExtensionOwner() {
+        return extensionOwner;
+    }
+
+    public void setExtensionOwner(String extensionOwner) {
+        this.extensionOwner = extensionOwner;
+    }
+
 }

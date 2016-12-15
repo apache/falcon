@@ -42,13 +42,14 @@ public class ExtensionMetaStore {
     }
 
     public void storeExtensionBean(String extensionName, String location, ExtensionType extensionType,
-                                   String description){
+                                   String description, String extensionOwner) {
         ExtensionBean extensionBean = new ExtensionBean();
         extensionBean.setLocation(location);
         extensionBean.setExtensionName(extensionName);
         extensionBean.setExtensionType(extensionType);
         extensionBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionBean.setDescription(description);
+        extensionBean.setExtensionOwner(extensionOwner);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
