@@ -44,7 +44,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 /**
- *  Tests for extension store.
+ * Tests for extension store.
  */
 public class ExtensionStoreTest extends AbstractTestExtensionStore {
     private static Map<String, String> resourcesMap;
@@ -105,52 +105,52 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
     }
 
     @Test
-    public void testRegisterExtension() throws IOException, URISyntaxException, FalconException{
+    public void testRegisterExtension() throws IOException, URISyntaxException, FalconException {
         String extensionPath = EXTENSION_PATH + "testRegister";
         createLibs(extensionPath);
         createReadmeAndJar(extensionPath);
         createMETA(extensionPath);
         store = ExtensionStore.get();
-        store.registerExtension("test", STORAGE_URL + extensionPath, "test desc", "falcon");
+        store.registerExtension("test", STORAGE_URL + extensionPath, "test desc", "falconUser");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 1);
     }
 
-    @Test(expectedExceptions=ValidationException.class)
-    public void testFailureCaseRegisterExtension() throws IOException, URISyntaxException, FalconException{
+    @Test(expectedExceptions = ValidationException.class)
+    public void testFailureCaseRegisterExtension() throws IOException, URISyntaxException, FalconException {
         String extensionPath = EXTENSION_PATH + "testRegister";
         store = ExtensionStore.get();
         createLibs(extensionPath);
-        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc", "falcon");
+        store.registerExtension("test", STORAGE_URL + EXTENSION_PATH, "test desc", "falconUser");
     }
 
     @Test
-    public void testDeleteExtension() throws IOException, URISyntaxException, FalconException{
+    public void testDeleteExtension() throws IOException, URISyntaxException, FalconException {
         String extensionPath = EXTENSION_PATH + "testDelete";
         createLibs(extensionPath);
         createReadmeAndJar(extensionPath);
         createMETA(extensionPath);
         store = ExtensionStore.get();
-        store.registerExtension("toBeDeleted", STORAGE_URL + extensionPath, "test desc", "falcon");
-        store.deleteExtension("toBeDeleted", "falcon");
+        store.registerExtension("toBeDeleted", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.deleteExtension("toBeDeleted", "falconUser");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 0);
     }
 
-    @Test(expectedExceptions=FalconException.class)
-    public void testFailureDeleteExtension() throws IOException, URISyntaxException, FalconException{
+    @Test(expectedExceptions = FalconException.class)
+    public void testFailureDeleteExtension() throws IOException, URISyntaxException, FalconException {
         String extensionPath = EXTENSION_PATH + "testACLOnDelete";
         createLibs(extensionPath);
         createReadmeAndJar(extensionPath);
         createMETA(extensionPath);
         store = ExtensionStore.get();
-        store.registerExtension("ACLFailure", STORAGE_URL + extensionPath, "test desc", "oozie");
-        store.deleteExtension("ACLFailure", "falcon");
+        store.registerExtension("ACLFailure", STORAGE_URL + extensionPath, "test desc", "oozieUser");
+        store.deleteExtension("ACLFailure", "falconUser");
     }
 
-    private void createMETA(String extensionPath) throws IOException{
+    private void createMETA(String extensionPath) throws IOException {
         Path path = new Path(extensionPath + "/META");
-        if (fs.exists(path)){
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         fs.mkdirs(path);
@@ -158,7 +158,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         OutputStream os = fs.create(path);
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         br.write("Hello World");
-        if (fs.exists(path)){
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         br.write("test properties");
@@ -166,9 +166,9 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         br.close();
     }
 
-    private void createLibs(String extensionPath) throws IOException{
+    private void createLibs(String extensionPath) throws IOException {
         Path path = new Path(extensionPath);
-        if (fs.exists(path)){
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         fs.mkdirs(path);
@@ -176,9 +176,9 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         fs.mkdirs(path);
     }
 
-    private void createReadmeAndJar(String extensionPath) throws IOException{
+    private void createReadmeAndJar(String extensionPath) throws IOException {
         Path path = new Path(extensionPath + "/README");
-        if (fs.exists(path)){
+        if (fs.exists(path)) {
             fs.delete(path, true);
         }
         fs.create(path);
@@ -202,6 +202,5 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
             em.close();
         }
     }
-
 }
 

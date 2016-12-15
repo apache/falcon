@@ -95,7 +95,7 @@ public final class ExtensionStore {
     }
 
     private void initializeDbTable() {
-        try{
+        try {
             metaStore.deleteExtensionsOfType(ExtensionType.TRUSTED);
             List<String> extensions = getExtensions();
             for (String extension : extensions) {
@@ -107,7 +107,7 @@ public final class ExtensionStore {
                 String extensionOwner = CurrentUser.getUser();
                 metaStore.storeExtensionBean(recipeName, location, extensionType, description, extensionOwner);
             }
-        } catch (FalconException e){
+        } catch (FalconException e) {
             LOG.error("Exception in ExtensionMetaStore:", e);
             throw new RuntimeException(e);
         }
@@ -254,12 +254,12 @@ public final class ExtensionStore {
         return extensionList;
     }
 
-    public String deleteExtension(final String extensionName, String currentUser) throws FalconException{
+    public String deleteExtension(final String extensionName, String currentUser) throws FalconException {
         ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
                 : ExtensionType.CUSTOM;
-        if (extensionType.equals(ExtensionType.TRUSTED)){
+        if (extensionType.equals(ExtensionType.TRUSTED)) {
             throw new ValidationException(extensionName + " is trusted cannot be deleted.");
-        } else if (!metaStore.checkIfExtensionExists(extensionName)){
+        } else if (!metaStore.checkIfExtensionExists(extensionName)) {
             throw new FalconException("Extension:" + extensionName + " is not registered with Falcon.");
         } else if (!metaStore.getDetail(extensionName).getExtensionOwner().equals(currentUser)) {
             throw new FalconException("User: " + currentUser + " is not allowed to delete extension: " + extensionName);
@@ -270,49 +270,48 @@ public final class ExtensionStore {
     }
 
     public String registerExtension(final String extensionName, final String path, final String description,
-                                    String extensionOwner)
-        throws URISyntaxException, FalconException {
+                                    String extensionOwner) throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
         conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
-        FileSystem fileSystem =  HadoopClientFactory.get().createFalconFileSystem(uri);
+        FileSystem fileSystem = HadoopClientFactory.get().createFalconFileSystem(uri);
         try {
             fileSystem.listStatus(new Path(uri.getPath() + "/README"));
-        } catch (IOException e){
+        } catch (IOException e) {
             LOG.error("Exception in registering Extension:{}", extensionName, e);
             throw new ValidationException("README file is not present in the " + path);
         }
-        PathFilter filter=new PathFilter(){
-            public boolean accept(Path file){
+        PathFilter filter = new PathFilter() {
+            public boolean accept(Path file) {
                 return file.getName().endsWith(".jar");
             }
         };
         FileStatus[] jarStatus;
         try {
             jarStatus = fileSystem.listStatus(new Path(uri.getPath(), "libs/build"), filter);
-            if (jarStatus.length <=0) {
+            if (jarStatus.length <= 0) {
                 throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             LOG.error("Exception in registering Extension:{}", extensionName, e);
             throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
         }
         FileStatus[] propStatus;
-        try{
+        try {
             propStatus = fileSystem.listStatus(new Path(uri.getPath() + "/META"));
-            if (propStatus.length <=0){
+            if (propStatus.length <= 0) {
                 throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
                         + " structure.");
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             LOG.error("Exception in registering Extension:{}", extensionName, e);
             throw new ValidationException("Directory is not present in the " + uri.getPath() + "/META"
                     + " structure.");
         }
 
-        if (!metaStore.checkIfExtensionExists(extensionName)){
+        if (!metaStore.checkIfExtensionExists(extensionName)) {
             metaStore.storeExtensionBean(extensionName, path, ExtensionType.CUSTOM, description, extensionOwner);
-        }else{
+        } else {
             throw new ValidationException(extensionName + " already exists.");
         }
         return "Extension :" + extensionName + " registered successfully.";

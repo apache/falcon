@@ -95,7 +95,6 @@ public class ExtensionBean {
         this.creationTime = creationTime;
     }
 
-
     public String getExtensionName() {
         return extensionName;
     }
