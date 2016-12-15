@@ -521,7 +521,7 @@ public abstract class AbstractFalconClient {
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
-            throw new FalconCLIException("File not found:", e);
+            throw new FalconCLIException("File not found:" + filePath, e);
         }
         return stream;
     }

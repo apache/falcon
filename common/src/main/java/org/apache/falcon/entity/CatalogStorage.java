@@ -57,7 +57,7 @@ import java.util.regex.Matcher;
  */
 public class CatalogStorage extends Configured implements Storage {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EvictionHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CatalogStorage.class);
 
     // constants to be used while preparing HCatalog partition filter query
     private static final String FILTER_ST_BRACKET = "(";
