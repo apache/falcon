@@ -75,6 +75,23 @@ public class ExtensionMetaStore {
         return false;
     }
 
+    public Boolean checkIfExtensionJobExists(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        q.setParameter(JOB_NAME, jobName);
+        int resultSize = 0;
+        try {
+            resultSize = q.getResultList().size();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (resultSize > 0){
+            return true;
+        }
+        return false;
+    }
+
     public List<ExtensionBean> getAllExtensions() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
