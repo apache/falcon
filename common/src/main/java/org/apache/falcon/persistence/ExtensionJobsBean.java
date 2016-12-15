@@ -102,7 +102,6 @@ public class ExtensionJobsBean {
         this.creationTime = creationTime;
     }
 
-
     public byte[] getConfig() {
         return config;
     }
