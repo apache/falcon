@@ -30,10 +30,14 @@ import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.service.FalconJPAService;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.codehaus.jettison.json.JSONObject;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
@@ -67,6 +71,16 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
     private static final String EXTENSION_PATH = "/projects/falcon/extension/testExtension";
     public static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
+    private FileSystem fileSystem;
+
+    private static final String STORAGE_URL = "jail://global:00";
+
+    @BeforeClass
+    public void init() throws IOException{
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", STORAGE_URL);
+        fs.initialize(LocalFileSystem.getDefaultUri(conf), conf);
+    }
 
     @Test
     public void testProcessInstanceExecution() throws Exception {
@@ -407,7 +421,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         submitCluster();
         createExtensionPackage();
 
-        String result = registerExtension("testExtension", new Path(EXTENSION_PATH).toString(), "testExtension");
+        String result = registerExtension("testExtension", new Path(STORAGE_URL + EXTENSION_PATH).toString()
+                , "testExtension");
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
 
         result = unregisterExtension("testExtension");
@@ -420,7 +435,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         submitCluster();
         createExtensionPackage();
         String packageBuildLib = new Path(EXTENSION_PATH, "libs/build/").toString();
-        String result = registerExtension("testExtension", EXTENSION_PATH, "testExtension");
+        String result = registerExtension("testExtension", STORAGE_URL + EXTENSION_PATH, "testExtension");
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
 
         createDir(PROCESS_APP_PATH);
