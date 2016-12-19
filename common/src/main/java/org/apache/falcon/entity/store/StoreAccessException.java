@@ -35,4 +35,8 @@ public class StoreAccessException extends FalconException {
     public StoreAccessException(Exception e) {
         super(e);
     }
+
+    public StoreAccessException(String message){
+        super(message);
+    }
 }
