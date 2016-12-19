@@ -20,11 +20,10 @@ package org.apache.falcon.resource.proxy;
 
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
-import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.Entity;
@@ -47,7 +46,6 @@ import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
-import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -68,14 +66,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.lang.reflect.Constructor;
+import java.util.*;
 
 /**
  * Jersey Resource for extension job operations.
@@ -640,5 +632,62 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             throw FalconWebException.newAPIException(
                     ExtensionService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
+    }
+
+    private abstract class EntitiesProxy<T extends APIResult> {
+        private final Class<T> clazz;
+        private String type;
+        private String name;
+
+        public EntitiesProxy(String type, String name, Class<T> resultClazz) {
+            this.clazz = resultClazz;
+            this.type = type;
+            this.name = name;
+        }
+
+
+        private T getResultInstance(APIResult.Status status, String message) {
+            try {
+                Constructor<T> constructor = clazz.getConstructor(APIResult.Status.class, String.class);
+                return constructor.newInstance(status, message);
+            } catch (Exception e) {
+                throw new FalconRuntimException("Unable to consolidate result.", e);
+            }
+        }
+
+        public EntitiesProxy(String type, String name) {
+            this(type, name, (Class<T>) APIResult.class);
+        }
+
+        public T execute() {
+            Set<String> colos = getColosToApply();
+
+            Map<String, T> results = new HashMap();
+
+            for (String colo : colos) {
+                try {
+                    results.put(colo, doExecute(colo));
+                } catch (FalconWebException e) {
+                    String message = ((APIResult) e.getResponse().getEntity()).getMessage();
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, message));
+                } catch (Throwable throwable) {
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED, throwable.getClass().getName() + "::"
+                            + throwable.getMessage()));
+                }
+            }
+
+            T finalResult = consolidateResult(results, clazz);
+            if (finalResult.getStatus() == APIResult.Status.FAILED) {
+                throw FalconWebException.newAPIException(finalResult.getMessage());
+            } else {
+                return finalResult;
+            }
+        }
+
+        protected Set<String> getColosToApply() {
+            return getApplicableColos(type, name);
+        }
+
+        protected abstract T doExecute(String colo) throws FalconException;
     }
 }
