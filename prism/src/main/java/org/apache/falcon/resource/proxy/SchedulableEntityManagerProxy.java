@@ -39,7 +39,7 @@ import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.SchedulableEntityInstanceResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
-import org.apache.falcon.resource.extensions.ExtensionManager;
+import org.apache.falcon.resource.AbstractExtensionManager;
 import org.apache.falcon.util.DeploymentUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -403,7 +403,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     private void entityHasExtensionJobTag(Entity entity) {
         String tags = entity.getTags();
         if (StringUtils.isNotBlank(tags)) {
-            String jobName = ExtensionManager.getJobNameFromTag(tags);
+            String jobName = AbstractExtensionManager.getJobNameFromTag(tags);
             if (StringUtils.isNotBlank(jobName)) {
                 throw FalconWebException.newAPIException("Entity has extension job name in the tag. Such entities need "
                         + "to be submitted as extension jobs:" + jobName);
@@ -413,7 +413,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     private void checkExtensionJobExist(String tags) {
         if (tags != null) {
-            String jobName = ExtensionManager.getJobNameFromTag(tags);
+            String jobName = AbstractExtensionManager.getJobNameFromTag(tags);
             ExtensionMetaStore extensionMetaStore = ExtensionStore.getMetaStore();
             if (jobName != null && extensionMetaStore.checkIfExtensionJobExists(jobName)) {
                 throw FalconWebException.newAPIException("Entity operation is not allowed on this entity as it is"
