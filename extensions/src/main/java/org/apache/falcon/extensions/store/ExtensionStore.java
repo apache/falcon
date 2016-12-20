@@ -104,7 +104,7 @@ public final class ExtensionStore {
                 String description = getShortDescription(extension);
                 String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
-                String extensionOwner = CurrentUser.getUser();
+                String extensionOwner = System.getProperty("user.name");
                 metaStore.storeExtensionBean(recipeName, location, extensionType, description, extensionOwner);
             }
         } catch (FalconException e) {
