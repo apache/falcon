@@ -109,7 +109,7 @@ public final class ExtensionHandler {
         throws IOException, FalconException {
         ClassLoader extensionClassLoader = ExtensionClassLoader.load(urls);
         if (extensionClassLoader.getResourceAsStream(EXTENSION_BUILDER_INTERFACE_SERVICE_FILE) == null) {
-            throw new FalconCLIException("The jars in the extension build are not packaged with META-INF/services/"
+            throw new FalconCLIException("The extension build time jars do not contain "
                     + EXTENSION_BUILDER_INTERFACE_SERVICE_FILE);
         }
         ExtensionHandler extensionHandler = new ExtensionHandler();
