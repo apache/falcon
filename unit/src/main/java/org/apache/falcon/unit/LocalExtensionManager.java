@@ -52,7 +52,7 @@ public class LocalExtensionManager extends ExtensionManagerProxy {
 
     public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream configStream,
                                                       Map<EntityType, List<Entity>> entityMap)
-            throws FalconException, IOException {
+        throws FalconException, IOException {
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
