@@ -104,6 +104,13 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         }
     }
 
+    @Test(expectedExceptions=ValidationException.class)
+    public void testFailureCaseRegisterExtensionForURL() throws IOException, URISyntaxException, FalconException{
+        store = ExtensionStore.get();
+        createLibs(EXTENSION_PATH);
+        store.registerExtension("test", EXTENSION_PATH, "test desc", "falconUser");
+    }
+
     @Test
     public void testRegisterExtension() throws IOException, URISyntaxException, FalconException {
         String extensionPath = EXTENSION_PATH + "testRegister";
