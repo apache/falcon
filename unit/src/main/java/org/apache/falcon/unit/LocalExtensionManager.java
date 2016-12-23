@@ -24,7 +24,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.proxy.ExtensionManagerProxy;
+import org.apache.falcon.resource.AbstractExtensionManager;
 import org.apache.falcon.security.CurrentUser;
 
 import java.io.IOException;
@@ -32,15 +32,17 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A proxy implementation of the extension operations in local mode.
  */
-public class LocalExtensionManager extends ExtensionManagerProxy {
+public class LocalExtensionManager extends AbstractExtensionManager {
     public LocalExtensionManager() {}
 
     public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config,
-                                        Map<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
+                                        TreeMap<EntityType, List<Entity>> entityMap)
+        throws FalconException, IOException {
 
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
             for(Entity entity : entry.getValue()){
@@ -51,7 +53,7 @@ public class LocalExtensionManager extends ExtensionManagerProxy {
     }
 
     public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream configStream,
-                                                      Map<EntityType, List<Entity>> entityMap)
+                                                      TreeMap<EntityType, List<Entity>> entityMap)
         throws FalconException, IOException {
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();

@@ -46,7 +46,6 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String CONFIG  = "config";
     private static final String CREATION_TIME  = "creationTime";
     private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
-    public static final String FALCON_TAG = "falcon";
 
     public static void validateExtensionName(final String extensionName) {
         if (StringUtils.isBlank(extensionName)) {

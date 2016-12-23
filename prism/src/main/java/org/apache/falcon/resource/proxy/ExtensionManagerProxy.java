@@ -22,7 +22,6 @@ import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
@@ -70,7 +69,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.lang.reflect.Constructor;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,6 +78,7 @@ import java.util.Set;
 import java.util.Properties;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
@@ -326,7 +325,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
-        Map<EntityType, List<Entity>> entityMap;
+        TreeMap<EntityType, List<Entity>> entityMap;
 
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
@@ -338,7 +337,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully:" + jobName);
     }
 
-    private Map<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
+    private TreeMap<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
                                                         List<FormDataBodyPart> feedForms,
                                                         List<FormDataBodyPart> processForms, InputStream config)
         throws FalconException, IOException{
@@ -346,7 +345,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         List<Entity> feeds = getFeeds(feedForms);
         ExtensionType extensionType = getExtensionType(extensionName);
         List<Entity> entities;
-        Map<EntityType, List<Entity>> entityMap = new HashMap<>();
+        TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
             entities = generateEntities(extensionName, config);
             List<Entity> trustedFeeds = new ArrayList<>();
@@ -397,7 +396,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
-        Map<EntityType, List<Entity>> entityMap;
+        TreeMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             submitEntities(extensionName, jobName, entityMap, config, request);
@@ -442,7 +441,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     }
 
     protected void submitEntities(String extensionName, String jobName,
-                                  Map<EntityType, List<Entity>> entityMap, InputStream configStream,
+                                  TreeMap<EntityType, List<Entity>> entityMap, InputStream configStream,
                                   HttpServletRequest request) throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
@@ -453,8 +452,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
             for(final Entity entity : entry.getValue()){
-                final HttpServletRequest httpServletRequest = getEntityStream(entity, entity.getEntityType(), request);
-                final HttpServletRequest bufferedRequest = getBufferedRequest(httpServletRequest);
+                final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
                 final Set<String> colos = getApplicableColos(entity.getEntityType().toString(), entity);
                 new EntityProxy(entity.getEntityType().toString(), entity.getName()) {
                     @Override
@@ -509,7 +507,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                 return byteArrayInputStream.read();
             }
         };
-        return new HttpServletRequestInputStreamWrapper(request, servletInputStream);
+        return getBufferedRequest(new HttpServletRequestInputStreamWrapper(request, servletInputStream));
     }
 
 
@@ -777,62 +775,5 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             throw FalconWebException.newAPIException(
                     ExtensionService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
-    }
-
-    private abstract class EntitiesProxy<T extends APIResult> {
-        private final Class<T> clazz;
-        private String type;
-        private String name;
-
-        public EntitiesProxy(String type, String name, Class<T> resultClazz) {
-            this.clazz = resultClazz;
-            this.type = type;
-            this.name = name;
-        }
-
-
-        private T getResultInstance(APIResult.Status status, String message) {
-            try {
-                Constructor<T> constructor = clazz.getConstructor(APIResult.Status.class, String.class);
-                return constructor.newInstance(status, message);
-            } catch (Exception e) {
-                throw new FalconRuntimException("Unable to consolidate result.", e);
-            }
-        }
-
-        public EntitiesProxy(String type, String name) {
-            this(type, name, (Class<T>) APIResult.class);
-        }
-
-        public T execute() {
-            Set<String> colos = getColosToApply();
-
-            Map<String, T> results = new HashMap();
-
-            for (String colo : colos) {
-                try {
-                    results.put(colo, doExecute(colo));
-                } catch (FalconWebException e) {
-                    String message = ((APIResult) e.getResponse().getEntity()).getMessage();
-                    results.put(colo, getResultInstance(APIResult.Status.FAILED, message));
-                } catch (Throwable throwable) {
-                    results.put(colo, getResultInstance(APIResult.Status.FAILED, throwable.getClass().getName() + "::"
-                            + throwable.getMessage()));
-                }
-            }
-
-            T finalResult = consolidateResult(results, clazz);
-            if (finalResult.getStatus() == APIResult.Status.FAILED) {
-                throw FalconWebException.newAPIException(finalResult.getMessage());
-            } else {
-                return finalResult;
-            }
-        }
-
-        protected Set<String> getColosToApply() {
-            return getApplicableColos(type, name);
-        }
-
-        protected abstract T doExecute(String colo) throws FalconException;
     }
 }
