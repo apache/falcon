@@ -26,6 +26,7 @@ import org.apache.falcon.extensions.AbstractExtension;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.persistence.PersistenceConstants;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -344,6 +345,34 @@ public final class ExtensionStore {
 
     public boolean isExtensionStoreInitialized() {
         return (storePath != null);
+    }
+
+    public String disableExtension(final String extensionName, String currentUser) throws FalconException {
+        ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
+                : ExtensionType.CUSTOM;
+        if (extensionType.equals(ExtensionType.TRUSTED)) {
+            throw new ValidationException(extensionName + " is trusted cannot be disabled.");
+        } else if (!metaStore.checkIfExtensionExists(extensionName)) {
+            throw new FalconException("Extension:" + extensionName + " is not registered with Falcon.");
+        } else if (!metaStore.getDetail(extensionName).getExtensionOwner().equals(currentUser)) {
+            throw new FalconException("User: " + currentUser + " is not allowed to disable extension: "
+                    + extensionName);
+        } else {
+            metaStore.updateExtension(extensionName, PersistenceConstants.DISABLE_EXTENSION);
+            return "Disabled extension:" + extensionName;
+        }
+    }
+
+    public String enableExtension(final String extensionName, String currentUser) throws FalconException {
+
+        if (!metaStore.checkIfExtensionExists(extensionName)) {
+            throw new FalconException("Extension:" + extensionName + " is not registered with Falcon.");
+        } else if (!metaStore.getDetail(extensionName).getExtensionOwner().equals(currentUser)) {
+            throw new FalconException("User: " + currentUser + " is not allowed to enable extension: " + extensionName);
+        } else {
+            metaStore.updateExtension(extensionName, PersistenceConstants.ENABLE_EXTENSION);
+            return "Enabled extension:" + extensionName;
+        }
     }
 
 }

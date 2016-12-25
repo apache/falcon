@@ -212,4 +212,16 @@ public class ExtensionMetaStore {
             entityManager.close();
         }
     }
+
+    public void updateExtension(String extensionName, String action) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(action);
+        q.setParameter(EXTENSION_NAME, extensionName);
+        try {
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
 }

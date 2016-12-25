@@ -177,4 +177,22 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
         return tags.substring(nameStart, nameEnd);
     }
+
+    public String disableExtension(String extensionName, String currentUser) {
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().disableExtension(extensionName, currentUser);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public String enableExtension(String extensionName, String currentUser) {
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().enableExtension(extensionName, currentUser);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

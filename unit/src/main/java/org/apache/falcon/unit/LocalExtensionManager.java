@@ -63,4 +63,11 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         return super.getExtensionJobDetail(jobName);
     }
 
+    public APIResult disableExtension(String extensionName) {
+        return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName, CurrentUser.getUser()));
+    }
+
+    public APIResult enableExtension(String extensionName) {
+        return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName, CurrentUser.getUser()));
+    }
 }

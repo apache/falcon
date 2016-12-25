@@ -617,6 +617,36 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 
+    @POST
+    @Path("disable/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.TEXT_PLAIN)
+    public APIResult disableExtension(
+            @PathParam("extension-name") String extensionName) {
+        checkIfExtensionServiceIsEnabled();
+        try {
+            return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName,
+                    CurrentUser.getUser()));
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @POST
+    @Path("enable/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.TEXT_PLAIN)
+    public APIResult enableExtension(
+            @PathParam("extension-name") String extensionName) {
+        checkIfExtensionServiceIsEnabled();
+        try {
+            return new APIResult(APIResult.Status.SUCCEEDED, super.enableExtension(extensionName,
+                    CurrentUser.getUser()));
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private static JSONArray buildEnumerateResult() throws FalconException {
         JSONArray results = new JSONArray();
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();

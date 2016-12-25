@@ -44,7 +44,9 @@ import java.util.Date;
         @NamedQuery(name = PersistenceConstants.GET_ALL_EXTENSIONS, query = "select OBJECT(a) from ExtensionBean a "),
         @NamedQuery(name = PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE, query = "delete from ExtensionBean a where a.extensionType = :extensionType "),
         @NamedQuery(name = PersistenceConstants.DELETE_EXTENSION, query = "delete from ExtensionBean a where a.extensionName = :extensionName "),
-        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionBean a where a.extensionName = :extensionName")
+        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionBean a where a.extensionName = :extensionName"),
+        @NamedQuery(name = PersistenceConstants.ENABLE_EXTENSION, query = "update ExtensionBean OBJECT(a) set is_enabled = true where a.extensionName = :extensionName"),
+        @NamedQuery(name = PersistenceConstants.DISABLE_EXTENSION, query = "update ExtensionBean OBJECT(a) set is_enabled = false where a.extensionName = :extensionName")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class ExtensionBean {
@@ -78,6 +80,11 @@ public class ExtensionBean {
     @NotNull
     @Column(name = "extension_owner")
     private String extensionOwner;
+
+    @Basic
+    @NotNull
+    @Column(name = "is_enabled")
+    private Boolean isEnabled;
 
     public ExtensionType getExtensionType() {
         return extensionType;
@@ -125,6 +132,14 @@ public class ExtensionBean {
 
     public void setExtensionOwner(String extensionOwner) {
         this.extensionOwner = extensionOwner;
+    }
+
+    public Boolean getEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        isEnabled = enabled;
     }
 
 }
