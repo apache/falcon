@@ -79,6 +79,7 @@ import java.util.Properties;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.SortedMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
@@ -325,7 +326,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
-        TreeMap<EntityType, List<Entity>> entityMap;
+        SortedMap<EntityType, List<Entity>> entityMap;
 
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
@@ -337,7 +338,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully:" + jobName);
     }
 
-    private TreeMap<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
+    private SortedMap<EntityType, List<Entity>> getEntityList(String extensionName, String jobName,
                                                         List<FormDataBodyPart> feedForms,
                                                         List<FormDataBodyPart> processForms, InputStream config)
         throws FalconException, IOException{
@@ -396,7 +397,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
-        TreeMap<EntityType, List<Entity>> entityMap;
+        SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             submitEntities(extensionName, jobName, entityMap, config, request);
@@ -441,7 +442,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     }
 
     protected void submitEntities(String extensionName, String jobName,
-                                  TreeMap<EntityType, List<Entity>> entityMap, InputStream configStream,
+                                  SortedMap<EntityType, List<Entity>> entityMap, InputStream configStream,
                                   HttpServletRequest request) throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
