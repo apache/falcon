@@ -50,6 +50,7 @@ public class ExtensionMetaStore {
         extensionBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionBean.setDescription(description);
         extensionBean.setExtensionOwner(extensionOwner);
+        extensionBean.setEnabled(true);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
