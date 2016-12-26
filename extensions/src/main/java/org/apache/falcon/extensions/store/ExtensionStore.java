@@ -268,10 +268,22 @@ public final class ExtensionStore {
         }
     }
 
+    private void assertURI(String part, String value) throws ValidationException {
+        if (value == null) {
+            String msg = "Invalid Path supplied. " + part + " is missing. "
+                    + " Path must contain scheme, authority and path.";
+            LOG.error(msg);
+            throw new ValidationException(msg);
+        }
+    }
+
     public String registerExtension(final String extensionName, final String path, final String description,
                                     String extensionOwner) throws URISyntaxException, FalconException {
         Configuration conf = new Configuration();
         URI uri = new URI(path);
+        assertURI("Scheme", uri.getScheme());
+        assertURI("Authority", uri.getAuthority());
+        assertURI("Path", uri.getPath());
         conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem = HadoopClientFactory.get().createFalconFileSystem(uri);
         try {
@@ -313,6 +325,7 @@ public final class ExtensionStore {
         } else {
             throw new ValidationException(extensionName + " already exists.");
         }
+        LOG.info("Extension :" + extensionName + " registered successfully.");
         return "Extension :" + extensionName + " registered successfully.";
     }
 
