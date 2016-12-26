@@ -36,9 +36,9 @@ import java.util.List;
  * Test Class for validating Extension util helper methods.
  */
 public class ExtensionHandlerTest {
-    public static final String PROCESS_XML = "/extension-example-duplicate.xml";
-    public static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
-    public static final String CONFIG_PATH = "file:///" + System.getProperty("user.dir")
+    private static final String PROCESS_XML = "/extension-example-duplicate.xml";
+    private static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
+    private static final String CONFIG_PATH = "file:///" + System.getProperty("user.dir")
             + "/src/test/resources/extension.properties";
 
     @Test

@@ -17,32 +17,20 @@
  */
 package org.apache.falcon.resource;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.parser.ValidationException;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A base class for managing Extension Operations.
@@ -111,57 +99,6 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             LOG.error("Exception while building extension jon details for job {}", jobName, e);
         }
         return detailsObject;
-    }
-
-
-    protected void submitEntities(String extensionName, String doAsUser, String jobName,
-                                  Map<EntityType, List<Entity>> entityMap, InputStream configStream)
-        throws FalconException, IOException {
-        List<Entity> feeds = entityMap.get(EntityType.FEED);
-        List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
-        List<String> feedNames = new ArrayList<>();
-        List<String> processNames = new ArrayList<>();
-        for (Entity feed : feeds) {
-            submitInternal(feed, doAsUser);
-            feedNames.add(feed.getName());
-        }
-        for (Entity process: processes) {
-            submitInternal(process, doAsUser);
-            processNames.add(process.getName());
-        }
-
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        byte[] configBytes = null;
-        if (configStream != null) {
-            configBytes = IOUtils.toByteArray(configStream);
-        }
-        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
-    }
-
-
-    private void validateFeeds(List<Entity> feeds) throws FalconException {
-        for (Entity feed : feeds) {
-            super.validate(feed);
-        }
-    }
-
-    private void validateProcesses(List<Entity> processes) throws FalconException {
-        ProcessEntityParser processEntityParser = new ProcessEntityParser();
-        for (Entity process : processes) {
-            processEntityParser.validate((Process)process, false);
-        }
-    }
-
-    protected void scheduleEntities(Map<EntityType, List<Entity>> entityMap) throws FalconException,
-            AuthorizationException {
-        for (Object feed: entityMap.get(EntityType.FEED)) {
-            scheduleInternal(EntityType.FEED.name(), ((Feed)feed).getName(), null, null);
-        }
-        for (Object process: entityMap.get(EntityType.PROCESS)) {
-            scheduleInternal(EntityType.PROCESS.name(), ((Process)process).getName(), null, null);
-        }
     }
 
     public static String getJobNameFromTag(String tags) {
