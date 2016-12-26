@@ -32,7 +32,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.SortedMap;
 
 /**
  * A proxy implementation of the extension operations in local mode.
@@ -41,7 +41,7 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     public LocalExtensionManager() {}
 
     public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config,
-                                        TreeMap<EntityType, List<Entity>> entityMap)
+                                        SortedMap<EntityType, List<Entity>> entityMap)
         throws FalconException, IOException {
 
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
@@ -53,7 +53,7 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     }
 
     public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream configStream,
-                                                      TreeMap<EntityType, List<Entity>> entityMap)
+                                                      SortedMap<EntityType, List<Entity>> entityMap)
         throws FalconException, IOException {
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
