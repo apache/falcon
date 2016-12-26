@@ -1019,21 +1019,21 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(String.class, clientResponse);
     }
 
-    public String unregisterExtension(final String extensionName) {
+    public APIResult unregisterExtension(final String extensionName) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
                 .call(ExtensionOperations.UNREGISTER);
-        return getResponse(String.class, clientResponse);
+        return getResponse(APIResult.class, clientResponse);
     }
 
-    public String getExtensionDetail(final String extensionName) {
-        return getResponse(String.class, getExtensionDetailResponse(extensionName));
+    public APIResult getExtensionDetail(final String extensionName) {
+        return getResponse(APIResult.class, getExtensionDetailResponse(extensionName));
     }
 
-    public String getExtensionJobDetails(final String jobName) {
+    public APIResult getExtensionJobDetails(final String jobName) {
         ClientResponse clientResponse = new ResourceBuilder().path(ExtensionOperations.JOB_DETAILS.path, jobName)
                 .call(ExtensionOperations.JOB_DETAILS);
-        return getResponse(String.class, clientResponse);
+        return getResponse(APIResult.class, clientResponse);
     }
 
     public ClientResponse getExtensionDetailResponse(final String extensionName) {
@@ -1041,26 +1041,26 @@ public class FalconClient extends AbstractFalconClient {
                 .call(ExtensionOperations.DETAIL);
     }
 
-    public String registerExtension(final String extensionName, final String packagePath, final String description) {
+    public APIResult registerExtension(final String extensionName, final String packagePath, final String description) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, packagePath)
                 .addQueryParam(FalconCLIConstants.DESCRIPTION, description)
                 .call(ExtensionOperations.REGISTER);
-        return getResponse(String.class, clientResponse);
+        return getResponse(APIResult.class, clientResponse);
     }
 
-    public String getExtensionDefinition(final String extensionName)  {
+    public APIResult getExtensionDefinition(final String extensionName)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DEFINITION.path, extensionName)
                 .call(ExtensionOperations.DEFINITION);
-        return getResponse(String.class, clientResponse);
+        return getResponse(APIResult.class, clientResponse);
     }
 
-    public String getExtensionDescription(final String extensionName)  {
+    public APIResult getExtensionDescription(final String extensionName)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DESCRIBE.path, extensionName)
                 .call(ExtensionOperations.DESCRIBE);
-        return getResponse(String.class, clientResponse);
+        return getResponse(APIResult.class, clientResponse);
     }
 
     @Override

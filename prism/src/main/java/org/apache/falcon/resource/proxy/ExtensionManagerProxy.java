@@ -537,12 +537,12 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("describe/{extension-name}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getExtensionDescription(
+    public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().getResource(extensionName, README);
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -564,10 +564,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("extensionJobDetails/{job-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public String getExtensionJobDetail(@PathParam("job-name") String jobName) {
+    public APIResult getExtensionJobDetail(@PathParam("job-name") String jobName) {
         checkIfExtensionServiceIsEnabled();
         try {
-            return  super.getExtensionJobDetail(jobName);
+            return super.getExtensionJobDetail(jobName);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -577,7 +577,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces(MediaType.TEXT_PLAIN)
-    public String deleteExtensionMetadata(
+    public APIResult deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName){
         checkIfExtensionServiceIsEnabled();
         try {
@@ -591,7 +591,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Path("register/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces(MediaType.TEXT_PLAIN)
-    public String registerExtensionMetadata(
+    public APIResult registerExtensionMetadata(
             @PathParam("extension-name") String extensionName,
             @QueryParam("path") String path,
             @QueryParam("description") String description) {
@@ -606,12 +606,12 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("definition/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public String getExtensionDefinition(
+    public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         try {
-            return ExtensionStore.get().getResource(extensionName,
-                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
+                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }

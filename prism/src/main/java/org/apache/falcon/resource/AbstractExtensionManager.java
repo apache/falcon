@@ -66,27 +66,29 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public String registerExtensionMetadata(String extensionName, String path, String description, String owner) {
+    public APIResult registerExtensionMetadata(String extensionName, String path, String description, String owner) {
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().registerExtension(extensionName, path, description, owner);
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().registerExtension(extensionName, path,
+                    description, owner));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public String getExtensionJobDetail(String jobName) {
+    public APIResult getExtensionJobDetail(String jobName) {
         try {
-            return buildExtensionJobDetailResult(jobName).toString();
+            return new APIResult(APIResult.Status.SUCCEEDED, buildExtensionJobDetailResult(jobName).toString());
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public String deleteExtensionMetadata(String extensionName){
+    public APIResult deleteExtensionMetadata(String extensionName){
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().deleteExtension(extensionName, CurrentUser.getUser());
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().deleteExtension(extensionName,
+                    CurrentUser.getUser()));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }

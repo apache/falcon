@@ -271,12 +271,12 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public String registerExtension(String extensionName, String packagePath, String description) {
+    public APIResult registerExtension(String extensionName, String packagePath, String description) {
         return localExtensionManager.registerExtensionMetadata(extensionName, packagePath, description);
     }
 
     @Override
-    public String unregisterExtension(String extensionName) {
+    public APIResult unregisterExtension(String extensionName) {
         return localExtensionManager.unRegisterExtension(extensionName);
     }
 
@@ -335,7 +335,7 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public String getExtensionJobDetails(final String jobName) {
+    public APIResult getExtensionJobDetails(final String jobName) {
         return localExtensionManager.getExtensionJobDetails(jobName);
     }
 
