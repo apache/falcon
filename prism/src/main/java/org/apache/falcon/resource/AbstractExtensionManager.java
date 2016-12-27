@@ -23,14 +23,17 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.security.CurrentUser;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * A base class for managing Extension Operations.
@@ -47,6 +50,11 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String CREATION_TIME  = "creationTime";
     private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
 
+    private static final String NAME = "name";
+    private static final String EXTENSION_TYPE = "type";
+    private static final String EXTENSION_DESC = "description";
+    private static final String EXTENSION_LOCATION = "location";
+
     public static void validateExtensionName(final String extensionName) {
         if (StringUtils.isBlank(extensionName)) {
             throw FalconWebException.newAPIException("Extension name is mandatory and shouldn't be blank",
@@ -54,27 +62,45 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public String registerExtensionMetadata(String extensionName, String path, String description, String owner) {
+    public APIResult registerExtensionMetadata(String extensionName, String path, String description, String owner) {
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().registerExtension(extensionName, path, description, owner);
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().registerExtension(extensionName, path,
+                    description, owner));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public String getExtensionJobDetail(String jobName) {
+    public APIResult getExtensionJobDetail(String jobName) {
         try {
-            return buildExtensionJobDetailResult(jobName).toString();
+            return new APIResult(APIResult.Status.SUCCEEDED, buildExtensionJobDetailResult(jobName).toString());
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public String deleteExtensionMetadata(String extensionName){
+    public APIResult getExtensionDetail(String extensionName) {
+        try {
+            return new APIResult(APIResult.Status.SUCCEEDED, buildExtensionDetailResult(extensionName).toString());
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public APIResult getExtensions() {
+        try {
+            return new APIResult(APIResult.Status.SUCCEEDED, buildEnumerateResult().toString());
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public APIResult deleteExtensionMetadata(String extensionName){
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().deleteExtension(extensionName, CurrentUser.getUser());
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().deleteExtension(extensionName,
+                    CurrentUser.getUser()));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -113,5 +139,46 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             nameEnd = tags.length();
         }
         return tags.substring(nameStart, nameEnd);
+    }
+
+    private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+
+        if (!metaStore.checkIfExtensionExists(extensionName)){
+            throw new ValidationException("No extension resources found for " + extensionName);
+        }
+
+        ExtensionBean bean = metaStore.getDetail(extensionName);
+        JSONObject resultObject = new JSONObject();
+        try {
+            resultObject.put(NAME, bean.getExtensionName());
+            resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
+            resultObject.put(EXTENSION_DESC, bean.getDescription());
+            resultObject.put(EXTENSION_LOCATION, bean.getLocation());
+        } catch (JSONException e) {
+            LOG.error("Exception in buildDetailResults:", e);
+            throw new FalconException(e);
+        }
+        return resultObject;
+    }
+
+    private static JSONArray buildEnumerateResult() throws FalconException {
+        JSONArray results = new JSONArray();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        List<ExtensionBean> extensionBeanList = metaStore.getAllExtensions();
+        for (ExtensionBean extensionBean : extensionBeanList) {
+            JSONObject resultObject = new JSONObject();
+
+            try {
+                resultObject.put(NAME, extensionBean.getExtensionName().toLowerCase());
+                resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
+                resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
+                resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
+            } catch (JSONException e) {
+                throw new FalconException(e);
+            }
+            results.put(resultObject);
+        }
+        return results;
     }
 }

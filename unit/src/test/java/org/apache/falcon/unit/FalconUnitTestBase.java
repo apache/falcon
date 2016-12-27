@@ -221,15 +221,15 @@ public class FalconUnitTestBase {
     public String registerExtension(String extensionName, String packagePath, String description)
         throws IOException, FalconException {
 
-        return falconUnitClient.registerExtension(extensionName, packagePath, description);
+        return falconUnitClient.registerExtension(extensionName, packagePath, description).getMessage();
     }
 
     public String getExtensionJobDetails(String jobName) {
-        return falconUnitClient.getExtensionJobDetails(jobName);
+        return falconUnitClient.getExtensionJobDetails(jobName).getMessage();
     }
 
     public String unregisterExtension(String extensionName) {
-        return falconUnitClient.unregisterExtension(extensionName);
+        return falconUnitClient.unregisterExtension(extensionName).getMessage();
     }
 
     public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {

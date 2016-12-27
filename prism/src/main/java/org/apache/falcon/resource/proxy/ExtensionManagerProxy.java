@@ -25,8 +25,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
-import org.apache.falcon.entity.parser.ValidationException;
-import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -49,9 +47,6 @@ import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,22 +90,13 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
     private static final String ASCENDING_SORT_ORDER = "asc";
     private static final String DESCENDING_SORT_ORDER = "desc";
-
     private Extension extension = new Extension();
-
-    private static final String EXTENSION_RESULTS = "extensions";
-    private static final String TOTAL_RESULTS = "totalResults";
     private static final String README = "README";
-    private static final String NAME = "name";
-    private static final String EXTENSION_TYPE = "type";
-    private static final String EXTENSION_DESC = "description";
-    private static final String EXTENSION_LOCATION = "location";
+
     private boolean embeddedMode = DeploymentUtil.isEmbeddedMode();
     private String currentColo = DeploymentUtil.getCurrentColo();
     private final Map<String, Channel> configSyncChannels = new HashMap<String, Channel>();
-    private static final String PRISM_TAG = "prism";
     private final Map<String, Channel> entityManagerChannels = new HashMap<String, Channel>();
-
 
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
@@ -596,26 +582,11 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("enumerate")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getExtensions() {
+    public APIResult getExtensions() {
         checkIfExtensionServiceIsEnabled();
-        JSONArray results;
-
         try {
-            results = buildEnumerateResult();
-        } catch (StoreAccessException e) {
-            LOG.error("Failed when accessing extension store.", e);
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        } catch (FalconException e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-
-        try {
-            JSONObject response = new JSONObject();
-            response.put(EXTENSION_RESULTS, results);
-            response.put(TOTAL_RESULTS, results.length());
-
-            return Response.ok(response).build();
-        } catch (Throwable e) {
+            return new APIResult(APIResult.Status.SUCCEEDED, super.getExtensions().toString());
+        } catch (FalconWebException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -623,12 +594,12 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("describe/{extension-name}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getExtensionDescription(
+    public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().getResource(extensionName, README);
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -637,11 +608,11 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("detail/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getDetail(@PathParam("extension-name") String extensionName) {
+    public APIResult getDetail(@PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
         try {
-            return Response.ok(buildExtensionDetailResult(extensionName)).build();
+            return super.getExtensionDetail(extensionName);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -650,10 +621,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("extensionJobDetails/{job-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public String getExtensionJobDetail(@PathParam("job-name") String jobName) {
+    public APIResult getExtensionJobDetail(@PathParam("job-name") String jobName) {
         checkIfExtensionServiceIsEnabled();
         try {
-            return  super.getExtensionJobDetail(jobName);
+            return super.getExtensionJobDetail(jobName);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -663,7 +634,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces(MediaType.TEXT_PLAIN)
-    public String deleteExtensionMetadata(
+    public APIResult deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName){
         checkIfExtensionServiceIsEnabled();
         try {
@@ -677,7 +648,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Path("register/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces(MediaType.TEXT_PLAIN)
-    public String registerExtensionMetadata(
+    public APIResult registerExtensionMetadata(
             @PathParam("extension-name") String extensionName,
             @QueryParam("path") String path,
             @QueryParam("description") String description) {
@@ -692,36 +663,15 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @GET
     @Path("definition/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public String getExtensionDefinition(
+    public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         try {
-            return ExtensionStore.get().getResource(extensionName,
-                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX);
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
+                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private static JSONArray buildEnumerateResult() throws FalconException {
-        JSONArray results = new JSONArray();
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        List<ExtensionBean> extensionBeanList = metaStore.getAllExtensions();
-        for (ExtensionBean extensionBean : extensionBeanList) {
-            JSONObject resultObject = new JSONObject();
-
-            try {
-                resultObject.put(NAME, extensionBean.getExtensionName().toLowerCase());
-                resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
-                resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
-                resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
-            } catch (JSONException e) {
-                throw new FalconException(e);
-            }
-            results.put(resultObject);
-
-        }
-        return results;
     }
 
     private List<Entity> generateEntities(String extensionName, InputStream configStream)
@@ -736,27 +686,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         EntityUtil.applyTags(extensionName, jobName, entities);
 
         return entities;
-    }
-
-    private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-
-        if (!metaStore.checkIfExtensionExists(extensionName)){
-            throw new ValidationException("No extension resources found for " + extensionName);
-        }
-
-        ExtensionBean bean = metaStore.getDetail(extensionName);
-        JSONObject resultObject = new JSONObject();
-        try {
-            resultObject.put(NAME, bean.getExtensionName());
-            resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
-            resultObject.put(EXTENSION_DESC, bean.getDescription());
-            resultObject.put(EXTENSION_LOCATION, bean.getLocation());
-        } catch (JSONException e) {
-            LOG.error("Exception in buildDetailResults:", e);
-            throw new FalconException(e);
-        }
-        return resultObject;
     }
 
     private Map<String, List<Entity>> groupEntitiesByJob(List<Entity> entities) {
