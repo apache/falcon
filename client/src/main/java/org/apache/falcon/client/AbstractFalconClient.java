@@ -229,6 +229,19 @@ public abstract class AbstractFalconClient {
     public abstract APIResult getExtensionJobDetails(final String jobName);
 
     /**
+     * returns details of an extension
+     * @param extensionName name of the extension.
+     * @return
+     */
+    public abstract APIResult getExtensionDetail(final String extensionName);
+
+    /**
+     * returns all registered extensions
+     * @return
+     */
+    public abstract APIResult enumerateExtensions();
+
+    /**
      *
      * Get list of the entities.
      * We have two filtering parameters for entity tags: "tags" and "tagkeys".

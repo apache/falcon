@@ -1012,11 +1012,11 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    public String enumerateExtensions()  {
+    public APIResult enumerateExtensions()  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.ENUMERATE.path)
                 .call(ExtensionOperations.ENUMERATE);
-        return getResponse(String.class, clientResponse);
+        return getResponse(APIResult.class, clientResponse);
     }
 
     public APIResult unregisterExtension(final String extensionName) {

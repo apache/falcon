@@ -63,4 +63,12 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         return super.getExtensionJobDetail(jobName);
     }
 
+    public APIResult getExtensionDetails(String extensionName){
+        return super.getExtensionJobDetail(extensionName);
+    }
+
+    public APIResult getExtensions(){
+        return super.getExtensions();
+    }
+
 }
