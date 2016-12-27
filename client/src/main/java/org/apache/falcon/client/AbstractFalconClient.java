@@ -187,14 +187,14 @@ public abstract class AbstractFalconClient {
      * @param description description of the extension.
      * @return Result of the registerExtension command.
      */
-    public abstract String registerExtension(String extensionName, String packagePath, String description);
+    public abstract APIResult registerExtension(String extensionName, String packagePath, String description);
 
     /**
      *
      * @param extensionName extensionName that needs to be unregistered
      * @return Result of the unregisterExtension operation
      */
-    public abstract String unregisterExtension(String extensionName);
+    public abstract APIResult unregisterExtension(String extensionName);
 
     /**
      * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
@@ -226,7 +226,20 @@ public abstract class AbstractFalconClient {
      * @param jobName job name of the extension job.
      * @return
      */
-    public abstract String getExtensionJobDetails(final String jobName);
+    public abstract APIResult getExtensionJobDetails(final String jobName);
+
+    /**
+     * Returns details of an extension.
+     * @param extensionName name of the extension.
+     * @return
+     */
+    public abstract APIResult getExtensionDetail(final String extensionName);
+
+    /**
+     * Returns all registered extensions.
+     * @return
+     */
+    public abstract APIResult enumerateExtensions();
 
     /**
      *
