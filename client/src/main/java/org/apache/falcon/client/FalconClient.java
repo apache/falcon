@@ -359,8 +359,8 @@ public class FalconClient extends AbstractFalconClient {
         DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_PLAIN),
-        ENABLE("api/extension/update", HttpMethod.POST, MediaType.TEXT_XML),
-        DISABLE("api/extension/update", HttpMethod.POST, MediaType.TEXT_XML);
+        ENABLE("api/extension/enable", HttpMethod.POST, MediaType.TEXT_PLAIN),
+        DISABLE("api/extension/disable", HttpMethod.POST, MediaType.TEXT_PLAIN);
 
         private String path;
         private String method;

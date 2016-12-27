@@ -18,6 +18,7 @@
 
 package org.apache.falcon.persistence;
 
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionType;
 
 import javax.persistence.Basic;
@@ -45,8 +46,7 @@ import java.util.Date;
         @NamedQuery(name = PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE, query = "delete from ExtensionBean a where a.extensionType = :extensionType "),
         @NamedQuery(name = PersistenceConstants.DELETE_EXTENSION, query = "delete from ExtensionBean a where a.extensionName = :extensionName "),
         @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionBean a where a.extensionName = :extensionName"),
-        @NamedQuery(name = PersistenceConstants.ENABLE_EXTENSION, query = "update ExtensionBean OBJECT(a) set is_enabled = true where a.extensionName = :extensionName"),
-        @NamedQuery(name = PersistenceConstants.DISABLE_EXTENSION, query = "update ExtensionBean OBJECT(a) set is_enabled = false where a.extensionName = :extensionName")
+        @NamedQuery(name = PersistenceConstants.CHANGE_EXTENSION_STATUS, query = "update ExtensionBean OBJECT(a) set a.status = :extensionStatus where a.extensionName = :extensionName")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class ExtensionBean {
@@ -83,8 +83,9 @@ public class ExtensionBean {
 
     @Basic
     @NotNull
-    @Column(name = "is_enabled")
-    private Boolean isEnabled;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private ExtensionStatus status;
 
     public ExtensionType getExtensionType() {
         return extensionType;
@@ -134,12 +135,12 @@ public class ExtensionBean {
         this.extensionOwner = extensionOwner;
     }
 
-    public Boolean getEnabled() {
-        return isEnabled;
+    public ExtensionStatus getStatus() {
+        return status;
     }
 
-    public void setEnabled(Boolean enabled) {
-        isEnabled = enabled;
+    public void setStatus(ExtensionStatus status) {
+        this.status = status;
     }
 
 }

@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionJobsBean;
@@ -181,7 +182,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     public String disableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().disableExtension(extensionName, currentUser);
+            return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.DISABLED);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -190,7 +191,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     public String enableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
-            return ExtensionStore.get().enableExtension(extensionName, currentUser);
+            return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.ENABLED);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }

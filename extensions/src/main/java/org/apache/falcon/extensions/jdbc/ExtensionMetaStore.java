@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.extensions.jdbc;
 
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.persistence.ExtensionJobsBean;
@@ -36,6 +37,7 @@ public class ExtensionMetaStore {
     private static final String EXTENSION_NAME = "extensionName";
     private static final String JOB_NAME = "jobName";
     private static final String EXTENSION_TYPE = "extensionType";
+    private static final String EXTENSION_STATUS = "extensionStatus";
 
     private EntityManager getEntityManager() {
         return FalconJPAService.get().getEntityManager();
@@ -50,7 +52,7 @@ public class ExtensionMetaStore {
         extensionBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionBean.setDescription(description);
         extensionBean.setExtensionOwner(extensionOwner);
-        extensionBean.setEnabled(true);
+        extensionBean.setStatus(ExtensionStatus.ENABLED);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
@@ -214,11 +216,11 @@ public class ExtensionMetaStore {
         }
     }
 
-    public void updateExtension(String extensionName, String action) {
+    public void updateExtensionStatus(String extensionName, ExtensionStatus status) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
-        Query q = entityManager.createNamedQuery(action);
-        q.setParameter(EXTENSION_NAME, extensionName);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.CHANGE_EXTENSION_STATUS);
+        q.setParameter(EXTENSION_NAME, extensionName).setParameter(EXTENSION_STATUS, status);
         try {
             q.executeUpdate();
         } finally {
