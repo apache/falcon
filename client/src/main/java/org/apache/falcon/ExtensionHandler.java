@@ -44,8 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-import static org.apache.falcon.client.FalconClient.OUT;
-
 /**
  * Handler class that is responsible for preparing Extension entities.
  */
@@ -56,9 +54,13 @@ public final class ExtensionHandler {
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
     private static final String LOCATION = "location";
     private static final String TYPE = "type";
+    private static final String EXTENSION_BUILDER_INTERFACE_SERVICE_FILE =
+            "META-INF/services/org.apache.falcon.extensions.ExtensionBuilder";
 
-    public List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
-                                           InputStream configStream) throws IOException, FalconException {
+    private ExtensionHandler(){}
+
+    private List<Entity> getEntities(ClassLoader extensionClassloader, String extensionName, String jobName,
+                                     InputStream configStream) throws IOException, FalconException {
         Thread.currentThread().setContextClassLoader(extensionClassloader);
 
         ServiceLoader<ExtensionBuilder> extensionBuilders = ServiceLoader.load(ExtensionBuilder.class);
@@ -78,6 +80,7 @@ public final class ExtensionHandler {
 
         ExtensionBuilder extensionBuilder = null;
         try {
+            @SuppressWarnings("unchecked")
             Class<ExtensionBuilder> clazz = (Class<ExtensionBuilder>) extensionClassloader
                     .loadClass(result.get(0).getCanonicalName());
             extensionBuilder = clazz.newInstance();
@@ -86,9 +89,8 @@ public final class ExtensionHandler {
         }
 
         extensionBuilder.validateExtensionConfig(extensionName, configStream);
-        List<Entity> entities = extensionBuilder.getEntities(jobName, configStream);
 
-        return entities;
+        return extensionBuilder.getEntities(jobName, configStream);
     }
 
     public static List<Entity> loadAndPrepare(String extensionName, String jobName, InputStream configStream,
@@ -106,6 +108,10 @@ public final class ExtensionHandler {
     public static List<Entity> prepare(String extensionName, String jobName, InputStream configStream, List<URL> urls)
         throws IOException, FalconException {
         ClassLoader extensionClassLoader = ExtensionClassLoader.load(urls);
+        if (extensionClassLoader.getResourceAsStream(EXTENSION_BUILDER_INTERFACE_SERVICE_FILE) == null) {
+            throw new FalconCLIException("The extension build time jars do not contain "
+                    + EXTENSION_BUILDER_INTERFACE_SERVICE_FILE);
+        }
         ExtensionHandler extensionHandler = new ExtensionHandler();
 
         return extensionHandler.getEntities(extensionClassLoader, extensionName, jobName, configStream);
@@ -145,7 +151,7 @@ public final class ExtensionHandler {
         return stagePath;
     }
 
-    public static List<URL> copyExtensionPackage(String extensionBuildUrl, FileSystem fs, String stagePath)
+    private static List<URL> copyExtensionPackage(String extensionBuildUrl, FileSystem fs, String stagePath)
         throws IOException {
 
         Path libsPath = new Path(extensionBuildUrl, FalconExtensionConstants.LIBS);
@@ -167,7 +173,7 @@ public final class ExtensionHandler {
         return urls;
     }
 
-    public static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
+    static List<URL> getFilesInPath(URL fileURL) throws MalformedURLException {
         List<URL> urls = new ArrayList<>();
 
         File file = new File(fileURL.getPath());
@@ -199,8 +205,8 @@ public final class ExtensionHandler {
         try {
             extensionBuildPath = extensionDetailJson.get(LOCATION).toString();
         } catch (JSONException e) {
-            OUT.get().print("Error. " + extensionName + " not found ");
-            throw new FalconCLIException("Failed to get extension type for the given extension");
+            throw new FalconCLIException("Failed to get extension location for the given extension:" + extensionName,
+                    e);
         }
         return extensionBuildPath;
     }
@@ -210,8 +216,7 @@ public final class ExtensionHandler {
         try {
             extensionType = extensionDetailJson.get(TYPE).toString();
         } catch (JSONException e) {
-            OUT.get().print("Error. " + extensionName + " not found ");
-            throw new FalconCLIException("Failed to get extension type for the given extension");
+            throw new FalconCLIException("Failed to get extension type for the given extension:" + extensionName, e);
         }
         return extensionType;
     }
