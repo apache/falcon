@@ -77,7 +77,7 @@ public class FalconExtensionCLI {
         String description = commandLine.getOptionValue(FalconCLIConstants.DESCRIPTION);
 
         if (optionsList.contains(ENUMERATE_OPT)) {
-            result = client.enumerateExtensions();
+            result = client.enumerateExtensions().getMessage();
             result = prettyPrintJson(result);
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
