@@ -87,16 +87,24 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     }
 
 
-    public String registerExtensionMetadata(String extensionName, String packagePath , String description) {
+    public APIResult registerExtensionMetadata(String extensionName, String packagePath , String description) {
         return super.registerExtensionMetadata(extensionName, packagePath, description, CurrentUser.getUser());
     }
 
-    public String unRegisterExtension(String extensionName) {
+    public APIResult unRegisterExtension(String extensionName) {
         return super.deleteExtensionMetadata(extensionName);
     }
 
-    public String getExtensionJobDetails(String jobName){
+    public APIResult getExtensionJobDetails(String jobName){
         return super.getExtensionJobDetail(jobName);
+    }
+
+    public APIResult getExtensionDetails(String extensionName){
+        return super.getExtensionJobDetail(extensionName);
+    }
+
+    public APIResult getExtensions(){
+        return super.getExtensions();
     }
 
 }
