@@ -340,7 +340,7 @@ public class FalconClient extends AbstractFalconClient {
      */
     protected static enum ExtensionOperations {
 
-        ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.TEXT_XML),
         DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
         DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -353,10 +353,10 @@ public class FalconClient extends AbstractFalconClient {
         SUSPEND("api/extension/suspend", HttpMethod.POST, MediaType.TEXT_XML),
         RESUME("api/extension/resume", HttpMethod.POST, MediaType.TEXT_XML),
         DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML),
-        UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_PLAIN),
+        UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_XML),
         DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_PLAIN);
+        REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_XML);
 
         private String path;
         private String method;
@@ -1106,9 +1106,10 @@ public class FalconClient extends AbstractFalconClient {
 
     private JSONObject getExtensionDetailJson(String extensionName) {
         ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
+
         JSONObject extensionDetailJson;
         try {
-            extensionDetailJson = new JSONObject(clientResponse.getEntity(String.class));
+            extensionDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
             throw new FalconCLIException("Failed to get details for the given extension", e);
         }

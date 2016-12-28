@@ -581,11 +581,11 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     // Extension store related REST API's
     @GET
     @Path("enumerate")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult getExtensions() {
         checkIfExtensionServiceIsEnabled();
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, super.getExtensions().toString());
+            return super.getExtensions();
         } catch (FalconWebException e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -633,7 +633,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @POST
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName){
         checkIfExtensionServiceIsEnabled();
@@ -647,7 +647,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @POST
     @Path("register/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult registerExtensionMetadata(
             @PathParam("extension-name") String extensionName,
             @QueryParam("path") String path,
