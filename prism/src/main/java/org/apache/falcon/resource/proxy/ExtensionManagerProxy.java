@@ -355,7 +355,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             return entityMap;
         }
     }
-    
+
     private ExtensionType getExtensionType(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
