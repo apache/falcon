@@ -296,8 +296,6 @@ public final class ExtensionStore {
             throw new ValidationException(msg);
         }
     }
-
- 
     private FileSystem getHdfsFileSystem(String path)  throws  FalconException {
         Configuration conf = new Configuration();
         URI uri;
