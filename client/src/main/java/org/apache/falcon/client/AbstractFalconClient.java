@@ -222,6 +222,16 @@ public abstract class AbstractFalconClient {
                                                  String doAsUser);
 
     /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and updates them.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     * @throws FalconCLIException
+     */
+    public abstract APIResult updateExtensionJob(String jobName, String configPath, String doAsUser);
+
+    /**
      *  Prepares set of entities the extension has implemented to validate the extension job.
      * @param jobName job name of the extension job.
      * @return
