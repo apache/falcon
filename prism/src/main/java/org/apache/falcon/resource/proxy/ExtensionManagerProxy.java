@@ -23,6 +23,7 @@ import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.v0.Entity;
@@ -36,6 +37,7 @@ import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
@@ -273,29 +275,67 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult delete(@PathParam("job-name") String jobName,
+                            @Context HttpServletRequest request,
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                // return failure if the extension job doesn't exist
-                return new APIResult(APIResult.Status.SUCCEEDED,
-                        "Extension job " + jobName + " doesn't exist. Nothing to delete.");
-            }
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobDetails = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobDetails == null) {
+            // return failure if the extension job doesn't exist
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    "Extension job " + jobName + " doesn't exist. Nothing to delete.");
+        }
 
-            for (Entity entity : entities) {
-                // TODO(yzheng): need to remember the entity dependency graph for clean ordered removal
-                canRemove(entity);
-                if (entity.getEntityType().isSchedulable() && !DeploymentUtil.isPrism()) {
-                    getWorkflowEngine(entity).delete(entity);
-                }
-                configStore.remove(entity.getEntityType(), entity.getName());
-            }
-        } catch (FalconException | IOException e) {
+        SortedMap<EntityType, List<Entity>> entityMap;
+        try {
+                entityMap = getJobEntities(jobName, extensionJobDetails, doAsUser);
+                deleteEntities(entityMap, request);
+        } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error when deleting extension job: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
+        metaStore.deleteExtensionJob(jobName);
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " deleted successfully");
+    }
+
+    private SortedMap<EntityType,List<Entity>> getJobEntities(String jobName, ExtensionJobsBean extensionJobsBean,
+                                                              String doAsUser) throws FalconException, IOException {
+        TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+
+        ExtensionType extensionType =  metaStore.getDetail(extensionJobsBean.getExtensionName()).getExtensionType();
+        if (ExtensionType.TRUSTED.equals(extensionType)) {
+            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
+            List<Entity> processes = new ArrayList<>();
+            List<Entity> feeds = new ArrayList<>();
+            for (Entity entity : entities){
+                if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                    processes.add(entity);
+                } else if (EntityType.FEED.equals(entity.getEntityType())) {
+                    feeds.add(entity);
+                }
+            }
+            entityMap.put(EntityType.PROCESS, processes);
+            entityMap.put(EntityType.FEED, feeds);
+        } else {
+            List<String> processes = extensionJobsBean.getProcesses();
+            List<String> feeds = extensionJobsBean.getFeeds();
+            entityMap.put(EntityType.PROCESS, getEntities(processes, EntityType.PROCESS));
+            entityMap.put(EntityType.FEED, getEntities(feeds, EntityType.FEED));
+        }
+        return entityMap;
+    }
+
+    private List<Entity> getEntities(List<String> entityNames, EntityType entityType) throws FalconException {
+        List<Entity> entities = new ArrayList<>();
+        for (String entityName : entityNames) {
+            try {
+                entities.add(EntityUtil.getEntity(entityType, entityName));
+            } catch (EntityNotRegisteredException e) {
+                LOG.error("Entity {}  not found during deletion nothing to do", entityName);
+            }
+        }
+        return entities;
     }
 
     @POST
@@ -425,6 +465,28 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             return (BufferedRequest) request;
         }
         return new BufferedRequest(request);
+    }
+
+
+    private void deleteEntities(SortedMap<EntityType, List<Entity>> entityMap, HttpServletRequest request)
+        throws IOException, JAXBException {
+        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
+            for (final Entity entity : entry.getValue()) {
+                final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
+                final String entityType = entity.getEntityType().toString();
+                final String entityName = entity.getName();
+                new EntityProxy(entityType, entityName) {
+                    @Override
+                    protected APIResult doExecute(String colo) throws FalconException {
+                        return getConfigSyncChannel(colo).invoke("delete", bufferedRequest,
+                                entityType, entityName, colo);
+                    }
+                }.execute();
+                if (!embeddedMode) {
+                    super.delete(bufferedRequest, entityType, entityName, currentColo);
+                }
+            }
+        }
     }
 
     protected void submitEntities(String extensionName, String jobName,
