@@ -683,7 +683,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         // add tags on extension name and job
         String jobName = properties.getProperty(ExtensionProperties.JOB_NAME.getName());
         EntityUtil.applyTags(extensionName, jobName, entities);
-
         return entities;
     }
 
