@@ -490,20 +490,60 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
             for (final Entity entity : entry.getValue()) {
-                final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
-                final Set<String> colos = getApplicableColos(entity.getEntityType().toString(), entity);
-                new EntityProxy(entity.getEntityType().toString(), entity.getName()) {
-                    @Override
-                    protected Set<String> getColosToApply() {
-                        return colos;
-                    }
+                final String entityType = entity.getEntityType().toString();
+                final String entityName = entity.getName();
+                final Set<String> oldColos = getApplicableColos(entityType, entityName);
+                final Set<String> newColos = getApplicableColos(entityType, entity);
+                final Set<String> mergedColos = new HashSet<String>();
+                mergedColos.addAll(oldColos);
+                mergedColos.retainAll(newColos);    //Common colos where update should be called
+                newColos.removeAll(oldColos);   //New colos where submit should be called
+                oldColos.removeAll(mergedColos);   //Old colos where delete should be called
 
-                    @Override
-                    protected APIResult doExecute(String colo) throws FalconException {
-                        return getConfigSyncChannel(colo).invoke("update", bufferedRequest,
-                                entity.getEntityType().toString(), entity.getName(), colo, Boolean.FALSE);
-                    }
-                }.execute();
+                final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
+                final Set<String> colos = getApplicableColos(entityType, entity);
+
+                if (!oldColos.isEmpty()) {
+                    new EntityProxy(entityType, entityName) {
+                        @Override
+                        protected Set<String> getColosToApply() {
+                            return oldColos;
+                        }
+
+                        @Override
+                        protected APIResult doExecute(String colo) throws FalconException {
+                            return getConfigSyncChannel(colo).invoke("delete", bufferedRequest,
+                                    entityType, entityName, colo);
+                        }
+                    }.execute();
+                }
+                if (!mergedColos.isEmpty()) {
+                    new EntityProxy(entityType, entityName) {
+                        @Override
+                        protected Set<String> getColosToApply() {
+                            return colos;
+                        }
+
+                        @Override
+                        protected APIResult doExecute(String colo) throws FalconException {
+                            return getConfigSyncChannel(colo).invoke("update", bufferedRequest,
+                                    entityType, entityName, colo, Boolean.FALSE);
+                        }
+                    }.execute();
+                }
+                if (!newColos.isEmpty()) {
+                    new EntityProxy(entityType, entityName) {
+                        @Override
+                        protected Set<String> getColosToApply() {
+                            return newColos;
+                        }
+
+                        @Override
+                        protected APIResult doExecute(String colo) throws FalconException {
+                            return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, entityType, colo);
+                        }
+                    }.execute();
+                }
                 if (!embeddedMode) {
                     super.update(bufferedRequest, entity.getEntityType().toString(), entity.getName(), currentColo,
                             Boolean.FALSE);
