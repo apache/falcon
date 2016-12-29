@@ -18,17 +18,21 @@
 
 package org.apache.falcon.unit;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
 import org.apache.falcon.security.CurrentUser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 /**
  * A proxy implementation of the extension operations in local mode.
@@ -37,29 +41,61 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     public LocalExtensionManager() {}
 
     public APIResult submitExtensionJob(String extensionName, String jobName, InputStream config,
-                                        Map<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
-        submitEntities(extensionName, null, jobName, entityMap, config);
-        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
-    }
-
-    public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream config,
-                                                      Map<EntityType, List<Entity>> entityMap)
+                                        SortedMap<EntityType, List<Entity>> entityMap)
         throws FalconException, IOException {
-        submitEntities(extensionName, null, jobName, entityMap, config);
-        scheduleEntities(entityMap);
+
+        for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
+            for(Entity entity : entry.getValue()){
+                submitInternal(entity, "falconUser");
+            }
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
+    }
+
+    public APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream configStream,
+                                                      SortedMap<EntityType, List<Entity>> entityMap)
+        throws FalconException, IOException {
+        List<String> feedNames = new ArrayList<>();
+        List<String> processNames = new ArrayList<>();
+        for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
+            for(Entity entity : entry.getValue()){
+                submitInternal(entity, "falconUser");
+            }
+        }
+
+        for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
+            for(Entity entity : entry.getValue()){
+                scheduleInternal(entry.getKey().name(), entity.getName(), null, null);
+            }
+        }
+        byte[] configBytes = null;
+        if (configStream != null) {
+            configBytes = IOUtils.toByteArray(configStream);
+        }
+        for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
+            for(final Entity entity : entry.getValue()){
+                if (entity.getEntityType().equals(EntityType.FEED)){
+                    feedNames.add(entity.getName());
+                }else{
+                    processNames.add(entity.getName());
+                }
+            }
+        }
+        ExtensionStore.getMetaStore().storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
+
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
 
-    public String registerExtensionMetadata(String extensionName, String packagePath , String description) {
+    public APIResult registerExtensionMetadata(String extensionName, String packagePath , String description) {
         return super.registerExtensionMetadata(extensionName, packagePath, description, CurrentUser.getUser());
     }
 
-    public String unRegisterExtension(String extensionName) {
+    public APIResult unRegisterExtension(String extensionName) {
         return super.deleteExtensionMetadata(extensionName);
     }
 
-    public String getExtensionJobDetails(String jobName){
+    public APIResult getExtensionJobDetails(String jobName){
         return super.getExtensionJobDetail(jobName);
     }
 
@@ -69,5 +105,13 @@ public class LocalExtensionManager extends AbstractExtensionManager {
 
     public APIResult enableExtension(String extensionName) {
         return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName, CurrentUser.getUser()));
+    }
+
+    public APIResult getExtensionDetails(String extensionName){
+        return super.getExtensionJobDetail(extensionName);
+    }
+
+    public APIResult getExtensions(){
+        return super.getExtensions();
     }
 }
