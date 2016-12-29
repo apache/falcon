@@ -30,10 +30,10 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionProperties;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.ExtensionType;
-import org.apache.falcon.extensions.ExtensionStatus;
+import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
@@ -197,6 +197,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public APIResult schedule(@PathParam("job-name") String jobName,
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
+        checkIfExtensionIsEnabled(ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName());
         try {
             List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
             if (entities.isEmpty()) {
@@ -758,3 +759,5 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 }
+
+
