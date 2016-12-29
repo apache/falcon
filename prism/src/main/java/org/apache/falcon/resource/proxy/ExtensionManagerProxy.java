@@ -37,6 +37,7 @@ import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
@@ -315,8 +316,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
+        checkIfExtensionJobExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
-
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             submitEntities(extensionName, jobName, entityMap, config, request);
@@ -387,6 +388,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
+        checkIfExtensionJobExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
@@ -441,6 +443,13 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        byte[] configBytes = null;
+        if (configStream != null) {
+            configBytes = IOUtils.toByteArray(configStream);
+        }
+        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
+
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
             for(final Entity entity : entry.getValue()){
                 final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
@@ -465,15 +474,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                 }else{
                     processNames.add(entity.getName());
                 }
+                metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
             }
         }
-
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        byte[] configBytes = null;
-        if (configStream != null) {
-            configBytes = IOUtils.toByteArray(configStream);
-        }
-        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
     }
 
     private void initializeFor(String colo) throws FalconException {
@@ -745,6 +748,15 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         if (metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED.toString())) {
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static void checkIfExtensionJobExists(String jobName, String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
+            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
