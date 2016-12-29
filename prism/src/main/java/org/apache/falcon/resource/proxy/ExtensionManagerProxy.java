@@ -759,5 +759,3 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 }
-
-
