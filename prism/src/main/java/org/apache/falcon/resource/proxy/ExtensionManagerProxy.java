@@ -25,12 +25,15 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
-import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.extensions.*;
+import org.apache.falcon.extensions.Extension;
+import org.apache.falcon.extensions.ExtensionStatus;
+import org.apache.falcon.extensions.ExtensionService;
+import org.apache.falcon.extensions.ExtensionType;
+import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
@@ -740,7 +743,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private static void checkIfExtensionIsEnabled(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        if(metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED.toString())){
+        if (metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED.toString())) {
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
