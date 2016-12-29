@@ -56,14 +56,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.TreeMap;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Properties;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.TimeZone;
+import java.util.SortedMap;
 
 /**
  * Client for Falcon Unit.
@@ -271,12 +272,12 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public String registerExtension(String extensionName, String packagePath, String description) {
+    public APIResult registerExtension(String extensionName, String packagePath, String description) {
         return localExtensionManager.registerExtensionMetadata(extensionName, packagePath, description);
     }
 
     @Override
-    public String unregisterExtension(String extensionName) {
+    public APIResult unregisterExtension(String extensionName) {
         return localExtensionManager.unRegisterExtension(extensionName);
     }
 
@@ -295,14 +296,14 @@ public class FalconUnitClient extends AbstractFalconClient {
 
         InputStream configStream = getServletInputStream(configPath);
         try {
-            Map<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
+            SortedMap<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
             return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entityMap);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
         }
     }
 
-    private Map<EntityType, List<Entity>> getEntityTypeListMap(String extensionName, String jobName, InputStream configStream) {
+    private SortedMap<EntityType, List<Entity>> getEntityTypeListMap(String extensionName, String jobName, InputStream configStream) {
         List<Entity> entities = getEntities(extensionName, jobName, configStream);
         List<Entity> feeds = new ArrayList<>();
         List<Entity> processes = new ArrayList<>();
@@ -313,7 +314,7 @@ public class FalconUnitClient extends AbstractFalconClient {
                 processes.add(entity);
             }
         }
-        Map<EntityType, List<Entity>> entityMap = new HashMap<>();
+        SortedMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         entityMap.put(EntityType.PROCESS, processes);
         entityMap.put(EntityType.FEED, feeds);
         return entityMap;
@@ -336,7 +337,7 @@ public class FalconUnitClient extends AbstractFalconClient {
                                                    String doAsUser) {
         InputStream configStream = getServletInputStream(configPath);
         try {
-            Map<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
+            SortedMap<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
             return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
                     entityMap);
         } catch (FalconException | IOException e) {
@@ -345,8 +346,18 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public String getExtensionJobDetails(final String jobName) {
+    public APIResult getExtensionJobDetails(final String jobName) {
         return localExtensionManager.getExtensionJobDetails(jobName);
+    }
+
+    @Override
+    public APIResult getExtensionDetail(String extensionName) {
+        return localExtensionManager.getExtensionDetails(extensionName);
+    }
+
+    @Override
+    public APIResult enumerateExtensions() {
+        return localExtensionManager.getExtensions();
     }
 
     @Override

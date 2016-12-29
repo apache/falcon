@@ -54,7 +54,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -852,60 +851,5 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private abstract class EntityProxy<T extends APIResult> {
-        private final Class<T> clazz;
-        private String type;
-        private String name;
 
-        public EntityProxy(String type, String name, Class<T> resultClazz) {
-            this.clazz = resultClazz;
-            this.type = type;
-            this.name = name;
-        }
-
-
-        private T getResultInstance(APIResult.Status status, String message) {
-            try {
-                Constructor<T> constructor = clazz.getConstructor(APIResult.Status.class, String.class);
-                return constructor.newInstance(status, message);
-            } catch (Exception e) {
-                throw new FalconRuntimException("Unable to consolidate result.", e);
-            }
-        }
-
-        public EntityProxy(String type, String name) {
-            this(type, name, (Class<T>) APIResult.class);
-        }
-
-        public T execute() {
-            Set<String> colos = getColosToApply();
-
-            Map<String, T> results = new HashMap();
-
-            for (String colo : colos) {
-                try {
-                    results.put(colo, doExecute(colo));
-                } catch (FalconWebException e) {
-                    String message = ((APIResult) e.getResponse().getEntity()).getMessage();
-                    results.put(colo, getResultInstance(APIResult.Status.FAILED, message));
-                } catch (Throwable throwable) {
-                    results.put(colo, getResultInstance(APIResult.Status.FAILED, throwable.getClass().getName() + "::"
-                        + throwable.getMessage()));
-                }
-            }
-
-            T finalResult = consolidateResult(results, clazz);
-            if (finalResult.getStatus() == APIResult.Status.FAILED) {
-                throw FalconWebException.newAPIException(finalResult.getMessage());
-            } else {
-                return finalResult;
-            }
-        }
-
-        protected Set<String> getColosToApply() {
-            return getApplicableColos(type, name);
-        }
-
-        protected abstract T doExecute(String colo) throws FalconException;
-    }
 }
