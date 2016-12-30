@@ -70,7 +70,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String WORKFLOW = "workflow.xml";
     private static final String SLEEP_WORKFLOW = "sleepWorkflow.xml";
     private static final String EXTENSION_PATH = "/projects/falcon/extension/testExtension";
-    public static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
+    private static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
+    private static final String EXTENSION_PROPERTIES = "extension.properties";
     private FileSystem fileSystem;
 
     private static final String STORAGE_URL = "jail://global:00";
@@ -445,6 +446,20 @@ public class TestFalconUnit extends FalconUnitTestBase {
         result = getExtensionJobDetails("testJob");
         JSONObject resultJson = new JSONObject(result);
         Assert.assertEquals(resultJson.get("extensionName"), "testExtension");
+        Process process = (Process)getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
+        Assert.assertEquals(process.getPipelines(), "testPipeline");
+
+        apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
+        assertStatus(apiResult);
+        Assert.assertEquals(apiResult.getMessage(), "RUNNING");
+
+        apiResult = updateExtensionJob("testJob", getAbsolutePath(EXTENSION_PROPERTIES), null);
+        assertStatus(apiResult);
+
+        String processes = new JSONObject(getExtensionJobDetails("testJob")).get("processes").toString();
+        Assert.assertEquals(processes, "sample");
+        process = (Process)getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
+        Assert.assertEquals(process.getPipelines(), "testSample");
 
         apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
         assertStatus(apiResult);

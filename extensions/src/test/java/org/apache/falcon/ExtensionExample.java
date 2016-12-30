@@ -21,28 +21,43 @@ package org.apache.falcon;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Schema;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.ExtensionBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Extension Example for testing extension loading and preparing entities.
  */
 public class ExtensionExample implements ExtensionBuilder{
 
+    public static final Logger LOG = LoggerFactory.getLogger(ExtensionExample.class);
     public static final String PROCESS_XML = "/extension-example.xml";
 
     @Override
     public List<Entity> getEntities(String extensionName, InputStream extensionConfigStream) throws FalconException {
-        Entity process;
+        Process process;
         try {
-            process = (Entity) EntityType.PROCESS.getUnmarshaller().unmarshal(
+            process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
                     getClass().getResourceAsStream(PROCESS_XML));
         } catch (JAXBException e) {
             throw new FalconException("Failed in un-marshalling the entity");
+        }
+        if (extensionConfigStream != null) {
+            Properties properties = new Properties();
+            try {
+                properties.load(extensionConfigStream);
+            } catch (IOException e) {
+                LOG.warn("Not able to load the configStream");
+            }
+            process.setPipelines(properties.getProperty("pipelines.name"));
         }
         List<Entity> entities = new ArrayList<>();
         entities.add(process);
@@ -52,7 +67,6 @@ public class ExtensionExample implements ExtensionBuilder{
     @Override
     public void validateExtensionConfig(String extensionName, InputStream extensionConfigStream)
         throws FalconException {
-
     }
 
     @Override

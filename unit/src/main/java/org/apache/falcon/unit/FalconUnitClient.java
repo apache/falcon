@@ -293,7 +293,8 @@ public class FalconUnitClient extends AbstractFalconClient {
         }
     }
 
-    private SortedMap<EntityType, List<Entity>> getEntityTypeListMap(String extensionName, String jobName, InputStream configStream) {
+    private SortedMap<EntityType, List<Entity>> getEntityTypeListMap(String extensionName, String jobName,
+                                                                     InputStream configStream) {
         List<Entity> entities = getEntities(extensionName, jobName, configStream);
         List<Entity> feeds = new ArrayList<>();
         List<Entity> processes = new ArrayList<>();
@@ -332,6 +333,18 @@ public class FalconUnitClient extends AbstractFalconClient {
                     entityMap);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed in submitting extension job " + jobName);
+        }
+    }
+
+    public APIResult updateExtensionJob(String jobName, String configPath, String doAsUser) {
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            String extensionName = ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName();
+            SortedMap<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
+            return localExtensionManager.updateExtensionJob(extensionName, jobName, configStream,
+                    entityMap);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in updating the extension job " + jobName);
         }
     }
 

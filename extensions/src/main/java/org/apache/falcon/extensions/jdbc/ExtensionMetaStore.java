@@ -172,6 +172,23 @@ public class ExtensionMetaStore {
         }
     }
 
+    public void updateExtensionJob(String jobName, String extensionName, List<String> feedNames,
+                                   List<String> processNames, byte[] configBytes) {
+        EntityManager entityManager = getEntityManager();
+        ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
+        extensionJobsBean.setJobName(jobName);
+        extensionJobsBean.setExtensionName(extensionName);
+        extensionJobsBean.setFeeds(feedNames);
+        extensionJobsBean.setProcesses(processNames);
+        extensionJobsBean.setConfig(configBytes);
+        try {
+            beginTransaction(entityManager);
+            entityManager.merge(extensionJobsBean);
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
     public ExtensionJobsBean getExtensionJobDetails(String jobName) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);

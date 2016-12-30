@@ -241,6 +241,11 @@ public class FalconUnitTestBase {
         return falconUnitClient.submitAndScheduleExtensionJob(extensionName, jobName, configPath, doAsUser);
     }
 
+    APIResult updateExtensionJob(String jobName, String configPath, String doAsUser) {
+        return falconUnitClient.updateExtensionJob(jobName, configPath, doAsUser);
+    }
+
+
     public static String overlayParametersOverTemplate(String template,
                                                        Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();
