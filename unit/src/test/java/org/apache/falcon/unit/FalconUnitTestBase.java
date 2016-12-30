@@ -249,7 +249,6 @@ public class FalconUnitTestBase {
         return falconUnitClient.deleteExtensionJob(jobName, doAsUser);
     }
 
-
     public static String overlayParametersOverTemplate(String template,
                                                        Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();

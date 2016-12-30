@@ -420,7 +420,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return new BufferedRequest(request);
     }
 
-
     private void deleteEntities(SortedMap<EntityType, List<Entity>> entityMap, HttpServletRequest request)
         throws IOException, JAXBException {
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
