@@ -42,7 +42,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     public static final Logger LOG = LoggerFactory.getLogger(AbstractExtensionManager.class);
 
     private static final String JOB_NAME = "jobName";
-    public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
+    protected static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
     private static final String EXTENSION_NAME = "extensionName";
     private static final String FEEDS = "feeds";
     private static final String PROCESSES = "processes";
@@ -50,19 +50,19 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String CREATION_TIME  = "creationTime";
     private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
 
-    private static final String NAME = "name";
-    private static final String EXTENSION_TYPE = "type";
-    private static final String EXTENSION_DESC = "description";
-    private static final String EXTENSION_LOCATION = "location";
+    public static final String NAME = "name";
+    protected static final String EXTENSION_TYPE = "type";
+    protected static final String EXTENSION_DESC = "description";
+    protected static final String EXTENSION_LOCATION = "location";
 
-    public static void validateExtensionName(final String extensionName) {
+    protected static void validateExtensionName(final String extensionName) {
         if (StringUtils.isBlank(extensionName)) {
             throw FalconWebException.newAPIException("Extension name is mandatory and shouldn't be blank",
                     Response.Status.BAD_REQUEST);
         }
     }
 
-    public APIResult registerExtensionMetadata(String extensionName, String path, String description, String owner) {
+    protected APIResult registerExtensionMetadata(String extensionName, String path, String description, String owner) {
         validateExtensionName(extensionName);
         try {
             return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().registerExtension(extensionName, path,
@@ -80,7 +80,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public APIResult getExtensionDetail(String extensionName) {
+    protected APIResult getExtensionDetail(String extensionName) {
         try {
             return new APIResult(APIResult.Status.SUCCEEDED, buildExtensionDetailResult(extensionName).toString());
         } catch (FalconException e) {
@@ -112,6 +112,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         if (jobsBean == null) {
             throw new ValidationException("Job name not found:" + jobName);
         }
+        ExtensionBean extensionBean = metaStore.getDetail(jobsBean.getExtensionName());
         JSONObject detailsObject = new JSONObject();
         try {
             detailsObject.put(JOB_NAME, jobsBean.getJobName());
@@ -121,6 +122,8 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             detailsObject.put(CONFIG, jobsBean.getConfig());
             detailsObject.put(CREATION_TIME, jobsBean.getCreationTime());
             detailsObject.put(LAST_UPDATE_TIME, jobsBean.getLastUpdatedTime());
+            detailsObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
+            detailsObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
         } catch (JSONException e) {
             LOG.error("Exception while building extension jon details for job {}", jobName, e);
         }
