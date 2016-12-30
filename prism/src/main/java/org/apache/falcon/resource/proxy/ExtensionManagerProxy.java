@@ -96,8 +96,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private boolean embeddedMode = DeploymentUtil.isEmbeddedMode();
     private String currentColo = DeploymentUtil.getCurrentColo();
-    private final Map<String, Channel> configSyncChannels = new HashMap<>();
-    private final Map<String, Channel> entityManagerChannels = new HashMap<>();
     private EntityProxyUtil entityProxyUtil = new EntityProxyUtil();
 
 
@@ -370,13 +368,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return extensionJobDetails.getExtensionName();
     }
 
-    private Channel getEntityManager(String colo) throws FalconException {
-        if (!entityManagerChannels.containsKey(colo)) {
-            initializeFor(colo);
-        }
-        return entityManagerChannels.get(colo);
-    }
-
     @POST
     @Path("submitAndSchedule/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA})
@@ -418,7 +409,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
                     @Override
                     protected APIResult doExecute(String colo) throws FalconException {
-                        return getEntityManager(colo).invoke("schedule", bufferedRequest, entity.getEntityType().toString(),
+                        return new EntityProxyUtil().getEntityManager(colo).invoke("schedule", bufferedRequest,
+                                entity.getEntityType().toString(),
                                 entity.getName(), colo, Boolean.FALSE, "");
                     }
                 }.execute();
@@ -501,11 +493,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             configBytes = IOUtils.toByteArray(configStream);
         }
         metaStore.updateExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
-    }
-
-    private void initializeFor(String colo) throws FalconException {
-        entityManagerChannels.put(colo, ChannelFactory.get("SchedulableEntityManager", colo));
-        configSyncChannels.put(colo, ChannelFactory.get("ConfigSyncService", colo));
     }
 
     private HttpServletRequest getEntityStream(Entity entity, EntityType type, HttpServletRequest request)
