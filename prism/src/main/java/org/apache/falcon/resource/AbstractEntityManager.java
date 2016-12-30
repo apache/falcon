@@ -116,7 +116,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    protected Set<String> getAllColos() {
+    public static Set<String> getAllColos() {
         if (DeploymentUtil.isEmbeddedMode()) {
             return DeploymentUtil.getDefaultColos();
         }
@@ -141,7 +141,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         return colos;
     }
 
-    protected Set<String> getApplicableColos(String type, String name) {
+    public static Set<String> getApplicableColos(String type, String name) {
         try {
             if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();
@@ -157,7 +157,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    protected Set<String> getApplicableColos(String type, Entity entity) {
+    public static Set<String> getApplicableColos(String type, Entity entity) {
         try {
             if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();

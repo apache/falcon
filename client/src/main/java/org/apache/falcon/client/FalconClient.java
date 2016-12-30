@@ -340,7 +340,7 @@ public class FalconClient extends AbstractFalconClient {
      */
     protected static enum ExtensionOperations {
 
-        ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.TEXT_XML),
         DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
         DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.APPLICATION_JSON),
         LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -353,10 +353,10 @@ public class FalconClient extends AbstractFalconClient {
         SUSPEND("api/extension/suspend", HttpMethod.POST, MediaType.TEXT_XML),
         RESUME("api/extension/resume", HttpMethod.POST, MediaType.TEXT_XML),
         DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML),
-        UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_PLAIN),
+        UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_XML),
         DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_PLAIN);
+        REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_XML);
 
         private String path;
         private String method;
@@ -1101,12 +1101,10 @@ public class FalconClient extends AbstractFalconClient {
     private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
                                                          InputStream configStream) {
         JSONObject extensionDetailJson;
-        if (StringUtils.isNotBlank(extensionName)) {
-            extensionDetailJson = getExtensionDetailJson(extensionName);
-        } else {
-            extensionDetailJson = getExtensionJobDetailJson(jobName);
+        if (StringUtils.isBlank(extensionName)) {
+            extensionName = ExtensionHandler.getExtensionName(jobName, getExtensionJobDetailJson(jobName));
         }
-
+        extensionDetailJson = getExtensionDetailJson(extensionName);
         String extensionType = ExtensionHandler.getExtensionType(extensionName, extensionDetailJson);
         String extensionBuildLocation = ExtensionHandler.getExtensionLocation(extensionName, extensionDetailJson);
         return getEntities(extensionName, jobName, configStream, extensionType,
@@ -1117,7 +1115,7 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
         JSONObject extensionDetailJson;
         try {
-            extensionDetailJson = new JSONObject(clientResponse.getEntity(APIResult.class).getMessage());
+            extensionDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
             throw new FalconCLIException("Failed to get details for the given extension", e);
         }
@@ -1127,7 +1125,7 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse clientResponse = getExtensionJobDetailsResponse(jobName);
         JSONObject extensionJobDetailJson;
         try {
-            extensionJobDetailJson = new JSONObject(clientResponse.getEntity(APIResult.class).getMessage());
+            extensionJobDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
             throw new FalconCLIException("Failed to get details for the given extension", e);
         }

@@ -96,8 +96,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private boolean embeddedMode = DeploymentUtil.isEmbeddedMode();
     private String currentColo = DeploymentUtil.getCurrentColo();
-    private final Map<String, Channel> configSyncChannels = new HashMap<String, Channel>();
-    private final Map<String, Channel> entityManagerChannels = new HashMap<String, Channel>();
+    private final Map<String, Channel> configSyncChannels = new HashMap<>();
+    private final Map<String, Channel> entityManagerChannels = new HashMap<>();
+    private EntityProxyUtil entityProxyUtil = new EntityProxyUtil();
 
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
@@ -357,7 +358,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 
-
     private ExtensionType getExtensionType(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
@@ -447,18 +447,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             for (final Entity entity : entry.getValue()) {
                 final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
                 final Set<String> colos = getApplicableColos(entity.getEntityType().toString(), entity);
-                new EntityProxy(entity.getEntityType().toString(), entity.getName()) {
-                    @Override
-                    protected Set<String> getColosToApply() {
-                        return colos;
-                    }
-
-                    @Override
-                    protected APIResult doExecute(String colo) throws FalconException {
-                        return getConfigSyncChannel(colo).invoke("submit", bufferedRequest,
-                                entity.getEntityType().toString(), colo);
-                    }
-                }.execute();
+                entityProxyUtil.proxySubmit(entity.getEntityType().toString(), bufferedRequest, entity, colos);
                 if (!embeddedMode) {
                     super.submit(bufferedRequest, entity.getEntityType().toString(), currentColo);
                 }
@@ -492,58 +481,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             for (final Entity entity : entry.getValue()) {
                 final String entityType = entity.getEntityType().toString();
                 final String entityName = entity.getName();
-                final Set<String> oldColos = getApplicableColos(entityType, entityName);
-                final Set<String> newColos = getApplicableColos(entityType, entity);
-                final Set<String> mergedColos = new HashSet<String>();
-                mergedColos.addAll(oldColos);
-                mergedColos.retainAll(newColos);    //Common colos where update should be called
-                newColos.removeAll(oldColos);   //New colos where submit should be called
-                oldColos.removeAll(mergedColos);   //Old colos where delete should be called
-
                 final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
-                final Set<String> colos = getApplicableColos(entityType, entity);
-
-                if (!oldColos.isEmpty()) {
-                    new EntityProxy(entityType, entityName) {
-                        @Override
-                        protected Set<String> getColosToApply() {
-                            return oldColos;
-                        }
-
-                        @Override
-                        protected APIResult doExecute(String colo) throws FalconException {
-                            return getConfigSyncChannel(colo).invoke("delete", bufferedRequest,
-                                    entityType, entityName, colo);
-                        }
-                    }.execute();
-                }
-                if (!mergedColos.isEmpty()) {
-                    new EntityProxy(entityType, entityName) {
-                        @Override
-                        protected Set<String> getColosToApply() {
-                            return colos;
-                        }
-
-                        @Override
-                        protected APIResult doExecute(String colo) throws FalconException {
-                            return getConfigSyncChannel(colo).invoke("update", bufferedRequest,
-                                    entityType, entityName, colo, Boolean.FALSE);
-                        }
-                    }.execute();
-                }
-                if (!newColos.isEmpty()) {
-                    new EntityProxy(entityType, entityName) {
-                        @Override
-                        protected Set<String> getColosToApply() {
-                            return newColos;
-                        }
-
-                        @Override
-                        protected APIResult doExecute(String colo) throws FalconException {
-                            return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, entityType, colo);
-                        }
-                    }.execute();
-                }
+                entityProxyUtil.proxyUpdate(entityType, entityName, Boolean.FALSE, bufferedRequest, entity);
                 if (!embeddedMode) {
                     super.update(bufferedRequest, entity.getEntityType().toString(), entity.getName(), currentColo,
                             Boolean.FALSE);
@@ -567,13 +506,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private void initializeFor(String colo) throws FalconException {
         entityManagerChannels.put(colo, ChannelFactory.get("SchedulableEntityManager", colo));
         configSyncChannels.put(colo, ChannelFactory.get("ConfigSyncService", colo));
-    }
-
-    private Channel getConfigSyncChannel(String colo) throws FalconException {
-        if (!configSyncChannels.containsKey(colo)) {
-            initializeFor(colo);
-        }
-        return configSyncChannels.get(colo);
     }
 
     private HttpServletRequest getEntityStream(Entity entity, EntityType type, HttpServletRequest request)
@@ -678,7 +610,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     // Extension store related REST API's
     @GET
     @Path("enumerate")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult getExtensions() {
         checkIfExtensionServiceIsEnabled();
         try {
@@ -730,7 +662,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @POST
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
@@ -744,7 +676,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @POST
     @Path("register/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult registerExtensionMetadata(
             @PathParam("extension-name") String extensionName,
             @QueryParam("path") String path,
@@ -781,7 +713,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         // add tags on extension name and job
         String jobName = properties.getProperty(ExtensionProperties.JOB_NAME.getName());
         EntityUtil.applyTags(extensionName, jobName, entities);
-
         return entities;
     }
 
