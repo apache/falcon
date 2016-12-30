@@ -43,8 +43,6 @@ import org.apache.falcon.resource.AbstractExtensionManager;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
-import org.apache.falcon.resource.channel.Channel;
-import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
