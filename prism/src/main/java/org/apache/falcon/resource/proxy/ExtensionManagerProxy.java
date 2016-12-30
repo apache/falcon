@@ -744,7 +744,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private static void checkIfExtensionIsEnabled(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        if (metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED.toString())) {
+        if (metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
