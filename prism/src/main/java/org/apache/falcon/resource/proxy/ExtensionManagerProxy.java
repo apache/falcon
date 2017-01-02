@@ -190,20 +190,23 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult schedule(@PathParam("job-name") String jobName,
+                              @Context HttpServletRequest request,
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                // return failure if the extension job doesn't exist
-                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
-            }
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean == null) {
+            // return failure if the extension job doesn't exist
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    "Extension job " + jobName + " doesn't exist. Nothing to delete.");
+        }
 
-            for (Entity entity : entities) {
-                scheduleInternal(entity.getEntityType().name(), entity.getName(), null, null);
-            }
-        } catch (FalconException | IOException e) {
-            LOG.error("Error when scheduling extension job: " + jobName + ": ", e);
+        SortedMap<EntityType, List<Entity>> entityMap;
+        try {
+            entityMap = getJobEntities(extensionJobsBean);
+            scheduleEntities(entityMap, request);
+        } catch (FalconException | IOException | JAXBException e) {
+            LOG.error("Error when deleting extension job: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " scheduled successfully");
