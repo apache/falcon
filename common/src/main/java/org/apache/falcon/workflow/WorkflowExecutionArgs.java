@@ -71,7 +71,6 @@ public enum WorkflowExecutionArgs {
     OUTPUT_FEED_NAMES("feedNames", "name of the feeds which are generated/replicated/deleted"),
     OUTPUT_FEED_PATHS("feedInstancePaths", "comma separated feed instance paths"),
     OUTPUT_NAMES("feedInstanceNames", "comma separated list of names of outputs", false),
-    OUTPUT_STORAGE_TYPES("falconInputFeedStorageTypes", "output storage types", false),
 
     // broker related parameters
     TOPIC_NAME("topicName", "name of the topic to be used to send JMS message", false),
