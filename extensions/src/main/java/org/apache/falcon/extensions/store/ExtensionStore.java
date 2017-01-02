@@ -23,6 +23,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.extensions.AbstractExtension;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -376,6 +377,32 @@ public final class ExtensionStore {
 
     public boolean isExtensionStoreInitialized() {
         return (storePath != null);
+    }
+
+    public String updateExtensionStatus(final String extensionName, String currentUser, ExtensionStatus status) throws
+            FalconException {
+        validateStatusChange(extensionName, currentUser);
+        if (metaStore.getDetail(extensionName).getStatus().equals(status)) {
+            throw new ValidationException(extensionName + " is already in " + status.toString() + " state.");
+        } else {
+            metaStore.updateExtensionStatus(extensionName, status);
+            return "Status of extension: " + extensionName + "changed to " + status.toString() + " state.";
+        }
+    }
+
+    private void validateStatusChange(final String extensionName, String currentUser) throws FalconException {
+
+        ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extensionName) ? ExtensionType.TRUSTED
+                : ExtensionType.CUSTOM;
+        if (extensionType.equals(ExtensionType.TRUSTED)) {
+            throw new ValidationException(extensionName + " is trusted. Status can't be changed for trusted "
+                    + "extensions.");
+        } else if (!metaStore.checkIfExtensionExists(extensionName)) {
+            throw new FalconException("Extension:" + extensionName + " is not registered with Falcon.");
+        } else if (!metaStore.getDetail(extensionName).getExtensionOwner().equals(currentUser)) {
+            throw new FalconException("User: " + currentUser + " is not allowed to change status of extension: "
+                    + extensionName);
+        }
     }
 
 }

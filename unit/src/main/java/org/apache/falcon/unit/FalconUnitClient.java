@@ -282,6 +282,16 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
+    public APIResult enableExtension(String extensionName) {
+        return localExtensionManager.enableExtension(extensionName);
+    }
+
+    @Override
+    public APIResult disableExtension(String extensionName) {
+        return localExtensionManager.disableExtension(extensionName);
+    }
+
+    @Override
     public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
 
         InputStream configStream = getServletInputStream(configPath);

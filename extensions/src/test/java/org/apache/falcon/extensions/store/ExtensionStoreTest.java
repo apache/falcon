@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
 import org.apache.falcon.hadoop.JailedFileSystem;
@@ -155,6 +156,42 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         store = ExtensionStore.get();
         store.registerExtension("ACLFailure", STORAGE_URL + extensionPath, "test desc", "oozieUser");
         store.deleteExtension("ACLFailure", "falconUser");
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testStatusChangeExtensionACLFailure() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChangeACLFailure";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChangeACLFailure", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.updateExtensionStatus("testStatusChangeACLFailure", "oozieUser", ExtensionStatus.DISABLED);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testStatusChangeExtensionValidationFailure() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChangeValidationFailure";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChangeValidationFailure", STORAGE_URL + extensionPath, "test desc",
+                "falconUser");
+        store.updateExtensionStatus("testStatusChangeValidationFailure", "falconUser", ExtensionStatus.ENABLED);
+    }
+
+    @Test()
+    public void testStatusChangeExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChange";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChange", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.updateExtensionStatus("testStatusChange", "falconUser", ExtensionStatus.DISABLED);
+        ExtensionMetaStore metaStore = new ExtensionMetaStore();
+        Assert.assertEquals(metaStore.getDetail("testStatusChange").getStatus(), ExtensionStatus.DISABLED);
     }
 
     private void createMETA(String extensionPath) throws IOException {

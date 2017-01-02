@@ -140,6 +140,14 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         return super.getExtensionJobDetail(jobName);
     }
 
+    public APIResult disableExtension(String extensionName) {
+        return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName, CurrentUser.getUser()));
+    }
+
+    public APIResult enableExtension(String extensionName) {
+        return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName, CurrentUser.getUser()));
+    }
+
     public APIResult getExtensionDetails(String extensionName){
         return super.getExtensionDetail(extensionName);
     }
@@ -147,5 +155,4 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     public APIResult getExtensions(){
         return super.getExtensions();
     }
-
 }
