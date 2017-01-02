@@ -63,6 +63,7 @@ public abstract class ImportWorkflowBuilder extends OozieOrchestrationWorkflowBu
             props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
         }
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
                 String.format("${coord:dataOut('%s')}", FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME));
         props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), NONE);

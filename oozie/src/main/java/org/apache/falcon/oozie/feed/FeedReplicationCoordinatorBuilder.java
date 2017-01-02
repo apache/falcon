@@ -262,6 +262,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
 
         // falcon post processing
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), "${coord:dataOut('output')}");
     }
 

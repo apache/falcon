@@ -116,11 +116,14 @@ public final class BacklogMetricEmitterService implements FalconService,
         if (entity.getEntityType() != EntityType.PROCESS){
             return;
         }
-        backlogMetricStore.deleteEntityInstance(entity.getName());
-        entityBacklogs.remove(entity);
-        Process process = EntityUtil.getEntity(entity.getEntityType(), entity.getName());
-        for(Cluster cluster : process.getClusters().getClusters()){
-            dropMetric(cluster.getName(), process);
+        Process process = (Process) entity;
+        if (process.getSla() != null) {
+            backlogMetricStore.deleteEntityInstance(entity.getName());
+            entityBacklogs.remove(entity);
+            process = EntityUtil.getEntity(entity.getEntityType(), entity.getName());
+            for (Cluster cluster : process.getClusters().getClusters()) {
+                dropMetric(cluster.getName(), process);
+            }
         }
     }
 
@@ -146,12 +149,14 @@ public final class BacklogMetricEmitterService implements FalconService,
             return;
         }
         Process newProcess = (Process) newEntity;
+        Process oldProcess = EntityUtil.getEntity(oldEntity.getEntityType(), oldEntity.getName());
         if (newProcess.getSla() == null || newProcess.getSla().getShouldEndIn() == null){
-            backlogMetricStore.deleteEntityInstance(newProcess.getName());
-            entityBacklogs.remove(newProcess);
-            Process process = EntityUtil.getEntity(oldEntity.getEntityType(), oldEntity.getName());
-            for(Cluster cluster : process.getClusters().getClusters()){
-                dropMetric(cluster.getName(), process);
+            if (oldProcess.getSla() != null) {
+                backlogMetricStore.deleteEntityInstance(newProcess.getName());
+                entityBacklogs.remove(newProcess);
+                for (Cluster cluster : oldProcess.getClusters().getClusters()) {
+                    dropMetric(cluster.getName(), oldProcess);
+                }
             }
         } else {
             addToBacklog(newEntity);
