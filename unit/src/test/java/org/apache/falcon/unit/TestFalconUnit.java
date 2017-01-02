@@ -20,7 +20,6 @@ package org.apache.falcon.unit;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityNotRegisteredException;
-import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -473,11 +472,13 @@ public class TestFalconUnit extends FalconUnitTestBase {
         assertStatus(apiResult);
         try {
             getEntity(EntityType.PROCESS, "sample");
+            Assert.fail("Should have thrown a validation exception");
         } catch (EntityNotRegisteredException e) {
             //Do nothing. Exception Expected
         }
         try {
             getClient().getExtensionJobDetails(TEST_JOB);
+            Assert.fail("Should have thrown a FalconWebException");
         } catch (FalconWebException e) {
             Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Job name not found:testJob");
             //Do nothing. Exception Expected.
