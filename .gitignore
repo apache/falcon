@@ -37,8 +37,12 @@ activemq-data
 #log files
 logs
 *.log
+*.patch
 
 #Falcon UI NPM files
 falcon-ui/dist
 falcon-ui/node
 falcon-ui/node_modules
+
+#Resources jar
+unit/src/test/resources/falcon-extensions-*-tests.jar

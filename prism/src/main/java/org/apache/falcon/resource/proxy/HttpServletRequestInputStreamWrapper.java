@@ -15,28 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.falcon.resource.proxy;
 
-package org.apache.falcon.entity.store;
-
-import org.apache.falcon.FalconException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
- * Exception when there in issue accessing the persistent store.
+ * Wrapper class to wrap new ServletInputStream.
  */
-public class StoreAccessException extends FalconException {
 
-    /**
-     * @param e Exception
-     */
-    public StoreAccessException(String message, Exception e) {
-        super(message, e);
+public class HttpServletRequestInputStreamWrapper extends HttpServletRequestWrapper {
+
+    private ServletInputStream inputStream;
+
+
+    public HttpServletRequestInputStreamWrapper(HttpServletRequest request , ServletInputStream stream){
+        super(request);
+        this.inputStream = stream;
     }
 
-    public StoreAccessException(Exception e) {
-        super(e);
-    }
-
-    public StoreAccessException(String message){
-        super(message);
+    @Override
+    public ServletInputStream getInputStream(){
+        return inputStream;
     }
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.extensions.jdbc;
 
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.persistence.ExtensionJobsBean;
@@ -36,19 +37,22 @@ public class ExtensionMetaStore {
     private static final String EXTENSION_NAME = "extensionName";
     private static final String JOB_NAME = "jobName";
     private static final String EXTENSION_TYPE = "extensionType";
+    private static final String EXTENSION_STATUS = "extensionStatus";
 
     private EntityManager getEntityManager() {
         return FalconJPAService.get().getEntityManager();
     }
 
     public void storeExtensionBean(String extensionName, String location, ExtensionType extensionType,
-                                   String description){
+                                   String description, String extensionOwner) {
         ExtensionBean extensionBean = new ExtensionBean();
         extensionBean.setLocation(location);
         extensionBean.setExtensionName(extensionName);
         extensionBean.setExtensionType(extensionType);
         extensionBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionBean.setDescription(description);
+        extensionBean.setExtensionOwner(extensionOwner);
+        extensionBean.setStatus(ExtensionStatus.ENABLED);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
@@ -63,6 +67,23 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter(EXTENSION_NAME, extensionName);
+        int resultSize = 0;
+        try {
+            resultSize = q.getResultList().size();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (resultSize > 0){
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean checkIfExtensionJobExists(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        q.setParameter(JOB_NAME, jobName);
         int resultSize = 0;
         try {
             resultSize = q.getResultList().size();
@@ -154,6 +175,41 @@ public class ExtensionMetaStore {
         }
     }
 
+    public void updateExtensionJob(String jobName, String extensionName, List<String> feedNames,
+                                   List<String> processNames, byte[] configBytes) {
+        EntityManager entityManager = getEntityManager();
+        ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
+        extensionJobsBean.setJobName(jobName);
+        extensionJobsBean.setExtensionName(extensionName);
+        extensionJobsBean.setFeeds(feedNames);
+        extensionJobsBean.setProcesses(processNames);
+        extensionJobsBean.setConfig(configBytes);
+        try {
+            beginTransaction(entityManager);
+            entityManager.merge(extensionJobsBean);
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public ExtensionJobsBean getExtensionJobDetails(String jobName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION_JOB);
+        query.setParameter(JOB_NAME, jobName);
+        List<ExtensionJobsBean> jobsBeanList;
+        try {
+            jobsBeanList = query.getResultList();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+        if (jobsBeanList != null && !jobsBeanList.isEmpty()) {
+            return jobsBeanList.get(0);
+        } else {
+            return null;
+        }
+    }
+
     public List<ExtensionJobsBean> getAllExtensionJobs() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
@@ -174,6 +230,18 @@ public class ExtensionMetaStore {
         if (entityManager != null) {
             entityManager.getTransaction().commit();
             entityManager.close();
+        }
+    }
+
+    public void updateExtensionStatus(String extensionName, ExtensionStatus status) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.CHANGE_EXTENSION_STATUS);
+        q.setParameter(EXTENSION_NAME, extensionName).setParameter(EXTENSION_STATUS, status);
+        try {
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
         }
     }
 }

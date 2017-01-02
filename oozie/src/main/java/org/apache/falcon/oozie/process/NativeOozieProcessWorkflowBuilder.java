@@ -41,6 +41,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -110,13 +111,16 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
         if (entity.getOutputs() == null) {
             props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), NONE);
             props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), NONE);
+            props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), NONE);
             return props;
         }
-        List<String> feedNames = new ArrayList<>();
-        List<String> feedInstancePaths= new ArrayList<>();
+        List<String> falconOutputFeeds = new LinkedList<>();
+        List<String> feedInstancePaths= new LinkedList<>();
+        List<String> falconOutputNames = new LinkedList<>();
         for (Output output : entity.getOutputs().getOutputs()) {
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
-            feedNames.add(feed.getName());
+            falconOutputFeeds.add(feed.getName());
+            falconOutputNames.add(output.getName());
             String outputExp = output.getInstance();
             Date outTime = EXPRESSION_HELPER.evaluate(outputExp, Date.class);
             for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
@@ -139,7 +143,8 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
                 }
             }
         }
-        props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(feedNames, ","));
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(falconOutputFeeds, ","));
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), StringUtils.join(falconOutputNames, ","));
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), StringUtils.join(feedInstancePaths, ","));
         return props;
     }
@@ -154,10 +159,10 @@ public class NativeOozieProcessWorkflowBuilder extends OozieProcessWorkflowBuild
             props.put(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName(), NONE);
             return props;
         }
-        List<String> falconInputFeeds = new ArrayList<>();
-        List<String> falconInputNames = new ArrayList<>();
-        List<String> falconInputPaths = new ArrayList<>();
-        List<String> falconInputFeedStorageTypes = new ArrayList<>();
+        List<String> falconInputFeeds = new LinkedList<>();
+        List<String> falconInputNames = new LinkedList<>();
+        List<String> falconInputPaths = new LinkedList<>();
+        List<String> falconInputFeedStorageTypes = new LinkedList<>();
         for (Input input : entity.getInputs().getInputs()) {
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
             Storage storage = FeedHelper.createStorage(clusterObj, feed);
