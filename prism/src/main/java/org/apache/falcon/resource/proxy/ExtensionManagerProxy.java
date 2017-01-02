@@ -455,6 +455,15 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         if (configStream != null) {
             configBytes = IOUtils.toByteArray(configStream);
         }
+        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
+            for (final Entity entity : entry.getValue()) {
+                if (entity.getEntityType().equals(EntityType.FEED)) {
+                    feedNames.add(entity.getName());
+                } else {
+                    processNames.add(entity.getName());
+                }
+            }
+        }
         metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
 
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
@@ -465,12 +474,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                 if (!embeddedMode) {
                     super.submit(bufferedRequest, entity.getEntityType().toString(), currentColo);
                 }
-                if (entity.getEntityType().equals(EntityType.FEED)) {
-                    feedNames.add(entity.getName());
-                } else {
-                    processNames.add(entity.getName());
-                }
-                metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
             }
         }
     }

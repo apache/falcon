@@ -157,7 +157,7 @@ public class ExtensionMetaStore {
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
-            entityManager.merge(extensionJobsBean);
+            entityManager.persist(extensionJobsBean);
         } finally {
             commitAndCloseTransaction(entityManager);
         }
