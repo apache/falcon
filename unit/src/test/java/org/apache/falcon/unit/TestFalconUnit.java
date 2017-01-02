@@ -19,6 +19,8 @@ package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -432,7 +434,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(result, "Deleted extension:testExtension");
     }
 
-    @Test
+    @Test(expectedExceptions = {ValidationException.class, EntityNotRegisteredException.class})
     public void testSubmitAndScheduleExtensionJob() throws Exception {
         clearDB();
         submitCluster();
@@ -469,6 +471,10 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         apiResult = deleteExtensionJob(TEST_JOB, null);
         assertStatus(apiResult);
+        getEntity(EntityType.PROCESS, "sample");
+        Assert.fail("Should have thrown a EntityNotRegisteredException");
+        getClient().getExtensionJobDetails(TEST_JOB);
+        Assert.fail("Should have thrown a ValidationException");
     }
 
 
