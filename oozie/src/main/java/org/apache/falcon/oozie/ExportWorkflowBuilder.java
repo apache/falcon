@@ -62,6 +62,7 @@ public abstract class ExportWorkflowBuilder extends OozieOrchestrationWorkflowBu
             props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
         }
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), NONE);
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), NONE);
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), NONE);
 
         props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), entity.getName());
