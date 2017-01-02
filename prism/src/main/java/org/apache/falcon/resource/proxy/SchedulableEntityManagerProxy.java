@@ -21,7 +21,6 @@ package org.apache.falcon.resource.proxy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -222,29 +221,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             throw FalconWebException.newAPIException(e);
         }
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        Map<String, APIResult> results = new HashMap<String, APIResult>();
-
-        results.put(FALCON_TAG, new EntityProxy(type, entityName) {
-            @Override
-            public APIResult execute() {
-                try {
-                    EntityUtil.getEntity(type, entityName);
-                    return super.execute();
-                } catch (EntityNotRegisteredException e) {
-                    return new APIResult(APIResult.Status.SUCCEEDED,
-                            entityName + "(" + type + ") doesn't exist. Nothing to do");
-                } catch (FalconException e) {
-                    throw FalconWebException.newAPIException(e);
-                }
-            }
-
-            @Override
-            protected APIResult doExecute(String colo) throws FalconException {
-                return entityProxyUtil.getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entityName,
-                        colo);
-            }
-        }.execute());
-
+        Map<String, APIResult> results = new HashMap<>();
+        results.putAll(entityProxyUtil.proxyDelete(type, entityName, bufferedRequest));
         // delete only if deleted from everywhere
         if (!embeddedMode && results.get(FALCON_TAG).getStatus() == APIResult.Status.SUCCEEDED) {
             results.put(PRISM_TAG, super.delete(bufferedRequest, type, entityName, currentColo));

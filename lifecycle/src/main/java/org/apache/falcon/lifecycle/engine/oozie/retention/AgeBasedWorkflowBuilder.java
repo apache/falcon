@@ -121,14 +121,15 @@ public final class AgeBasedWorkflowBuilder {
         props.put("frequency", feed.getFrequency().getTimeUnit().name());
         props.put("falconFeedStorageType", storage.getType().name());
         props.put("limit", new AgeBasedDelete().getRetentionLimit(feed, cluster.getName()).toString());
-        props.put("falconInputFeeds", feed.getName());
-        props.put("falconInPaths", OozieBuilderUtils.IGNORE);
+        props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), feed.getName());
+        props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), OozieBuilderUtils.IGNORE);
 
         String feedDataPath = storage.getUriTemplate();
         props.put("feedDataPath",
                 feedDataPath.replaceAll(Storage.DOLLAR_EXPR_START_REGEX, Storage.QUESTION_EXPR_START_REGEX));
 
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), feed.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), feed.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), OozieBuilderUtils.IGNORE);
 
         return props;
