@@ -282,6 +282,16 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
+    public APIResult enableExtension(String extensionName) {
+        return localExtensionManager.enableExtension(extensionName);
+    }
+
+    @Override
+    public APIResult disableExtension(String extensionName) {
+        return localExtensionManager.disableExtension(extensionName);
+    }
+
+    @Override
     public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
 
         InputStream configStream = getServletInputStream(configPath);
@@ -336,6 +346,7 @@ public class FalconUnitClient extends AbstractFalconClient {
         }
     }
 
+    @Override
     public APIResult updateExtensionJob(String jobName, String configPath, String doAsUser) {
         InputStream configStream = getServletInputStream(configPath);
         try {
@@ -344,9 +355,19 @@ public class FalconUnitClient extends AbstractFalconClient {
             return localExtensionManager.updateExtensionJob(extensionName, jobName, configStream,
                     entityMap);
         } catch (FalconException | IOException e) {
-            throw new FalconCLIException("Failed in updating the extension job " + jobName);
+            throw new FalconCLIException("Failed in updating the extension job:" + jobName);
         }
     }
+
+    @Override
+    public APIResult deleteExtensionJob(String jobName, String doAsUser) {
+        try {
+            return localExtensionManager.deleteExtensionJob(jobName);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed to delete the extension job:" + jobName);
+        }
+    }
+
 
     @Override
     public APIResult getExtensionJobDetails(final String jobName) {

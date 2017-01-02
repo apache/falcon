@@ -197,13 +197,26 @@ public abstract class AbstractFalconClient {
     public abstract APIResult unregisterExtension(String extensionName);
 
     /**
+     *
+     * @param extensionName extensionName that needs to be enabled
+     * @return Result of the enableExtension operation
+     */
+    public abstract APIResult enableExtension(String extensionName);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be disabled
+     * @return Result of the disableExtension operation
+     */
+    public abstract APIResult disableExtension(String extensionName);
+
+    /**
      * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult submitExtensionJob(String extensionName, String jobName, String configPath,
                                                 String doAsUser);
@@ -216,7 +229,6 @@ public abstract class AbstractFalconClient {
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
                                                  String doAsUser);
@@ -227,10 +239,15 @@ public abstract class AbstractFalconClient {
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult updateExtensionJob(String jobName, String configPath, String doAsUser);
 
+    /**
+     * Deletes the entities that are part of the extension job and then deleted the job from the DB.
+     * @param jobName name of the extension job that needs to be deleted.
+     * @return APIResult status of the deletion query.
+     */
+    public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
     /**
      *  Prepares set of entities the extension has implemented to validate the extension job.
      * @param jobName job name of the extension job.

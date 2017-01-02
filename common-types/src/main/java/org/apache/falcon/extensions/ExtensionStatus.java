@@ -15,28 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.falcon.entity.store;
-
-import org.apache.falcon.FalconException;
+package org.apache.falcon.extensions;
 
 /**
- * Exception when there in issue accessing the persistent store.
+ * Enum to store ExtensionStatus.
  */
-public class StoreAccessException extends FalconException {
+public enum ExtensionStatus {
+    ENABLED("enabled state"),
+    DISABLED("disabled state");
 
-    /**
-     * @param e Exception
-     */
-    public StoreAccessException(String message, Exception e) {
-        super(message, e);
+    private final String text;
+
+    ExtensionStatus(final String text) {
+        this.text = text;
     }
 
-    public StoreAccessException(Exception e) {
-        super(e);
-    }
-
-    public StoreAccessException(String message){
-        super(message);
+    @Override
+    public String toString(){
+        return text;
     }
 }

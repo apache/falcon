@@ -54,7 +54,7 @@ public final class ExtensionHandler {
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
     private static final String LOCATION = "location";
     private static final String TYPE = "type";
-    private static final String NAME = "name";
+    private static final String NAME = "extensionName";
     private static final String EXTENSION_BUILDER_INTERFACE_SERVICE_FILE =
             "META-INF/services/org.apache.falcon.extensions.ExtensionBuilder";
 
@@ -185,8 +185,6 @@ public final class ExtensionHandler {
                 for (File innerFile : files) {
                     if (innerFile.isFile()) {
                         urls.add(innerFile.toURI().toURL());
-                    } else {
-                        urls.addAll(getFilesInPath(file.toURI().toURL()));
                     }
                 }
             }
