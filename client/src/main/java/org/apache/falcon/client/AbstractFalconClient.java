@@ -203,7 +203,6 @@ public abstract class AbstractFalconClient {
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult submitExtensionJob(String extensionName, String jobName, String configPath,
                                                 String doAsUser);
@@ -216,7 +215,6 @@ public abstract class AbstractFalconClient {
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
                                                  String doAsUser);
@@ -227,10 +225,15 @@ public abstract class AbstractFalconClient {
      *                           loadAndPrepare.
      * @param configPath path to extension parameters.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult updateExtensionJob(String jobName, String configPath, String doAsUser);
 
+    /**
+     * Deletes the entities that are part of the extension job and then deleted the job from the DB.
+     * @param jobName name of the extension job that needs to be deleted.
+     * @return APIResult status of the deletion query.
+     */
+    public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
     /**
      *  Prepares set of entities the extension has implemented to validate the extension job.
      * @param jobName job name of the extension job.

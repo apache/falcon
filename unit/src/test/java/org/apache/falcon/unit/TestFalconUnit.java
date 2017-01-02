@@ -19,6 +19,7 @@ package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -72,6 +73,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String EXTENSION_PATH = "/projects/falcon/extension/testExtension";
     private static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
     private static final String EXTENSION_PROPERTIES = "extension.properties";
+    private static final String TEST_JOB = "testJob";
+    private static final String TEST_EXTENSION = "testExtension";
     private FileSystem fileSystem;
 
     private static final String STORAGE_URL = "jail://global:00";
@@ -431,39 +434,55 @@ public class TestFalconUnit extends FalconUnitTestBase {
     }
 
     @Test
-    public void testSubmitAndScheduleExtensionJob() throws Exception {
+    public void testExtensionJobOperations() throws Exception {
         clearDB();
         submitCluster();
         createExtensionPackage();
         String packageBuildLib = new Path(EXTENSION_PATH, "libs/build/").toString();
-        String result = registerExtension("testExtension", STORAGE_URL + EXTENSION_PATH, "testExtension");
+        String result = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION);
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
 
         createDir(PROCESS_APP_PATH);
         copyExtensionJar(packageBuildLib);
-        APIResult apiResult = submitAndScheduleExtensionJob("testExtension", "testJob", null, null);
+        APIResult apiResult = submitAndScheduleExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
-        result = getExtensionJobDetails("testJob");
+        result = getExtensionJobDetails(TEST_JOB);
         JSONObject resultJson = new JSONObject(result);
-        Assert.assertEquals(resultJson.get("extensionName"), "testExtension");
-        Process process = (Process)getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
+        Assert.assertEquals(resultJson.get("extensionName"), TEST_EXTENSION);
+        Process process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
         Assert.assertEquals(process.getPipelines(), "testPipeline");
 
         apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
         assertStatus(apiResult);
         Assert.assertEquals(apiResult.getMessage(), "RUNNING");
 
-        apiResult = updateExtensionJob("testJob", getAbsolutePath(EXTENSION_PROPERTIES), null);
+        apiResult = updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
         assertStatus(apiResult);
 
-        String processes = new JSONObject(getExtensionJobDetails("testJob")).get("processes").toString();
+        String processes = new JSONObject(getExtensionJobDetails(TEST_JOB)).get("processes").toString();
         Assert.assertEquals(processes, "sample");
-        process = (Process)getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
+        process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
         Assert.assertEquals(process.getPipelines(), "testSample");
 
         apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
         assertStatus(apiResult);
         Assert.assertEquals(apiResult.getMessage(), "RUNNING");
+
+        apiResult = deleteExtensionJob(TEST_JOB, null);
+        assertStatus(apiResult);
+        try {
+            getEntity(EntityType.PROCESS, "sample");
+            Assert.fail("Should have thrown a validation exception");
+        } catch (EntityNotRegisteredException e) {
+            //Do nothing. Exception Expected
+        }
+        try {
+            getClient().getExtensionJobDetails(TEST_JOB);
+            Assert.fail("Should have thrown a FalconWebException");
+        } catch (FalconWebException e) {
+            Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Job name not found:testJob");
+            //Do nothing. Exception Expected.
+        }
     }
 
 

@@ -96,7 +96,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private String currentColo = DeploymentUtil.getCurrentColo();
     private EntityProxyUtil entityProxyUtil = new EntityProxyUtil();
 
-
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
@@ -271,28 +270,26 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult delete(@PathParam("job-name") String jobName,
+                            @Context HttpServletRequest request,
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                // return failure if the extension job doesn't exist
-                return new APIResult(APIResult.Status.SUCCEEDED,
-                        "Extension job " + jobName + " doesn't exist. Nothing to delete.");
-            }
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean == null) {
+            // return failure if the extension job doesn't exist
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    "Extension job " + jobName + " doesn't exist. Nothing to delete.");
+        }
 
-            for (Entity entity : entities) {
-                // TODO(yzheng): need to remember the entity dependency graph for clean ordered removal
-                canRemove(entity);
-                if (entity.getEntityType().isSchedulable() && !DeploymentUtil.isPrism()) {
-                    getWorkflowEngine(entity).delete(entity);
-                }
-                configStore.remove(entity.getEntityType(), entity.getName());
-            }
-        } catch (FalconException | IOException e) {
+        SortedMap<EntityType, List<Entity>> entityMap;
+        try {
+            entityMap = getJobEntities(extensionJobsBean);
+            deleteEntities(entityMap, request);
+        } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error when deleting extension job: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
+        metaStore.deleteExtensionJob(jobName);
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " deleted successfully");
     }
 
@@ -421,6 +418,21 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             return (BufferedRequest) request;
         }
         return new BufferedRequest(request);
+    }
+
+    private void deleteEntities(SortedMap<EntityType, List<Entity>> entityMap, HttpServletRequest request)
+        throws IOException, JAXBException {
+        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
+            for (final Entity entity : entry.getValue()) {
+                final HttpServletRequest bufferedRequest = getEntityStream(entity, entity.getEntityType(), request);
+                final String entityType = entity.getEntityType().toString();
+                final String entityName = entity.getName();
+                entityProxyUtil.proxyDelete(entityType, entityName, bufferedRequest);
+                if (!embeddedMode) {
+                    super.delete(bufferedRequest, entityType, entityName, currentColo);
+                }
+            }
+        }
     }
 
     private void submitEntities(String extensionName, String jobName,

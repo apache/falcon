@@ -22,7 +22,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
 import org.apache.falcon.security.CurrentUser;
@@ -84,6 +86,19 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         ExtensionStore.getMetaStore().storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
 
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
+    }
+
+    public APIResult deleteExtensionJob(String jobName) throws FalconException, IOException{
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        SortedMap<EntityType, List<Entity>> entityMap = getJobEntities(extensionJobsBean);
+        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
+            for (Entity entity : entry.getValue()) {
+                delete(entity.getEntityType().name(), entity.getName(), null);
+            }
+        }
+        ExtensionStore.getMetaStore().deleteExtensionJob(jobName);
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " deleted successfully");
     }
 
     public APIResult updateExtensionJob(String extensionName, String jobName, InputStream configStream,
