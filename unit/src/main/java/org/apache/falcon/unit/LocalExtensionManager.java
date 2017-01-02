@@ -101,7 +101,8 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         }
         ExtensionStore.getMetaStore().storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
 
-        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted and scheduled successfully"
+                + jobName);
     }
 
     APIResult scheduleExtensionJob(String jobName, String doAsUser) throws  FalconException, IOException{
