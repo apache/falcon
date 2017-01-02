@@ -199,8 +199,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         if (extensionJobsBean == null) {
             // return failure if the extension job doesn't exist
-            return new APIResult(APIResult.Status.SUCCEEDED,
-                    "Extension job " + jobName + " doesn't exist. Nothing to delete.");
+            LOG.error("Extension Job not found:" + jobName);
+            throw FalconWebException.newAPIException("ExtensionJob not found:" + jobName,
+                    Response.Status.NOT_FOUND);
         }
 
         SortedMap<EntityType, List<Entity>> entityMap;
@@ -208,7 +209,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             entityMap = getJobEntities(extensionJobsBean);
             scheduleEntities(entityMap, request);
         } catch (FalconException | IOException | JAXBException e) {
-            LOG.error("Error when deleting extension job: " + jobName + ": ", e);
+            LOG.error("Error while scheduling entities of the extension: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " scheduled successfully");
