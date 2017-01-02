@@ -197,6 +197,20 @@ public abstract class AbstractFalconClient {
     public abstract APIResult unregisterExtension(String extensionName);
 
     /**
+     *
+     * @param extensionName extensionName that needs to be enabled
+     * @return Result of the enableExtension operation
+     */
+    public abstract APIResult enableExtension(String extensionName);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be disabled
+     * @return Result of the disableExtension operation
+     */
+    public abstract APIResult disableExtension(String extensionName);
+
+    /**
      * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
      * @param extensionName extension which is available in the store.
      * @param jobName name to be used in all the extension entities' tagging that are built as part of

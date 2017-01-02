@@ -52,6 +52,8 @@ public class FalconExtensionCLI {
     public static final String UNREGISTER_OPT = "unregister";
     public static final String DETAIL_OPT = "detail";
     public static final String REGISTER_OPT = "register";
+    public static final String ENABLE_OPT = "enable";
+    public static final String DISABLE_OPT = "disable";
 
     // Input parameters
     public static final String EXTENSION_NAME_OPT = "extensionName";
@@ -153,10 +155,16 @@ public class FalconExtensionCLI {
                     commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT),
                     commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT));
             result = instances != null ? instances.toString() : "No instance (" + jobName + ") found.";
+        } else if (optionsList.contains(ENABLE_OPT)) {
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            result = client.enableExtension(extensionName).getMessage();
+        } else if (optionsList.contains(DISABLE_OPT)) {
+            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            result = client.disableExtension(extensionName).getMessage();
         } else {
             throw new FalconCLIException("Invalid/missing extension command. Supported commands include "
                     + "enumerate, definition, describe, list, instances, submit, submitAndSchedule, "
-                    + "schedule, suspend, resume, delete, update, validate. "
+                    + "schedule, suspend, resume, delete, update, validate, enable, disable. "
                     + "Please refer to Falcon CLI twiki for more details.");
         }
         OUT.get().println(result);

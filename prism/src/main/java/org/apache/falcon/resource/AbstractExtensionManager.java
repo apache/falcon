@@ -23,6 +23,7 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
@@ -35,7 +36,6 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -172,6 +172,24 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             nameEnd = tags.length();
         }
         return tags.substring(nameStart, nameEnd);
+    }
+
+    public String disableExtension(String extensionName, String currentUser) {
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.DISABLED);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public String enableExtension(String extensionName, String currentUser) {
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.ENABLED);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
