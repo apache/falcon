@@ -434,8 +434,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(result, "Deleted extension:testExtension");
     }
 
-    @Test(expectedExceptions = {ValidationException.class, EntityNotRegisteredException.class})
-    public void testSubmitAndScheduleExtensionJob() throws Exception {
+    @Test
+    public void testExtensionJobOperations() throws Exception {
         clearDB();
         submitCluster();
         createExtensionPackage();
@@ -471,10 +471,17 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         apiResult = deleteExtensionJob(TEST_JOB, null);
         assertStatus(apiResult);
-        getEntity(EntityType.PROCESS, "sample");
-        Assert.fail("Should have thrown a EntityNotRegisteredException");
-        getClient().getExtensionJobDetails(TEST_JOB);
-        Assert.fail("Should have thrown a ValidationException");
+        try {
+            getEntity(EntityType.PROCESS, "sample");
+        } catch (EntityNotRegisteredException e) {
+            //Do nothing. Exception Expected
+        }
+        try {
+            getClient().getExtensionJobDetails(TEST_JOB);
+        } catch (FalconWebException e) {
+            Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Job name not found:testJob");
+            //Do nothing. Exception Expected.
+        }
     }
 
 
