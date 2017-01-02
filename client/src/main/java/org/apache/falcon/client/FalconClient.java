@@ -1030,9 +1030,12 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult getExtensionJobDetails(final String jobName) {
-        ClientResponse clientResponse = new ResourceBuilder().path(ExtensionOperations.JOB_DETAILS.path, jobName)
+        return getResponse(APIResult.class, getExtensionJobDetailsResponse(jobName));
+    }
+
+    private ClientResponse getExtensionJobDetailsResponse(final String jobName) {
+        return new ResourceBuilder().path(ExtensionOperations.JOB_DETAILS.path, jobName)
                 .call(ExtensionOperations.JOB_DETAILS);
-        return getResponse(APIResult.class, clientResponse);
     }
 
     private ClientResponse getExtensionDetailResponse(final String extensionName) {
@@ -1111,7 +1114,11 @@ public class FalconClient extends AbstractFalconClient {
 
     private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
                                                          InputStream configStream) {
-        JSONObject extensionDetailJson = getExtensionDetailJson(extensionName);
+        JSONObject extensionDetailJson;
+        if (StringUtils.isBlank(extensionName)) {
+            extensionName = ExtensionHandler.getExtensionName(jobName, getExtensionJobDetailJson(jobName));
+        }
+        extensionDetailJson = getExtensionDetailJson(extensionName);
         String extensionType = ExtensionHandler.getExtensionType(extensionName, extensionDetailJson);
         String extensionBuildLocation = ExtensionHandler.getExtensionLocation(extensionName, extensionDetailJson);
         return getEntities(extensionName, jobName, configStream, extensionType,
@@ -1128,6 +1135,16 @@ public class FalconClient extends AbstractFalconClient {
             throw new FalconCLIException("Failed to get details for the given extension", e);
         }
         return extensionDetailJson;
+    }
+    private JSONObject getExtensionJobDetailJson(String jobName) {
+        ClientResponse clientResponse = getExtensionJobDetailsResponse(jobName);
+        JSONObject extensionJobDetailJson;
+        try {
+            extensionJobDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
+        } catch (JSONException e) {
+            throw new FalconCLIException("Failed to get details for the given extension", e);
+        }
+        return extensionJobDetailJson;
     }
 
     private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
@@ -1158,12 +1175,12 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult updateExtensionJob(final String extensionName, final String filePath, final String doAsUser) {
-        InputStream entityStream = getServletInputStream(filePath);
+    public APIResult updateExtensionJob(final String jobName, final String configPath, final String doAsUser) {
+        FormDataMultiPart entitiesForm = getEntitiesForm(null, jobName, configPath);
         ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.UPDATE.path, extensionName)
+                .path(ExtensionOperations.UPDATE.path, jobName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .call(ExtensionOperations.UPDATE, entityStream);
+                .call(ExtensionOperations.UPDATE, entitiesForm);
         return getResponse(APIResult.class, clientResponse);
     }
 

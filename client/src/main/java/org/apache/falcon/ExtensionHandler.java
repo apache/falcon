@@ -54,6 +54,7 @@ public final class ExtensionHandler {
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
     private static final String LOCATION = "location";
     private static final String TYPE = "type";
+    private static final String NAME = "name";
     private static final String EXTENSION_BUILDER_INTERFACE_SERVICE_FILE =
             "META-INF/services/org.apache.falcon.extensions.ExtensionBuilder";
 
@@ -217,6 +218,16 @@ public final class ExtensionHandler {
             extensionType = extensionDetailJson.get(TYPE).toString();
         } catch (JSONException e) {
             throw new FalconCLIException("Failed to get extension type for the given extension:" + extensionName, e);
+        }
+        return extensionType;
+    }
+
+    public static  String getExtensionName(String jobName, JSONObject extensionJobDetailJson) {
+        String extensionType;
+        try {
+            extensionType = extensionJobDetailJson.get(NAME).toString();
+        } catch (JSONException e) {
+            throw new FalconCLIException("Failed to get extension name for the given extension job:" + jobName, e);
         }
         return extensionType;
     }

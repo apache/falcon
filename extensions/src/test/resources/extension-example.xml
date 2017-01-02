@@ -27,7 +27,6 @@
     <parallel>1</parallel>
     <order>LIFO</order>
     <frequency>hours(1)</frequency>
-    <sla shouldStartIn="hours(2)" shouldEndIn="hours(4)"/>
     <!-- how -->
     <properties>
         <property name="name1" value="value1"/>

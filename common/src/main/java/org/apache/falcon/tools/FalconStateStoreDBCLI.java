@@ -272,12 +272,12 @@ public class FalconStateStoreDBCLI {
             "create table FALCON_DB_PROPS (name varchar(100), data varchar(100))";
 
     private void createFalconPropsTable(String sqlFile, boolean run, String version) throws Exception {
-        String insertDbVerion = "insert into FALCON_DB_PROPS (name, data) values ('db.version', '" + version + "')";
+        String insertDbVersion = "insert into FALCON_DB_PROPS (name, data) values ('db.version', '" + version + "')";
 
         PrintWriter writer = new PrintWriter(new FileWriter(sqlFile, true));
         writer.println();
         writer.println(CREATE_FALCON_DB_PROPS);
-        writer.println(insertDbVerion);
+        writer.println(insertDbVersion);
         writer.close();
         System.out.println("Create FALCON_DB_PROPS table");
         if (run) {
@@ -287,7 +287,7 @@ public class FalconStateStoreDBCLI {
                 conn.setAutoCommit(true);
                 st = conn.createStatement();
                 st.executeUpdate(CREATE_FALCON_DB_PROPS);
-                st.executeUpdate(insertDbVerion);
+                st.executeUpdate(insertDbVersion);
                 st.close();
             } catch (Exception ex) {
                 closeStatement(st);
