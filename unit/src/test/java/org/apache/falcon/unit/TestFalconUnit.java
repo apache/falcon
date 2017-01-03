@@ -445,8 +445,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createDir(PROCESS_APP_PATH);
         copyExtensionJar(packageBuildLib);
         APIResult apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
-        //submitted again to check for submit idempotency.
-        apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
         result = getExtensionJobDetails(TEST_JOB);
         JSONObject resultJson = new JSONObject(result);

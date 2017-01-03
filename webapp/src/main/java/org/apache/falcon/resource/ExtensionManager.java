@@ -42,13 +42,13 @@ import java.util.List;
  * This class provides RESTful API for the extensions.
  */
 @Path("extension")
-public class ExtensionManager extends AbstractEntityManager{
+public class ExtensionManager extends AbstractExtensionManager {
     private static final Logger LOG = LoggerFactory.getLogger(ExtensionManager.class);
 
     @GET
     @Path("enumerate")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getExtensions() {
+    public APIResult getExtensions() {
         LOG.error("Enumerate is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Enumerate is not supported on Server. Please run your operation "
                 + "on Prism.");
@@ -104,7 +104,7 @@ public class ExtensionManager extends AbstractEntityManager{
     @GET
     @Path("describe/{extension-name}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getExtensionDescription(
+    public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Describe is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Describe is not supported on Server. Please run your operation "
@@ -114,7 +114,7 @@ public class ExtensionManager extends AbstractEntityManager{
     @GET
     @Path("detail/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getDetail(@PathParam("extension-name") String extensionName) {
+    public APIResult getDetail(@PathParam("extension-name") String extensionName) {
         LOG.error("Detail is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Detail is not supported on Server. Please run your operation "
                 + "on Prism.");
@@ -124,7 +124,7 @@ public class ExtensionManager extends AbstractEntityManager{
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces(MediaType.TEXT_PLAIN)
-    public String deleteExtensionMetadata(
+    public APIResult deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Unregister is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Unregister is not supported on Server. Please run your operation "
@@ -134,7 +134,7 @@ public class ExtensionManager extends AbstractEntityManager{
     @GET
     @Path("definition/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public String getExtensionDefinition(
+    public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Definition is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Definition is not supported on Server. Please run your operation "

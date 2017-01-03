@@ -336,7 +336,7 @@ public class FalconUnitClient extends AbstractFalconClient {
     @Override
     public APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser) {
         try {
-            return localExtensionManager.scheduleExtensionJob(coloExpr, doAsUser);
+            return localExtensionManager.scheduleExtensionJob(jobName, coloExpr, doAsUser);
         } catch (FalconException | IOException e) {
             throw new FalconCLIException("Failed to delete the extension job:" + coloExpr);
         }

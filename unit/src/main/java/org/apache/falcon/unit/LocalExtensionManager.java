@@ -92,15 +92,10 @@ public class LocalExtensionManager extends AbstractExtensionManager {
                 }
             }
         }
-        boolean alreadySubmitted = false;
-        if (ExtensionStore.getMetaStore().getExtensionJobDetails(jobName) != null) {
-            alreadySubmitted = true;
-        }
-        ExtensionStore.getMetaStore().storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes,
-                alreadySubmitted);
+        ExtensionStore.getMetaStore().storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
     }
 
-    APIResult scheduleExtensionJob(String jobName, String doAsUser) throws  FalconException, IOException{
+    APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser) throws  FalconException, IOException{
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         SortedMap<EntityType, List<Entity>> entityMap = getJobEntities(extensionJobsBean);
