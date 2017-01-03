@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.StoreAccessException;
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.mirroring.hdfs.HdfsMirroringExtension;
 import org.apache.falcon.hadoop.JailedFileSystem;
@@ -36,10 +37,10 @@ import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.util.Map;
 
@@ -139,6 +140,8 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         createMETA(extensionPath);
         store = ExtensionStore.get();
         store.registerExtension("toBeDeleted", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        Assert.assertTrue(store.getResource("toBeDeleted", "README").equals("README"));
+        store.getResource("toBeDeleted", "README");
         store.deleteExtension("toBeDeleted", "falconUser");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 0);
@@ -153,6 +156,42 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         store = ExtensionStore.get();
         store.registerExtension("ACLFailure", STORAGE_URL + extensionPath, "test desc", "oozieUser");
         store.deleteExtension("ACLFailure", "falconUser");
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testStatusChangeExtensionACLFailure() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChangeACLFailure";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChangeACLFailure", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.updateExtensionStatus("testStatusChangeACLFailure", "oozieUser", ExtensionStatus.DISABLED);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testStatusChangeExtensionValidationFailure() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChangeValidationFailure";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChangeValidationFailure", STORAGE_URL + extensionPath, "test desc",
+                "falconUser");
+        store.updateExtensionStatus("testStatusChangeValidationFailure", "falconUser", ExtensionStatus.ENABLED);
+    }
+
+    @Test()
+    public void testStatusChangeExtension() throws IOException, URISyntaxException, FalconException {
+        String extensionPath = EXTENSION_PATH + "testStatusChange";
+        createLibs(extensionPath);
+        createReadmeAndJar(extensionPath);
+        createMETA(extensionPath);
+        store = ExtensionStore.get();
+        store.registerExtension("testStatusChange", STORAGE_URL + extensionPath, "test desc", "falconUser");
+        store.updateExtensionStatus("testStatusChange", "falconUser", ExtensionStatus.DISABLED);
+        ExtensionMetaStore metaStore = new ExtensionMetaStore();
+        Assert.assertEquals(metaStore.getDetail("testStatusChange").getStatus(), ExtensionStatus.DISABLED);
     }
 
     private void createMETA(String extensionPath) throws IOException {
@@ -188,14 +227,20 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         if (fs.exists(path)) {
             fs.delete(path, true);
         }
-        fs.create(path);
-        path = new Path(extensionPath + "/libs/build/test.jar");
         OutputStream os = fs.create(path);
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        br.write("README");
+        fs.create(path);
+        br.close();
+        os.close();
+        path = new Path(extensionPath + "/libs/build/test.jar");
+        os = fs.create(path);
+        br = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         br.write("Hello World");
         br.write("test jar");
         fs.create(path);
         br.close();
+        os.close();
     }
 
     private void clearDB() {

@@ -52,7 +52,7 @@ public enum WorkflowExecutionArgs {
     // workflow execution details
     WORKFLOW_ID("workflowId", "current workflow-id of the instance"),
     RUN_ID("runId", "current run-id of the instance"),
-    STATUS("status", "status of the user workflow isnstance"),
+    STATUS("status", "status of the user workflow instance"),
     WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie", false),
     USER_SUBFLOW_ID("subflowId", "external id of user workflow", false),
     PARENT_ID("parentId", "The parent of the current workflow, typically coord action", false),
@@ -70,6 +70,7 @@ public enum WorkflowExecutionArgs {
     // what outputs
     OUTPUT_FEED_NAMES("feedNames", "name of the feeds which are generated/replicated/deleted"),
     OUTPUT_FEED_PATHS("feedInstancePaths", "comma separated feed instance paths"),
+    OUTPUT_NAMES("feedInstanceNames", "comma separated list of names of outputs", false),
 
     // broker related parameters
     TOPIC_NAME("topicName", "name of the topic to be used to send JMS message", false),

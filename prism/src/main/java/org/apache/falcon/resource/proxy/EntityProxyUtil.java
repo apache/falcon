@@ -20,6 +20,9 @@ package org.apache.falcon.resource.proxy;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.channel.Channel;
@@ -36,6 +39,9 @@ import static org.apache.falcon.resource.AbstractEntityManager.getAllColos;
 import static org.apache.falcon.resource.AbstractEntityManager.getApplicableColos;
 import static org.apache.falcon.resource.proxy.SchedulableEntityManagerProxy.FALCON_TAG;
 
+/**
+ * Proxy Util class to proxy entity management apis from prism to servers.
+ */
 class EntityProxyUtil {
     private final Map<String, Channel> entityManagerChannels = new HashMap<>();
     private final Map<String, Channel> configSyncChannels = new HashMap<>();
@@ -84,6 +90,31 @@ class EntityProxyUtil {
             @Override
             protected APIResult doExecute(String colo) throws FalconException {
                 return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, type, colo);
+            }
+        }.execute());
+        return results;
+    }
+
+    Map<String, APIResult> proxyDelete(final String type, final String entityName,
+                                               final HttpServletRequest bufferedRequest) {
+        Map<String, APIResult> results = new HashMap<>();
+        results.put(FALCON_TAG, new EntityProxy(type, entityName) {
+            @Override
+            public APIResult execute() {
+                try {
+                    EntityUtil.getEntity(type, entityName);
+                    return super.execute();
+                } catch (EntityNotRegisteredException e) {
+                    return new APIResult(APIResult.Status.SUCCEEDED,
+                            entityName + "(" + type + ") doesn't exist. Nothing to do");
+                } catch (FalconException e) {
+                    throw FalconWebException.newAPIException(e);
+                }
+            }
+
+            @Override
+            protected APIResult doExecute(String colo) throws FalconException {
+                return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entityName, colo);
             }
         }.execute());
         return results;

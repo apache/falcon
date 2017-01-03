@@ -213,13 +213,13 @@ public class FalconPostProcessingTest {
 
         // Verify user message
         if (checkUserMessage) {
-            verifyMesssage(consumer);
+            verifyMessage(consumer);
         }
 
         connection.close();
     }
 
-    private void verifyMesssage(MessageConsumer consumer) throws JMSException {
+    private void verifyMessage(MessageConsumer consumer) throws JMSException {
 
         String[] actualFeedNames = new String[outputFeedPaths.length];
         String[] actualFeedPaths = new String[outputFeedPaths.length];

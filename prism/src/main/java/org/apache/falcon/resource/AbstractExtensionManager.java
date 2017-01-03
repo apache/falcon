@@ -20,7 +20,12 @@ package org.apache.falcon.resource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.extensions.ExtensionStatus;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
@@ -31,9 +36,12 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * A base class for managing Extension Operations.
@@ -106,6 +114,28 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    protected SortedMap<EntityType, List<Entity>> getJobEntities(ExtensionJobsBean extensionJobsBean)
+        throws FalconException, IOException {
+        TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
+        List<String> processes = extensionJobsBean.getProcesses();
+        List<String> feeds = extensionJobsBean.getFeeds();
+        entityMap.put(EntityType.PROCESS, getEntities(processes, EntityType.PROCESS));
+        entityMap.put(EntityType.FEED, getEntities(feeds, EntityType.FEED));
+        return entityMap;
+    }
+
+    private List<Entity> getEntities(List<String> entityNames, EntityType entityType) throws FalconException {
+        List<Entity> entities = new ArrayList<>();
+        for (String entityName : entityNames) {
+            try {
+                entities.add(EntityUtil.getEntity(entityType, entityName));
+            } catch (EntityNotRegisteredException e) {
+                LOG.error("Entity {}  not found during deletion nothing to do", entityName);
+            }
+        }
+        return entities;
+    }
+
     private JSONObject buildExtensionJobDetailResult(final String jobName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean jobsBean = metaStore.getExtensionJobDetails(jobName);
@@ -142,6 +172,24 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             nameEnd = tags.length();
         }
         return tags.substring(nameStart, nameEnd);
+    }
+
+    public String disableExtension(String extensionName, String currentUser) {
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.DISABLED);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public String enableExtension(String extensionName, String currentUser) {
+        validateExtensionName(extensionName);
+        try {
+            return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.ENABLED);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {

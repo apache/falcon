@@ -37,6 +37,7 @@ activemq-data
 #log files
 logs
 *.log
+*.patch
 
 #Falcon UI NPM files
 falcon-ui/dist

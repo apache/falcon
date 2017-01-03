@@ -245,6 +245,9 @@ public class FalconUnitTestBase {
         return falconUnitClient.updateExtensionJob(jobName, configPath, doAsUser);
     }
 
+    APIResult deleteExtensionJob(String jobName, String doAsUser) {
+        return falconUnitClient.deleteExtensionJob(jobName, doAsUser);
+    }
 
     public static String overlayParametersOverTemplate(String template,
                                                        Map<String, String> overlay) throws IOException {

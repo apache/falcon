@@ -95,10 +95,11 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
         props.put("limit", feedCluster.getRetention().getLimit().toString());
 
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
 
-        props.put("falconInputFeeds", entity.getName());
-        props.put("falconInPaths", IGNORE);
+        props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), IGNORE);
         props.put(WorkflowExecutionArgs.DATASOURCE_NAME.getName(), "NA");
         return props;
     }
