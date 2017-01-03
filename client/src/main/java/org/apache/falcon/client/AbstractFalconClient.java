@@ -226,7 +226,7 @@ public abstract class AbstractFalconClient {
      * @param jobName extensionJob that needs to be scheduled.
      * @return APIResult stating status of scheduling the extension.
      */
-    public abstract APIResult scheduleExtensionJob(String jobName, String doAsUser);
+    public abstract APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser);
 
     /**
      * Prepares set of entities the extension has implemented and stage them to a local directory and submits and

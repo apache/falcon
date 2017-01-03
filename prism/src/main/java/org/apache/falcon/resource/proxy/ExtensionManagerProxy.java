@@ -192,6 +192,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult schedule(@PathParam("job-name") String jobName,
                               @Context HttpServletRequest request,
+                              @QueryParam("colo") final String coloExpr,
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName());
@@ -207,7 +208,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getJobEntities(extensionJobsBean);
-            scheduleEntities(entityMap, request);
+            scheduleEntities(entityMap, request, coloExpr);
         } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error while scheduling entities of the extension: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -314,11 +315,11 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        boolean alreadySubmitted = checkIfExtensionJobExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
-            submitEntities(extensionName, jobName, entityMap, config, request);
+            submitEntities(extensionName, jobName, entityMap, config, request, alreadySubmitted);
         } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -379,17 +380,18 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @Context HttpServletRequest request,
             @DefaultValue("") @QueryParam("doAs") String doAsUser,
             @QueryParam("jobName") String jobName,
+            @QueryParam("colo") final String coloExpr,
             @FormDataParam("processes") List<FormDataBodyPart> processForms,
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        boolean alreadySubmitted = checkIfExtensionJobExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
-            submitEntities(extensionName, jobName, entityMap, config, request);
-            scheduleEntities(entityMap, request);
+            submitEntities(extensionName, jobName, entityMap, config, request, alreadySubmitted);
+            scheduleEntities(entityMap, request, coloExpr);
         } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error while submitting extension job: ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
@@ -397,13 +399,13 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted and scheduled successfully");
     }
 
-    protected void scheduleEntities(Map<EntityType, List<Entity>> entityMap, HttpServletRequest request)
+    private void scheduleEntities(Map<EntityType, List<Entity>> entityMap, HttpServletRequest request, String coloExpr)
         throws FalconException, JAXBException, IOException {
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
             for (final Entity entity : entry.getValue()) {
                 final HttpServletRequest httpServletRequest = getEntityStream(entity, entity.getEntityType(), request);
                 final HttpServletRequest bufferedRequest = getBufferedRequest(httpServletRequest);
-                final Set<String> colos = getApplicableColos(entity.getEntityType().toString(), entity);
+                final Set<String> colos = getColosFromExpression(coloExpr, entity.getEntityType().name(), entity);
 
                 new EntityProxy(entity.getEntityType().toString(), entity.getName()) {
                     @Override
@@ -445,8 +447,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     }
 
     private void submitEntities(String extensionName, String jobName,
-                                  SortedMap<EntityType, List<Entity>> entityMap, InputStream configStream,
-                                  HttpServletRequest request) throws FalconException, IOException, JAXBException {
+                                SortedMap<EntityType, List<Entity>> entityMap, InputStream configStream,
+                                HttpServletRequest request, boolean alreadySubmitted)
+        throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
         validateFeeds(feeds);
@@ -468,7 +471,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                 }
             }
         }
-        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
+        metaStore.storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes, alreadySubmitted);
 
         for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
             for(final Entity entity : entry.getValue()){
@@ -770,6 +773,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private static void checkIfExtensionServiceIsEnabled() {
         if (!Services.get().isRegistered(ExtensionService.SERVICE_NAME)) {
+            LOG.error(ExtensionService.SERVICE_NAME + " is not enabled.");
             throw FalconWebException.newAPIException(
                     ExtensionService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
@@ -777,18 +781,24 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private static void checkIfExtensionIsEnabled(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        if (metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
+        if (!metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
+            LOG.error("Extension: " + extensionName + " is in disabled state.");
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private static void checkIfExtensionJobExists(String jobName, String extensionName) {
+    private static boolean checkIfExtensionJobExists(String jobName, String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
-        if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
-            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
-                    Response.Status.INTERNAL_SERVER_ERROR);
+        if (extensionJobsBean != null){
+            if (!extensionJobsBean.getExtensionName().equals(extensionName)) {
+                LOG.error("Extension job with name: " + extensionName + " already exists.");
+                throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
+                        Response.Status.INTERNAL_SERVER_ERROR);
+            }
+            return true;
         }
+        return false;
     }
 }

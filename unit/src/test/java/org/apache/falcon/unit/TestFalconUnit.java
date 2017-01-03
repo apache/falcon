@@ -445,6 +445,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createDir(PROCESS_APP_PATH);
         copyExtensionJar(packageBuildLib);
         APIResult apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
+        //submitted again to check for submit idempotency.
+        apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
         result = getExtensionJobDetails(TEST_JOB);
         JSONObject resultJson = new JSONObject(result);
@@ -452,7 +454,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Process process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
         Assert.assertEquals(process.getPipelines(), "testPipeline");
 
-        apiResult = getClient().scheduleExtensionJob(TEST_JOB, null);
+        apiResult = getClient().scheduleExtensionJob(TEST_JOB, null, null);
         assertStatus(apiResult);
         apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
         assertStatus(apiResult);

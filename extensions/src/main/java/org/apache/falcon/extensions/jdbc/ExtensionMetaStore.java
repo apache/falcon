@@ -144,7 +144,7 @@ public class ExtensionMetaStore {
     }
 
     public void storeExtensionJob(String jobName, String extensionName, List<String> feeds, List<String> processes,
-                                  byte[] config) {
+                                  byte[] config, boolean alreadySubmitted) {
         ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
         Date currentTime = new Date(System.currentTimeMillis());
         extensionJobsBean.setJobName(jobName);
@@ -157,7 +157,11 @@ public class ExtensionMetaStore {
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
-            entityManager.persist(extensionJobsBean);
+            if (alreadySubmitted) {
+                entityManager.merge(extensionJobsBean);
+            } else {
+                entityManager.persist(extensionJobsBean);
+            }
         } finally {
             commitAndCloseTransaction(entityManager);
         }

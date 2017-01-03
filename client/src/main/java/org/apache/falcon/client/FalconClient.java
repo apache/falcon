@@ -1200,9 +1200,10 @@ public class FalconClient extends AbstractFalconClient {
         }
     }
 
-    public APIResult scheduleExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult scheduleExtensionJob(String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SCHEDULE.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.SCHEDULE);
         return getResponse(APIResult.class, clientResponse);
