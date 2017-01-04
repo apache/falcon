@@ -120,6 +120,55 @@ class EntityProxyUtil {
         return results;
     }
 
+    APIResult proxySchedule(final String type, final String entity, final String coloExpr,
+                                    final Boolean skipDryRun, final String properties,
+                                    final HttpServletRequest bufferedRequest) {
+        return new EntityProxy(type, entity) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return getColosFromExpression(coloExpr, type, entity);
+            }
+
+            @Override
+            protected APIResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("schedule", bufferedRequest, type, entity,
+                        colo, skipDryRun, properties);
+            }
+        }.execute();
+    }
+
+    APIResult proxySuspend(final String type, final String entity, final String coloExpr,
+                                   final HttpServletRequest bufferedRequest) {
+        return new EntityProxy(type, entity) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return getColosFromExpression(coloExpr, type, entity);
+            }
+
+            @Override
+            protected APIResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("suspend", bufferedRequest, type, entity,
+                        colo);
+            }
+        }.execute();
+    }
+
+    APIResult proxyResume(final String type, final String entity, final String coloExpr,
+                          final HttpServletRequest bufferedRequest) {
+        return new EntityProxy(type, entity) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return getColosFromExpression(coloExpr, type, entity);
+            }
+
+            @Override
+            protected APIResult doExecute(String colo) throws FalconException {
+                return getEntityManager(colo).invoke("resume", bufferedRequest, type, entity,
+                        colo);
+            }
+        }.execute();
+    }
+
     Map<String, APIResult> proxyUpdate(final String type, final String entityName, final Boolean skipDryRun,
                                        final HttpServletRequest bufferedRequest, Entity newEntity) {
         final Set<String> oldColos = getApplicableColos(type, entityName);

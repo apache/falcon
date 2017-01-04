@@ -1209,17 +1209,19 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult suspendExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUSPEND.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.SUSPEND);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult resumeExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.RESUME.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.RESUME);
         return getResponse(APIResult.class, clientResponse);

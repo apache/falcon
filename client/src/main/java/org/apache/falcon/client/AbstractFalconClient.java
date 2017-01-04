@@ -255,6 +255,25 @@ public abstract class AbstractFalconClient {
      * @return APIResult status of the deletion query.
      */
     public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be suspended.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user
+     * @return result status of the suspend operation.
+     */
+    public abstract APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be resumed.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user.
+     * @return result status of the resume operation.
+     */
+    public abstract APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
     /**
      *  Prepares set of entities the extension has implemented to validate the extension job.
      * @param jobName job name of the extension job.

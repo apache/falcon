@@ -139,10 +139,12 @@ public class FalconExtensionCLI extends FalconCLI{
             result = client.scheduleExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SUSPEND_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
-            result = client.suspendExtensionJob(jobName, doAsUser).getMessage();
+            colo = getColo(colo);
+            result = client.suspendExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.RESUME_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
-            result = client.resumeExtensionJob(jobName, doAsUser).getMessage();
+            colo = getColo(colo);
+            result = client.resumeExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.DELETE_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.deleteExtensionJob(jobName, doAsUser).getMessage();

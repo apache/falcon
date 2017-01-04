@@ -148,6 +148,34 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         return new APIResult(APIResult.Status.SUCCEEDED, "Updated successfully");
     }
 
+    APIResult suspendExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        List<String> feeds = extensionJobsBean.getFeeds();
+        List<String> processes = extensionJobsBean.getProcesses();
+        for (String entityName : feeds) {
+            super.suspend(null, EntityType.FEED.name(), entityName, coloExpr);
+        }
+        for (String entityName : processes) {
+            super.suspend(null, EntityType.PROCESS.name(), entityName, coloExpr);
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " suspended successfully");
+    }
+
+    APIResult resumeExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        List<String> feeds = extensionJobsBean.getFeeds();
+        List<String> processes = extensionJobsBean.getProcesses();
+        for (String entityName : feeds) {
+            super.resume(null, EntityType.FEED.name(), entityName, coloExpr);
+        }
+        for (String entityName : processes) {
+            super.resume(null, EntityType.PROCESS.name(), entityName, coloExpr);
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " suspended successfully");
+    }
+
     APIResult registerExtensionMetadata(String extensionName, String packagePath, String description) {
         return super.registerExtensionMetadata(extensionName, packagePath, description, CurrentUser.getUser());
     }

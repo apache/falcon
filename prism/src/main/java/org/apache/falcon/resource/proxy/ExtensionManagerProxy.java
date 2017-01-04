@@ -221,27 +221,58 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult suspend(@PathParam("job-name") String jobName,
-                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+                             @Context HttpServletRequest request,
+                             @DefaultValue("") @QueryParam("doAs") String doAsUser,
+                             @QueryParam("colo") final String coloExpr) {
         checkIfExtensionServiceIsEnabled();
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                // return failure if the extension job doesn't exist
-                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
-            }
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean == null) {
+            // return failure if the extension job doesn't exist
+            LOG.error("Extension Job not found:" + jobName);
+            throw FalconWebException.newAPIException("ExtensionJob not found:" + jobName,
+                    Response.Status.NOT_FOUND);
+        }
 
-            for (Entity entity : entities) {
-                if (entity.getEntityType().isSchedulable()) {
-                    if (getWorkflowEngine(entity).isActive(entity)) {
-                        getWorkflowEngine(entity).suspend(entity);
-                    }
-                }
-            }
-        } catch (FalconException | IOException e) {
-            LOG.error("Error when scheduling extension job: " + jobName + ": ", e);
+        try {
+            suspendEntities(extensionJobsBean, coloExpr, request);
+        } catch (FalconException e) {
+            LOG.error("Error while suspending entities of the extension: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " suspended successfully");
+    }
+
+    private void suspendEntities(ExtensionJobsBean extensionJobsBean, String coloExpr, final HttpServletRequest request)
+        throws FalconException {
+        List<String> processes = extensionJobsBean.getProcesses();
+        List<String> feeds = extensionJobsBean.getFeeds();
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        suspendEntities(coloExpr, feeds, EntityType.FEED.name(), bufferedRequest);
+        suspendEntities(coloExpr, processes, EntityType.PROCESS.name(), bufferedRequest);
+    }
+
+    private void resumeEntities(ExtensionJobsBean extensionJobsBean, String coloExpr, final HttpServletRequest request)
+        throws FalconException {
+        List<String> processes = extensionJobsBean.getProcesses();
+        List<String> feeds = extensionJobsBean.getFeeds();
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        resumeEntities(coloExpr, feeds, EntityType.FEED.name(), bufferedRequest);
+        resumeEntities(coloExpr, processes, EntityType.PROCESS.name(), bufferedRequest);
+    }
+
+    private void resumeEntities(String coloExpr, List<String> entityNames, final String entityType,
+                                 final HttpServletRequest bufferedRequest) throws FalconException {
+        for (final String entityName : entityNames) {
+            entityProxyUtil.proxyResume(entityType, entityName, coloExpr, bufferedRequest);
+        }
+    }
+
+    private void suspendEntities(String coloExpr, List<String> entityNames, final String entityType,
+                                        final HttpServletRequest bufferedRequest) throws FalconException {
+        for (final String entityName : entityNames) {
+            entityProxyUtil.proxySuspend(entityType, entityName, coloExpr, bufferedRequest);
+        }
     }
 
     @POST
@@ -249,24 +280,22 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public APIResult resume(@PathParam("job-name") String jobName,
+                            @Context HttpServletRequest request,
+                            @QueryParam("colo") final String coloExpr,
                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean == null) {
+            // return failure if the extension job doesn't exist
+            LOG.error("Extension Job not found:" + jobName);
+            throw FalconWebException.newAPIException("ExtensionJob not found:" + jobName,
+                    Response.Status.NOT_FOUND);
+        }
         try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                // return failure if the extension job doesn't exist
-                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
-            }
-
-            for (Entity entity : entities) {
-                if (entity.getEntityType().isSchedulable()) {
-                    if (getWorkflowEngine(entity).isSuspended(entity)) {
-                        getWorkflowEngine(entity).resume(entity);
-                    }
-                }
-            }
-        } catch (FalconException | IOException e) {
-            LOG.error("Error when resuming extension job " + jobName + ": ", e);
+            resumeEntities(extensionJobsBean, coloExpr, request);
+        } catch (FalconException e) {
+            LOG.error("Error while resuming entities of the extension: " + jobName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " resumed successfully");
@@ -405,21 +434,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             for (final Entity entity : entry.getValue()) {
                 final HttpServletRequest httpServletRequest = getEntityStream(entity, entity.getEntityType(), request);
                 final HttpServletRequest bufferedRequest = getBufferedRequest(httpServletRequest);
-                final Set<String> colos = getColosFromExpression(coloExpr, entity.getEntityType().name(), entity);
-
-                new EntityProxy(entity.getEntityType().toString(), entity.getName()) {
-                    @Override
-                    protected Set<String> getColosToApply() {
-                        return colos;
-                    }
-
-                    @Override
-                    protected APIResult doExecute(String colo) throws FalconException {
-                        return new EntityProxyUtil().getEntityManager(colo).invoke("schedule", bufferedRequest,
-                                entity.getEntityType().toString(),
-                                entity.getName(), colo, Boolean.FALSE, "");
-                    }
-                }.execute();
+                entityProxyUtil.proxySchedule(entity.getEntityType().name(), entity.getName(), coloExpr,
+                        Boolean.FALSE, "", bufferedRequest);
             }
         }
     }
