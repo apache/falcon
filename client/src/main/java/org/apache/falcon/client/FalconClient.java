@@ -356,7 +356,9 @@ public class FalconClient extends AbstractFalconClient {
         UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_XML),
         DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_XML);
+        REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_XML),
+        ENABLE("api/extension/enable", HttpMethod.POST, MediaType.TEXT_XML),
+        DISABLE("api/extension/disable", HttpMethod.POST, MediaType.TEXT_XML);
 
         private String path;
         private String method;
@@ -1049,6 +1051,18 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
+    public APIResult enableExtension(final String extensionName) {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.ENABLE.path, extensionName).call(ExtensionOperations.ENABLE);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
+    public APIResult disableExtension(final String extensionName) {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.DISABLE.path, extensionName).call(ExtensionOperations.DISABLE);
+        return getResponse(APIResult.class, clientResponse);
+    }
+
     public APIResult getExtensionDefinition(final String extensionName)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DEFINITION.path, extensionName)
@@ -1186,9 +1200,10 @@ public class FalconClient extends AbstractFalconClient {
         }
     }
 
-    public APIResult scheduleExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult scheduleExtensionJob(String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SCHEDULE.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.SCHEDULE);
         return getResponse(APIResult.class, clientResponse);

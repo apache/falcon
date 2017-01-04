@@ -83,6 +83,8 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
 
         byte[] config = new byte[0];
         stateStore.storeExtensionJob("job1", "test2", feeds, processes, config);
+        //storing again to check for entity manager merge to let submission go forward.
+        stateStore.storeExtensionJob("job1", "test2", feeds, processes, config);
 
         Assert.assertEquals(stateStore.getAllExtensionJobs().size(), 1);
         Assert.assertEquals(stateStore.getExtensionJobDetails("job1").getFeeds().get(0), "testFeed");

@@ -17,7 +17,9 @@
  */
 package org.apache.falcon.extensions.jdbc;
 
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionType;
+import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.persistence.PersistenceConstants;
@@ -36,6 +38,7 @@ public class ExtensionMetaStore {
     private static final String EXTENSION_NAME = "extensionName";
     private static final String JOB_NAME = "jobName";
     private static final String EXTENSION_TYPE = "extensionType";
+    private static final String EXTENSION_STATUS = "extensionStatus";
 
     private EntityManager getEntityManager() {
         return FalconJPAService.get().getEntityManager();
@@ -50,6 +53,7 @@ public class ExtensionMetaStore {
         extensionBean.setCreationTime(new Date(System.currentTimeMillis()));
         extensionBean.setDescription(description);
         extensionBean.setExtensionOwner(extensionOwner);
+        extensionBean.setStatus(ExtensionStatus.ENABLED);
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
@@ -142,6 +146,11 @@ public class ExtensionMetaStore {
 
     public void storeExtensionJob(String jobName, String extensionName, List<String> feeds, List<String> processes,
                                   byte[] config) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        boolean alreadySubmitted = false;
+        if (metaStore.getExtensionJobDetails(jobName) != null){
+            alreadySubmitted = true;
+        }
         ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
         Date currentTime = new Date(System.currentTimeMillis());
         extensionJobsBean.setJobName(jobName);
@@ -154,7 +163,11 @@ public class ExtensionMetaStore {
         EntityManager entityManager = getEntityManager();
         try {
             beginTransaction(entityManager);
-            entityManager.persist(extensionJobsBean);
+            if (alreadySubmitted) {
+                entityManager.merge(extensionJobsBean);
+            } else {
+                entityManager.persist(extensionJobsBean);
+            }
         } finally {
             commitAndCloseTransaction(entityManager);
         }
@@ -227,6 +240,18 @@ public class ExtensionMetaStore {
         if (entityManager != null) {
             entityManager.getTransaction().commit();
             entityManager.close();
+        }
+    }
+
+    public void updateExtensionStatus(String extensionName, ExtensionStatus status) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query q = entityManager.createNamedQuery(PersistenceConstants.CHANGE_EXTENSION_STATUS);
+        q.setParameter(EXTENSION_NAME, extensionName).setParameter(EXTENSION_STATUS, status);
+        try {
+            q.executeUpdate();
+        } finally {
+            commitAndCloseTransaction(entityManager);
         }
     }
 }
