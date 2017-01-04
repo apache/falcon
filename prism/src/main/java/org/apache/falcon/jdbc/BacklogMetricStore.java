@@ -77,7 +77,7 @@ public class BacklogMetricStore {
         }
     }
 
-    public void deleteEntityInstance(String entityName, String entityType) {
+    public void deleteEntityBackLogInstances(String entityName, String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_BACKLOG_ENTITY_INSTANCES);
