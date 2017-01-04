@@ -369,7 +369,7 @@ public class FalconEntityCLI extends FalconCLI {
         OUT.get().println(result);
     }
 
-    private void validateColo(Set<String> optionsList) {
+    static void validateColo(Set<String> optionsList) {
         if (optionsList.contains(FalconCLIConstants.COLO_OPT)) {
             throw new FalconCLIException("Invalid argument : " + FalconCLIConstants.COLO_OPT);
         }
