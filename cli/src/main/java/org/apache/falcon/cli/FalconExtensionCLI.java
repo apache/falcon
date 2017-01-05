@@ -33,38 +33,44 @@ import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.apache.falcon.cli.FalconEntityCLI.validateColo;
+import static org.apache.falcon.client.FalconCLIConstants.COLO_OPT;
+import static org.apache.falcon.client.FalconCLIConstants.COLO_OPT_DESCRIPTION;
+
 /**
  * Falcon extensions Command Line Interface - wraps the RESTful API for extensions.
  */
-public class FalconExtensionCLI {
+public class FalconExtensionCLI extends FalconCLI{
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
 
     // Extension commands
-    public static final String ENUMERATE_OPT = "enumerate";
-    public static final String DEFINITION_OPT = "definition";
-    public static final String DESCRIBE_OPT = "describe";
-    public static final String INSTANCES_OPT = "instances";
-    public static final String UNREGISTER_OPT = "unregister";
-    public static final String DETAIL_OPT = "detail";
-    public static final String REGISTER_OPT = "register";
-    public static final String ENABLE_OPT = "enable";
-    public static final String DISABLE_OPT = "disable";
+    private static final String ENUMERATE_OPT = "enumerate";
+    private static final String DEFINITION_OPT = "definition";
+    private static final String DESCRIBE_OPT = "describe";
+    private static final String INSTANCES_OPT = "instances";
+    private static final String UNREGISTER_OPT = "unregister";
+    private static final String DETAIL_OPT = "detail";
+    private static final String REGISTER_OPT = "register";
+    private static final String ENABLE_OPT = "enable";
+    private static final String DISABLE_OPT = "disable";
 
     // Input parameters
-    public static final String EXTENSION_NAME_OPT = "extensionName";
-    public static final String JOB_NAME_OPT = "jobName";
+    private static final String EXTENSION_NAME_OPT = "extensionName";
+    private static final String JOB_NAME_OPT = "jobName";
     public static final String DESCRIPTION = "description";
-    public static final String PATH = "path";
+    private static final String PATH = "path";
 
-    public FalconExtensionCLI() {
+    FalconExtensionCLI() throws Exception {
+        super();
     }
 
-    public void extensionCommand(CommandLine commandLine, FalconClient client) {
+    void extensionCommand(CommandLine commandLine, FalconClient client) throws IOException {
         Set<String> optionsList = new HashSet<>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -77,6 +83,8 @@ public class FalconExtensionCLI {
         String doAsUser = commandLine.getOptionValue(FalconCLIConstants.DO_AS_OPT);
         String path = commandLine.getOptionValue(FalconCLIConstants.PATH);
         String description = commandLine.getOptionValue(FalconCLIConstants.DESCRIPTION);
+        String colo = commandLine.getOptionValue(FalconCLIConstants.COLO_OPT);
+        colo = getColo(colo);
 
         if (optionsList.contains(ENUMERATE_OPT)) {
             result = client.enumerateExtensions().getMessage();
@@ -105,6 +113,7 @@ public class FalconExtensionCLI {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
+            validateColo(optionsList);
             result = client.submitExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(REGISTER_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
@@ -114,6 +123,7 @@ public class FalconExtensionCLI {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
+            validateColo(optionsList);
             result = client.submitAndScheduleExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.UPDATE_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
@@ -125,7 +135,8 @@ public class FalconExtensionCLI {
             result = client.validateExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
-            result = client.scheduleExtensionJob(jobName, doAsUser).getMessage();
+            colo = getColo(colo);
+            result = client.scheduleExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SUSPEND_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.suspendExtensionJob(jobName, doAsUser).getMessage();
@@ -170,7 +181,7 @@ public class FalconExtensionCLI {
         OUT.get().println(result);
     }
 
-    public Options createExtensionOptions() {
+    Options createExtensionOptions() {
         Options extensionOptions = new Options();
 
         Option enumerate = new Option(ENUMERATE_OPT, false, "Enumerate all extensions");
@@ -192,6 +203,8 @@ public class FalconExtensionCLI {
         Option detail = new Option(FalconCLIConstants.DETAIL, false, "Show details of a given extension");
         Option register = new Option(FalconCLIConstants.REGISTER, false, "Register an extension with Falcon. This will "
                 + "make the extension available for instantiation for all users.");
+        Option colo = new Option(COLO_OPT, true, COLO_OPT_DESCRIPTION);
+        colo.setRequired(false);
 
         OptionGroup group = new OptionGroup();
         group.addOption(enumerate);
@@ -249,6 +262,7 @@ public class FalconExtensionCLI {
         extensionOptions.addOption(filePath);
         extensionOptions.addOption(path);
         extensionOptions.addOption(description);
+        extensionOptions.addOption(colo);
 
         return extensionOptions;
     }

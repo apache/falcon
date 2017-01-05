@@ -19,6 +19,7 @@ package org.apache.falcon.service;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.jdbc.BacklogMetricStore;
 import org.apache.falcon.metrics.MetricNotificationService;
@@ -46,9 +47,9 @@ import java.util.Map;
  */
 public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
     private static final String DB_BASE_DIR = "target/test-data/backlogmetricdb";
-    protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
-    protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
-    protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
+    private static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
+    protected static String url = "jdbc:derby:" + dbLocation + ";create=true";
+    private static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
     protected LocalFileSystem fs = new LocalFileSystem();
 
     private static BacklogMetricStore backlogMetricStore;
@@ -56,13 +57,13 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
     private static BacklogMetricEmitterService backlogMetricEmitterService;
     private MetricNotificationService mockMetricNotificationService;
 
-    protected int execDBCLICommands(String[] args) {
+    private int execDBCLICommands(String[] args) {
         return new FalconStateStoreDBCLI().run(args);
     }
 
-    public void createDB(String file) {
+    private void createDB(String file) {
         File sqlFile = new File(file);
-        String[] argsCreate = { "create", "-sqlfile", sqlFile.getAbsolutePath(), "-run" };
+        String[] argsCreate = {"create", "-sqlfile", sqlFile.getAbsolutePath(), "-run"};
         int result = execDBCLICommands(argsCreate);
         Assert.assertEquals(0, result);
         Assert.assertTrue(sqlFile.exists());
@@ -79,7 +80,7 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
     }
 
     @BeforeClass
-    public void setup() throws Exception{
+    public void setup() throws Exception {
         StateStoreProperties.get().setProperty(FalconJPAService.URL, url);
         Configuration localConf = new Configuration();
         fs.initialize(LocalFileSystem.getDefaultUri(localConf), localConf);
@@ -94,7 +95,6 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
         Services.get().register(mockMetricNotificationService);
         Services.get().register(BacklogMetricEmitterService.get());
         backlogMetricEmitterService = BacklogMetricEmitterService.get();
-
     }
 
 
@@ -102,7 +102,7 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
     public void testBacklogEmitter() throws Exception {
         backlogMetricEmitterService.init();
         storeEntity(EntityType.PROCESS, "entity1");
-        backlogMetricEmitterService.highSLAMissed("entity1",  "cluster1", EntityType.PROCESS,
+        backlogMetricEmitterService.highSLAMissed("entity1", "cluster1", EntityType.PROCESS,
                 BacklogMetricEmitterService.DATE_FORMAT.get().parse("2016-06-30T00-00Z"));
         Thread.sleep(10);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
@@ -116,7 +116,11 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
         Mockito.reset(mockMetricNotificationService);
         Mockito.verify(mockMetricNotificationService, Mockito.times(0)).publish(Mockito.any(String.class),
                 Mockito.any(Long.class));
-
+        backlogMetricEmitterService.highSLAMissed("entity1", "cluster1", EntityType.PROCESS,
+                BacklogMetricEmitterService.DATE_FORMAT.get().parse("2016-06-30T00-00Z"));
+        Thread.sleep(1000);
+        backlogMetricEmitterService.onRemove(EntityUtil.getEntity(EntityType.PROCESS, "entity1"));
+        Assert.assertNull(backlogMetricStore.getAllInstances());
     }
 
     private WorkflowExecutionContext getWorkflowExecutionContext() {
@@ -126,8 +130,6 @@ public class BacklogMetricEmitterServiceTest extends AbstractTestBase{
         args.put(WorkflowExecutionArgs.ENTITY_NAME, "entity1");
         args.put(WorkflowExecutionArgs.NOMINAL_TIME, "2016-06-30-00-00");
         args.put(WorkflowExecutionArgs.OPERATION, "GENERATE");
-        WorkflowExecutionContext workflowExecutionContext = new WorkflowExecutionContext(args);
-        return workflowExecutionContext;
-
+        return new WorkflowExecutionContext(args);
     }
 }
