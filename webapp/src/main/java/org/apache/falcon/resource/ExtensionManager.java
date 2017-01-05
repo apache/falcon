@@ -17,39 +17,93 @@
  */
 package org.apache.falcon.resource;
 
+import com.sun.jersey.multipart.FormDataBodyPart;
+import com.sun.jersey.multipart.FormDataParam;
 import org.apache.falcon.FalconWebException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.POST;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * This class provides RESTful API for the extensions.
  */
 @Path("extension")
-public class ExtensionManager {
-    public static final Logger LOG = LoggerFactory.getLogger(ExtensionManager.class);
+public class ExtensionManager extends AbstractExtensionManager {
+    private static final Logger LOG = LoggerFactory.getLogger(ExtensionManager.class);
 
     @GET
     @Path("enumerate")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getExtensions() {
+    public APIResult getExtensions() {
         LOG.error("Enumerate is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Enumerate is not supported on Server. Please run your operation "
                 + "on Prism.");
     }
 
+    @POST
+    @Path("schedule/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult schedule(@PathParam("job-name") String jobName,
+                              @Context HttpServletRequest request,
+                              @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("schedule is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("schedule is not supported on Server. Please run your operation "
+                + "on Prism.");
+    }
+
+    @POST
+    @Path("submit/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA,
+            MediaType.APPLICATION_OCTET_STREAM})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult submit(
+            @PathParam("extension-name") String extensionName,
+            @Context HttpServletRequest request,
+            @DefaultValue("") @QueryParam("doAs") String doAsUser,
+            @QueryParam("jobName") String jobName,
+            @FormDataParam("processes") List<FormDataBodyPart> processForms,
+            @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
+            @FormDataParam("config") InputStream config) {
+        LOG.error("submit is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("submit is not supported on Server. Please run your operation "
+                + "on Prism.");
+    }
+
+    @POST
+    @Path("submitAndSchedule/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult submitAndSchedule(
+            @PathParam("extension-name") String extensionName,
+            @Context HttpServletRequest request,
+            @DefaultValue("") @QueryParam("doAs") String doAsUser,
+            @QueryParam("jobName") String jobName,
+            @FormDataParam("processes") List<FormDataBodyPart> processForms,
+            @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
+            @FormDataParam("config") InputStream config) {
+        LOG.error("submitAndSchedule is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("submitAndSchedule is not supported on Server. Please run your "
+                + "operation on Prism.");
+    }
+
     @GET
     @Path("describe/{extension-name}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getExtensionDescription(
+    public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Describe is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Describe is not supported on Server. Please run your operation "
@@ -59,7 +113,7 @@ public class ExtensionManager {
     @GET
     @Path("detail/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getDetail(@PathParam("extension-name") String extensionName) {
+    public APIResult getDetail(@PathParam("extension-name") String extensionName) {
         LOG.error("Detail is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Detail is not supported on Server. Please run your operation "
                 + "on Prism.");
@@ -69,8 +123,8 @@ public class ExtensionManager {
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Produces(MediaType.TEXT_PLAIN)
-    public String deleteExtensionMetadata(
-            @PathParam("extension-name") String extensionName){
+    public APIResult deleteExtensionMetadata(
+            @PathParam("extension-name") String extensionName) {
         LOG.error("Unregister is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Unregister is not supported on Server. Please run your operation "
                 + "on Prism.");
@@ -79,7 +133,7 @@ public class ExtensionManager {
     @GET
     @Path("definition/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
-    public String getExtensionDefinition(
+    public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Definition is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Definition is not supported on Server. Please run your operation "

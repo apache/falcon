@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Backlog Metric Store for entitties.
+ * Backlog Metric Store for entities' backlog instances.
  */
 public class BacklogMetricStore {
 
@@ -70,19 +70,20 @@ public class BacklogMetricStore {
         q.setParameter("clusterName", cluster);
         q.setParameter("nominalTime", nominalTime);
         q.setParameter("entityType", entityType.name());
-        try{
+        try {
             q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
         }
     }
 
-    public void deleteEntityInstance(String entityName){
+    public void deleteEntityBackLogInstances(String entityName, String entityType) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_ALL_BACKLOG_ENTITY_INSTANCES);
         q.setParameter("entityName", entityName);
-        try{
+        q.setParameter("entityType", entityType);
+        try {
             q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
@@ -110,7 +111,7 @@ public class BacklogMetricStore {
             if (CollectionUtils.isEmpty(result)) {
                 return null;
             }
-        } finally{
+        } finally {
             entityManager.close();
         }
 
@@ -121,7 +122,7 @@ public class BacklogMetricStore {
             if (!backlogMetrics.containsKey(entity)) {
                 backlogMetrics.put(entity, new ArrayList<MetricInfo>());
             }
-            List<MetricInfo> metrics =  backlogMetrics.get(entity);
+            List<MetricInfo> metrics = backlogMetrics.get(entity);
             MetricInfo metricInfo = new MetricInfo(BacklogMetricEmitterService.DATE_FORMAT.get()
                     .format(backlogMetricBean.getNominalTime()),
                     backlogMetricBean.getClusterName());
