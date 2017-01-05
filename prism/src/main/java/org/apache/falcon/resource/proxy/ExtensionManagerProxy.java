@@ -362,12 +362,24 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private ExtensionType getExtensionType(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
+        if (extensionDetails == null) {
+            // return failure if the extension job doesn't exist
+            LOG.error("Extension not found: " + extensionName);
+            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
+                    Response.Status.NOT_FOUND);
+        }
         return extensionDetails.getExtensionType();
     }
 
     private String getExtensionName(String jobName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobDetails = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobDetails == null) {
+            // return failure if the extension job doesn't exist
+            LOG.error("Extension job not found: " + jobName);
+            throw FalconWebException.newAPIException("Extension Job not found:" + jobName,
+                    Response.Status.NOT_FOUND);
+        }
         return extensionJobDetails.getExtensionName();
     }
 
@@ -586,6 +598,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         String extensionName = getExtensionName(jobName);
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
+            if (entityMap.isEmpty()) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
             updateEntities(extensionName, jobName, entityMap, config, request);
         } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error while updating extension job: " + jobName, e);
@@ -618,7 +634,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully");
     }
-
 
     // Extension store related REST API's
     @GET
