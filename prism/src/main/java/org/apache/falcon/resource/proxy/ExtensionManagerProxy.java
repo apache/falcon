@@ -30,7 +30,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.ExtensionProperties;
@@ -794,22 +793,5 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 
-    private static void checkIfExtensionIsEnabled(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        if (!metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
-            LOG.error("Extension: " + extensionName + " is in disabled state.");
-            throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
-                    Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
 
-    private static void checkIfExtensionJobExists(String jobName, String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
-        if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
-            LOG.error("Extension job with name: " + extensionName + " already exists.");
-            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
-                    Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
 }
