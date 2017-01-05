@@ -246,18 +246,20 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private void suspendEntities(SortedMap<EntityType, List<String>> entityNameMap, String coloExpr,
                                  final HttpServletRequest request) throws FalconException {
+        HttpServletRequest bufferedRequest = new BufferedRequest(request);
         for (Map.Entry<EntityType, List<String>> entityTypeEntry : entityNameMap.entrySet()) {
             for (final String entityName : entityTypeEntry.getValue()) {
-                entityProxyUtil.proxySuspend(entityTypeEntry.getKey().name(), entityName, coloExpr, request);
+                entityProxyUtil.proxySuspend(entityTypeEntry.getKey().name(), entityName, coloExpr, bufferedRequest);
             }
         }
     }
 
     private void resumeEntities(SortedMap<EntityType, List<String>> entityNameMap, String coloExpr,
                                 final HttpServletRequest request) throws FalconException {
+        HttpServletRequest bufferedRequest = new BufferedRequest(request);
         for (Map.Entry<EntityType, List<String>> entityTypeEntry : entityNameMap.entrySet()) {
             for (final String entityName : entityTypeEntry.getValue()) {
-                entityProxyUtil.proxyResume(entityTypeEntry.getKey().name(), entityName, coloExpr, request);
+                entityProxyUtil.proxyResume(entityTypeEntry.getKey().name(), entityName, coloExpr, bufferedRequest);
             }
         }
     }
@@ -421,10 +423,11 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private void scheduleEntities(SortedMap<EntityType, List<String>> entityMap, HttpServletRequest request,
                                   String coloExpr) throws FalconException {
+        HttpServletRequest bufferedRequest = new BufferedRequest(request);
         for (Map.Entry<EntityType, List<String>> entityTypeEntry : entityMap.entrySet()) {
             for (final String entityName : entityTypeEntry.getValue()) {
                 entityProxyUtil.proxySchedule(entityTypeEntry.getKey().name(), entityName, coloExpr,
-                        Boolean.FALSE, "", request);
+                        Boolean.FALSE, "", bufferedRequest);
             }
         }
     }
@@ -440,9 +443,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         throws FalconException {
         for (Map.Entry<EntityType, List<String>> entityTypeEntry : entityMap.entrySet()) {
             for (final String entityName : entityTypeEntry.getValue()) {
-                entityProxyUtil.proxyDelete(entityTypeEntry.getKey().name(), entityName, request);
+                HttpServletRequest bufferedRequest = new BufferedRequest(request);
+                entityProxyUtil.proxyDelete(entityTypeEntry.getKey().name(), entityName, bufferedRequest);
                 if (!embeddedMode) {
-                    super.delete(request, entityTypeEntry.getKey().name(), entityName, currentColo);
+                    super.delete(bufferedRequest, entityTypeEntry.getKey().name(), entityName, currentColo);
                 }
             }
         }
