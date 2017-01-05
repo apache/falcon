@@ -448,6 +448,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         try {
             submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
+            Assert.fail("Should have thrown a FalconWebException");
         } catch (FalconWebException e) {
             Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Extension: "
                     + TEST_EXTENSION + " is in disabled state.");

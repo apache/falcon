@@ -314,7 +314,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
@@ -397,7 +397,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
@@ -597,7 +597,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         String extensionName = getExtensionName(jobName);
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
-            if (entityMap.isEmpty()) {
+            if (entityMap.get(EntityType.FEED).isEmpty() && entityMap.get(EntityType.PROCESS).isEmpty()) {
                 // return failure if the extension job doesn't exist
                 return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
             }

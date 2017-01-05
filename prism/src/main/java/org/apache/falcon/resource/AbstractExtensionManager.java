@@ -233,7 +233,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         return results;
     }
 
-    public static void checkIfExtensionIsEnabled(String extensionName) {
+    protected static void checkIfExtensionIsEnabled(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         if (!metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
             LOG.error("Extension: " + extensionName + " is in disabled state.");
@@ -242,7 +242,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public static void checkIfExtensionJobExists(String jobName, String extensionName) {
+    protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {

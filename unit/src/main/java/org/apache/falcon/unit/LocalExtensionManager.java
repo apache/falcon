@@ -46,7 +46,7 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     APIResult submitExtensionJob(String extensionName, String jobName, InputStream configStream,
                                  SortedMap<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
             for (Entity entity : entry.getValue()) {
                 submitInternal(entity, "falconUser");
@@ -57,8 +57,10 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     }
 
     APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream configStream,
-                                               SortedMap<EntityType, List<Entity>> entityMap) throws FalconException,
-            IOException {
+                                               SortedMap<EntityType, List<Entity>> entityMap)
+        throws FalconException, IOException {
+        checkIfExtensionIsEnabled(extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
             for (Entity entity : entry.getValue()) {
                 submitInternal(entity, "falconUser");
@@ -96,8 +98,9 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         ExtensionStore.getMetaStore().storeExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
     }
 
-    APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser) throws FalconException,
-            IOException {
+    APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser)
+        throws FalconException, IOException {
+        checkIfExtensionIsEnabled(ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName());
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         SortedMap<EntityType, List<Entity>> entityMap = getJobEntities(extensionJobsBean);
