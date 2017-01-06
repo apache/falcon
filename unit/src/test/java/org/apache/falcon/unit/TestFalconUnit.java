@@ -438,6 +438,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         clearDB();
         submitCluster();
         createExtensionPackage();
+        createDir(PROCESS_APP_PATH);
+        fs.copyFromLocalFile(new Path(getAbsolutePath(WORKFLOW)), new Path(PROCESS_APP_PATH, "workflow.xml"));
         String packageBuildLib = new Path(EXTENSION_PATH, "libs/build/").toString();
         String result = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION);
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
@@ -453,6 +455,14 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(process.getPipelines(), "testPipeline");
 
         apiResult = getClient().scheduleExtensionJob(TEST_JOB, null, null);
+        assertStatus(apiResult);
+
+        apiResult = getClient().suspendExtensionJob(TEST_JOB, null, null);
+        assertStatus(apiResult);
+        apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
+        Assert.assertEquals(apiResult.getMessage(), "SUSPENDED");
+
+        apiResult = getClient().resumeExtensionJob(TEST_JOB, null, null);
         assertStatus(apiResult);
         apiResult = getClient().getStatus(EntityType.PROCESS, "sample", CLUSTER_NAME, null, false);
         assertStatus(apiResult);
@@ -487,8 +497,13 @@ public class TestFalconUnit extends FalconUnitTestBase {
         }
     }
 
+    @Test
+    public void testExtensionJobSuspendAndResume() throws Exception {
 
-    void copyExtensionJar(String destDirPath) throws IOException {
+    }
+
+
+    private void copyExtensionJar(String destDirPath) throws IOException {
         File dir = new File(new Path(JARS_DIR).toUri().toURL().getPath());
         for (File file : dir.listFiles()) {
             if (file.toString().endsWith(".jar")) {
