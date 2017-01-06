@@ -39,7 +39,7 @@ import java.util.SortedMap;
 /**
  * A proxy implementation of the extension operations in local mode.
  */
-public class LocalExtensionManager extends AbstractExtensionManager {
+class LocalExtensionManager extends AbstractExtensionManager {
     LocalExtensionManager() {}
 
     APIResult submitExtensionJob(String extensionName, String jobName, InputStream configStream,
@@ -99,10 +99,10 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         throws FalconException, IOException{
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
-        SortedMap<EntityType, List<Entity>> entityMap = getJobEntities(extensionJobsBean);
-        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
-            for (Entity entity : entry.getValue()) {
-                scheduleInternal(entity.getEntityType().name(), entity.getName(), true, null);
+        SortedMap<EntityType, List<String>> entityMap = getJobEntities(extensionJobsBean);
+        for (Map.Entry<EntityType, List<String>> entry : entityMap.entrySet()) {
+            for (String entityName : entry.getValue()) {
+                scheduleInternal(entry.getKey().name(), entityName, true, null);
             }
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " scheduled successfully");
@@ -111,10 +111,10 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     APIResult deleteExtensionJob(String jobName) throws FalconException, IOException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
-        SortedMap<EntityType, List<Entity>> entityMap = getJobEntities(extensionJobsBean);
-        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
-            for (Entity entity : entry.getValue()) {
-                delete(entity.getEntityType().name(), entity.getName(), null);
+        SortedMap<EntityType, List<String>> entityMap = getJobEntities(extensionJobsBean);
+        for (Map.Entry<EntityType, List<String>> entry : entityMap.entrySet()) {
+            for (String entityName : entry.getValue()) {
+                delete(entry.getKey().name(), entityName, null);
             }
         }
         ExtensionStore.getMetaStore().deleteExtensionJob(jobName);
@@ -146,6 +146,30 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         }
         ExtensionStore.getMetaStore().updateExtensionJob(jobName, extensionName, feedNames, processNames, configBytes);
         return new APIResult(APIResult.Status.SUCCEEDED, "Updated successfully");
+    }
+
+    APIResult suspendExtensionJob(String jobName, String coloExpr, String doAsUser) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        SortedMap<EntityType, List<String>> entityMap = getJobEntities(extensionJobsBean);
+        for (Map.Entry<EntityType, List<String>> entityTypeEntry : entityMap.entrySet()) {
+            for (String entityName : entityTypeEntry.getValue()) {
+                super.suspend(null, entityTypeEntry.getKey().name(), entityName, coloExpr);
+            }
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " suspended successfully");
+    }
+
+    APIResult resumeExtensionJob(String jobName, String coloExpr, String doAsUser) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        SortedMap<EntityType, List<String>> entityMap = getJobEntities(extensionJobsBean);
+        for (Map.Entry<EntityType, List<String>> entityTypeEntry : entityMap.entrySet()) {
+            for (String entityName : entityTypeEntry.getValue()) {
+                super.resume(null, entityTypeEntry.getKey().name(), entityName, coloExpr);
+            }
+        }
+        return new APIResult(APIResult.Status.SUCCEEDED, "Extension job " + jobName + " suspended successfully");
     }
 
     APIResult registerExtensionMetadata(String extensionName, String packagePath, String description) {
