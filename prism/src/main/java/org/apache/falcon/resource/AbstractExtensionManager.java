@@ -20,11 +20,8 @@ package org.apache.falcon.resource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.EntityNotRegisteredException;
-import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.extensions.ExtensionStatus;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
@@ -37,8 +34,6 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -59,9 +54,9 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
 
     public static final String NAME = "name";
-    protected static final String EXTENSION_TYPE = "type";
-    protected static final String EXTENSION_DESC = "description";
-    protected static final String EXTENSION_LOCATION = "location";
+    private static final String EXTENSION_TYPE = "type";
+    private static final String EXTENSION_DESC = "description";
+    private static final String EXTENSION_LOCATION = "location";
 
     protected static void validateExtensionName(final String extensionName) {
         if (StringUtils.isBlank(extensionName)) {
@@ -114,26 +109,12 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    protected SortedMap<EntityType, List<Entity>> getJobEntities(ExtensionJobsBean extensionJobsBean)
-        throws FalconException, IOException {
-        TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
-        List<String> processes = extensionJobsBean.getProcesses();
-        List<String> feeds = extensionJobsBean.getFeeds();
-        entityMap.put(EntityType.PROCESS, getEntities(processes, EntityType.PROCESS));
-        entityMap.put(EntityType.FEED, getEntities(feeds, EntityType.FEED));
+    protected SortedMap<EntityType, List<String>> getJobEntities(ExtensionJobsBean extensionJobsBean)
+        throws FalconException {
+        TreeMap<EntityType, List<String>> entityMap = new TreeMap<>();
+        entityMap.put(EntityType.PROCESS, extensionJobsBean.getProcesses());
+        entityMap.put(EntityType.FEED, extensionJobsBean.getFeeds());
         return entityMap;
-    }
-
-    private List<Entity> getEntities(List<String> entityNames, EntityType entityType) throws FalconException {
-        List<Entity> entities = new ArrayList<>();
-        for (String entityName : entityNames) {
-            try {
-                entities.add(EntityUtil.getEntity(entityType, entityName));
-            } catch (EntityNotRegisteredException e) {
-                LOG.error("Entity {}  not found during deletion nothing to do", entityName);
-            }
-        }
-        return entities;
     }
 
     private JSONObject buildExtensionJobDetailResult(final String jobName) throws FalconException {
@@ -174,7 +155,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         return tags.substring(nameStart, nameEnd);
     }
 
-    public String disableExtension(String extensionName, String currentUser) {
+    protected String disableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
             return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.DISABLED);
@@ -183,7 +164,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public String enableExtension(String extensionName, String currentUser) {
+    protected String enableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
             return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.ENABLED);

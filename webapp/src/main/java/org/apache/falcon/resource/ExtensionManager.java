@@ -130,6 +130,28 @@ public class ExtensionManager extends AbstractExtensionManager {
                 + "on Prism.");
     }
 
+    @POST
+    @Path("suspend/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult suspend(@PathParam("job-name") String jobName,
+                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("Suspend of an extension job is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Suspend of an extension job is not supported on Server."
+                + "Please run your operation on Prism.");
+    }
+
+    @POST
+    @Path("resume/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult resume(@PathParam("job-name") String jobName,
+                            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("Resume of an extension job is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Resume of an extension job is not supported on Server."
+                + "Please run your operation on Prism.");
+    }
+
     @GET
     @Path("definition/{extension-name}")
     @Produces({MediaType.APPLICATION_JSON})
