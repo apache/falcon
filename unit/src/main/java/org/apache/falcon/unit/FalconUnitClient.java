@@ -378,12 +378,20 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public APIResult suspendExtensionJob(String jobName, String coloExpr, String doAsUser) {
-        return localExtensionManager.suspendExtensionJob(jobName, coloExpr, doAsUser);
+        try {
+            return localExtensionManager.suspendExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in suspending the extension job:" + jobName);
+        }
     }
 
     @Override
     public APIResult resumeExtensionJob(String jobName, String coloExpr, String doAsUser) {
-        return localExtensionManager.resumeExtensionJob(jobName, coloExpr, doAsUser);
+        try {
+            return localExtensionManager.resumeExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in resuming the extension job:" + jobName);
+        }
     }
 
     @Override
