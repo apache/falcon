@@ -222,6 +222,13 @@ public abstract class AbstractFalconClient {
                                                 String doAsUser);
 
     /**
+     * Schedules the set of entities that are part of the extension.
+     * @param jobName extensionJob that needs to be scheduled.
+     * @return APIResult stating status of scheduling the extension.
+     */
+    public abstract APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser);
+
+    /**
      * Prepares set of entities the extension has implemented and stage them to a local directory and submits and
      * schedules them.
      * @param extensionName extension which is available in the store.
@@ -248,6 +255,25 @@ public abstract class AbstractFalconClient {
      * @return APIResult status of the deletion query.
      */
     public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be suspended.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user
+     * @return result status of the suspend operation.
+     */
+    public abstract APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be resumed.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user.
+     * @return result status of the resume operation.
+     */
+    public abstract APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
     /**
      *  Prepares set of entities the extension has implemented to validate the extension job.
      * @param jobName job name of the extension job.
