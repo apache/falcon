@@ -41,7 +41,7 @@ import java.util.SortedMap;
  */
 public class LocalExtensionManager extends AbstractExtensionManager {
     LocalExtensionManager() {
-    }   
+    }
 
     APIResult submitExtensionJob(String extensionName, String jobName, InputStream configStream,
                                  SortedMap<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
