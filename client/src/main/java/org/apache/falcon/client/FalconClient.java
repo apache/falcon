@@ -341,8 +341,8 @@ public class FalconClient extends AbstractFalconClient {
     protected static enum ExtensionOperations {
 
         ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.TEXT_XML),
-        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_XML),
+        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         INSTANCES("api/extension/instances", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUBMIT("api/extension/submit", HttpMethod.POST, MediaType.TEXT_XML),
