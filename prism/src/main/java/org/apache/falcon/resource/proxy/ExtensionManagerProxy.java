@@ -655,7 +655,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     @GET
     @Path("detail/{extension-name}")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     public APIResult getDetail(@PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
         validateExtensionName(extensionName);
@@ -668,7 +668,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     @GET
     @Path("extensionJobDetails/{job-name}")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     public APIResult getExtensionJobDetail(@PathParam("job-name") String jobName) {
         checkIfExtensionServiceIsEnabled();
         try {
