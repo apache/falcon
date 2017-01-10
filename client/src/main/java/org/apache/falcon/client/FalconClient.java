@@ -341,8 +341,8 @@ public class FalconClient extends AbstractFalconClient {
     protected static enum ExtensionOperations {
 
         ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.TEXT_XML),
-        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_XML),
+        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         INSTANCES("api/extension/instances", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUBMIT("api/extension/submit", HttpMethod.POST, MediaType.TEXT_XML),
@@ -354,8 +354,8 @@ public class FalconClient extends AbstractFalconClient {
         RESUME("api/extension/resume", HttpMethod.POST, MediaType.TEXT_XML),
         DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML),
         UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_XML),
-        DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.TEXT_XML),
+        JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.TEXT_XML),
         REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_XML),
         ENABLE("api/extension/enable", HttpMethod.POST, MediaType.TEXT_XML),
         DISABLE("api/extension/disable", HttpMethod.POST, MediaType.TEXT_XML);
@@ -1209,17 +1209,19 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult suspendExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUSPEND.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.SUSPEND);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult resumeExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.RESUME.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.RESUME);
         return getResponse(APIResult.class, clientResponse);

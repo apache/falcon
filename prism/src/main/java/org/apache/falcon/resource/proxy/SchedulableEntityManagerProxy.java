@@ -469,18 +469,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                               @QueryParam("properties") final String properties) {
 
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
-        return new EntityProxy(type, entity) {
-            @Override
-            protected Set<String> getColosToApply() {
-                return getColosFromExpression(coloExpr, type, entity);
-            }
-
-            @Override
-            protected APIResult doExecute(String colo) throws FalconException {
-                return entityProxyUtil.getEntityManager(colo).invoke("schedule", bufferedRequest, type, entity,
-                        colo, skipDryRun, properties);
-            }
-        }.execute();
+        return entityProxyUtil.proxySchedule(type, entity, coloExpr, skipDryRun, properties, bufferedRequest);
     }
 
     /**
@@ -531,22 +520,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                              @Dimension("colo") @QueryParam("colo") final String coloExpr) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        return new EntityProxy(type, entity) {
-            @Override
-            protected Set<String> getColosToApply() {
-                return getColosFromExpression(coloExpr, type, entity);
-            }
-
-            @Override
-            protected APIResult doExecute(String colo) throws FalconException {
-                return entityProxyUtil.getEntityManager(colo).invoke("suspend", bufferedRequest, type, entity,
-                        colo);
-            }
-        }.execute();
+        return entityProxyUtil.proxySuspend(type, entity, coloExpr, bufferedRequest);
     }
 
     /**
-     * Resume a supended entity.
+     * Resume a suspended entity.
      * @param request Servlet Request
      * @param type Valid options are feed or process.
      * @param entity Name of the entity.
@@ -564,18 +542,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("colo") @QueryParam("colo") final String coloExpr) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        return new EntityProxy(type, entity) {
-            @Override
-            protected Set<String> getColosToApply() {
-                return getColosFromExpression(coloExpr, type, entity);
-            }
-
-            @Override
-            protected APIResult doExecute(String colo) throws FalconException {
-                return entityProxyUtil.getEntityManager(colo).invoke("resume", bufferedRequest, type, entity,
-                        colo);
-            }
-        }.execute();
+        return entityProxyUtil.proxyResume(type, entity, coloExpr, bufferedRequest);
     }
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
