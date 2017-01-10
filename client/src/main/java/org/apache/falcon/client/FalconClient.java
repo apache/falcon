@@ -72,6 +72,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1164,6 +1165,7 @@ public class FalconClient extends AbstractFalconClient {
                         extensionBuildLocation);
             } catch (Exception e) {
                 LOG.error("Error in building the extension. Cause: ", e);
+                OUT.get().println("Error in building the extension:" + Arrays.toString(e.getStackTrace()));
                 throw new FalconCLIException("Error in building the extension:" + e.getMessage(), e);
             }
             if (entities == null || entities.isEmpty()) {
