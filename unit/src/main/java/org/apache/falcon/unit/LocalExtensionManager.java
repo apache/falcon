@@ -39,27 +39,30 @@ import java.util.SortedMap;
 /**
  * A proxy implementation of the extension operations in local mode.
  */
-class LocalExtensionManager extends AbstractExtensionManager {
-    LocalExtensionManager() {}
+public class LocalExtensionManager extends AbstractExtensionManager {
+    LocalExtensionManager() {
+    }
 
     APIResult submitExtensionJob(String extensionName, String jobName, InputStream configStream,
-                                 SortedMap<EntityType, List<Entity>> entityMap)
-        throws FalconException, IOException {
+                                 SortedMap<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
+        checkIfExtensionIsEnabled(extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
             for (Entity entity : entry.getValue()) {
                 submitInternal(entity, "falconUser");
             }
         }
         storeExtension(extensionName, jobName, configStream, entityMap);
-
         return new APIResult(APIResult.Status.SUCCEEDED, "Extension job submitted successfully" + jobName);
     }
 
     APIResult submitAndSchedulableExtensionJob(String extensionName, String jobName, InputStream configStream,
                                                SortedMap<EntityType, List<Entity>> entityMap)
         throws FalconException, IOException {
-        for(Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()){
-            for(Entity entity : entry.getValue()){
+        checkIfExtensionIsEnabled(extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
+        for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
+            for (Entity entity : entry.getValue()) {
                 submitInternal(entity, "falconUser");
             }
         }
@@ -96,7 +99,8 @@ class LocalExtensionManager extends AbstractExtensionManager {
     }
 
     APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser)
-        throws FalconException, IOException{
+        throws FalconException, IOException {
+        checkIfExtensionIsEnabled(ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName());
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         SortedMap<EntityType, List<String>> entityMap = getJobEntities(extensionJobsBean);
@@ -122,8 +126,7 @@ class LocalExtensionManager extends AbstractExtensionManager {
     }
 
     APIResult updateExtensionJob(String extensionName, String jobName, InputStream configStream,
-                                 SortedMap<EntityType, List<Entity>> entityMap)
-        throws FalconException, IOException {
+                                 SortedMap<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
@@ -180,7 +183,7 @@ class LocalExtensionManager extends AbstractExtensionManager {
         return super.deleteExtensionMetadata(extensionName);
     }
 
-    APIResult getExtensionJobDetails(String jobName){
+    APIResult getExtensionJobDetails(String jobName) {
         return super.getExtensionJobDetail(jobName);
     }
 
@@ -189,14 +192,14 @@ class LocalExtensionManager extends AbstractExtensionManager {
     }
 
     APIResult enableExtension(String extensionName) {
-        return new APIResult(APIResult.Status.SUCCEEDED, super.disableExtension(extensionName, CurrentUser.getUser()));
+        return new APIResult(APIResult.Status.SUCCEEDED, super.enableExtension(extensionName, CurrentUser.getUser()));
     }
 
-    APIResult getExtensionDetails(String extensionName){
+    APIResult getExtensionDetails(String extensionName) {
         return super.getExtensionDetail(extensionName);
     }
 
-    public APIResult getExtensions(){
+    public APIResult getExtensions() {
         return super.getExtensions();
     }
 }

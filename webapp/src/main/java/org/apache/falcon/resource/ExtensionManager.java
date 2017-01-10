@@ -157,8 +157,30 @@ public class ExtensionManager extends AbstractExtensionManager {
     @Produces({MediaType.APPLICATION_JSON})
     public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
-        LOG.error("Definition is not supported on Server.Please run your operation on Prism ");
+        LOG.error("Definition is not supported on Server. Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Definition is not supported on Server. Please run your operation "
                 + "on Prism.");
+    }
+
+    @GET
+    @Path("enable/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.TEXT_PLAIN)
+    public APIResult enableExtension(
+            @PathParam("extension-name") String extensionName) {
+        LOG.error("Enable extension is not supported on Server. Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Enable extension is not supported on Server. Please run your "
+                + "operation on Prism.");
+    }
+
+    @GET
+    @Path("disable/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.TEXT_PLAIN)
+    public APIResult disableExtension(
+            @PathParam("extension-name") String extensionName) {
+        LOG.error("Disable extension is not supported on Server. Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Disable extension is not supported on Server. Please run your "
+                + "operation on Prism.");
     }
 }
