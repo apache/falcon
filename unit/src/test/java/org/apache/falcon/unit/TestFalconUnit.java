@@ -444,8 +444,19 @@ public class TestFalconUnit extends FalconUnitTestBase {
         String result = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION);
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
 
+        disableExtension(TEST_EXTENSION);
         createDir(PROCESS_APP_PATH);
         copyExtensionJar(packageBuildLib);
+
+        try {
+            submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
+            Assert.fail("Should have thrown a FalconWebException");
+        } catch (FalconWebException e) {
+            Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Extension: "
+                    + TEST_EXTENSION + " is in disabled state.");
+        }
+        enableExtension(TEST_EXTENSION);
+
         APIResult apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
         result = getExtensionJobDetails(TEST_JOB);

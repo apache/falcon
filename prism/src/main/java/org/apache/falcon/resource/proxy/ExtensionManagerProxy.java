@@ -30,7 +30,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.ExtensionProperties;
@@ -334,7 +333,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
@@ -381,12 +380,24 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private ExtensionType getExtensionType(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
+        if (extensionDetails == null) {
+            // return failure if the extension job doesn't exist
+            LOG.error("Extension not found: " + extensionName);
+            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
+                    Response.Status.NOT_FOUND);
+        }
         return extensionDetails.getExtensionType();
     }
 
     private String getExtensionName(String jobName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobDetails = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobDetails == null) {
+            // return failure if the extension job doesn't exist
+            LOG.error("Extension job not found: " + jobName);
+            throw FalconWebException.newAPIException("Extension Job not found:" + jobName,
+                    Response.Status.NOT_FOUND);
+        }
         return extensionJobDetails.getExtensionName();
     }
 
@@ -405,7 +416,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @FormDataParam("config") InputStream config) {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionIsEnabled(extensionName);
-        checkIfExtensionJobExists(jobName, extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         SortedMap<EntityType, List<Entity>> entityMap;
         SortedMap<EntityType, List<String>> entityNameMap;
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
@@ -592,6 +603,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         String extensionName = getExtensionName(jobName);
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
+            if (entityMap.get(EntityType.FEED).isEmpty() && entityMap.get(EntityType.PROCESS).isEmpty()) {
+                // return failure if the extension job doesn't exist
+                return new APIResult(APIResult.Status.FAILED, "Extension job " + jobName + " doesn't exist.");
+            }
             updateEntities(extensionName, jobName, entityMap, config, request);
         } catch (FalconException | IOException | JAXBException e) {
             LOG.error("Error while updating extension job: " + jobName, e);
@@ -624,7 +639,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully");
     }
-
 
     // Extension store related REST API's
     @GET
@@ -785,22 +799,5 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 
-    private static void checkIfExtensionIsEnabled(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        if (!metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
-            LOG.error("Extension: " + extensionName + " is in disabled state.");
-            throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
-                    Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
 
-    private static void checkIfExtensionJobExists(String jobName, String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
-        if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
-            LOG.error("Extension job with name: " + extensionName + " already exists.");
-            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
-                    Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
 }

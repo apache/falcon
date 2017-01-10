@@ -213,4 +213,23 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
         return results;
     }
+
+    protected static void checkIfExtensionIsEnabled(String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        if (!metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
+            LOG.error("Extension: " + extensionName + " is in disabled state.");
+            throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
+            LOG.error("Extension job with name: " + extensionName + " already exists.");
+            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
