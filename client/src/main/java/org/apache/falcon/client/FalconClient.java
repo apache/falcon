@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
@@ -52,6 +53,8 @@ import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -81,6 +84,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FalconClient extends AbstractFalconClient {
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
+    public static final Logger LOG = LoggerFactory.getLogger(FalconClient.class);
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
@@ -187,6 +191,7 @@ public class FalconClient extends AbstractFalconClient {
             client.resource(UriBuilder.fromUri(baseUrl).build());
             authenticationToken = getToken(baseUrl);
         } catch (Exception e) {
+            LOG.error("Unable to initialize Falcon Client object. Cause : ", e);
             throw new FalconCLIException("Unable to initialize Falcon Client object. Cause : " + e.getMessage(), e);
         }
     }
@@ -1107,7 +1112,8 @@ public class FalconClient extends AbstractFalconClient {
         try {
             formDataMultiPart.close();
         } catch (IOException e) {
-            throw new FalconCLIException("Submit failed. Failed to submit entities", e);
+            LOG.error("Submit failed. Failed to submit entities. Cause: ", e);
+            throw new FalconCLIException("Submit failed. Failed to submit entities:" + e.getMessage(), e);
         }
         return formDataMultiPart;
     }
@@ -1132,17 +1138,20 @@ public class FalconClient extends AbstractFalconClient {
         try {
             extensionDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
-            throw new FalconCLIException("Failed to get details for the given extension", e);
+            LOG.error("Failed to get details for the given extension. Cause: ", e);
+            throw new FalconCLIException("Failed to get details for the given extension:" + e.getMessage(), e);
         }
         return extensionDetailJson;
     }
+
     private JSONObject getExtensionJobDetailJson(String jobName) {
         ClientResponse clientResponse = getExtensionJobDetailsResponse(jobName);
         JSONObject extensionJobDetailJson;
         try {
             extensionJobDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
-            throw new FalconCLIException("Failed to get details for the given extension", e);
+            LOG.error("Failed to get details for the given extension. Cause: ", e);
+            throw new FalconCLIException("Failed to get details for the given extension:" + e.getMessage(), e);
         }
         return extensionJobDetailJson;
     }
@@ -1155,7 +1164,9 @@ public class FalconClient extends AbstractFalconClient {
                 entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                         extensionBuildLocation);
             } catch (Exception e) {
-                throw new FalconCLIException("Error in building the extension", e);
+                LOG.error("Error in building the extension. Cause: ", e);
+                OUT.get().println("Error in building the extension:" + ExceptionUtils.getFullStackTrace(e));
+                throw new FalconCLIException("Error in building the extension:" + e.getMessage(), e);
             }
             if (entities == null || entities.isEmpty()) {
                 throw new FalconCLIException("No entities got built for the given extension");
