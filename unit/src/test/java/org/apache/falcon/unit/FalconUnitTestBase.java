@@ -224,6 +224,14 @@ public class FalconUnitTestBase {
         return falconUnitClient.registerExtension(extensionName, packagePath, description).getMessage();
     }
 
+    public String disableExtension(String extensionName) {
+        return falconUnitClient.disableExtension(extensionName).getMessage();
+    }
+
+    public String enableExtension(String extensionName) {
+        return falconUnitClient.enableExtension(extensionName).getMessage();
+    }
+
     public String getExtensionJobDetails(String jobName) {
         return falconUnitClient.getExtensionJobDetails(jobName).getMessage();
     }
