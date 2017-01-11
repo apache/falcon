@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
@@ -1165,7 +1166,7 @@ public class FalconClient extends AbstractFalconClient {
                         extensionBuildLocation);
             } catch (Exception e) {
                 LOG.error("Error in building the extension. Cause: ", e);
-                OUT.get().println("Error in building the extension:" + Arrays.toString(e.getStackTrace()));
+                OUT.get().println("Error in building the extension:" + ExceptionUtils.getFullStackTrace(e));
                 throw new FalconCLIException("Error in building the extension:" + e.getMessage(), e);
             }
             if (entities == null || entities.isEmpty()) {
