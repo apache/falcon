@@ -426,10 +426,10 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createExtensionPackage();
 
         String result = registerExtension("testExtension", new Path(STORAGE_URL + EXTENSION_PATH).toString()
-                , "testExtension");
+                , "testExtension", null);
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
 
-        result = unregisterExtension("testExtension");
+        result = unregisterExtension("testExtension", null);
         Assert.assertEquals(result, "Deleted extension:testExtension");
     }
 
@@ -441,10 +441,10 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createDir(PROCESS_APP_PATH);
         fs.copyFromLocalFile(new Path(getAbsolutePath(WORKFLOW)), new Path(PROCESS_APP_PATH, "workflow.xml"));
         String packageBuildLib = new Path(EXTENSION_PATH, "libs/build/").toString();
-        String result = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION);
+        String result = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION, null);
         Assert.assertEquals(result, "Extension :testExtension registered successfully.");
 
-        disableExtension(TEST_EXTENSION);
+        disableExtension(TEST_EXTENSION, null);
         createDir(PROCESS_APP_PATH);
         copyExtensionJar(packageBuildLib);
 
@@ -455,11 +455,11 @@ public class TestFalconUnit extends FalconUnitTestBase {
             Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Extension: "
                     + TEST_EXTENSION + " is in disabled state.");
         }
-        enableExtension(TEST_EXTENSION);
+        enableExtension(TEST_EXTENSION, null);
 
         APIResult apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
-        result = getExtensionJobDetails(TEST_JOB);
+        result = getExtensionJobDetails(TEST_JOB, null);
         JSONObject resultJson = new JSONObject(result);
         Assert.assertEquals(resultJson.get("extensionName"), TEST_EXTENSION);
         Process process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
@@ -482,7 +482,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         apiResult = updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
         assertStatus(apiResult);
 
-        String processes = new JSONObject(getExtensionJobDetails(TEST_JOB)).get("processes").toString();
+        String processes = new JSONObject(getExtensionJobDetails(TEST_JOB, null)).get("processes").toString();
         Assert.assertEquals(processes, "sample");
         process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
         Assert.assertEquals(process.getPipelines(), "testSample");
@@ -500,7 +500,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
             //Do nothing. Exception Expected
         }
         try {
-            getClient().getExtensionJobDetails(TEST_JOB);
+            getClient().getExtensionJobDetails(TEST_JOB, null);
             Assert.fail("Should have thrown a FalconWebException");
         } catch (FalconWebException e) {
             Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Job name not found:testJob");

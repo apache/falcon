@@ -1011,25 +1011,25 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    public APIResult enumerateExtensions()  {
+    public APIResult enumerateExtensions(final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.ENUMERATE.path)
                 .call(ExtensionOperations.ENUMERATE);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult unregisterExtension(final String extensionName) {
+    public APIResult unregisterExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
                 .call(ExtensionOperations.UNREGISTER);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult getExtensionDetail(final String extensionName) {
+    public APIResult getExtensionDetail(final String extensionName, final String doAsUser) {
         return getResponse(APIResult.class, getExtensionDetailResponse(extensionName));
     }
 
-    public APIResult getExtensionJobDetails(final String jobName) {
+    public APIResult getExtensionJobDetails(final String jobName, final String doAsUser) {
         return getResponse(APIResult.class, getExtensionJobDetailsResponse(jobName));
     }
 
@@ -1043,7 +1043,8 @@ public class FalconClient extends AbstractFalconClient {
                 .call(ExtensionOperations.DETAIL);
     }
 
-    public APIResult registerExtension(final String extensionName, final String packagePath, final String description) {
+    public APIResult registerExtension(final String extensionName, final String packagePath, final String description,
+                                       final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, packagePath)
                 .addQueryParam(FalconCLIConstants.DESCRIPTION, description)
@@ -1051,26 +1052,26 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult enableExtension(final String extensionName) {
+    public APIResult enableExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.ENABLE.path, extensionName).call(ExtensionOperations.ENABLE);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult disableExtension(final String extensionName) {
+    public APIResult disableExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DISABLE.path, extensionName).call(ExtensionOperations.DISABLE);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult getExtensionDefinition(final String extensionName)  {
+    public APIResult getExtensionDefinition(final String extensionName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DEFINITION.path, extensionName)
                 .call(ExtensionOperations.DEFINITION);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult getExtensionDescription(final String extensionName)  {
+    public APIResult getExtensionDescription(final String extensionName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DESCRIBE.path, extensionName)
                 .call(ExtensionOperations.DESCRIBE);

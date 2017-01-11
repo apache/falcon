@@ -271,22 +271,22 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public APIResult registerExtension(String extensionName, String packagePath, String description) {
+    public APIResult registerExtension(String extensionName, String packagePath, String description, String doAsUser) {
         return localExtensionManager.registerExtensionMetadata(extensionName, packagePath, description);
     }
 
     @Override
-    public APIResult unregisterExtension(String extensionName) {
+    public APIResult unregisterExtension(String extensionName, String doAsUser) {
         return localExtensionManager.unRegisterExtension(extensionName);
     }
 
     @Override
-    public APIResult enableExtension(String extensionName) {
+    public APIResult enableExtension(String extensionName, String doAsUser) {
         return localExtensionManager.enableExtension(extensionName);
     }
 
     @Override
-    public APIResult disableExtension(String extensionName) {
+    public APIResult disableExtension(String extensionName, String doAsUser) {
         return localExtensionManager.disableExtension(extensionName);
     }
 
@@ -395,17 +395,17 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public APIResult getExtensionJobDetails(final String jobName) {
+    public APIResult getExtensionJobDetails(final String jobName, final String doAsUser) {
         return localExtensionManager.getExtensionJobDetails(jobName);
     }
 
     @Override
-    public APIResult getExtensionDetail(String extensionName) {
+    public APIResult getExtensionDetail(String extensionName, String doAsUser) {
         return localExtensionManager.getExtensionDetails(extensionName);
     }
 
     @Override
-    public APIResult enumerateExtensions() {
+    public APIResult enumerateExtensions(String doAsUser) {
         return localExtensionManager.getExtensions();
     }
 
