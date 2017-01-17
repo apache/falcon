@@ -662,8 +662,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         validateExtensionName(extensionName);
         try {
             return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
-        } catch (Throwable e) {
+        } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
+        } catch (Throwable e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

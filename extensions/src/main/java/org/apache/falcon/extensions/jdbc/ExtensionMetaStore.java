@@ -127,7 +127,7 @@ public class ExtensionMetaStore {
         q.setParameter(EXTENSION_NAME, extensionName);
         try {
             List resultList = q.getResultList();
-            if (resultList.size()>0) {
+            if (!resultList.isEmpty()) {
                 return (ExtensionBean)resultList.get(0);
             } else {
                 return null;
