@@ -663,7 +663,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         try {
             return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
         } catch (Throwable e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -732,7 +732,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
                     extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
         } catch (Throwable e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         }
     }
 
