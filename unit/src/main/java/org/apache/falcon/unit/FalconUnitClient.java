@@ -77,14 +77,14 @@ public class FalconUnitClient extends AbstractFalconClient {
     private static final String DEFAULT_ORDER_BY = "status";
     private static final String DEFAULT_SORTED_ORDER = "asc";
 
-    protected ConfigurationStore configStore;
+    private ConfigurationStore configStore;
     private AbstractWorkflowEngine workflowEngine;
     private LocalSchedulableEntityManager localSchedulableEntityManager;
     private LocalInstanceManager localInstanceManager;
     private LocalExtensionManager localExtensionManager;
 
 
-    public FalconUnitClient() throws FalconException {
+    FalconUnitClient() throws FalconException {
         configStore = ConfigurationStore.get();
         workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
         localSchedulableEntityManager = new LocalSchedulableEntityManager();
@@ -123,7 +123,6 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @param entityName entity name
      * @param cluster    cluster on which it has to be scheduled
      * @return
-     * @throws FalconException
      */
     @Override
     public APIResult schedule(EntityType entityType, String entityName, String cluster,
@@ -377,6 +376,23 @@ public class FalconUnitClient extends AbstractFalconClient {
         }
     }
 
+    @Override
+    public APIResult suspendExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.suspendExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in suspending the extension job:" + jobName);
+        }
+    }
+
+    @Override
+    public APIResult resumeExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.resumeExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in resuming the extension job:" + jobName);
+        }
+    }
 
     @Override
     public APIResult getExtensionJobDetails(final String jobName) {
