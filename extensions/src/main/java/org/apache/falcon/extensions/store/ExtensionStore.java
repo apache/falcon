@@ -28,6 +28,7 @@ import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -377,6 +378,19 @@ public final class ExtensionStore {
 
     public boolean isExtensionStoreInitialized() {
         return (storePath != null);
+    }
+
+    public List<String> getJobsForAnExtension(final String extensionName) throws FalconException {
+        List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
+        if (null != extensionJobs && !extensionJobs.isEmpty()){
+            List<String> extensionJobNames = new ArrayList<>();
+            for (ExtensionJobsBean extensionJobsBean: extensionJobs) {
+                extensionJobNames.add(extensionJobsBean.getJobName());
+            }
+            return extensionJobNames;
+        } else {
+            return null;
+        }
     }
 
     public String updateExtensionStatus(final String extensionName, String currentUser, ExtensionStatus status) throws
