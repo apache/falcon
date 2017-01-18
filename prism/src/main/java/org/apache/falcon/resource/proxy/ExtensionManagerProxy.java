@@ -40,7 +40,6 @@ import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
-import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.security.CurrentUser;
@@ -103,25 +102,12 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
             @PathParam("extension-name") String extensionName,
-            @DefaultValue("") @QueryParam("fields") String fields,
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
-            @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        checkIfExtensionExists(extensionName);
         try {
-            // get filtered entities
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_NAME + extensionName, "", doAsUser);
-            if (entities.isEmpty()) {
-                return new ExtensionJobList(0);
-            }
-
-            // group entities by extension job name
-            Map<String, List<Entity>> groupedEntities = groupEntitiesByJob(entities);
-
-            // sort by extension job name
-            List<String> jobNames = new ArrayList<>(groupedEntities.keySet());
+            List<String> jobNames = ExtensionStore.get().getJobsForAnExtension(extensionName);
             switch (sortOrder.toLowerCase()) {
             case DESCENDING_SORT_ORDER:
                 Collections.sort(jobNames, Collections.reverseOrder(String.CASE_INSENSITIVE_ORDER));
@@ -129,19 +115,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             default:
                 Collections.sort(jobNames, String.CASE_INSENSITIVE_ORDER);
             }
-
-            // pagination and format output
-            int pageCount = getRequiredNumberOfResults(jobNames.size(), offset, resultsPerPage);
-            HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
-            ExtensionJobList jobList = new ExtensionJobList(pageCount);
-            for (int i = offset; i < offset + pageCount; i++) {
-                String jobName = jobNames.get(i);
-                List<Entity> jobEntities = groupedEntities.get(jobName);
-                EntityList entityList = new EntityList(buildEntityElements(fieldSet, jobEntities), jobEntities.size());
-                jobList.addJob(new ExtensionJobList.JobElement(jobName, entityList));
-            }
-            return jobList;
-        } catch (FalconException | IOException e) {
+            return new ExtensionJobList(jobNames.size(), jobNames);
+        } catch (FalconException e) {
             LOG.error("Failed to get extension job list of " + extensionName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }

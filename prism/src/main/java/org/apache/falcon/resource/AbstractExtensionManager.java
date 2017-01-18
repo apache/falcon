@@ -237,6 +237,16 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    protected static void checkIfExtensionExists(String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw FalconWebException.newAPIException("Extension Job not found:" + extensionName,
+                    Response.Status.NOT_FOUND);
+        }
+    }
+
     protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
