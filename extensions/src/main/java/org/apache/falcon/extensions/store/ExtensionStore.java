@@ -382,14 +382,14 @@ public final class ExtensionStore {
 
     public List<String> getJobsForAnExtension(final String extensionName) throws FalconException {
         List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
+        List<String> extensionJobNames = new ArrayList<>();
         if (null != extensionJobs && !extensionJobs.isEmpty()){
-            List<String> extensionJobNames = new ArrayList<>();
             for (ExtensionJobsBean extensionJobsBean: extensionJobs) {
                 extensionJobNames.add(extensionJobsBean.getJobName());
             }
             return extensionJobNames;
         } else {
-            return null;
+            return extensionJobNames;
         }
     }
 

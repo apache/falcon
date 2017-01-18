@@ -100,17 +100,22 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public APIResult deleteExtensionMetadata(String extensionName) throws FalconException {
+    public APIResult deleteExtensionMetadata(String extensionName) {
         validateExtensionName(extensionName);
-        return new APIResult(APIResult.Status.SUCCEEDED, deleteExtension(extensionName));
+        ExtensionStore metaStore = ExtensionStore.get();
+        try {
+            canDeleteExtension(extensionName);
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    metaStore.deleteExtension(extensionName, CurrentUser.getUser()));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e);
+        }
     }
 
-    private String deleteExtension(String extensionName) throws FalconException {
+    private void canDeleteExtension(String extensionName) throws FalconException {
         ExtensionStore metaStore = ExtensionStore.get();
         List<String> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
-        if (null == extensionJobs || extensionJobs.isEmpty()) {
-            return metaStore.deleteExtension(extensionName, CurrentUser.getUser());
-        } else {
+        if (!extensionJobs.isEmpty()) {
             LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
                     ArrayUtils.toString(extensionJobs));
             throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances"

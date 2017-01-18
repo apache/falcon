@@ -280,7 +280,7 @@ public class FalconUnitClient extends AbstractFalconClient {
         try {
             return localExtensionManager.unRegisterExtension(extensionName);
         } catch (FalconException e) {
-            throw new FalconCLIException("Failed in unRegistering the exnteison"+ e.getMessage());
+            throw new FalconCLIException("Failed in unRegistering the extension"+ e.getMessage());
         }
     }
 
