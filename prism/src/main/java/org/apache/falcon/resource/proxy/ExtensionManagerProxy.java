@@ -701,8 +701,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         checkIfExtensionServiceIsEnabled();
         try {
             return super.deleteExtensionMetadata(extensionName);
-        } catch (FalconException e){
-            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
