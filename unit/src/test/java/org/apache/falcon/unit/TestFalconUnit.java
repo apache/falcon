@@ -19,7 +19,6 @@ package org.apache.falcon.unit;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
@@ -494,7 +493,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         try {
             unregisterExtension(TEST_EXTENSION);
             Assert.fail("Should have thrown a FalconCLIException");
-        } catch (FalconCLIException e) {
+        } catch (FalconWebException e) {
             //Do nothing. Exception expected as there are dependent extension jobs and so extension cannot be deleted.
         }
         apiResult = deleteExtensionJob(TEST_JOB, null);
