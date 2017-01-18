@@ -242,7 +242,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         ExtensionBean extensionBean = metaStore.getDetail(extensionName);
         if (extensionBean == null) {
             LOG.error("Extension not found: " + extensionName);
-            throw FalconWebException.newAPIException("Extension Job not found:" + extensionName,
+            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
                     Response.Status.NOT_FOUND);
         }
     }
@@ -252,7 +252,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
             LOG.error("Extension job with name: " + extensionName + " already exists.");
-            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
+            throw FalconWebException.newAPIException("Extension job with name: " + jobName + " already exists.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
