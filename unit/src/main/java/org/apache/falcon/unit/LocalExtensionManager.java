@@ -179,7 +179,7 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         return super.registerExtensionMetadata(extensionName, packagePath, description, CurrentUser.getUser());
     }
 
-    APIResult unRegisterExtension(String extensionName) {
+    APIResult unRegisterExtension(String extensionName) throws FalconException {
         return super.deleteExtensionMetadata(extensionName);
     }
 
