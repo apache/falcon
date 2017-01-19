@@ -180,13 +180,17 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             throw new ValidationException("No extension resources found for " + extensionName);
         }
 
-        ExtensionBean bean = metaStore.getDetail(extensionName);
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw new FalconException("Extension not found:" + extensionName);
+        }
         JSONObject resultObject = new JSONObject();
         try {
-            resultObject.put(NAME, bean.getExtensionName());
-            resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
-            resultObject.put(EXTENSION_DESC, bean.getDescription());
-            resultObject.put(EXTENSION_LOCATION, bean.getLocation());
+            resultObject.put(NAME, extensionBean.getExtensionName());
+            resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
+            resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
+            resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
         } catch (JSONException e) {
             LOG.error("Exception in buildDetailResults:", e);
             throw new FalconException(e);
@@ -216,7 +220,13 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
 
     protected static void checkIfExtensionIsEnabled(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        if (!metaStore.getDetail(extensionName).getStatus().equals(ExtensionStatus.ENABLED)) {
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
+                    Response.Status.NOT_FOUND);
+        }
+        if (!extensionBean.getStatus().equals(ExtensionStatus.ENABLED)) {
             LOG.error("Extension: " + extensionName + " is in disabled state.");
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
                     Response.Status.INTERNAL_SERVER_ERROR);
