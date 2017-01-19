@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -99,13 +100,26 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public APIResult deleteExtensionMetadata(String extensionName){
+    public APIResult deleteExtensionMetadata(String extensionName) {
         validateExtensionName(extensionName);
+        ExtensionStore metaStore = ExtensionStore.get();
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().deleteExtension(extensionName,
-                    CurrentUser.getUser()));
-        } catch (Throwable e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            canDeleteExtension(extensionName);
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    metaStore.deleteExtension(extensionName, CurrentUser.getUser()));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e);
+        }
+    }
+
+    private void canDeleteExtension(String extensionName) throws FalconException {
+        ExtensionStore metaStore = ExtensionStore.get();
+        List<String> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
+        if (!extensionJobs.isEmpty()) {
+            LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
+                    ArrayUtils.toString(extensionJobs));
+            throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances"
+                    + " are dependent on the extension" + ArrayUtils.toString(extensionJobs));
         }
     }
 

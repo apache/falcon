@@ -137,6 +137,18 @@ public class ExtensionMetaStore {
         }
     }
 
+    public List<ExtensionJobsBean> getJobsForAnExtension(String extensionName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.GET_JOBS_FOR_AN_EXTENSION);
+        query.setParameter(EXTENSION_NAME, extensionName);
+        try {
+            return (List<ExtensionJobsBean>)query.getResultList();
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
     public void deleteExtension(String extensionName){
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
