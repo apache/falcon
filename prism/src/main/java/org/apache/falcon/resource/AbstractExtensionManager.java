@@ -113,7 +113,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     private void canDeleteExtension(String extensionName) throws FalconException {
-        ExtensionStore metaStore = ExtensionStore.get();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         List<String> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
         if (!extensionJobs.isEmpty()) {
             LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
@@ -190,7 +190,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
 
-        if (!metaStore.checkIfExtensionExists(extensionName)){
+        if (!metaStore.checkIfExtensionExists(extensionName)) {
             throw new ValidationException("No extension resources found for " + extensionName);
         }
 
