@@ -421,7 +421,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
-                                        LOG.debug("Instance of nominaltime {} of entity {} has succeeded, removing "
+                                        LOG.debug("Instance of nominal time {} of entity {} has succeeded, removing "
                                                 + "from backlog entries", nominalTimeStr, entity.getName());
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
