@@ -277,7 +277,11 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public APIResult unregisterExtension(String extensionName) {
-        return localExtensionManager.unRegisterExtension(extensionName);
+        try {
+            return localExtensionManager.unRegisterExtension(extensionName);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in unRegistering the extension"+ e.getMessage());
+        }
     }
 
     @Override

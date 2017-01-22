@@ -102,7 +102,7 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSIONS);
         try {
-            return q.getResultList();
+            return (List<ExtensionBean>)q.getResultList();
         } finally {
             commitAndCloseTransaction(entityManager);
         }
@@ -126,7 +126,24 @@ public class ExtensionMetaStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter(EXTENSION_NAME, extensionName);
         try {
-            return (ExtensionBean)q.getSingleResult();
+            List resultList = q.getResultList();
+            if (!resultList.isEmpty()) {
+                return (ExtensionBean)resultList.get(0);
+            } else {
+                return null;
+            }
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public List<ExtensionJobsBean> getJobsForAnExtension(String extensionName) {
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.GET_JOBS_FOR_AN_EXTENSION);
+        query.setParameter(EXTENSION_NAME, extensionName);
+        try {
+            return (List<ExtensionJobsBean>)query.getResultList();
         } finally {
             commitAndCloseTransaction(entityManager);
         }

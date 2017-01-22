@@ -218,21 +218,29 @@ public class FalconUnitTestBase {
         return props;
     }
 
-    public String registerExtension(String extensionName, String packagePath, String description)
+    APIResult registerExtension(String extensionName, String packagePath, String description)
         throws IOException, FalconException {
 
-        return falconUnitClient.registerExtension(extensionName, packagePath, description).getMessage();
+        return falconUnitClient.registerExtension(extensionName, packagePath, description);
     }
 
-    public String getExtensionJobDetails(String jobName) {
-        return falconUnitClient.getExtensionJobDetails(jobName).getMessage();
+    String disableExtension(String extensionName) {
+        return falconUnitClient.disableExtension(extensionName).getMessage();
     }
 
-    public String unregisterExtension(String extensionName) {
-        return falconUnitClient.unregisterExtension(extensionName).getMessage();
+    String enableExtension(String extensionName) {
+        return falconUnitClient.enableExtension(extensionName).getMessage();
     }
 
-    public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
+    APIResult getExtensionJobDetails(String jobName) {
+        return falconUnitClient.getExtensionJobDetails(jobName);
+    }
+
+    APIResult unregisterExtension(String extensionName) {
+        return falconUnitClient.unregisterExtension(extensionName);
+    }
+
+    APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
         return falconUnitClient.submitExtensionJob(extensionName, jobName, configPath, doAsUser);
     }
 
