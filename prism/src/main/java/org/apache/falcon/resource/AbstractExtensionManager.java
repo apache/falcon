@@ -100,6 +100,14 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    public APIResult getExtensionJobs() {
+        try {
+            return new APIResult(APIResult.Status.SUCCEEDED, buildListExtensionJobsResult().toString());
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public APIResult deleteExtensionMetadata(String extensionName) {
         validateExtensionName(extensionName);
         ExtensionStore metaStore = ExtensionStore.get();
@@ -224,6 +232,24 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
                 resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
                 resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
                 resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
+            } catch (JSONException e) {
+                throw new FalconException(e);
+            }
+            results.put(resultObject);
+        }
+        return results;
+    }
+
+    private static JSONArray buildListExtensionJobsResult() throws FalconException {
+        JSONArray results = new JSONArray();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        List<ExtensionJobsBean> extensionJobsBeanList = metaStore.getAllExtensionJobs();
+        for (ExtensionJobsBean extensionJobsBean : extensionJobsBeanList) {
+            JSONObject resultObject = new JSONObject();
+
+            try {
+                resultObject.put(NAME, extensionJobsBean.getJobName());
+                resultObject.put(EXTENSION_NAME, extensionJobsBean.getExtensionName());
             } catch (JSONException e) {
                 throw new FalconException(e);
             }

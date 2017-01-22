@@ -53,6 +53,15 @@ public class ExtensionManager extends AbstractExtensionManager {
                 + "on Prism.");
     }
 
+    @GET
+    @Path("enumerate")
+    @Produces({MediaType.APPLICATION_JSON})
+    public APIResult getExtensionJobs() {
+        LOG.error("listJobs is not supported on Server.Please run your listJobs on Prism ");
+        throw FalconWebException.newAPIException("listJobs is not supported on Server. Please run your operation "
+                + "on Prism.");
+    }
+
     @POST
     @Path("schedule/{job-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
