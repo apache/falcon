@@ -27,7 +27,6 @@ import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -137,7 +136,6 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query query = entityManager.createNamedQuery(PersistenceConstants.GET_JOBS_FOR_AN_EXTENSION);
         query.setParameter(EXTENSION_NAME, extensionName);
-        List<String> jobNames = new ArrayList<>();
         try {
             return query.getResultList();
         } finally {

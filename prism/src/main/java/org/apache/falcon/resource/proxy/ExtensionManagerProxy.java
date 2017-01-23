@@ -62,9 +62,20 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.util.*;
+import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.Properties;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.SortedMap;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Comparator;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
 
@@ -99,7 +110,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         try {
             Map<String, String> jobAndExtensionNames = new HashMap<>();
             List<ExtensionJobsBean> extensionJobs = null;
-            if(extensionName != null) {
+            if (extensionName != null) {
                 extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
             } else {
                 extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
@@ -122,7 +133,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                 });
             }
 
-            for(ExtensionJobsBean job : extensionJobs) {
+            for (ExtensionJobsBean job : extensionJobs) {
                 jobAndExtensionNames.put(job.getJobName(), job.getExtensionName());
             }
             return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
