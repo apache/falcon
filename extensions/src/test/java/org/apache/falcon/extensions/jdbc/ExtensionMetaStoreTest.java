@@ -45,7 +45,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     private static ExtensionMetaStore stateStore;
 
     @BeforeClass
-    public void setup() throws Exception{
+    public void setup() throws Exception {
         initExtensionStore();
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
@@ -58,7 +58,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
     }
 
     @Test
-    public void testExtension(){
+    public void testExtension() {
         //insert
         stateStore.storeExtensionBean("test1", "test_location", ExtensionType.TRUSTED, "test_description",
                 "falconUser");
@@ -86,6 +86,8 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
         //storing again to check for entity manager merge to let submission go forward.
         stateStore.storeExtensionJob("job1", "test2", feeds, processes, config);
 
+        Assert.assertEquals(stateStore.getJobsForAnExtension("test2").size(), 1);
+        Assert.assertEquals(stateStore.getJobsForAnExtension("test2").get(0), "job1");
         Assert.assertEquals(stateStore.getAllExtensionJobs().size(), 1);
         Assert.assertEquals(stateStore.getExtensionJobDetails("job1").getFeeds().get(0), "testFeed");
         stateStore.deleteExtensionJob("job1");

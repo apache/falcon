@@ -113,7 +113,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     private void canDeleteExtension(String extensionName) throws FalconException {
-        ExtensionStore metaStore = ExtensionStore.get();
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         List<String> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
         if (!extensionJobs.isEmpty()) {
             LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
@@ -190,7 +190,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
 
-        if (!metaStore.checkIfExtensionExists(extensionName)){
+        if (!metaStore.checkIfExtensionExists(extensionName)) {
             throw new ValidationException("No extension resources found for " + extensionName);
         }
 
@@ -247,12 +247,22 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
+    protected static void checkIfExtensionExists(String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
+                    Response.Status.NOT_FOUND);
+        }
+    }
+
     protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
             LOG.error("Extension job with name: " + extensionName + " already exists.");
-            throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
+            throw FalconWebException.newAPIException("Extension job with name: " + jobName + " already exists.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
