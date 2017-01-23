@@ -21,6 +21,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.entity.v0.EntityType;
@@ -58,6 +60,8 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
     private static final String EXTENSION_LOCATION = "location";
+    private static final String ENTITY_EXISTS_STATUS = "EXISTS";
+    private static final String ENTITY_NOT_EXISTS_STATUS = "NOT_EXISTS";
 
     protected static void validateExtensionName(final String extensionName) {
         if (StringUtils.isBlank(extensionName)) {
@@ -142,8 +146,29 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         try {
             detailsObject.put(JOB_NAME, jobsBean.getJobName());
             detailsObject.put(EXTENSION_NAME, jobsBean.getExtensionName());
-            detailsObject.put(FEEDS, StringUtils.join(jobsBean.getFeeds(), ","));
-            detailsObject.put(PROCESSES, StringUtils.join(jobsBean.getProcesses(), ","));
+
+            JSONObject feedsObject = new JSONObject();
+            for(String feed : jobsBean.getFeeds()){
+                try {
+                    EntityUtil.getEntity(EntityType.FEED, feed);
+                } catch (EntityNotRegisteredException e){
+                    feedsObject.put(feed, ENTITY_NOT_EXISTS_STATUS);
+                }
+                feedsObject.put(feed, ENTITY_EXISTS_STATUS);
+            }
+            detailsObject.put(FEEDS, feedsObject);
+
+            JSONObject processObject = new JSONObject();
+            for(String process : jobsBean.getProcesses()){
+                try {
+                    EntityUtil.getEntity(EntityType.PROCESS, process);
+                } catch (EntityNotRegisteredException e){
+                    processObject.put(process, ENTITY_NOT_EXISTS_STATUS);
+                }
+                processObject.put(process, ENTITY_EXISTS_STATUS);
+            }
+            detailsObject.put(PROCESSES, processObject);
+
             detailsObject.put(CONFIG, jobsBean.getConfig());
             detailsObject.put(CREATION_TIME, jobsBean.getCreationTime());
             detailsObject.put(LAST_UPDATE_TIME, jobsBean.getLastUpdatedTime());
