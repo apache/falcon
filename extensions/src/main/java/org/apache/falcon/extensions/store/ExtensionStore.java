@@ -301,7 +301,6 @@ public final class ExtensionStore {
     }
 
     private FileSystem getHdfsFileSystem(String path)  throws  FalconException {
-        Configuration conf = new Configuration();
         URI uri;
         try {
             uri = new URI(path);
@@ -309,19 +308,16 @@ public final class ExtensionStore {
             LOG.error("Exception : ", e);
             throw new FalconException(e);
         }
-        conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
         return HadoopClientFactory.get().createFalconFileSystem(uri);
     }
 
 
     public String registerExtension(final String extensionName, final String path, final String description,
                                     String extensionOwner) throws URISyntaxException, FalconException {
-        Configuration conf = new Configuration();
         URI uri = new URI(path);
         assertURI("Scheme", uri.getScheme());
         assertURI("Authority", uri.getAuthority());
         assertURI("Path", uri.getPath());
-        conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem = getHdfsFileSystem(path);
         try {
             fileSystem.listStatus(new Path(uri.getPath() + "/README"));

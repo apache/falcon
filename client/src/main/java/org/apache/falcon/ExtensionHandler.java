@@ -24,6 +24,7 @@ import org.apache.falcon.client.FalconExtensionConstants;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.ExtensionBuilder;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -38,6 +39,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -95,11 +98,12 @@ public final class ExtensionHandler {
     }
 
     public static List<Entity> loadAndPrepare(String extensionName, String jobName, InputStream configStream,
-                                              String extensionBuildLocation) throws IOException, FalconException {
+                                              String extensionBuildLocation)
+        throws IOException, FalconException, URISyntaxException {
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
         String stagePath = createStagePath(extensionName, jobName);
-        List<URL> urls = ExtensionHandler.copyExtensionPackage(extensionBuildLocation, fs, stagePath);
+        List<URL> urls = ExtensionHandler.copyExtensionPackage(extensionBuildLocation, stagePath);
 
         List<Entity> entities = prepare(extensionName, jobName, configStream, urls);
         ExtensionHandler.stageEntities(entities, stagePath);
@@ -152,9 +156,10 @@ public final class ExtensionHandler {
         return stagePath;
     }
 
-    private static List<URL> copyExtensionPackage(String extensionBuildUrl, FileSystem fs, String stagePath)
-        throws IOException {
+    private static List<URL> copyExtensionPackage(String extensionBuildUrl, String stagePath)
+            throws IOException, FalconException, URISyntaxException {
 
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem( new URI(extensionBuildUrl));
         Path libsPath = new Path(extensionBuildUrl, FalconExtensionConstants.LIBS);
         Path buildLibsPath = new Path(libsPath, FalconExtensionConstants.BUILD);
         Path localStagePath = new Path(stagePath);
