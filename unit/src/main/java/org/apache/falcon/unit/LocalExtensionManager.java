@@ -202,8 +202,4 @@ public class LocalExtensionManager extends AbstractExtensionManager {
     public APIResult getExtensions() {
         return super.getExtensions();
     }
-
-    public APIResult getExtensionJobs() {
-        return super.getExtensionJobs();
-    }
 }

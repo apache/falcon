@@ -51,7 +51,6 @@ public class FalconExtensionCLI extends FalconCLI{
 
     // Extension commands
     private static final String ENUMERATE_OPT = "enumerate";
-    private static final String JOB_LIST_OPT = "jobList";
     private static final String DEFINITION_OPT = "definition";
     private static final String DESCRIBE_OPT = "describe";
     private static final String INSTANCES_OPT = "instances";
@@ -89,9 +88,6 @@ public class FalconExtensionCLI extends FalconCLI{
 
         if (optionsList.contains(ENUMERATE_OPT)) {
             result = client.enumerateExtensions().getMessage();
-            result = prettyPrintJson(result);
-        } else if (optionsList.contains(JOB_LIST_OPT)) {
-            result = client.getJobsList().getMessage();
             result = prettyPrintJson(result);
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);

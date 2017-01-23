@@ -654,18 +654,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     }
 
     @GET
-    @Path("listJobs")
-    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
-    public APIResult getExtensionJobs() {
-        checkIfExtensionServiceIsEnabled();
-        try {
-            return super.getExtensionJobs();
-        } catch (FalconWebException e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GET
     @Path("describe/{extension-name}")
     @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult getExtensionDescription(

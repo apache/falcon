@@ -346,7 +346,6 @@ public class FalconClient extends AbstractFalconClient {
     protected static enum ExtensionOperations {
 
         ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.TEXT_XML),
-        JOB_LIST("api/extension/listJobs/", HttpMethod.GET, MediaType.TEXT_XML),
         DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_XML),
         DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
@@ -1021,13 +1020,6 @@ public class FalconClient extends AbstractFalconClient {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.ENUMERATE.path)
                 .call(ExtensionOperations.ENUMERATE);
-        return getResponse(APIResult.class, clientResponse);
-    }
-
-    public APIResult getJobsList()  {
-        ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.JOB_LIST.path)
-                .call(ExtensionOperations.JOB_LIST);
         return getResponse(APIResult.class, clientResponse);
     }
 

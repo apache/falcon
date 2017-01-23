@@ -100,14 +100,6 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public APIResult getExtensionJobs() {
-        try {
-            return new APIResult(APIResult.Status.SUCCEEDED, buildListExtensionJobsResult().toString());
-        } catch (FalconException e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     public APIResult deleteExtensionMetadata(String extensionName) {
         validateExtensionName(extensionName);
         ExtensionStore metaStore = ExtensionStore.get();
