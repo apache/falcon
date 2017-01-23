@@ -146,29 +146,8 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         try {
             detailsObject.put(JOB_NAME, jobsBean.getJobName());
             detailsObject.put(EXTENSION_NAME, jobsBean.getExtensionName());
-
-            JSONObject feedsObject = new JSONObject();
-            for (String feed : jobsBean.getFeeds()) {
-                try {
-                    EntityUtil.getEntity(EntityType.FEED, feed);
-                } catch (EntityNotRegisteredException e) {
-                    feedsObject.put(feed, ENTITY_NOT_EXISTS_STATUS);
-                }
-                feedsObject.put(feed, ENTITY_EXISTS_STATUS);
-            }
-            detailsObject.put(FEEDS, feedsObject);
-
-            JSONObject processObject = new JSONObject();
-            for (String process : jobsBean.getProcesses()) {
-                try {
-                    EntityUtil.getEntity(EntityType.PROCESS, process);
-                } catch (EntityNotRegisteredException e) {
-                    processObject.put(process, ENTITY_NOT_EXISTS_STATUS);
-                }
-                processObject.put(process, ENTITY_EXISTS_STATUS);
-            }
-            detailsObject.put(PROCESSES, processObject);
-
+            detailsObject.put(FEEDS, getEntitiesStatus(jobsBean.getFeeds(), EntityType.FEED));
+            detailsObject.put(PROCESSES, getEntitiesStatus(jobsBean.getProcesses(), EntityType.PROCESS));
             detailsObject.put(CONFIG, jobsBean.getConfig());
             detailsObject.put(CREATION_TIME, jobsBean.getCreationTime());
             detailsObject.put(LAST_UPDATE_TIME, jobsBean.getLastUpdatedTime());
@@ -280,5 +259,18 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             throw FalconWebException.newAPIException("Extension job with name: " + extensionName + " already exists.",
                     Response.Status.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private JSONObject getEntitiesStatus(List<String> entities, EntityType type) throws JSONException, FalconException {
+        JSONObject entityObject = new JSONObject();
+        for (String entity : entities) {
+            try {
+                EntityUtil.getEntity(type, entity);
+            } catch (EntityNotRegisteredException e) {
+                entityObject.put(entity, ENTITY_NOT_EXISTS_STATUS);
+            }
+            entityObject.put(entity, ENTITY_EXISTS_STATUS);
+        }
+        return entityObject;
     }
 }
