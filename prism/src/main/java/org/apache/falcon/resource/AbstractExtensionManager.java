@@ -246,7 +246,6 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         List<ExtensionJobsBean> extensionJobsBeanList = metaStore.getAllExtensionJobs();
         for (ExtensionJobsBean extensionJobsBean : extensionJobsBeanList) {
             JSONObject resultObject = new JSONObject();
-
             try {
                 resultObject.put(NAME, extensionJobsBean.getJobName());
                 resultObject.put(EXTENSION_NAME, extensionJobsBean.getExtensionName());
