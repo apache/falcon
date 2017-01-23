@@ -62,16 +62,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.Properties;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.SortedMap;
+import java.util.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
@@ -106,15 +97,35 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionExists(extensionName);
         try {
-            List<String> jobNames = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
+            Map<String, String> jobAndExtensionNames = new HashMap<>();
+            List<ExtensionJobsBean> extensionJobs = null;
+            if(extensionName != null) {
+                extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
+            } else {
+                extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
+            }
+
             switch (sortOrder.toLowerCase()) {
             case DESCENDING_SORT_ORDER:
-                Collections.sort(jobNames, Collections.reverseOrder(String.CASE_INSENSITIVE_ORDER));
+                Collections.sort(extensionJobs, new Comparator<ExtensionJobsBean>() {
+                    public int compare(ExtensionJobsBean o1, ExtensionJobsBean o2) {
+                        return o2.getJobName().compareTo(o1.getJobName());
+                    }
+                });
                 break;
+
             default:
-                Collections.sort(jobNames, String.CASE_INSENSITIVE_ORDER);
+                Collections.sort(extensionJobs, new Comparator<ExtensionJobsBean>() {
+                    public int compare(ExtensionJobsBean o1, ExtensionJobsBean o2) {
+                        return o1.getJobName().compareTo(o2.getJobName());
+                    }
+                });
             }
-            return new ExtensionJobList(jobNames.size(), jobNames);
+
+            for(ExtensionJobsBean job : extensionJobs) {
+                jobAndExtensionNames.put(job.getJobName(), job.getExtensionName());
+            }
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
         } catch (Throwable e) {
             LOG.error("Failed to get extension job list of " + extensionName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);

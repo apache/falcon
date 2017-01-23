@@ -132,18 +132,17 @@ public class ExtensionMetaStore {
         }
     }
 
-    public List<String> getJobsForAnExtension(String extensionName) {
+    public List<ExtensionJobsBean> getJobsForAnExtension(String extensionName) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query query = entityManager.createNamedQuery(PersistenceConstants.GET_JOBS_FOR_AN_EXTENSION);
         query.setParameter(EXTENSION_NAME, extensionName);
         List<String> jobNames = new ArrayList<>();
         try {
-            jobNames.addAll((List<String>) query.getResultList());
+            return query.getResultList();
         } finally {
             commitAndCloseTransaction(entityManager);
         }
-        return jobNames;
     }
 
     public void deleteExtension(String extensionName) {
@@ -234,7 +233,7 @@ public class ExtensionMetaStore {
         }
     }
 
-    List<ExtensionJobsBean> getAllExtensionJobs() {
+    public List<ExtensionJobsBean> getAllExtensionJobs() {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSION_JOBS);

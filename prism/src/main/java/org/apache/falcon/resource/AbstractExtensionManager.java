@@ -114,7 +114,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
 
     private void canDeleteExtension(String extensionName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        List<String> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
+        List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
         if (!extensionJobs.isEmpty()) {
             LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
                     ArrayUtils.toString(extensionJobs));
