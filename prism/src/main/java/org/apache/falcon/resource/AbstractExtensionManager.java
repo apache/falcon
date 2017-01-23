@@ -148,10 +148,10 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             detailsObject.put(EXTENSION_NAME, jobsBean.getExtensionName());
 
             JSONObject feedsObject = new JSONObject();
-            for(String feed : jobsBean.getFeeds()){
+            for (String feed : jobsBean.getFeeds()) {
                 try {
                     EntityUtil.getEntity(EntityType.FEED, feed);
-                } catch (EntityNotRegisteredException e){
+                } catch (EntityNotRegisteredException e) {
                     feedsObject.put(feed, ENTITY_NOT_EXISTS_STATUS);
                 }
                 feedsObject.put(feed, ENTITY_EXISTS_STATUS);
@@ -159,10 +159,10 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             detailsObject.put(FEEDS, feedsObject);
 
             JSONObject processObject = new JSONObject();
-            for(String process : jobsBean.getProcesses()){
+            for (String process : jobsBean.getProcesses()) {
                 try {
                     EntityUtil.getEntity(EntityType.PROCESS, process);
-                } catch (EntityNotRegisteredException e){
+                } catch (EntityNotRegisteredException e) {
                     processObject.put(process, ENTITY_NOT_EXISTS_STATUS);
                 }
                 processObject.put(process, ENTITY_EXISTS_STATUS);
