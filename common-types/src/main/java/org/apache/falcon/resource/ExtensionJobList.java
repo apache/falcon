@@ -33,10 +33,10 @@ import java.util.List;
 public class ExtensionJobList {
 
     @XmlElement
-    public int numJobs;
+    int numJobs;
 
     @XmlElementWrapper(name = "jobs")
-    public List<JobElement> job;
+    public List<String> job;
 
     public ExtensionJobList() {
         numJobs = 0;
@@ -45,54 +45,21 @@ public class ExtensionJobList {
 
     public ExtensionJobList(int numJobs) {
         this.numJobs = numJobs;
-        job = new ArrayList<JobElement>();
+        job = new ArrayList<>();
     }
 
-    public ExtensionJobList(int numJobs, List<JobElement> elements) {
+    public ExtensionJobList(int numJobs, List<String> extensionJobNames) {
         this.numJobs = numJobs;
-        this.job = elements;
-    }
-
-    public void addJob(JobElement element) {
-        job.add(element);
+        this.job = extensionJobNames;
     }
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder();
-        buffer.append(numJobs + "\n\n");
-        for (JobElement element : job) {
-            buffer.append(element.toString());
+        StringBuilder builder = new StringBuilder();
+        builder.append(numJobs).append("\n");
+        for (String extensionJobNames : job) {
+            builder.append(extensionJobNames);
         }
-        return buffer.toString();
-    }
-
-    /**
-     * Element for a job.
-     */
-    public static class JobElement {
-        @XmlElement
-        public String jobName;
-
-        @XmlElement
-        public EntityList jobEntities;
-
-        public JobElement() {
-            jobName = null;
-            jobEntities = null;
-        }
-
-        public JobElement(String name, EntityList entities) {
-            jobName = name;
-            jobEntities = entities;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("Job: " + jobName + ", #. entities: ");
-            buffer.append(jobEntities.toString() + "\n");
-            return buffer.toString();
-        }
+        return builder.toString();
     }
 }
