@@ -62,7 +62,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.util.Collections;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Arrays;
@@ -71,11 +70,9 @@ import java.util.Properties;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.HashMap;
 import java.util.SortedMap;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
 
@@ -86,8 +83,6 @@ import java.io.ByteArrayInputStream;
 public class ExtensionManagerProxy extends AbstractExtensionManager {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionManagerProxy.class);
 
-    private static final String ASCENDING_SORT_ORDER = "asc";
-    private static final String DESCENDING_SORT_ORDER = "desc";
     private Extension extension = new Extension();
     private static final String README = "README";
 
@@ -108,35 +103,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         checkIfExtensionServiceIsEnabled();
         checkIfExtensionExists(extensionName);
         try {
-            Map<String, String> jobAndExtensionNames = new HashMap<>();
-            List<ExtensionJobsBean> extensionJobs = null;
-            if (extensionName != null) {
-                extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
-            } else {
-                extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
-            }
-
-            switch (sortOrder.toLowerCase()) {
-            case DESCENDING_SORT_ORDER:
-                Collections.sort(extensionJobs, new Comparator<ExtensionJobsBean>() {
-                    public int compare(ExtensionJobsBean o1, ExtensionJobsBean o2) {
-                        return o2.getJobName().compareTo(o1.getJobName());
-                    }
-                });
-                break;
-
-            default:
-                Collections.sort(extensionJobs, new Comparator<ExtensionJobsBean>() {
-                    public int compare(ExtensionJobsBean o1, ExtensionJobsBean o2) {
-                        return o1.getJobName().compareTo(o2.getJobName());
-                    }
-                });
-            }
-
-            for (ExtensionJobsBean job : extensionJobs) {
-                jobAndExtensionNames.put(job.getJobName(), job.getExtensionName());
-            }
-            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
+            return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
         } catch (Throwable e) {
             LOG.error("Failed to get extension job list of " + extensionName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);

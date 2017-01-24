@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
@@ -458,6 +459,10 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
+
+        ExtensionJobList extensionJobList = getExtensionJobs(TEST_EXTENSION, null, null);
+        Assert.assertEquals(extensionJobList.getNumJobs(), 1);
+
         apiResult = getExtensionJobDetails(TEST_JOB);
         JSONObject resultJson = new JSONObject(apiResult.getMessage());
         Assert.assertEquals(resultJson.get("extensionName"), TEST_EXTENSION);

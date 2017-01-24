@@ -43,6 +43,10 @@ public class ExtensionJobList {
         job = null;
     }
 
+    public int getNumJobs() {
+        return numJobs;
+    }
+
     public ExtensionJobList(int numJobs) {
         this.numJobs = numJobs;
         job = new HashMap<>();
