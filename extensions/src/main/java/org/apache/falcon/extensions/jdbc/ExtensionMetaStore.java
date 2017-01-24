@@ -27,6 +27,7 @@ import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -132,12 +133,14 @@ public class ExtensionMetaStore {
     }
 
     public List<ExtensionJobsBean> getJobsForAnExtension(String extensionName) {
+        List<ExtensionJobsBean> extensionJobs = new ArrayList<>();
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query query = entityManager.createNamedQuery(PersistenceConstants.GET_JOBS_FOR_AN_EXTENSION);
         query.setParameter(EXTENSION_NAME, extensionName);
         try {
-            return query.getResultList();
+            extensionJobs.addAll(query.getResultList());
+            return extensionJobs;
         } finally {
             commitAndCloseTransaction(entityManager);
         }
@@ -232,11 +235,13 @@ public class ExtensionMetaStore {
     }
 
     public List<ExtensionJobsBean> getAllExtensionJobs() {
+        List<ExtensionJobsBean> extensionJobs = new ArrayList<>();
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSION_JOBS);
         try {
-            return q.getResultList();
+            extensionJobs.addAll(q.getResultList());
+            return extensionJobs;
         } finally {
             commitAndCloseTransaction(entityManager);
         }

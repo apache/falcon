@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.resource;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
@@ -36,7 +35,6 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -118,11 +116,11 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         };
 
         Map<String, String> jobAndExtensionNames = new HashMap<>();
-        List<ExtensionJobsBean> extensionJobs = new ArrayList<>();
+        List<ExtensionJobsBean> extensionJobs = null;
         if (extensionName != null) {
-            extensionJobs.addAll(ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName));
+            extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
         } else {
-            extensionJobs.addAll(ExtensionStore.getMetaStore().getAllExtensionJobs());
+            extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
         }
 
         sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
