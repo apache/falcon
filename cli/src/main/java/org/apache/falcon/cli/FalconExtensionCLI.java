@@ -152,10 +152,7 @@ public class FalconExtensionCLI extends FalconCLI{
         } else if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             ExtensionJobList jobs = client.listExtensionJob(extensionName, doAsUser,
-                    commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.FIELDS_OPT));
+                    commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT));
             result = jobs != null ? jobs.toString() : "No extension job (" + extensionName + ") found.";
         } else if (optionsList.contains(INSTANCES_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);

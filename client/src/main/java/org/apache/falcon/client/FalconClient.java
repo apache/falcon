@@ -1247,15 +1247,11 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public ExtensionJobList listExtensionJob(final String extensionName, final String doAsUser,
-                                             final String sortOrder, final String offset,
-                                             final String numResults, final String fields)  {
+                                             final String sortOrder)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.LIST.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
-                .addQueryParam(FIELDS, fields)
                 .addQueryParam(SORT_ORDER, sortOrder)
-                .addQueryParam(OFFSET, offset)
-                .addQueryParam(NUM_RESULTS, numResults)
                 .call(ExtensionOperations.LIST);
         return getResponse(ExtensionJobList.class, clientResponse);
     }
