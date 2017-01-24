@@ -483,7 +483,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
 
         String processes = new JSONObject(getExtensionJobDetails(TEST_JOB).getMessage()).get("processes").toString();
         JSONObject processObject = new JSONObject();
-        processObject.put("sample", "EXISTS");
+        processObject.put("name", "sample");
+        processObject.put("status", "EXISTS");
 
         Assert.assertEquals(processes, processObject.toString());
         process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);

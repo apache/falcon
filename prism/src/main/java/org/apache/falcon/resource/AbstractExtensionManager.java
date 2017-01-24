@@ -57,6 +57,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
 
     public static final String NAME = "name";
+    public static final String STATUS = "status";
     private static final String EXTENSION_TYPE = "type";
     private static final String EXTENSION_DESC = "description";
     private static final String EXTENSION_LOCATION = "location";
@@ -275,11 +276,12 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         JSONObject entityObject = new JSONObject();
         for (String entity : entities) {
             try {
+                entityObject.put(NAME, entity);
                 EntityUtil.getEntity(type, entity);
+                entityObject.put(STATUS, ENTITY_EXISTS_STATUS);
             } catch (EntityNotRegisteredException e) {
-                entityObject.put(entity, ENTITY_NOT_EXISTS_STATUS);
+                entityObject.put(STATUS, ENTITY_NOT_EXISTS_STATUS);
             }
-            entityObject.put(entity, ENTITY_EXISTS_STATUS);
         }
         return entityObject;
     }
