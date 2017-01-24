@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -330,7 +331,7 @@ public class FalconUnitClient extends AbstractFalconClient {
         try {
             entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                     packagePath);
-        } catch (FalconException | IOException e) {
+        } catch (FalconException | IOException | URISyntaxException e) {
             throw new FalconCLIException("Failed in generating entities" + jobName);
         }
         return entities;
