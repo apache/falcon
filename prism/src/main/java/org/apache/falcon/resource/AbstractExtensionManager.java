@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.resource;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
@@ -117,11 +118,11 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         };
 
         Map<String, String> jobAndExtensionNames = new HashMap<>();
-        List<ExtensionJobsBean> extensionJobs = null;
+        List<ExtensionJobsBean> extensionJobs = new ArrayList<>();
         if (extensionName != null) {
-            extensionJobs = new ArrayList<>(ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName));
+            extensionJobs.addAll(ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName));
         } else {
-            extensionJobs = new ArrayList<>(ExtensionStore.getMetaStore().getAllExtensionJobs());
+            extensionJobs.addAll(ExtensionStore.getMetaStore().getAllExtensionJobs());
         }
 
         sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
