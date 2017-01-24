@@ -37,6 +37,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -130,7 +131,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
 
     protected SortedMap<EntityType, List<String>> getJobEntities(ExtensionJobsBean extensionJobsBean)
         throws FalconException {
-        TreeMap<EntityType, List<String>> entityMap = new TreeMap<>();
+        TreeMap<EntityType, List<String>> entityMap = new TreeMap<>(Collections.<EntityType>reverseOrder());
         entityMap.put(EntityType.PROCESS, extensionJobsBean.getProcesses());
         entityMap.put(EntityType.FEED, extensionJobsBean.getFeeds());
         return entityMap;
