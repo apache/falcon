@@ -87,7 +87,7 @@ public class ExtensionMetaStoreTest extends AbstractTestExtensionStore {
         stateStore.storeExtensionJob("job1", "test2", feeds, processes, config);
 
         Assert.assertEquals(stateStore.getJobsForAnExtension("test2").size(), 1);
-        Assert.assertEquals(stateStore.getJobsForAnExtension("test2").get(0), "job1");
+        Assert.assertEquals(stateStore.getJobsForAnExtension("test2").get(0).getJobName(), "job1");
         Assert.assertEquals(stateStore.getAllExtensionJobs().size(), 1);
         Assert.assertEquals(stateStore.getExtensionJobDetails("job1").getFeeds().get(0), "testFeed");
         stateStore.deleteExtensionJob("job1");
