@@ -35,6 +35,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
@@ -242,6 +243,10 @@ public class FalconUnitTestBase {
 
     APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
         return falconUnitClient.submitExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return falconUnitClient.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 
     public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
