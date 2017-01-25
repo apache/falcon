@@ -169,7 +169,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
 
     protected SortedMap<EntityType, List<String>> getJobEntities(ExtensionJobsBean extensionJobsBean)
         throws FalconException {
-        TreeMap<EntityType, List<String>> entityMap = new TreeMap<>();
+        TreeMap<EntityType, List<String>> entityMap = new TreeMap<>(Collections.<EntityType>reverseOrder());
         entityMap.put(EntityType.PROCESS, extensionJobsBean.getProcesses());
         entityMap.put(EntityType.FEED, extensionJobsBean.getFeeds());
         return entityMap;
