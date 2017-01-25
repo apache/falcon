@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -293,6 +294,12 @@ public abstract class AbstractFalconClient {
      * @return
      */
     public abstract APIResult enumerateExtensions();
+
+    /**
+     * Returns all registered jobs for an extension.
+     * @return
+     */
+    public abstract ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser);
 
     /**
      *

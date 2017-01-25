@@ -36,6 +36,7 @@ import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -412,6 +413,11 @@ public class FalconUnitClient extends AbstractFalconClient {
     @Override
     public APIResult enumerateExtensions() {
         return localExtensionManager.getExtensions();
+    }
+
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return localExtensionManager.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 
     @Override

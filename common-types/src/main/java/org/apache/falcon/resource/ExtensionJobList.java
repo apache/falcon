@@ -21,8 +21,8 @@ package org.apache.falcon.resource;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Extension job list used for marshalling / unmarshalling with REST calls.
@@ -36,19 +36,23 @@ public class ExtensionJobList {
     int numJobs;
 
     @XmlElementWrapper(name = "jobs")
-    public List<String> job;
+    public Map<String, String> job;
 
     public ExtensionJobList() {
         numJobs = 0;
         job = null;
     }
 
-    public ExtensionJobList(int numJobs) {
-        this.numJobs = numJobs;
-        job = new ArrayList<>();
+    public int getNumJobs() {
+        return numJobs;
     }
 
-    public ExtensionJobList(int numJobs, List<String> extensionJobNames) {
+    public ExtensionJobList(int numJobs) {
+        this.numJobs = numJobs;
+        job = new HashMap<>();
+    }
+
+    public ExtensionJobList(int numJobs, Map<String, String> extensionJobNames) {
         this.numJobs = numJobs;
         this.job = extensionJobNames;
     }
@@ -57,8 +61,8 @@ public class ExtensionJobList {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(numJobs).append("\n");
-        for (String extensionJobNames : job) {
-            builder.append(extensionJobNames);
+        for (Map.Entry<String, String> extensionJobs : job.entrySet()) {
+            builder.append(extensionJobs.getKey() + "\t" + extensionJobs.getValue() + "\n");
         }
         return builder.toString();
     }
