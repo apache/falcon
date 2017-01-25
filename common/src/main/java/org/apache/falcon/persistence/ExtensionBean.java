@@ -18,6 +18,7 @@
 
 package org.apache.falcon.persistence;
 
+import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.extensions.ExtensionType;
 
 import javax.persistence.Basic;
@@ -44,7 +45,8 @@ import java.util.Date;
         @NamedQuery(name = PersistenceConstants.GET_ALL_EXTENSIONS, query = "select OBJECT(a) from ExtensionBean a "),
         @NamedQuery(name = PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE, query = "delete from ExtensionBean a where a.extensionType = :extensionType "),
         @NamedQuery(name = PersistenceConstants.DELETE_EXTENSION, query = "delete from ExtensionBean a where a.extensionName = :extensionName "),
-        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionBean a where a.extensionName = :extensionName")
+        @NamedQuery(name = PersistenceConstants.GET_EXTENSION, query = "select OBJECT(a) from ExtensionBean a where a.extensionName = :extensionName"),
+        @NamedQuery(name = PersistenceConstants.CHANGE_EXTENSION_STATUS, query = "update ExtensionBean a set a.status = :extensionStatus where a.extensionName = :extensionName")
 })
 //RESUME CHECKSTYLE CHECK  LineLengthCheck
 public class ExtensionBean {
@@ -74,6 +76,17 @@ public class ExtensionBean {
     @Column(name = "creation_time")
     private Date creationTime;
 
+    @Basic
+    @NotNull
+    @Column(name = "extension_owner")
+    private String extensionOwner;
+
+    @Basic
+    @NotNull
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private ExtensionStatus status;
+
     public ExtensionType getExtensionType() {
         return extensionType;
     }
@@ -89,7 +102,6 @@ public class ExtensionBean {
     public void setCreationTime(Date creationTime) {
         this.creationTime = creationTime;
     }
-
 
     public String getExtensionName() {
         return extensionName;
@@ -114,4 +126,21 @@ public class ExtensionBean {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getExtensionOwner() {
+        return extensionOwner;
+    }
+
+    public void setExtensionOwner(String extensionOwner) {
+        this.extensionOwner = extensionOwner;
+    }
+
+    public ExtensionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ExtensionStatus status) {
+        this.status = status;
+    }
+
 }

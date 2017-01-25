@@ -60,9 +60,9 @@ public final class PersistenceConstants {
     public static final String GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE = "GET_INSTANCE_SUMMARY_BY_STATE_WITH_RANGE";
 
     public static final String GET_LATEST_INSTANCE_TIME = "GET_LATEST_INSTANCE_TIME";
-    public static final String GET_ENTITY_ALERTS = "GET_ENTITY_ALERTS";
-    public static final String GET_ALL_ENTITY_ALERTS = "GET_ALL_ENTITY_ALERTS";
-    public static final String GET_SLA_HIGH_CANDIDATES = "GET_SLA_HIGH_CANDIDATES";
+    static final String GET_ENTITY_ALERTS = "GET_ENTITY_ALERTS";
+    static final String GET_ALL_ENTITY_ALERTS = "GET_ALL_ENTITY_ALERTS";
+    static final String GET_SLA_HIGH_CANDIDATES = "GET_SLA_HIGH_CANDIDATES";
     public static final String UPDATE_SLA_HIGH = "UPDATE_SLA_HIGH";
 
     public static final String GET_ENTITY_ALERT_INSTANCE = "GET_ENTITY_ALERT_INSTANCE";
@@ -75,9 +75,11 @@ public final class PersistenceConstants {
     public static final String DELETE_EXTENSIONS_OF_TYPE = "DELETE_EXTENSIONS_OF_TYPE";
     public static final String DELETE_EXTENSION = "DELETE_EXTENSION";
     public static final String GET_EXTENSION = "GET_EXTENSION";
+    public static final String CHANGE_EXTENSION_STATUS = "CHANGE_EXTENSION_STATUS";
 
     public static final String GET_ALL_EXTENSION_JOBS = "GET_ALL_EXTENSION_JOBS";
     public static final String DELETE_EXTENSION_JOB = "DELETE_EXTENSION_JOB";
     public static final String GET_EXTENSION_JOB = "GET_EXTENSION_JOB";
+    public static final String GET_JOBS_FOR_AN_EXTENSION = "GET_JOBS_FOR_AN_EXTENSION";
     public static final String GET_ALL_PROCESS_INFO_INSTANCES = "GET_ALL_PROCESS_INFO_INSTANCES";
 }

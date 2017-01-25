@@ -35,6 +35,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
@@ -218,23 +219,47 @@ public class FalconUnitTestBase {
         return props;
     }
 
-    public String registerExtension(String extensionName, String packagePath, String description)
+    APIResult registerExtension(String extensionName, String packagePath, String description)
         throws IOException, FalconException {
 
         return falconUnitClient.registerExtension(extensionName, packagePath, description);
     }
 
-    public String unregisterExtension(String extensionName) {
+    String disableExtension(String extensionName) {
+        return falconUnitClient.disableExtension(extensionName).getMessage();
+    }
+
+    String enableExtension(String extensionName) {
+        return falconUnitClient.enableExtension(extensionName).getMessage();
+    }
+
+    APIResult getExtensionJobDetails(String jobName) {
+        return falconUnitClient.getExtensionJobDetails(jobName);
+    }
+
+    APIResult unregisterExtension(String extensionName) {
         return falconUnitClient.unregisterExtension(extensionName);
     }
 
-    public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
+    APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
         return falconUnitClient.submitExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return falconUnitClient.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 
     public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
                                                    String doAsUser) {
         return falconUnitClient.submitAndScheduleExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    APIResult updateExtensionJob(String jobName, String configPath, String doAsUser) {
+        return falconUnitClient.updateExtensionJob(jobName, configPath, doAsUser);
+    }
+
+    APIResult deleteExtensionJob(String jobName, String doAsUser) {
+        return falconUnitClient.deleteExtensionJob(jobName, doAsUser);
     }
 
     public static String overlayParametersOverTemplate(String template,

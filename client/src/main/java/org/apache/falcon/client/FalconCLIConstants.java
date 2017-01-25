@@ -43,6 +43,8 @@ public final class FalconCLIConstants {
     public static final String UPDATE_OPT = "update";
     public static final String UPDATE_CLUSTER_DEPENDENTS_OPT = "updateClusterDependents";
     public static final String DELETE_OPT = "delete";
+    public static final String ENABLE_OPT = "enable";
+    public static final String DISABLE_OPT = "disable";
     public static final String SCHEDULE_OPT = "schedule";
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
