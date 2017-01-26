@@ -35,6 +35,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
@@ -236,12 +237,33 @@ public class FalconUnitTestBase {
         return falconUnitClient.getExtensionJobDetails(jobName, doAsUser).getMessage();
     }
 
-    public String unregisterExtension(String extensionName, String doAsUser) {
-        return falconUnitClient.unregisterExtension(extensionName, doAsUser).getMessage();
+    APIResult registerExtension(String extensionName, String packagePath, String description)
+        throws IOException, FalconException {
+        return falconUnitClient.registerExtension(extensionName, packagePath, description);
     }
 
-    public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
+    String disableExtension(String extensionName) {
+        return falconUnitClient.disableExtension(extensionName).getMessage();
+    }
+
+    String enableExtension(String extensionName) {
+        return falconUnitClient.enableExtension(extensionName).getMessage();
+    }
+
+    APIResult getExtensionJobDetails(String jobName) {
+        return falconUnitClient.getExtensionJobDetails(jobName);
+    }
+
+    APIResult unregisterExtension(String extensionName) {
+        return falconUnitClient.unregisterExtension(extensionName);
+    }
+
+    APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
         return falconUnitClient.submitExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return falconUnitClient.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 
     public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,

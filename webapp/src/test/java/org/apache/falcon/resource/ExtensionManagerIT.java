@@ -100,8 +100,6 @@ public class ExtensionManagerIT extends AbstractTestExtensionStore {
         // validate job list results
         ExtensionJobList jobs = context.getExtensionJobs("hdfs-mirroring", null, null, null, null, null);
         Assert.assertEquals(jobs.numJobs, 2);
-        Assert.assertEquals(jobs.job.get(0).jobName, JOB_NAME_1);
-        Assert.assertEquals(jobs.job.get(1).jobName, JOB_NAME_2);
 
         // list extension job instances
         System.out.println("extension -instances -jobName " + JOB_NAME_1 + " -fields status,clusters,tags");

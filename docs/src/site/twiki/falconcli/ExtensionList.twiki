@@ -8,9 +8,9 @@ Usage:
 $FALCON_HOME/bin/falcon extension -list -extensionName <<extension-name>>
 
 Optional Args : -doAs <<user-name>>
--sortOrder <<sortOrder>> -offset <<offset-number>> -numResults <<number-of-results>> -fields <<field1,field2>>
+-sortOrder <<sortOrder>>
 
 <a href="../restapi/ExtensionList.html">Parameters and examples described here.</a>
 
 Example:
-$FALCON_HOME/bin/falcon extension -list -extensionName hdfs-mirroring -offset 0 -numResults 10
+$FALCON_HOME/bin/falcon extension -list -extensionName hdfs-mirroring

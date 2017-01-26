@@ -40,7 +40,6 @@ import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
-import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.security.CurrentUser;
@@ -63,9 +62,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.util.Collections;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Arrays;
 import java.util.Set;
@@ -86,9 +83,6 @@ import java.io.ByteArrayInputStream;
 public class ExtensionManagerProxy extends AbstractExtensionManager {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionManagerProxy.class);
 
-    private static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
-    private static final String ASCENDING_SORT_ORDER = "asc";
-    private static final String DESCENDING_SORT_ORDER = "desc";
     private Extension extension = new Extension();
     private static final String README = "README";
 
@@ -97,51 +91,20 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private EntityProxyUtil entityProxyUtil = new EntityProxyUtil();
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
+
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
     @Path("list/{extension-name}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
             @PathParam("extension-name") String extensionName,
-            @DefaultValue("") @QueryParam("fields") String fields,
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
-            @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        checkIfExtensionExists(extensionName);
         try {
-            // get filtered entities
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_NAME + extensionName, "", doAsUser);
-            if (entities.isEmpty()) {
-                return new ExtensionJobList(0);
-            }
-
-            // group entities by extension job name
-            Map<String, List<Entity>> groupedEntities = groupEntitiesByJob(entities);
-
-            // sort by extension job name
-            List<String> jobNames = new ArrayList<>(groupedEntities.keySet());
-            switch (sortOrder.toLowerCase()) {
-            case DESCENDING_SORT_ORDER:
-                Collections.sort(jobNames, Collections.reverseOrder(String.CASE_INSENSITIVE_ORDER));
-                break;
-            default:
-                Collections.sort(jobNames, String.CASE_INSENSITIVE_ORDER);
-            }
-
-            // pagination and format output
-            int pageCount = getRequiredNumberOfResults(jobNames.size(), offset, resultsPerPage);
-            HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
-            ExtensionJobList jobList = new ExtensionJobList(pageCount);
-            for (int i = offset; i < offset + pageCount; i++) {
-                String jobName = jobNames.get(i);
-                List<Entity> jobEntities = groupedEntities.get(jobName);
-                EntityList entityList = new EntityList(buildEntityElements(fieldSet, jobEntities), jobEntities.size());
-                jobList.addJob(new ExtensionJobList.JobElement(jobName, entityList));
-            }
-            return jobList;
-        } catch (FalconException | IOException e) {
+            return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
+        } catch (Throwable e) {
             LOG.error("Failed to get extension job list of " + extensionName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -662,6 +625,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         validateExtensionName(extensionName);
         try {
             return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -731,6 +696,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         try {
             return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
                     extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -779,18 +746,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return entities;
     }
 
-    private Map<String, List<Entity>> groupEntitiesByJob(List<Entity> entities) {
-        Map<String, List<Entity>> groupedEntities = new HashMap<>();
-        for (Entity entity : entities) {
-            String jobName = getJobNameFromTag(entity.getTags());
-            if (!groupedEntities.containsKey(jobName)) {
-                groupedEntities.put(jobName, new ArrayList<Entity>());
-            }
-            groupedEntities.get(jobName).add(entity);
-        }
-        return groupedEntities;
-    }
-
     private static void checkIfExtensionServiceIsEnabled() {
         if (!Services.get().isRegistered(ExtensionService.SERVICE_NAME)) {
             LOG.error(ExtensionService.SERVICE_NAME + " is not enabled.");
@@ -798,6 +753,4 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                     ExtensionService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
     }
-
-
 }

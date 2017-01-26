@@ -29,7 +29,6 @@ import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -75,7 +74,7 @@ public final class ExtensionStore {
     private static final String RESOURCES_DIR = "resources";
     private static final String LIBS_DIR = "libs";
 
-    public static final String EXTENSION_STORE_URI = "extension.store.uri";
+    static final String EXTENSION_STORE_URI = "extension.store.uri";
 
     private static final ExtensionStore STORE = new ExtensionStore();
 
@@ -103,10 +102,9 @@ public final class ExtensionStore {
                 ExtensionType extensionType = AbstractExtension.isExtensionTrusted(extension)
                         ? ExtensionType.TRUSTED : ExtensionType.CUSTOM;
                 String description = getShortDescription(extension);
-                String recipeName = extension;
                 String location = storePath.toString() + '/' + extension;
                 String extensionOwner = System.getProperty("user.name");
-                metaStore.storeExtensionBean(recipeName, location, extensionType, description, extensionOwner);
+                metaStore.storeExtensionBean(extension, location, extensionType, description, extensionOwner);
             }
         } catch (FalconException e) {
             LOG.error("Exception in ExtensionMetaStore:", e);
@@ -143,17 +141,20 @@ public final class ExtensionStore {
         }
     }
 
-    public Map<String, String> getExtensionArtifacts(final String extensionName) throws
-             FalconException {
+    private Map<String, String> getExtensionArtifacts(final String extensionName) throws
+            FalconException {
         Map<String, String> extensionFileMap = new HashMap<>();
         Path extensionPath;
         try {
             RemoteIterator<LocatedFileStatus> fileStatusListIterator;
-            if (AbstractExtension.isExtensionTrusted(extensionName)){
+            if (AbstractExtension.isExtensionTrusted(extensionName)) {
                 extensionPath = new Path(storePath, extensionName.toLowerCase());
                 fileStatusListIterator = fs.listFiles(extensionPath, true);
-            }else{
+            } else {
                 ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+                if (null == extensionBean) {
+                    throw new StoreAccessException("Extension not found:" + extensionName);
+                }
                 extensionPath = new Path(extensionBean.getLocation());
                 FileSystem fileSystem = getHdfsFileSystem(extensionBean.getLocation());
                 fileStatusListIterator = fileSystem.listFiles(extensionPath, true);
@@ -173,7 +174,6 @@ public final class ExtensionStore {
         }
         return extensionFileMap;
     }
-
 
 
     public Map<String, String> getExtensionResources(final String extensionName) throws StoreAccessException {
@@ -243,10 +243,10 @@ public final class ExtensionStore {
             InputStream data;
 
             ByteArrayOutputStream writer = new ByteArrayOutputStream();
-            if (resourcePath.startsWith("file")){
+            if (resourcePath.startsWith("file")) {
                 data = fs.open(resourceFile);
                 IOUtils.copyBytes(data, writer, fs.getConf(), true);
-            }else{
+            } else {
                 FileSystem fileSystem = getHdfsFileSystem(resourcePath);
                 data = fileSystem.open(resourceFile);
                 IOUtils.copyBytes(data, writer, fileSystem.getConf(), true);
@@ -257,7 +257,7 @@ public final class ExtensionStore {
         }
     }
 
-    public List<String> getTrustedExtensions() throws StoreAccessException {
+    private List<String> getTrustedExtensions() throws StoreAccessException {
         List<String> extensionList = new ArrayList<>();
         try {
             FileStatus[] fileStatuses = fs.listStatus(storePath);
@@ -297,28 +297,25 @@ public final class ExtensionStore {
             throw new ValidationException(msg);
         }
     }
+
     private FileSystem getHdfsFileSystem(String path)  throws  FalconException {
-        Configuration conf = new Configuration();
         URI uri;
         try {
             uri = new URI(path);
-        } catch (URISyntaxException e){
+        } catch (URISyntaxException e) {
             LOG.error("Exception : ", e);
             throw new FalconException(e);
         }
-        conf.set("fs.default.name", uri.getScheme() + "://" + uri.getAuthority());
-        return  HadoopClientFactory.get().createFalconFileSystem(uri);
+        return HadoopClientFactory.get().createFalconFileSystem(uri);
     }
 
 
     public String registerExtension(final String extensionName, final String path, final String description,
                                     String extensionOwner) throws URISyntaxException, FalconException {
-        Configuration conf = new Configuration();
         URI uri = new URI(path);
         assertURI("Scheme", uri.getScheme());
         assertURI("Authority", uri.getAuthority());
         assertURI("Path", uri.getPath());
-        conf.set("fs.defaultFS", uri.getScheme() + "://" + uri.getAuthority());
         FileSystem fileSystem = getHdfsFileSystem(path);
         try {
             fileSystem.listStatus(new Path(uri.getPath() + "/README"));
@@ -362,7 +359,8 @@ public final class ExtensionStore {
         LOG.info("Extension :" + extensionName + " registered successfully.");
         return "Extension :" + extensionName + " registered successfully.";
     }
-    public String getResource(final String extensionName, final String resourceName) throws  FalconException {
+
+    public String getResource(final String extensionName, final String resourceName) throws FalconException {
         Map<String, String> resources = getExtensionArtifacts(extensionName);
         if (resources.isEmpty()) {
             throw new StoreAccessException("No extension resources found for " + extensionName);
@@ -382,7 +380,12 @@ public final class ExtensionStore {
     public String updateExtensionStatus(final String extensionName, String currentUser, ExtensionStatus status) throws
             FalconException {
         validateStatusChange(extensionName, currentUser);
-        if (metaStore.getDetail(extensionName).getStatus().equals(status)) {
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw new FalconException("Extension not found:" + extensionName);
+        }
+        if (extensionBean.getStatus().equals(status)) {
             throw new ValidationException(extensionName + " is already in " + status.toString() + " state.");
         } else {
             metaStore.updateExtensionStatus(extensionName, status);

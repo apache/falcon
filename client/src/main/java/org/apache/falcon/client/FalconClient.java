@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
@@ -52,6 +53,8 @@ import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -81,6 +84,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FalconClient extends AbstractFalconClient {
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
+    public static final Logger LOG = LoggerFactory.getLogger(FalconClient.class);
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
@@ -187,6 +191,7 @@ public class FalconClient extends AbstractFalconClient {
             client.resource(UriBuilder.fromUri(baseUrl).build());
             authenticationToken = getToken(baseUrl);
         } catch (Exception e) {
+            LOG.error("Unable to initialize Falcon Client object. Cause : ", e);
             throw new FalconCLIException("Unable to initialize Falcon Client object. Cause : " + e.getMessage(), e);
         }
     }
@@ -1019,10 +1024,19 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult unregisterExtension(final String extensionName, final String doAsUser) {
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.LIST.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .addQueryParam(SORT_ORDER, sortOrder)
+                .call(ExtensionOperations.LIST);
+        return getResponse(ExtensionJobList.class, clientResponse);
+    }
+
+    public APIResult unregisterExtension(final String extensionName) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.UNREGISTER);
         return getResponse(APIResult.class, clientResponse);
     }
@@ -1032,12 +1046,11 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult getExtensionJobDetails(final String jobName, final String doAsUser) {
-        return getResponse(APIResult.class, getExtensionJobDetailsResponse(jobName, doAsUser));
+        return getResponse(APIResult.class, getExtensionJobDetailsResponse(jobName));
     }
 
-    private ClientResponse getExtensionJobDetailsResponse(final String jobName, final String doAsUser) {
+    private ClientResponse getExtensionJobDetailsResponse(final String jobName) {
         return new ResourceBuilder().path(ExtensionOperations.JOB_DETAILS.path, jobName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.JOB_DETAILS);
     }
 
@@ -1119,7 +1132,8 @@ public class FalconClient extends AbstractFalconClient {
         try {
             formDataMultiPart.close();
         } catch (IOException e) {
-            throw new FalconCLIException("Submit failed. Failed to submit entities", e);
+            LOG.error("Submit failed. Failed to submit entities. Cause: ", e);
+            throw new FalconCLIException("Submit failed. Failed to submit entities:" + e.getMessage(), e);
         }
         return formDataMultiPart;
     }
@@ -1128,7 +1142,7 @@ public class FalconClient extends AbstractFalconClient {
                                                          InputStream configStream, String doAsUser) {
         JSONObject extensionDetailJson;
         if (StringUtils.isBlank(extensionName)) {
-            extensionName = ExtensionHandler.getExtensionName(jobName, getExtensionJobDetailJson(jobName, doAsUser));
+            extensionName = ExtensionHandler.getExtensionName(jobName, getExtensionJobDetailJson(jobName));
         }
         extensionDetailJson = getExtensionDetailJson(extensionName, doAsUser);
         String extensionType = ExtensionHandler.getExtensionType(extensionName, extensionDetailJson);
@@ -1144,18 +1158,20 @@ public class FalconClient extends AbstractFalconClient {
         try {
             extensionDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
-            throw new FalconCLIException("Failed to get details for the given extension", e);
+            LOG.error("Failed to get details for the given extension. Cause: ", e);
+            throw new FalconCLIException("Failed to get details for the given extension:" + e.getMessage(), e);
         }
         return extensionDetailJson;
     }
 
-    private JSONObject getExtensionJobDetailJson(String jobName, String doAsUser) {
-        ClientResponse clientResponse = getExtensionJobDetailsResponse(jobName, doAsUser);
+    private JSONObject getExtensionJobDetailJson(String jobName) {
+        ClientResponse clientResponse = getExtensionJobDetailsResponse(jobName);
         JSONObject extensionJobDetailJson;
         try {
             extensionJobDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
-            throw new FalconCLIException("Failed to get details for the given extension", e);
+            LOG.error("Failed to get details for the given extension. Cause: ", e);
+            throw new FalconCLIException("Failed to get details for the given extension:" + e.getMessage(), e);
         }
         return extensionJobDetailJson;
     }
@@ -1168,7 +1184,9 @@ public class FalconClient extends AbstractFalconClient {
                 entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                         extensionBuildLocation);
             } catch (Exception e) {
-                throw new FalconCLIException("Error in building the extension", e);
+                LOG.error("Error in building the extension. Cause: ", e);
+                OUT.get().println("Error in building the extension:" + ExceptionUtils.getFullStackTrace(e));
+                throw new FalconCLIException("Error in building the extension:" + e.getMessage(), e);
             }
             if (entities == null || entities.isEmpty()) {
                 throw new FalconCLIException("No entities got built for the given extension");
@@ -1248,20 +1266,6 @@ public class FalconClient extends AbstractFalconClient {
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.DELETE);
         return getResponse(APIResult.class, clientResponse);
-    }
-
-    public ExtensionJobList listExtensionJob(final String extensionName, final String doAsUser,
-                                             final String sortOrder, final String offset,
-                                             final String numResults, final String fields)  {
-        ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.LIST.path, extensionName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
-                .addQueryParam(FIELDS, fields)
-                .addQueryParam(SORT_ORDER, sortOrder)
-                .addQueryParam(OFFSET, offset)
-                .addQueryParam(NUM_RESULTS, numResults)
-                .call(ExtensionOperations.LIST);
-        return getResponse(ExtensionJobList.class, clientResponse);
     }
 
     public ExtensionInstanceList listExtensionInstance(final String jobName, final String doAsUser, final String fields,

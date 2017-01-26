@@ -27,6 +27,7 @@ import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.security.CurrentUser;
 
 import java.io.IOException;
@@ -179,7 +180,7 @@ public class LocalExtensionManager extends AbstractExtensionManager {
         return super.registerExtensionMetadata(extensionName, packagePath, description, CurrentUser.getUser());
     }
 
-    APIResult unRegisterExtension(String extensionName) {
+    APIResult unRegisterExtension(String extensionName) throws FalconException {
         return super.deleteExtensionMetadata(extensionName);
     }
 
@@ -201,5 +202,9 @@ public class LocalExtensionManager extends AbstractExtensionManager {
 
     public APIResult getExtensions() {
         return super.getExtensions();
+    }
+
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 }

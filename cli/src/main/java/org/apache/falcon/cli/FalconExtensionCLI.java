@@ -98,7 +98,7 @@ public class FalconExtensionCLI extends FalconCLI{
             result = client.getExtensionDescription(extensionName, doAsUser).getMessage();
         } else if (optionsList.contains(UNREGISTER_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
-            result = client.unregisterExtension(extensionName, doAsUser).getMessage();
+            result = client.unregisterExtension(extensionName).getMessage();
         } else if (optionsList.contains(DETAIL_OPT)) {
             if (optionsList.contains(JOB_NAME_OPT)) {
                 validateRequiredParameter(jobName, JOB_NAME_OPT);
@@ -131,6 +131,7 @@ public class FalconExtensionCLI extends FalconCLI{
             result = client.updateExtensionJob(jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.VALIDATE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            validateRequiredParameter(jobName, JOB_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.validateExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
@@ -149,12 +150,8 @@ public class FalconExtensionCLI extends FalconCLI{
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.deleteExtensionJob(jobName, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
-            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
-            ExtensionJobList jobs = client.listExtensionJob(extensionName, doAsUser,
-                    commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.FIELDS_OPT));
+            ExtensionJobList jobs = client.getExtensionJobs(extensionName, doAsUser,
+                    commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT));
             result = jobs != null ? jobs.toString() : "No extension job (" + extensionName + ") found.";
         } else if (optionsList.contains(INSTANCES_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
