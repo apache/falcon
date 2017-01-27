@@ -31,6 +31,7 @@ import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -51,7 +52,6 @@ import java.io.IOException;
 import java.text.ParseException;
 
 import static org.apache.falcon.entity.EntityUtil.getEntity;
-
 
 /**
  * Test cases of falcon jobs using Local Oozie and LocalJobRunner.
@@ -426,9 +426,9 @@ public class TestFalconUnit extends FalconUnitTestBase {
         submitCluster();
         createExtensionPackage();
         APIResult apiResult = registerExtension("testExtension", new Path(STORAGE_URL + EXTENSION_PATH).toString()
-                , "testExtension");
+                , "testExtension", null);
         assertStatus(apiResult);
-        apiResult = unregisterExtension("testExtension");
+        apiResult = unregisterExtension("testExtension", CurrentUser.getUser());
         assertStatus(apiResult);
         Assert.assertEquals(apiResult.getMessage(), "Deleted extension:testExtension");
 
@@ -442,7 +442,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         createDir(PROCESS_APP_PATH);
         fs.copyFromLocalFile(new Path(getAbsolutePath(WORKFLOW)), new Path(PROCESS_APP_PATH, "workflow.xml"));
         String packageBuildLib = new Path(EXTENSION_PATH, "libs/build/").toString();
-        APIResult apiResult = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION);
+        APIResult apiResult = registerExtension(TEST_EXTENSION, STORAGE_URL + EXTENSION_PATH, TEST_EXTENSION, null);
         assertStatus(apiResult);
 
         disableExtension(TEST_EXTENSION, null);
@@ -461,13 +461,10 @@ public class TestFalconUnit extends FalconUnitTestBase {
         apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
 
-        result = getExtensionJobDetails(TEST_JOB, null);
-        JSONObject resultJson = new JSONObject(result);
-
         ExtensionJobList extensionJobList = getExtensionJobs(TEST_EXTENSION, null, null);
         Assert.assertEquals(extensionJobList.getNumJobs(), 1);
 
-        apiResult = getExtensionJobDetails(TEST_JOB);
+        apiResult = getExtensionJobDetails(TEST_JOB, CurrentUser.getUser());
         JSONObject resultJson = new JSONObject(apiResult.getMessage());
         Assert.assertEquals(resultJson.get("extensionName"), TEST_EXTENSION);
         Process process = (Process) getClient().getDefinition(EntityType.PROCESS.toString(), "sample", null);
@@ -490,7 +487,8 @@ public class TestFalconUnit extends FalconUnitTestBase {
         apiResult = updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
         assertStatus(apiResult);
 
-        String processes = new JSONObject(getExtensionJobDetails(TEST_JOB).getMessage()).get("processes").toString();
+        String processes = new JSONObject(getExtensionJobDetails(TEST_JOB, CurrentUser.getUser()).getMessage())
+                .get("processes").toString();
         JSONObject processObject = new JSONObject();
         processObject.put("name", "sample");
         processObject.put("status", "EXISTS");
@@ -504,7 +502,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         Assert.assertEquals(apiResult.getMessage(), "RUNNING");
 
         try {
-            unregisterExtension(TEST_EXTENSION);
+            unregisterExtension(TEST_EXTENSION, CurrentUser.getUser());
             Assert.fail("Should have thrown a FalconCLIException");
         } catch (FalconWebException e) {
             //Do nothing. Exception expected as there are dependent extension jobs and so extension cannot be deleted.
@@ -524,7 +522,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
             Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Job name not found:testJob");
             //Do nothing. Exception Expected.
         }
-        apiResult = unregisterExtension(TEST_EXTENSION);
+        apiResult = unregisterExtension(TEST_EXTENSION, CurrentUser.getUser());
         assertStatus(apiResult);
     }
 

@@ -219,10 +219,9 @@ public class FalconUnitTestBase {
         return props;
     }
 
-    public String registerExtension(String extensionName, String packagePath, String description, String doAsUser)
+    public APIResult registerExtension(String extensionName, String packagePath, String description, String doAsUser)
         throws IOException, FalconException {
-
-        return falconUnitClient.registerExtension(extensionName, packagePath, description, doAsUser).getMessage();
+        return falconUnitClient.registerExtension(extensionName, packagePath, description, doAsUser);
     }
 
     public String disableExtension(String extensionName, String doAsUser) {
@@ -233,29 +232,12 @@ public class FalconUnitTestBase {
         return falconUnitClient.enableExtension(extensionName, doAsUser).getMessage();
     }
 
-    public String getExtensionJobDetails(String jobName, String doAsUser) {
-        return falconUnitClient.getExtensionJobDetails(jobName, doAsUser).getMessage();
+    public APIResult getExtensionJobDetails(String jobName, String doAsUser) {
+        return falconUnitClient.getExtensionJobDetails(jobName, doAsUser);
     }
 
-    APIResult registerExtension(String extensionName, String packagePath, String description)
-        throws IOException, FalconException {
-        return falconUnitClient.registerExtension(extensionName, packagePath, description);
-    }
-
-    String disableExtension(String extensionName) {
-        return falconUnitClient.disableExtension(extensionName).getMessage();
-    }
-
-    String enableExtension(String extensionName) {
-        return falconUnitClient.enableExtension(extensionName).getMessage();
-    }
-
-    APIResult getExtensionJobDetails(String jobName) {
-        return falconUnitClient.getExtensionJobDetails(jobName);
-    }
-
-    APIResult unregisterExtension(String extensionName) {
-        return falconUnitClient.unregisterExtension(extensionName);
+    APIResult unregisterExtension(String extensionName, String doAsUser) {
+        return falconUnitClient.unregisterExtension(extensionName, doAsUser);
     }
 
     APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {

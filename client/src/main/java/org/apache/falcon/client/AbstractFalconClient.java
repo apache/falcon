@@ -196,7 +196,7 @@ public abstract class AbstractFalconClient {
      * @param extensionName extensionName that needs to be unregistered
      * @return Result of the unregisterExtension operation
      */
-    public abstract APIResult unregisterExtension(String extensionName);
+    public abstract APIResult unregisterExtension(String extensionName, String doAsUser);
 
     /**
      *

@@ -1034,7 +1034,7 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(ExtensionJobList.class, clientResponse);
     }
 
-    public APIResult unregisterExtension(final String extensionName) {
+    public APIResult unregisterExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
                 .call(ExtensionOperations.UNREGISTER);

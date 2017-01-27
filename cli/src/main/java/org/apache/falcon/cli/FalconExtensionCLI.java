@@ -98,7 +98,7 @@ public class FalconExtensionCLI extends FalconCLI{
             result = client.getExtensionDescription(extensionName, doAsUser).getMessage();
         } else if (optionsList.contains(UNREGISTER_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
-            result = client.unregisterExtension(extensionName).getMessage();
+            result = client.unregisterExtension(extensionName, doAsUser).getMessage();
         } else if (optionsList.contains(DETAIL_OPT)) {
             if (optionsList.contains(JOB_NAME_OPT)) {
                 validateRequiredParameter(jobName, JOB_NAME_OPT);
