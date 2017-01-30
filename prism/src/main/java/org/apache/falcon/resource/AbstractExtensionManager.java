@@ -159,11 +159,16 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private void canDeleteExtension(String extensionName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
+
         if (!extensionJobs.isEmpty()) {
-            LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
-                    ArrayUtils.toString(extensionJobs));
-            throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances"
-                    + " are dependent on the extension" + ArrayUtils.toString(extensionJobs));
+            StringBuilder jobs = new StringBuilder();
+            for(ExtensionJobsBean extensionJobsBean : extensionJobs) {
+                jobs.append("\n" + extensionJobsBean.getJobName());
+            }
+            LOG.error("Extension:" + extensionName + " cannot be unregistered as following instances: "
+                    + " are dependent on the extension" + jobs.toString());
+            throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances: "
+                    + " are dependent on the extension" + jobs.toString());
         }
     }
 
