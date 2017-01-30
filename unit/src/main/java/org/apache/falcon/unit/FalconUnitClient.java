@@ -36,6 +36,7 @@ import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -56,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -330,7 +332,7 @@ public class FalconUnitClient extends AbstractFalconClient {
         try {
             entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                     packagePath);
-        } catch (FalconException | IOException e) {
+        } catch (FalconException | IOException | URISyntaxException e) {
             throw new FalconCLIException("Failed in generating entities" + jobName);
         }
         return entities;
@@ -411,6 +413,11 @@ public class FalconUnitClient extends AbstractFalconClient {
     @Override
     public APIResult enumerateExtensions() {
         return localExtensionManager.getExtensions();
+    }
+
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return localExtensionManager.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 
     @Override
