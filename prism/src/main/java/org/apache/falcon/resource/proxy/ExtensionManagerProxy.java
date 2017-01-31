@@ -693,9 +693,17 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
+        checkIfExtensionExists(extensionName);
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
-                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
+            ExtensionType extensionType = getExtensionType(extensionName);
+            if (ExtensionType.TRUSTED.equals(extensionType)) {
+                return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
+                        extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
+            } else {
+                return new APIResult(APIResult.Status.SUCCEEDED,
+                        ExtensionStore.getMetaStore().getDetail(extensionName).getDescription());
+            }
+
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
