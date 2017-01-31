@@ -119,7 +119,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             }
         };
 
-        Map<String, String> jobAndExtensionNames = new HashMap<>();
+        TreeMap<String, String> jobAndExtensionNames = new TreeMap<>();
         List<ExtensionJobsBean> extensionJobs = null;
         if (extensionName != null) {
             extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
