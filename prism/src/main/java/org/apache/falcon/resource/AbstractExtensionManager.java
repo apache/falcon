@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.resource;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -160,10 +159,14 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
         if (!extensionJobs.isEmpty()) {
-            LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
-                    ArrayUtils.toString(extensionJobs));
+            StringBuilder jobs = new StringBuilder();
+            for(ExtensionJobsBean extensionJobsBean : extensionJobs) {
+                jobs.append("\n" + extensionJobsBean.getJobName());
+            }
+            LOG.error("Extension:" + extensionName + " cannot be unregistered as following instances are dependent on "
+                    + "the extension:" + jobs.toString());
             throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances"
-                    + " are dependent on the extension" + ArrayUtils.toString(extensionJobs));
+                    + " are dependent on the extension:" + jobs.toString());
         }
     }
 
