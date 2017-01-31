@@ -431,7 +431,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         apiResult = unregisterExtension("testExtension", CurrentUser.getUser());
         assertStatus(apiResult);
         Assert.assertEquals(apiResult.getMessage(), "Deleted extension:testExtension");
-
     }
 
     @Test
