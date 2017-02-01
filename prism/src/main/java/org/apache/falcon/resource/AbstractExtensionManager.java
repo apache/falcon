@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -126,7 +125,6 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         switch (sortOrder.toLowerCase()) {
         case DESCENDING_SORT_ORDER:
             return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames.descendingMap());
-            break;
 
         default:
             return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
