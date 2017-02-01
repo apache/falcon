@@ -314,9 +314,10 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    private JSONObject getEntitiesStatus(List<String> entities, EntityType type) throws JSONException, FalconException {
-        JSONObject entityObject = new JSONObject();
+    private JSONArray getEntitiesStatus(List<String> entities, EntityType type) throws JSONException, FalconException {
+        JSONArray entityObjects = new JSONArray();
         for (String entity : entities) {
+            JSONObject entityObject = new JSONObject();
             try {
                 entityObject.put(NAME, entity);
                 EntityUtil.getEntity(type, entity);
@@ -324,7 +325,8 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             } catch (EntityNotRegisteredException e) {
                 entityObject.put(STATUS, ENTITY_NOT_EXISTS_STATUS);
             }
+            entityObjects.put(entityObject);
         }
-        return entityObject;
+        return entityObjects;
     }
 }
