@@ -25,6 +25,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -35,6 +36,7 @@ import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.persistence.ExtensionBean;
 import org.apache.falcon.persistence.ExtensionJobsBean;
 import org.apache.falcon.resource.InstancesResult;
@@ -45,6 +47,8 @@ import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +66,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Arrays;
@@ -700,8 +705,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                 return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
                         extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
             } else {
-                return new APIResult(APIResult.Status.SUCCEEDED,
-                        ExtensionStore.getMetaStore().getDetail(extensionName).getDescription());
+                return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, null));
             }
 
         } catch (FalconException e) {

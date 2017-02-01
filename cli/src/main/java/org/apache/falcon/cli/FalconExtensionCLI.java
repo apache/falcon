@@ -92,7 +92,6 @@ public class FalconExtensionCLI extends FalconCLI{
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDefinition(extensionName).getMessage();
-            result = prettyPrintJson(result);
         } else if (optionsList.contains(DESCRIBE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDescription(extensionName).getMessage();
