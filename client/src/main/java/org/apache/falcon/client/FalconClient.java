@@ -1016,9 +1016,10 @@ public class FalconClient extends AbstractFalconClient {
         return sendMetadataLineageRequest(MetadataOperations.EDGES, id, doAsUser);
     }
 
-    public APIResult enumerateExtensions()  {
+    public APIResult enumerateExtensions(final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.ENUMERATE.path)
+                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.ENUMERATE);
         return getResponse(APIResult.class, clientResponse);
     }
@@ -1033,18 +1034,18 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(ExtensionJobList.class, clientResponse);
     }
 
-    public APIResult unregisterExtension(final String extensionName) {
+    public APIResult unregisterExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
                 .call(ExtensionOperations.UNREGISTER);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult getExtensionDetail(final String extensionName) {
-        return getResponse(APIResult.class, getExtensionDetailResponse(extensionName));
+    public APIResult getExtensionDetail(final String extensionName, final String doAsUser) {
+        return getResponse(APIResult.class, getExtensionDetailResponse(extensionName, doAsUser));
     }
 
-    public APIResult getExtensionJobDetails(final String jobName) {
+    public APIResult getExtensionJobDetails(final String jobName, final String doAsUser) {
         return getResponse(APIResult.class, getExtensionJobDetailsResponse(jobName));
     }
 
@@ -1053,41 +1054,50 @@ public class FalconClient extends AbstractFalconClient {
                 .call(ExtensionOperations.JOB_DETAILS);
     }
 
-    private ClientResponse getExtensionDetailResponse(final String extensionName) {
+    private ClientResponse getExtensionDetailResponse(final String extensionName, final String doAsUser) {
         return  new ResourceBuilder().path(ExtensionOperations.DETAIL.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.DETAIL);
     }
 
-    public APIResult registerExtension(final String extensionName, final String packagePath, final String description) {
+    public APIResult registerExtension(final String extensionName, final String packagePath, final String description,
+                                       final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.REGISTER.path, extensionName).addQueryParam(PATH, packagePath)
                 .addQueryParam(FalconCLIConstants.DESCRIPTION, description)
+                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.REGISTER);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult enableExtension(final String extensionName) {
+    public APIResult enableExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.ENABLE.path, extensionName).call(ExtensionOperations.ENABLE);
+                .path(ExtensionOperations.ENABLE.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.ENABLE);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult disableExtension(final String extensionName) {
+    public APIResult disableExtension(final String extensionName, final String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.DISABLE.path, extensionName).call(ExtensionOperations.DISABLE);
+                .path(ExtensionOperations.DISABLE.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .call(ExtensionOperations.DISABLE);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult getExtensionDefinition(final String extensionName)  {
+    public APIResult getExtensionDefinition(final String extensionName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DEFINITION.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.DEFINITION);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult getExtensionDescription(final String extensionName)  {
+    public APIResult getExtensionDescription(final String extensionName, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.DESCRIBE.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.DESCRIBE);
         return getResponse(APIResult.class, clientResponse);
     }
@@ -1095,7 +1105,7 @@ public class FalconClient extends AbstractFalconClient {
     @Override
     public APIResult submitExtensionJob(final String extensionName, final String jobName, final String configPath,
                                         final String doAsUser) {
-        FormDataMultiPart entitiesForm = getEntitiesForm(extensionName, jobName, configPath);
+        FormDataMultiPart entitiesForm = getEntitiesForm(extensionName, jobName, configPath, doAsUser);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT.path, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1104,9 +1114,9 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    private FormDataMultiPart getEntitiesForm(String extensionName, String jobName, String configPath) {
+    private FormDataMultiPart getEntitiesForm(String extensionName, String jobName, String configPath, String doAsUser) {
         InputStream configStream = getServletInputStream(configPath);
-        List<Entity> entities = validateExtensionAndGetEntities(extensionName, jobName, configStream);
+        List<Entity> entities = validateExtensionAndGetEntities(extensionName, jobName, configStream, doAsUser);
         FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
 
         if (entities != null && !entities.isEmpty()) {
@@ -1129,20 +1139,20 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     private List<Entity> validateExtensionAndGetEntities(String extensionName, String jobName,
-                                                         InputStream configStream) {
+                                                         InputStream configStream, String doAsUser) {
         JSONObject extensionDetailJson;
         if (StringUtils.isBlank(extensionName)) {
             extensionName = ExtensionHandler.getExtensionName(jobName, getExtensionJobDetailJson(jobName));
         }
-        extensionDetailJson = getExtensionDetailJson(extensionName);
+        extensionDetailJson = getExtensionDetailJson(extensionName, doAsUser);
         String extensionType = ExtensionHandler.getExtensionType(extensionName, extensionDetailJson);
         String extensionBuildLocation = ExtensionHandler.getExtensionLocation(extensionName, extensionDetailJson);
         return getEntities(extensionName, jobName, configStream, extensionType,
                 extensionBuildLocation);
     }
 
-    private JSONObject getExtensionDetailJson(String extensionName) {
-        ClientResponse clientResponse = getExtensionDetailResponse(extensionName);
+    private JSONObject getExtensionDetailJson(String extensionName, String doAsUser) {
+        ClientResponse clientResponse = getExtensionDetailResponse(extensionName, doAsUser);
 
         JSONObject extensionDetailJson;
         try {
@@ -1187,7 +1197,7 @@ public class FalconClient extends AbstractFalconClient {
 
     public APIResult submitAndScheduleExtensionJob(final String extensionName, final String jobName,
                                                    final String configPath, final String doAsUser)  {
-        FormDataMultiPart entitiesForm = getEntitiesForm(extensionName, jobName, configPath);
+        FormDataMultiPart entitiesForm = getEntitiesForm(extensionName, jobName, configPath, doAsUser);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUBMIT_AND_SCHEDULE.path, extensionName)
                 .addQueryParam(JOB_NAME_OPT, jobName)
@@ -1197,9 +1207,10 @@ public class FalconClient extends AbstractFalconClient {
     }
 
     public APIResult updateExtensionJob(final String jobName, final String configPath, final String doAsUser) {
-        FormDataMultiPart entitiesForm = getEntitiesForm(null, jobName, configPath);
+        FormDataMultiPart entitiesForm = getEntitiesForm(null, jobName, configPath, doAsUser);
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UPDATE.path, jobName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.UPDATE, entitiesForm);
         return getResponse(APIResult.class, clientResponse);
@@ -1207,7 +1218,8 @@ public class FalconClient extends AbstractFalconClient {
 
     public APIResult validateExtensionJob(final String extensionName, final String jobName,
                                           final String configPath, final String doAsUser) {
-        String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionDetailJson(extensionName));
+        String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionDetailJson(extensionName,
+                doAsUser));
         InputStream configStream = getServletInputStream(configPath);
         if (ExtensionType.TRUSTED.name().equalsIgnoreCase(extensionType)) {
             ClientResponse clientResponse = new ResourceBuilder()
@@ -1216,7 +1228,7 @@ public class FalconClient extends AbstractFalconClient {
                     .call(ExtensionOperations.VALIDATE, configStream);
             return getResponse(APIResult.class, clientResponse);
         } else {
-            validateExtensionAndGetEntities(extensionName, jobName, configStream);
+            validateExtensionAndGetEntities(extensionName, jobName, configStream, doAsUser);
             return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully");
         }
     }

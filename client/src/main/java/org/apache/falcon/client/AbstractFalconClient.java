@@ -188,28 +188,29 @@ public abstract class AbstractFalconClient {
      * @param description description of the extension.
      * @return Result of the registerExtension command.
      */
-    public abstract APIResult registerExtension(String extensionName, String packagePath, String description);
+    public abstract APIResult registerExtension(String extensionName, String packagePath, String description,
+                                                String doAsUser);
 
     /**
      *
      * @param extensionName extensionName that needs to be unregistered
      * @return Result of the unregisterExtension operation
      */
-    public abstract APIResult unregisterExtension(String extensionName);
+    public abstract APIResult unregisterExtension(String extensionName, String doAsUser);
 
     /**
      *
      * @param extensionName extensionName that needs to be enabled
      * @return Result of the enableExtension operation
      */
-    public abstract APIResult enableExtension(String extensionName);
+    public abstract APIResult enableExtension(String extensionName, String doAsUser);
 
     /**
      *
      * @param extensionName extensionName that needs to be disabled
      * @return Result of the disableExtension operation
      */
-    public abstract APIResult disableExtension(String extensionName);
+    public abstract APIResult disableExtension(String extensionName, String doAsUser);
 
     /**
      * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
@@ -280,20 +281,20 @@ public abstract class AbstractFalconClient {
      * @param jobName job name of the extension job.
      * @return
      */
-    public abstract APIResult getExtensionJobDetails(final String jobName);
+    public abstract APIResult getExtensionJobDetails(final String jobName, final String doAsUser);
 
     /**
      * Returns details of an extension.
      * @param extensionName name of the extension.
      * @return
      */
-    public abstract APIResult getExtensionDetail(final String extensionName);
+    public abstract APIResult getExtensionDetail(final String extensionName, final String doAsUser);
 
     /**
      * Returns all registered extensions.
      * @return
      */
-    public abstract APIResult enumerateExtensions();
+    public abstract APIResult enumerateExtensions(String doAsUser);
 
     /**
      * Returns all registered jobs for an extension.

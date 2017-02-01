@@ -225,7 +225,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    protected String enableExtension(String extensionName, String currentUser) {
+    public String enableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
             return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.ENABLED);
