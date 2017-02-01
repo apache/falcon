@@ -333,32 +333,25 @@ public final class ExtensionStore {
             if (AbstractExtension.isExtensionTrusted(extensionName)) {
                 extensionResourcePath = new Path(storePath, extensionName.toLowerCase());
                 fileStatusListIterator = fs.listFiles(extensionResourcePath, true);
-                if (!fileStatusListIterator.hasNext()) {
-                    throw new StoreAccessException(" For extension " + extensionName
-                            + " there are no artifacts at the extension store path " + storePath);
-                }
-                while (fileStatusListIterator.hasNext()) {
-                    LocatedFileStatus fileStatus = fileStatusListIterator.next();
-                    Path filePath = fileStatus.getPath();
-                    if (filePath.getName().equals(resourceName)) {
-                        return getExtensionResource(filePath.toString());
-                    }
-                }
-                // if no matching resource file has been found.
-                throw new StoreAccessException("No extension resources found for " + extensionName);
+                return getResourceDetails(extensionName, resourceName, extensionResourcePath, fileStatusListIterator);
             } else {
                 ExtensionBean extensionBean = metaStore.getDetail(extensionName);
                 if (null == extensionBean) {
                     throw new StoreAccessException("Extension not found:" + extensionName);
                 }
-                extensionResourcePath = new Path(extensionBean.getLocation(), "META");
                 FileSystem fileSystem = getHdfsFileSystem(extensionBean.getLocation());
-                fileStatusListIterator = fileSystem.listFiles(extensionResourcePath, true);
+                if (StringUtils.isNotBlank(resourceName)) {
+                    extensionResourcePath = new Path(extensionBean.getLocation());
+                    fileStatusListIterator = fileSystem.listFiles(extensionResourcePath, true);
+                    return getResourceDetails(extensionName, resourceName, extensionResourcePath,
+                            fileStatusListIterator);
+                }
                 StringBuilder definition = new StringBuilder();
+                extensionResourcePath = new Path(extensionBean.getLocation(), "META");
+                fileStatusListIterator = fileSystem.listFiles(extensionResourcePath, true);
                 while (fileStatusListIterator.hasNext()) {
                     LocatedFileStatus fileStatus = fileStatusListIterator.next();
                     Path filePath = fileStatus.getPath();
-
                     definition.append("Contents of file ").append(filePath.getName()).append(":\n");
                     definition.append(getExtensionResource(filePath.toString())).append("\n \n");
                 }
@@ -367,6 +360,24 @@ public final class ExtensionStore {
         } catch (IOException e) {
             throw new StoreAccessException(e);
         }
+    }
+
+    private String getResourceDetails(String extensionName, String resourceName, Path extensionResourcePath,
+                                      RemoteIterator<LocatedFileStatus> fileStatusListIterator)
+        throws IOException, FalconException {
+        if (!fileStatusListIterator.hasNext()) {
+            throw new StoreAccessException(" For extension " + extensionName
+                    + " there are no artifacts at the extension store path " + extensionResourcePath);
+        }
+        while (fileStatusListIterator.hasNext()) {
+            LocatedFileStatus fileStatus = fileStatusListIterator.next();
+            Path filePath = fileStatus.getPath();
+            if (filePath.getName().equals(resourceName)) {
+                return getExtensionResource(filePath.toString());
+            }
+        }
+        // if no matching resource file has been found.
+        throw new StoreAccessException("No extension resources found for " + extensionName);
     }
 
     public Path getExtensionStorePath() {
