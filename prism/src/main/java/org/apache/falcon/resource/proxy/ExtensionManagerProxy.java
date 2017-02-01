@@ -564,6 +564,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
         SortedMap<EntityType, List<Entity>> entityMap;
         String extensionName = getExtensionName(jobName);
+        checkIfExtensionIsEnabled(extensionName);
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             if (entityMap.get(EntityType.FEED).isEmpty() && entityMap.get(EntityType.PROCESS).isEmpty()) {

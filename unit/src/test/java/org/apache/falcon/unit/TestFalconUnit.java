@@ -483,6 +483,17 @@ public class TestFalconUnit extends FalconUnitTestBase {
         assertStatus(apiResult);
         Assert.assertEquals(apiResult.getMessage(), "RUNNING");
 
+        // update will fail in case of an extension being disabled
+        disableExtension(TEST_EXTENSION);
+        try {
+            updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
+            Assert.fail("Should have thrown a FalconWebException");
+        } catch (FalconWebException e) {
+            Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Extension: "
+                    + TEST_EXTENSION + " is in disabled state.");
+        }
+        enableExtension(TEST_EXTENSION);
+
         apiResult = updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
         assertStatus(apiResult);
 
