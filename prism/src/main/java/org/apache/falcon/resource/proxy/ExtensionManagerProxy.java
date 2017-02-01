@@ -157,7 +157,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                               @QueryParam("colo") final String coloExpr,
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        checkIfExtensionIsEnabled(ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName());
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         if (extensionJobsBean == null) {
@@ -166,6 +165,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             throw FalconWebException.newAPIException("ExtensionJob not found:" + jobName,
                     Response.Status.NOT_FOUND);
         }
+        checkIfExtensionIsEnabled(extensionJobsBean.getExtensionName());
 
         SortedMap<EntityType, List<String>> entityMap;
         try {
@@ -564,6 +564,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
         SortedMap<EntityType, List<Entity>> entityMap;
         String extensionName = getExtensionName(jobName);
+        checkIfExtensionIsEnabled(extensionName);
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             if (entityMap.get(EntityType.FEED).isEmpty() && entityMap.get(EntityType.PROCESS).isEmpty()) {
