@@ -268,13 +268,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     protected static void checkIfExtensionIsEnabled(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
-        if (extensionBean == null) {
-            LOG.error("Extension not found: " + extensionName);
-            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
-                    Response.Status.NOT_FOUND);
-        }
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         if (!extensionBean.getStatus().equals(ExtensionStatus.ENABLED)) {
             LOG.error("Extension: " + extensionName + " is in disabled state.");
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
@@ -282,7 +276,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    protected static void checkIfExtensionExists(String extensionName) {
+    protected static ExtensionBean getExtensionIfExists(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionBean = metaStore.getDetail(extensionName);
         if (extensionBean == null) {
@@ -290,6 +284,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             throw FalconWebException.newAPIException("Extension not found:" + extensionName,
                     Response.Status.NOT_FOUND);
         }
+        return extensionBean;
     }
 
     protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
