@@ -43,6 +43,8 @@ public final class FalconCLIConstants {
     public static final String UPDATE_OPT = "update";
     public static final String UPDATE_CLUSTER_DEPENDENTS_OPT = "updateClusterDependents";
     public static final String DELETE_OPT = "delete";
+    public static final String ENABLE_OPT = "enable";
+    public static final String DISABLE_OPT = "disable";
     public static final String SCHEDULE_OPT = "schedule";
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
@@ -217,4 +219,9 @@ public final class FalconCLIConstants {
     public static final String DIRECTION_OPT_DESCRIPTION = "edge direction property";
     public static final String DEBUG_OPTION_DESCRIPTION = "Use debug mode to see debugging statements on stdout";
     public static final String DO_AS_DESCRIPTION = "doAs user";
+    public static final String UREGISTER = "unregister";
+    public static final String DETAIL = "detail";
+    public static final String REGISTER = "register";
+    public static final String PATH = "path";
+    public static final String DESCRIPTION = "description";
 }

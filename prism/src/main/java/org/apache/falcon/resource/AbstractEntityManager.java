@@ -116,7 +116,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    protected Set<String> getAllColos() {
+    public static Set<String> getAllColos() {
         if (DeploymentUtil.isEmbeddedMode()) {
             return DeploymentUtil.getDefaultColos();
         }
@@ -128,12 +128,21 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
     }
 
     protected Set<String> getColosFromExpression(String coloExpr, String type, String entity) {
-        Set<String> colos;
         final Set<String> applicableColos = getApplicableColos(type, entity);
+        return getColosFromExpression(coloExpr, applicableColos);
+    }
+
+    protected Set<String> getColosFromExpression(String coloExpr, String type, Entity entity) {
+        final Set<String> applicableColos = getApplicableColos(type, entity);
+        return getColosFromExpression(coloExpr, applicableColos);
+    }
+
+    private Set<String> getColosFromExpression(String coloExpr, Set<String> applicableColos) {
+        Set<String> colos;
         if (coloExpr == null || coloExpr.equals("*") || coloExpr.isEmpty()) {
             colos = applicableColos;
         } else {
-            colos = new HashSet<String>(Arrays.asList(coloExpr.split(",")));
+            colos = new HashSet<>(Arrays.asList(coloExpr.split(",")));
             if (!applicableColos.containsAll(colos)) {
                 throw FalconWebException.newAPIException("Given colos not applicable for entity operation");
             }
@@ -141,7 +150,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         return colos;
     }
 
-    protected Set<String> getApplicableColos(String type, String name) {
+    public static Set<String> getApplicableColos(String type, String name) {
         try {
             if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();
@@ -157,7 +166,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         }
     }
 
-    protected Set<String> getApplicableColos(String type, Entity entity) {
+    public static Set<String> getApplicableColos(String type, Entity entity) {
         try {
             if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();

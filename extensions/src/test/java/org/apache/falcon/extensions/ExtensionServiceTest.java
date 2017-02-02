@@ -18,6 +18,7 @@
 
 package org.apache.falcon.extensions;
 
+import org.apache.falcon.extensions.store.AbstractTestExtensionStore;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -26,12 +27,13 @@ import org.testng.Assert;
 /**
  * Unit tests for ExtensionService.
  */
-public class ExtensionServiceTest {
+public class ExtensionServiceTest extends AbstractTestExtensionStore {
 
     private ExtensionService service;
 
     @BeforeClass
     public void setUp() throws Exception {
+        initExtensionStore();
         service = new ExtensionService();
         service.init();
     }
@@ -47,7 +49,7 @@ public class ExtensionServiceTest {
     }
 
     @Test
-    public void testGetextensionStore() throws Exception {
+    public void testGetExtensionStore() throws Exception {
         Assert.assertNotNull(ExtensionService.getExtensionStore());
     }
 }

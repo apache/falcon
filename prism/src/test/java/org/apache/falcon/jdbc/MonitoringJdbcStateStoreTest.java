@@ -19,6 +19,7 @@ package org.apache.falcon.jdbc;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -27,6 +28,7 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.persistence.ProcessInstanceInfoBean;
 import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.tools.FalconStateStoreDBCLI;
 import org.apache.falcon.util.StateStoreProperties;
@@ -39,12 +41,14 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static org.apache.falcon.util.DateUtil.now;
+
 /**
 *Unit test for MonitoringJdbcStateStore.
  * */
 
 public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
-    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
+    private static final String DB_BASE_DIR = "target/test-data/persistenceDB";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
@@ -86,11 +90,11 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
 
     @Test
     public void testInsertRetrieveAndUpdate() throws Exception {
-        monitoringJdbcStateStore.putMonitoredEntity("test_feed1", EntityType.FEED.toString());
-        monitoringJdbcStateStore.putMonitoredEntity("test_feed2", EntityType.FEED.toString());
+        monitoringJdbcStateStore.putMonitoredEntity("test_feed1", EntityType.FEED.toString(), now());
+        monitoringJdbcStateStore.putMonitoredEntity("test_feed2", EntityType.FEED.toString(), now());
         Assert.assertEquals("test_feed1", monitoringJdbcStateStore.getMonitoredEntity("test_feed1",
-                EntityType.FEED.toString()).getFeedName());
-        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredEntity().size(), 2);
+                EntityType.FEED.toString()).getEntityName());
+        Assert.assertEquals(monitoringJdbcStateStore.getAllMonitoredEntities().size(), 2);
 
         monitoringJdbcStateStore.deleteMonitoringEntity("test_feed1", EntityType.FEED.toString());
         monitoringJdbcStateStore.deleteMonitoringEntity("test_feed2", EntityType.FEED.toString());
@@ -109,10 +113,27 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
     }
 
     @Test
+    public void testUpdateAndGetLastMonitoredTime() throws Exception {
+        Date expectedLastMonitoredTime = now();
+        monitoringJdbcStateStore.putMonitoredEntity("test-process", EntityType.PROCESS.toString(),
+                expectedLastMonitoredTime);
+        Date actualLastMonitoredTime = monitoringJdbcStateStore.getMonitoredEntity("test-process",
+                EntityType.PROCESS.toString()).getLastMonitoredTime();
+        Assert.assertEquals(actualLastMonitoredTime, expectedLastMonitoredTime);
+
+        Date updatedLastMonitoredTime = new Date(now().getTime() + 600000L);
+        monitoringJdbcStateStore.updateLastMonitoredTime("test-process", EntityType.PROCESS.toString(),
+                updatedLastMonitoredTime);
+        actualLastMonitoredTime = monitoringJdbcStateStore.getMonitoredEntity("test-process",
+                EntityType.PROCESS.toString()).getLastMonitoredTime();
+        Assert.assertEquals(actualLastMonitoredTime, updatedLastMonitoredTime);
+    }
+
+    @Test
     public void testEmptyLatestInstance() throws Exception {
         MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
-        store.putMonitoredEntity("test-feed1", EntityType.FEED.toString());
-        store.putMonitoredEntity("test-feed2", EntityType.FEED.toString());
+        store.putMonitoredEntity("test-feed1", EntityType.FEED.toString(), now());
+        store.putMonitoredEntity("test-feed2", EntityType.FEED.toString(), now());
         Assert.assertNull(store.getLastInstanceTime("test-feed1", EntityType.FEED.toString()));
 
         Date dateOne =  SchemaHelper.parseDateUTC("2015-11-20T00:00Z");
@@ -152,6 +173,15 @@ public class MonitoringJdbcStateStoreTest extends AbstractTestBase {
         store.updateSLAAlertInstance("test-process", "test-cluster", dateOne, EntityType.PROCESS.toString());
         Assert.assertEquals(Boolean.TRUE, store.getEntityAlertInstance("test-process",
                 "test-cluster", dateOne, EntityType.PROCESS.toString()).getIsSLAHighMissed());
+    }
+
+    @Test
+    public void putProcessInstance() throws Exception{
+        MonitoringJdbcStateStore store = new MonitoringJdbcStateStore();
+        store.putProcessInstance("test-process", "test-colo", 1466602429423L, 99999999L, 99999999L, "test", "failed");
+        List<ProcessInstanceInfoBean> list =  store.getAllInstancesProcessInstance();
+        ProcessInstanceInfoBean processInstanceInfoBean =  list.get(0);
+        Assert.assertEquals("test-process", processInstanceInfoBean.getProcessName());
     }
 
     private void clear() {

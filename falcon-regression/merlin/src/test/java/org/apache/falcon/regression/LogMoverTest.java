@@ -22,6 +22,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
@@ -37,7 +38,9 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -64,6 +67,13 @@ public class LogMoverTest extends BaseTestClass {
     private String process;
     private String startDate;
     private String endDate;
+
+    @BeforeClass
+    public void checkEnvironment() throws Exception {
+        if (MerlinConstants.IS_SECURE) {
+            throw new SkipException("Skipping tests because LogMover Functionality is not Supported on secure mode.");
+        }
+    }
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {

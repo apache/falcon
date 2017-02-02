@@ -49,7 +49,11 @@ import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Properties;
@@ -95,7 +99,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         return properties;
     }
 
-    private static Properties getHdfsProperties() {
+    private static InputStream getHdfsConfigStream() throws IOException {
         Properties properties = getCommonProperties();
         properties.setProperty(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
                 SOURCEDIR);
@@ -106,10 +110,10 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         properties.setProperty(HdfsMirroringExtensionProperties.TARGET_CLUSTER.getName(),
                 TARGET_CLUSTER);
 
-        return properties;
+        return getConfigStream(properties, "target/hdfsconfig.properties");
     }
 
-    private static Properties getHdfsSnapshotExtensionProperties() {
+    private static InputStream getHdfsSnapshotExtensionConfigStream() throws IOException {
         Properties properties = getCommonProperties();
         properties.setProperty(HdfsSnapshotMirrorProperties.SOURCE_SNAPSHOT_DIR.getName(),
                 SOURCEDIR);
@@ -143,7 +147,16 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         properties.setProperty(HdfsSnapshotMirrorProperties.TDE_ENCRYPTION_ENABLED.getName(),
                 "false");
 
-        return properties;
+        return getConfigStream(properties, "target/HdfsSnapshotMirror.properties");
+    }
+
+    private static InputStream getConfigStream(Properties properties, String pathName) throws IOException {
+        File file = new File(pathName);
+        file.delete();
+        OutputStream outputStream = new FileOutputStream(pathName);
+        properties.store(outputStream, null);
+        outputStream.close();
+        return new FileInputStream(pathName);
     }
 
     @BeforeClass
@@ -169,10 +182,10 @@ public class ExtensionTest extends AbstractTestExtensionStore {
     }
 
     @Test
-    public void testGetExtensionEntitiesForHdfsMirroring() throws FalconException {
+    public void testGetExtensionEntitiesForHdfsMirroring() throws FalconException, IOException {
         ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
 
-        List<Entity> entities = extension.getEntities(new HdfsMirroringExtension().getName(), getHdfsProperties());
+        List<Entity> entities = extension.getEntities(new HdfsMirroringExtension().getName(), getHdfsConfigStream());
         if (entities == null || entities.isEmpty()) {
             Assert.fail("Entities returned cannot be null or empty");
         }
@@ -219,11 +232,14 @@ public class ExtensionTest extends AbstractTestExtensionStore {
 
     @Test(expectedExceptions = FalconException.class,
             expectedExceptionsMessageRegExp = "Missing extension property: jobClusterName")
-    public void testGetExtensionEntitiesForHdfsMirroringMissingMandatoryProperties() throws FalconException {
-        Properties props = getHdfsProperties();
+    public void testGetExtensionEntitiesForHdfsMirroringMissingMandatoryProperties()
+        throws FalconException, IOException {
+        Properties props = new Properties();
+        props.load(getHdfsConfigStream());
         props.remove(ExtensionProperties.CLUSTER_NAME.getName());
 
-        extension.getEntities(new HdfsMirroringExtension().getName(), props);
+        extension.getEntities(new HdfsMirroringExtension().getName(),
+                getConfigStream(props, "target/HdfsMirroringMissingMandatory.properties"));
     }
 
     @Test
@@ -234,7 +250,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         miniDfs.allowSnapshot(new Path(TARGETDIR));
 
         List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
-                getHdfsSnapshotExtensionProperties());
+                getHdfsSnapshotExtensionConfigStream());
         if (entities == null || entities.isEmpty()) {
             Assert.fail("Entities returned cannot be null or empty");
         }
@@ -288,7 +304,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         miniDfs.disallowSnapshot(new Path(SOURCEDIR));
 
         List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
-                getHdfsSnapshotExtensionProperties());
+                getHdfsSnapshotExtensionConfigStream());
         if (entities == null || entities.isEmpty()) {
             Assert.fail("Entities returned cannot be null or empty");
         }
@@ -296,10 +312,13 @@ public class ExtensionTest extends AbstractTestExtensionStore {
 
     @Test(expectedExceptions = FalconException.class,
             expectedExceptionsMessageRegExp = "Missing extension property: sourceCluster")
-    public void testGetExtensionEntitiesForHdfsSnapshotMirroringMissingProperties() throws FalconException {
-        Properties props = getHdfsSnapshotExtensionProperties();
+    public void testGetExtensionEntitiesForHdfsSnapshotMirroringMissingProperties()
+        throws FalconException, IOException {
+        Properties props = new Properties();
+        props.load(getHdfsSnapshotExtensionConfigStream());
         props.remove(HdfsSnapshotMirrorProperties.SOURCE_CLUSTER.getName());
-        extension.getEntities(new HdfsSnapshotMirroringExtension().getName(), props);
+        extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
+                getConfigStream(props, "target/HdfsSnapshotMirroringMissing.propertes"));
     }
 
     @Test(dependsOnMethods = "testHdfsSnapshotMirroringNonSnapshotableDir",
@@ -311,7 +330,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         }
 
         List<Entity> entities = extension.getEntities(new HdfsSnapshotMirroringExtension().getName(),
-                getHdfsSnapshotExtensionProperties());
+                getHdfsSnapshotExtensionConfigStream());
         if (entities == null || entities.isEmpty()) {
             Assert.fail("Entities returned cannot be null or empty");
         }

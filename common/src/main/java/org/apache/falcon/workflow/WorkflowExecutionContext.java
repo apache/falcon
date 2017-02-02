@@ -170,7 +170,7 @@ public class WorkflowExecutionContext {
         return getValue(WorkflowExecutionArgs.LOG_FILE);
     }
 
-    String getNominalTime() {
+    public String getNominalTime() {
         return getValue(WorkflowExecutionArgs.NOMINAL_TIME);
     }
 
@@ -184,6 +184,10 @@ public class WorkflowExecutionContext {
 
     String getTimestamp() {
         return getValue(WorkflowExecutionArgs.TIMESTAMP);
+    }
+
+    public boolean hasTimeStamp() {
+        return containsKey(WorkflowExecutionArgs.TIMESTAMP);
     }
 
     /**

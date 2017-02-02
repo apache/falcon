@@ -56,7 +56,7 @@ public final class WorkflowEngineFactory {
             LOG.debug("Returning native workflow engine for entity {}", entity.getName());
             return nativeWorkflowEngine;
         }
-        LOG.debug("Returning configured workflow engine for entity {}.", entity);
+        LOG.debug("Returning configured workflow engine for entity {}", (entity == null)? null : entity.getName());
         return getWorkflowEngine();
     }
 
@@ -70,7 +70,7 @@ public final class WorkflowEngineFactory {
         throws FalconException {
         // If entity is null or not schedulable and the engine property is not specified, return the configured WE.
         if (entity == null || !entity.getEntityType().isSchedulable()) {
-            LOG.debug("Returning configured workflow engine for entity {}.", entity);
+            LOG.debug("Returning configured workflow engine for entity {}", (entity == null)? null : entity.getName());
             return getWorkflowEngine();
         }
 

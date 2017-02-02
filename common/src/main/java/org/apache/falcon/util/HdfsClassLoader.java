@@ -44,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HdfsClassLoader extends URLClassLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(HdfsClassLoader.class);
-    private static Map<String, HdfsClassLoader>  classLoaderCache = new ConcurrentHashMap<String, HdfsClassLoader>();
+    private static Map<String, HdfsClassLoader>  classLoaderCache = new ConcurrentHashMap<>();
     private static final Object LOCK = new Object();
 
     public static ClassLoader load(final String name, final List<String> jarHdfsPath) throws IOException {

@@ -93,7 +93,11 @@ public final class EntityUtil {
 
     public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
     public static final String WF_LIB_SEPARATOR = ",";
+    public static final String TAG_SEPARATOR = ",";
     private static final String STAGING_DIR_NAME_SEPARATOR = "_";
+
+    public static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
+    public static final String TAG_PREFIX_EXTENSION_JOB = "_falcon_extension_job=";
 
     public static final ThreadLocal<SimpleDateFormat> PATH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -1024,18 +1028,69 @@ public final class EntityUtil {
      */
     public static List<Date> getEntityInstanceTimes(Entity entity, String clusterName, Date startRange, Date endRange) {
         Date start = null;
+        Date end = null;
+
         switch (entity.getEntityType()) {
 
         case FEED:
             Feed feed = (Feed) entity;
-            start = FeedHelper.getCluster(feed, clusterName).getValidity().getStart();
+            org.apache.falcon.entity.v0.feed.Validity feedValidity =
+                    FeedHelper.getCluster(feed, clusterName).getValidity();
+            start = feedValidity.getStart();
+            end = feedValidity.getEnd().before(endRange) ? feedValidity.getEnd() : endRange;
             return getInstanceTimes(start, feed.getFrequency(), feed.getTimezone(),
+                    startRange, end);
+
+        case PROCESS:
+
+            Process process = (Process) entity;
+            org.apache.falcon.entity.v0.process.Validity processValidity =
+                    ProcessHelper.getCluster(process, clusterName).getValidity();
+            start = processValidity.getStart();
+            end = processValidity.getEnd().before(endRange) ? processValidity.getEnd() : endRange;
+            return getInstanceTimes(start, process.getFrequency(),
+                    process.getTimezone(), startRange, end);
+
+        default:
+            throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+        }
+    }
+
+    /**
+     * Find the entity instance times in between the given time range.
+     * <p/>
+     * Both start and end Date are inclusive.
+     *
+     * @param entity      feed or process entity whose instance times are to be found
+     * @param clusterName name of the cluster
+     * @param startRange  start time for the input range
+     * @param endRange    end time for the input range
+     * @return List of instance times in between the given time range
+     */
+    public static List<Date> getEntityInstanceTimesInBetween(Entity entity, String clusterName, Date startRange,
+                                                             Date endRange) {
+        Date start = null;
+        Date end = null;
+
+
+        switch (entity.getEntityType()) {
+        case FEED:
+            Feed feed = (Feed) entity;
+            org.apache.falcon.entity.v0.feed.Validity feedValidity =
+                    FeedHelper.getCluster(feed, clusterName).getValidity();
+            start = feedValidity.getStart();
+            end = feedValidity.getEnd();
+            return getInstancesInBetween(start, end, feed.getFrequency(), feed.getTimezone(),
                     startRange, endRange);
 
         case PROCESS:
             Process process = (Process) entity;
-            start = ProcessHelper.getCluster(process, clusterName).getValidity().getStart();
-            return getInstanceTimes(start, process.getFrequency(),
+            org.apache.falcon.entity.v0.process.Validity processValidity =
+                    ProcessHelper.getCluster(process, clusterName).getValidity();
+            start = processValidity.getStart();
+            end = processValidity.getEnd();
+
+            return getInstancesInBetween(start, end, process.getFrequency(),
                     process.getTimezone(), startRange, endRange);
 
         default:
@@ -1066,13 +1121,37 @@ public final class EntityUtil {
 
         Date current = getPreviousInstanceTime(startTime, frequency, timeZone, startRange);
         while (true) {
-            Date nextStartTime = getNextStartTime(startTime, frequency, timeZone, current);
-            if (nextStartTime.after(endRange)){
+            Date nextInstanceTime = getNextStartTime(startTime, frequency, timeZone, current);
+            if (nextInstanceTime.after(endRange)){
                 break;
             }
-            result.add(nextStartTime);
+            result.add(nextInstanceTime);
             // this is required because getNextStartTime returns greater than or equal to referenceTime
-            current = new Date(nextStartTime.getTime() + ONE_MS); // 1 milli seconds later
+            current = new Date(nextInstanceTime.getTime() + ONE_MS); // 1 milli seconds later
+        }
+        return result;
+    }
+
+
+    public static List<Date> getInstancesInBetween(Date startTime, Date endTime, Frequency frequency, TimeZone timeZone,
+                                                  Date startRange, Date endRange) {
+        List<Date> result = new LinkedList<>();
+        if (endRange.before(startRange)) {
+            return result;
+        }
+        if (timeZone == null) {
+            timeZone = TimeZone.getTimeZone("UTC");
+        }
+        Date current = getPreviousInstanceTime(startTime, frequency, timeZone, startRange);
+        while (true) {
+            if (!current.before(startRange) && !current.after(endRange)
+                    && current.before(endTime) && !current.before(startTime)) {
+                result.add(current);
+            }
+            current = getNextInstanceTime(current, frequency, timeZone, 1);
+            if (current.after(endRange)){
+                break;
+            }
         }
         return result;
     }
@@ -1116,6 +1195,48 @@ public final class EntityUtil {
 
         default:
             throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+        }
+    }
+
+    /**
+     * Set the tags to a given entity.
+     * @param entity
+     * @param tags
+     */
+    public static void setEntityTags(Entity entity, String tags) {
+        switch (entity.getEntityType()) {
+        case PROCESS:
+            ((Process) entity).setTags(tags);
+            break;
+        case FEED:
+            ((Feed) entity).setTags(tags);
+            break;
+        case CLUSTER:
+            ((Cluster) entity).setTags(tags);
+            break;
+        default:
+            throw new IllegalArgumentException("Unhandled entity type " + entity.getEntityType());
+        }
+    }
+
+    public static void applyTags(String extensionName, String jobName, List<Entity> entities) throws FalconException {
+        for (Entity entity : entities) {
+            String tags = entity.getTags();
+            if (StringUtils.isNotEmpty(tags)) {
+                if (tags.contains(TAG_PREFIX_EXTENSION_NAME)) {
+                    throw new FalconException("Generated extension entity " + entity.getName()
+                            + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_NAME);
+                }
+                if (tags.contains(TAG_PREFIX_EXTENSION_JOB)) {
+                    throw new FalconException("Generated extension entity " + entity.getName()
+                            + " should not contain tag prefix " + TAG_PREFIX_EXTENSION_JOB);
+                }
+                setEntityTags(entity, tags + TAG_SEPARATOR + TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
+                        + TAG_PREFIX_EXTENSION_JOB + jobName);
+            } else {
+                setEntityTags(entity, TAG_PREFIX_EXTENSION_NAME + extensionName + TAG_SEPARATOR
+                        + TAG_PREFIX_EXTENSION_JOB + jobName);
+            }
         }
     }
 
@@ -1203,5 +1324,6 @@ public final class EntityUtil {
         }
         return false;
     }
+
 
 }

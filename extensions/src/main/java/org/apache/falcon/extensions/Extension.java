@@ -20,13 +20,18 @@ package org.apache.falcon.extensions;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Pair;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.feed.Schema;
 import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.extensions.util.ExtensionProcessBuilderUtils;
+import org.apache.openjpa.util.UnsupportedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -60,26 +65,33 @@ public class Extension implements ExtensionBuilder {
     }
 
     @Override
-    public List<Entity> getEntities(final String extensionName, final Properties extensionProperties)
+    public List<Entity> getEntities(final String extensionName, final InputStream configStream)
         throws FalconException {
         if (StringUtils.isBlank(extensionName)) {
             throw new FalconException("Extension name cannot be null or empty");
         }
-        validateProperties(extensionProperties);
+        Properties configProperties = new Properties();
+        try {
+            configProperties.load(configStream);
+        } catch (IOException e) {
+            LOG.error("Error in reading the config stream");
+            throw new FalconException("Error while reading the config stream", e);
+        }
+        validateProperties(configProperties);
 
         String name = extensionName.toLowerCase();
         AbstractExtension extension = ExtensionFactory.getExtensionType(name);
         if (extension != null) {
-            extension.validate(extensionProperties);
-            Properties props = extension.getAdditionalProperties(extensionProperties);
+            extension.validate(configProperties);
+            Properties props = extension.getAdditionalProperties(configProperties);
             if (props != null && !props.isEmpty()) {
-                extensionProperties.putAll(props);
+                configProperties.putAll(props);
             }
         }
 
         ExtensionStore store = ExtensionService.getExtensionStore();
 
-        String resourceName = extensionProperties.getProperty(ExtensionProperties.RESOURCE_NAME.getName());
+        String resourceName = configProperties.getProperty(ExtensionProperties.RESOURCE_NAME.getName());
         if (StringUtils.isBlank(resourceName)) {
             resourceName = name;
         }
@@ -92,11 +104,29 @@ public class Extension implements ExtensionBuilder {
         /* Get Lib path */
         String wfLibPath = store.getExtensionLibPath(name);
         Entity entity = ExtensionProcessBuilderUtils.createProcessFromTemplate(extensionTemplate,
-                name, extensionProperties, wfPath, wfLibPath);
+                name, configProperties, wfPath, wfLibPath);
         if (entity == null) {
             throw new FalconException("Entity created from the extension template cannot be null");
         }
         LOG.info("Extension processing complete");
-        return Arrays.asList(entity);
+        return Collections.singletonList(entity);
+    }
+
+    @Override
+    public void validateExtensionConfig(String extensionName, InputStream extensionConfigStream)
+        throws FalconException {
+        Properties configProperties = new Properties();
+        try {
+            configProperties.load(extensionConfigStream);
+        } catch (IOException e) {
+            LOG.error("Error in reading the config stream");
+            throw new FalconException("Error while reading the config stream", e);
+        }
+        validateProperties(configProperties);
+    }
+
+    @Override
+    public List<Pair<String, Schema>> getOutputSchemas(String extensionName) throws FalconException {
+        throw new UnsupportedException("Not yet Implemented");
     }
 }

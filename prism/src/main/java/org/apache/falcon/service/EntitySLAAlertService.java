@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-  * Service to know which all feeds have missed SLA.
+  * Service to know which all entities have missed SLA.
   */
 public final class EntitySLAAlertService implements FalconService, EntitySLAListener {
 
@@ -68,7 +68,7 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     @Override
     public void init() throws FalconException {
         String listenerClassNames = StartupProperties.get().
-                getProperty("feedAlert.listeners");
+                getProperty("entityAlert.listeners");
         if (listenerClassNames != null && !listenerClassNames.isEmpty()) {
             for (String listenerClassName : listenerClassNames.split(",")) {
                 listenerClassName = listenerClassName.trim();
@@ -76,11 +76,12 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                     continue;
                 }
                 EntitySLAListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+                LOG.info("Registering listener {}" , listenerClassName);
                 registerListener(listener);
             }
         }
 
-        String freq = StartupProperties.get().getProperty("feed.sla.statusCheck.frequency.seconds", "600");
+        String freq = StartupProperties.get().getProperty("entity.sla.statusCheck.frequency.seconds", "600");
         int statusCheckFrequencySeconds = Integer.parseInt(freq);
 
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
@@ -106,13 +107,12 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     }
 
     void processSLACandidates(){
-        //Get all feeds instances to be monitored
+        //Get all entity instances to be monitored
         List<PendingInstanceBean> pendingInstanceBeanList = store.getAllPendingInstances();
         if (pendingInstanceBeanList == null || pendingInstanceBeanList.isEmpty()){
             return;
         }
-
-        LOG.debug("In processSLACandidates :" + pendingInstanceBeanList.size());
+        LOG.trace("In processSLACandidates :" + pendingInstanceBeanList.size());
         try{
             for (PendingInstanceBean pendingInstanceBean : pendingInstanceBeanList) {
 
@@ -139,18 +139,17 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
                     store.putSLAAlertInstance(entityName, clusterName, entityType,
                             nominalTime, true, false);
                     //Mark in DB as SLA missed
-                    LOG.info("Feed :"+ entityName
-                                + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "missed SLALow");
+                    LOG.info("Entity : {} Cluster : {} Nominal Time : {} missed SLALow", entityName, entityType,
+                            clusterName, nominalTime);
                 } else if (schedulableEntityInstance.getTags().contains(EntitySLAMonitoringService.get().TAG_CRITICAL)){
-                    if (entityType.equals(EntityType.PROCESS.name())){
+                    if (entityType.equalsIgnoreCase(EntityType.PROCESS.name())){
                         store.putSLAAlertInstance(entityName, clusterName, entityType,
                                 nominalTime, true, false);
                     }
                     store.updateSLAAlertInstance(entityName, clusterName, nominalTime, entityType);
-                    LOG.info("Entity :"+ entityName
-                            + "Cluster:" + clusterName + "Nominal Time:" + nominalTime + "EntityType:"+ entityType
-                            + "missed SLAHigh");
-                    highSLAMissed(entityName, clusterName, EntityType.valueOf(entityType), nominalTime);
+                    LOG.info("Entity :{} EntityType : {} Cluster: {} Nominal Time: {} missed SLAHigh", entityName,
+                            entityType, clusterName , nominalTime);
+                    highSLAMissed(entityName, clusterName, EntityType.getEnum(entityType), nominalTime);
                 }
             }
         } catch (FalconException e){
@@ -162,10 +161,9 @@ public final class EntitySLAAlertService implements FalconService, EntitySLAList
     @Override
     public void highSLAMissed(String entityName, String clusterName, EntityType entityType , Date nominalTime
                               ) throws FalconException {
-        LOG.debug("Listners called...");
         for (EntitySLAListener listener : listeners) {
             listener.highSLAMissed(entityName, clusterName, entityType, nominalTime);
-            store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType.name());
         }
+        store.deleteEntityAlertInstance(entityName, clusterName, nominalTime, entityType.name());
     }
 }

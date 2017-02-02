@@ -52,8 +52,8 @@ import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.fs.Path;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -150,10 +150,10 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
             return;
         }
 
-        List<String> inputFeeds = new ArrayList<String>();
-        List<String> inputNames = new ArrayList<String>();
-        List<String> inputPaths = new ArrayList<String>();
-        List<String> inputFeedStorageTypes = new ArrayList<String>();
+        List<String> inputFeeds = new LinkedList<>();
+        List<String> inputNames = new LinkedList<>();
+        List<String> inputPaths = new LinkedList<>();
+        List<String> inputFeedStorageTypes = new LinkedList<>();
         for (Input input : entity.getInputs().getInputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
@@ -254,6 +254,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         if (entity.getOutputs() == null) {
             props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), NONE);
             props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), NONE);
+            props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), NONE);
             return;
         }
 
@@ -265,8 +266,9 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
             coord.setOutputEvents(new OUTPUTEVENTS());
         }
 
-        List<String> outputFeeds = new ArrayList<String>();
-        List<String> outputPaths = new ArrayList<String>();
+        List<String> outputFeeds = new LinkedList<>();
+        List<String> outputPaths = new LinkedList<>();
+        List<String> falconOutputNames = new LinkedList<>();
         for (Output output : entity.getOutputs().getOutputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
@@ -282,6 +284,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
             String outputExpr = "${coord:dataOut('" + output.getName() + "')}";
             outputFeeds.add(feed.getName());
+            falconOutputNames.add(output.getName());
             outputPaths.add(outputExpr);
 
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
@@ -295,6 +298,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
         // Output feed name and path for parent workflow
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeeds, ','));
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), StringUtils.join(falconOutputNames, ','));
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), StringUtils.join(outputPaths, ','));
     }
 

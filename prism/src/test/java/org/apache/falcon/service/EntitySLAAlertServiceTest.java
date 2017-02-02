@@ -45,10 +45,10 @@ import java.io.File;
 import java.util.Date;
 
 /**
- * Test for EntitySLAMonitoringService.
+ * Test for SLA Alerts.
  */
 public class EntitySLAAlertServiceTest extends AbstractTestBase {
-    private static final String DB_BASE_DIR = "target/test-data/persistancedb";
+    private static final String DB_BASE_DIR = "target/test-data/persistencedb";
     protected static String dbLocation = DB_BASE_DIR + File.separator + "data.db";
     protected static String url = "jdbc:derby:"+ dbLocation +";create=true";
     protected static final String DB_SQL_FILE = DB_BASE_DIR + File.separator + "out.sql";
@@ -105,7 +105,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    @Test(expectedExceptions = javax.persistence.NoResultException.class)
     public static void processSLALowCandidates() throws FalconException, InterruptedException{
 
         Date dateOne =  new Date(System.currentTimeMillis()-100000);
@@ -141,7 +141,7 @@ public class EntitySLAAlertServiceTest extends AbstractTestBase {
                 dateOne, EntityType.FEED.toString()).getIsSLALowMissed());
     }
 
-    @Test
+    @Test(expectedExceptions = javax.persistence.NoResultException.class)
     public static void processSLACandidateProcess() throws FalconException, InterruptedException{
         Date dateOne =  new Date(System.currentTimeMillis()-130000);
 

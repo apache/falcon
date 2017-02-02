@@ -48,7 +48,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         if (shouldPreProcess()) {
             ACTION action = getPreProcessingAction(false, Tag.REPLICATION);
             addHDFSServersConfig(action, src, target);
-            addTransition(action, REPLICATION_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            addTransition(action, REPLICATION_ACTION_NAME, getFailAction());
             workflow.getDecisionOrForkOrJoin().add(action);
             start = PREPROCESS_ACTION_NAME;
         }

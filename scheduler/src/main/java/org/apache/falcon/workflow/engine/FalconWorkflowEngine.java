@@ -392,6 +392,12 @@ public class FalconWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
+    public InstancesResult ignoreInstances(Entity entity, Date start, Date end, Properties props,
+                                           List<LifeCycle> lifeCycles) throws FalconException{
+        throw new UnsupportedOperationException("Not yet Implemented");
+    }
+
+    @Override
     public InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
                                           List<LifeCycle> lifeCycles, Boolean isForced) throws FalconException {
         if (isForced == null) {

@@ -17,12 +17,15 @@
  */
 package org.apache.falcon.service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.jdbc.BacklogMetricStore;
 import org.apache.falcon.metrics.MetricNotificationService;
@@ -59,9 +62,9 @@ import static org.apache.falcon.workflow.WorkflowEngineFactory.getWorkflowEngine
  * Backlog Metric Emitter Service to publish metrics to Graphite.
  */
 public final class BacklogMetricEmitterService implements FalconService,
-        EntitySLAListener, WorkflowExecutionListener {
+        EntitySLAListener, WorkflowExecutionListener, ConfigurationChangeListener {
 
-    private static final String METRIC_PREFIX = "falcon";
+    private static final String METRIC_PREFIX = StartupProperties.get().getProperty("falcon.graphite.prefix");
     private static final String METRIC_SEPARATOR = ".";
     private static final String BACKLOG_METRIC_EMIT_INTERVAL = "falcon.backlog.metricservice.emit.interval.millisecs";
     private static final String BACKLOG_METRIC_RECHECK_INTERVAL = "falcon.backlog.metricservice."
@@ -76,6 +79,9 @@ public final class BacklogMetricEmitterService implements FalconService,
 
     private static MetricNotificationService metricNotificationService =
             Services.get().getService(MetricNotificationService.SERVICE_NAME);
+
+    private static final List<LifeCycle> PROCESS_LIFE_CYCLE =
+            Collections.singletonList(LifeCycle.valueOf(LifeCycle.EXECUTION.name()));
 
     public static BacklogMetricEmitterService get() {
         return SERVICE;
@@ -100,9 +106,81 @@ public final class BacklogMetricEmitterService implements FalconService,
     private static ConcurrentHashMap<Entity, List<MetricInfo>> entityBacklogs = new ConcurrentHashMap<>();
 
     @Override
-    public void highSLAMissed(String entityName, String clusterName, EntityType entityType, Date nominalTime)
-        throws FalconException {
+    public void onAdd(Entity entity) throws FalconException {
+        addToBacklog(entity);
+    }
 
+    @Override
+    public void onRemove(Entity entity) throws FalconException {
+        if (entity.getEntityType() != EntityType.PROCESS) {
+            return;
+        }
+        Process process = (Process) entity;
+        if (process.getSla() != null) {
+            backlogMetricStore.deleteEntityBackLogInstances(entity.getName(), entity.getEntityType().name());
+            entityBacklogs.remove(entity);
+            process = EntityUtil.getEntity(entity.getEntityType(), entity.getName());
+            for (Cluster cluster : process.getClusters().getClusters()) {
+                dropMetric(cluster.getName(), process);
+            }
+        }
+    }
+
+    private void dropMetric(String clusterName, Process process) {
+        String pipelinesStr = process.getPipelines();
+        String metricName;
+
+        if (pipelinesStr != null && !pipelinesStr.isEmpty()) {
+            String[] pipelines = pipelinesStr.split(",");
+            for (String pipeline : pipelines) {
+                metricName = getMetricName(clusterName, process.getName(), pipeline);
+                metricNotificationService.deleteMetric(metricName);
+            }
+        } else {
+            metricName = getMetricName(clusterName, process.getName(), DEFAULT_PIPELINE);
+            metricNotificationService.deleteMetric(metricName);
+        }
+    }
+
+    @Override
+    public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
+        if (oldEntity.getEntityType() != EntityType.PROCESS) {
+            return;
+        }
+        Process newProcess = (Process) newEntity;
+        Process oldProcess = EntityUtil.getEntity(oldEntity.getEntityType(), oldEntity.getName());
+        if (newProcess.getSla() == null || newProcess.getSla().getShouldEndIn() == null) {
+            if (oldProcess.getSla() != null) {
+                backlogMetricStore.deleteEntityBackLogInstances(newProcess.getName(), newEntity.getEntityType().name());
+                entityBacklogs.remove(newProcess);
+                for (Cluster cluster : oldProcess.getClusters().getClusters()) {
+                    dropMetric(cluster.getName(), oldProcess);
+                }
+            }
+        } else {
+            addToBacklog(newEntity);
+        }
+    }
+
+    @Override
+    public void onReload(Entity entity) throws FalconException {
+        addToBacklog(entity);
+    }
+
+    private void addToBacklog(Entity entity) {
+        if (entity.getEntityType() != EntityType.PROCESS) {
+            return;
+        }
+        Process process = (Process) entity;
+        if (process.getSla() == null) {
+            return;
+        }
+        entityBacklogs.putIfAbsent(entity, Collections.synchronizedList(new ArrayList<MetricInfo>()));
+    }
+
+    @Override
+    public void highSLAMissed(String entityName, String clusterName, EntityType entityType,
+                              Date nominalTime) throws FalconException {
         if (entityType != EntityType.PROCESS) {
             return;
         }
@@ -145,7 +223,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                 List<MetricInfo> metricsInDB = entry.getValue();
                 List<MetricInfo> metricInfoList = Collections.synchronizedList(metricsInDB);
                 entityBacklogs.put(entry.getKey(), metricInfoList);
-                LOG.debug("Backlog of entity " + entry.getKey().getName() + " for instances " + metricInfoList);
+                LOG.debug("Initializing backlog for entity " + entry.getKey().getName());
             }
         }
     }
@@ -171,6 +249,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                 metrics.remove(new MetricInfo(DATE_FORMAT.get().format(date), context.getClusterName()));
                 if (metrics.isEmpty()) {
                     entityBacklogs.remove(entity);
+                    publishBacklog((Process) entity, context.getClusterName(), 0L);
                 }
             }
         }
@@ -197,9 +276,9 @@ public final class BacklogMetricEmitterService implements FalconService,
     }
 
     /**
-     * Service which executes backlog evaluation and publishing metrics to Graphite parallel for entities.
+     * Service that executes backlog evaluation and publishes metrics to Graphite for entities in parallel.
      */
-    public static class BacklogMetricEmitter implements Runnable {
+    private static class BacklogMetricEmitter implements Runnable {
         private ThreadPoolExecutor executor;
 
         @Override
@@ -231,9 +310,9 @@ public final class BacklogMetricEmitterService implements FalconService,
     }
 
     /**
-     * Service which calculates backlog for given entity and publish to graphite.
+     * Service that calculates backlog for given entity and publishes them to graphite.
      */
-    public static class BacklogCalcService implements Runnable {
+    private static class BacklogCalcService implements Runnable {
 
         private Entity entityObj;
         private List<MetricInfo> metrics;
@@ -249,60 +328,72 @@ public final class BacklogMetricEmitterService implements FalconService,
             MetricInfo metricInfo = null;
             HashMap<String, Long> backLogsCluster = new HashMap<>();
             synchronized (metrics) {
-                long currentTime = System.currentTimeMillis();
-                Iterator iter = metrics.iterator();
-                while (iter.hasNext()) {
-                    try {
-                        metricInfo = (MetricInfo) iter.next();
-                        long time = DATE_FORMAT.get().parse(metricInfo.getNominalTime()).getTime();
-                        long backlog = backLogsCluster.containsKey(metricInfo.getCluster())
-                                ? backLogsCluster.get(metricInfo.getCluster()) : 0;
-                        backlog += (currentTime - time);
-                        backLogsCluster.put(metricInfo.getCluster(), backlog);
-                    } catch (ParseException e) {
-                        LOG.error("Unable to parse nominal time" + metricInfo.getNominalTime());
+                if (metrics.isEmpty()) {
+                    Process process = (Process) entityObj;
+                    Clusters clusters = process.getClusters();
+                    for (Cluster cluster : clusters.getClusters()) {
+                        publishBacklog(process, cluster.getName(), 0L);
                     }
-                }
+                } else {
+                    long currentTime = System.currentTimeMillis();
+                    for (MetricInfo metric : metrics) {
+                        try {
+                            metricInfo = metric;
+                            long time = DATE_FORMAT.get().parse(metricInfo.getNominalTime()).getTime();
+                            long backlog = backLogsCluster.containsKey(metricInfo.getCluster())
+                                    ? backLogsCluster.get(metricInfo.getCluster()) : 0;
+                            backlog += (currentTime - time);
+                            backLogsCluster.put(metricInfo.getCluster(), backlog);
+                        } catch (ParseException e) {
+                            LOG.error("Unable to parse nominal time" + metricInfo.getNominalTime());
+                        }
+                    }
 
+                }
             }
             org.apache.falcon.entity.v0.process.Process process = (Process) entityObj;
 
             if (backLogsCluster != null && !backLogsCluster.isEmpty()) {
                 for (Map.Entry<String, Long> entry : backLogsCluster.entrySet()) {
                     String clusterName = entry.getKey();
-                    String pipelinesStr = process.getPipelines();
-                    String metricName;
                     Long backlog = entry.getValue() / (60 * 1000L); // Converting to minutes
-                    if (pipelinesStr != null && !pipelinesStr.isEmpty()) {
-                        String[] pipelines = pipelinesStr.split(",");
-                        for (String pipeline : pipelines) {
-                            metricName = METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
-                                    + pipeline + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
-                                    + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
-                                    + "backlogInMins";
-                            metricNotificationService.publish(metricName, backlog);
-                        }
-                    } else {
-                        metricName = METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
-                                + DEFAULT_PIPELINE + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
-                                + METRIC_SEPARATOR + entityObj.getName() + METRIC_SEPARATOR
-                                + "backlogInMins";
-                        metricNotificationService.publish(metricName, backlog);
-                    }
+                    publishBacklog(process, clusterName, backlog);
                 }
             }
         }
     }
 
 
+    private static void publishBacklog(Process process, String clusterName, Long backlog) {
+        String pipelinesStr = process.getPipelines();
+        String metricName;
+
+        if (pipelinesStr != null && !pipelinesStr.isEmpty()) {
+            String[] pipelines = pipelinesStr.split(",");
+            for (String pipeline : pipelines) {
+                metricName = getMetricName(clusterName, process.getName(), pipeline);
+                metricNotificationService.publish(metricName, backlog);
+            }
+        } else {
+            metricName = getMetricName(clusterName, process.getName(), DEFAULT_PIPELINE);
+            metricNotificationService.publish(metricName, backlog);
+        }
+    }
+
+    private static String getMetricName(String clusterName, String processName, String pipeline) {
+        return METRIC_PREFIX + METRIC_SEPARATOR + clusterName + METRIC_SEPARATOR
+                + pipeline + METRIC_SEPARATOR + LifeCycle.EXECUTION.name()
+                + METRIC_SEPARATOR + processName + METRIC_SEPARATOR
+                + "backlogInMins";
+    }
+
     /**
      * Service runs periodically and removes succeeded instances from backlog list.
      */
-    public static class BacklogCheckService implements Runnable {
-
+    private static class BacklogCheckService implements Runnable {
         @Override
         public void run() {
-            LOG.debug("BacklogCheckService running for entities");
+            LOG.trace("BacklogCheckService running for entities");
             try {
                 AbstractWorkflowEngine wfEngine = getWorkflowEngine();
                 for (Entity entity : entityBacklogs.keySet()) {
@@ -316,25 +407,21 @@ public final class BacklogMetricEmitterService implements FalconService,
                                 Date nominalTime;
                                 try {
                                     nominalTime = DATE_FORMAT.get().parse(nominalTimeStr);
-                                    if (entity.getACL().getOwner() != null && !entity.getACL().getOwner().isEmpty()) {
-                                        CurrentUser.authenticate(entity.getACL().getOwner());
-                                    } else {
-                                        CurrentUser.authenticate(System.getProperty("user.name"));
-                                    }
+                                    authenticateUser(entity);
                                     if (wfEngine.isMissing(entity)) {
                                         LOG.info("Entity of name {} was deleted so removing instance of "
-                                                + "nominaltime {} ", entity.getName(), nominalTimeStr);
+                                                + "nominal time {} ", entity.getName(), nominalTimeStr);
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
                                         iterator.remove();
                                         continue;
                                     }
                                     InstancesResult status = wfEngine.getStatus(entity, nominalTime,
-                                            nominalTime, null, null);
+                                            new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
                                     if (status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
-                                        LOG.debug("Instance of nominaltime {} of entity {} was succeeded, removing "
+                                        LOG.debug("Instance of nominal time {} of entity {} has succeeded, removing "
                                                 + "from backlog entries", nominalTimeStr, entity.getName());
                                         backlogMetricStore.deleteMetricInstance(entity.getName(),
                                                 metricInfo.getCluster(), nominalTime, entity.getEntityType());
@@ -353,4 +440,13 @@ public final class BacklogMetricEmitterService implements FalconService,
         }
     }
 
+    private static void authenticateUser(Entity entity) {
+        if (!CurrentUser.isAuthenticated()) {
+            if (StringUtils.isNotBlank(entity.getACL().getOwner())) {
+                CurrentUser.authenticate(entity.getACL().getOwner());
+            } else {
+                CurrentUser.authenticate(System.getProperty("user.name"));
+            }
+        }
+    }
 }

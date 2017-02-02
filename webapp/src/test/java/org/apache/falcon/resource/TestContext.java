@@ -294,9 +294,6 @@ public class TestContext extends AbstractTestContext {
                                              String resultsPerPage, String doAsUser) {
         WebResource resource = this.service.path("api/extension/list/" + extensionName);
         resource = addQueryParam(resource, "doAs", doAsUser);
-        resource = addQueryParam(resource, "fields", fields);
-        resource = addQueryParam(resource, "sortOrder", sortOrder);
-        resource = addQueryParam(resource, "offset", offset);
         resource = addQueryParam(resource, "numResults", resultsPerPage);
         ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)

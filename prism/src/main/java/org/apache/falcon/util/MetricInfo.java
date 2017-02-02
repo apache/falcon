@@ -25,6 +25,8 @@ public class MetricInfo {
     private String nominalTime;
     private String cluster;
 
+    public MetricInfo(){}
+
     public MetricInfo(String nominalTimeStr, String clusterName) {
         this.nominalTime = nominalTimeStr;
         this.cluster = clusterName;

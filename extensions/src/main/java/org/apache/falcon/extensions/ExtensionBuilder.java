@@ -19,14 +19,39 @@
 package org.apache.falcon.extensions;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Pair;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.feed.Schema;
 
-import java.util.Properties;
+import java.io.InputStream;
 import java.util.List;
 
 /**
  * Extension interface to be implemented by all trusted and custom extensions.
  */
 public interface ExtensionBuilder {
-    List<Entity> getEntities(final String extensionName, final Properties extensionProperties) throws FalconException;
+
+    /**
+     * @param extensionName extension name.
+     * @param extensionConfigStream stream comprising of the extension properties.
+     * @return List of the entities that are involved in the extension.
+     * @throws FalconException
+     */
+    List<Entity> getEntities(final String extensionName, final InputStream extensionConfigStream)
+        throws FalconException;
+
+    /**
+     * @param extensionName extension name.
+     * @param extensionConfigStream Properties supplied will be validated.
+     * @throws FalconException
+     */
+    void validateExtensionConfig(final String extensionName, final InputStream extensionConfigStream)
+        throws FalconException;
+
+    /**
+     * @param extensionName extension name.
+     * @return List of the feed names along with the schema that the extension has generated if any.
+     * @throws FalconException
+     */
+    List<Pair<String, Schema>> getOutputSchemas(final String extensionName) throws FalconException;
 }

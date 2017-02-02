@@ -580,7 +580,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     entityObject, startStr, endStr);
 
             AbstractWorkflowEngine wfEngine = getWorkflowEngine(entityObject);
-            return wfEngine.killInstances(entityObject,
+            wfEngine.killInstances(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
+            return wfEngine.ignoreInstances(entityObject,
                     startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);

@@ -34,6 +34,7 @@ import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FalconTestUtil;
 import org.apache.hadoop.fs.FileStatus;
@@ -60,6 +61,8 @@ import java.util.TimeZone;
 public class FileSystemStorageTest {
 
     private static final String USER = FalconTestUtil.TEST_USER_1;
+    private static final String TEST_FEED_LISTING = "TestFeedListing";
+    private static final String TEST_FEED_INSTANCE_LISTING = "TestFeedInstanceListing";
 
     @BeforeClass
     public void setUp() {
@@ -424,7 +427,7 @@ public class FileSystemStorageTest {
     @Test (dataProvider = "testListingDataProvider")
     public void testListing(String availabilityFlag, Frequency frequency, TimeZone timeZone,
                             Date start, Date end) throws Exception {
-        EmbeddedCluster cluster = EmbeddedCluster.newCluster("TestFeedListing", false);
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster(TEST_FEED_LISTING, false);
         FileSystem fs = cluster.getFileSystem();
         ConfigurationStore.get().publish(EntityType.CLUSTER, cluster.getCluster());
         try {
@@ -433,79 +436,125 @@ public class FileSystemStorageTest {
             FileSystemStorage fileSystemStorage = new FileSystemStorage(cluster.getFileSystem().
                     getUri().toString(), feed.getLocations());
             List<FeedInstanceStatus> actual = fileSystemStorage.
-                    getListing(feed, "TestFeedListing", LocationType.DATA, start, end);
+                    getListing(feed, TEST_FEED_LISTING, LocationType.DATA, start, end);
             Assert.assertEquals(actual, expected, "Feed instance Listings doesn't match");
         } finally {
             ConfigurationStore.get().remove(EntityType.CLUSTER, cluster.getCluster().getName());
         }
     }
 
+    @Test (dataProvider = "testListingDataProvider")
+    public void testInstanceListing(String availabilityFlag, Frequency frequency, TimeZone timeZone,
+                                    Date start, Date end) throws Exception {
+        EmbeddedCluster firstCluster = EmbeddedCluster.newCluster(TEST_FEED_LISTING, false);
+        FileSystem fs = firstCluster.getFileSystem();
+        ConfigurationStore.get().publish(EntityType.CLUSTER, firstCluster.getCluster());
+
+
+        EmbeddedCluster secondCluster = EmbeddedCluster.newCluster(TEST_FEED_INSTANCE_LISTING, false);
+        ConfigurationStore.get().publish(EntityType.CLUSTER, secondCluster.getCluster());
+
+        try {
+            Feed feed = getFeed(availabilityFlag, frequency, timeZone);
+            Cluster cluster = new Cluster();
+            cluster.setName(TEST_FEED_INSTANCE_LISTING);
+            feed.getClusters().getClusters().add(cluster);
+            Validity validity = new Validity();
+            cluster.setValidity(validity);
+            validity.setStart(new Date(System.currentTimeMillis() - (1000L * 24 * 3600000)));
+            validity.setEnd(new Date(System.currentTimeMillis() - (1000L * 21 * 3600000)));
+            Locations locations = new Locations();
+            Location dataLocation = new Location();
+            dataLocation.setPath("/TestFeedInstanceListing/data/${YEAR}/${MONTH}/${DAY}"
+                    + (frequency.getTimeUnit() == Frequency.TimeUnit.hours ? "/${HOUR}" : "") + "/MORE");
+            dataLocation.setType(LocationType.DATA);
+            locations.getLocations().add(dataLocation);
+            cluster.setLocations(locations);
+
+            List<FeedInstanceStatus> expected = prepareData(fs, feed, start, end);
+
+            FeedInstanceResult actual = FeedHelper.getFeedInstanceListing(feed, start, end);
+            Assert.assertEquals(actual.getInstances().length, expected.size());
+        } finally {
+            ConfigurationStore.get().remove(EntityType.CLUSTER, firstCluster.getCluster().getName());
+            ConfigurationStore.get().remove(EntityType.CLUSTER, secondCluster.getCluster().getName());
+        }
+
+
+    }
+
     @SuppressWarnings("MagicConstant")
     private List<FeedInstanceStatus> prepareData(FileSystem fs, Feed feed,
                                                  Date start, Date end) throws Exception {
-        fs.delete(new Path("/TestFeedListing"), true);
+        fs.delete(new Path("/" + TEST_FEED_LISTING), true);
         Random random = new Random();
         List<FeedInstanceStatus> instances = new ArrayList<FeedInstanceStatus>();
         String basePath = feed.getLocations().getLocations().get(0).getPath();
         Frequency frequency = feed.getFrequency();
         TimeZone tz = feed.getTimezone();
-        Date dataStart = EntityUtil.getNextStartTime(feed.getClusters().getClusters().get(0).getValidity().getStart(),
-                feed.getFrequency(), tz, new Date(start.getTime()));
-        Date dataEnd = new Date(end.getTime());
-        while (dataStart.before(dataEnd)) {
-            Properties properties = ExpressionHelper.getTimeVariables(dataStart, tz);
-            String path = ExpressionHelper.substitute(basePath, properties);
-            FeedInstanceStatus instance = new FeedInstanceStatus(path);
-            instance.setStatus(FeedInstanceStatus.AvailabilityStatus.MISSING);
-            instance.setSize(-1);
-            instance.setCreationTime(0);
-            Date date = FeedHelper.getDate(basePath, new Path(path), tz);
-            instance.setInstance(SchemaHelper.formatDateUTC(date));
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(dataStart);
-            cal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequencyAsInt());
-            dataStart.setTime(cal.getTimeInMillis());
-            if (random.nextBoolean()) {
-                OutputStream out = fs.create(new Path(path, "file"));
-                out.write("Hello World\n".getBytes());
-                out.close();
-                instance.setSize(12);
-                if (feed.getAvailabilityFlag() == null
-                        || (feed.getAvailabilityFlag() != null && random.nextBoolean())) {
-                    //If availability is not present or if ok to create availability file, mark as available
-                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.AVAILABLE);
-                    if (feed.getAvailabilityFlag() != null) {
-                        fs.create(new Path(path, feed.getAvailabilityFlag())).close();
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            Date dataStart = EntityUtil.getNextStartTime(cluster.getValidity().getStart(),
+                    feed.getFrequency(), tz, new Date(start.getTime()));
+            String clusterLocationPath = null;
+            if (cluster.getLocations() != null && cluster.getLocations().getLocations().get(0).getPath() != null) {
+                basePath = clusterLocationPath == null ? basePath : clusterLocationPath;
+            }
+            Date dataEnd = new Date(end.getTime());
+            while (dataStart.before(dataEnd)) {
+                Properties properties = ExpressionHelper.getTimeVariables(dataStart, tz);
+                String path = ExpressionHelper.substitute(basePath, properties);
+                FeedInstanceStatus instance = new FeedInstanceStatus(path);
+                instance.setStatus(FeedInstanceStatus.AvailabilityStatus.MISSING);
+                instance.setSize(-1);
+                instance.setCreationTime(0);
+                Date date = FeedHelper.getDate(basePath, new Path(path), tz);
+                instance.setInstance(SchemaHelper.formatDateUTC(date));
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(dataStart);
+                cal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequencyAsInt());
+                dataStart.setTime(cal.getTimeInMillis());
+                if (random.nextBoolean()) {
+                    OutputStream out = fs.create(new Path(path, "file"));
+                    out.write("Hello World\n".getBytes());
+                    out.close();
+                    instance.setSize(12);
+                    if (feed.getAvailabilityFlag() == null
+                            || (feed.getAvailabilityFlag() != null && random.nextBoolean())) {
+                        //If availability is not present or if ok to create availability file, mark as available
+                        instance.setStatus(FeedInstanceStatus.AvailabilityStatus.AVAILABLE);
+                        if (feed.getAvailabilityFlag() != null) {
+                            fs.create(new Path(path, feed.getAvailabilityFlag())).close();
+                        }
+                    } else if (feed.getAvailabilityFlag() != null) {
+                        //If availability is present or not ok to create availability file, mark as partial
+                        fs.mkdirs(new Path(path));
+                        instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
                     }
-                } else if (feed.getAvailabilityFlag() != null) {
-                    //If availability is present or not ok to create availability file, mark as partial
-                    fs.mkdirs(new Path(path));
-                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
+                } else {
+                    if (feed.getAvailabilityFlag() == null && random.nextBoolean()) {
+                        //If availability is not present or ok to create dir, mark as empty
+                        fs.mkdirs(new Path(path));
+                        instance.setStatus(FeedInstanceStatus.AvailabilityStatus.EMPTY);
+                        instance.setSize(0);
+                    } else if (feed.getAvailabilityFlag() != null && random.nextBoolean()) {
+                        //If availability is present and ok to create dir, mark as partial
+                        fs.mkdirs(new Path(path));
+                        instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
+                    } else if (feed.getAvailabilityFlag() != null) {
+                        //If availability is present and ok to create empty instance
+                        fs.create(new Path(path, feed.getAvailabilityFlag())).close();
+                        instance.setStatus(FeedInstanceStatus.AvailabilityStatus.EMPTY);
+                        instance.setSize(0);
+                    }
                 }
-            } else {
-                if (feed.getAvailabilityFlag() == null && random.nextBoolean()) {
-                    //If availability is not present or ok to create dir, mark as empty
-                    fs.mkdirs(new Path(path));
-                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.EMPTY);
-                    instance.setSize(0);
-                } else if (feed.getAvailabilityFlag() != null && random.nextBoolean()) {
-                    //If availability is present and ok to create dir, mark as partial
-                    fs.mkdirs(new Path(path));
-                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
-                } else if (feed.getAvailabilityFlag() != null)  {
-                    //If availability is present and ok to create empty instance
-                    fs.create(new Path(path, feed.getAvailabilityFlag())).close();
-                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.EMPTY);
-                    instance.setSize(0);
+                try {
+                    FileStatus fileStatus = fs.getFileStatus(new Path(path));
+                    instance.setCreationTime(fileStatus.getModificationTime());
+                } catch (IOException e) {
+                    //ignore
                 }
+                instances.add(instance);
             }
-            try {
-                FileStatus fileStatus = fs.getFileStatus(new Path(path));
-                instance.setCreationTime(fileStatus.getModificationTime());
-            } catch (IOException e) {
-                //ignore
-            }
-            instances.add(instance);
         }
         return instances;
     }
@@ -518,12 +567,12 @@ public class FileSystemStorageTest {
         feed.setLocations(new Locations());
         Location dataLocation = new Location();
         feed.getLocations().getLocations().add(dataLocation);
-        dataLocation.setPath("/TestFeedListing/data/${YEAR}/${MONTH}/${DAY}"
+        dataLocation.setPath("/" + TEST_FEED_LISTING + "/data/${YEAR}/${MONTH}/${DAY}"
                 + (frequency.getTimeUnit() == Frequency.TimeUnit.hours ? "/${HOUR}" : "") + "/MORE");
         dataLocation.setType(LocationType.DATA);
         feed.setClusters(new Clusters());
         Cluster cluster = new Cluster();
-        cluster.setName("TestFeedListing");
+        cluster.setName(TEST_FEED_LISTING);
         feed.getClusters().getClusters().add(cluster);
         Validity validity = new Validity();
         cluster.setValidity(validity);

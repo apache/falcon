@@ -44,15 +44,26 @@ public class LogMoverService implements WorkflowExecutionListener  {
     public static final String ENABLE_POSTPROCESSING = StartupProperties.get().
             getProperty("falcon.postprocessing.enable");
 
-    private BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(50);
-    private ExecutorService executorService = new ThreadPoolExecutor(20, getThreadCount(), 120,
+    private BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(Integer.parseInt(
+            StartupProperties.get().getProperty("falcon.logMoveService.blockingQueue.length", "50")));
+    private ExecutorService executorService = new ThreadPoolExecutor(getCorePoolSize(), getThreadCount(), 120,
             TimeUnit.SECONDS, blockingQueue);
-    public int getThreadCount() {
+
+    public int getCorePoolSize(){
         try{
-            return Integer.parseInt(StartupProperties.get().getProperty("falcon.logMoveService.threadCount"));
+            return Integer.parseInt(StartupProperties.get().getProperty("falcon.logMoveService.min.threadCount", "20"));
         } catch (NumberFormatException  e){
             LOG.error("Exception in LogMoverService", e);
-            return 50;
+            return 20;
+        }
+    }
+    public int getThreadCount() {
+        try{
+            return Integer.parseInt(StartupProperties.get()
+                    .getProperty("falcon.logMoveService.max.threadCount", "200"));
+        } catch (NumberFormatException  e){
+            LOG.error("Exception in LogMoverService", e);
+            return 200;
         }
     }
 
@@ -85,12 +96,12 @@ public class LogMoverService implements WorkflowExecutionListener  {
         if (Boolean.parseBoolean(ENABLE_POSTPROCESSING)) {
             return;
         }
-        while(0<blockingQueue.remainingCapacity()){
+        while(blockingQueue.remainingCapacity()<=0){
             try {
-                LOG.info("Sleeing, no capacity in threadpool....");
+                LOG.trace("Sleeping, no capacity in threadpool....");
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOG.error("Exception in LogMoverService", e);
             }
         }
         executorService.execute(new LogMover(context));
