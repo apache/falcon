@@ -20,34 +20,20 @@ package org.apache.falcon.resource.proxy;
 
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
-import org.apache.commons.io.IOUtils;
-import org.apache.falcon.FalconException;
-import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.parser.ProcessEntityParser;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionService;
-import org.apache.falcon.extensions.ExtensionType;
-import org.apache.falcon.extensions.ExtensionProperties;
-import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
-import org.apache.falcon.extensions.store.ExtensionStore;
-import org.apache.falcon.persistence.ExtensionBean;
-import org.apache.falcon.persistence.ExtensionJobsBean;
-import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.AbstractExtensionManager;
-import org.apache.falcon.resource.ExtensionInstanceList;
-import org.apache.falcon.resource.ExtensionJobList;
-import org.apache.falcon.security.CurrentUser;
-import org.apache.falcon.service.Services;
-import org.apache.falcon.util.DeploymentUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -62,19 +48,33 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.Properties;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.SortedMap;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.parser.ProcessEntityParser;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.extensions.Extension;
+import org.apache.falcon.extensions.ExtensionProperties;
+import org.apache.falcon.extensions.ExtensionService;
+import org.apache.falcon.extensions.ExtensionType;
+import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
+import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.AbstractExtensionManager;
+import org.apache.falcon.resource.ExtensionInstanceList;
+import org.apache.falcon.resource.ExtensionJobList;
+import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.Services;
+import org.apache.falcon.util.DeploymentUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jersey Resource for extension job operations.
@@ -101,7 +101,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        checkIfExtensionExists(extensionName);
+        getExtensionIfExists(extensionName);
         try {
             return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
         } catch (Throwable e) {
@@ -341,14 +341,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     }
 
     private ExtensionType getExtensionType(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
-        if (extensionDetails == null) {
-            // return failure if the extension job doesn't exist
-            LOG.error("Extension not found: " + extensionName);
-            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
-                    Response.Status.NOT_FOUND);
-        }
+        ExtensionBean extensionDetails = getExtensionIfExists(extensionName);
         return extensionDetails.getExtensionType();
     }
 
@@ -623,9 +616,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
-        validateExtensionName(extensionName);
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
+            String extensionResourcePath = extensionBean.getLocation() + File.separator +  README;
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionResourcePath));
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
@@ -694,9 +688,18 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
-                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
+            ExtensionType extensionType = extensionBean.getExtensionType();
+            String extensionResourcePath;
+            if (ExtensionType.TRUSTED.equals(extensionType)) {
+                extensionResourcePath = extensionBean.getLocation() + "/META/"
+                        + extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX;
+            } else {
+                extensionResourcePath = extensionBean.getLocation() + "/META";
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    ExtensionStore.get().getResource(extensionResourcePath));
         } catch (FalconException e) {
             throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
