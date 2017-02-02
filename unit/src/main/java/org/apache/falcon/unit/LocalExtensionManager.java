@@ -130,6 +130,8 @@ public class LocalExtensionManager extends AbstractExtensionManager {
                                  SortedMap<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
+        checkIfExtensionIsEnabled(extensionName);
+        checkIfExtensionJobNameExists(jobName, extensionName);
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
             for (Entity entity : entry.getValue()) {
                 update(entity, entity.getEntityType().toString(), entity.getName(), true);
