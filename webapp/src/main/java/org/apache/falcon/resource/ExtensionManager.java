@@ -44,9 +44,10 @@ import java.util.List;
 public class ExtensionManager extends AbstractExtensionManager {
     private static final Logger LOG = LoggerFactory.getLogger(ExtensionManager.class);
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
     @Path("enumerate")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult getExtensions() {
         LOG.error("Enumerate is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Enumerate is not supported on Server. Please run your operation "
@@ -79,8 +80,8 @@ public class ExtensionManager extends AbstractExtensionManager {
             @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
             @FormDataParam("config") InputStream config) {
         LOG.error("submit is not supported on Server.Please run your operation on Prism ");
-        throw FalconWebException.newAPIException("submit is not supported on Server. Please run your operation "
-                + "on Prism.");
+        throw FalconWebException.newAPIException("submit is not supported on Server. "
+                + "Please run your operation on Prism.");
     }
 
     @POST
@@ -101,8 +102,39 @@ public class ExtensionManager extends AbstractExtensionManager {
     }
 
     @GET
+    @Path("list/{extension-name}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    public ExtensionJobList getExtensionJobs(
+            @PathParam("extension-name") String extensionName,
+            @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
+            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("list jobs is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("list jobs is not supported on Server. Please run your "
+                + "operation on Prism.");
+    }
+
+    @GET
+    @Path("instances/{job-name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ExtensionInstanceList getInstances(
+            @PathParam("job-name") final String jobName,
+            @QueryParam("start") final String nominalStart,
+            @QueryParam("end") final String nominalEnd,
+            @DefaultValue("") @QueryParam("instanceStatus") String instanceStatus,
+            @DefaultValue("") @QueryParam("fields") String fields,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") String sortOrder,
+            @DefaultValue("0") @QueryParam("offset") final Integer offset,
+            @QueryParam("numResults") Integer resultsPerPage,
+            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("instances is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("instances is not supported on Server. Please run your "
+                + "operation on Prism.");
+    }
+
+    @GET
     @Path("describe/{extension-name}")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Describe is not supported on Server.Please run your operation on Prism ");
@@ -112,7 +144,7 @@ public class ExtensionManager extends AbstractExtensionManager {
 
     @GET
     @Path("detail/{extension-name}")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     public APIResult getDetail(@PathParam("extension-name") String extensionName) {
         LOG.error("Detail is not supported on Server.Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Detail is not supported on Server. Please run your operation "
@@ -122,7 +154,7 @@ public class ExtensionManager extends AbstractExtensionManager {
     @POST
     @Path("unregister/{extension-name}")
     @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult deleteExtensionMetadata(
             @PathParam("extension-name") String extensionName) {
         LOG.error("Unregister is not supported on Server.Please run your operation on Prism ");
@@ -130,13 +162,116 @@ public class ExtensionManager extends AbstractExtensionManager {
                 + "on Prism.");
     }
 
+    @POST
+    @Path("delete/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult delete(@PathParam("job-name") String jobName,
+                            @Context HttpServletRequest request,
+                            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("delete is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("delete is not supported on Server. Please run your operation "
+                + "on Prism.");
+    }
+
+    @POST
+    @Path("update/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.MULTIPART_FORM_DATA})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult update(
+            @PathParam("job-name") String jobName,
+            @Context HttpServletRequest request,
+            @DefaultValue("") @QueryParam("doAs") String doAsUser,
+            @FormDataParam("processes") List<FormDataBodyPart> processForms,
+            @FormDataParam("feeds") List<FormDataBodyPart> feedForms,
+            @FormDataParam("config") InputStream config) {
+        LOG.error("update is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("update is not supported on Server. Please run your operation "
+                + "on Prism.");
+    }
+
+    @GET
+    @Path("extensionJobDetails/{job-name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public APIResult getExtensionJobDetail(@PathParam("job-name") String jobName) {
+        LOG.error("extensionJobDetails is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("extensionJobDetails is not supported on Server. "
+                + "Please run your operation on Prism.");
+    }
+
+    @POST
+    @Path("register/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
+    public APIResult registerExtensionMetadata(
+            @PathParam("extension-name") String extensionName) {
+        LOG.error("Register is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Register is not supported on Server. Please run your operation "
+                + "on Prism.");
+    }
+
+    @POST
+    @Path("suspend/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult suspend(@PathParam("job-name") String jobName,
+                             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("Suspend of an extension job is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Suspend of an extension job is not supported on Server."
+                + "Please run your operation on Prism.");
+    }
+
+    @POST
+    @Path("resume/{job-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult resume(@PathParam("job-name") String jobName,
+                            @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("Resume of an extension job is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Resume of an extension job is not supported on Server."
+                + "Please run your operation on Prism.");
+    }
+
+    @POST
+    @Path("validate/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public APIResult validate(@PathParam("extension-name") String extensionName, @Context HttpServletRequest request,
+                              @DefaultValue("") @QueryParam("doAs") String doAsUser) {
+        LOG.error("Validate extension is not supported on Server.Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Validate extension is not supported on Server."
+                + "Please run your operation on Prism.");
+    }
+
     @GET
     @Path("definition/{extension-name}")
-    @Produces({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
     public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
-        LOG.error("Definition is not supported on Server.Please run your operation on Prism ");
+        LOG.error("Definition is not supported on Server. Please run your operation on Prism ");
         throw FalconWebException.newAPIException("Definition is not supported on Server. Please run your operation "
                 + "on Prism.");
+    }
+
+    @GET
+    @Path("enable/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
+    public APIResult enableExtension(
+            @PathParam("extension-name") String extensionName) {
+        LOG.error("Enable extension is not supported on Server. Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Enable extension is not supported on Server. Please run your "
+                + "operation on Prism.");
+    }
+
+    @GET
+    @Path("disable/{extension-name}")
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_XML})
+    public APIResult disableExtension(
+            @PathParam("extension-name") String extensionName) {
+        LOG.error("Disable extension is not supported on Server. Please run your operation on Prism ");
+        throw FalconWebException.newAPIException("Disable extension is not supported on Server. Please run your "
+                + "operation on Prism.");
     }
 }

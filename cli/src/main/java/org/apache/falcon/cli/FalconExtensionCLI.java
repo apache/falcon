@@ -92,7 +92,6 @@ public class FalconExtensionCLI extends FalconCLI{
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDefinition(extensionName).getMessage();
-            result = prettyPrintJson(result);
         } else if (optionsList.contains(DESCRIBE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDescription(extensionName).getMessage();
@@ -131,6 +130,7 @@ public class FalconExtensionCLI extends FalconCLI{
             result = client.updateExtensionJob(jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.VALIDATE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
+            validateRequiredParameter(jobName, JOB_NAME_OPT);
             validateRequiredParameter(filePath, FalconCLIConstants.FILE_PATH_OPT);
             result = client.validateExtensionJob(extensionName, jobName, filePath, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SCHEDULE_OPT)) {
@@ -139,20 +139,18 @@ public class FalconExtensionCLI extends FalconCLI{
             result = client.scheduleExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.SUSPEND_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
-            result = client.suspendExtensionJob(jobName, doAsUser).getMessage();
+            colo = getColo(colo);
+            result = client.suspendExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.RESUME_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
-            result = client.resumeExtensionJob(jobName, doAsUser).getMessage();
+            colo = getColo(colo);
+            result = client.resumeExtensionJob(jobName, colo, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.DELETE_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.deleteExtensionJob(jobName, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
-            validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
-            ExtensionJobList jobs = client.listExtensionJob(extensionName, doAsUser,
-                    commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.OFFSET_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.NUM_RESULTS_OPT),
-                    commandLine.getOptionValue(FalconCLIConstants.FIELDS_OPT));
+            ExtensionJobList jobs = client.getExtensionJobs(extensionName, doAsUser,
+                    commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT));
             result = jobs != null ? jobs.toString() : "No extension job (" + extensionName + ") found.";
         } else if (optionsList.contains(INSTANCES_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
@@ -198,6 +196,8 @@ public class FalconExtensionCLI extends FalconCLI{
         Option suspend = new Option(FalconCLIConstants.SUSPEND_OPT, false, "Suspend an extension job");
         Option resume = new Option(FalconCLIConstants.RESUME_OPT, false, "Resume an extension job");
         Option delete = new Option(FalconCLIConstants.DELETE_OPT, false, "Delete an extension job");
+        Option enable = new Option(FalconCLIConstants.ENABLE_OPT, false, "Enable an extension");
+        Option disable = new Option(FalconCLIConstants.DISABLE_OPT, false, "Disable an extension");
         Option unregister = new Option(FalconCLIConstants.UREGISTER, false, "Un-register an extension. This will make"
                 + " the extension unavailable for instantiation");
         Option detail = new Option(FalconCLIConstants.DETAIL, false, "Show details of a given extension");
@@ -223,6 +223,8 @@ public class FalconExtensionCLI extends FalconCLI{
         group.addOption(unregister);
         group.addOption(detail);
         group.addOption(register);
+        group.addOption(enable);
+        group.addOption(disable);
         extensionOptions.addOptionGroup(group);
 
         Option url = new Option(FalconCLIConstants.URL_OPTION, true, "Falcon URL");

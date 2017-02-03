@@ -27,6 +27,7 @@ import org.apache.falcon.service.FalconJPAService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -74,10 +75,7 @@ public class ExtensionMetaStore {
         } finally {
             commitAndCloseTransaction(entityManager);
         }
-        if (resultSize > 0){
-            return true;
-        }
-        return false;
+        return resultSize > 0;
     }
 
     public Boolean checkIfExtensionJobExists(String jobName) {
@@ -91,10 +89,7 @@ public class ExtensionMetaStore {
         } finally {
             commitAndCloseTransaction(entityManager);
         }
-        if (resultSize > 0){
-            return true;
-        }
-        return false;
+        return resultSize > 0;
     }
 
     public List<ExtensionBean> getAllExtensions() {
@@ -102,7 +97,7 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSIONS);
         try {
-            return q.getResultList();
+            return (List<ExtensionBean>) q.getResultList();
         } finally {
             commitAndCloseTransaction(entityManager);
         }
@@ -113,7 +108,7 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSIONS_OF_TYPE);
         q.setParameter(EXTENSION_TYPE, extensionType);
-        try{
+        try {
             q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
@@ -126,18 +121,37 @@ public class ExtensionMetaStore {
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_EXTENSION);
         q.setParameter(EXTENSION_NAME, extensionName);
         try {
-            return (ExtensionBean)q.getSingleResult();
+            List resultList = q.getResultList();
+            if (!resultList.isEmpty()) {
+                return (ExtensionBean) resultList.get(0);
+            } else {
+                return null;
+            }
         } finally {
             commitAndCloseTransaction(entityManager);
         }
     }
 
-    public void deleteExtension(String extensionName){
+    public List<ExtensionJobsBean> getJobsForAnExtension(String extensionName) {
+        List<ExtensionJobsBean> extensionJobs = new ArrayList<>();
+        EntityManager entityManager = getEntityManager();
+        beginTransaction(entityManager);
+        Query query = entityManager.createNamedQuery(PersistenceConstants.GET_JOBS_FOR_AN_EXTENSION);
+        query.setParameter(EXTENSION_NAME, extensionName);
+        try {
+            extensionJobs.addAll(query.getResultList());
+            return extensionJobs;
+        } finally {
+            commitAndCloseTransaction(entityManager);
+        }
+    }
+
+    public void deleteExtension(String extensionName) {
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSION);
         q.setParameter(EXTENSION_NAME, extensionName);
-        try{
+        try {
             q.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
@@ -148,7 +162,7 @@ public class ExtensionMetaStore {
                                   byte[] config) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         boolean alreadySubmitted = false;
-        if (metaStore.getExtensionJobDetails(jobName) != null){
+        if (metaStore.getExtensionJobDetails(jobName) != null) {
             alreadySubmitted = true;
         }
         ExtensionJobsBean extensionJobsBean = new ExtensionJobsBean();
@@ -178,7 +192,7 @@ public class ExtensionMetaStore {
         beginTransaction(entityManager);
         Query query = entityManager.createNamedQuery(PersistenceConstants.DELETE_EXTENSION_JOB);
         query.setParameter(JOB_NAME, jobName);
-        try{
+        try {
             query.executeUpdate();
         } finally {
             commitAndCloseTransaction(entityManager);
@@ -221,11 +235,13 @@ public class ExtensionMetaStore {
     }
 
     public List<ExtensionJobsBean> getAllExtensionJobs() {
+        List<ExtensionJobsBean> extensionJobs = new ArrayList<>();
         EntityManager entityManager = getEntityManager();
         beginTransaction(entityManager);
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_EXTENSION_JOBS);
         try {
-            return q.getResultList();
+            extensionJobs.addAll(q.getResultList());
+            return extensionJobs;
         } finally {
             commitAndCloseTransaction(entityManager);
         }

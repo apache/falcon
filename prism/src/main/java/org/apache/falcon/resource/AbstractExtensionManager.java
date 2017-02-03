@@ -24,7 +24,6 @@ import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.extensions.ExtensionStatus;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
 import org.apache.falcon.extensions.store.ExtensionStore;
@@ -37,8 +36,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -57,11 +55,16 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private static final String CONFIG  = "config";
     private static final String CREATION_TIME  = "creationTime";
     private static final String LAST_UPDATE_TIME  = "lastUpdatedTime";
+    protected static final String ASCENDING_SORT_ORDER = "asc";
+    protected static final String DESCENDING_SORT_ORDER = "desc";
 
     public static final String NAME = "name";
-    protected static final String EXTENSION_TYPE = "type";
-    protected static final String EXTENSION_DESC = "description";
-    protected static final String EXTENSION_LOCATION = "location";
+    public static final String STATUS = "status";
+    private static final String EXTENSION_TYPE = "type";
+    private static final String EXTENSION_DESC = "description";
+    private static final String EXTENSION_LOCATION = "location";
+    private static final String ENTITY_EXISTS_STATUS = "EXISTS";
+    private static final String ENTITY_NOT_EXISTS_STATUS = "NOT_EXISTS";
 
     protected static void validateExtensionName(final String extensionName) {
         if (StringUtils.isBlank(extensionName)) {
@@ -104,36 +107,63 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public APIResult deleteExtensionMetadata(String extensionName){
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        TreeMap<String, String> jobAndExtensionNames = new TreeMap<>();
+        List<ExtensionJobsBean> extensionJobs = null;
+
+        if (extensionName != null) {
+            extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
+        } else {
+            extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
+        }
+
+        for (ExtensionJobsBean job : extensionJobs) {
+            jobAndExtensionNames.put(job.getJobName(), job.getExtensionName());
+        }
+
+        sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
+        switch (sortOrder.toLowerCase()) {
+        case DESCENDING_SORT_ORDER:
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames.descendingMap());
+
+        default:
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
+        }
+    }
+
+    public APIResult deleteExtensionMetadata(String extensionName) {
         validateExtensionName(extensionName);
+        ExtensionStore metaStore = ExtensionStore.get();
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().deleteExtension(extensionName,
-                    CurrentUser.getUser()));
-        } catch (Throwable e) {
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
+            canDeleteExtension(extensionName);
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    metaStore.deleteExtension(extensionName, CurrentUser.getUser()));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e);
         }
     }
 
-    protected SortedMap<EntityType, List<Entity>> getJobEntities(ExtensionJobsBean extensionJobsBean)
-        throws FalconException, IOException {
-        TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
-        List<String> processes = extensionJobsBean.getProcesses();
-        List<String> feeds = extensionJobsBean.getFeeds();
-        entityMap.put(EntityType.PROCESS, getEntities(processes, EntityType.PROCESS));
-        entityMap.put(EntityType.FEED, getEntities(feeds, EntityType.FEED));
-        return entityMap;
-    }
-
-    private List<Entity> getEntities(List<String> entityNames, EntityType entityType) throws FalconException {
-        List<Entity> entities = new ArrayList<>();
-        for (String entityName : entityNames) {
-            try {
-                entities.add(EntityUtil.getEntity(entityType, entityName));
-            } catch (EntityNotRegisteredException e) {
-                LOG.error("Entity {}  not found during deletion nothing to do", entityName);
+    private void canDeleteExtension(String extensionName) throws FalconException {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
+        if (!extensionJobs.isEmpty()) {
+            StringBuilder jobs = new StringBuilder();
+            for(ExtensionJobsBean extensionJobsBean : extensionJobs) {
+                jobs.append("\n" + extensionJobsBean.getJobName());
             }
+            LOG.error("Extension:" + extensionName + " cannot be unregistered as following instances are dependent on "
+                    + "the extension:" + jobs.toString());
+            throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances"
+                    + " are dependent on the extension:" + jobs.toString());
         }
-        return entities;
+    }
+
+    protected SortedMap<EntityType, List<String>> getJobEntities(ExtensionJobsBean extensionJobsBean)
+        throws FalconException {
+        TreeMap<EntityType, List<String>> entityMap = new TreeMap<>(Collections.<EntityType>reverseOrder());
+        entityMap.put(EntityType.PROCESS, extensionJobsBean.getProcesses());
+        entityMap.put(EntityType.FEED, extensionJobsBean.getFeeds());
+        return entityMap;
     }
 
     private JSONObject buildExtensionJobDetailResult(final String jobName) throws FalconException {
@@ -147,8 +177,8 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         try {
             detailsObject.put(JOB_NAME, jobsBean.getJobName());
             detailsObject.put(EXTENSION_NAME, jobsBean.getExtensionName());
-            detailsObject.put(FEEDS, StringUtils.join(jobsBean.getFeeds(), ","));
-            detailsObject.put(PROCESSES, StringUtils.join(jobsBean.getProcesses(), ","));
+            detailsObject.put(FEEDS, getEntitiesStatus(jobsBean.getFeeds(), EntityType.FEED));
+            detailsObject.put(PROCESSES, getEntitiesStatus(jobsBean.getProcesses(), EntityType.PROCESS));
             detailsObject.put(CONFIG, jobsBean.getConfig());
             detailsObject.put(CREATION_TIME, jobsBean.getCreationTime());
             detailsObject.put(LAST_UPDATE_TIME, jobsBean.getLastUpdatedTime());
@@ -174,7 +204,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         return tags.substring(nameStart, nameEnd);
     }
 
-    public String disableExtension(String extensionName, String currentUser) {
+    protected String disableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
             return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.DISABLED);
@@ -183,7 +213,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    public String enableExtension(String extensionName, String currentUser) {
+    protected String enableExtension(String extensionName, String currentUser) {
         validateExtensionName(extensionName);
         try {
             return ExtensionStore.get().updateExtensionStatus(extensionName, currentUser, ExtensionStatus.ENABLED);
@@ -195,17 +225,21 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     private JSONObject buildExtensionDetailResult(final String extensionName) throws FalconException {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
 
-        if (!metaStore.checkIfExtensionExists(extensionName)){
+        if (!metaStore.checkIfExtensionExists(extensionName)) {
             throw new ValidationException("No extension resources found for " + extensionName);
         }
 
-        ExtensionBean bean = metaStore.getDetail(extensionName);
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw new FalconException("Extension not found:" + extensionName);
+        }
         JSONObject resultObject = new JSONObject();
         try {
-            resultObject.put(NAME, bean.getExtensionName());
-            resultObject.put(EXTENSION_TYPE, bean.getExtensionType());
-            resultObject.put(EXTENSION_DESC, bean.getDescription());
-            resultObject.put(EXTENSION_LOCATION, bean.getLocation());
+            resultObject.put(NAME, extensionBean.getExtensionName());
+            resultObject.put(EXTENSION_TYPE, extensionBean.getExtensionType());
+            resultObject.put(EXTENSION_DESC, extensionBean.getDescription());
+            resultObject.put(EXTENSION_LOCATION, extensionBean.getLocation());
         } catch (JSONException e) {
             LOG.error("Exception in buildDetailResults:", e);
             throw new FalconException(e);
@@ -231,5 +265,51 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             results.put(resultObject);
         }
         return results;
+    }
+
+    protected static void checkIfExtensionIsEnabled(String extensionName) {
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
+        if (!extensionBean.getStatus().equals(ExtensionStatus.ENABLED)) {
+            LOG.error("Extension: " + extensionName + " is in disabled state.");
+            throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected static ExtensionBean getExtensionIfExists(String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
+        if (extensionBean == null) {
+            LOG.error("Extension not found: " + extensionName);
+            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
+                    Response.Status.NOT_FOUND);
+        }
+        return extensionBean;
+    }
+
+    protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
+        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
+        ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
+        if (extensionJobsBean != null && !extensionJobsBean.getExtensionName().equals(extensionName)) {
+            LOG.error("Extension job with name: " + extensionName + " already exists.");
+            throw FalconWebException.newAPIException("Extension job with name: " + jobName + " already exists.",
+                    Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private JSONArray getEntitiesStatus(List<String> entities, EntityType type) throws JSONException, FalconException {
+        JSONArray entityObjects = new JSONArray();
+        for (String entity : entities) {
+            JSONObject entityObject = new JSONObject();
+            try {
+                entityObject.put(NAME, entity);
+                EntityUtil.getEntity(type, entity);
+                entityObject.put(STATUS, ENTITY_EXISTS_STATUS);
+            } catch (EntityNotRegisteredException e) {
+                entityObject.put(STATUS, ENTITY_NOT_EXISTS_STATUS);
+            }
+            entityObjects.put(entityObject);
+        }
+        return entityObjects;
     }
 }

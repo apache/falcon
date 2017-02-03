@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
@@ -52,6 +53,8 @@ import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -81,6 +84,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FalconClient extends AbstractFalconClient {
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<>(System.out);
+    public static final Logger LOG = LoggerFactory.getLogger(FalconClient.class);
 
     public static final String WS_HEADER_PREFIX = "header:";
     public static final String USER = System.getProperty("user.name");
@@ -187,6 +191,7 @@ public class FalconClient extends AbstractFalconClient {
             client.resource(UriBuilder.fromUri(baseUrl).build());
             authenticationToken = getToken(baseUrl);
         } catch (Exception e) {
+            LOG.error("Unable to initialize Falcon Client object. Cause : ", e);
             throw new FalconCLIException("Unable to initialize Falcon Client object. Cause : " + e.getMessage(), e);
         }
     }
@@ -341,8 +346,8 @@ public class FalconClient extends AbstractFalconClient {
     protected static enum ExtensionOperations {
 
         ENUMERATE("api/extension/enumerate/", HttpMethod.GET, MediaType.TEXT_XML),
-        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DESCRIBE("api/extension/describe/", HttpMethod.GET, MediaType.TEXT_XML),
+        DEFINITION("api/extension/definition", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/extension/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         INSTANCES("api/extension/instances", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUBMIT("api/extension/submit", HttpMethod.POST, MediaType.TEXT_XML),
@@ -354,8 +359,8 @@ public class FalconClient extends AbstractFalconClient {
         RESUME("api/extension/resume", HttpMethod.POST, MediaType.TEXT_XML),
         DELETE("api/extension/delete", HttpMethod.POST, MediaType.TEXT_XML),
         UNREGISTER("api/extension/unregister/", HttpMethod.POST, MediaType.TEXT_XML),
-        DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        DETAIL("api/extension/detail/", HttpMethod.GET, MediaType.TEXT_XML),
+        JOB_DETAILS("api/extension/extensionJobDetails/", HttpMethod.GET, MediaType.TEXT_XML),
         REGISTER("api/extension/register/", HttpMethod.POST, MediaType.TEXT_XML),
         ENABLE("api/extension/enable", HttpMethod.POST, MediaType.TEXT_XML),
         DISABLE("api/extension/disable", HttpMethod.POST, MediaType.TEXT_XML);
@@ -1018,6 +1023,16 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.LIST.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .addQueryParam(SORT_ORDER, sortOrder)
+                .call(ExtensionOperations.LIST);
+        return getResponse(ExtensionJobList.class, clientResponse);
+    }
+
     public APIResult unregisterExtension(final String extensionName) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
@@ -1107,7 +1122,8 @@ public class FalconClient extends AbstractFalconClient {
         try {
             formDataMultiPart.close();
         } catch (IOException e) {
-            throw new FalconCLIException("Submit failed. Failed to submit entities", e);
+            LOG.error("Submit failed. Failed to submit entities. Cause: ", e);
+            throw new FalconCLIException("Submit failed. Failed to submit entities:" + e.getMessage(), e);
         }
         return formDataMultiPart;
     }
@@ -1132,17 +1148,20 @@ public class FalconClient extends AbstractFalconClient {
         try {
             extensionDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
-            throw new FalconCLIException("Failed to get details for the given extension", e);
+            LOG.error("Failed to get details for the given extension. Cause: ", e);
+            throw new FalconCLIException("Failed to get details for the given extension:" + e.getMessage(), e);
         }
         return extensionDetailJson;
     }
+
     private JSONObject getExtensionJobDetailJson(String jobName) {
         ClientResponse clientResponse = getExtensionJobDetailsResponse(jobName);
         JSONObject extensionJobDetailJson;
         try {
             extensionJobDetailJson = new JSONObject(getResponse(APIResult.class, clientResponse).getMessage());
         } catch (JSONException e) {
-            throw new FalconCLIException("Failed to get details for the given extension", e);
+            LOG.error("Failed to get details for the given extension. Cause: ", e);
+            throw new FalconCLIException("Failed to get details for the given extension:" + e.getMessage(), e);
         }
         return extensionJobDetailJson;
     }
@@ -1155,7 +1174,9 @@ public class FalconClient extends AbstractFalconClient {
                 entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                         extensionBuildLocation);
             } catch (Exception e) {
-                throw new FalconCLIException("Error in building the extension", e);
+                LOG.error("Error in building the extension. Cause: ", e);
+                OUT.get().println("Error in building the extension:" + ExceptionUtils.getFullStackTrace(e));
+                throw new FalconCLIException("Error in building the extension:" + e.getMessage(), e);
             }
             if (entities == null || entities.isEmpty()) {
                 throw new FalconCLIException("No entities got built for the given extension");
@@ -1209,17 +1230,19 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult suspendExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.SUSPEND.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.SUSPEND);
         return getResponse(APIResult.class, clientResponse);
     }
 
-    public APIResult resumeExtensionJob(final String jobName, final String doAsUser)  {
+    public APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser)  {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.RESUME.path, jobName)
+                .addQueryParam(COLO, coloExpr)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.RESUME);
         return getResponse(APIResult.class, clientResponse);
@@ -1231,20 +1254,6 @@ public class FalconClient extends AbstractFalconClient {
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.DELETE);
         return getResponse(APIResult.class, clientResponse);
-    }
-
-    public ExtensionJobList listExtensionJob(final String extensionName, final String doAsUser,
-                                             final String sortOrder, final String offset,
-                                             final String numResults, final String fields)  {
-        ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.LIST.path, extensionName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
-                .addQueryParam(FIELDS, fields)
-                .addQueryParam(SORT_ORDER, sortOrder)
-                .addQueryParam(OFFSET, offset)
-                .addQueryParam(NUM_RESULTS, numResults)
-                .call(ExtensionOperations.LIST);
-        return getResponse(ExtensionJobList.class, clientResponse);
     }
 
     public ExtensionInstanceList listExtensionInstance(final String jobName, final String doAsUser, final String fields,

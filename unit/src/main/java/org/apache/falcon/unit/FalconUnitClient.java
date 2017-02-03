@@ -36,6 +36,7 @@ import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -56,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -77,14 +79,14 @@ public class FalconUnitClient extends AbstractFalconClient {
     private static final String DEFAULT_ORDER_BY = "status";
     private static final String DEFAULT_SORTED_ORDER = "asc";
 
-    protected ConfigurationStore configStore;
+    private ConfigurationStore configStore;
     private AbstractWorkflowEngine workflowEngine;
     private LocalSchedulableEntityManager localSchedulableEntityManager;
     private LocalInstanceManager localInstanceManager;
     private LocalExtensionManager localExtensionManager;
 
 
-    public FalconUnitClient() throws FalconException {
+    FalconUnitClient() throws FalconException {
         configStore = ConfigurationStore.get();
         workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
         localSchedulableEntityManager = new LocalSchedulableEntityManager();
@@ -123,7 +125,6 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @param entityName entity name
      * @param cluster    cluster on which it has to be scheduled
      * @return
-     * @throws FalconException
      */
     @Override
     public APIResult schedule(EntityType entityType, String entityName, String cluster,
@@ -278,7 +279,11 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public APIResult unregisterExtension(String extensionName) {
-        return localExtensionManager.unRegisterExtension(extensionName);
+        try {
+            return localExtensionManager.unRegisterExtension(extensionName);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in unRegistering the extension"+ e.getMessage());
+        }
     }
 
     @Override
@@ -327,8 +332,8 @@ public class FalconUnitClient extends AbstractFalconClient {
         try {
             entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                     packagePath);
-        } catch (FalconException | IOException e) {
-            throw new FalconCLIException("Failed in generating entities" + jobName);
+        } catch (FalconException | IOException | URISyntaxException e) {
+            throw new FalconCLIException("Failed in generating entities for job:" + jobName);
         }
         return entities;
     }
@@ -377,6 +382,23 @@ public class FalconUnitClient extends AbstractFalconClient {
         }
     }
 
+    @Override
+    public APIResult suspendExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.suspendExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in suspending the extension job:" + jobName);
+        }
+    }
+
+    @Override
+    public APIResult resumeExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.resumeExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in resuming the extension job:" + jobName);
+        }
+    }
 
     @Override
     public APIResult getExtensionJobDetails(final String jobName) {
@@ -391,6 +413,11 @@ public class FalconUnitClient extends AbstractFalconClient {
     @Override
     public APIResult enumerateExtensions() {
         return localExtensionManager.getExtensions();
+    }
+
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return localExtensionManager.getExtensionJobs(extensionName, sortOrder, doAsUser);
     }
 
     @Override

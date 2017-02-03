@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
@@ -255,6 +256,25 @@ public abstract class AbstractFalconClient {
      * @return APIResult status of the deletion query.
      */
     public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be suspended.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user
+     * @return result status of the suspend operation.
+     */
+    public abstract APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be resumed.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user.
+     * @return result status of the resume operation.
+     */
+    public abstract APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
     /**
      *  Prepares set of entities the extension has implemented to validate the extension job.
      * @param jobName job name of the extension job.
@@ -274,6 +294,12 @@ public abstract class AbstractFalconClient {
      * @return
      */
     public abstract APIResult enumerateExtensions();
+
+    /**
+     * Returns all registered jobs for an extension.
+     * @return
+     */
+    public abstract ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser);
 
     /**
      *
