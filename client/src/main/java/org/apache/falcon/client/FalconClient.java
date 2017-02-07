@@ -1027,6 +1027,7 @@ public class FalconClient extends AbstractFalconClient {
     @Override
     public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
         ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.LIST.path)
                 .addQueryParam(EXTENSION_NAME_OPT, extensionName)
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .addQueryParam(SORT_ORDER, sortOrder)

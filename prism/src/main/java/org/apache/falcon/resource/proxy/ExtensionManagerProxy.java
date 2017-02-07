@@ -97,11 +97,13 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     @Path("list")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
-            @PathParam("extension-name") String extensionName,
+            @QueryParam("extension-name") String extensionName,
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        getExtensionIfExists(extensionName);
+        if(extensionName != null) {
+            getExtensionIfExists(extensionName);
+        }
         try {
             return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
         } catch (Throwable e) {
