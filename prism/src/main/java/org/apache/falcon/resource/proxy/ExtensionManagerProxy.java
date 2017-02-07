@@ -94,7 +94,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list/{extension-name}")
+    @Path("list")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
             @PathParam("extension-name") String extensionName,
