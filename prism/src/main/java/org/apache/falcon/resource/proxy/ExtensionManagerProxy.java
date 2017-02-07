@@ -124,28 +124,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
-        checkIfExtensionServiceIsEnabled();
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                return new ExtensionInstanceList(0);
-            }
-
-            HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
-            ExtensionInstanceList instances = new ExtensionInstanceList(entities.size());
-            for (Entity entity : entities) {
-                InstancesResult entityInstances = super.getStatus(
-                        entity.getEntityType().name(), entity.getName(), nominalStart, nominalEnd,
-                        null, null, "STATUS:" + instanceStatus, orderBy, sortOrder, offset, resultsPerPage, null);
-                instances.addEntitySummary(new ExtensionInstanceList.EntitySummary(
-                        getEntityElement(entity, fieldSet), entityInstances.getInstances()));
-            }
-            return instances;
-        } catch (FalconException | IOException e) {
-            LOG.error("Error when listing instances of extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+        LOG.error("instances is not supported on falcon extensions. Use falcon instance api on individual entities.");
+        throw FalconWebException.newAPIException("instances is not supported on falcon extensions. Use falcon instance "
+                + "api on individual entities.");
     }
 
     @POST
