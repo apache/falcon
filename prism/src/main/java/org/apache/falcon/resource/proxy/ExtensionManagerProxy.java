@@ -101,7 +101,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        if(extensionName != null) {
+        if (extensionName != null) {
             getExtensionIfExists(extensionName);
         }
         try {
