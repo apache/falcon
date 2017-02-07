@@ -37,10 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -111,36 +108,27 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
-
-        Comparator<ExtensionJobsBean> compareByJobName = new Comparator<ExtensionJobsBean>() {
-            @Override
-            public int compare(ExtensionJobsBean o1, ExtensionJobsBean o2) {
-                return o1.getJobName().compareToIgnoreCase(o2.getJobName());
-            }
-        };
-
-        Map<String, String> jobAndExtensionNames = new HashMap<>();
+        TreeMap<String, String> jobAndExtensionNames = new TreeMap<>();
         List<ExtensionJobsBean> extensionJobs = null;
+
         if (extensionName != null) {
             extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
         } else {
             extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
         }
 
-        sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
-        switch (sortOrder.toLowerCase()) {
-        case DESCENDING_SORT_ORDER:
-            Collections.sort(extensionJobs, Collections.reverseOrder(compareByJobName));
-            break;
-
-        default:
-            Collections.sort(extensionJobs, compareByJobName);
-        }
-
         for (ExtensionJobsBean job : extensionJobs) {
             jobAndExtensionNames.put(job.getJobName(), job.getExtensionName());
         }
-        return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
+
+        sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
+        switch (sortOrder.toLowerCase()) {
+        case DESCENDING_SORT_ORDER:
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames.descendingMap());
+
+        default:
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
+        }
     }
 
     public APIResult deleteExtensionMetadata(String extensionName) {
@@ -280,13 +268,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     protected static void checkIfExtensionIsEnabled(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
-        if (extensionBean == null) {
-            LOG.error("Extension not found: " + extensionName);
-            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
-                    Response.Status.NOT_FOUND);
-        }
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         if (!extensionBean.getStatus().equals(ExtensionStatus.ENABLED)) {
             LOG.error("Extension: " + extensionName + " is in disabled state.");
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
@@ -294,7 +276,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    protected static void checkIfExtensionExists(String extensionName) {
+    protected static ExtensionBean getExtensionIfExists(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionBean = metaStore.getDetail(extensionName);
         if (extensionBean == null) {
@@ -302,6 +284,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             throw FalconWebException.newAPIException("Extension not found:" + extensionName,
                     Response.Status.NOT_FOUND);
         }
+        return extensionBean;
     }
 
     protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
