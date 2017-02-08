@@ -278,46 +278,45 @@ public final class ExtensionStore {
 
     public String registerExtension(final String extensionName, final String path, final String description,
                                     String extensionOwner) throws URISyntaxException, FalconException {
-        URI uri = new URI(path);
-        assertURI("Scheme", uri.getScheme());
-        assertURI("Authority", uri.getAuthority());
-        assertURI("Path", uri.getPath());
-        FileSystem fileSystem = getHdfsFileSystem(path);
-        try {
-            fileSystem.listStatus(new Path(uri.getPath() + "/README"));
-        } catch (IOException e) {
-            LOG.error("Exception in registering Extension:{}", extensionName, e);
-            throw new ValidationException("README file is not present in the " + path);
-        }
-        PathFilter filter = new PathFilter() {
-            public boolean accept(Path file) {
-                return file.getName().endsWith(".jar");
+        if (!metaStore.checkIfExtensionExists(extensionName)) {
+            URI uri = new URI(path);
+            assertURI("Scheme", uri.getScheme());
+            assertURI("Authority", uri.getAuthority());
+            assertURI("Path", uri.getPath());
+            FileSystem fileSystem = getHdfsFileSystem(path);
+            try {
+                fileSystem.listStatus(new Path(uri.getPath() + "/README"));
+            } catch (IOException e) {
+                LOG.error("Exception in registering Extension:{}", extensionName, e);
+                throw new ValidationException("README file is not present in the " + path);
             }
-        };
-        FileStatus[] jarStatus;
-        try {
-            jarStatus = fileSystem.listStatus(new Path(uri.getPath(), "libs/build"), filter);
-            if (jarStatus.length <= 0) {
+            PathFilter filter = new PathFilter() {
+                public boolean accept(Path file) {
+                    return file.getName().endsWith(".jar");
+                }
+            };
+            FileStatus[] jarStatus;
+            try {
+                jarStatus = fileSystem.listStatus(new Path(uri.getPath(), "libs/build"), filter);
+                if (jarStatus.length <= 0) {
+                    throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
+                }
+            } catch (IOException e) {
+                LOG.error("Exception in registering Extension:{}", extensionName, e);
                 throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
             }
-        } catch (IOException e) {
-            LOG.error("Exception in registering Extension:{}", extensionName, e);
-            throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
-        }
-        FileStatus[] propStatus;
-        try {
-            propStatus = fileSystem.listStatus(new Path(uri.getPath() , "META"));
-            if (propStatus.length <= 0) {
-                throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
+            FileStatus[] propStatus;
+            try {
+                propStatus = fileSystem.listStatus(new Path(uri.getPath() , "META"));
+                if (propStatus.length <= 0) {
+                    throw new ValidationException("No properties file is not present in the " + uri.getPath() + "/META"
+                            + " structure.");
+                }
+            } catch (IOException e) {
+                LOG.error("Exception in registering Extension:{}", extensionName, e);
+                throw new ValidationException("Directory is not present in the " + uri.getPath() + "/META"
                         + " structure.");
             }
-        } catch (IOException e) {
-            LOG.error("Exception in registering Extension:{}", extensionName, e);
-            throw new ValidationException("Directory is not present in the " + uri.getPath() + "/META"
-                    + " structure.");
-        }
-
-        if (!metaStore.checkIfExtensionExists(extensionName)) {
             metaStore.storeExtensionBean(extensionName, path, ExtensionType.CUSTOM, description, extensionOwner);
         } else {
             throw new ValidationException(extensionName + " already exists.");
