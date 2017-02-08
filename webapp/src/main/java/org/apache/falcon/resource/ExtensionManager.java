@@ -127,9 +127,9 @@ public class ExtensionManager extends AbstractExtensionManager {
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
-        LOG.error("instances is not supported on Server.Please run your operation on Prism ");
-        throw FalconWebException.newAPIException("instances is not supported on Server. Please run your "
-                + "operation on Prism.");
+        LOG.error("instances is not supported on Falcon extensions. Use Falcon instance api on individual entities.");
+        throw FalconWebException.newAPIException("instances is not supported on Falcon extensions. Use Falcon instance "
+                + "api on individual entities.");
     }
 
     @GET
