@@ -26,8 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -69,7 +67,6 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractExtensionManager;
 import org.apache.falcon.resource.ExtensionInstanceList;
 import org.apache.falcon.resource.ExtensionJobList;
-import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentUtil;
@@ -124,28 +121,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
-        checkIfExtensionServiceIsEnabled();
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                return new ExtensionInstanceList(0);
-            }
-
-            HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
-            ExtensionInstanceList instances = new ExtensionInstanceList(entities.size());
-            for (Entity entity : entities) {
-                InstancesResult entityInstances = super.getStatus(
-                        entity.getEntityType().name(), entity.getName(), nominalStart, nominalEnd,
-                        null, null, "STATUS:" + instanceStatus, orderBy, sortOrder, offset, resultsPerPage, null);
-                instances.addEntitySummary(new ExtensionInstanceList.EntitySummary(
-                        getEntityElement(entity, fieldSet), entityInstances.getInstances()));
-            }
-            return instances;
-        } catch (FalconException | IOException e) {
-            LOG.error("Error when listing instances of extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+        LOG.error("instances is not supported on Falcon extensions. Use Falcon instance api on individual entities.");
+        throw FalconWebException.newAPIException("instances is not supported on Falcon extensions. Use Falcon instance "
+                + "api on individual entities.");
     }
 
     @POST
