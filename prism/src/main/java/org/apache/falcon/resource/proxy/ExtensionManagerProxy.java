@@ -48,6 +48,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -101,7 +103,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        if (extensionName != null) {
+        if (StringUtils.isNotBlank(extensionName)) {
             getExtensionIfExists(extensionName);
         }
         try {
