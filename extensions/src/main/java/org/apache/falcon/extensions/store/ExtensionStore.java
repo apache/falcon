@@ -305,6 +305,7 @@ public final class ExtensionStore {
                 LOG.error("Exception in registering Extension:{}", extensionName, e);
                 throw new ValidationException("Jars are not present in the " + uri.getPath() + "/libs/build.");
             }
+
             FileStatus[] propStatus;
             try {
                 propStatus = fileSystem.listStatus(new Path(uri.getPath() , "META"));
