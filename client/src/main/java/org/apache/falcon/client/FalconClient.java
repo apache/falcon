@@ -125,7 +125,6 @@ public class FalconClient extends AbstractFalconClient {
     private static final String DO_AS_OPT = "doAs";
     private static final String JOB_NAME_OPT = "jobName";
     public static final String ENTITIES_OPT = "entities";
-    public static final String EXTENSION_NAME_OPT = "extension-name";
     /**
      * Name of the HTTP cookie used for the authentication token between the client and the server.
      */
