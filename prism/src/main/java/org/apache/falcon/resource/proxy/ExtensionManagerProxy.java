@@ -94,10 +94,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list")
+    @Path("list{extension-name : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
-            @QueryParam("extension-name") String extensionName,
+            @PathParam("extension-name") String extensionName,
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
