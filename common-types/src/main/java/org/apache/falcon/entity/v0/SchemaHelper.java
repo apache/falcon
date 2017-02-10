@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity.v0;
 
+import javax.xml.stream.XMLInputFactory;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -67,5 +68,16 @@ public final class SchemaHelper {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Return the xml input factory that has the properties set for secure handling of data.
+     * @return xif
+     */
+    public static XMLInputFactory createXmlInputFactory() {
+        XMLInputFactory xif = XMLInputFactory.newFactory();
+        xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        return xif;
     }
 }

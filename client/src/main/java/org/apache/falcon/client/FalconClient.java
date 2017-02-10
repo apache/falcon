@@ -1169,7 +1169,7 @@ public class FalconClient extends AbstractFalconClient {
     private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
                                      String extensionType, String extensionBuildLocation) {
         List<Entity> entities = null;
-        if (!extensionType.equals(ExtensionType.CUSTOM.name())) {
+        if (!extensionType.equals(ExtensionType.TRUSTED.toString())) {
             try {
                 entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                         extensionBuildLocation);
@@ -1209,7 +1209,7 @@ public class FalconClient extends AbstractFalconClient {
                                           final String configPath, final String doAsUser) {
         String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionDetailJson(extensionName));
         InputStream configStream = getServletInputStream(configPath);
-        if (ExtensionType.TRUSTED.name().equalsIgnoreCase(extensionType)) {
+        if (extensionType.equals(ExtensionType.TRUSTED.toString())) {
             ClientResponse clientResponse = new ResourceBuilder()
                     .path(ExtensionOperations.VALIDATE.path, extensionName)
                     .addQueryParam(DO_AS_OPT, doAsUser)

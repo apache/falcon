@@ -382,13 +382,11 @@ public final class DatasourceHelper {
             Path path = new Path(passwordFilePath);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri());
             if (!fs.exists(path)) {
-                throw new IOException("The password file does not exist! "
-                        + passwordFilePath);
+                throw new IOException("The password file does not exist! ");
             }
 
             if (!fs.isFile(path)) {
-                throw new IOException("The password file cannot be a directory! "
-                        + passwordFilePath);
+                throw new IOException("The password file cannot be a directory! ");
             }
 
             InputStream is = fs.open(path);
