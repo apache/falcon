@@ -23,13 +23,13 @@ package org.apache.falcon.extensions.mirroring.hdfs;
  */
 public enum HdfsMirroringExtensionProperties {
     SOURCE_DIR("sourceDir", "Location of source data to replicate"),
-    SOURCE_CLUSTER("sourceCluster", "Source cluster"),
-    SOURCE_CLUSTER_FS_WRITE_ENDPOINT("sourceClusterFS", "Source cluster end point", false),
+    SOURCE_CLUSTER("sourceCluster", "Source cluster", false),
+    SOURCE_CLUSTER_FS_READ_ENDPOINT("sourceClusterFS", "Source cluster end point", false),
     TARGET_DIR("targetDir", "Location on target cluster for replication"),
-    TARGET_CLUSTER("targetCluster", "Target cluster"),
+    TARGET_CLUSTER("targetCluster", "Target cluster", false),
     TARGET_CLUSTER_FS_WRITE_ENDPOINT("targetClusterFS", "Target cluster end point", false),
     DISTCP_MAX_MAPS("distcpMaxMaps", "Maximum number of maps used during replication", false),
-    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s used by each mapper during replication",
+    DISTCP_MAP_BANDWIDTH_IN_MB("distcpMapBandwidth", "Bandwidth in MB/s usCOed by each mapper during replication",
             false),
     TDE_ENCRYPTION_ENABLED("tdeEncryptionEnabled", "Set to true if TDE encryption is enabled", false);
 
