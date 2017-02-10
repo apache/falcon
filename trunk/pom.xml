@@ -102,7 +102,7 @@
                 <role>committer</role>
                 <role>PPMC</role>
             </roles>
-            <organization>Hortonworks Inc.</organization>
+            <organization/>
             <!--<organizationUrl>http://www.hortonworks.com</organizationUrl>-->
         </developer>
         <developer>
@@ -254,6 +254,7 @@
             <email>sowmya_kr@apache.org</email>
             <timezone>-08:00</timezone>
             <roles>
+                <role>committer</role>
                 <role>PPMC</role>
             </roles>
             <organization>Hortonworks</organization>
@@ -297,7 +298,7 @@
             <roles>
                 <role>committer</role>
             </roles>
-            <organization>Hortonworks</organization>
+            <organization/>
         </developer>
         <developer>
             <id>pavankumar</id>
@@ -318,6 +319,16 @@
                 <role>committer</role>
             </roles>
             <organization>Hortonworks</organization>
+        </developer>
+        <developer>
+            <id>ying</id>
+            <name>Ying Zheng</name>
+            <email>ying@apache.org</email>
+            <timezone>-08:00</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization/>
         </developer>
 
     </developers>
