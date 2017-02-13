@@ -330,6 +330,16 @@
             </roles>
             <organization/>
         </developer>
+        <developer>
+            <id>praveenadlakha</id>
+            <name>Praveen Adlakha</name>
+            <email>praveenadlakha@apache.org</email>
+            <timezone>+05:30</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+            <organization>Inmobi</organization>
+        </developer>
 
     </developers>
 
