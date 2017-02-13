@@ -99,7 +99,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays.asList(WorkflowJob.Status.SUSPENDED);
     private static final List<CoordinatorAction.Status> COORD_RERUN_PRECOND =
         Arrays.asList(CoordinatorAction.Status.TIMEDOUT, CoordinatorAction.Status.FAILED,
-                CoordinatorAction.Status.KILLED, CoordinatorAction.Status.SUCCEEDED);
+                CoordinatorAction.Status.KILLED, CoordinatorAction.Status.SUCCEEDED, CoordinatorAction.Status.IGNORED);
     private static final List<Job.Status> BUNDLE_ACTIVE_STATUS =
         Arrays.asList(Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED,
             Job.Status.RUNNINGWITHERROR, Job.Status.PAUSED, Status.PREPPAUSED, Status.PAUSEDWITHERROR);

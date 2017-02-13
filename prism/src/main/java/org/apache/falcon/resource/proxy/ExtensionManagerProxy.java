@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -46,6 +45,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -56,7 +57,6 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
@@ -91,14 +91,16 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list/{extension-name}")
+    @Path("list{extension-name : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
             @PathParam("extension-name") String extensionName,
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        getExtensionIfExists(extensionName);
+        if (StringUtils.isNotBlank(extensionName)) {
+            getExtensionIfExists(extensionName);
+        }
         try {
             return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
         } catch (Throwable e) {
@@ -296,7 +298,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         List<Entity> entities;
         TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
-            entities = generateEntities(extensionName, config);
+            entities = extension.getEntities(extensionName, config);
             List<Entity> trustedFeeds = new ArrayList<>();
             List<Entity> trustedProcesses = new ArrayList<>();
             for (Entity entity : entities) {
@@ -564,7 +566,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             throw FalconWebException.newAPIException("Extension validation is supported only for trusted extensions");
         }
         try {
-            List<Entity> entities = generateEntities(extensionName, request.getInputStream());
+            List<Entity> entities = extension.getEntities(extensionName, request.getInputStream());
             for (Entity entity : entities) {
                 super.validate(entity);
             }
@@ -713,19 +715,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private List<Entity> generateEntities(String extensionName, InputStream configStream)
-        throws FalconException, IOException {
-        // get entities for extension job
-        Properties properties = new Properties();
-        properties.load(configStream);
-        List<Entity> entities = extension.getEntities(extensionName, configStream);
-
-        // add tags on extension name and job
-        String jobName = properties.getProperty(ExtensionProperties.JOB_NAME.getName());
-        EntityUtil.applyTags(extensionName, jobName, entities);
-        return entities;
     }
 
     private static void checkIfExtensionServiceIsEnabled() {

@@ -24,6 +24,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -41,6 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -466,8 +470,12 @@ public final class ConfigurationStore implements FalconService {
         throws IOException, FalconException {
 
         InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
+        XMLInputFactory xif = SchemaHelper.createXmlInputFactory();
         try {
-            return (T) type.getUnmarshaller().unmarshal(in);
+            XMLStreamReader xsr = xif.createXMLStreamReader(in);
+            return (T) type.getUnmarshaller().unmarshal(xsr);
+        } catch (XMLStreamException xse) {
+            throw new StoreAccessException("Unable to un-marshall xml definition for " + type + "/" + name, xse);
         } catch (JAXBException e) {
             throw new StoreAccessException("Unable to un-marshall xml definition for " + type + "/" + name, e);
         } finally {
