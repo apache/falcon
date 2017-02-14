@@ -1023,6 +1023,16 @@ public class FalconClient extends AbstractFalconClient {
         return getResponse(APIResult.class, clientResponse);
     }
 
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        ClientResponse clientResponse = new ResourceBuilder()
+                .path(ExtensionOperations.LIST.path, extensionName)
+                .addQueryParam(DO_AS_OPT, doAsUser)
+                .addQueryParam(SORT_ORDER, sortOrder)
+                .call(ExtensionOperations.LIST);
+        return getResponse(ExtensionJobList.class, clientResponse);
+    }
+
     public APIResult unregisterExtension(final String extensionName) {
         ClientResponse clientResponse = new ResourceBuilder()
                 .path(ExtensionOperations.UNREGISTER.path, extensionName)
@@ -1159,7 +1169,7 @@ public class FalconClient extends AbstractFalconClient {
     private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream,
                                      String extensionType, String extensionBuildLocation) {
         List<Entity> entities = null;
-        if (!extensionType.equals(ExtensionType.CUSTOM.name())) {
+        if (!extensionType.equals(ExtensionType.TRUSTED.toString())) {
             try {
                 entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                         extensionBuildLocation);
@@ -1199,7 +1209,7 @@ public class FalconClient extends AbstractFalconClient {
                                           final String configPath, final String doAsUser) {
         String extensionType = ExtensionHandler.getExtensionType(extensionName, getExtensionDetailJson(extensionName));
         InputStream configStream = getServletInputStream(configPath);
-        if (ExtensionType.TRUSTED.name().equalsIgnoreCase(extensionType)) {
+        if (extensionType.equals(ExtensionType.TRUSTED.toString())) {
             ClientResponse clientResponse = new ResourceBuilder()
                     .path(ExtensionOperations.VALIDATE.path, extensionName)
                     .addQueryParam(DO_AS_OPT, doAsUser)
@@ -1244,20 +1254,6 @@ public class FalconClient extends AbstractFalconClient {
                 .addQueryParam(DO_AS_OPT, doAsUser)
                 .call(ExtensionOperations.DELETE);
         return getResponse(APIResult.class, clientResponse);
-    }
-
-    public ExtensionJobList listExtensionJob(final String extensionName, final String doAsUser,
-                                             final String sortOrder, final String offset,
-                                             final String numResults, final String fields)  {
-        ClientResponse clientResponse = new ResourceBuilder()
-                .path(ExtensionOperations.LIST.path, extensionName)
-                .addQueryParam(DO_AS_OPT, doAsUser)
-                .addQueryParam(FIELDS, fields)
-                .addQueryParam(SORT_ORDER, sortOrder)
-                .addQueryParam(OFFSET, offset)
-                .addQueryParam(NUM_RESULTS, numResults)
-                .call(ExtensionOperations.LIST);
-        return getResponse(ExtensionJobList.class, clientResponse);
     }
 
     public ExtensionInstanceList listExtensionInstance(final String jobName, final String doAsUser, final String fields,

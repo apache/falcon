@@ -21,8 +21,8 @@ package org.apache.falcon.resource;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Extension job list used for marshalling / unmarshalling with REST calls.
@@ -33,66 +33,37 @@ import java.util.List;
 public class ExtensionJobList {
 
     @XmlElement
-    public int numJobs;
+    int numJobs;
 
     @XmlElementWrapper(name = "jobs")
-    public List<JobElement> job;
+    public Map<String, String> job;
 
     public ExtensionJobList() {
         numJobs = 0;
         job = null;
     }
 
+    public int getNumJobs() {
+        return numJobs;
+    }
+
     public ExtensionJobList(int numJobs) {
         this.numJobs = numJobs;
-        job = new ArrayList<JobElement>();
+        job = new HashMap<>();
     }
 
-    public ExtensionJobList(int numJobs, List<JobElement> elements) {
+    public ExtensionJobList(int numJobs, Map<String, String> extensionJobNames) {
         this.numJobs = numJobs;
-        this.job = elements;
-    }
-
-    public void addJob(JobElement element) {
-        job.add(element);
+        this.job = extensionJobNames;
     }
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder();
-        buffer.append(numJobs + "\n\n");
-        for (JobElement element : job) {
-            buffer.append(element.toString());
+        StringBuilder builder = new StringBuilder();
+        builder.append(numJobs).append("\n");
+        for (Map.Entry<String, String> extensionJobs : job.entrySet()) {
+            builder.append(extensionJobs.getKey() + "\t" + extensionJobs.getValue() + "\n");
         }
-        return buffer.toString();
-    }
-
-    /**
-     * Element for a job.
-     */
-    public static class JobElement {
-        @XmlElement
-        public String jobName;
-
-        @XmlElement
-        public EntityList jobEntities;
-
-        public JobElement() {
-            jobName = null;
-            jobEntities = null;
-        }
-
-        public JobElement(String name, EntityList entities) {
-            jobName = name;
-            jobEntities = entities;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("Job: " + jobName + ", #. entities: ");
-            buffer.append(jobEntities.toString() + "\n");
-            return buffer.toString();
-        }
+        return builder.toString();
     }
 }

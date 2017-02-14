@@ -20,35 +20,17 @@ package org.apache.falcon.resource.proxy;
 
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
-import org.apache.commons.io.IOUtils;
-import org.apache.falcon.FalconException;
-import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.parser.ProcessEntityParser;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.extensions.Extension;
-import org.apache.falcon.extensions.ExtensionService;
-import org.apache.falcon.extensions.ExtensionType;
-import org.apache.falcon.extensions.ExtensionProperties;
-import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
-import org.apache.falcon.extensions.store.ExtensionStore;
-import org.apache.falcon.persistence.ExtensionBean;
-import org.apache.falcon.persistence.ExtensionJobsBean;
-import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.AbstractExtensionManager;
-import org.apache.falcon.resource.EntityList;
-import org.apache.falcon.resource.ExtensionInstanceList;
-import org.apache.falcon.resource.ExtensionJobList;
-import org.apache.falcon.security.CurrentUser;
-import org.apache.falcon.service.Services;
-import org.apache.falcon.util.DeploymentUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -63,21 +45,33 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.Properties;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.SortedMap;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.parser.ProcessEntityParser;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.extensions.Extension;
+import org.apache.falcon.extensions.ExtensionService;
+import org.apache.falcon.extensions.ExtensionType;
+import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
+import org.apache.falcon.extensions.store.ExtensionStore;
+import org.apache.falcon.persistence.ExtensionBean;
+import org.apache.falcon.persistence.ExtensionJobsBean;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.AbstractExtensionManager;
+import org.apache.falcon.resource.ExtensionInstanceList;
+import org.apache.falcon.resource.ExtensionJobList;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.Services;
+import org.apache.falcon.util.DeploymentUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jersey Resource for extension job operations.
@@ -86,9 +80,6 @@ import java.io.ByteArrayInputStream;
 public class ExtensionManagerProxy extends AbstractExtensionManager {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionManagerProxy.class);
 
-    private static final String TAG_PREFIX_EXTENSION_NAME = "_falcon_extension_name=";
-    private static final String ASCENDING_SORT_ORDER = "asc";
-    private static final String DESCENDING_SORT_ORDER = "desc";
     private Extension extension = new Extension();
     private static final String README = "README";
 
@@ -97,51 +88,22 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private EntityProxyUtil entityProxyUtil = new EntityProxyUtil();
 
     private static final String EXTENSION_PROPERTY_JSON_SUFFIX = "-properties.json";
+
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
-    @Path("list/{extension-name}")
+    @Path("list{extension-name : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
             @PathParam("extension-name") String extensionName,
-            @DefaultValue("") @QueryParam("fields") String fields,
             @DefaultValue(ASCENDING_SORT_ORDER) @QueryParam("sortOrder") String sortOrder,
-            @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
+        if (StringUtils.isNotBlank(extensionName)) {
+            getExtensionIfExists(extensionName);
+        }
         try {
-            // get filtered entities
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_NAME + extensionName, "", doAsUser);
-            if (entities.isEmpty()) {
-                return new ExtensionJobList(0);
-            }
-
-            // group entities by extension job name
-            Map<String, List<Entity>> groupedEntities = groupEntitiesByJob(entities);
-
-            // sort by extension job name
-            List<String> jobNames = new ArrayList<>(groupedEntities.keySet());
-            switch (sortOrder.toLowerCase()) {
-            case DESCENDING_SORT_ORDER:
-                Collections.sort(jobNames, Collections.reverseOrder(String.CASE_INSENSITIVE_ORDER));
-                break;
-            default:
-                Collections.sort(jobNames, String.CASE_INSENSITIVE_ORDER);
-            }
-
-            // pagination and format output
-            int pageCount = getRequiredNumberOfResults(jobNames.size(), offset, resultsPerPage);
-            HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
-            ExtensionJobList jobList = new ExtensionJobList(pageCount);
-            for (int i = offset; i < offset + pageCount; i++) {
-                String jobName = jobNames.get(i);
-                List<Entity> jobEntities = groupedEntities.get(jobName);
-                EntityList entityList = new EntityList(buildEntityElements(fieldSet, jobEntities), jobEntities.size());
-                jobList.addJob(new ExtensionJobList.JobElement(jobName, entityList));
-            }
-            return jobList;
-        } catch (FalconException | IOException e) {
+            return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
+        } catch (Throwable e) {
             LOG.error("Failed to get extension job list of " + extensionName + ": ", e);
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -161,28 +123,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @QueryParam("numResults") Integer resultsPerPage,
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
-        checkIfExtensionServiceIsEnabled();
-        resultsPerPage = resultsPerPage == null ? getDefaultResultsPerPage() : resultsPerPage;
-        try {
-            List<Entity> entities = getEntityList("", "", "", TAG_PREFIX_EXTENSION_JOB + jobName, "", doAsUser);
-            if (entities.isEmpty()) {
-                return new ExtensionInstanceList(0);
-            }
-
-            HashSet<String> fieldSet = new HashSet<>(Arrays.asList(fields.toUpperCase().split(",")));
-            ExtensionInstanceList instances = new ExtensionInstanceList(entities.size());
-            for (Entity entity : entities) {
-                InstancesResult entityInstances = super.getStatus(
-                        entity.getEntityType().name(), entity.getName(), nominalStart, nominalEnd,
-                        null, null, "STATUS:" + instanceStatus, orderBy, sortOrder, offset, resultsPerPage, null);
-                instances.addEntitySummary(new ExtensionInstanceList.EntitySummary(
-                        getEntityElement(entity, fieldSet), entityInstances.getInstances()));
-            }
-            return instances;
-        } catch (FalconException | IOException e) {
-            LOG.error("Error when listing instances of extension job: " + jobName + ": ", e);
-            throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+        LOG.error("instances is not supported on Falcon extensions. Use Falcon instance api on individual entities.");
+        throw FalconWebException.newAPIException("instances is not supported on Falcon extensions. Use Falcon instance "
+                + "api on individual entities.");
     }
 
     @POST
@@ -194,7 +137,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                               @QueryParam("colo") final String coloExpr,
                               @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
-        checkIfExtensionIsEnabled(ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName());
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionJobsBean extensionJobsBean = metaStore.getExtensionJobDetails(jobName);
         if (extensionJobsBean == null) {
@@ -203,6 +145,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             throw FalconWebException.newAPIException("ExtensionJob not found:" + jobName,
                     Response.Status.NOT_FOUND);
         }
+        checkIfExtensionIsEnabled(extensionJobsBean.getExtensionName());
 
         SortedMap<EntityType, List<String>> entityMap;
         try {
@@ -355,7 +298,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         List<Entity> entities;
         TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
-            entities = generateEntities(extensionName, config);
+            entities = extension.getEntities(extensionName, config);
             List<Entity> trustedFeeds = new ArrayList<>();
             List<Entity> trustedProcesses = new ArrayList<>();
             for (Entity entity : entities) {
@@ -378,14 +321,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     }
 
     private ExtensionType getExtensionType(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionBean extensionDetails = metaStore.getDetail(extensionName);
-        if (extensionDetails == null) {
-            // return failure if the extension job doesn't exist
-            LOG.error("Extension not found: " + extensionName);
-            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
-                    Response.Status.NOT_FOUND);
-        }
+        ExtensionBean extensionDetails = getExtensionIfExists(extensionName);
         return extensionDetails.getExtensionType();
     }
 
@@ -601,6 +537,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
         SortedMap<EntityType, List<Entity>> entityMap;
         String extensionName = getExtensionName(jobName);
+        checkIfExtensionIsEnabled(extensionName);
         try {
             entityMap = getEntityList(extensionName, jobName, feedForms, processForms, config);
             if (entityMap.get(EntityType.FEED).isEmpty() && entityMap.get(EntityType.PROCESS).isEmpty()) {
@@ -629,7 +566,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             throw FalconWebException.newAPIException("Extension validation is supported only for trusted extensions");
         }
         try {
-            List<Entity> entities = generateEntities(extensionName, request.getInputStream());
+            List<Entity> entities = extension.getEntities(extensionName, request.getInputStream());
             for (Entity entity : entities) {
                 super.validate(entity);
             }
@@ -659,9 +596,12 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public APIResult getExtensionDescription(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
-        validateExtensionName(extensionName);
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName, README));
+            String extensionResourcePath = extensionBean.getLocation() + File.separator +  README;
+            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionResourcePath));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -728,9 +668,20 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     public APIResult getExtensionDefinition(
             @PathParam("extension-name") String extensionName) {
         checkIfExtensionServiceIsEnabled();
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         try {
-            return new APIResult(APIResult.Status.SUCCEEDED, ExtensionStore.get().getResource(extensionName,
-                    extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX));
+            ExtensionType extensionType = extensionBean.getExtensionType();
+            String extensionResourcePath;
+            if (ExtensionType.TRUSTED.equals(extensionType)) {
+                extensionResourcePath = extensionBean.getLocation() + "/META/"
+                        + extensionName.toLowerCase() + EXTENSION_PROPERTY_JSON_SUFFIX;
+            } else {
+                extensionResourcePath = extensionBean.getLocation() + "/META";
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    ExtensionStore.get().getResource(extensionResourcePath));
+        } catch (FalconException e) {
+            throw FalconWebException.newAPIException(e, Response.Status.BAD_REQUEST);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
@@ -766,31 +717,6 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         }
     }
 
-    private List<Entity> generateEntities(String extensionName, InputStream configStream)
-        throws FalconException, IOException {
-        // get entities for extension job
-        Properties properties = new Properties();
-        properties.load(configStream);
-        List<Entity> entities = extension.getEntities(extensionName, configStream);
-
-        // add tags on extension name and job
-        String jobName = properties.getProperty(ExtensionProperties.JOB_NAME.getName());
-        EntityUtil.applyTags(extensionName, jobName, entities);
-        return entities;
-    }
-
-    private Map<String, List<Entity>> groupEntitiesByJob(List<Entity> entities) {
-        Map<String, List<Entity>> groupedEntities = new HashMap<>();
-        for (Entity entity : entities) {
-            String jobName = getJobNameFromTag(entity.getTags());
-            if (!groupedEntities.containsKey(jobName)) {
-                groupedEntities.put(jobName, new ArrayList<Entity>());
-            }
-            groupedEntities.get(jobName).add(entity);
-        }
-        return groupedEntities;
-    }
-
     private static void checkIfExtensionServiceIsEnabled() {
         if (!Services.get().isRegistered(ExtensionService.SERVICE_NAME)) {
             LOG.error(ExtensionService.SERVICE_NAME + " is not enabled.");
@@ -798,6 +724,4 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                     ExtensionService.SERVICE_NAME + " is not enabled.", Response.Status.NOT_FOUND);
         }
     }
-
-
 }
