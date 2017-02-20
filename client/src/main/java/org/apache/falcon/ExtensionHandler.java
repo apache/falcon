@@ -27,6 +27,7 @@ import org.apache.falcon.extensions.ExtensionBuilder;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
@@ -110,6 +111,7 @@ public final class ExtensionHandler {
     public static List<Entity> prepare(String extensionName, String jobName, InputStream configStream, List<URL> urls)
         throws IOException, FalconException {
         ClassLoader extensionClassLoader = ExtensionClassLoader.load(urls);
+        LOG.debug("Urls loaded:" + StringUtils.join(", ", urls));
         if (extensionClassLoader.getResourceAsStream(EXTENSION_BUILDER_INTERFACE_SERVICE_FILE) == null) {
             throw new FalconCLIException("The extension build time jars do not contain "
                     + EXTENSION_BUILDER_INTERFACE_SERVICE_FILE);
