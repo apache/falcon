@@ -54,8 +54,9 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
 
     private static final String[] LIBS = StartupProperties.get().getProperty("shared.libs").split(",");
 
-    private static class FalconLibPath implements  FalconPathFilter {
+    private static class FalconLibPath implements FalconPathFilter {
         private String[] shareLibs;
+
         FalconLibPath(String[] libList) {
             this.shareLibs = Arrays.copyOf(libList, libList.length);
         }
@@ -79,7 +80,8 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             }
             throw new IllegalArgumentException(path + " is not accepted!");
         }
-    };
+    }
+
 
     private void pushExtensionArtifactsToCluster(final Cluster cluster,
                                                  final FileSystem clusterFs) throws FalconException {
@@ -95,6 +97,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             return;
         }
 
+        final String filterPath = "/apps/falcon/extensions/mirroring/";
         Path extensionStorePath = store.getExtensionStorePath();
         LOG.info("extensionStorePath :{}", extensionStorePath);
         FileSystem falconFileSystem =
@@ -118,6 +121,12 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             while (fileStatusListIterator.hasNext()) {
                 LocatedFileStatus srcfileStatus = fileStatusListIterator.next();
                 Path filePath = Path.getPathWithoutSchemeAndAuthority(srcfileStatus.getPath());
+
+                if (filePath != null && filePath.toString().startsWith(filterPath)) {
+                    /* HiveDR uses filter path as store path in DRStatusStore, so skip it. Copy only the extension
+                     artifacts */
+                    continue;
+                }
 
                 if (srcfileStatus.isDirectory()) {
                     if (!clusterFs.exists(filePath)) {
@@ -160,13 +169,13 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
                     nonFalconJarFilter);
             pushLibsToHDFS(fs, properties.getProperty("libext.paths"), libext, null);
             pushLibsToHDFS(fs, properties.getProperty("libext.feed.paths"),
-                    new Path(libext, EntityType.FEED.name()) , null);
+                    new Path(libext, EntityType.FEED.name()), null);
             pushLibsToHDFS(fs, properties.getProperty("libext.feed.replication.paths"),
                     new Path(libext, EntityType.FEED.name() + "/replication"), null);
             pushLibsToHDFS(fs, properties.getProperty("libext.feed.retention.paths"),
                     new Path(libext, EntityType.FEED.name() + "/retention"), null);
             pushLibsToHDFS(fs, properties.getProperty("libext.process.paths"),
-                    new Path(libext, EntityType.PROCESS.name()) , null);
+                    new Path(libext, EntityType.PROCESS.name()), null);
         } catch (IOException e) {
             throw new FalconException("Failed to copy shared libs to cluster" + cluster.getName(), e);
         }
@@ -181,9 +190,9 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         LOG.debug("Copying libs from {}", src);
         createTargetPath(fs, target);
 
-        for(String srcPaths : src.split(",")) {
+        for (String srcPaths : src.split(",")) {
             File srcFile = new File(srcPaths);
-            File[] srcFiles = new File[] { srcFile };
+            File[] srcFiles = new File[]{srcFile};
             if (srcFiles != null) {
                 if (srcFile.isDirectory()) {
                     srcFiles = srcFile.listFiles();
