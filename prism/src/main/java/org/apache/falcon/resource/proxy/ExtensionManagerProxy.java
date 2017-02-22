@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Properties;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -57,6 +58,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
+import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
@@ -298,7 +300,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         List<Entity> entities;
         TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
-            entities = extension.getEntities(extensionName, config);
+            entities = extension.getEntities(jobName, addJobNameToConf(config, jobName));
             List<Entity> trustedFeeds = new ArrayList<>();
             List<Entity> trustedProcesses = new ArrayList<>();
             for (Entity entity : entities) {
@@ -308,6 +310,9 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                     trustedProcesses.add(entity);
                 }
             }
+            // add tags on extension name and job
+            EntityUtil.applyTags(extensionName, jobName, trustedFeeds);
+            EntityUtil.applyTags(extensionName, jobName, trustedProcesses);
             entityMap.put(EntityType.PROCESS, trustedProcesses);
             entityMap.put(EntityType.FEED, trustedFeeds);
             return entityMap;
@@ -318,6 +323,20 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             entityMap.put(EntityType.FEED, feeds);
             return entityMap;
         }
+    }
+
+    private InputStream addJobNameToConf(InputStream conf, String jobName) throws  FalconException{
+        Properties inputProperties = new Properties();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            inputProperties.load(conf);
+            inputProperties.setProperty(ExtensionProperties.JOB_NAME.getName(), jobName);
+            inputProperties.store(output, null);
+        } catch (IOException e) {
+            LOG.error("Error in reading the config stream");
+            throw new FalconException("Error while reading the config stream", e);
+        }
+        return new ByteArrayInputStream(output.toByteArray());
     }
 
     private ExtensionType getExtensionType(String extensionName) {
