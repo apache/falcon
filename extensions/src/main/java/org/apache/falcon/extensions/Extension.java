@@ -110,9 +110,6 @@ public class Extension implements ExtensionBuilder {
             throw new FalconException("Entity created from the extension template cannot be null");
         }
         LOG.info("Extension processing complete");
-        // add tags on extension name and job
-        String jobName = configProperties.getProperty(ExtensionProperties.JOB_NAME.getName());
-        EntityUtil.applyTags(extensionName, jobName, Collections.singletonList(entity));
         return Collections.singletonList(entity);
     }
 
