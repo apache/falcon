@@ -21,7 +21,6 @@ package org.apache.falcon.extensions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
-import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.feed.Schema;
 import org.apache.falcon.extensions.store.ExtensionStore;
