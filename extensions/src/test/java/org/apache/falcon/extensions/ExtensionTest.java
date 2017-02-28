@@ -213,7 +213,7 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         Assert.assertEquals(extensionStorePath + "/hdfs-mirroring/libs",
                 processEntity.getWorkflow().getLib());
         Assert.assertEquals(extensionStorePath
-                + "/hdfs-mirroring/resources/runtime/hdfs-mirroring-workflow.xml",
+                        + "/hdfs-mirroring/resources/runtime/hdfs-mirroring-workflow.xml",
                 processEntity.getWorkflow().getPath());
 
         Properties props = EntityUtil.getEntityProperties(processEntity);
@@ -221,7 +221,8 @@ public class ExtensionTest extends AbstractTestExtensionStore {
         String srcClusterEndPoint = ClusterHelper.getReadOnlyStorageUrl(ClusterHelper.getCluster(SOURCE_CLUSTER));
         Assert.assertEquals(srcClusterEndPoint + SOURCEDIR, props.getProperty("sourceDir"));
         Assert.assertEquals(SOURCE_CLUSTER, props.getProperty("sourceCluster"));
-        Assert.assertEquals(TARGETDIR, props.getProperty("targetDir"));
+        String tgtClusterEndPoint = ClusterHelper.getStorageUrl(ClusterHelper.getCluster(TARGET_CLUSTER));
+        Assert.assertEquals(tgtClusterEndPoint + TARGETDIR, props.getProperty("targetDir"));
         Assert.assertEquals(TARGET_CLUSTER, props.getProperty("targetCluster"));
 
         //retry

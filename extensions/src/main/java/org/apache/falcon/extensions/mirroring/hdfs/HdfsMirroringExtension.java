@@ -23,6 +23,8 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.extensions.AbstractExtension;
+import org.apache.falcon.util.FSDRUtils;
+import org.apache.hadoop.fs.Path;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,11 +50,30 @@ public class HdfsMirroringExtension extends AbstractExtension {
                 throw new FalconException("Missing extension property: " + option.getName());
             }
         }
+
+        String srcPaths = extensionProperties.getProperty(HdfsMirroringExtensionProperties
+                .SOURCE_DIR.getName());
+        if (!isHCFSPath(srcPaths)) {
+            if (extensionProperties.getProperty(HdfsMirroringExtensionProperties.SOURCE_CLUSTER.getName()) == null) {
+                throw new FalconException("Missing extension property: " + HdfsMirroringExtensionProperties.
+                        SOURCE_CLUSTER.getName());
+            }
+        }
+        String targetDir = extensionProperties.getProperty(HdfsMirroringExtensionProperties
+                .TARGET_DIR.getName());
+
+        if (!FSDRUtils.isHCFS(new Path(targetDir.trim()))) {
+            if (extensionProperties.getProperty(HdfsMirroringExtensionProperties.TARGET_CLUSTER.getName()) == null) {
+                throw new FalconException("Missing extension property: " + HdfsMirroringExtensionProperties.
+                        TARGET_CLUSTER.getName());
+            }
+        }
     }
 
     @Override
     public Properties getAdditionalProperties(final Properties extensionProperties) throws FalconException {
         Properties additionalProperties = new Properties();
+        boolean isHCFSDR = false;
 
         // Add default properties if not passed
         String distcpMaxMaps = extensionProperties.getProperty(
@@ -67,23 +88,31 @@ public class HdfsMirroringExtension extends AbstractExtension {
             additionalProperties.put(HdfsMirroringExtensionProperties.DISTCP_MAP_BANDWIDTH_IN_MB.getName(), "100");
         }
 
-        // Construct fully qualified hdfs src path
         String srcPaths = extensionProperties.getProperty(HdfsMirroringExtensionProperties
                 .SOURCE_DIR.getName());
-        StringBuilder absoluteSrcPaths = new StringBuilder();
-        String sourceClusterName = extensionProperties.getProperty(
-                HdfsMirroringExtensionProperties.SOURCE_CLUSTER.getName());
+        String sourceClusterFS = "";
+        if (isHCFSPath(srcPaths)) {
+            // Make sure path is fully qualified
+            // For HCFS only one path
+            URI pathUri = new Path(srcPaths).toUri();
+            if (pathUri.getAuthority() == null) {
+                throw new FalconException("getAdditionalProperties: " + srcPaths + " is not fully qualified path");
+            }
+            isHCFSDR = true;
+        } else {
+            StringBuilder absoluteSrcPaths = new StringBuilder();
+            String sourceClusterName = extensionProperties.getProperty(
+                    HdfsMirroringExtensionProperties.SOURCE_CLUSTER.getName());
 
-        // Since source cluster get read interface
-        Cluster srcCluster = ClusterHelper.getCluster(sourceClusterName);
-        if (srcCluster == null) {
-            throw new FalconException("Cluster entity " + sourceClusterName + " not found");
-        }
-        String srcClusterEndPoint = ClusterHelper.getReadOnlyStorageUrl(srcCluster);
+            // Since source cluster get read interface
+            Cluster srcCluster = ClusterHelper.getCluster(sourceClusterName.trim());
+            if (srcCluster == null) {
+                throw new FalconException("Source Cluster entity " + sourceClusterName + " not found");
+            }
+            String srcClusterEndPoint = ClusterHelper.getReadOnlyStorageUrl(srcCluster);
 
-        if (StringUtils.isNotBlank(srcPaths)) {
+            // Construct fully qualified hdfs src path
             String[] paths = srcPaths.split(COMMA_SEPARATOR);
-
             URI pathUri;
             for (String path : paths) {
                 try {
@@ -92,48 +121,78 @@ public class HdfsMirroringExtension extends AbstractExtension {
                     throw new FalconException(e);
                 }
                 String authority = pathUri.getAuthority();
-                StringBuilder srcpath = new StringBuilder();
+                StringBuilder srcpath;
                 if (authority == null) {
-                    srcpath.append(srcClusterEndPoint);
+                    srcpath = new StringBuilder(srcClusterEndPoint);
+                } else {
+                    srcpath = new StringBuilder();
                 }
-
                 srcpath.append(path.trim());
                 srcpath.append(COMMA_SEPARATOR);
                 absoluteSrcPaths.append(srcpath);
             }
+            additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
+                    StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
+            sourceClusterFS = ClusterHelper.getReadOnlyStorageUrl(srcCluster);
         }
-        additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_DIR.getName(),
-                StringUtils.removeEnd(absoluteSrcPaths.toString(), COMMA_SEPARATOR));
 
-        // Target dir shouldn't have the namenode
+
         String targetDir = extensionProperties.getProperty(HdfsMirroringExtensionProperties
                 .TARGET_DIR.getName());
+        String targetClusterFS = "";
+        if (FSDRUtils.isHCFS(new Path(targetDir.trim()))) {
+            // Make sure path is fully qualified
+            URI pathUri = new Path(targetDir).toUri();
+            if (pathUri.getAuthority() == null) {
+                throw new FalconException("getAdditionalProperties: " + targetDir + " is not fully qualified path");
+            }
+            isHCFSDR = true;
+        } else {
+            String targetClusterName = extensionProperties.getProperty(
+                    HdfsMirroringExtensionProperties.TARGET_CLUSTER.getName());
 
-        URI targetPathUri;
-        try {
-            targetPathUri = new URI(targetDir.trim());
-        } catch (URISyntaxException e) {
-            throw new FalconException(e);
-        }
+            Cluster targetCluster = ClusterHelper.getCluster(targetClusterName.trim());
+            if (targetCluster == null) {
+                throw new FalconException("Target Cluster entity " + targetClusterName + " not found");
+            }
 
-        if (targetPathUri.getScheme() != null) {
+            targetClusterFS = ClusterHelper.getStorageUrl(targetCluster);
+
+            // Construct fully qualified hdfs target path
+            URI pathUri;
+            try {
+                pathUri = new URI(targetDir.trim());
+            } catch (URISyntaxException e) {
+                throw new FalconException(e);
+            }
+
+            StringBuilder targetPath;
+            String authority = pathUri.getAuthority();
+            if (authority == null) {
+                targetPath = new StringBuilder(targetClusterFS);
+            } else {
+                targetPath = new StringBuilder();
+            }
+            targetPath.append(targetDir.trim());
+
             additionalProperties.put(HdfsMirroringExtensionProperties.TARGET_DIR.getName(),
-                    targetPathUri.getPath());
+                    targetPath.toString());
         }
 
-        // add sourceClusterFS and targetClusterFS
-        additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_CLUSTER_FS_WRITE_ENDPOINT.getName(),
-                ClusterHelper.getStorageUrl(srcCluster));
-
-        String targetClusterName = extensionProperties.getProperty(
-                HdfsMirroringExtensionProperties.TARGET_CLUSTER.getName());
-
-        Cluster targetCluster = ClusterHelper.getCluster(targetClusterName);
-        if (targetCluster == null) {
-            throw new FalconException("Cluster entity " + targetClusterName + " not found");
+        // Oozie doesn't take null or empty string for arg in the WF. For HCFS pass the source FS as its not used
+        if (isHCFSDR) {
+            if (StringUtils.isBlank(sourceClusterFS)) {
+                sourceClusterFS = targetClusterFS;
+            } else if (StringUtils.isBlank(targetClusterFS)) {
+                targetClusterFS = sourceClusterFS;
+            }
         }
+        // Add sourceClusterFS
+        additionalProperties.put(HdfsMirroringExtensionProperties.SOURCE_CLUSTER_FS_READ_ENDPOINT.getName(),
+                sourceClusterFS);
+        // Add targetClusterFS
         additionalProperties.put(HdfsMirroringExtensionProperties.TARGET_CLUSTER_FS_WRITE_ENDPOINT.getName(),
-                ClusterHelper.getStorageUrl(targetCluster));
+                targetClusterFS);
 
         if (StringUtils.isBlank(
                 extensionProperties.getProperty(HdfsMirroringExtensionProperties.TDE_ENCRYPTION_ENABLED.getName()))) {
@@ -144,4 +203,16 @@ public class HdfsMirroringExtension extends AbstractExtension {
         return additionalProperties;
     }
 
+    private static boolean isHCFSPath(String srcPaths) throws FalconException {
+        if (StringUtils.isNotBlank(srcPaths)) {
+            String[] paths = srcPaths.split(COMMA_SEPARATOR);
+
+            // We expect all paths to be of same type, hence verify the first path
+            for (String path : paths) {
+                return FSDRUtils.isHCFS(new Path(path.trim()));
+            }
+        }
+
+        return false;
+    }
 }
