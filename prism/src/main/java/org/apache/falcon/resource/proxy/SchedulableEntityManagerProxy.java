@@ -139,8 +139,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     private void validateEntity(Entity entity, Set<String> applicableColos) {
         if (entity.getEntityType() != EntityType.CLUSTER || embeddedMode) {
+            try {
+                checkEntityExists(entity);
+            } catch (FalconException e) {
+                throw FalconWebException.newAPIException(e);
+            }
             return;
         }
+
         // If the submitted entity is a cluster, ensure its spec. has one of the valid colos
         String colo = ((Cluster) entity).getColo();
         if (!applicableColos.contains(colo)) {
