@@ -639,9 +639,9 @@ public class MetadataMappingServiceTest {
         Graph graph = service.getGraph();
 
         Vertex vertex = graph.getVertices("name", "sample-process/2014-01-01T01:00Z").iterator().next();
-        Assert.assertEquals(vertex.getProperty("TIMETAKEN"), 36956L);
-        Assert.assertEquals(vertex.getProperty("COPY"), 30L);
-        Assert.assertEquals(vertex.getProperty("BYTESCOPIED"), 1000L);
+        Assert.assertEquals(vertex.<String>getProperty("TIMETAKEN"), 36956L);
+        Assert.assertEquals(vertex.<String>getProperty("COPY"), 30L);
+        Assert.assertEquals(vertex.<String>getProperty("BYTESCOPIED"), 1000L);
         Assert.assertEquals(getVerticesCount(service.getGraph()), 9);
         Assert.assertEquals(getEdgesCount(service.getGraph()), 14);
         verifyLineageGraphForJobCounters(context);

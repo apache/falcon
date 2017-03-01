@@ -144,7 +144,7 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Edge findEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {
-        return findEdge(fromVertex, toVertex.getProperty(RelationshipProperty.NAME.getName()), edgeLabel);
+        return findEdge(fromVertex, (Object) toVertex.getProperty(RelationshipProperty.NAME.getName()), edgeLabel);
     }
 
     protected Edge findEdge(Vertex fromVertex, Object toVertexName, String edgeLabel) {
