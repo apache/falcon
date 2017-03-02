@@ -25,7 +25,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.Pair;
-import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.lock.MemoryLocks;
 import org.apache.falcon.entity.parser.EntityParser;
@@ -275,28 +274,33 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
         try {
             EntityType entityType = EntityType.getEnum(type);
             String removedFromEngine = "";
+            Entity entityObj;
             try {
-                Entity entityObj = EntityUtil.getEntity(type, entity);
-                verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.DELETE);
-
-                canRemove(entityObj);
-                obtainEntityLocks(entityObj, "delete", tokenList);
-                if (entityType.isSchedulable() && !DeploymentUtil.isPrism()) {
-                    getWorkflowEngine(entityObj).delete(entityObj);
-                    removedFromEngine = "(KILLED in WF_ENGINE)";
-                }
-
-                configStore.remove(entityType, entity);
-            } catch (EntityNotRegisteredException e) { // already deleted
+                entityObj = EntityUtil.getEntity(type, entity);
+            } catch (FalconException e) {
                 return new APIResult(APIResult.Status.SUCCEEDED,
                         entity + "(" + type + ") doesn't exist. Nothing to do");
             }
 
+            verifySafemodeOperation(entityObj, EntityUtil.ENTITY_OPERATION.DELETE);
+            try {
+                canRemove(entityObj);
+                obtainEntityLocks(entityObj, "delete", tokenList);
+                try {
+                    if (entityType.isSchedulable() && !DeploymentUtil.isPrism()) {
+                        getWorkflowEngine(entityObj).delete(entityObj);
+                        removedFromEngine = "(KILLED in WF_ENGINE)";
+                    }
+                } catch (FalconException e) {
+                    LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
+                    throw FalconWebException.newAPIException(e);
+                }
+                configStore.remove(entityType, entity);
+            } catch (FalconException e) {
+                throw FalconWebException.newAPIException(e);
+            }
             return new APIResult(APIResult.Status.SUCCEEDED,
                     entity + "(" + type + ") removed successfully " + removedFromEngine);
-        } catch (Throwable e) {
-            LOG.error("Unable to reach workflow engine for deletion or deletion failed", e);
-            throw FalconWebException.newAPIException(e);
         } finally {
             releaseEntityLocks(entity, tokenList);
         }
@@ -622,7 +626,7 @@ public abstract class AbstractEntityManager extends AbstractMetadataResource {
                 messages.append(ref).append("\n");
             }
             throw new FalconException(
-                    entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
+                    entity.getName() + "(" + entity.getEntityType() + ") cant be removed as it is referred by "
                             + messages);
         }
     }
