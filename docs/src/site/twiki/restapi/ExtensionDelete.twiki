@@ -17,7 +17,7 @@ Result of the delete operation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/delete/sales-monthly
+POST http://localhost:15000/api/extension/delete/sales-monthly
 </verbatim>
 ---+++ Result
 <verbatim>
