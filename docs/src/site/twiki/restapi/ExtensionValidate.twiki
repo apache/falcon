@@ -17,7 +17,7 @@ Result of validation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/validate/hdfs-mirroring
+POST http://localhost:15000/api/extension/validate/hdfs-mirroring
 jobName=sales-monthly
 jobClustername=primaryCluster
 jobClusterValidityStart=2015-03-13T00:00Z
