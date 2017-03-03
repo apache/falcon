@@ -99,8 +99,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
         if (StringUtils.isNotBlank(extensionName)) {
+            extensionName = extensionName.substring(1);
             getExtensionIfExists(extensionName);
         }
+
         try {
             return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
         } catch (Throwable e) {

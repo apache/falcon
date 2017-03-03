@@ -18,7 +18,7 @@ Total number of results and a list of jobs implementing the given extension.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/extensions/list/billCollection
+GET http://localhost:15000/api/extension/list/billCollection
 </verbatim>
 ---+++ Result
 <verbatim>
