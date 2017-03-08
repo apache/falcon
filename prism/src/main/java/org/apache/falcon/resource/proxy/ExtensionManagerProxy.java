@@ -301,28 +301,22 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
             entities = extension.getEntities(jobName, addJobNameToConf(config, jobName));
-            List<Entity> trustedFeeds = new ArrayList<>();
-            List<Entity> trustedProcesses = new ArrayList<>();
+            feeds = new ArrayList<>();
+            processes = new ArrayList<>();
             for (Entity entity : entities) {
                 if (EntityType.FEED.equals(entity.getEntityType())) {
-                    trustedFeeds.add(entity);
+                    feeds.add(entity);
                 } else {
-                    trustedProcesses.add(entity);
+                    processes.add(entity);
                 }
             }
-            // add tags on extension name and job
-            EntityUtil.applyTags(extensionName, jobName, trustedFeeds);
-            EntityUtil.applyTags(extensionName, jobName, trustedProcesses);
-            entityMap.put(EntityType.PROCESS, trustedProcesses);
-            entityMap.put(EntityType.FEED, trustedFeeds);
-            return entityMap;
-        } else {
-            EntityUtil.applyTags(extensionName, jobName, processes);
-            EntityUtil.applyTags(extensionName, jobName, feeds);
-            entityMap.put(EntityType.PROCESS, processes);
-            entityMap.put(EntityType.FEED, feeds);
-            return entityMap;
         }
+        // add tags on extension name and job
+        EntityUtil.applyTags(extensionName, jobName, processes);
+        EntityUtil.applyTags(extensionName, jobName, feeds);
+        entityMap.put(EntityType.PROCESS, processes);
+        entityMap.put(EntityType.FEED, feeds);
+        return entityMap;
     }
 
     private InputStream addJobNameToConf(InputStream conf, String jobName) throws  FalconException{
