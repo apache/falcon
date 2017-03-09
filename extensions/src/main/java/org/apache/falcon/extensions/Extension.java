@@ -21,7 +21,6 @@ package org.apache.falcon.extensions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
-import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.feed.Schema;
 import org.apache.falcon.extensions.store.ExtensionStore;
@@ -110,9 +109,6 @@ public class Extension implements ExtensionBuilder {
             throw new FalconException("Entity created from the extension template cannot be null");
         }
         LOG.info("Extension processing complete");
-        // add tags on extension name and job
-        String jobName = configProperties.getProperty(ExtensionProperties.JOB_NAME.getName());
-        EntityUtil.applyTags(extensionName, jobName, Collections.singletonList(entity));
         return Collections.singletonList(entity);
     }
 
