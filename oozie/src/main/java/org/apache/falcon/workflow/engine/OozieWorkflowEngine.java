@@ -949,7 +949,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 status = Status.KILLED.name();
                 break;
             }
-            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
+            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus()) &&
+                    jobInfo.getStatus().name().equalsIgnoreCase(Status.IGNORED.name())) {
                 break;
             }
 
