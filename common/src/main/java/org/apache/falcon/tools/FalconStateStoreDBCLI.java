@@ -220,11 +220,15 @@ public class FalconStateStoreDBCLI {
         return jdbcConf;
     }
 
-    private String[] createMappingToolArguments(String sqlFile) throws Exception {
+    private String[] createMappingToolArguments(String sqlFile, boolean create) throws Exception {
         Map<String, String> conf = getJdbcConf();
         List<String> args = new ArrayList<String>();
         args.add("-schemaAction");
-        args.add("add");
+        if (create) {
+            args.add("add");
+        } else {
+            args.add("refresh");
+        }
         args.add("-p");
         args.add("persistence.xml#falcon-" + conf.get("dbtype"));
         args.add("-connectionDriverName");
@@ -392,10 +396,10 @@ public class FalconStateStoreDBCLI {
 
     private void createUpgradeDB(String sqlFile, boolean run, boolean create) throws Exception {
         System.out.println((create) ? "Create SQL schema" : "Upgrade SQL schema");
-        String[] args = createMappingToolArguments(sqlFile);
+        String[] args = createMappingToolArguments(sqlFile, create);
         org.apache.openjpa.jdbc.meta.MappingTool.main(args);
         if (run) {
-            args = createMappingToolArguments(null);
+            args = createMappingToolArguments(null, create);
             org.apache.openjpa.jdbc.meta.MappingTool.main(args);
         }
         System.out.println("DONE");
