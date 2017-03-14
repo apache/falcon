@@ -27,6 +27,7 @@ import org.apache.falcon.extensions.ExtensionBuilder;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
@@ -54,6 +55,7 @@ public final class ExtensionHandler {
     public static final Logger LOG = LoggerFactory.getLogger(ExtensionHandler.class);
     private static final String UTF_8 = CharEncoding.UTF_8;
     private static final String TMP_BASE_DIR = String.format("file://%s", System.getProperty("java.io.tmpdir"));
+    private static final String PATH_SEPARATOR = "_";
     private static final String LOCATION = "location";
     private static final String TYPE = "type";
     private static final String NAME = "extensionName";
@@ -110,6 +112,7 @@ public final class ExtensionHandler {
     public static List<Entity> prepare(String extensionName, String jobName, InputStream configStream, List<URL> urls)
         throws IOException, FalconException {
         ClassLoader extensionClassLoader = ExtensionClassLoader.load(urls);
+        LOG.debug("Urls loaded:" + StringUtils.join(", ", urls));
         if (extensionClassLoader.getResourceAsStream(EXTENSION_BUILDER_INTERFACE_SERVICE_FILE) == null) {
             throw new FalconCLIException("The extension build time jars do not contain "
                     + EXTENSION_BUILDER_INTERFACE_SERVICE_FILE);
@@ -144,8 +147,8 @@ public final class ExtensionHandler {
     }
 
     private static String createStagePath(String extensionName, String jobName) {
-        String stagePath = TMP_BASE_DIR + File.separator + extensionName + File.separator + jobName
-                + File.separator + System.currentTimeMillis()/1000;
+        String stagePath = TMP_BASE_DIR + File.separator + extensionName + PATH_SEPARATOR + jobName
+                + PATH_SEPARATOR + System.currentTimeMillis()/1000;
         File tmpPath = new File(stagePath);
         if (tmpPath.mkdir()) {
             throw new FalconCLIException("Failed to create stage directory" + tmpPath.toString());

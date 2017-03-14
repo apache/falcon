@@ -50,7 +50,7 @@ import java.util.Map;
 public class ExtensionStoreTest extends AbstractTestExtensionStore {
     private static Map<String, String> resourcesMap;
     private static JailedFileSystem fs;
-    protected static final String EXTENSION_PATH = "/projects/falcon/extension";
+    protected static final String EXTENSION_PATH = "/projects/falcon/extension/";
     private static final String STORAGE_URL = "jail://global:00";
 
     @BeforeClass
@@ -140,8 +140,7 @@ public class ExtensionStoreTest extends AbstractTestExtensionStore {
         createMETA(extensionPath);
         store = ExtensionStore.get();
         store.registerExtension("toBeDeleted", STORAGE_URL + extensionPath, "test desc", "falconUser");
-        Assert.assertTrue(store.getResource("toBeDeleted", "README").equals("README"));
-        store.getResource("toBeDeleted", "README");
+        Assert.assertTrue(store.getResource(STORAGE_URL + extensionPath + "/README").equals("README"));
         store.deleteExtension("toBeDeleted", "falconUser");
         ExtensionMetaStore metaStore = new ExtensionMetaStore();
         Assert.assertEquals(metaStore.getAllExtensions().size(), 0);

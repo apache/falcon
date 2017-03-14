@@ -17,7 +17,6 @@
  */
 package org.apache.falcon.resource;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
@@ -38,10 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -112,36 +108,27 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
-
-        Comparator<ExtensionJobsBean> compareByJobName = new Comparator<ExtensionJobsBean>() {
-            @Override
-            public int compare(ExtensionJobsBean o1, ExtensionJobsBean o2) {
-                return o1.getJobName().compareToIgnoreCase(o2.getJobName());
-            }
-        };
-
-        Map<String, String> jobAndExtensionNames = new HashMap<>();
+        TreeMap<String, String> jobAndExtensionNames = new TreeMap<>();
         List<ExtensionJobsBean> extensionJobs = null;
-        if (extensionName != null) {
+
+        if (StringUtils.isNoneBlank(extensionName)) {
             extensionJobs = ExtensionStore.getMetaStore().getJobsForAnExtension(extensionName);
         } else {
             extensionJobs = ExtensionStore.getMetaStore().getAllExtensionJobs();
         }
 
-        sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
-        switch (sortOrder.toLowerCase()) {
-        case DESCENDING_SORT_ORDER:
-            Collections.sort(extensionJobs, Collections.reverseOrder(compareByJobName));
-            break;
-
-        default:
-            Collections.sort(extensionJobs, compareByJobName);
-        }
-
         for (ExtensionJobsBean job : extensionJobs) {
             jobAndExtensionNames.put(job.getJobName(), job.getExtensionName());
         }
-        return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
+
+        sortOrder = (sortOrder == null) ? ASCENDING_SORT_ORDER : sortOrder;
+        switch (sortOrder.toLowerCase()) {
+        case DESCENDING_SORT_ORDER:
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames.descendingMap());
+
+        default:
+            return new ExtensionJobList(extensionJobs.size(), jobAndExtensionNames);
+        }
     }
 
     public APIResult deleteExtensionMetadata(String extensionName) {
@@ -160,10 +147,14 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         List<ExtensionJobsBean> extensionJobs = metaStore.getJobsForAnExtension(extensionName);
         if (!extensionJobs.isEmpty()) {
-            LOG.error("Extension:{} cannot be unregistered as {} are instances of the extension", extensionName,
-                    ArrayUtils.toString(extensionJobs));
+            StringBuilder jobs = new StringBuilder();
+            for(ExtensionJobsBean extensionJobsBean : extensionJobs) {
+                jobs.append("\n" + extensionJobsBean.getJobName());
+            }
+            LOG.error("Extension:" + extensionName + " cannot be unregistered as following instances are dependent on "
+                    + "the extension:" + jobs.toString());
             throw new FalconException("Extension:" + extensionName + " cannot be unregistered as following instances"
-                    + " are dependent on the extension" + ArrayUtils.toString(extensionJobs));
+                    + " are dependent on the extension:" + jobs.toString());
         }
     }
 
@@ -277,13 +268,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
     }
 
     protected static void checkIfExtensionIsEnabled(String extensionName) {
-        ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
-        ExtensionBean extensionBean = metaStore.getDetail(extensionName);
-        if (extensionBean == null) {
-            LOG.error("Extension not found: " + extensionName);
-            throw FalconWebException.newAPIException("Extension not found:" + extensionName,
-                    Response.Status.NOT_FOUND);
-        }
+        ExtensionBean extensionBean = getExtensionIfExists(extensionName);
         if (!extensionBean.getStatus().equals(ExtensionStatus.ENABLED)) {
             LOG.error("Extension: " + extensionName + " is in disabled state.");
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
@@ -291,7 +276,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    protected static void checkIfExtensionExists(String extensionName) {
+    protected static ExtensionBean getExtensionIfExists(String extensionName) {
         ExtensionMetaStore metaStore = ExtensionStore.getMetaStore();
         ExtensionBean extensionBean = metaStore.getDetail(extensionName);
         if (extensionBean == null) {
@@ -299,6 +284,7 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             throw FalconWebException.newAPIException("Extension not found:" + extensionName,
                     Response.Status.NOT_FOUND);
         }
+        return extensionBean;
     }
 
     protected static void checkIfExtensionJobNameExists(String jobName, String extensionName) {
@@ -311,9 +297,10 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
         }
     }
 
-    private JSONObject getEntitiesStatus(List<String> entities, EntityType type) throws JSONException, FalconException {
-        JSONObject entityObject = new JSONObject();
+    private JSONArray getEntitiesStatus(List<String> entities, EntityType type) throws JSONException, FalconException {
+        JSONArray entityObjects = new JSONArray();
         for (String entity : entities) {
+            JSONObject entityObject = new JSONObject();
             try {
                 entityObject.put(NAME, entity);
                 EntityUtil.getEntity(type, entity);
@@ -321,7 +308,8 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             } catch (EntityNotRegisteredException e) {
                 entityObject.put(STATUS, ENTITY_NOT_EXISTS_STATUS);
             }
+            entityObjects.put(entityObject);
         }
-        return entityObject;
+        return entityObjects;
     }
 }

@@ -92,7 +92,6 @@ public class FalconExtensionCLI extends FalconCLI{
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDefinition(extensionName).getMessage();
-            result = prettyPrintJson(result);
         } else if (optionsList.contains(DESCRIBE_OPT)) {
             validateRequiredParameter(extensionName, EXTENSION_NAME_OPT);
             result = client.getExtensionDescription(extensionName).getMessage();
@@ -150,9 +149,12 @@ public class FalconExtensionCLI extends FalconCLI{
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             result = client.deleteExtensionJob(jobName, doAsUser).getMessage();
         } else if (optionsList.contains(FalconCLIConstants.LIST_OPT)) {
+            if (extensionName == null) {
+                extensionName = "";
+            }
             ExtensionJobList jobs = client.getExtensionJobs(extensionName, doAsUser,
                     commandLine.getOptionValue(FalconCLIConstants.SORT_ORDER_OPT));
-            result = jobs != null ? jobs.toString() : "No extension job (" + extensionName + ") found.";
+            result = jobs.getNumJobs() != 0 ? jobs.toString() : "No extension job found.";
         } else if (optionsList.contains(INSTANCES_OPT)) {
             validateRequiredParameter(jobName, JOB_NAME_OPT);
             ExtensionInstanceList instances = client.listExtensionInstance(jobName, doAsUser,

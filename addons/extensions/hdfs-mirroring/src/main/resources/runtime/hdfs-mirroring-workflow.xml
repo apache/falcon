@@ -92,7 +92,7 @@
             <arg>-sourcePaths</arg>
             <arg>${sourceDir}</arg>
             <arg>-targetPath</arg>
-            <arg>${targetClusterFS}${targetDir}</arg>
+            <arg>${targetDir}</arg>
             <arg>-falconFeedStorageType</arg>
             <arg>FILESYSTEM</arg>
             <arg>-availabilityFlag</arg>

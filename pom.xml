@@ -702,6 +702,18 @@
                 <groupId>com.sun.jersey.contribs</groupId>
                 <artifactId>jersey-multipart</artifactId>
                 <version>${jersey.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jvnet</groupId>
+                        <artifactId>mimepull</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jvnet.mimepull</groupId>
+                <artifactId>mimepull</artifactId>
+                <version>1.9</version>
             </dependency>
 
             <dependency>
