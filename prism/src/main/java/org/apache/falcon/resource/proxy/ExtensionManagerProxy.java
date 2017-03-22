@@ -51,7 +51,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.v0.Entity;
