@@ -525,7 +525,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             Entity entity = EntityUtil.getEntity(entityType, process.getName());
             String extractedJobName = AbstractExtensionManager.getJobNameFromTag(entity.getTags());
             if (!extractedJobName.equals(jobName)) {
-                throw new FalconException("Entity is part another extension job: " + extractedJobName);
+                throw new FalconException("Entity:" + entity.getName() +"is part another extension job: "
+                        + extractedJobName);
             }
         } catch (EntityNotRegisteredException ignored) {
             //Valid. Ignore if its not submitted already.
