@@ -74,6 +74,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
     private static final String JARS_DIR = "file:///" + System.getProperty("user.dir") + "/src/test/resources";
     private static final String EXTENSION_PROPERTIES = "extension.properties";
     private static final String TEST_JOB = "testJob";
+    private static final String TEST_JOB_DUPLICATE = "testJobDuplicate";
     private static final String TEST_EXTENSION = "testExtension";
     private FileSystem fileSystem;
 
@@ -459,6 +460,12 @@ public class TestFalconUnit extends FalconUnitTestBase {
         apiResult = submitExtensionJob(TEST_EXTENSION, TEST_JOB, null, null);
         assertStatus(apiResult);
 
+        try {
+            submitExtensionJob(TEST_EXTENSION, TEST_JOB_DUPLICATE, null, null);
+        } catch (FalconWebException e) {
+            Assert.assertEquals(((APIResult) e.getResponse().getEntity()).getMessage(), "Entity:sample is part another "
+                    + "extension job:testJob");
+        }
         ExtensionJobList extensionJobList = getExtensionJobs(TEST_EXTENSION, null, null);
         Assert.assertEquals(extensionJobList.getNumJobs(), 1);
 
@@ -493,7 +500,6 @@ public class TestFalconUnit extends FalconUnitTestBase {
         }
         enableExtension(TEST_EXTENSION);
 
-        Thread.sleep(10000);
         apiResult = updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
         assertStatus(apiResult);
 

@@ -506,7 +506,7 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
 
     private void validateFeeds(List<Entity> feeds, String jobName) throws FalconException {
         for (Entity feed : feeds) {
-            checkIfPartOfAnotherExtension(feed, EntityType.FEED, jobName);
+            checkIfPartOfAnotherExtension(feed.getName(), EntityType.FEED, jobName);
             super.validate(feed);
         }
     }
@@ -514,22 +514,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
     private void validateProcesses(List<Entity> processes, String jobName) throws FalconException {
         ProcessEntityParser processEntityParser = new ProcessEntityParser();
         for (Entity process : processes) {
-            checkIfPartOfAnotherExtension(process, EntityType.PROCESS, jobName);
+            checkIfPartOfAnotherExtension(process.getName(), EntityType.PROCESS, jobName);
             processEntityParser.validate((Process) process, false);
-        }
-    }
-
-    private void checkIfPartOfAnotherExtension(Entity process, EntityType entityType, String jobName)
-        throws FalconException {
-        try {
-            Entity entity = EntityUtil.getEntity(entityType, process.getName());
-            String extractedJobName = AbstractExtensionManager.getJobNameFromTag(entity.getTags());
-            if (!extractedJobName.equals(jobName)) {
-                throw new FalconException("Entity:" + entity.getName() +"is part another extension job: "
-                        + extractedJobName);
-            }
-        } catch (EntityNotRegisteredException ignored) {
-            //Valid. Ignore if its not submitted already.
         }
     }
 
