@@ -51,6 +51,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.v0.Entity;
@@ -420,8 +421,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
+        validateFeeds(feeds, jobName);
+        validateProcesses(processes, jobName);
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
@@ -458,8 +459,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                                 HttpServletRequest request) throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
+        validateFeeds(feeds, jobName);
+        validateProcesses(processes, jobName);
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
@@ -503,17 +504,31 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return getBufferedRequest(new HttpServletRequestInputStreamWrapper(request, servletInputStream));
     }
 
-
-    private void validateFeeds(List<Entity> feeds) throws FalconException {
+    private void validateFeeds(List<Entity> feeds, String jobName) throws FalconException {
         for (Entity feed : feeds) {
+            checkIfPartOfAnotherExtension(feed, EntityType.FEED, jobName);
             super.validate(feed);
         }
     }
 
-    private void validateProcesses(List<Entity> processes) throws FalconException {
+    private void validateProcesses(List<Entity> processes, String jobName) throws FalconException {
         ProcessEntityParser processEntityParser = new ProcessEntityParser();
         for (Entity process : processes) {
+            checkIfPartOfAnotherExtension(process, EntityType.PROCESS, jobName);
             processEntityParser.validate((Process) process, false);
+        }
+    }
+
+    private void checkIfPartOfAnotherExtension(Entity process, EntityType entityType, String jobName)
+        throws FalconException {
+        try {
+            Entity entity = EntityUtil.getEntity(entityType, process.getName());
+            String extractedJobName = AbstractExtensionManager.getJobNameFromTag(entity.getTags());
+            if (!extractedJobName.equals(jobName)) {
+                throw new FalconException("Entity is part another extension job: " + extractedJobName);
+            }
+        } catch (EntityNotRegisteredException ignored) {
+            //Valid. Ignore if its not submitted already.
         }
     }
 

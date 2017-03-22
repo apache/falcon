@@ -493,6 +493,7 @@ public class TestFalconUnit extends FalconUnitTestBase {
         }
         enableExtension(TEST_EXTENSION);
 
+        Thread.sleep(10000);
         apiResult = updateExtensionJob(TEST_JOB, getAbsolutePath(EXTENSION_PROPERTIES), null);
         assertStatus(apiResult);
 
