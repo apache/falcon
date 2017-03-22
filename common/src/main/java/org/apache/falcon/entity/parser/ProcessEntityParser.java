@@ -135,7 +135,9 @@ public class ProcessEntityParser extends EntityParser<Process> {
             }
         }
         validateDatasetName(process.getInputs(), process.getOutputs());
-        validateLateInputs(process);
+        if (checkDependentFeeds) {
+            validateLateInputs(process);
+        }
         validateProcessSLA(process);
         validateHadoopQueue(process);
         validateProcessEntity(process);
