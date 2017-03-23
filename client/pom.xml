@@ -87,6 +87,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jvnet.mimepull</groupId>
+            <artifactId>mimepull</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>

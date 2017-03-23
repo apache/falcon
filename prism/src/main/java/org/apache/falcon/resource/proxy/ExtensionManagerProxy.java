@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Properties;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -57,6 +58,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.extensions.Extension;
+import org.apache.falcon.extensions.ExtensionProperties;
 import org.apache.falcon.extensions.ExtensionService;
 import org.apache.falcon.extensions.ExtensionType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
@@ -99,8 +101,10 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
             @DefaultValue("") @QueryParam("doAs") String doAsUser) {
         checkIfExtensionServiceIsEnabled();
         if (StringUtils.isNotBlank(extensionName)) {
+            extensionName = extensionName.substring(1);
             getExtensionIfExists(extensionName);
         }
+
         try {
             return super.getExtensionJobs(extensionName, sortOrder, doAsUser);
         } catch (Throwable e) {
@@ -298,26 +302,37 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         List<Entity> entities;
         TreeMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
         if (ExtensionType.TRUSTED.equals(extensionType)) {
-            entities = extension.getEntities(extensionName, config);
-            List<Entity> trustedFeeds = new ArrayList<>();
-            List<Entity> trustedProcesses = new ArrayList<>();
+            entities = extension.getEntities(jobName, addJobNameToConf(config, jobName));
+            feeds = new ArrayList<>();
+            processes = new ArrayList<>();
             for (Entity entity : entities) {
                 if (EntityType.FEED.equals(entity.getEntityType())) {
-                    trustedFeeds.add(entity);
+                    feeds.add(entity);
                 } else {
-                    trustedProcesses.add(entity);
+                    processes.add(entity);
                 }
             }
-            entityMap.put(EntityType.PROCESS, trustedProcesses);
-            entityMap.put(EntityType.FEED, trustedFeeds);
-            return entityMap;
-        } else {
-            EntityUtil.applyTags(extensionName, jobName, processes);
-            EntityUtil.applyTags(extensionName, jobName, feeds);
-            entityMap.put(EntityType.PROCESS, processes);
-            entityMap.put(EntityType.FEED, feeds);
-            return entityMap;
         }
+        // add tags on extension name and job
+        EntityUtil.applyTags(extensionName, jobName, processes);
+        EntityUtil.applyTags(extensionName, jobName, feeds);
+        entityMap.put(EntityType.PROCESS, processes);
+        entityMap.put(EntityType.FEED, feeds);
+        return entityMap;
+    }
+
+    private InputStream addJobNameToConf(InputStream conf, String jobName) throws  FalconException{
+        Properties inputProperties = new Properties();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            inputProperties.load(conf);
+            inputProperties.setProperty(ExtensionProperties.JOB_NAME.getName(), jobName);
+            inputProperties.store(output, null);
+        } catch (IOException e) {
+            LOG.error("Error in reading the config stream");
+            throw new FalconException("Error while reading the config stream", e);
+        }
+        return new ByteArrayInputStream(output.toByteArray());
     }
 
     private ExtensionType getExtensionType(String extensionName) {
@@ -405,8 +420,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
+        validateFeeds(feeds, jobName);
+        validateProcesses(processes, jobName);
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
@@ -443,8 +458,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                                 HttpServletRequest request) throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
+        validateFeeds(feeds, jobName);
+        validateProcesses(processes, jobName);
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
@@ -488,16 +503,17 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return getBufferedRequest(new HttpServletRequestInputStreamWrapper(request, servletInputStream));
     }
 
-
-    private void validateFeeds(List<Entity> feeds) throws FalconException {
+    private void validateFeeds(List<Entity> feeds, String jobName) throws FalconException {
         for (Entity feed : feeds) {
+            checkIfPartOfAnotherExtension(feed.getName(), EntityType.FEED, jobName);
             super.validate(feed);
         }
     }
 
-    private void validateProcesses(List<Entity> processes) throws FalconException {
+    private void validateProcesses(List<Entity> processes, String jobName) throws FalconException {
         ProcessEntityParser processEntityParser = new ProcessEntityParser();
         for (Entity process : processes) {
+            checkIfPartOfAnotherExtension(process.getName(), EntityType.PROCESS, jobName);
             processEntityParser.validate((Process) process, false);
         }
     }

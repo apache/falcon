@@ -17,7 +17,7 @@ Result of submission.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/submit/hdfs-mirroring
+POST http://localhost:15000/api/extension/submit/hdfs-mirroring
 jobName=sales-monthly
 jobClustername=primaryCluster
 jobClusterValidityStart=2015-03-13T00:00Z
