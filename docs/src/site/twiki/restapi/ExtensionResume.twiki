@@ -17,7 +17,7 @@ Result of the resume operation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/resume/sales-monthly
+POST http://localhost:15000/api/extension/resume/sales-monthly
 </verbatim>
 ---+++ Result
 <verbatim>

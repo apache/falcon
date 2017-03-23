@@ -42,7 +42,7 @@ public class CopyMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CopyMapper.class);
     private EventUtils eventUtils;
-    ScheduledThreadPoolExecutor timer;
+    private ScheduledThreadPoolExecutor timer;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {

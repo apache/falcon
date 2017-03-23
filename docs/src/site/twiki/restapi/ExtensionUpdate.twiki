@@ -17,7 +17,7 @@ Result of update.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/update/hdfs-mirroring
+POST http://localhost:15000/api/extension/update/hdfs-mirroring
 jobName=sales-monthly
 jobClustername=primaryCluster
 jobClusterValidityStart=2015-03-13T00:00Z
