@@ -420,8 +420,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
+        validateFeeds(feeds, jobName);
+        validateProcesses(processes, jobName);
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
@@ -458,8 +458,8 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
                                 HttpServletRequest request) throws FalconException, IOException, JAXBException {
         List<Entity> feeds = entityMap.get(EntityType.FEED);
         List<Entity> processes = entityMap.get(EntityType.PROCESS);
-        validateFeeds(feeds);
-        validateProcesses(processes);
+        validateFeeds(feeds, jobName);
+        validateProcesses(processes, jobName);
         List<String> feedNames = new ArrayList<>();
         List<String> processNames = new ArrayList<>();
 
@@ -503,16 +503,17 @@ public class ExtensionManagerProxy extends AbstractExtensionManager {
         return getBufferedRequest(new HttpServletRequestInputStreamWrapper(request, servletInputStream));
     }
 
-
-    private void validateFeeds(List<Entity> feeds) throws FalconException {
+    private void validateFeeds(List<Entity> feeds, String jobName) throws FalconException {
         for (Entity feed : feeds) {
+            checkIfPartOfAnotherExtension(feed.getName(), EntityType.FEED, jobName);
             super.validate(feed);
         }
     }
 
-    private void validateProcesses(List<Entity> processes) throws FalconException {
+    private void validateProcesses(List<Entity> processes, String jobName) throws FalconException {
         ProcessEntityParser processEntityParser = new ProcessEntityParser();
         for (Entity process : processes) {
+            checkIfPartOfAnotherExtension(process.getName(), EntityType.PROCESS, jobName);
             processEntityParser.validate((Process) process, false);
         }
     }
