@@ -23,6 +23,7 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.extensions.ExtensionStatus;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
@@ -273,6 +274,25 @@ public class AbstractExtensionManager extends AbstractSchedulableEntityManager {
             LOG.error("Extension: " + extensionName + " is in disabled state.");
             throw FalconWebException.newAPIException("Extension: " + extensionName + " is in disabled state.",
                     Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    protected static void checkIfPartOfAnotherExtension(String entityName, EntityType entityType, String jobName)
+        throws FalconException {
+        try {
+            Entity entity = EntityUtil.getEntity(entityType, entityName);
+            String extractedJobName = AbstractExtensionManager.getJobNameFromTag(entity.getTags());
+            if (StringUtils.isBlank(extractedJobName)) {
+                LOG.error("Entity:{} is already submitted", entity.getName());
+                throw FalconWebException.newAPIException("Entity:" + entity.getName() + " is already submitted",
+                        Response.Status.INTERNAL_SERVER_ERROR);
+            } else if (!extractedJobName.equals(jobName)) {
+                LOG.error("Entity: {} is part another extension job:{}", entity.getName(), extractedJobName);
+                throw FalconWebException.newAPIException("Entity:" + entity.getName() +" is part another extension job:"
+                        + extractedJobName, Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        } catch (EntityNotRegisteredException ignored) {
+            //Valid. Ignore if its not submitted already.
         }
     }
 

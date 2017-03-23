@@ -17,7 +17,7 @@ Result of the suspend operation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/extensions/suspend/sales-monthly
+POST http://localhost:15000/api/extension/suspend/sales-monthly
 </verbatim>
 ---+++ Result
 <verbatim>

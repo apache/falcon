@@ -333,7 +333,7 @@ public class FalconUnitClient extends AbstractFalconClient {
             entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
                     packagePath);
         } catch (FalconException | IOException | URISyntaxException e) {
-            throw new FalconCLIException("Failed in generating entities for job:" + jobName);
+            throw new FalconCLIException("Failed in generating entities for job:" + jobName, e);
         }
         return entities;
     }
