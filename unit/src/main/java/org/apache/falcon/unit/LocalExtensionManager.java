@@ -20,6 +20,7 @@ package org.apache.falcon.unit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.extensions.jdbc.ExtensionMetaStore;
@@ -48,7 +49,12 @@ public class LocalExtensionManager extends AbstractExtensionManager {
                                  SortedMap<EntityType, List<Entity>> entityMap) throws FalconException, IOException {
         checkIfExtensionIsEnabled(extensionName);
         checkIfExtensionJobNameExists(jobName, extensionName);
+        EntityUtil.applyTags(extensionName, jobName, entityMap.get(EntityType.FEED));
+        EntityUtil.applyTags(extensionName, jobName, entityMap.get(EntityType.PROCESS));
         for (Map.Entry<EntityType, List<Entity>> entry : entityMap.entrySet()) {
+            for (Entity entity : entry.getValue()) {
+                checkIfPartOfAnotherExtension(entity.getName(), entity.getEntityType(), jobName);
+            }
             for (Entity entity : entry.getValue()) {
                 submitInternal(entity, "falconUser");
             }

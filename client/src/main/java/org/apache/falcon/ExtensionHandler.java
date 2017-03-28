@@ -148,7 +148,7 @@ public final class ExtensionHandler {
 
     private static String createStagePath(String extensionName, String jobName) {
         String stagePath = TMP_BASE_DIR + File.separator + extensionName + PATH_SEPARATOR + jobName
-                + PATH_SEPARATOR + System.currentTimeMillis()/1000;
+                + PATH_SEPARATOR + System.currentTimeMillis();
         File tmpPath = new File(stagePath);
         if (tmpPath.mkdir()) {
             throw new FalconCLIException("Failed to create stage directory" + tmpPath.toString());
