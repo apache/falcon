@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.falcon.regression</groupId>
         <artifactId>falcon-regression</artifactId>
-        <version>0.11-SNAPSHOT</version>
+        <version>0.11</version>
     </parent>
     <artifactId>falcon-merlin-core</artifactId>
     <description>merlin-core - utilities for Apache Falcon regression suite</description>
