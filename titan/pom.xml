@@ -24,7 +24,7 @@
     <parent>
         <artifactId>falcon-main</artifactId>
         <groupId>org.apache.falcon</groupId>
-        <version>0.11-SNAPSHOT</version>
+        <version>0.11</version>
     </parent>
     <artifactId>falcon-titan</artifactId>
     <description>Titan HBase 1.0 shaded libraries for 0.5.4 for Falcon</description>
