@@ -2,7 +2,7 @@
 
 ---++ Overview
 
-A falcon user extension is a solution template that comprises of Falcon entities that a Falcon user can build. The extension so built can be made available to and discovered by other users (sharing the same Falcon installation).
+A Falcon user extension is a solution template that comprises of Falcon entities that a Falcon user can build. The extension so built can be made available to and discovered by other users (sharing the same Falcon installation).
 Extension users can instantiate the solution template and deploy it by providing relevant parameters.
 
    * <a href="#Extension Developer">Extension Developer</a>
