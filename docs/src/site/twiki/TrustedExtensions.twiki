@@ -2,7 +2,11 @@
 
 ---++ Overview
 
-A Falcon Trusted extension is a static process template with parameterized workflow to realize a specific use case and enable non-programmers to capture and re-use very complex business logic. Trusted Extensions are defined in server space. Objective of the trusted extension is to solve a standard data management function that can be invoked as a tool using the standard Falcon features (REST API, CLI and UI access) supporting standard falcon features.
+A Falcon Trusted extension is a static process template with parameterized workflow to realize a specific use case and enable non-programmers to capture and re-use very complex business logic. Trusted Extensions are defined in server space. The Trusted Extension solves standard data management function that can be invoked as a tool using the standard Falcon features (REST API, CLI and UI access) supporting standard falcon features.
+
+Falcon's trusted extension provides a Process abstraction that encapsulates the configuration for a user workflow with scheduling controls. All extensions can be modeled as a Process and its dependent feeds with in Falcon which executes the user
+workflow periodically. The process and its associated workflow are parameterized. The user will provide properties which are <name, value> pairs that are substituted by falcon before scheduling it. Falcon translates these extensions
+as a process entity by replacing the parameters in the workflow definition.
 
 For example:
 
@@ -11,15 +15,9 @@ For example:
    * Replicating between HDFS and Hive - either way
    * Data masking etc.
 
----++ Proposal
-
-Falcon provides a Process abstraction that encapsulates the configuration for a user workflow with scheduling controls. All extensions can be modeled as a Process and its dependent feeds with in Falcon which executes the user
-workflow periodically. The process and its associated workflow are parameterized. The user will provide properties which are <name, value> pairs that are substituted by falcon before scheduling it. Falcon translates these extensions
-as a process entity by replacing the parameters in the workflow definition.
-
 ---++ Falcon extension artifacts to manage trusted extensions
 
-Extension artifacts are published in addons/extensions. Artifacts are expected to be installed on HDFS at "extension.store.uri" path defined in startup properties. Each extension is expected to ahve the below artifacts
+Extension artifacts are published in addons/extensions. Artifacts are expected to be installed on HDFS at "extension.store.uri" path defined in startup properties. Each extension is expected to have the below artifacts
    * json file under META directory lists all the required and optional parameters/arguments for scheduling extension job
    * process entity template to be scheduled under resources directory
    * parameterized workflow under resources directory

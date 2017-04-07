@@ -2,8 +2,8 @@
 
 ---++ Overview
 
-A Falcon User extension is an Extension Developer's implementation of Falcon Extension builder. A user extension can be used by all falcon users.
-There are mainly two roles into Falcon User Extensions:
+A falcon user extension is a solution template that comprises of Falcon entities that a Falcon user can build. The extension so built can be made available to and discovered by other users (sharing the same Falcon installation).
+Extension users can instantiate the solution template and deploy it by providing relevant parameters.
 
    * <a href="#Extension Developer">Extension Developer</a>
 
@@ -11,7 +11,7 @@ There are mainly two roles into Falcon User Extensions:
 
 
 ---++ Extension Developer
-This user is the developer of an user extension.Following are the various actions a falcon extension developer performs:
+This user is the developer of an user extension. Following are the various actions a Falcon extension developer performs:
 
    * Implements the Extension Builder SPI: The SPI contains the following high level behaviour:
       * Validate the user supplied parameters.
@@ -27,7 +27,7 @@ This user is the developer of an user extension.Following are the various action
 
 ---+++ Extension Registration API
 ---++++ Extension Registration:
-An extension developer has to register his extension with Falcon in order to make it discoverable to other users. Registration of the extension, enables it by default.
+An extension developer has to register his extension with Falcon in order to make it discoverable by other users. Registration of the extension, enables it by default.
 
 ---++++ Command:
 falcon extension -register <extension name> -path <location> [-description <short description>]
@@ -78,6 +78,29 @@ The packaging structure for an user extensions will continue to be consistent wi
 </verbatim>
 The jar supplied in the build directory should be packaged with the following file META-INF/services/org.apache.falcon.extensions.ExtensionBuilder
 containing the full class name of the class which implements ExtensionBuilder.
+---++++Command: falcon extension -definition -name <extension name>
+ Sample Output
+<verbatim>
+##### Start configuration:
+
+pipeline.name: "my business name"
+xml {
+  schema.path: "/hdfs/path/to/schema.xml"
+  metadata.path: "/hdfs/path/to/metadata.xml"
+}
+start: "2016-01-01T00:00Z"
+end: "2017-01-01T00:00Z"
+queue: "the queue the pipeline will run in"
+falcon-cluster {
+  clusters {
+    cluster1: {} // empty object will inherit start and end dates from above
+    cluster2: {start: "2016-06-01T00:00Z"} // cluster2 was added in between
+    cluster3: {end: "2016-06-01T00:00Z"} // cluster3 was taken out in between
+    }
+  }
+}
+# A note on path.prefix used below. The path of a falcon feed is constructed
+</verbatim>
 
 
 
@@ -128,14 +151,14 @@ Sample Output :
 }
 </verbatim>
 
----+++ Extension Instatiation validation.
+---+++ Extension Instantiation validation.
 Validates the configs supplied for an instantiation of the given extension.
 <verbatim>
-Sample Command: falcon extension -validate -extensionName data-quality-check -file extensions/hdfs-mirroring//META/hdfs-mirroring-properties.json
+Sample Command: falcon extension -validate -jobName dataQualityTestJob -extensionName data-quality-check -file extensions/hdfs-mirroring//META/hdfs-mirroring-properties.json
 </verbatim>
 
 ---+++ List of the instantiations of an extension
-Lists all the instances of a given extension
+Lists all the instances of a given extension. Extension Name is optional, when not passed will list down all the extension jobs.
 ---++++Command: bin/falcon extension -list -extensionName <extension name>
 <verbatim>
 Sample Output (Could be tabular format too, instead of plain JSON):
@@ -170,7 +193,7 @@ submit/falcon/default/Submit successful (process) pig-process-abc
 
 ---+++ Details of an extension job
 Gets the details of a particular job:
----++++Command: bin/falcon extension -get -jobName <jobName>
+---++++Command: bin/falcon extension -detail -jobName <jobName>
 <verbatim>
 Sample Output :
     {
@@ -180,12 +203,22 @@ Sample Output :
     }
 </verbatim>
 
+---+++Schedule an Extension Job(Idempotent)
+A submitted extension job can be scheduled.
+As of now there is no support for scheduling in specific colos in distributed mode.
+---++++Commands: falcon extension -schedule -jobName <name to be used in all the extension entities>
+<verbatim>
+Sample Output:
+falcon/default/resume successful (feed) out-feed-abc
+submit/falcon/default/resume successful (process) pig-process-abc
+</verbatim>
+
 ---+++ Update an extension job
 Lets the user change properties and/or Update/re-generate instance of an extension (Idempotent)
 Users will have an option to update a particular instance of an extension. He can supply new parameters during update. However, an update will always update the entities to use the latest libs of the extension.
 ---++++Commands:
 <verbatim>
-falcon extension -update -extensionName <extension name> -jobName <name to be used in all the extension entities> -file <path to extension parameters>
+falcon extension -update -jobName <name to be used in all the extension entities> -file <path to extension parameters>
 Sample Output:
 falcon/default/Update successful (feed) out-feed-abc
 submit/falcon/default/Update successful (process) pig-process-abc
@@ -194,7 +227,7 @@ submit/falcon/default/Update successful (process) pig-process-abc
 ---+++Delete an Extension Job(Idempotent)
 Deletion of the entities that are part of an extension can only be deleted by deleting an extension.
 All the write operations(submit, submitAndSchedule, update and delete) of entites that are part of an extension job can be done only via extension job apis.
----++++Commands: falcon extension -delete -extensionName <extension name> -jobName <name to be used in all the extension entities>
+---++++Commands: falcon extension -delete -jobName <name to be used in all the extension entities>
 <verbatim>
 Sample Output:
 falcon/default/Delete successful (feed) out-feed-abc
@@ -204,7 +237,7 @@ submit/falcon/default/Delete successful (process) pig-process-abc
 ---+++Suspend an Extension Job(Idempotent)
 Suspending an extension job will suspend all the entities that are part of the extension.
 As of now there is no support for suspending in specific colos in distributed mode.
----++++Commands: falcon extension -suspend -extensionName <extension name> -jobName <name to be used in all the extension entities>
+---++++Commands: falcon extension -suspend -jobName <name to be used in all the extension entities>
 <verbatim>
 Sample Output:
 falcon/default/suspend successful (feed) out-feed-abc
@@ -214,19 +247,11 @@ submit/falcon/default/suspend successful (process) pig-process-abc
 ---+++Resume an Extension Job(Idempotent)
 Resuming an extension job will resume all the entities that are part of the extension.
 As of now there is no support for resuming in specific colos in distributed mode.
----++++Commands: falcon extension -resume -extensionName <extension name> -jobName <name to be used in all the extension entities>
+---++++Commands: falcon extension -resume -jobName <name to be used in all the extension entities>
 <verbatim>
 Sample Output:
 falcon/default/resume successful (feed) out-feed-abc
 submit/falcon/default/resume successful (process) pig-process-abc
 </verbatim>
 
----+++Schedule an Extension Job(Idempotent)
-A submitted extension job can be shceduled.
-As of now there is no support for scheduling in specific colos in distributed mode.
----++++Commands: falcon extension -schedule -extensionName <extension name> -jobName <name to be used in all the extension entities>
-<verbatim>
-Sample Output:
-falcon/default/resume successful (feed) out-feed-abc
-submit/falcon/default/resume successful (process) pig-process-abc
-</verbatim>
+All instance(instance of an entity) level operations will have to be performed by Falcon instance operations.
