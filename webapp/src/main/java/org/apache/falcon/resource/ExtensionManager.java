@@ -102,7 +102,7 @@ public class ExtensionManager extends AbstractExtensionManager {
     }
 
     @GET
-    @Path("list/{extension-name}")
+    @Path("list{extension-name : (/[^/]+)?}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public ExtensionJobList getExtensionJobs(
             @PathParam("extension-name") String extensionName,

@@ -77,7 +77,12 @@ public class MetricNotificationService implements FalconService {
 
     @Override
     public void destroy() throws FalconException {
-        graphiteReporter.stop();
+        try {
+            // reporting final metrics into graphite before stopping
+            graphiteReporter.report();
+        } finally {
+            graphiteReporter.stop();
+        }
     }
 
     private MetricGauge createMetric(final String metricName){

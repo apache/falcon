@@ -1,0 +1,63 @@
+---+ Falcon Trusted Extensions
+
+---++ Overview
+
+A Falcon Trusted extension is a static process template with parameterized workflow to realize a specific use case and enable non-programmers to capture and re-use very complex business logic. Trusted Extensions are defined in server space. The Trusted Extension solves standard data management function that can be invoked as a tool using the standard Falcon features (REST API, CLI and UI access) supporting standard falcon features.
+
+Falcon's trusted extension provides a Process abstraction that encapsulates the configuration for a user workflow with scheduling controls. All extensions can be modeled as a Process and its dependent feeds with in Falcon which executes the user
+workflow periodically. The process and its associated workflow are parameterized. The user will provide properties which are <name, value> pairs that are substituted by falcon before scheduling it. Falcon translates these extensions
+as a process entity by replacing the parameters in the workflow definition.
+
+For example:
+
+   * Replicating directories from one HDFS cluster to another (not timed partitions)
+   * Replicating hive metadata (database, table, views, etc.)
+   * Replicating between HDFS and Hive - either way
+   * Data masking etc.
+
+---++ Falcon extension artifacts to manage trusted extensions
+
+Extension artifacts are published in addons/extensions. Artifacts are expected to be installed on HDFS at "extension.store.uri" path defined in startup properties. Each extension is expected to have the below artifacts
+   * json file under META directory lists all the required and optional parameters/arguments for scheduling extension job
+   * process entity template to be scheduled under resources directory
+   * parameterized workflow under resources directory
+   * required libs under the libs directory
+   * README describing the functionality achieved by extension
+
+REST API and CLI support has been added for extension artifact management on HDFS. Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details.
+
+---++ CLI and REST API support
+REST APIs and CLI support has been added to manage extension jobs and instances.
+
+Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details on usage of CLI and REST API's for extension jobs and instances management.
+
+---++ Metrics
+HDFS mirroring and Hive mirroring extensions will capture the replication metrics like TIMETAKEN, BYTESCOPIED, COPY (number of files copied) for an instance and populate to the GraphDB.
+
+---++ Sample trusted extensions
+
+Sample extensions are published in addons/extensions
+
+---++ Types of extensions
+   * [[HDFSMirroring][HDFS mirroring extension]]
+   * [[HiveMirroring][Hive mirroring extension]]
+   * [[HdfsSnapshotMirroring][HDFS snapshot based mirroring]]
+
+---++ Packaging and installation
+
+This feature is enabled by default but could be disabled by removing the following from startup properties:
+<verbatim>
+config name: *.application.services
+config value: org.apache.falcon.extensions.ExtensionService
+</verbatim>
+
+ExtensionService should be added before ConfigurationStore in startup properties for application services configuration.
+For manual installation user is expected to update "extension.store.uri" property defined in startup properties with
+HDFS path where the extension artifacts will be copied to.
+Extension artifacts in addons/extensions are packaged in falcon. For manual installation once the Falcon Server is setup user is expected to copy the extension artifacts under {falcon-server-dir}/extensions to HDFS at "extension.store.uri" path defined in startup properties and then restart Falcon.
+
+---++ Migration
+Recipes framework and HDFS mirroring capability was added in Apache Falcon 0.6.0 release and it was client side logic. With 0.10 release its moved to server side and renamed as server side extensions. Client side recipes only had CLI support and expected certain pre steps to get it working. This is no longer required in 0.10 release as new CLI and REST API support has been provided.
+
+Migrating to 0.10 release and above is not backward compatible for Recipes. If user is migrating to 0.10 release and above then old Recipe setup and CLI's won't work. For manual installation user is expected to copy Extension artifacts to HDFS. Please refer "Packaging and installation" section above for more details.
+Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details on usage of CLI and REST API's for extension jobs and instances management.
