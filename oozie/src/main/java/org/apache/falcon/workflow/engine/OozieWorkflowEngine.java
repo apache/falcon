@@ -94,7 +94,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private static final List<WorkflowJob.Status> WF_KILL_PRECOND =
         Arrays.asList(WorkflowJob.Status.PREP, WorkflowJob.Status.RUNNING, WorkflowJob.Status.SUSPENDED,
-                WorkflowJob.Status.FAILED);
+                WorkflowJob.Status.FAILED, WorkflowJob.Status.FAILED);
     private static final List<WorkflowJob.Status> WF_SUSPEND_PRECOND = Arrays.asList(WorkflowJob.Status.RUNNING);
     private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays.asList(WorkflowJob.Status.SUSPENDED);
     private static final List<CoordinatorAction.Status> COORD_RERUN_PRECOND =
@@ -949,7 +949,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 status = Status.KILLED.name();
                 break;
             }
-            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
+            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus()) &&
+                    !jobInfo.getStatus().name().equalsIgnoreCase(Status.IGNORED.name())) {
                 break;
             }
 
