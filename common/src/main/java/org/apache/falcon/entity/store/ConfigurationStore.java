@@ -211,7 +211,7 @@ public final class ConfigurationStore implements FalconService {
                                 LOG.info("Restored configuration {}/{}", type, entityName);
                                 entityMap.put(entityName, entity);
                             } catch (IOException | FalconException e) {
-                                LOG.error("Unable to restore entity of", file);
+                                LOG.error("Unable to restore entity of " + file.getPath().getName(), e);
                             }
                         }
                     });
