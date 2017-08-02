@@ -207,6 +207,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (feed.getSla() != null && feed.getLocations() != null) {
                 for (Cluster cluster : feed.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName()) && FeedHelper.getSLA(cluster, feed) != null) {
+                        LOG.debug("Removing feed:{} for monitoring", feed.getName());
                         MONITORING_JDBC_STATE_STORE.deleteMonitoringEntity(feed.getName(), EntityType.FEED.toString());
                         MONITORING_JDBC_STATE_STORE.deletePendingInstances(feed.getName(), cluster.getName(),
                                 EntityType.FEED.toString());
@@ -218,6 +219,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             Process process = (Process) entity;
             if (process.getSla() != null){
                 for (org.apache.falcon.entity.v0.process.Cluster  cluster : process.getClusters().getClusters()) {
+                    LOG.debug("Removing process:{} for monitoring", process.getName());
                     if (currentClusters.contains(cluster.getName())) {
                         MONITORING_JDBC_STATE_STORE.deleteMonitoringEntity(process.getName(),
                                 EntityType.PROCESS.toString());
@@ -364,6 +366,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                     // add Instances from last checked time to 10 minutes from now(some buffer for status check)
                     Date newCheckPointTime = new Date(now().getTime() + lookAheadWindowMillis);
                     addPendingEntityInstances(newCheckPointTime);
+                } else {
+                    LOG.debug("No entities present for sla monitoring.");
                 }
             } catch (Throwable e) {
                 LOG.error("Feed SLA monitoring failed: ", e);
