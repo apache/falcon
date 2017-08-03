@@ -62,6 +62,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -318,6 +319,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
 
         freq = StartupProperties.get().getProperty("entity.sla.lookAheadWindow.millis", "900000");
         lookAheadWindowMillis = Integer.parseInt(freq);
+
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         addPendingEntityInstances(now());
         executor.scheduleWithFixedDelay(new Monitor(), 0, statusCheckFrequencySeconds, TimeUnit.SECONDS);
@@ -453,8 +455,10 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (entityType.equalsIgnoreCase(EntityType.PROCESS.toString())){
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
-                AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
+                Interval interval = new Interval(nominalTime.getTime(), new Date().getTime());
+                if(nominalTime.)
 
+                AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
                 InstancesResult instancesResult = wfEngine.getStatus(entity, nominalTime,
                         new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
                 if (instancesResult.getInstances().length > 0) {
