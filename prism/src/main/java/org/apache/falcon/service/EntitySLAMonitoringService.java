@@ -456,7 +456,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
 
-                if((System.currentTimeMillis() - nominalTime.getTime())/(1000*60*60*24) >= Integer.parseInt(
+                if ((System.currentTimeMillis() - nominalTime.getTime())/(1000*60*60*24) >= Integer.parseInt(
                     RuntimeProperties.get().getProperty("worklflow.expiration.period", "7"))) {
                     return true;
                 }
