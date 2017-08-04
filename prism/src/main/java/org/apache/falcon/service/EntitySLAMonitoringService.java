@@ -55,6 +55,7 @@ import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
@@ -455,8 +456,11 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (entityType.equalsIgnoreCase(EntityType.PROCESS.toString())){
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
-                Interval interval = new Interval(nominalTime.getTime(), new Date().getTime());
-                if(nominalTime.)
+
+                if((System.currentTimeMillis() - nominalTime.getTime())/(1000*60*60*24) >= Integer.parseInt(
+                    RuntimeProperties.get().getProperty("worklflow.expiration.period", "7"))) {
+                    return true;
+                }
 
                 AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
                 InstancesResult instancesResult = wfEngine.getStatus(entity, nominalTime,
