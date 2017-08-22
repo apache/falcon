@@ -82,4 +82,5 @@ public final class PersistenceConstants {
     public static final String GET_EXTENSION_JOB = "GET_EXTENSION_JOB";
     public static final String GET_JOBS_FOR_AN_EXTENSION = "GET_JOBS_FOR_AN_EXTENSION";
     public static final String GET_ALL_PROCESS_INFO_INSTANCES = "GET_ALL_PROCESS_INFO_INSTANCES";
+    public static final String GET_PENDING_INSTANCES_BETWEEN_TIME_RANGE = "GET_PENDING_INSTANCES_BETWEEN_TIME_RANGE";
 }

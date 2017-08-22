@@ -55,6 +55,7 @@ import org.apache.falcon.resource.SchedulableEntityInstance;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
@@ -207,9 +208,11 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (feed.getSla() != null && feed.getLocations() != null) {
                 for (Cluster cluster : feed.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName()) && FeedHelper.getSLA(cluster, feed) != null) {
+                        LOG.debug("Removing feed:{} for monitoring", feed.getName());
                         MONITORING_JDBC_STATE_STORE.deleteMonitoringEntity(feed.getName(), EntityType.FEED.toString());
                         MONITORING_JDBC_STATE_STORE.deletePendingInstances(feed.getName(), cluster.getName(),
                                 EntityType.FEED.toString());
+                        LOG.debug("Removing feed:{} for monitoring", feed.getName());
                     }
                 }
             }
@@ -219,6 +222,7 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
             if (process.getSla() != null){
                 for (org.apache.falcon.entity.v0.process.Cluster  cluster : process.getClusters().getClusters()) {
                     if (currentClusters.contains(cluster.getName())) {
+                        LOG.debug("Removing feed:{} for monitoring", process.getName());
                         MONITORING_JDBC_STATE_STORE.deleteMonitoringEntity(process.getName(),
                                 EntityType.PROCESS.toString());
                         MONITORING_JDBC_STATE_STORE.deletePendingInstances(process.getName(), cluster.getName(),
@@ -364,6 +368,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                     // add Instances from last checked time to 10 minutes from now(some buffer for status check)
                     Date newCheckPointTime = new Date(now().getTime() + lookAheadWindowMillis);
                     addPendingEntityInstances(newCheckPointTime);
+                } else {
+                    LOG.debug("No entities present for sla monitoring.");
                 }
             } catch (Throwable e) {
                 LOG.error("Feed SLA monitoring failed: ", e);
@@ -450,7 +456,6 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                 LOG.trace("Checking instance availability status for entity:{}, cluster:{}, "
                         + "instanceTime:{}", entity.getName(), clusterName, nominalTime, entityType);
                 AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-
                 InstancesResult instancesResult = wfEngine.getStatus(entity, nominalTime,
                         new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
                 if (instancesResult.getInstances().length > 0) {
@@ -459,6 +464,9 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
                                 entity.getName(), clusterName, nominalTime);
                         return true;
                     }
+                } else if ((System.currentTimeMillis() - nominalTime.getTime())/(1000*60*60*24) >= Integer.parseInt(
+                        RuntimeProperties.get().getProperty("workflow.history.expiration.period.days", "7"))) {
+                    return true;
                 }
                 return false;
             }
@@ -552,8 +560,8 @@ public final class EntitySLAMonitoringService implements ConfigurationChangeList
     public Set<SchedulableEntityInstance> getEntitySLAMissPendingAlerts(String entityName, String clusterName,
                                           Date start, Date end, String entityType) throws FalconException {
         Set<SchedulableEntityInstance> result = new HashSet<>();
-        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstances(entityName, clusterName,
-                entityType);
+        List<Date> missingInstances = MONITORING_JDBC_STATE_STORE.getNominalInstancesBetweenTimeRange(entityName,
+                clusterName, entityType, start, end);
         if (missingInstances == null){
             return result;
         }
