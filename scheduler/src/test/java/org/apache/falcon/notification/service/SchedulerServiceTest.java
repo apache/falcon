@@ -269,7 +269,7 @@ public class SchedulerServiceTest extends AbstractTestBase {
         stateStore.putExecutionInstance(new InstanceState(instance3));
         scheduler.unregister(handler, instance3.getId());
 
-        Thread.sleep(100);
+        Thread.sleep(300);
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance1), new Integer(1));
         Assert.assertEquals(((MockDAGEngine) mockDagEngine).getTotalRuns(instance2), new Integer(1));
         // Second instance should not run.
