@@ -182,6 +182,20 @@ public class MonitoringJdbcStateStore {
         return result;
     }
 
+    public List<Date> getNominalInstancesBetweenTimeRange(String entityName, String clusterName, String entityType,
+                                                          Date startTime, Date endTime) {
+        EntityManager entityManager = getEntityManager();
+        Query q = entityManager.createNamedQuery(PersistenceConstants.GET_PENDING_INSTANCES_BETWEEN_TIME_RANGE);
+        q.setParameter(PendingInstanceBean.ENTITY_NAME, entityName);
+        q.setParameter(PendingInstanceBean.CLUSTER_NAME, clusterName);
+        q.setParameter(PendingInstanceBean.ENTITY_TYPE, entityType.toLowerCase());
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        List result = q.getResultList();
+        entityManager.close();
+        return result;
+    }
+
     public List<PendingInstanceBean> getAllPendingInstances(){
         EntityManager entityManager = getEntityManager();
         Query q = entityManager.createNamedQuery(PersistenceConstants.GET_ALL_PENDING_INSTANCES);

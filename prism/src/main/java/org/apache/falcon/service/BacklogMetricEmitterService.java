@@ -117,6 +117,7 @@ public final class BacklogMetricEmitterService implements FalconService,
         }
         Process process = (Process) entity;
         if (process.getSla() != null) {
+            LOG.debug("Removing process:{} from monitoring", process.getName());
             backlogMetricStore.deleteEntityBackLogInstances(entity.getName(), entity.getEntityType().name());
             entityBacklogs.remove(entity);
             process = EntityUtil.getEntity(entity.getEntityType(), entity.getName());
