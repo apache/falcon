@@ -418,7 +418,7 @@ public final class BacklogMetricEmitterService implements FalconService,
                                     }
                                     InstancesResult status = wfEngine.getStatus(entity, nominalTime,
                                             new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
-                                    if (status.getInstances().length > 0
+                                    if ( status !=null && status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
                                         LOG.debug("Instance of nominal time {} of entity {} has succeeded, removing "
