@@ -416,8 +416,13 @@ public final class BacklogMetricEmitterService implements FalconService,
                                         iterator.remove();
                                         continue;
                                     }
-                                    InstancesResult status = wfEngine.getStatus(entity, nominalTime,
-                                            new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
+                                    InstancesResult status = null;
+                                    try {
+                                        status = wfEngine.getStatus(entity, nominalTime,
+                                                new Date(nominalTime.getTime() + 200), PROCESS_LIFE_CYCLE, false);
+                                    } catch (FalconException e) {
+                                        LOG.error("Unable to get status for :" + entity.getName(), e);
+                                    }
                                     if ( status !=null && status.getInstances().length > 0
                                             && status.getInstances()[0].status == InstancesResult.
                                             WorkflowStatus.SUCCEEDED) {
