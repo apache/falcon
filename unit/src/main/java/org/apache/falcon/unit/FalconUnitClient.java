@@ -18,6 +18,7 @@
 package org.apache.falcon.unit;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.ExtensionHandler;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.AbstractFalconClient;
@@ -31,13 +32,19 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.extensions.store.ExtensionStore;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 import org.apache.falcon.resource.admin.AdminResource;
 import org.apache.falcon.util.DateUtil;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
@@ -48,14 +55,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.util.TreeMap;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
+import java.util.Properties;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.TimeZone;
+import java.util.SortedMap;
 
 /**
  * Client for Falcon Unit.
@@ -65,20 +76,22 @@ public class FalconUnitClient extends AbstractFalconClient {
     private static final Logger LOG = LoggerFactory.getLogger(FalconUnitClient.class);
     protected static final int XML_DEBUG_LEN = 10 * 1024;
 
-    private static final String DEFAULT_ORDERBY = "status";
+    private static final String DEFAULT_ORDER_BY = "status";
     private static final String DEFAULT_SORTED_ORDER = "asc";
 
-    protected ConfigurationStore configStore;
+    private ConfigurationStore configStore;
     private AbstractWorkflowEngine workflowEngine;
     private LocalSchedulableEntityManager localSchedulableEntityManager;
     private LocalInstanceManager localInstanceManager;
+    private LocalExtensionManager localExtensionManager;
 
 
-    public FalconUnitClient() throws FalconException {
+    FalconUnitClient() throws FalconException {
         configStore = ConfigurationStore.get();
         workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
         localSchedulableEntityManager = new LocalSchedulableEntityManager();
         localInstanceManager = new LocalInstanceManager();
+        localExtensionManager = new LocalExtensionManager();
     }
 
     public ConfigurationStore getConfigStore() {
@@ -96,11 +109,11 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @return boolean
      */
     @Override
-    public APIResult submit(String type, String filePath, String doAsUser) throws IOException, FalconCLIException {
+    public APIResult submit(String type, String filePath, String doAsUser) {
 
         try {
             return localSchedulableEntityManager.submit(type, filePath, doAsUser);
-        } catch (FalconException e) {
+        } catch (FalconException | IOException e) {
             throw new FalconCLIException("FAILED", e);
         }
     }
@@ -112,17 +125,13 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @param entityName entity name
      * @param cluster    cluster on which it has to be scheduled
      * @return
-     * @throws FalconCLIException
-     * @throws FalconException
      */
     @Override
     public APIResult schedule(EntityType entityType, String entityName, String cluster,
-                              Boolean skipDryRun, String doAsUser, String properties) throws FalconCLIException {
+                              Boolean skipDryRun, String doAsUser, String properties) {
         try {
             return localSchedulableEntityManager.schedule(entityType, entityName, skipDryRun, properties);
-        } catch (FalconException e) {
-            throw new FalconCLIException(e);
-        } catch (AuthorizationException e) {
+        } catch (FalconException | AuthorizationException e) {
             throw new FalconCLIException(e);
         }
     }
@@ -134,7 +143,7 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public APIResult validate(String entityType, String filePath, Boolean skipDryRun,
-                              String doAsUser) throws FalconCLIException {
+                              String doAsUser) {
         try {
             return localSchedulableEntityManager.validate(entityType, filePath, skipDryRun, doAsUser);
         } catch (FalconException e) {
@@ -144,7 +153,7 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     @Override
     public APIResult update(String entityType, String entityName, String filePath,
-                            Boolean skipDryRun, String doAsUser) throws FalconCLIException {
+                            Boolean skipDryRun, String doAsUser) {
         try {
             return localSchedulableEntityManager.update(entityType, entityName, filePath,
                     skipDryRun, "local", doAsUser);
@@ -154,7 +163,7 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public Entity getDefinition(String entityType, String entityName, String doAsUser) throws FalconCLIException {
+    public Entity getDefinition(String entityType, String entityName, String doAsUser) {
         String entity = localSchedulableEntityManager.getEntityDefinition(entityType, entityName);
         return Entity.fromString(EntityType.getEnum(entityType), entity);
     }
@@ -164,9 +173,9 @@ public class FalconUnitClient extends AbstractFalconClient {
     public InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String colo,
                                                 List<LifeCycle> lifeCycles, String filterBy, String orderBy,
                                                 String sortOrder, Integer offset, Integer numResults, String doAsUser,
-                                                Boolean allAttempts) throws FalconCLIException {
+                                                Boolean allAttempts) {
         if (orderBy == null) {
-            orderBy = DEFAULT_ORDERBY;
+            orderBy = DEFAULT_ORDER_BY;
         }
         if (sortOrder == null) {
             sortOrder = DEFAULT_SORTED_ORDER;
@@ -182,7 +191,6 @@ public class FalconUnitClient extends AbstractFalconClient {
 
     }
 
-
     /**
      * Schedules an submitted process entity immediately.
      *
@@ -193,7 +201,7 @@ public class FalconUnitClient extends AbstractFalconClient {
      * @return boolean
      */
     public APIResult schedule(EntityType entityType, String entityName, String startTime, int numInstances,
-                              String cluster, Boolean skipDryRun, String properties) throws FalconCLIException {
+                              String cluster, Boolean skipDryRun, String properties) {
         try {
             FalconUnitHelper.checkSchedulableEntity(entityType.toString());
             Entity entity = EntityUtil.getEntity(entityType, entityName);
@@ -238,40 +246,184 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     @Override
-    public APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException {
+    public APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser) {
         return localSchedulableEntityManager.suspend(entityType.name(), entityName, colo);
     }
 
     @Override
-    public APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException {
+    public APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser) {
         return localSchedulableEntityManager.resume(entityType.name(), entityName, colo);
     }
 
     @Override
     public APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser,
-                               boolean showScheduler) throws FalconCLIException {
+                               boolean showScheduler) {
         return localSchedulableEntityManager.getStatus(entityType.name(), entityName, colo, showScheduler);
     }
 
     @Override
     public APIResult submitAndSchedule(String entityType, String filePath, Boolean skipDryRun, String doAsUser,
-                                       String properties) throws FalconCLIException {
+                                       String properties) {
         try {
             return localSchedulableEntityManager.submitAndSchedule(entityType, filePath, skipDryRun, doAsUser,
                     properties);
-        } catch (FalconException e) {
-            throw new FalconCLIException(e);
-        } catch (IOException e) {
+        } catch (FalconException | IOException e) {
             throw new FalconCLIException(e);
         }
     }
 
     @Override
+    public APIResult registerExtension(String extensionName, String packagePath, String description) {
+        return localExtensionManager.registerExtensionMetadata(extensionName, packagePath, description);
+    }
+
+    @Override
+    public APIResult unregisterExtension(String extensionName) {
+        try {
+            return localExtensionManager.unRegisterExtension(extensionName);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in unRegistering the extension"+ e.getMessage());
+        }
+    }
+
+    @Override
+    public APIResult enableExtension(String extensionName) {
+        return localExtensionManager.enableExtension(extensionName);
+    }
+
+    @Override
+    public APIResult disableExtension(String extensionName) {
+        return localExtensionManager.disableExtension(extensionName);
+    }
+
+    @Override
+    public APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
+
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            SortedMap<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
+            return localExtensionManager.submitExtensionJob(extensionName, jobName, configStream, entityMap);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in submitting extension job " + jobName);
+        }
+    }
+
+    private SortedMap<EntityType, List<Entity>> getEntityTypeListMap(String extensionName, String jobName,
+                                                                     InputStream configStream) {
+        List<Entity> entities = getEntities(extensionName, jobName, configStream);
+        List<Entity> feeds = new ArrayList<>();
+        List<Entity> processes = new ArrayList<>();
+        for (Entity entity : entities) {
+            if (EntityType.FEED.equals(entity.getEntityType())) {
+                feeds.add(entity);
+            } else if (EntityType.PROCESS.equals(entity.getEntityType())) {
+                processes.add(entity);
+            }
+        }
+        SortedMap<EntityType, List<Entity>> entityMap = new TreeMap<>();
+        entityMap.put(EntityType.PROCESS, processes);
+        entityMap.put(EntityType.FEED, feeds);
+        return entityMap;
+    }
+
+    private List<Entity> getEntities(String extensionName, String jobName, InputStream configStream) {
+        String packagePath = ExtensionStore.getMetaStore().getDetail(extensionName).getLocation();
+        List<Entity> entities;
+        try {
+            entities = ExtensionHandler.loadAndPrepare(extensionName, jobName, configStream,
+                    packagePath);
+        } catch (FalconException | IOException | URISyntaxException e) {
+            throw new FalconCLIException("Failed in generating entities for job:" + jobName, e);
+        }
+        return entities;
+    }
+
+    @Override
+    public APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.scheduleExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed to delete the extension job:" + coloExpr);
+        }
+    }
+
+    @Override
+    public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                   String doAsUser) {
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            SortedMap<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
+            return localExtensionManager.submitAndSchedulableExtensionJob(extensionName, jobName, configStream,
+                    entityMap);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in submitting extension job " + jobName);
+        }
+    }
+
+    @Override
+    public APIResult updateExtensionJob(String jobName, String configPath, String doAsUser) {
+        InputStream configStream = getServletInputStream(configPath);
+        try {
+            String extensionName = ExtensionStore.getMetaStore().getExtensionJobDetails(jobName).getExtensionName();
+            SortedMap<EntityType, List<Entity>> entityMap = getEntityTypeListMap(extensionName, jobName, configStream);
+            return localExtensionManager.updateExtensionJob(extensionName, jobName, configStream,
+                    entityMap);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed in updating the extension job:" + jobName);
+        }
+    }
+
+    @Override
+    public APIResult deleteExtensionJob(String jobName, String doAsUser) {
+        try {
+            return localExtensionManager.deleteExtensionJob(jobName);
+        } catch (FalconException | IOException e) {
+            throw new FalconCLIException("Failed to delete the extension job:" + jobName);
+        }
+    }
+
+    @Override
+    public APIResult suspendExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.suspendExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in suspending the extension job:" + jobName);
+        }
+    }
+
+    @Override
+    public APIResult resumeExtensionJob(String jobName, String coloExpr, String doAsUser) {
+        try {
+            return localExtensionManager.resumeExtensionJob(jobName, coloExpr, doAsUser);
+        } catch (FalconException e) {
+            throw new FalconCLIException("Failed in resuming the extension job:" + jobName);
+        }
+    }
+
+    @Override
+    public APIResult getExtensionJobDetails(final String jobName) {
+        return localExtensionManager.getExtensionJobDetails(jobName);
+    }
+
+    @Override
+    public APIResult getExtensionDetail(String extensionName) {
+        return localExtensionManager.getExtensionDetails(extensionName);
+    }
+
+    @Override
+    public APIResult enumerateExtensions() {
+        return localExtensionManager.getExtensions();
+    }
+
+    @Override
+    public ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return localExtensionManager.getExtensionJobs(extensionName, sortOrder, doAsUser);
+    }
+
+    @Override
     public EntityList getEntityList(String entityType, String fields, String nameSubsequence, String tagKeywords,
                                     String filterBy, String filterTags, String orderBy, String sortOrder,
-                                    Integer offset, Integer numResults, String doAsUser) throws FalconCLIException {
+                                    Integer offset, Integer numResults, String doAsUser) {
         return localSchedulableEntityManager.getEntityList(fields, nameSubsequence, tagKeywords, entityType, filterTags,
                 filterBy, orderBy, sortOrder, offset, numResults, doAsUser);
     }
@@ -280,34 +432,34 @@ public class FalconUnitClient extends AbstractFalconClient {
     public EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
                                                 String fields, String filterBy, String filterTags, String orderBy,
                                                 String sortOrder, Integer offset, Integer numResults,
-                                                Integer numInstances, String doAsUser) throws FalconCLIException {
+                                                Integer numInstances, String doAsUser) {
         return localSchedulableEntityManager.getEntitySummary(entityType, cluster, start, end, fields, filterBy,
                 filterTags, orderBy, sortOrder, offset, numResults, numInstances, doAsUser);
     }
 
     @Override
     public APIResult touch(String entityType, String entityName, String colo, Boolean skipDryRun,
-                           String doAsUser) throws FalconCLIException {
+                           String doAsUser) {
         return localSchedulableEntityManager.touch(entityType, entityName, colo, skipDryRun);
     }
 
     public InstancesResult killInstances(String type, String entity, String start, String end, String colo,
                                          String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                         String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+                                         String doAsUser) throws UnsupportedEncodingException {
         Properties props = getProperties(clusters, sourceClusters);
         return localInstanceManager.killInstance(props, type, entity, start, end, colo, lifeCycles);
     }
 
     public InstancesResult suspendInstances(String type, String entity, String start, String end, String colo,
                                             String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                            String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+                                            String doAsUser) throws UnsupportedEncodingException {
         Properties props = getProperties(clusters, sourceClusters);
         return localInstanceManager.suspendInstance(props, type, entity, start, end, colo, lifeCycles);
     }
 
     public InstancesResult resumeInstances(String type, String entity, String start, String end, String colo,
                                            String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                           String doAsUser) throws FalconCLIException, UnsupportedEncodingException {
+                                           String doAsUser) throws UnsupportedEncodingException {
         Properties props = getProperties(clusters, sourceClusters);
         return localInstanceManager.resumeInstance(props, type, entity, start, end, colo, lifeCycles);
     }
@@ -315,17 +467,16 @@ public class FalconUnitClient extends AbstractFalconClient {
     public InstancesResult rerunInstances(String type, String entity, String start, String end, String filePath,
                                           String colo, String clusters, String sourceClusters,
                                           List<LifeCycle> lifeCycles, Boolean isForced, String doAsUser) throws
-            FalconCLIException, IOException {
+            IOException {
         Properties props = getProperties(clusters, sourceClusters);
         return localInstanceManager.reRunInstance(type, entity, start, end, props, colo, lifeCycles, isForced);
     }
 
     public InstancesSummaryResult getSummaryOfInstances(String type, String entity, String start, String end,
                                                         String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                                        String orderBy, String sortOrder, String doAsUser) throws
-            FalconCLIException {
+                                                        String orderBy, String sortOrder, String doAsUser) {
         if (StringUtils.isBlank(orderBy)) {
-            orderBy = DEFAULT_ORDERBY;
+            orderBy = DEFAULT_ORDER_BY;
         }
         if (StringUtils.isBlank(sortOrder)) {
             sortOrder = DEFAULT_SORTED_ORDER;
@@ -335,32 +486,32 @@ public class FalconUnitClient extends AbstractFalconClient {
     }
 
     public FeedInstanceResult getFeedListing(String type, String entity, String start, String end, String colo,
-                                             String doAsUser) throws FalconCLIException {
+                                             String doAsUser) {
         return localInstanceManager.getListing(type, entity, start, end, colo);
     }
 
     public InstancesResult getLogsOfInstances(String type, String entity, String start, String end, String colo,
                                               String runId, List<LifeCycle> lifeCycles, String filterBy,
                                               String orderBy, String sortOrder, Integer offset, Integer numResults,
-                                              String doAsUser) throws FalconCLIException {
+                                              String doAsUser) {
         return localInstanceManager.getLogs(type, entity, start, end, colo, runId, lifeCycles, filterBy, orderBy,
                 sortOrder, offset, numResults);
     }
 
     public InstancesResult getParamsOfInstance(String type, String entity, String start, String colo,
-                                               List<LifeCycle> lifeCycles, String doAsUser) throws FalconCLIException,
+                                               List<LifeCycle> lifeCycles, String doAsUser) throws
             UnsupportedEncodingException {
         return localInstanceManager.getInstanceParams(type, entity, start, colo, lifeCycles);
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public InstanceDependencyResult getInstanceDependencies(String entityType, String entityName, String instanceTime,
-                                                            String colo) throws FalconCLIException {
+                                                            String colo) {
         return localInstanceManager.getInstanceDependencies(entityType, entityName, instanceTime, colo);
     }
 
     @Override
-    public String getVersion(String doAsUser) throws FalconCLIException {
+    public String getVersion(String doAsUser) {
         AdminResource resource = new AdminResource();
         AdminResource.PropertyList propertyList = resource.getVersion();
         Map<String, String> version = new LinkedHashMap<>();
@@ -373,6 +524,91 @@ public class FalconUnitClient extends AbstractFalconClient {
         }
         version.put("properties", list.toString());
         return version.toString();
+    }
+
+    @Override
+    public SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
+                                                                       String start, String end, String colo) {
+        return null;
+    }
+
+    @Override
+    public FeedLookupResult reverseLookUp(String entityType, String path, String doAs) {
+        return null;
+    }
+
+    @Override
+    public EntityList getDependency(String entityType, String entityName, String doAs) {
+        return null;
+    }
+
+    @Override
+    public TriageResult triage(String name, String entityName, String start, String colo) {
+        return null;
+    }
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public InstancesResult getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
+                                               String filterBy, String orderBy, String sortOrder,
+                                               Integer offset, Integer numResults, String doAsUser) {
+        return null;
+    }
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
+    @Override
+    public FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
+                                                     String colo, String doAsUser) {
+        return null;
+    }
+
+    @Override
+    public int getStatus(String doAsUser) {
+        return 200;
+    }
+
+    @Override
+    public String getThreadDump(String doAs) {
+        return "";
+    }
+
+    @Override
+    public LineageGraphResult getEntityLineageGraph(String pipeline, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getDimensionList(String dimensionType, String cluster, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName,
+                                                     Integer numResults, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getDimensionRelations(String dimensionType, String dimensionName, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertex(String id, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertices(String key, String value, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getVertexEdges(String id, String direction, String doAs) {
+        return null;
+    }
+
+    @Override
+    public String getEdge(String id, String doAs) {
+        return null;
     }
 
     private boolean checkAndUpdateCluster(Entity entity, EntityType entityType, String cluster) {

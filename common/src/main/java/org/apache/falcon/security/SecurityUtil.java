@@ -53,6 +53,13 @@ public final class SecurityUtil {
     public static final String NN_PRINCIPAL = "dfs.namenode.kerberos.principal";
 
     /**
+     * Constant for the configuration property that indicates the
+     * Resource Manager principal.   This is useful when the remote cluster realm
+     * (with cross domain trust) or the auth to local rule definition results in a
+     * different RM principal than in Falcon server cluster.
+     */
+    public static final String RM_PRINCIPAL = "yarn.resourcemanager.principal";
+    /**
      * Constant for the configuration property that indicates the Name node principal.
      * This is used to talk to Hive Meta Store during parsing and validations only.
      */
@@ -108,6 +115,16 @@ public final class SecurityUtil {
                 "falcon.security.authorization.enabled", "false"));
     }
 
+    /**
+     * Checks if CSRF filter is enabled in the configuration.
+     *
+     * @return true if falcon.security.csrf.enabled is enabled, false otherwise
+     */
+    public static boolean isCSRFFilterEnabled() {
+        return Boolean.valueOf(StartupProperties.get().getProperty(
+                "falcon.security.csrf.enabled", "false"));
+    }
+
     public static AuthorizationProvider getAuthorizationProvider() throws FalconException {
         String providerClassName = StartupProperties.get().getProperty(
                 "falcon.security.authorization.provider",
@@ -134,4 +151,5 @@ public final class SecurityUtil {
             }
         }
     }
+
 }

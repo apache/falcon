@@ -139,6 +139,9 @@ public class WorkflowJobEndNotificationService implements FalconService {
 
     public void notifyWait(WorkflowExecutionContext context) throws FalconException {
         // Wait notifications can only be from Oozie JMS notifications
+        if (!updateContextFromWFConf(context)) {
+            return;
+        }
         LOG.debug("Sending workflow wait notification to listeners with context : {} ", context);
         for (WorkflowExecutionListener listener : listeners) {
             try {
@@ -155,6 +158,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
     private boolean updateContextFromWFConf(WorkflowExecutionContext context) throws FalconException {
         Properties wfProps = contextMap.get(context.getWorkflowId());
         if (wfProps == null) {
+            wfProps = new Properties();
             Entity entity = null;
             try {
                 entity = EntityUtil.getEntity(context.getEntityType(), context.getEntityName());
@@ -166,11 +170,12 @@ public class WorkflowJobEndNotificationService implements FalconService {
                 return false;
             }
             for (String cluster : EntityUtil.getClustersDefinedInColos(entity)) {
+                wfProps.setProperty(WorkflowExecutionArgs.CLUSTER_NAME.getName(), cluster);
                 try {
                     InstancesResult.Instance[] instances = WorkflowEngineFactory.getWorkflowEngine(entity)
                             .getJobDetails(cluster, context.getWorkflowId()).getInstances();
                     if (instances != null && instances.length > 0) {
-                        wfProps = getWFProps(instances[0].getWfParams());
+                        wfProps.putAll(getWFProps(instances[0].getWfParams()));
                         // Required by RetryService. But, is not part of conf.
                         wfProps.setProperty(WorkflowExecutionArgs.RUN_ID.getName(),
                                 Integer.toString(instances[0].getRunId()));
@@ -299,7 +304,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
         }
         Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
 
-        if (context.hasWorkflowFailed()) {
+        if (!context.hasWorkflowSucceeded()) {
             GenericAlert.instrumentFailedInstance(clusterName, entityType,
                     entityName, nominalTime, workflowId, workflowUser, runId, operation,
                     SchemaHelper.formatDateUTC(startTime), "", "", duration);

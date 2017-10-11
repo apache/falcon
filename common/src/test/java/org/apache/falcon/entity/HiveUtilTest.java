@@ -55,7 +55,7 @@ public class HiveUtilTest {
         Properties expected = new Properties();
         expected.put(HiveUtil.METASTORE_UGI, "true");
         expected.put(HiveUtil.NODE, metaStoreUrl.replace("thrift", "hcat"));
-        expected.put(HiveUtil.METASTROE_URI, metaStoreUrl);
+        expected.put(HiveUtil.METASTORE_URI, metaStoreUrl);
         expected.put(HiveUtil.METASTOREURIS, metaStoreUrl);
 
         Properties actual = HiveUtil.getHiveCredentials(cluster);
@@ -91,7 +91,7 @@ public class HiveUtilTest {
         expected.put(SecurityUtil.METASTORE_PRINCIPAL, principal);
         expected.put(HiveUtil.METASTORE_UGI, "true");
         expected.put(HiveUtil.NODE, metaStoreUrl.replace("thrift", "hcat"));
-        expected.put(HiveUtil.METASTROE_URI, metaStoreUrl);
+        expected.put(HiveUtil.METASTORE_URI, metaStoreUrl);
         expected.put(HiveUtil.METASTOREURIS, metaStoreUrl);
 
         Properties actual = HiveUtil.getHiveCredentials(cluster);

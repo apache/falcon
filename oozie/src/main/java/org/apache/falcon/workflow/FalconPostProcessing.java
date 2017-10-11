@@ -23,7 +23,6 @@ import org.apache.falcon.messaging.JMSMessageProducer;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -48,14 +47,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         // serialize the context to HDFS under logs dir before sending the message
         context.serialize();
 
-        boolean systemNotificationEnabled = Boolean.parseBoolean(context.
-                getValue(WorkflowExecutionArgs.SYSTEM_JMS_NOTIFICATION_ENABLED, "true"));
-
-        if (systemNotificationEnabled) {
-            LOG.info("Sending Falcon message {} ", context);
-            invokeFalconMessageProducer(context);
-        }
-
         String userBrokerUrl = context.getValue(WorkflowExecutionArgs.USER_BRKR_URL);
         boolean userNotificationEnabled = Boolean.parseBoolean(context.
                 getValue(WorkflowExecutionArgs.USER_JMS_NOTIFICATION_ENABLED, "true"));
@@ -68,7 +59,7 @@ public class FalconPostProcessing extends Configured implements Tool {
 
         // JobLogMover doesn't throw exception, a failed log mover will not fail the user workflow
         LOG.info("Moving logs {}", context);
-        invokeLogProducer(context);
+        new JobLogMover().moveLog(context);
 
         return 0;
     }
@@ -78,27 +69,5 @@ public class FalconPostProcessing extends Configured implements Tool {
                 .type(JMSMessageProducer.MessageType.USER)
                 .build();
         jmsMessageProducer.sendMessage(WorkflowExecutionContext.USER_MESSAGE_ARGS);
-    }
-
-    private void invokeFalconMessageProducer(WorkflowExecutionContext context) throws Exception {
-        JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
-                .type(JMSMessageProducer.MessageType.FALCON)
-                .build();
-        jmsMessageProducer.sendMessage();
-    }
-
-    private void invokeLogProducer(WorkflowExecutionContext context) {
-        // todo: need to move this out to Falcon in-process
-        if (UserGroupInformation.isSecurityEnabled()) {
-            LOG.info("Unable to move logs as security is enabled.");
-            return;
-        }
-
-        try {
-            new JobLogMover().run(context);
-        } catch (Exception ignored) {
-            // Mask exception, a failed log mover will not fail the user workflow
-            LOG.error("Exception in job log mover:", ignored);
-        }
     }
 }

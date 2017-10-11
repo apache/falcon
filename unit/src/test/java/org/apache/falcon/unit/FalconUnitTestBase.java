@@ -21,7 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
-import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
@@ -36,6 +35,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.util.DateUtil;
 import org.apache.hadoop.fs.Path;
@@ -140,7 +140,7 @@ public class FalconUnitTestBase {
     }
 
     public boolean submitCluster(String colo, String cluster,
-                                 Map<String, String> props) throws IOException, FalconCLIException {
+                                 Map<String, String> props) throws IOException {
         props = updateColoAndCluster(colo, cluster, props);
         fs.mkdirs(new Path(STAGING_PATH), HadoopClientFactory.ALL_PERMISSION);
         fs.mkdirs(new Path(WORKING_PATH), HadoopClientFactory.READ_EXECUTE_PERMISSION);
@@ -149,26 +149,26 @@ public class FalconUnitTestBase {
         return true ? APIResult.Status.SUCCEEDED.equals(result.getStatus()) : false;
     }
 
-    public boolean submitCluster() throws IOException, FalconCLIException {
+    public boolean submitCluster() throws IOException {
         return submitCluster(DEFAULT_COLO, DEFAULT_CLUSTER, null);
     }
 
-    public APIResult submit(EntityType entityType, String filePath) throws FalconCLIException, IOException {
+    public APIResult submit(EntityType entityType, String filePath) throws IOException {
         return submit(entityType.toString(), filePath);
     }
 
-    public APIResult submit(String entityType, String filePath) throws FalconCLIException, IOException {
+    public APIResult submit(String entityType, String filePath) throws IOException {
         return falconUnitClient.submit(entityType, filePath, "");
     }
 
-    public APIResult submitProcess(String filePath, String appDirectory) throws IOException, FalconCLIException {
+    public APIResult submitProcess(String filePath, String appDirectory) throws IOException {
         createDir(appDirectory);
         return submit(EntityType.PROCESS, filePath);
     }
 
     public APIResult scheduleProcess(String processName, String startTime, int numInstances,
                                    String cluster, String localWfPath, Boolean skipDryRun,
-                                   String properties) throws FalconException, IOException, FalconCLIException {
+                                   String properties) throws FalconException, IOException {
         Process processEntity = configStore.get(EntityType.PROCESS, processName);
         if (processEntity == null) {
             throw new FalconException("Process not found " + processName);
@@ -180,7 +180,7 @@ public class FalconUnitTestBase {
     }
 
     public APIResult scheduleProcess(String processName, String cluster, String localWfPath) throws FalconException,
-            IOException, FalconCLIException {
+            IOException {
         Process processEntity = configStore.get(EntityType.PROCESS, processName);
         if (processEntity == null) {
             throw new FalconException("Process not found " + processName);
@@ -190,8 +190,7 @@ public class FalconUnitTestBase {
         return falconUnitClient.schedule(EntityType.PROCESS, processName, cluster, false, null, null);
     }
 
-    public APIResult schedule(EntityType entityType, String entityName, String cluster) throws FalconException,
-            FalconCLIException {
+    public APIResult schedule(EntityType entityType, String entityName, String cluster) throws FalconException {
         Entity entity = configStore.get(entityType, entityName);
         if (entity == null) {
             throw new FalconException("Process not found " + entityName);
@@ -201,7 +200,7 @@ public class FalconUnitTestBase {
 
     public APIResult submitAndSchedule(String type, String filePath, String localWfPath, Boolean skipDryRun,
                                        String doAsUser, String properties, String appDirectory) throws IOException,
-            FalconException, FalconCLIException {
+            FalconException {
         createDir(appDirectory);
         fs.copyFromLocalFile(new Path(localWfPath), new Path(appDirectory, "workflow.xml"));
         return falconUnitClient.submitAndSchedule(type, filePath, skipDryRun, doAsUser, properties);
@@ -218,6 +217,49 @@ public class FalconUnitTestBase {
         props.put(CLUSTER, clusterProp);
 
         return props;
+    }
+
+    APIResult registerExtension(String extensionName, String packagePath, String description)
+        throws IOException, FalconException {
+
+        return falconUnitClient.registerExtension(extensionName, packagePath, description);
+    }
+
+    String disableExtension(String extensionName) {
+        return falconUnitClient.disableExtension(extensionName).getMessage();
+    }
+
+    String enableExtension(String extensionName) {
+        return falconUnitClient.enableExtension(extensionName).getMessage();
+    }
+
+    APIResult getExtensionJobDetails(String jobName) {
+        return falconUnitClient.getExtensionJobDetails(jobName);
+    }
+
+    APIResult unregisterExtension(String extensionName) {
+        return falconUnitClient.unregisterExtension(extensionName);
+    }
+
+    APIResult submitExtensionJob(String extensionName, String jobName, String configPath, String doAsUser) {
+        return falconUnitClient.submitExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser) {
+        return falconUnitClient.getExtensionJobs(extensionName, sortOrder, doAsUser);
+    }
+
+    public APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                   String doAsUser) {
+        return falconUnitClient.submitAndScheduleExtensionJob(extensionName, jobName, configPath, doAsUser);
+    }
+
+    APIResult updateExtensionJob(String jobName, String configPath, String doAsUser) {
+        return falconUnitClient.updateExtensionJob(jobName, configPath, doAsUser);
+    }
+
+    APIResult deleteExtensionJob(String jobName, String doAsUser) {
+        return falconUnitClient.deleteExtensionJob(jobName, doAsUser);
     }
 
     public static String overlayParametersOverTemplate(String template,
@@ -342,7 +384,7 @@ public class FalconUnitTestBase {
                     LOG.info("Waiting up to [{}] msec", waiting);
                     lastEcho = System.currentTimeMillis();
                 }
-                Thread.sleep(5000);
+                Thread.sleep(7000);
             }
             if (!predicate.evaluate()) {
                 LOG.info("Waiting timed out after [{}] msec", timeout);
@@ -368,8 +410,7 @@ public class FalconUnitTestBase {
         Assert.assertEquals(APIResult.Status.SUCCEEDED, apiResult.getStatus());
     }
 
-    public InstancesResult.WorkflowStatus getRetentionStatus(String feedName, String cluster) throws FalconException,
-            FalconCLIException {
+    public InstancesResult.WorkflowStatus getRetentionStatus(String feedName, String cluster) throws FalconException {
         Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
 
         Frequency feedFrequency = feedEntity.getFrequency();

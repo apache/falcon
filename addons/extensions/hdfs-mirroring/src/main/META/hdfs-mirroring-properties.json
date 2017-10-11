@@ -1,0 +1,221 @@
+{
+    "shortDescription": "This extension implements replicating arbitrary directories on HDFS from one Hadoop cluster to another Hadoop cluster. This piggy backs on replication solution in Falcon which uses the DistCp tool.",
+    "properties":[
+        {
+            "propertyName":"jobName",
+            "required":true,
+            "description":"Unique job name",
+            "example":"hdfs-monthly-sales-dr"
+        },
+        {
+            "propertyName":"jobClusterName",
+            "required":true,
+            "description":"Cluster where job should run",
+            "example":"backupCluster"
+        },
+        {
+            "propertyName":"jobValidityStart",
+            "required":true,
+            "description":"Job validity start time",
+            "example":"2016-03-03T00:00Z"
+        },
+        {
+            "propertyName":"jobValidityEnd",
+            "required":true,
+            "description":"Job validity end time",
+            "example":"2018-03-13T00:00Z"
+        },
+        {
+            "propertyName":"jobFrequency",
+            "required":true,
+            "description":"job frequency. Valid frequency types are minutes, hours, days, months",
+            "example":"months(1)"
+        },
+        {
+            "propertyName":"jobTimezone",
+            "required":false,
+            "description":"Time zone for the job",
+            "example":"GMT"
+        },
+        {
+            "propertyName":"jobTags",
+            "required":false,
+            "description":"list of comma separated tags. Key Value Pairs, separated by comma",
+            "example":"consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting"
+        },
+        {
+            "propertyName":"jobRetryPolicy",
+            "required":false,
+            "description":"Job retry policy",
+            "example":"periodic"
+        },
+        {
+            "propertyName":"jobRetryDelay",
+            "required":false,
+            "description":"Job retry delay",
+            "example":"minutes(30)"
+        },
+        {
+            "propertyName":"jobRetryAttempts",
+            "required":false,
+            "description":"Job retry attempts",
+            "example":"3"
+        },
+        {
+            "propertyName":"jobRetryOnTimeout",
+            "required":false,
+            "description":"Job retry on timeout",
+            "example":"true"
+        },
+        {
+            "propertyName":"jobAclOwner",
+            "required":false,
+            "description":"ACL owner",
+            "example":"ambari-qa"
+        },
+        {
+            "propertyName":"jobAclGroup",
+            "required":false,
+            "description":"ACL group",
+            "example":"users"
+        },
+        {
+            "propertyName":"jobAclPermission",
+            "required":false,
+            "description":"ACL permission",
+            "example":"0x755"
+        },
+        {
+            "propertyName":"sourceDir",
+            "required":true,
+            "description":"Multiple hdfs comma separated source directories",
+            "example":"/user/ambari-qa/primaryCluster/dr/input1, /user/ambari-qa/primaryCluster/dr/input2"
+        },
+        {
+            "propertyName":"sourceCluster",
+            "required":true,
+            "description":"Source cluster for hdfs mirroring",
+            "example":"primaryCluster"
+        },
+        {
+            "propertyName":"targetDir",
+            "required":true,
+            "description":"Target hdfs directory",
+            "example":"/user/ambari-qa/backupCluster/dr"
+        },
+        {
+            "propertyName":"targetCluster",
+            "required":true,
+            "description":"Target cluster for hdfs mirroring",
+            "example":"backupCluster"
+        },
+        {
+            "propertyName":"distcpMaxMaps",
+            "required":false,
+            "description":"Maximum number of mappers for DistCP",
+            "example":"1"
+        },
+        {
+            "propertyName":"distcpMapBandwidth",
+            "required":false,
+            "description":"Bandwidth in MB for each mapper in DistCP",
+            "example":"100"
+        },
+        {
+            "propertyName":"tdeEncryptionEnabled",
+            "required":false,
+            "description":"Set this flag to true if TDE encryption is enabled on source and target. Default value is false",
+            "example":"true"
+        },
+        {
+            "propertyName":"overwrite",
+            "required":false,
+            "description":"DitcCP overwrites target files even if they exist at the source, or have the same contents",
+            "example":"true"
+        },
+        {
+            "propertyName":"ignoreErrors",
+            "required":false,
+            "description":"Ignore failures during DistCp",
+            "example":"true"
+        },
+        {
+            "propertyName":"skipChecksum",
+            "required":false,
+            "description":"Skip checksum errors during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"removeDeletedFiles",
+            "required":false,
+            "description":"DistCP deletes the files existing in the dst but not in src",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveBlockSize",
+            "required":false,
+            "description":"Preserve block size during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveReplicationNumber",
+            "required":false,
+            "description":"Preserve replication number during DistCP",
+            "example":"false"
+        },
+        {
+            "propertyName":"preservePermission",
+            "required":false,
+            "description":"Preserve permission during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveUser",
+            "required":false,
+            "description":"Preserve user during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveGroup",
+            "required":false,
+            "description":"Preserve group during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveChecksumType",
+            "required":false,
+            "description":"Preserve checksum type during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveAcl",
+            "required":false,
+            "description":"Preserve ACL during DistCP",
+            "example":"false"
+        },
+        {
+            "propertyName":"preserveXattr",
+            "required":false,
+            "description":"Preserve Xattr during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"preserveTimes",
+            "required":false,
+            "description":"Preserve access and modification times during DistCP",
+            "example":"true"
+        },
+        {
+            "propertyName":"jobNotificationType",
+            "required":false,
+            "description":"Email Notification for Falcon instance completion",
+            "example":"email"
+        },
+        {
+            "propertyName":"jobNotificationReceivers",
+            "required":false,
+            "description":"Comma separated email Id's",
+            "example":"user1@gmail.com, user2@gmail.com"
+        }
+    ]
+}

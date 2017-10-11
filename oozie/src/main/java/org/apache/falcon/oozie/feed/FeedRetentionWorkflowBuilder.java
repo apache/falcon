@@ -51,21 +51,10 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
         WORKFLOWAPP workflow = new WORKFLOWAPP();
         String wfName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
-
         //Add eviction action
         ACTION eviction = unmarshalAction(EVICTION_ACTION_TEMPLATE);
-        addTransition(eviction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(eviction);
 
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
-
+        addPostProcessing(workflow, eviction);
         decorateWorkflow(workflow, wfName, EVICTION_ACTION_NAME);
         addLibExtensionsToWorkflow(cluster, workflow, Tag.RETENTION);
 
@@ -106,10 +95,11 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
         props.put("limit", feedCluster.getRetention().getLimit().toString());
 
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
 
-        props.put("falconInputFeeds", entity.getName());
-        props.put("falconInPaths", IGNORE);
+        props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), IGNORE);
         props.put(WorkflowExecutionArgs.DATASOURCE_NAME.getName(), "NA");
         return props;
     }

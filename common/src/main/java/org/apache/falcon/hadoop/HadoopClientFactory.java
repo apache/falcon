@@ -19,6 +19,7 @@
 package org.apache.falcon.hadoop;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
@@ -29,6 +30,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -57,6 +59,8 @@ public final class HadoopClientFactory {
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
 
     private static final HadoopClientFactory INSTANCE = new HadoopClientFactory();
+    public static final FsPermission READ_ONLY_PERMISSION =
+            new FsPermission(FsAction.READ, FsAction.READ, FsAction.READ);
 
     private HadoopClientFactory() {
     }
@@ -130,6 +134,28 @@ public final class HadoopClientFactory {
         }
     }
 
+    /**
+     * Return a DistributedFileSystem created with the authenticated proxy user for the specified conf.
+     *
+     * @param conf Configuration with all necessary information to create the FileSystem.
+     * @return DistributedFileSystem created with the provided proxyUser/group.
+     * @throws org.apache.falcon.FalconException
+     *          if the filesystem could not be created.
+     */
+    public DistributedFileSystem createDistributedProxiedFileSystem(final Configuration conf) throws FalconException {
+        Validate.notNull(conf, "configuration cannot be null");
+
+        String nameNode = getNameNode(conf);
+        try {
+            return createDistributedFileSystem(CurrentUser.getProxyUGI(), new URI(nameNode), conf);
+        } catch (URISyntaxException e) {
+            throw new FalconException("Exception while getting Distributed FileSystem for: " + nameNode, e);
+        } catch (IOException e) {
+            throw new FalconException("Exception while getting Distributed FileSystem for proxy: "
+                    + CurrentUser.getUser(), e);
+        }
+    }
+
     private static String getNameNode(Configuration conf) {
         return conf.get(FS_DEFAULT_NAME_KEY);
     }
@@ -170,12 +196,75 @@ public final class HadoopClientFactory {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public FileSystem createFileSystem(UserGroupInformation ugi, final URI uri,
                                        final Configuration conf) throws FalconException {
+        validateInputs(ugi, uri, conf);
+
+        try {
+            // prevent falcon impersonating falcon, no need to use doas
+            final String proxyUserName = ugi.getShortUserName();
+            if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
+                LOG.trace("Creating FS for the login user {}, impersonation not required",
+                    proxyUserName);
+                return FileSystem.get(uri, conf);
+            }
+
+            LOG.trace("Creating FS impersonating user {}", proxyUserName);
+            return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+                public FileSystem run() throws Exception {
+                    return FileSystem.get(uri, conf);
+                }
+            });
+        } catch (InterruptedException | IOException ex) {
+            throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Return a DistributedFileSystem created with the provided user for the specified URI.
+     *
+     * @param ugi user group information
+     * @param uri  file system URI.
+     * @param conf Configuration with all necessary information to create the FileSystem.
+     * @return DistributedFileSystem created with the provided user/group.
+     * @throws org.apache.falcon.FalconException
+     *          if the filesystem could not be created.
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public DistributedFileSystem createDistributedFileSystem(UserGroupInformation ugi, final URI uri,
+                                                             final Configuration conf) throws FalconException {
+        validateInputs(ugi, uri, conf);
+        FileSystem returnFs;
+        try {
+            // prevent falcon impersonating falcon, no need to use doas
+            final String proxyUserName = ugi.getShortUserName();
+            if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
+                LOG.info("Creating Distributed FS for the login user {}, impersonation not required",
+                        proxyUserName);
+                returnFs = DistributedFileSystem.get(uri, conf);
+            } else {
+                LOG.info("Creating FS impersonating user {}", proxyUserName);
+                returnFs = ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+                    public FileSystem run() throws Exception {
+                        return DistributedFileSystem.get(uri, conf);
+                    }
+                });
+            }
+
+            return (DistributedFileSystem) returnFs;
+        } catch (InterruptedException | IOException ex) {
+            throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
+        }
+    }
+
+    private void validateInputs(UserGroupInformation ugi, final URI uri,
+                                final Configuration conf) throws FalconException {
         Validate.notNull(ugi, "ugi cannot be null");
         Validate.notNull(conf, "configuration cannot be null");
 
         try {
             if (UserGroupInformation.isSecurityEnabled()) {
-                ugi.checkTGTAndReloginFromKeytab();
+                LOG.debug("Revalidating Auth Token with auth method {}",
+                        UserGroupInformation.getLoginUser().getAuthenticationMethod().name());
+                UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
             }
         } catch (IOException ioe) {
             throw new FalconException("Exception while getting FileSystem. Unable to check TGT for user "
@@ -183,27 +272,6 @@ public final class HadoopClientFactory {
         }
 
         validateNameNode(uri, conf);
-
-        try {
-            // prevent falcon impersonating falcon, no need to use doas
-            final String proxyUserName = ugi.getShortUserName();
-            if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
-                LOG.info("Creating FS for the login user {}, impersonation not required",
-                    proxyUserName);
-                return FileSystem.get(uri, conf);
-            }
-
-            LOG.info("Creating FS impersonating user {}", proxyUserName);
-            return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
-                public FileSystem run() throws Exception {
-                    return FileSystem.get(uri, conf);
-                }
-            });
-        } catch (InterruptedException ex) {
-            throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new FalconException("Exception creating FileSystem:" + ex.getMessage(), ex);
-        }
     }
 
     /**
@@ -212,11 +280,19 @@ public final class HadoopClientFactory {
      * @param executeUrl jt url or RM url
      * @throws IOException
      */
-    public void validateJobClient(String executeUrl) throws IOException {
+    public void validateJobClient(String executeUrl, String rmPrincipal) throws IOException {
         final JobConf jobConf = new JobConf();
         jobConf.set(MR_JT_ADDRESS_KEY, executeUrl);
         jobConf.set(YARN_RM_ADDRESS_KEY, executeUrl);
-
+        /**
+         * It is possible that the RM/JT principal can be different between clusters,
+         * for example, the cluster is using a different KDC with cross-domain trust
+         * with the Falcon KDC.   in that case, we want to allow the user to provide
+         * the RM principal similar to NN principal.
+         */
+        if (UserGroupInformation.isSecurityEnabled() && StringUtils.isNotEmpty(rmPrincipal)) {
+            jobConf.set(SecurityUtil.RM_PRINCIPAL, rmPrincipal);
+        }
         UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
         try {
             JobClient jobClient = loginUser.doAs(new PrivilegedExceptionAction<JobClient>() {

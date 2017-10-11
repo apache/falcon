@@ -43,21 +43,25 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
     protected void handleRerun(String clusterName, String jobStatus,
                                RetryEvent message, String entityType, String entityName) {
         try {
-            if (!jobStatus.equals("KILLED")) {
-                LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as job status is running:"
-                        + " {}", message.getWfId());
+            // Can happen when user does a manual re-run in-between retries.
+            if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")) {
+                LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as "
+                        + "job status is {} for : {}", jobStatus, message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
+            } else if (jobStatus.equals("SUSPENDED") || jobStatus.equals("SUCCEEDED")) {
+                LOG.debug("Not retrying workflow {} anymore as it is in {} state. ", message.getWfId(), jobStatus);
+                return;
             }
-            LOG.info("Retrying attempt: {} out of configured: {} attempt for instance: {}:{} And WorkflowId: {}"
+            LOG.info("Retrying attempt: {} out of configured: {} attempts for instance: {}:{} And WorkflowId: {}"
                             + " At time: {}",
                     (message.getRunId() + 1), message.getAttempts(), message.getEntityName(), message.getInstance(),
                     message.getWfId(), SchemaHelper.formatDateUTC(new Date(System.currentTimeMillis())));
             // Use coord action id for rerun if available
-            String id = message.getParentId();
-            if (StringUtils.isBlank(id)) {
-                id = message.getWfId();
+            String id = message.getWfId();
+            if (!id.contains("-C@") && StringUtils.isNotBlank(message.getParentId())) {
+                id = message.getParentId();
             }
             handler.getWfEngine(entityType, entityName).reRun(message.getClusterName(), id, null, false);
         } catch (Exception e) {

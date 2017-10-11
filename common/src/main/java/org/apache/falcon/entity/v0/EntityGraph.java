@@ -56,9 +56,9 @@ public final class EntityGraph implements ConfigurationChangeListener {
 
     public Set<Entity> getDependents(Entity entity) throws FalconException {
         Node entityNode = new Node(entity.getEntityType(), entity.getName());
+        Set<Entity> dependents = new HashSet<Entity>();
         if (graph.containsKey(entityNode)) {
             ConfigurationStore store = ConfigurationStore.get();
-            Set<Entity> dependents = new HashSet<Entity>();
             for (Node node : graph.get(entityNode)) {
                 Entity dependentEntity = store.get(node.type, node.name);
                 if (dependentEntity != null) {
@@ -67,10 +67,10 @@ public final class EntityGraph implements ConfigurationChangeListener {
                     LOG.error("Dependent entity {} was not found in configuration store.", node);
                 }
             }
-            return dependents;
         } else {
-            return null;
+            LOG.error("Entity node {} not found in entity graph.", entityNode);
         }
+        return dependents;
     }
 
     @Override
@@ -193,6 +193,15 @@ public final class EntityGraph implements ConfigurationChangeListener {
 
             if (FeedHelper.isImportEnabled(cluster)) {
                 Node dbNode = new Node(EntityType.DATASOURCE, FeedHelper.getImportDatasourceName(cluster));
+                if (!nodeEdges.containsKey(dbNode)) {
+                    nodeEdges.put(dbNode, new HashSet<Node>());
+                }
+                Set<Node> dbEdges = nodeEdges.get(dbNode);
+                feedEdges.add(dbNode);
+                dbEdges.add(feedNode);
+            }
+            if (FeedHelper.isExportEnabled(cluster)) {
+                Node dbNode = new Node(EntityType.DATASOURCE, FeedHelper.getExportDatasourceName(cluster));
                 if (!nodeEdges.containsKey(dbNode)) {
                     nodeEdges.put(dbNode, new HashSet<Node>());
                 }

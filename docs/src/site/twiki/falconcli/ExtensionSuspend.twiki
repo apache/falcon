@@ -1,0 +1,15 @@
+---+++Suspend
+
+[[CommonCLI][Common CLI Options]]
+
+Suspend an extension job.
+
+Usage:
+$FALCON_HOME/bin/falcon extension -suspend -jobName <<extension-job-name>>
+
+Optional Args : -doAs <<user-name>>
+
+<a href="../restapi/ExtensionSuspend.html">Parameters and examples described here.</a>
+
+Example:
+$FALCON_HOME/bin/falcon extension -suspend -jobName sales-monthly

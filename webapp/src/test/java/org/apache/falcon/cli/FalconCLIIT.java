@@ -18,7 +18,7 @@
 
 package org.apache.falcon.cli;
 
-import org.apache.commons.io.FilenameUtils;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.TestContext;
@@ -32,12 +32,10 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Date;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Test for Falcon CLI.
@@ -46,10 +44,7 @@ import java.util.Properties;
  */
 @Test(groups = {"exhaustive"})
 public class FalconCLIIT {
-    private static final String RECIPE_PROPERTIES_FILE_XML = "/hdfs-replication.properties";
-
     private InMemoryWriter stream = new InMemoryWriter(System.out);
-    private String recipePropertiesFilePath;
 
     @BeforeClass
     public void prepare() throws Exception {
@@ -486,7 +481,7 @@ public class FalconCLIIT {
 
     }
 
-    public void testInstanceRunningAndSummaryCommands() throws Exception {
+    public void testInstanceRunningAndSearchSummaryCommands() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
         submitTestFiles(context, overlay);
@@ -500,9 +495,14 @@ public class FalconCLIIT {
         Assert.assertEquals(executeWithURL("instance -status -type feed -name " + overlay.get("outputFeedName")
                 + " -start " + START_INSTANCE), 0);
 
+        Assert.assertEquals(executeWithURL("instance -search"), 0);
+
         Assert.assertEquals(executeWithURL("instance -running -type process -name " + overlay.get("processName")), 0);
 
         //with doAs
+        Assert.assertEquals(executeWithURL(
+                "instance -search -type process -instanceStatus RUNNING -doAs " + FalconTestUtil.TEST_USER_2), 0);
+
         Assert.assertEquals(executeWithURL("instance -running -type process -doAs " + FalconTestUtil.TEST_USER_2
                 + " -name " + overlay.get("processName")), 0);
 
@@ -719,22 +719,21 @@ public class FalconCLIIT {
         String feedName = overlay.get("outputFeedName");
         String clusterName = overlay.get("cluster");
 
-        Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                        + FalconCLI.TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
-                0);
+        Assert.assertEquals(executeWithURL(FalconCLIConstants.ENTITY_CMD + " -" + FalconCLIConstants.SCHEDULE_OPT + " -"
+                        + FalconCLIConstants.TYPE_OPT + " process  -"
+                + FalconCLIConstants.ENTITY_NAME_OPT + " " + processName), 0);
 
-        Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                + FalconCLI.TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
+        Assert.assertEquals(executeWithURL(FalconCLIConstants.ENTITY_CMD + " -" + FalconCLIConstants.SCHEDULE_OPT + " -"
+                + FalconCLIConstants.TYPE_OPT + " feed -" + FalconCLIConstants.ENTITY_NAME_OPT + " " + feedName), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
-        String metadataListCommand = FalconCLI.METADATA_CMD + " -" + FalconMetadataCLI.LIST_OPT + " -"
-                + FalconMetadataCLI.TYPE_OPT + " ";
-        String metadataListCommandWithDoAs = FalconCLI.METADATA_CMD + " -doAs " + FalconTestUtil.TEST_USER_2 + " -"
-                + FalconMetadataCLI.LIST_OPT + " -"
-                + FalconMetadataCLI.TYPE_OPT + " ";
+        String metadataListCommand = FalconCLIConstants.METADATA_CMD + " -" + FalconCLIConstants.LIST_OPT + " -"
+                + FalconCLIConstants.TYPE_OPT + " ";
+        String metadataListCommandWithDoAs = FalconCLIConstants.METADATA_CMD + " -doAs " + FalconTestUtil.TEST_USER_2
+                + " -" + FalconCLIConstants.LIST_OPT + " -" + FalconCLIConstants.TYPE_OPT + " ";
 
-        String clusterString = " -" + FalconMetadataCLI.CLUSTER_OPT + " " + clusterName;
+        String clusterString = " -" + FalconCLIConstants.CLUSTER_OPT + " " + clusterName;
 
         Assert.assertEquals(executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.name()), 0);
         Assert.assertEquals(executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.name()), 0);
@@ -763,36 +762,36 @@ public class FalconCLIIT {
         String feedName = overlay.get("outputFeedName");
         String clusterName = overlay.get("cluster");
 
-        Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                        + FalconCLI.TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName),
-                0);
+        Assert.assertEquals(executeWithURL(FalconCLIConstants.ENTITY_CMD + " -" + FalconCLIConstants.SCHEDULE_OPT + " -"
+                        + FalconCLIConstants.TYPE_OPT + " process  -"
+                + FalconCLIConstants.ENTITY_NAME_OPT + " " + processName), 0);
 
-        Assert.assertEquals(executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
-                + FalconCLI.TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName), 0);
+        Assert.assertEquals(executeWithURL(FalconCLIConstants.ENTITY_CMD + " -" + FalconCLIConstants.SCHEDULE_OPT + " -"
+                + FalconCLIConstants.TYPE_OPT + " feed -" + FalconCLIConstants.ENTITY_NAME_OPT + " " + feedName), 0);
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
-        String metadataRelationsCommand = FalconCLI.METADATA_CMD + " -" + FalconMetadataCLI.RELATIONS_OPT + " -"
-                + FalconMetadataCLI.TYPE_OPT + " ";
+        String metadataRelationsCommand = FalconCLIConstants.METADATA_CMD + " -"
+                + FalconCLIConstants.RELATIONS_OPT + " -" + FalconCLIConstants.TYPE_OPT + " ";
 
-        String metadataRelationsCommandWithDoAs = FalconCLI.METADATA_CMD + " -doAs " + FalconTestUtil.TEST_USER_2
-                + " -" + FalconMetadataCLI.RELATIONS_OPT + " -"
-                + FalconMetadataCLI.TYPE_OPT + " ";
+        String metadataRelationsCommandWithDoAs = FalconCLIConstants.METADATA_CMD
+                + " -doAs " + FalconTestUtil.TEST_USER_2 + " -" + FalconCLIConstants.RELATIONS_OPT + " -"
+                + FalconCLIConstants.TYPE_OPT + " ";
 
         Assert.assertEquals(executeWithURL(metadataRelationsCommand + RelationshipType.CLUSTER_ENTITY.name()
-                + " -" + FalconMetadataCLI.NAME_OPT + " " + clusterName), 0);
+                + " -" + FalconCLIConstants.NAME_OPT + " " + clusterName), 0);
         Assert.assertEquals(executeWithURL(metadataRelationsCommand + RelationshipType.PROCESS_ENTITY.name()
-                + " -" + FalconMetadataCLI.NAME_OPT + " " + processName), 0);
+                + " -" + FalconCLIConstants.NAME_OPT + " " + processName), 0);
 
         // with doAs
         Assert.assertEquals(executeWithURL(metadataRelationsCommandWithDoAs + RelationshipType.PROCESS_ENTITY.name()
-                + " -" + FalconMetadataCLI.NAME_OPT + " " + processName), 0);
+                + " -" + FalconCLIConstants.NAME_OPT + " " + processName), 0);
 
         Assert.assertEquals(executeWithURL(metadataRelationsCommand + "feed -"
-                + FalconMetadataCLI.NAME_OPT + " " + clusterName), -1);
+                + FalconCLIConstants.NAME_OPT + " " + clusterName), -1);
 
         Assert.assertEquals(executeWithURL(metadataRelationsCommand + "invalid -"
-                + FalconMetadataCLI.NAME_OPT + " " + clusterName), -1);
+                + FalconCLIConstants.NAME_OPT + " " + clusterName), -1);
         Assert.assertEquals(executeWithURL(metadataRelationsCommand + RelationshipType.CLUSTER_ENTITY.name()), -1);
     }
 
@@ -953,56 +952,6 @@ public class FalconCLIIT {
                 + overlay.get("processName")
                 + " -start " + START_INSTANCE + " -end " + START_INSTANCE
                 + " -filterBy STATUS:SUCCEEDED -orderBy wrongOrder -offset 0 -numResults 1"), -1);
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test(enabled = false)
-    public void testRecipeCommand() throws Exception {
-        recipeSetup();
-        try {
-            Assert.assertEquals(executeWithURL("recipe -name " + "hdfs-replication"
-                    + " -operation HDFS_REPLICATION"), 0);
-        } finally {
-            if (recipePropertiesFilePath != null) {
-                new File(recipePropertiesFilePath).delete();
-            }
-        }
-    }
-
-    private void recipeSetup() throws Exception {
-        TestContext context = new TestContext();
-        Map<String, String> overlay = context.getUniqueOverlay();
-
-        createPropertiesFile(context);
-        String filePath = TestContext.overlayParametersOverTemplate(context.getClusterFileTemplate(),
-                overlay);
-        Assert.assertEquals(executeWithURL("entity -submit -type cluster -file " + filePath), 0);
-        context.setCluster(overlay.get("cluster"));
-    }
-
-    private void createPropertiesFile(TestContext context) throws Exception  {
-        InputStream in = this.getClass().getResourceAsStream(RECIPE_PROPERTIES_FILE_XML);
-        Properties props = new Properties();
-        props.load(in);
-        in.close();
-
-        String wfFile = TestContext.class.getResource("/fs-workflow.xml").getPath();
-        String resourcePath = FilenameUtils.getFullPathNoEndSeparator(wfFile);
-        String libPath = TestContext.getTempFile("target/lib", "recipe", ".jar").getAbsolutePath();
-
-        File file = new File(resourcePath, "hdfs-replication.properties");
-        OutputStream out = new FileOutputStream(file);
-        props.setProperty("falcon.recipe.name", context.getProcessName());
-        props.setProperty("falcon.recipe.cluster.name", context.getClusterName());
-        props.setProperty("falcon.recipe.cluster.validity.end", context.getProcessEndTime());
-        props.setProperty("falcon.recipe.workflow.path", TestContext.class.getResource("/fs-workflow.xml").getPath());
-        props.setProperty("falcon.recipe.workflow.lib.path", new File(libPath).getParent());
-        props.setProperty("falcon.recipe.cluster.hdfs.writeEndPoint", "jail://global:00");
-
-        props.store(out, null);
-        out.close();
-
-        recipePropertiesFilePath = file.getAbsolutePath();
     }
 
     private int executeWithURL(String command) throws Exception {

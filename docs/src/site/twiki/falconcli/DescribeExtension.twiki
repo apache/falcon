@@ -1,0 +1,8 @@
+---+++Describe
+
+[[CommonCLI][Common CLI Options]]
+
+Description of an extension. Outputs the README of the specified extension.
+
+Usage:
+$FALCON_HOME/bin/falcon extension ­describe ­name <extension­name>

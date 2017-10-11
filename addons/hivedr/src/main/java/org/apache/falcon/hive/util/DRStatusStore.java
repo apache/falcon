@@ -30,7 +30,7 @@ import java.util.List;
  */
 public abstract class DRStatusStore {
 
-    public static final String BASE_DEFAULT_STORE_PATH = "/apps/data-mirroring/";
+    public static final String BASE_DEFAULT_STORE_PATH = "/apps/falcon/extensions/mirroring";
     public static final FsPermission DEFAULT_STORE_PERMISSION =
             new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 

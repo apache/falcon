@@ -603,6 +603,24 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }.execute(colo, entityType, entityName);
     }
 
+    @GET
+    @Path("search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-search")
+    @Override
+    public InstancesResult searchInstances(
+            @DefaultValue("") @QueryParam("type") String type,
+            @DefaultValue("") @QueryParam("nameseq") String nameSubsequence,
+            @DefaultValue("") @QueryParam("tagkeys") String tagKeywords,
+            @DefaultValue("") @QueryParam("start") String nominalStartTime,
+            @DefaultValue("") @QueryParam("end") String nominalEndTime,
+            @DefaultValue("") @QueryParam("instanceStatus") String status,
+            @DefaultValue("") @QueryParam("orderBy") String orderBy,
+            @DefaultValue("0") @QueryParam("offset") Integer offset,
+            @QueryParam("numResults") Integer resultsPerPage) {
+        return super.searchInstances(type, nameSubsequence, tagKeywords, nominalStartTime, nominalEndTime,
+                status, orderBy, offset, resultsPerPage);
+    }
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

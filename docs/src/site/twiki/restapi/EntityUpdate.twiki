@@ -8,8 +8,8 @@
 Updates the submitted entity.
 
 ---++ Parameters
-   * :entity-type can be feed or process.
-   * :entity-name is name of the feed or process.
+   * :entity-type can be cluster, feed or process.
+   * :entity-name is name of the cluster, feed or process.
    * skipDryRun : Optional query param, Falcon skips oozie dryrun when value is set to true.
    * doAs <optional query param> allows the current user to impersonate the user passed in doAs when interacting with the Falcon system.
 

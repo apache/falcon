@@ -57,7 +57,7 @@ import java.util.regex.Matcher;
  */
 public class CatalogStorage extends Configured implements Storage {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EvictionHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CatalogStorage.class);
 
     // constants to be used while preparing HCatalog partition filter query
     private static final String FILTER_ST_BRACKET = "(";
@@ -100,7 +100,7 @@ public class CatalogStorage extends Configured implements Storage {
         if (catalogUrl == null || catalogUrl.length() == 0) {
             throw new IllegalArgumentException("Catalog Registry URL cannot be null or empty");
         }
-
+        verifyAndUpdateConfiguration(getConf());
         this.catalogUrl = catalogUrl;
 
         parseFeedUri(tableUri);
@@ -177,6 +177,10 @@ public class CatalogStorage extends Configured implements Storage {
      * @throws URISyntaxException
      */
     protected CatalogStorage(String uriTemplate) throws URISyntaxException {
+        this(uriTemplate, new Configuration());
+    }
+
+    protected CatalogStorage(String uriTemplate, Configuration conf) throws URISyntaxException {
         if (uriTemplate == null || uriTemplate.length() == 0) {
             throw new IllegalArgumentException("URI template cannot be null or empty");
         }
@@ -186,13 +190,8 @@ public class CatalogStorage extends Configured implements Storage {
         URI uri = new URI(processed);
 
         this.catalogUrl = uri.getScheme() + "://" + uri.getAuthority();
-
+        verifyAndUpdateConfiguration(conf);
         parseUriTemplate(uri);
-    }
-
-    protected CatalogStorage(String uriTemplate, Configuration conf) throws URISyntaxException {
-        this(uriTemplate);
-        setConf(conf);
     }
 
     private void parseUriTemplate(URI uriTemplate) throws URISyntaxException {
@@ -588,5 +587,13 @@ public class CatalogStorage extends Configured implements Storage {
                 + ", table='" + table + '\''
                 + ", partitions=" + partitions
                 + '}';
+    }
+
+    private void verifyAndUpdateConfiguration(Configuration conf) {
+        if (conf == null) {
+            setConf(new Configuration());
+        } else {
+            setConf(conf);
+        }
     }
 }

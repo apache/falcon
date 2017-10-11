@@ -23,12 +23,19 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.ExtensionJobList;
 import org.apache.falcon.resource.FeedInstanceResult;
+import org.apache.falcon.resource.FeedLookupResult;
 import org.apache.falcon.resource.InstanceDependencyResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.LineageGraphResult;
+import org.apache.falcon.resource.SchedulableEntityInstanceResult;
+import org.apache.falcon.resource.TriageResult;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -52,10 +59,9 @@ public abstract class AbstractFalconClient {
      * @param entityType Entity type. Valid options are cluster, feed or process.
      * @param filePath Path for the entity definition
      * @return
-     * @throws FalconCLIException
+     * @throws IOException
      */
-    public abstract APIResult submit(String entityType, String filePath, String doAsUser) throws FalconCLIException,
-            IOException;
+    public abstract APIResult submit(String entityType, String filePath, String doAsUser);
 
     /**
      * Schedules an submitted process entity immediately.
@@ -63,10 +69,9 @@ public abstract class AbstractFalconClient {
      * @param entityName Name of the entity.
      * @param colo Cluster name.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult schedule(EntityType entityType, String entityName, String colo, Boolean skipDryRun,
-                                        String doAsuser, String properties) throws FalconCLIException;
+                                       String doAsuser, String properties);
 
     /**
      * Delete the specified entity.
@@ -74,10 +79,9 @@ public abstract class AbstractFalconClient {
      * @param entityName Name of the entity.
      * @param doAsUser Proxy User.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult delete(EntityType entityType, String entityName,
-                                     String doAsUser) throws FalconCLIException;
+                                     String doAsUser);
 
     /**
      * Validates the submitted entity.
@@ -86,10 +90,9 @@ public abstract class AbstractFalconClient {
      * @param skipDryRun Dry run.
      * @param doAsUser Proxy User.
      * @return
-     * @throws FalconCLIException
-     */
+    \     */
     public abstract APIResult validate(String entityType, String filePath, Boolean skipDryRun,
-                                       String doAsUser) throws FalconCLIException;
+                                       String doAsUser);
 
     /**
      * Updates the submitted entity.
@@ -99,10 +102,9 @@ public abstract class AbstractFalconClient {
      * @param skipDryRun Dry run.
      * @param doAsUser Proxy User.
      * @return
-     * @throws FalconCLIException
      */
     public abstract APIResult update(String entityType, String entityName, String filePath,
-                                                       Boolean skipDryRun, String doAsUser) throws FalconCLIException;
+                                     Boolean skipDryRun, String doAsUser);
 
     /**
      * Get definition of the entity.
@@ -110,11 +112,9 @@ public abstract class AbstractFalconClient {
      * @param entityName Name of the entity.
      * @param doAsUser Proxy user.
      * @return
-     * @throws FalconCLIException
      */
     public abstract Entity getDefinition(String entityType, String entityName,
-                                         String doAsUser) throws FalconCLIException;
-
+                                         String doAsUser);
 
 
     /**
@@ -133,11 +133,10 @@ public abstract class AbstractFalconClient {
      * @param doAsUser proxy user
      * @param allAttempts To get the instances corresponding to each run-id
      * @return
-     * @throws FalconCLIException
      */
     public abstract InstancesResult getStatusOfInstances(String type, String entity, String start, String end, String
-            colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer
-            numResults, String doAsUser, Boolean allAttempts) throws FalconCLIException;
+        colo, List<LifeCycle> lifeCycles, String filterBy, String orderBy, String sortOrder, Integer offset, Integer
+                                                             numResults, String doAsUser, Boolean allAttempts);
 
     /**
      * Suspend an entity.
@@ -146,10 +145,8 @@ public abstract class AbstractFalconClient {
      * @param colo Colo on which the query should be run.
      * @param doAsUser proxy user
      * @return Status of the entity.
-     * @throws FalconCLIException
      */
-    public abstract APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException;
+    public abstract APIResult suspend(EntityType entityType, String entityName, String colo, String doAsUser);
 
     /**
      * Resume a supended entity.
@@ -158,10 +155,8 @@ public abstract class AbstractFalconClient {
      * @param colo Colo on which the query should be run.
      * @param doAsUser proxy user
      * @return Result of the resume command.
-     * @throws FalconCLIException
      */
-    public abstract APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser) throws
-            FalconCLIException;
+    public abstract APIResult resume(EntityType entityType, String entityName, String colo, String doAsUser);
 
     /**
      * Get status of the entity.
@@ -171,10 +166,9 @@ public abstract class AbstractFalconClient {
      * @param doAsUser proxy user
      * @param showScheduler whether the call should return the scheduler on which the entity is scheduled.
      * @return Status of the entity.
-     * @throws FalconCLIException
      */
     public abstract APIResult getStatus(EntityType entityType, String entityName, String colo, String doAsUser,
-                                        boolean showScheduler) throws FalconCLIException;
+                                        boolean showScheduler);
 
     /**
      * Submits and schedules an entity.
@@ -185,7 +179,127 @@ public abstract class AbstractFalconClient {
      * @return Result of the submit and schedule command.
      */
     public abstract APIResult submitAndSchedule(String entityType, String filePath, Boolean skipDryRun, String doAsUser,
-                                       String properties) throws FalconCLIException;
+                                                String properties);
+
+    /**
+     * Registers an extension.
+     * @param extensionName extensionName of the extension.
+     * @param packagePath Package location for the extension.
+     * @param description description of the extension.
+     * @return Result of the registerExtension command.
+     */
+    public abstract APIResult registerExtension(String extensionName, String packagePath, String description);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be unregistered
+     * @return Result of the unregisterExtension operation
+     */
+    public abstract APIResult unregisterExtension(String extensionName);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be enabled
+     * @return Result of the enableExtension operation
+     */
+    public abstract APIResult enableExtension(String extensionName);
+
+    /**
+     *
+     * @param extensionName extensionName that needs to be disabled
+     * @return Result of the disableExtension operation
+     */
+    public abstract APIResult disableExtension(String extensionName);
+
+    /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and submit them too.
+     * @param extensionName extension which is available in the store.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     */
+    public abstract APIResult submitExtensionJob(String extensionName, String jobName, String configPath,
+                                                String doAsUser);
+
+    /**
+     * Schedules the set of entities that are part of the extension.
+     * @param jobName extensionJob that needs to be scheduled.
+     * @return APIResult stating status of scheduling the extension.
+     */
+    public abstract APIResult scheduleExtensionJob(String jobName, String coloExpr, String doAsUser);
+
+    /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and submits and
+     * schedules them.
+     * @param extensionName extension which is available in the store.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     */
+    public abstract APIResult submitAndScheduleExtensionJob(String extensionName, String jobName, String configPath,
+                                                 String doAsUser);
+
+    /**
+     * Prepares set of entities the extension has implemented and stage them to a local directory and updates them.
+     * @param jobName name to be used in all the extension entities' tagging that are built as part of
+     *                           loadAndPrepare.
+     * @param configPath path to extension parameters.
+     * @return
+     */
+    public abstract APIResult updateExtensionJob(String jobName, String configPath, String doAsUser);
+
+    /**
+     * Deletes the entities that are part of the extension job and then deleted the job from the DB.
+     * @param jobName name of the extension job that needs to be deleted.
+     * @return APIResult status of the deletion query.
+     */
+    public abstract APIResult deleteExtensionJob(final String jobName, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be suspended.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user
+     * @return result status of the suspend operation.
+     */
+    public abstract APIResult suspendExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *
+     * @param jobName name of the extension that has to be resumed.
+     * @param coloExpr comma separated list of colos where the operation has to be performed.
+     * @param doAsUser proxy user.
+     * @return result status of the resume operation.
+     */
+    public abstract APIResult resumeExtensionJob(final String jobName, final String coloExpr, final String doAsUser);
+
+    /**
+     *  Prepares set of entities the extension has implemented to validate the extension job.
+     * @param jobName job name of the extension job.
+     * @return
+     */
+    public abstract APIResult getExtensionJobDetails(final String jobName);
+
+    /**
+     * Returns details of an extension.
+     * @param extensionName name of the extension.
+     * @return
+     */
+    public abstract APIResult getExtensionDetail(final String extensionName);
+
+    /**
+     * Returns all registered extensions.
+     * @return
+     */
+    public abstract APIResult enumerateExtensions();
+
+    /**
+     * Returns all registered jobs for an extension.
+     * @return
+     */
+    public abstract ExtensionJobList getExtensionJobs(String extensionName, String sortOrder, String doAsUser);
 
     /**
      *
@@ -221,8 +335,8 @@ public abstract class AbstractFalconClient {
      * @return Total number of results and a list of entities.
      */
     public abstract EntityList getEntityList(String entityType, String fields, String nameSubsequence, String
-            tagKeywords, String filterBy, String filterTags, String orderBy, String sortOrder, Integer offset, Integer
-            numResults, String doAsUser) throws FalconCLIException;
+        tagKeywords, String filterBy, String filterTags, String orderBy, String sortOrder, Integer offset, Integer
+                                                 numResults, String doAsUser);
 
     /**
      * Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity.
@@ -254,9 +368,8 @@ public abstract class AbstractFalconClient {
      */
     public abstract EntitySummaryResult getEntitySummary(String entityType, String cluster, String start, String end,
                                                          String fields, String filterBy, String filterTags, String
-                                                         orderBy, String sortOrder, Integer offset, Integer
-                                                         numResults, Integer numInstances, String doAsUser) throws
-            FalconCLIException;
+                                                             orderBy, String sortOrder, Integer offset, Integer
+                                                             numResults, Integer numInstances, String doAsUser);
 
     /**
      * Force updates the entity.
@@ -268,7 +381,7 @@ public abstract class AbstractFalconClient {
      * @return Result of the validation.
      */
     public abstract APIResult touch(String entityType, String entityName, String colo, Boolean skipDryRun,
-                                    String doAsUser) throws FalconCLIException;
+                                    String doAsUser);
 
     /**
      * Kill currently running instance(s) of an entity.
@@ -281,11 +394,11 @@ public abstract class AbstractFalconClient {
      *                   process.
      * @param doAsUser proxy user
      * @return Result of the kill operation.
+     * @throws UnsupportedEncodingException
      */
     public abstract InstancesResult killInstances(String type, String entity, String start, String end, String colo,
                                                   String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                                  String doAsUser) throws FalconCLIException,
-            UnsupportedEncodingException;
+                                                  String doAsUser) throws UnsupportedEncodingException;
 
     /**
      * Suspend instances of an entity.
@@ -298,10 +411,11 @@ public abstract class AbstractFalconClient {
      *                   process.
      * @param doAsUser proxy user
      * @return Results of the suspend command.
+     * @throws UnsupportedEncodingException
      */
     public abstract InstancesResult suspendInstances(String type, String entity, String start, String end, String colo,
-                                            String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                            String doAsUser) throws FalconCLIException, UnsupportedEncodingException;
+                                                     String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                                     String doAsUser) throws UnsupportedEncodingException;
 
     /**
      * Resume suspended instances of an entity.
@@ -314,10 +428,11 @@ public abstract class AbstractFalconClient {
      *                   process.
      * @param doAsUser proxy user
      * @return Results of the resume command.
+     * @throws UnsupportedEncodingException
      */
     public abstract InstancesResult resumeInstances(String type, String entity, String start, String end, String colo,
-                                           String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
-                                           String doAsUser) throws FalconCLIException, UnsupportedEncodingException;
+                                                    String clusters, String sourceClusters, List<LifeCycle> lifeCycles,
+                                                    String doAsUser) throws UnsupportedEncodingException;
 
     /**
      * Rerun instances of an entity. On issuing a rerun, by default the execution resumes from the last failed node in
@@ -332,11 +447,12 @@ public abstract class AbstractFalconClient {
      * @param isForced <optional param> can be used to forcefully rerun the entire instance.
      * @param doAsUser proxy user
      * @return Results of the rerun command.
+     * @throws IOException
      */
     public abstract InstancesResult rerunInstances(String type, String entity, String start, String end,
                                                    String filePath, String colo, String clusters,
                                                    String sourceClusters, List<LifeCycle> lifeCycles, Boolean isForced,
-                                                   String doAsUser) throws FalconCLIException, IOException;
+                                                   String doAsUser) throws IOException;
 
     /**
      * Get summary of instance/instances of an entity.
@@ -363,7 +479,7 @@ public abstract class AbstractFalconClient {
     public abstract InstancesSummaryResult getSummaryOfInstances(String type, String entity, String start, String end,
                                                                  String colo, List<LifeCycle> lifeCycles,
                                                                  String filterBy, String orderBy, String sortOrder,
-                                                                 String doAsUser) throws FalconCLIException;
+                                                                 String doAsUser);
 
     /**
      * Get falcon feed instance availability.
@@ -378,7 +494,7 @@ public abstract class AbstractFalconClient {
      * @return Feed instance availability status
      */
     public abstract FeedInstanceResult getFeedListing(String type, String entity, String start, String end, String colo,
-                                                      String doAsUser) throws FalconCLIException;
+                                                      String doAsUser);
 
     /**
      * Get log of a specific instance of an entity.
@@ -408,8 +524,7 @@ public abstract class AbstractFalconClient {
     public abstract InstancesResult getLogsOfInstances(String type, String entity, String start, String end,
                                                        String colo, String runId, List<LifeCycle> lifeCycles,
                                                        String filterBy, String orderBy, String sortOrder,
-                                                       Integer offset, Integer numResults, String doAsUser) throws
-            FalconCLIException;
+                                                       Integer offset, Integer numResults, String doAsUser);
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
@@ -423,10 +538,11 @@ public abstract class AbstractFalconClient {
      *                   Execution(default).
      * @param doAsUser proxy user
      * @return List of instances currently running.
+     * @throws UnsupportedEncodingException
      */
     public abstract InstancesResult getParamsOfInstance(String type, String entity, String start, String colo,
                                                         List<LifeCycle> lifeCycles, String doAsUser) throws
-            FalconCLIException, UnsupportedEncodingException;
+        UnsupportedEncodingException;
 
     /**
      * Get dependent instances for a particular instance.
@@ -437,17 +553,16 @@ public abstract class AbstractFalconClient {
      * @return Dependent instances for the specified instance
      */
     public abstract InstanceDependencyResult getInstanceDependencies(String entityType, String entityName,
-                                                                     String instanceTime, String colo) throws
-            FalconCLIException;
+                                                                     String instanceTime, String colo);
 
     /**
      * Get version of the falcon server.
      * @return Version of the server.
      */
-    public abstract String getVersion(String doAsUser) throws FalconCLIException;
+    public abstract String getVersion(String doAsUser);
 
     protected InputStream getServletInputStream(String clusters, String sourceClusters, String properties) throws
-            FalconCLIException, UnsupportedEncodingException {
+        UnsupportedEncodingException {
 
         InputStream stream;
         StringBuilder buffer = new StringBuilder();
@@ -463,4 +578,61 @@ public abstract class AbstractFalconClient {
         stream = new ByteArrayInputStream(buffer.toString().getBytes());
         return (buffer.length() == 0) ? null : stream;
     }
+
+    /**
+     * Converts a InputStream into ServletInputStream.
+     *
+     * @param filePath - Path of file to stream
+     * @return ServletInputStream
+     */
+    protected InputStream getServletInputStream(String filePath) {
+
+        if (filePath == null) {
+            return null;
+        }
+        InputStream stream;
+        try {
+            stream = new FileInputStream(filePath);
+        } catch (FileNotFoundException e) {
+            throw new FalconCLIException("File not found:" + filePath, e);
+        }
+        return stream;
+    }
+
+    public abstract SchedulableEntityInstanceResult getFeedSlaMissPendingAlerts(String entityType, String entityName,
+                                                                                String start, String end, String colo);
+
+    public abstract FeedLookupResult reverseLookUp(String entityType, String path, String doAs);
+
+    public abstract EntityList getDependency(String entityType, String entityName, String doAs);
+
+    public abstract TriageResult triage(String name, String entityName, String start, String colo);
+    // SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public abstract InstancesResult getRunningInstances(String type, String entity, String colo,
+                                                        List<LifeCycle> lifeCycles,
+                                                        String filterBy, String orderBy, String sortOrder,
+                                                        Integer offset, Integer numResults, String doAsUser);
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
+    public abstract FeedInstanceResult getFeedInstanceListing(String type, String entity, String start, String end,
+                                                              String colo, String doAsUser);
+    public abstract int getStatus(String doAsUser);
+
+    public abstract String getThreadDump(String doAs);
+
+    public abstract LineageGraphResult getEntityLineageGraph(String pipeline, String doAs);
+
+    public abstract String getDimensionList(String dimensionType, String cluster, String doAs);
+
+    public abstract String getReplicationMetricsDimensionList(String schedEntityType, String schedEntityName,
+                                                              Integer numResults, String doAs);
+
+    public abstract String getDimensionRelations(String dimensionType, String dimensionName, String doAs);
+
+    public abstract String getVertex(String id, String doAs);
+
+    public abstract String getVertices(String key, String value, String doAs);
+
+    public abstract String getVertexEdges(String id, String direction, String doAs);
+
+    public abstract String getEdge(String id, String doAs);
 }

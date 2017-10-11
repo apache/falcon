@@ -1,0 +1,93 @@
+---+HDFS Snapshot based Mirroring
+
+---++Overview
+HDFS snapshots are very cost effective to create ( cost is O(1) excluding iNode lookup time). Once created, it is very
+efficient to find modifications relative to a snapshot and copy over these modifications for disaster recovery (DR).
+This makes for cost effective HDFS mirroring.
+
+---++Prerequisites
+Following is the prerequisite to use HDFS Snapshot based Mirrroring.
+
+   * Hadoop version 2.7.0 or higher.
+   * User submitting and scheduling falcon snapshot based mirroring job should have permission to create and manage snapshots on both source and target directories.
+
+---++ Use Case
+Create and manage snapshots on source/target directories. Mirror data from source to target for disaster
+recovery using these snapshots. Perform retention on the snapshots created on source and target.
+
+
+---++ Usage
+
+---+++ Setup
+   * Submit a source cluster and target cluster entities to Falcon.
+   <verbatim>
+    $FALCON_HOME/bin/falcon entity -submit -type cluster -file source-cluster-definition.xml
+    $FALCON_HOME/bin/falcon entity -submit -type cluster -file target-cluster-definition.xml
+   </verbatim>
+   * Ensure that source directory on source cluster and target directory on target cluster exists.
+   * Ensure that these dirs are snapshot-able by user submitting extension. You can find more [[https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-hdfs/HdfsSnapshots.html][information on snapshots here]].
+
+---+++ HDFS Snapshot based mirroring extension properties
+   Extension artifacts are expected to be installed on HDFS at the path specified by "extension.store.uri" in startup properties.
+   hdfs-snapshot-mirroring-properties.json file located at "<extension.store.uri>/hdfs-snapshot-mirroring/META/hdfs-snapshot-mirroring-properties.json"
+   lists all the required and optional parameters/arguments for scheduling the mirroring job.
+
+   Here is a sample set of properties,
+   <verbatim>
+   ## Job Properties
+   jobName=hdfs-snapshot-test
+   jobClusterName=backupCluster
+   jobValidityStart=2016-01-01T00:00Z
+   jobValidityEnd=2016-04-01T00:00Z
+   jobFrequency=hours(12)
+   jobTimezone=UTC
+   jobTags=consumer=consumer@xyz.com
+   jobRetryPolicy=periodic
+   jobRetryDelay=minutes(30)
+   jobRetryAttempts=3
+
+   ## Job owner
+   jobAclOwner=ambari-qa
+   jobAclGroup=users
+   jobAclPermission=*
+
+   ## Source information
+   sourceCluster=primaryCluster
+   sourceSnapshotDir=/apps/falcon/snapshots/source/
+   sourceSnapshotRetentionPolicy=delete
+   sourceSnapshotRetentionAgeLimit=days(15)
+   sourceSnapshotRetentionNumber=10
+
+   ## Target information
+   targetCluster=backupCluster
+   targetSnapshotDir=/apps/falcon/snapshots/target/
+   targetSnapshotRetentionPolicy=delete
+   targetSnapshotRetentionAgeLimit=months(6)
+   targetSnapshotRetentionNumber=20
+
+   ## Distcp properties
+   distcpMaxMaps=1
+   distcpMapBandwidth=100
+   tdeEncryptionEnabled=false
+   </verbatim>
+
+
+The above properties ensure Falcon hdfs snapshot based mirroring extension does the following every 12 hours.
+   * Create snapshot on dir /apps/falcon/snapshots/source/ on primaryCluster.
+   * DistCP data from /apps/falcon/snapshots/source/ on primaryCluster to /apps/falcon/snapshots/target/ on backupCluster.
+   * Create snapshot on dir /apps/falcon/snapshots/target/ on backupCluster.
+   * Perform retention job on source and target.
+      * Maintain at least N latest snapshots and delete all other snapshots older than specified age limit.
+      * Today, only "delete" policy is supported for snapshot retention.
+
+*Note:*
+When TDE encryption is enabled on source/target directories, DistCP ignores the snapshots and treats it like a regular
+replication. While user may not get the performance benefit of using snapshot based DistCP, the extension is still useful
+for creating and maintaining snapshots.
+
+---+++ Submit and schedule HDFS snapshot mirroring extension
+User can submit extension using CLI or RestAPI. CLI command looks as follows
+   <verbatim>
+    $FALCON_HOME/bin/falcon extension -submitAndSchedule -extensionName hdfs-snapshot-mirroring -file propeties-file.txt
+   </verbatim>
+   Please Refer to [[falconcli/FalconCLI][Falcon CLI]] and [[restapi/ResourceList][REST API]] for more details on usage of CLI and REST API's.

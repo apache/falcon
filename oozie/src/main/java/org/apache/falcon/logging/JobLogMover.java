@@ -18,15 +18,18 @@
 
 package org.apache.falcon.logging;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.util.OozieActionConfigurationHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
@@ -68,20 +71,44 @@ public class JobLogMover {
         return conf == null ? new Configuration(): conf;
     }
 
+    public void moveLog(WorkflowExecutionContext context){
+        if (UserGroupInformation.isSecurityEnabled()) {
+            LOG.info("Unable to move logs as security is enabled.");
+            return;
+        }
+        try {
+            run(context);
+        } catch (Exception ignored) {
+            // Mask exception, a failed log mover will not fail the user workflow
+            LOG.error("Exception in job log mover:", ignored);
+        }
+    }
+
     public int run(WorkflowExecutionContext context) {
         try {
-            OozieClient client = new OozieClient(context.getWorkflowEngineUrl());
+            String engineUrl = context.getWorkflowEngineUrl();
+            if (StringUtils.isBlank(engineUrl)) {
+                LOG.warn("Unable to retrieve workflow url for {} with status {} ",
+                        context.getWorkflowId(), context.getWorkflowStatus());
+                return 0;
+            }
+            String instanceOwner = context.getWorkflowUser();
+            if (StringUtils.isNotBlank(instanceOwner)) {
+                CurrentUser.authenticate(instanceOwner);
+            } else {
+                CurrentUser.authenticate(System.getProperty("user.name"));
+            }
+            OozieClient client = new OozieClient(engineUrl);
             WorkflowJob jobInfo;
             try {
-                jobInfo = client.getJobInfo(context.getUserSubflowId());
+                jobInfo = client.getJobInfo(context.getWorkflowId());
             } catch (OozieClientException e) {
                 LOG.error("Error getting jobinfo for: {}", context.getUserSubflowId(), e);
                 return 0;
             }
-
             //Assumption is - Each wf run will have a directory
             //the corresponding job logs are stored within the respective dir
-            Path path = new Path(context.getLogDir() + "/"
+            Path path = new Path(context.getLogDir() + "/" + context.getNominalTime() + "/"
                     + String.format("%03d", context.getWorkflowRunId()));
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri(), getConf());
 
@@ -104,6 +131,7 @@ public class JobLogMover {
                         ||context.getUserWorkflowEngine().equals("hive")) {
                     flowId = jobInfo.getId();
                 } else {
+                    jobInfo = client.getJobInfo(context.getUserSubflowId());
                     // if process wf with oozie engine
                     flowId = jobInfo.getExternalId();
                 }

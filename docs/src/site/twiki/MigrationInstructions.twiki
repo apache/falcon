@@ -1,15 +1,32 @@
 ---+ Migration Instructions
 
----++ Migrate from 0.5-incubating to 0.6-incubating
+---++ Migrate from 0.9 to 0.10
 
-This is a placeholder wiki for migration instructions from falcon 0.5-incubating to 0.6-incubating.
+FALCON-1333 (Instance Search feature) requires Falcon to use titan-berkeleyje version 0.5.4 to support indexing.
+Up until version 0.9 - Falcon used titan-berkeleyje-jre6 version 0.4.2. GraphDB created by version 0.4.2 cannot be
+read by version 0.5.4. The solution is to migrate the GraphDB to be compatible with Falcon 0.10 release. Please make
+sure that no falcon server is running while performing the migration.
 
----+++ Update Entities
+---+++ 1. Install Falcon 0.10
+Install Falcon 0.10 by following the [[InstallationSteps][Installation Steps]]. Do not start the falcon server yet.
+The tool to migrate graphDB is packaged with 0.10 Falcon server in falcon-common-0.10.jar.
 
----+++ Change cluster dir permissions
+---+++ 2. Export GraphDB to JSON file using Falcon 0.9
+Please run the following command to generate the JSON file.
 
----+++ Enable/Disable TLS
+<verbatim>
+ $FALCON_HOME/bin/graphdbutil.sh export <<java_home> <<hadoop_home>> <<falcon_0.9_home>> <<path_to_falcon-common-0.10.jar>> /jsonFile/dir/
+</verbatim>
 
----+++ Authorization
+This command will create /jsonFile/dir/instanceMetadata.json
 
+---+++ 3. Import GraphDB from JSON file using Falcon 0.10
+Please run the following command to import graphDB the JSON file. The location of graphDB will be based on property
+"*.falcon.graph.storage.directory" set in startup.properties file.
+
+<verbatim>
+  $FALCON_HOME/bin/graphdbutil.sh export <<java_home> <<hadoop_home>> <<falcon_0.10_home>> <<path_to_falcon-common-0.10.jar>> /jsonFile/dir/
+</verbatim>
+
+This command will import from /jsonFile/dir/instanceMetadata.json, now start the Falcon 0.10 server.
 

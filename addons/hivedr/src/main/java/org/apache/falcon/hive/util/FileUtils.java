@@ -33,20 +33,23 @@ import java.io.IOException;
  */
 public final class FileUtils {
 
-    public static final String DEFAULT_EVENT_STORE_PATH = DRStatusStore.BASE_DEFAULT_STORE_PATH
-            + File.separator + "Events";
+    public static final String DEFAULT_EVENT_STORE_PATH = StringUtils.removeEnd(DRStatusStore
+            .BASE_DEFAULT_STORE_PATH,  File.separator) + File.separator + "Events" + File.separator;
     public static final FsPermission FS_PERMISSION_700 = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
+    public static final FsPermission DEFAULT_DIR_PERMISSION =
+            new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE);
 
 
     private FileUtils() {}
 
-    public static Configuration getConfiguration(final String writeEP, final String nnKerberosPrincipal) {
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", writeEP);
+    public static Configuration getConfiguration(Configuration conf,
+                                final String writeEP, final String nnKerberosPrincipal) throws IOException {
+        Configuration newConf = new Configuration(conf);
+        newConf.set("fs.defaultFS", writeEP);
         if (StringUtils.isNotEmpty(nnKerberosPrincipal)) {
-            conf.set("dfs.namenode.kerberos.principal", nnKerberosPrincipal);
+            newConf.set("dfs.namenode.kerberos.principal", nnKerberosPrincipal);
         }
-        return conf;
+        return newConf;
     }
 
     public static void validatePath(final FileSystem fileSystem, final Path basePath) throws IOException {

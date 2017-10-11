@@ -44,6 +44,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -80,6 +81,35 @@ public class EntityUtilTest extends AbstractTestBase {
 
         view = EntityUtil.getClusterView(feed, "backupCluster");
         Assert.assertEquals(view.getClusters().getClusters().size(), 2);
+    }
+    @Test
+    public void  testGetInstancesInBetween(){
+        Date startTime = SchemaHelper.parseDateUTC("2016-09-30T15:24Z");
+        Date endTime = SchemaHelper.parseDateUTC("2016-09-30T17:04Z");
+        Frequency frequency = new Frequency("minutes(5)");
+        Date startRange = SchemaHelper.parseDateUTC("2016-09-30T15:25Z");
+        Date endRange = SchemaHelper.parseDateUTC("2016-09-30T15:30Z");
+        List<Date> instances = EntityUtil.getInstancesInBetween(startTime, endTime, frequency, tz, startRange,
+                endRange);
+        startRange = SchemaHelper.parseDateUTC("2016-09-30T15:18Z");
+        endRange = SchemaHelper.parseDateUTC("2016-09-30T15:24Z");
+        instances.addAll(EntityUtil.getInstancesInBetween(startTime, endTime, frequency, tz, startRange, endRange));
+        Assert.assertEquals(instances.size(), 2);
+        startRange = SchemaHelper.parseDateUTC("2016-09-30T15:24Z");
+        endRange = SchemaHelper.parseDateUTC("2016-09-30T15:25Z");
+        instances = EntityUtil.getInstancesInBetween(startTime, endTime, frequency, tz, startRange, endRange);
+        Assert.assertEquals(instances.size(), 1);
+
+        frequency = new Frequency("minutes(2)");
+        startRange = SchemaHelper.parseDateUTC("2016-09-30T16:32Z");
+        endRange = SchemaHelper.parseDateUTC("2016-09-30T17:02Z");
+        instances = EntityUtil.getInstancesInBetween(startTime, endTime, frequency, tz, startRange, endRange);
+        Assert.assertEquals(instances.size(), 16);
+        startRange = SchemaHelper.parseDateUTC("2016-09-30T15:24Z");
+        endRange = SchemaHelper.parseDateUTC("2016-09-30T17:05Z");
+        instances = EntityUtil.getInstancesInBetween(startTime, endTime, frequency, tz, startRange, endRange);
+        Assert.assertEquals(instances.size(), 50);
+
     }
 
     @Test
@@ -450,4 +480,33 @@ public class EntityUtilTest extends AbstractTestBase {
         // Ensure latest is returned.
         Assert.assertEquals(EntityUtil.getLatestStagingPath(cluster, process).getName(), md5 + "_1436357052992");
     }
+
+    @Test
+    public void testIsClusterUsedByEntity() throws Exception {
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+        Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(FEED_XML));
+        org.apache.falcon.entity.v0.cluster.Cluster cluster =
+                (org.apache.falcon.entity.v0.cluster.Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(
+                        getClass().getResourceAsStream(CLUSTER_XML));
+
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(cluster, "testCluster"));
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(feed, "testCluster"));
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(feed, "backupCluster"));
+        Assert.assertTrue(EntityUtil.isEntityDependentOnCluster(process, "testCluster"));
+
+        Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(cluster, "fakeCluster"));
+        Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(feed, "fakeCluster"));
+        Assert.assertFalse(EntityUtil.isEntityDependentOnCluster(process, "fakeCluster"));
+    }
+
+    @Test
+    public void testGetNextInstanceTimeWithDelay() throws Exception {
+        Date date = getDate("2016-08-10 03:00 UTC");
+        Frequency delay = new Frequency("hours(2)");
+        Date nextInstanceWithDelay = EntityUtil.getNextInstanceTimeWithDelay(date, delay, TimeZone.getTimeZone("UTC"));
+        Assert.assertEquals(nextInstanceWithDelay, getDate("2016-08-10 05:00 UTC"));
+    }
+
 }

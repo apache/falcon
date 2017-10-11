@@ -34,6 +34,9 @@ import java.util.regex.Pattern;
 public class WorkflowNameBuilder<T extends Entity> {
     private static final String PREFIX = "FALCON";
 
+    // Oozie JMS message property name that holds the workflow app name
+    private static final String OOZIE_JMS_MSG_APPNAME_PROP = "appName";
+
     private T entity;
     private Tag tag;
     private List<String> suffixes;
@@ -152,6 +155,10 @@ public class WorkflowNameBuilder<T extends Entity> {
                 }
             }
             return null;
+        }
+
+        public static String getJMSFalconSelector() {
+            return String.format("%s like '%s%s%%'", OOZIE_JMS_MSG_APPNAME_PROP, PREFIX, SEPARATOR);
         }
     }
 }

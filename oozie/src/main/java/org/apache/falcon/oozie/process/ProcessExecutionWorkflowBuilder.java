@@ -79,24 +79,14 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         //Add pre-processing action
         if (shouldPreProcess()) {
             ACTION preProcessAction = getPreProcessingAction(isTableStorageType, Tag.DEFAULT);
-            addTransition(preProcessAction, USER_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            addTransition(preProcessAction, USER_ACTION_NAME, getFailAction());
             wfApp.getDecisionOrForkOrJoin().add(preProcessAction);
             startAction = PREPROCESS_ACTION_NAME;
         }
-
         //Add user action
         ACTION userAction = getUserAction(cluster, buildPath);
-        addTransition(userAction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(userAction);
 
-        //Add post-processing
-        ACTION success = getSuccessPostProcessAction();
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        wfApp.getDecisionOrForkOrJoin().add(fail);
+        addPostProcessing(wfApp, userAction);
 
         decorateWorkflow(wfApp, wfName, startAction);
 
@@ -213,7 +203,9 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
             configProperty.setValue((String) entry.getValue());
             configuration.add(configProperty);
 
-            paramList.add(entry.getKey() + "=" + entry.getValue());
+            if (paramList != null) {
+                paramList.add(entry.getKey() + "=" + entry.getValue());
+            }
         }
     }
 

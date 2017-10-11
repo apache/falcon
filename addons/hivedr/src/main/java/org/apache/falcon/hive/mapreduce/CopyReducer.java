@@ -35,19 +35,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Reducer class for Hive DR.
  */
 public class CopyReducer extends Reducer<Text, Text, Text, Text> {
     private DRStatusStore hiveDRStore;
+    private ScheduledThreadPoolExecutor timer;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        FileSystem fs= FileSystem.get(FileUtils.getConfiguration(
-                conf.get(HiveDRArgs.TARGET_NN.getName()),
-                conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName())));
+        FileSystem fs = FileSystem.get(
+                FileUtils.getConfiguration(context.getConfiguration(),
+                        conf.get(HiveDRArgs.TARGET_NN.getName()),
+                        conf.get(HiveDRArgs.TARGET_NN_KERBEROS_PRINCIPAL.getName())));
         hiveDRStore = new HiveDRStatusStore(fs);
     }
 
@@ -62,9 +66,18 @@ public class CopyReducer extends Reducer<Text, Text, Text, Text> {
     }
 
     @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<Text> values, final Context context)
+        throws IOException, InterruptedException {
         List<ReplicationStatus> replStatusList = new ArrayList<ReplicationStatus>();
         ReplicationStatus rs;
+        timer = new ScheduledThreadPoolExecutor(1);
+        timer.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                System.out.println("Hive DR copy reducer progress heart beat");
+                context.progress();
+            }
+        }, 0, 30, TimeUnit.SECONDS);
+
         try {
             for (Text value : values) {
                 String[] fields = (value.toString()).split("\t");
@@ -76,6 +89,8 @@ public class CopyReducer extends Reducer<Text, Text, Text, Text> {
             hiveDRStore.updateReplicationStatus(key.toString(), sortStatusList(replStatusList));
         } catch (HiveReplicationException e) {
             throw new IOException(e);
+        } finally {
+            timer.shutdownNow();
         }
     }
 

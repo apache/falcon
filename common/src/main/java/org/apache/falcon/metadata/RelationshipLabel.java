@@ -29,6 +29,7 @@ public enum RelationshipLabel {
     FEED_PROCESS_EDGE("input"),
     PROCESS_FEED_EDGE("output"),
     DATASOURCE_IMPORT_EDGE("import"),
+    DATASOURCE_EXPORT_EDGE("export"),
 
     // instance edge labels
     INSTANCE_ENTITY_EDGE("instance-of"),
@@ -38,6 +39,7 @@ public enum RelationshipLabel {
     USER("owned-by"),
     GROUPS("grouped-as"),
     PIPELINES("pipeline"),
+    DATASOURCE_COLO("datasource-colo"),
 
     // replication labels
     FEED_CLUSTER_REPLICATED_EDGE("replicated-to"),

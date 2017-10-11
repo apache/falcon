@@ -25,37 +25,41 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.11-SNAPSHOT</version>
     </parent>
     <artifactId>falcon-cli</artifactId>
     <description>Apache Falcon CLI client</description>
     <name>Apache Falcon CLI client</name>
     <packaging>jar</packaging>
 
-    <profiles>
-        <profile>
-            <id>hadoop-2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-auth</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-client</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
+
 
     <dependencies>
+
         <dependency>
-            <groupId>org.apache.falcon</groupId>
-            <artifactId>falcon-client</artifactId>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -142,6 +146,16 @@
             <artifactId>spring-beans</artifactId>
             <version>4.0.3.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
     </dependencies>
 
@@ -165,7 +179,6 @@
                             <include>commons-codec:*</include>
                             <include>commons-io:*</include>
                             <include>jline:*</include>
-                            <include>org.slf4j:*</include>
                             <include>log4j:*</include>
                             <include>com.sun.jersey:*</include>
                             <include>org.springframework:*</include>

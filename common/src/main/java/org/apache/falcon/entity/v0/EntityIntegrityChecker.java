@@ -35,10 +35,6 @@ public final class EntityIntegrityChecker {
 
     public static Pair<String, EntityType>[] referencedBy(Entity entity) throws FalconException {
         Set<Entity> deps = EntityGraph.get().getDependents(entity);
-        if (deps == null) {
-            return null;
-        }
-
         switch (entity.getEntityType()) {
         case CLUSTER:
             return filter(deps, EntityType.FEED, EntityType.PROCESS);

@@ -67,6 +67,9 @@ public class DataAvailabilityService implements FalconNotificationService {
     public void register(NotificationRequest request) throws NotificationServiceException {
         LOG.info("Registering Data notification for " + request.getCallbackId().toString());
         DataNotificationRequest dataNotificationRequest = (DataNotificationRequest) request;
+        if (instancesToIgnore.containsKey(dataNotificationRequest.getCallbackId())) {
+            instancesToIgnore.remove(dataNotificationRequest.getCallbackId());
+        }
         delayQueue.offer(dataNotificationRequest);
     }
 
@@ -246,7 +249,11 @@ public class DataAvailabilityService implements FalconNotificationService {
                                              Map<Path, Boolean> locations) throws IOException {
             for (Path path : unAvailablePaths) {
                 if (fs.exists(path)) {
-                    locations.put(path, true);
+                    if (locations.containsKey(path)) {
+                        locations.put(path, true);
+                    } else {
+                        locations.put(new Path(path.toUri().getPath()), true);
+                    }
                 }
             }
         }

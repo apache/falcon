@@ -1,0 +1,57 @@
+---++Entity SLA Alerting
+
+Falcon supports SLA in feed and process.
+
+Types of SLA supported for feed:
+
+   1.slaLow
+   1.slaHigh
+
+To know more about feedSla look at [[EntitySpecification][Feed Specification]]
+
+Types of SLA supported for process:
+
+   1.shouldStartIn
+   1.shouldEndIn
+
+To know more about processSla look at [[EntitySpecification][Process Specification]]
+
+Falcon Entity Alerting service do the following things:
+
+   1.Monitor instances of feed and process and send notifications to all the listeners attached to it.
+   1.In case of feed it notifies when an *slaHigh* miss happens. slaLow is not supported.
+   1.In case of process it notifies when an SLA miss for *shouldEndIn* happens. shouldStartIn is not supported.
+
+Entity SLA Alert service depends upon [[EntitySLAMonitoring][Falcon Entity SLA Monitoring]] to know which process and feed instances are to be monitored.
+
+*How to attach listeners:*
+
+You can write custom listeners to do some action whenever a process or feed instance misses its SLA.
+To attach listeners please add below property in startup.properties:
+
+<verbatim>
+
+*.entityAlert.listeners=org.apache.customPath.customListener
+
+</verbatim>
+
+Currently Falcon natively supports [[BacklogMetricEmitterService][Back Log Emitter Service]] as a listener to EntitySLAAlert service
+
+---++Dependencies:
+
+*Other Services:*
+
+To enable Enity SLA Alerting service you need to enable [[EntitySLAMonitoring][Falcon Entity SLA Monitoring]]
+
+ Following properties are needed in startup.properties:
+
+<verbatim>
+
+*.application.services=org.apache.falcon.service.EntitySLAAlertService
+
+*.entity.sla.statusCheck.frequency.seconds=600
+</verbatim>
+
+*Falcon Database:*
+
+Entity SLA Alerting service maintains its state in the database.It needs one table *ENTITY_SLA_ALERTS* please have a look at [[FalconDatabase]] to know how to create it.

@@ -29,7 +29,6 @@ import org.apache.falcon.entity.HiveUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.ClusterLocationType;
-import org.apache.falcon.entity.v0.datasource.DatasourceType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -37,8 +36,10 @@ import org.apache.falcon.oozie.feed.FSReplicationWorkflowBuilder;
 import org.apache.falcon.oozie.feed.FeedRetentionWorkflowBuilder;
 import org.apache.falcon.oozie.feed.HCatReplicationWorkflowBuilder;
 import org.apache.falcon.oozie.process.HiveProcessWorkflowBuilder;
+import org.apache.falcon.oozie.process.NativeOozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.OozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.PigProcessWorkflowBuilder;
+import org.apache.falcon.oozie.process.SparkProcessWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.CREDENTIAL;
@@ -58,6 +59,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.joda.time.DateTime;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
@@ -76,7 +78,14 @@ import java.util.Set;
  * @param <T>
  */
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
-    protected static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+    public static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+
+    public String getEnablePostProcessing() {
+        return enablePostprocessing;
+    }
+
+    private String enablePostprocessing = StartupProperties.get().
+            getProperty("falcon.postprocessing.enable");
 
     protected static final String USER_ACTION_NAME = "user-action";
     protected static final String PREPROCESS_ACTION_NAME = "pre-processing";
@@ -93,10 +102,18 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
             new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME, }));
 
     private LifeCycle lifecycle;
+    private DateTime nominalTime;
 
     protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
     protected static final String MR_QUEUE_NAME = "queueName";
     protected static final String MR_JOB_PRIORITY = "jobPriority";
+
+    /**
+     * Represents Scheduler for Entities.
+     */
+    public enum Scheduler {
+        OOZIE, NATIVE
+    }
 
     public OozieOrchestrationWorkflowBuilder(T entity, LifeCycle lifecycle) {
         super(entity);
@@ -115,7 +132,17 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         super(entity);
     }
 
-    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
+    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster,
+                                                        Tag lifecycle) throws FalconException {
+        return get(entity, cluster, lifecycle, Scheduler.OOZIE);
+    }
+
+    public Boolean isPostProcessingEnabled(){
+        return Boolean.parseBoolean(getEnablePostProcessing());
+    }
+
+    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle,
+                                                        Scheduler scheduler)
         throws FalconException {
         switch (entity.getEntityType()) {
         case FEED:
@@ -133,26 +160,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 }
 
             case IMPORT:
-                DatasourceType dsType = EntityUtil.getImportDatasourceType(cluster, feed);
-                if ((dsType == DatasourceType.MYSQL)
-                    || (dsType == DatasourceType.ORACLE)
-                    || (dsType == DatasourceType.HSQL)) {
-                    return new DatabaseImportWorkflowBuilder(feed);
-                } else {
-                    LOG.info("Import policy not implemented for DataSourceType : " + dsType);
-                }
-                break;
+                return new DatabaseImportWorkflowBuilder(feed);
 
             case EXPORT:
-                dsType = EntityUtil.getExportDatasourceType(cluster, feed);
-                if ((dsType == DatasourceType.MYSQL)
-                        || (dsType == DatasourceType.ORACLE)
-                        || (dsType == DatasourceType.HSQL)) {
-                    return new DatabaseExportWorkflowBuilder(feed);
-                } else {
-                    LOG.info("Export policy not implemented for DataSourceType : " + dsType);
-                }
-                break;
+                return new DatabaseExportWorkflowBuilder(feed);
 
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
@@ -166,10 +177,16 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 return new PigProcessWorkflowBuilder(process);
 
             case OOZIE:
+                if (Scheduler.NATIVE == scheduler) {
+                    return new NativeOozieProcessWorkflowBuilder(process);
+                }
                 return new OozieProcessWorkflowBuilder(process);
 
             case HIVE:
                 return new HiveProcessWorkflowBuilder(process);
+
+            case SPARK:
+                return new SparkProcessWorkflowBuilder(process);
 
             default:
                 break;
@@ -211,6 +228,33 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         kill.setName(FAIL_ACTION_NAME);
         kill.setMessage("Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]");
         wf.getDecisionOrForkOrJoin().add(kill);
+    }
+
+    protected String getFailAction(){
+        if (!isPostProcessingEnabled()){
+            return FAIL_ACTION_NAME;
+        }else{
+            return FAIL_POSTPROCESS_ACTION_NAME;
+        }
+    }
+
+    protected void addPostProcessing(WORKFLOWAPP workflow, ACTION action) throws FalconException{
+        if (!isPostProcessingEnabled()){
+            addTransition(action, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(action);
+        }else{
+            addTransition(action, SUCCESS_POSTPROCESS_ACTION_NAME,  FAIL_POSTPROCESS_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(action);
+
+            //Add post-processing actions
+            ACTION success = getSuccessPostProcessAction();
+            addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(success);
+
+            ACTION fail = getFailPostProcessAction();
+            addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(fail);
+        }
     }
 
     protected ACTION getSuccessPostProcessAction() throws FalconException {
@@ -329,7 +373,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     }
 
     // creates hive-site.xml configuration in conf dir for the given cluster on the same cluster.
-    protected void createHiveConfiguration(Cluster cluster, Path workflowPath,
+    public void createHiveConfiguration(Cluster cluster, Path workflowPath,
                                            String prefix) throws FalconException {
         Configuration hiveConf = getHiveCredentialsAsConf(cluster);
 
@@ -413,7 +457,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         credential.setName(credentialName);
         credential.setType("hcat");
 
-        credential.getProperty().add(createProperty(HiveUtil.METASTROE_URI, metaStoreUrl));
+        credential.getProperty().add(createProperty(HiveUtil.METASTORE_URI, metaStoreUrl));
         credential.getProperty().add(createProperty(SecurityUtil.METASTORE_PRINCIPAL,
                 ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_KERBEROS_PRINCIPAL)));
 
@@ -496,5 +540,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
             conf.getProperty().add(confProp);
         }
         return conf;
+    }
+
+    public void setNominalTime(DateTime nominalTime) {
+        this.nominalTime = nominalTime;
+    }
+
+    public DateTime getNominalTime() {
+        return nominalTime;
     }
 }

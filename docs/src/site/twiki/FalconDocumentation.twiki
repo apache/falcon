@@ -2,18 +2,20 @@
    * <a href="#Architecture">Architecture</a>
    * <a href="#Control_flow">Control flow</a>
    * <a href="#Modes_Of_Deployment">Modes Of Deployment</a>
+   * <a href="#Configuring_Falcon">Configuring Falcon</a>
    * <a href="#Entity_Management_actions">Entity Management actions</a>
    * <a href="#Instance_Management_actions">Instance Management actions</a>
    * <a href="#Retention">Retention</a>
    * <a href="#Replication">Replication</a>
    * <a href="#Cross_entity_validations">Cross entity validations</a>
+   * <a href="#Updating_cluster_entity_definition">Updating cluster entity</a>
    * <a href="#Updating_process_and_feed_definition">Updating process and feed definition</a>
    * <a href="#Handling_late_input_data">Handling late input data</a>
    * <a href="#Idempotency">Idempotency</a>
    * <a href="#Falcon_EL_Expressions">Falcon EL Expressions</a>
    * <a href="#Lineage">Lineage</a>
    * <a href="#Security">Security</a>
-   * <a href="#Recipes">Recipes</a>
+   * <a href="#Extensions">Extensions</a>
    * <a href="#Monitoring">Monitoring</a>
    * <a href="#Email_Notification">Email Notification</a>
    * <a href="#Backwards_Compatibility">Backwards Compatibility Instructions</a>
@@ -91,6 +93,46 @@ Startup property file in both falcon & prism server need to be configured with t
 
 ---++++ Prism Setup
 <img src="PrismSetup.png" height="400" width="600" />
+
+---+++ Safe Mode
+Safemode is useful when the admin wants to prevent Falcon users from scheduling entities in the workflow engine. This can happen when
+   * Hadoop clusters are being upgraded.
+   * Falcon cluster entities are being updated.
+
+When in Safemode, users can only perform limited operations. To be specific,
+   * Users can perform read operations on entities subject to authorization.
+   * Superuser can perform cluster entity update operation.
+   * Suspend/Kill of individual instances will be allowed if users want to suspend specific job operations.
+   * Suspend operation on schedulable entities will be allowed. This is because, a user might want to suspend entities during rolling-upgrade to handle jobs incompatible with updated versions.
+   * All other operations are not allowed. To enumerate,
+      * All entity submit, submitAndSchedule operations are not allowed.
+      * Entity operations not allowed are : update, schedule, touch, delete, submit, submitAndSchedule, resume
+      * Instance operations not allowed are : rerun, resume
+
+---++++ Getting into/out-of Safemode.
+The Falcon process user can specify whether to start Falcon in safemode with the following command:
+<verbatim>
+<falcon-server>/bin/falcon-start -setsafemode <true/false>
+</verbatim>
+
+A superuser or admin-user can set Falcon server into/outof safemode using CLI or RestAPI. A user is considered superuser if they
+owns the Falcon process or belong to group specified in startup property falcon.security.authorization.superusergroup. A user is
+considered admin user if they are listed under startup property falcon.security.authorization.admin.users, OR they belong to group
+listed under startup property falcon.security.authorization.admin.groups.
+
+<verbatim>
+## CLI
+<falcon-server>/bin/falcon admin  [-setsafemode <true/false>]
+
+## RestAPI
+GET http://falcon-server:15000/api/admin/setSafeMode/true
+OR
+GET http://falcon-server:15000/api/admin/setSafeMode/false
+</verbatim>
+
+*NOTE* User can find if FalconServer is in safemode or not, by calling the [[restapi/AdminVersion][Admin Version]] API. Once
+server is set to safemode, this state is persisted during restarts. It has to be unset explicitly if user wants to exit safemode.
+
  
 ---+++ Configuration Store
 Configuration store is file system based store that the Falcon system maintains where the entity definitions
@@ -156,6 +198,9 @@ Examples:
 <table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 </verbatim>
 
+---++ Configuring Falcon
+
+Configuring Falcon is detailed in [[Configuration][Configuration]].
 
 ---++ Entity Management actions
 All the following operation can also be done using [[restapi/ResourceList][Falcon's RESTful API]].
@@ -205,9 +250,14 @@ entity from the falcon configuration store. Delete operation on an entity would 
 no dependent entities on the deleted entity.
 
 ---+++ Update
-Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
-not allowed. Feed update can cause cascading update to all the processes already scheduled. Process update triggers
-update in falcon if entity is updated. The following set of actions are performed in scheduler to realize an update:
+Update operation allows an already submitted/scheduled entity to be updated. Feed update can cause cascading update to
+all the processes already scheduled. Process update triggers update in falcon if entity is scheduled.
+
+Cluster update will require user to  update dependent Feed and Process entities that are already scheduled.
+Cluster update needs to be performed in safemode. We provide a CLI command for the user to update the scheduled
+dependent entities after cluster update and exiting safemode.
+
+The following set of actions are performed in scheduler to realize an update:
    * Update the old scheduled entity to set the end time to "now"
    * Schedule as per the new process/feed definition with the start time as "now"
 
@@ -265,6 +315,12 @@ feed past the cluster validity end time, user should set property "falcon.retent
 to false in runtime.properties.
 
 With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
+
+When a feed is scheduled Falcon kicks off the retention policy immediately. When job runs, it deletes everything that's eligible for eviction - eligibility criteria is the date pattern on the partition and NOT creation date.
+For e.g. if the retention limit is 90 days then retention job consistently deletes files older than 90 days.
+
+For retention, Falcon expects data to be in dated partitions. When the retention job is kicked off, it discovers data that needs to be evicted based on retention policy. It gets the location from the feed and uses pattern matching
+to find the pattern to get the list of data for the feed, then gets the date from the data path. If the data path date is beyond the retention limit it's deleted. As this uses pattern matching it is not time consuming and hence doesn't introduce performance overhead.
 
 ---+++ Example:
 If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
@@ -391,9 +447,11 @@ cluster, (no dirty reads)
 
 ---+++ Archival as Replication
 
-Falcon allows users to archive data from on-premice to cloud, either Azure WASB or S3.
+Falcon allows users to archive data from on-premise to cloud, either Azure WASB or S3.
 It uses the underlying replication for archiving data from source to target. The archival URI is
 specified as the overridden location for the target cluster.
+Note that for data replication between on-premise and Azure cloud, Azure credentials need to be added to core-site.xml.
+Please refer to [[DataReplicationAzure][AzureDataReplication]] for details and examples.
 
 *Example:*
 <verbatim>
@@ -565,10 +623,37 @@ Failure to follow any of the above rules would result in a process submission fa
 present in the system for the specified time period, the process can be submitted and scheduled, but all instances
 created would result in a WAITING state unless data is actually provided in the cluster.
 
+---++ Updating cluster entity definition
+Cluster entities can be updated when the user wants to change their interface endpoints or properties,
+e.g. hadoop clusters updated from unsecure to secure; hadoop cluster moved from non high-availability to high-availability, etc.
 
+In these scenarios, user would want to change the cluster entity to reflect updated interface endpoints or properties.
+Updating cluster would require cascading update to dependent feed/process jobs scheduled on this cluster. So Falcon only allows
+Cluster update when
+   * Falcon server is in safemode.
+   * The update is requested by superuser
+   * The underlying namenode or workflow engine referenced by interface URI is the same. It is only the URI that has changed to reflect secure/HA environments.
+
+Cluster entity should be updated by superuser using following CLI command.
+<verbatim>
+bash$ falcon entity -type cluster -name primaryCluster -update -file ~/primary-updated.xml
+</verbatim>
+
+Once the cluster entity is updated, user should exit FalconServer from safemode and update the scheduled entities that are
+dependent on this Cluster. In case of an error during update, user should address the root cause of failure and retry
+the command. For example : if the cluster has 10 dependent entities and the updateClusterDependents command failed
+after updating 6th entity, rerun of this command will only update entities 7 to 10.
+<verbatim>
+bash$ falcon entity -updateClusterDependents -cluster primaryCluster
+</verbatim>
+
+Please Refer to [[falconcli/FalconCLI][Falcon CLI]] for more details on usage of CLI commands.
 
 ---++ Updating process and feed definition
-Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated. Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates feed workflows like retention, replication etc. and also updates the processes that reference the feed.
+Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to
+be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated.
+Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates
+feed workflows like retention, replication etc. and also updates the processes that reference the feed.
 
 
 ---++ Handling late input data
@@ -732,13 +817,13 @@ lifecycle policies such as replication and retention.
 
 Security is detailed in [[Security][Security]].
 
----++ Recipes
+---++ Extensions
 
-Recipes is detailed in [[Recipes][Recipes]].
+Extensions is detailed in [[Extensions][Extensions]].
 
 ---++ Monitoring
 
-Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]].
+Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]] and [[EntitySLAMonitoring][Falcon Entity SLA Monitoring]].
 
 ---++ Email Notification
 Notification for instance completion in Falcon is defined in [[FalconEmailNotification][Falcon Email Notification]].

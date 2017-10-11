@@ -41,6 +41,15 @@
     </filter>
 
     <filter>
+        <filter-name>csrf</filter-name>
+        <filter-class>org.apache.falcon.security.FalconCSRFFilter</filter-class>
+        <init-param>
+            <param-name>methods-to-ignore</param-name>
+            <param-value>GET</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
         <filter-name>authorization</filter-name>
         <filter-class>org.apache.falcon.security.FalconAuthorizationFilter</filter-class>
     </filter>
@@ -57,6 +66,11 @@
 
     <filter-mapping>
         <filter-name>authentication</filter-name>
+        <servlet-name>FalconRESTApi</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>csrf</filter-name>
         <servlet-name>FalconRESTApi</servlet-name>
     </filter-mapping>
 
@@ -79,7 +93,9 @@
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
             <param-value>
-                org.apache.falcon.resource.admin,org.apache.falcon.resource.provider,org.apache.falcon.resource.proxy,org.apache.falcon.resource.metadata
+                org.apache.falcon.resource.admin,org.apache.falcon.resource.provider,
+                org.apache.falcon.resource.proxy,org.apache.falcon.resource.metadata,
+                org.apache.falcon.resource.extensions
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

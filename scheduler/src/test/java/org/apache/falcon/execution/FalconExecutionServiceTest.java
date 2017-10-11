@@ -45,7 +45,7 @@ import org.apache.falcon.state.InstanceID;
 import org.apache.falcon.state.InstanceState;
 import org.apache.falcon.state.store.AbstractStateStore;
 import org.apache.falcon.state.store.StateStore;
-import org.apache.falcon.state.store.service.FalconJPAService;
+import org.apache.falcon.service.FalconJPAService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.DAGEngine;
 import org.apache.falcon.workflow.engine.DAGEngineFactory;
@@ -271,10 +271,12 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         FalconExecutionService.get().resume(process);
         instance1 = stateStore.getExecutionInstance(new InstanceID(instance1.getInstance()));
         instance2 = stateStore.getExecutionInstance(new InstanceID(instance2.getInstance()));
-        Assert.assertEquals(instance1.getCurrentState(), InstanceState.STATE.RUNNING);
+        Assert.assertEquals(instance1.getCurrentState(), InstanceState.STATE.READY);
         Assert.assertEquals(instance2.getCurrentState(), InstanceState.STATE.READY);
 
         // Running should finish after resume
+        event = createEvent(NotificationServicesRegistry.SERVICE.JOB_SCHEDULE, instance1.getInstance());
+        FalconExecutionService.get().onEvent(event);
         event = createEvent(NotificationServicesRegistry.SERVICE.JOB_COMPLETION, instance1.getInstance());
         FalconExecutionService.get().onEvent(event);
 
@@ -361,7 +363,7 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
     }
 
     // Non-triggering event should not create an instance
-    @Test
+    @Test(enabled = false)
     public void testNonTriggeringEvents() throws Exception {
         storeEntity(EntityType.PROCESS, "summarize6");
         Process process = getStore().get(EntityType.PROCESS, "summarize6");
@@ -611,12 +613,13 @@ public class FalconExecutionServiceTest extends AbstractSchedulerTestBase {
         }
     }
 
-    private Event createEvent(NotificationServicesRegistry.SERVICE type, ExecutionInstance instance) {
+    private Event createEvent(NotificationServicesRegistry.SERVICE type,
+                              ExecutionInstance instance) throws IOException {
         ID id = new InstanceID(instance);
         switch (type) {
         case DATA:
             DataEvent dataEvent = new DataEvent(id,
-                    new ArrayList<Path>(Arrays.asList(new Path("/projects/falcon/clicks"))),
+                    new ArrayList<Path>(Arrays.asList(new Path("/projects/falcon/clicks/_SUCCESS"))),
                     DataEvent.STATUS.AVAILABLE);
             return dataEvent;
         case JOB_SCHEDULE:

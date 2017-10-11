@@ -28,6 +28,7 @@ import java.util.Map;
 /**
  * Tests for Instance operations using Falcon Native Scheduler.
  */
+@Test (enabled = false)
 public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJerseyIT {
 
 
@@ -40,7 +41,7 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         super.setup();
     }
 
-    @Test
+    @Test (enabled = false)
     public void testProcessInstanceExecution() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -48,8 +49,9 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         String cluster = overlay.get(CLUSTER);
 
         submitCluster(colo, cluster, null);
+        submitFeeds(overlay);
         context.prepare(HELLO_WORLD_WORKFLOW);
-        submitProcess(overlay);
+        submitProcess(PROCESS_TEMPLATE_NOLATE_DATA, overlay);
 
         String processName = overlay.get(PROCESS_NAME);
         scheduleProcess(processName, cluster, START_INSTANCE, 1);
@@ -63,12 +65,12 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
 
     }
 
-    @Test
+    @Test (enabled = false)
     public void testKillAndRerunInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        setupProcessExecution(context, overlay, 1);
+        setupProcessExecution(context, overlay, 1, PROCESS_TEMPLATE);
 
         String processName = overlay.get(PROCESS_NAME);
         String colo = overlay.get(COLO);
@@ -97,12 +99,12 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
 
     }
 
-    @Test
+    @Test (enabled = false)
     public void testSuspendResumeInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        setupProcessExecution(context, overlay, 1);
+        setupProcessExecution(context, overlay, 1, PROCESS_TEMPLATE_NOLATE_DATA);
 
         String processName = overlay.get(PROCESS_NAME);
         String colo = overlay.get(COLO);
@@ -121,15 +123,18 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
                 END_TIME, colo, null, null, null, null);
         status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
                 processName, START_INSTANCE);
-        Assert.assertEquals(status, InstancesResult.WorkflowStatus.RUNNING);
+        Assert.assertEquals(status, InstancesResult.WorkflowStatus.READY);
+
+        waitForStatus(EntityType.PROCESS.toString(), processName,
+                START_INSTANCE, InstancesResult.WorkflowStatus.RUNNING);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testListInstances() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        setupProcessExecution(context, overlay, 4);
+        setupProcessExecution(context, overlay, 4, PROCESS_TEMPLATE);
 
         String processName = overlay.get(PROCESS_NAME);
         String colo = overlay.get(COLO);
@@ -145,12 +150,12 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         Assert.assertEquals(result.getInstances()[2].getInstance(), START_INSTANCE);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testInstanceSummary() throws Exception {
         UnitTestContext context = new UnitTestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        setupProcessExecution(context, overlay, 3);
+        setupProcessExecution(context, overlay, 3, PROCESS_TEMPLATE);
 
         String processName = overlay.get(PROCESS_NAME);
         String colo = overlay.get(COLO);
@@ -167,5 +172,29 @@ public class InstanceSchedulerManagerJerseyIT extends AbstractSchedulerManagerJe
         // Parallelism is 2
         Assert.assertEquals(result.getInstancesSummary()[0].getSummaryMap().get("RUNNING").longValue(), 2L);
         Assert.assertEquals(result.getInstancesSummary()[0].getSummaryMap().get("READY").longValue(), 1L);
+    }
+
+    @Test (enabled = false)
+    public void testProcessWithInputs() throws Exception {
+        UnitTestContext context = new UnitTestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        String colo = overlay.get(COLO);
+        String cluster = overlay.get(CLUSTER);
+
+        submitCluster(colo, cluster, null);
+        submitFeeds(overlay);
+        context.prepare(HELLO_WORLD_WORKFLOW);
+
+        submitProcess(PROCESS_TEMPLATE_NOLATE_DATA, overlay);
+
+        String processName = overlay.get(PROCESS_NAME);
+        scheduleProcess(processName, cluster, START_INSTANCE, 1);
+
+        waitForStatus(EntityType.PROCESS.toString(), processName,
+                START_INSTANCE, InstancesResult.WorkflowStatus.SUCCEEDED);
+
+        InstancesResult.WorkflowStatus status = getClient().getInstanceStatus(EntityType.PROCESS.name(),
+                processName, START_INSTANCE);
+        Assert.assertEquals(status, InstancesResult.WorkflowStatus.SUCCEEDED);
     }
 }

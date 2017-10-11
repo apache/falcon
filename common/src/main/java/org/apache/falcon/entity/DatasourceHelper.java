@@ -27,10 +27,12 @@ import org.apache.falcon.entity.v0.datasource.Credential;
 import org.apache.falcon.entity.v0.datasource.Credentialtype;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.datasource.DatasourceType;
+import org.apache.falcon.entity.v0.datasource.Driver;
 import org.apache.falcon.entity.v0.datasource.Interface;
 import org.apache.falcon.entity.v0.datasource.Interfaces;
 import org.apache.falcon.entity.v0.datasource.Interfacetype;
 import org.apache.falcon.entity.v0.datasource.PasswordAliasType;
+import org.apache.falcon.entity.v0.datasource.Property;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -46,6 +48,8 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * DataSource entity helper methods.
@@ -70,11 +74,11 @@ public final class DatasourceHelper {
     }
 
     public static String getReadOnlyEndpoint(Datasource datasource) {
-        return getInterface(datasource, Interfacetype.READONLY);
+        return getInterfaceEndpoint(datasource, Interfacetype.READONLY);
     }
 
     public static String getWriteEndpoint(Datasource datasource) {
-        return getInterface(datasource, Interfacetype.WRITE);
+        return getInterfaceEndpoint(datasource, Interfacetype.WRITE);
     }
 
     /**
@@ -148,16 +152,158 @@ public final class DatasourceHelper {
     }
 
     /**
+     * checks if two datasource interfaces are same.
+     *
+     * @param oldEntity old datasource entity
+     * @param newEntity new datasource entity
+     * @param ifacetype type of interface
+     * @return true if same else false
+     */
+    public static boolean isSameInterface(Datasource oldEntity, Datasource newEntity, Interfacetype ifacetype) {
+        LOG.debug("Verifying if Interfaces match for Datasource {} : Old - {}, New - {}", oldEntity, newEntity);
+        Interface oIface = getInterface(oldEntity, ifacetype);
+        Interface nIface = getInterface(newEntity, ifacetype);
+        if ((oIface == null) && (nIface == null)) {
+            return true;
+        }
+        if ((oIface == null) || (nIface == null)) {
+            return false;
+        }
+
+        return (StringUtils.equals(oIface.getEndpoint(), nIface.getEndpoint())
+            && isSameDriverClazz(oIface.getDriver(), nIface.getDriver())
+            && isSameCredentials(oIface.getCredential(), nIface.getCredential()));
+
+    }
+
+    /**
+     * check if datasource driver is same.
+     * @param oldEntity
+     * @param newEntity
+     * @return true if same or false
+     */
+
+    public static boolean isSameDriverClazz(Driver oldEntity, Driver newEntity) {
+        if ((oldEntity == null) && (newEntity == null)) {
+            return true;
+        }
+        if ((oldEntity == null) || (newEntity == null)) {
+            return false;
+        }
+        return StringUtils.equals(oldEntity.getClazz(), newEntity.getClazz());
+    }
+
+    /**
+     * checks if data source properties are same.
+     * @param oldEntity
+     * @param newEntity
+     * @return true if same else false
+     */
+
+    public static boolean isSameProperties(Datasource oldEntity, Datasource newEntity) {
+        Map<String, String> oldProps = getDatasourceProperties(oldEntity);
+        Map<String, String> newProps = getDatasourceProperties(newEntity);
+        return oldProps.equals(newProps);
+    }
+
+    /**
+     * checks if data source credentials are same.
+     * @param oCred
+     * @param nCred
+     * @return true true
+     */
+    public static boolean isSameCredentials(Credential oCred, Credential nCred) {
+        if ((oCred == null) && (nCred == null)) {
+            return true;
+        }
+        if ((oCred == null) || (nCred == null)) {
+            return true;
+        }
+        if (StringUtils.equals(oCred.getUserName(), nCred.getUserName())) {
+            if (oCred.getType() == nCred.getType()) {
+                if (oCred.getType() == Credentialtype.PASSWORD_TEXT) {
+                    return StringUtils.equals(oCred.getPasswordText(), nCred.getPasswordText());
+                } else if (oCred.getType() == Credentialtype.PASSWORD_FILE) {
+                    return StringUtils.equals(oCred.getPasswordFile(), nCred.getPasswordFile());
+                } else if (oCred.getType() == Credentialtype.PASSWORD_ALIAS) {
+                    return (StringUtils.equals(oCred.getPasswordAlias().getAlias(),
+                            nCred.getPasswordAlias().getAlias())
+                            && StringUtils.equals(oCred.getPasswordAlias().getProviderPath(),
+                                    nCred.getPasswordAlias().getProviderPath()));
+                }
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public static Credential getCredential(Datasource db) {
+        return getCredential(db, null);
+    }
+
+    public static Credential getCredential(Datasource db, Interfacetype interfaceType) {
+        if (interfaceType == null) {
+            return db.getInterfaces().getCredential();
+        } else {
+            for(Interface iface : db.getInterfaces().getInterfaces()) {
+                if (iface.getType() == interfaceType) {
+                    return iface.getCredential();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static void validateCredential(Credential cred) throws FalconException {
+        if (cred == null) {
+            return;
+        }
+        switch (cred.getType()) {
+        case PASSWORD_TEXT:
+            if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordText())) {
+                throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'",
+                    cred.getType().value(), "userName", "passwordText"));
+            }
+            break;
+        case PASSWORD_FILE:
+            if (StringUtils.isBlank(cred.getUserName()) || StringUtils.isBlank(cred.getPasswordFile())) {
+                throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s'",
+                    cred.getType().value(), "userName", "passwordFile"));
+            }
+            break;
+        case PASSWORD_ALIAS:
+            if (StringUtils.isBlank(cred.getUserName()) || (cred.getPasswordAlias() == null)
+                || StringUtils.isBlank(cred.getPasswordAlias().getAlias())
+                || StringUtils.isBlank(cred.getPasswordAlias().getProviderPath())) {
+                throw new FalconException(String.format("Credential type '%s' missing tags '%s' or '%s' or %s'",
+                    cred.getType().value(), "userName", "alias", "providerPath"));
+            }
+            break;
+        default:
+            throw new FalconException(String.format("Unknown Credential type '%s'", cred.getType().value()));
+        }
+    }
+
+    /**
      * Return the Interface endpoint for the interface type specified in the argument.
      *
      * @param db
      * @param type - can be read-only or write
      * @return
      */
-    private static String getInterface(Datasource db, Interfacetype type) {
+    private static String getInterfaceEndpoint(Datasource db, Interfacetype type) {
+        if (getInterface(db, type) != null) {
+            return getInterface(db, type).getEndpoint();
+        } else {
+            return null;
+        }
+    }
+
+    private static Interface getInterface(Datasource db, Interfacetype type) {
         for(Interface ifs : db.getInterfaces().getInterfaces()) {
             if (ifs.getType() == type) {
-                return ifs.getEndpoint();
+                return ifs;
             }
         }
         return null;
@@ -172,6 +318,12 @@ public final class DatasourceHelper {
         }
     }
 
+    /**
+     * fetch password from the corresponding store.
+     * @param c
+     * @return actual password
+     * @throws FalconException
+     */
     private static String fetchPasswordInfoFromCredentialStore(final PasswordAliasType c) throws FalconException {
         try {
             final String credPath = c.getProviderPath();
@@ -216,18 +368,25 @@ public final class DatasourceHelper {
             throw new FalconException(msg, ioe);
         }
     }
+
+    /**
+     * fetch the password from file.
+     *
+     * @param passwordFilePath
+     * @return
+     * @throws FalconException
+     */
+
     private static String fetchPasswordInfoFromFile(String passwordFilePath) throws FalconException {
         try {
             Path path = new Path(passwordFilePath);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri());
             if (!fs.exists(path)) {
-                throw new IOException("The password file does not exist! "
-                        + passwordFilePath);
+                throw new IOException("The password file does not exist! ");
             }
 
             if (!fs.isFile(path)) {
-                throw new IOException("The password file cannot be a directory! "
-                        + passwordFilePath);
+                throw new IOException("The password file cannot be a directory! ");
             }
 
             InputStream is = fs.open(path);
@@ -245,4 +404,20 @@ public final class DatasourceHelper {
             throw new FalconException(ioe);
         }
     }
+
+
+    /*
+     returns data store properties
+     */
+
+    public static Map<String, String> getDatasourceProperties(final Datasource datasource) {
+        Map<String, String> returnProps = new HashMap<String, String>();
+        if (datasource.getProperties() != null) {
+            for (Property prop : datasource.getProperties().getProperties()) {
+                returnProps.put(prop.getName(), prop.getValue());
+            }
+        }
+        return returnProps;
+    }
+
 }

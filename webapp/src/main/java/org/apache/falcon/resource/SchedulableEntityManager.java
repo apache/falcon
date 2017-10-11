@@ -18,8 +18,14 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconWebException;
+import org.apache.falcon.monitors.Dimension;
+import org.apache.falcon.monitors.Monitored;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,15 +33,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.falcon.FalconWebException;
-import org.apache.falcon.monitors.Dimension;
-import org.apache.falcon.monitors.Monitored;
 
 /**
  * Entity management operations as REST API for feed and process.
@@ -79,6 +79,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         throw FalconWebException.newAPIException("delete on server is not"
                 + " supported.Please run your operation on Prism.", Response.Status.FORBIDDEN);
     }
+
     /**
      * Updates the submitted entity.
      * @param request Servlet Request
@@ -96,6 +97,26 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     public APIResult update(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("entityName") @PathParam("entity") final String entityName,
+            @Dimension("colo") @QueryParam("colo") String ignore,
+            @QueryParam("skipDryRun") final Boolean skipDryRun) {
+        throw FalconWebException.newAPIException("update on server is not"
+                + " supported.Please run your operation on Prism.", Response.Status.FORBIDDEN);
+    }
+
+    /**
+     * Updates the dependent entities of a cluster in workflow engine.
+     * @param clusterName Name of cluster.
+     * @param ignore colo.
+     * @param skipDryRun Optional query param, Falcon skips oozie dryrun when value is set to true.
+     * @return Result of the validation.
+     */
+    @POST
+    @Path("updateClusterDependents/{clusterName}")
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Monitored(event = "updateClusterDependents")
+    @Override
+    public APIResult updateClusterDependents(
+            @Dimension("entityName") @PathParam("clusterName") final String clusterName,
             @Dimension("colo") @QueryParam("colo") String ignore,
             @QueryParam("skipDryRun") final Boolean skipDryRun) {
         throw FalconWebException.newAPIException("update on server is not"
@@ -147,8 +168,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @GET
     @Path("sla-alert/{type}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Monitored(event = "feed-sla-misses")
-    public SchedulableEntityInstanceResult getFeedSLAMissPendingAlerts(
+    @Monitored(event = "entity-sla-misses")
+    public SchedulableEntityInstanceResult getEntitySLAMissPendingAlerts(
             @Dimension("entityType") @PathParam("type") String entityType,
             @Dimension("entityName") @QueryParam("name") String entityName,
             @Dimension("start") @QueryParam("start") String start,
@@ -156,7 +177,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @Dimension("colo") @QueryParam("colo") final String colo) {
         try {
             validateSlaParams(entityType, entityName, start, end, colo);
-            return super.getFeedSLAMissPendingAlerts(entityName, start, end, colo);
+            return super.getEntitySLAMissPendingAlerts(entityName, entityType, start, end, colo);
         } catch (Throwable e) {
             throw FalconWebException.newAPIException(e);
         }

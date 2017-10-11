@@ -59,19 +59,27 @@ public final class AgeBasedWorkflowBuilder {
 
         //Add eviction action
         ACTION eviction = OozieBuilderUtils.unmarshalAction(EVICTION_ACTION_TEMPLATE);
-        OozieBuilderUtils.addTransition(eviction, OozieBuilderUtils.SUCCESS_POSTPROCESS_ACTION_NAME,
-                OozieBuilderUtils.FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(eviction);
 
-        //Add post-processing actions
-        ACTION success = OozieBuilderUtils.getSuccessPostProcessAction();
-        OozieBuilderUtils.addTransition(success, OozieBuilderUtils.OK_ACTION_NAME, OozieBuilderUtils.FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
+        if (!Boolean.parseBoolean(OozieBuilderUtils.ENABLE_POSTPROCESSING)){
+            OozieBuilderUtils.addTransition(eviction, OozieBuilderUtils.OK_ACTION_NAME,
+                    OozieBuilderUtils.FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(eviction);
+        } else {
+            OozieBuilderUtils.addTransition(eviction, OozieBuilderUtils.SUCCESS_POSTPROCESS_ACTION_NAME,
+                    OozieBuilderUtils.FAIL_POSTPROCESS_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(eviction);
 
-        ACTION fail = OozieBuilderUtils.getFailPostProcessAction();
-        OozieBuilderUtils.addTransition(fail, OozieBuilderUtils.FAIL_ACTION_NAME, OozieBuilderUtils.FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
+            //Add post-processing actions
+            ACTION success = OozieBuilderUtils.getSuccessPostProcessAction();
+            OozieBuilderUtils.addTransition(success, OozieBuilderUtils.OK_ACTION_NAME,
+                    OozieBuilderUtils.FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(success);
 
+            ACTION fail = OozieBuilderUtils.getFailPostProcessAction();
+            OozieBuilderUtils.addTransition(fail, OozieBuilderUtils.FAIL_ACTION_NAME,
+                    OozieBuilderUtils.FAIL_ACTION_NAME);
+            workflow.getDecisionOrForkOrJoin().add(fail);
+        }
         OozieBuilderUtils.decorateWorkflow(workflow, wfName, EVICTION_ACTION_NAME);
         OozieBuilderUtils.addLibExtensionsToWorkflow(cluster, workflow, Tag.RETENTION, EntityType.FEED);
 
@@ -113,14 +121,15 @@ public final class AgeBasedWorkflowBuilder {
         props.put("frequency", feed.getFrequency().getTimeUnit().name());
         props.put("falconFeedStorageType", storage.getType().name());
         props.put("limit", new AgeBasedDelete().getRetentionLimit(feed, cluster.getName()).toString());
-        props.put("falconInputFeeds", feed.getName());
-        props.put("falconInPaths", OozieBuilderUtils.IGNORE);
+        props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), feed.getName());
+        props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), OozieBuilderUtils.IGNORE);
 
         String feedDataPath = storage.getUriTemplate();
         props.put("feedDataPath",
                 feedDataPath.replaceAll(Storage.DOLLAR_EXPR_START_REGEX, Storage.QUESTION_EXPR_START_REGEX));
 
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), feed.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), feed.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), OozieBuilderUtils.IGNORE);
 
         return props;

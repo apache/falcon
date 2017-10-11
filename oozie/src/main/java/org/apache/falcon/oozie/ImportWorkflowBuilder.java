@@ -48,7 +48,7 @@ public abstract class ImportWorkflowBuilder extends OozieOrchestrationWorkflowBu
         WORKFLOWAPP workflow = new WORKFLOWAPP();
         String wfName = EntityUtil.getWorkflowName(Tag.IMPORT, entity).toString();
         workflow.setName(wfName);
-        Properties p = getWorkflow(cluster, workflow);
+        Properties p = getWorkflow(cluster, workflow, buildPath);
         marshal(cluster, workflow, buildPath);
 
         Properties props = FeedHelper.getFeedProperties(entity);
@@ -63,6 +63,7 @@ public abstract class ImportWorkflowBuilder extends OozieOrchestrationWorkflowBu
             props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
         }
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
                 String.format("${coord:dataOut('%s')}", FeedImportCoordinatorBuilder.IMPORT_DATAOUT_NAME));
         props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), NONE);
@@ -81,5 +82,6 @@ public abstract class ImportWorkflowBuilder extends OozieOrchestrationWorkflowBu
         return props;
     }
 
-    protected abstract Properties getWorkflow(Cluster cluster, WORKFLOWAPP workflow) throws FalconException;
+    protected abstract Properties getWorkflow(Cluster cluster, WORKFLOWAPP workflow, Path buildPath)
+        throws FalconException;
 }

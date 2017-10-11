@@ -32,12 +32,15 @@ import org.apache.falcon.entity.v0.process.Properties;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.ACL;
+import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.process.SparkAttributes;
+import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.DateUtil;
@@ -71,6 +74,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     @Override
     public void validate(Process process) throws FalconException {
+        validate(process, true);
+    }
+
+    public void validate(Process process, boolean checkDependentFeeds) throws FalconException {
         if (process.getTimezone() == null) {
             process.setTimezone(TimeZone.getTimeZone("UTC"));
         }
@@ -91,35 +98,49 @@ public class ProcessEntityParser extends EntityParser<Process> {
                 cluster.getValidity().setEnd(DateUtil.NEVER);
             }
 
+            // set Cluster version
+            int clusterVersion = ClusterHelper.getCluster(cluster.getName()).getVersion();
+            if (cluster.getVersion() > 0 && cluster.getVersion() > clusterVersion) {
+                throw new ValidationException("Process should not set cluster to a version that does not exist");
+            } else {
+                cluster.setVersion(clusterVersion);
+            }
+
             validateProcessValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd());
             validateHDFSPaths(process, clusterName);
             validateProperties(process);
 
-            if (process.getInputs() != null) {
-                for (Input input : process.getInputs().getInputs()) {
-                    validateEntityExists(EntityType.FEED, input.getFeed());
-                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
-                    CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                    CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
-                    CrossEntityValidations.validateInstanceRange(process, input, feed);
-                    validateInputPartition(input, feed);
-                    validateOptionalInputsForTableStorage(feed, input);
+            if (checkDependentFeeds) {
+                if (process.getInputs() != null) {
+                    for (Input input : process.getInputs().getInputs()) {
+                        validateEntityExists(EntityType.FEED, input.getFeed());
+                        Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+                        CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
+                        CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
+                        CrossEntityValidations.validateInstanceRange(process, input, feed);
+                        validateInputPartition(input, feed);
+                        validateOptionalInputsForTableStorage(feed, input);
+                    }
                 }
-            }
 
-            if (process.getOutputs() != null) {
-                for (Output output : process.getOutputs().getOutputs()) {
-                    validateEntityExists(EntityType.FEED, output.getFeed());
-                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
-                    CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                    CrossEntityValidations.validateInstance(process, output, feed);
+
+                if (process.getOutputs() != null) {
+                    for (Output output : process.getOutputs().getOutputs()) {
+                        validateEntityExists(EntityType.FEED, output.getFeed());
+                        Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
+                        CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
+                        CrossEntityValidations.validateInstance(process, output, feed);
+                    }
                 }
             }
         }
         validateDatasetName(process.getInputs(), process.getOutputs());
-        validateLateInputs(process);
+        if (checkDependentFeeds) {
+            validateLateInputs(process);
+        }
         validateProcessSLA(process);
         validateHadoopQueue(process);
+        validateProcessEntity(process);
     }
 
 
@@ -361,6 +382,34 @@ public class ProcessEntityParser extends EntityParser<Process> {
                             + "entity for cluster %s is invalid.", processQueueName, cluster.getName());
                     LOG.info(strMsg);
                     throw new FalconException(strMsg);
+                }
+            }
+        }
+    }
+
+    protected void validateProcessEntity(Process process) throws FalconException {
+        validateSparkProcessEntity(process, process.getSparkAttributes());
+    }
+
+    private void validateSparkProcessEntity(Process process, SparkAttributes sparkAttributes) throws
+            FalconException {
+        Workflow workflow = process.getWorkflow();
+        if (workflow.getEngine() == EngineType.SPARK) {
+            if (sparkAttributes == null) {
+                throw new ValidationException(
+                        "For Spark Workflow engine Spark Attributes in Process Entity can't be null");
+            } else {
+                String clusterName = process.getClusters().getClusters().get(0).getName();
+                org.apache.falcon.entity.v0.cluster.Cluster cluster =
+                        ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
+                String clusterEntitySparkMaster = ClusterHelper.getSparkMasterEndPoint(cluster);
+                String processEntitySparkMaster = sparkAttributes.getMaster();
+                String sparkMaster = (processEntitySparkMaster == null)
+                        ? clusterEntitySparkMaster
+                        : processEntitySparkMaster;
+                if (StringUtils.isEmpty(sparkMaster)
+                        || StringUtils.isEmpty(sparkAttributes.getJar())) {
+                    throw new ValidationException("Spark master and jar/python file can't be null");
                 }
             }
         }

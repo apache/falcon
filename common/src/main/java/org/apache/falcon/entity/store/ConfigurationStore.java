@@ -20,12 +20,17 @@ package org.apache.falcon.entity.store;
 
 import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
+import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -37,6 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -66,6 +74,10 @@ public final class ConfigurationStore implements FalconService {
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
+    private static final String LOAD_ENTITIES_THREADS = "config.store.num.threads.load.entities";
+    private static final String TIMEOUT_MINS_LOAD_ENTITIES = "config.store.start.timeout.minutes";
+    private int numThreads;
+    private int restoreTimeOutInMins;
     private final boolean shouldPersist;
 
     private static final FsPermission STORE_PERMISSION =
@@ -98,9 +110,17 @@ public final class ConfigurationStore implements FalconService {
     public static ConfigurationStore get() {
         return STORE;
     }
-
     private FileSystem fs;
     private Path storePath;
+
+    public FileSystem getFs() {
+        return fs;
+    }
+
+    public Path getStorePath() {
+        return storePath;
+    }
+
 
     private ConfigurationStore() {
         for (EntityType type : EntityType.values()) {
@@ -138,6 +158,21 @@ public final class ConfigurationStore implements FalconService {
 
     @Override
     public void init() throws FalconException {
+        try {
+            numThreads = Integer.parseInt(StartupProperties.get().getProperty(LOAD_ENTITIES_THREADS, "100"));
+            LOG.info("Number of threads used to restore entities: {}", restoreTimeOutInMins);
+        } catch (NumberFormatException nfe) {
+            throw new FalconException("Invalid value specified for start up property \""
+                    + LOAD_ENTITIES_THREADS + "\".Please provide an integer value");
+        }
+        try {
+            restoreTimeOutInMins = Integer.parseInt(StartupProperties.get().
+                    getProperty(TIMEOUT_MINS_LOAD_ENTITIES, "30"));
+            LOG.info("TimeOut to load Entities is taken as {} mins", restoreTimeOutInMins);
+        } catch (NumberFormatException nfe) {
+            throw new FalconException("Invalid value specified for start up property \""
+                    + TIMEOUT_MINS_LOAD_ENTITIES + "\".Please provide an integer value");
+        }
         String listenerClassNames = StartupProperties.get().
                 getProperty("configstore.listeners", "org.apache.falcon.entity.v0.EntityGraph");
         for (String listenerClassName : listenerClassNames.split(",")) {
@@ -161,7 +196,8 @@ public final class ConfigurationStore implements FalconService {
             final ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
             FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
             if (files != null) {
-                final ExecutorService service = Executors.newFixedThreadPool(100);
+
+                final ExecutorService service = Executors.newFixedThreadPool(numThreads);
                 for (final FileStatus file : files) {
                     service.execute(new Runnable() {
                         @Override
@@ -172,18 +208,19 @@ public final class ConfigurationStore implements FalconService {
                                 // ".xml"
                                 String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
                                 Entity entity = restore(type, entityName);
+                                LOG.info("Restored configuration {}/{}", type, entityName);
                                 entityMap.put(entityName, entity);
                             } catch (IOException | FalconException e) {
-                                LOG.error("Unable to restore entity of", file);
+                                LOG.error("Unable to restore entity of " + file.getPath().getName(), e);
                             }
                         }
                     });
                 }
                 service.shutdown();
-                if (service.awaitTermination(10, TimeUnit.MINUTES)) {
+                if (service.awaitTermination(restoreTimeOutInMins, TimeUnit.MINUTES)) {
                     LOG.info("Restored Configurations for entity type: {} ", type.name());
                 } else {
-                    LOG.warn("Time out happened while waiting for all threads to finish while restoring entities "
+                    LOG.warn("Timed out while waiting for all threads to finish while restoring entities "
                             + "for type: {}", type.name());
                 }
                 // Checking if all entities were loaded
@@ -234,9 +271,10 @@ public final class ConfigurationStore implements FalconService {
     private synchronized void updateInternal(EntityType type, Entity entity) throws FalconException {
         try {
             if (get(type, entity.getName()) != null) {
-                persist(type, entity);
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
                 Entity oldEntity = entityMap.get(entity.getName());
+                updateVersion(oldEntity, entity);
+                persist(type, entity);
                 onChange(oldEntity, entity);
                 entityMap.put(entity.getName(), entity);
             } else {
@@ -248,8 +286,29 @@ public final class ConfigurationStore implements FalconService {
         AUDIT.info(type + "/" + entity.getName() + " is replaced into config store");
     }
 
+    private void updateVersion(Entity oldentity, Entity newEntity) throws FalconException {
+        // increase version number for cluster only if dependent feeds/process needs to be updated.
+        if (oldentity.getEntityType().equals(EntityType.CLUSTER)) {
+            if (UpdateHelper.isClusterEntityUpdated((Cluster) oldentity, (Cluster) newEntity)) {
+                EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity) + 1);
+            }
+        } else if (oldentity.getEntityType().equals(EntityType.DATASOURCE)) {
+            if (UpdateHelper.isDatasourceEntityUpdated((Datasource) oldentity, (Datasource) newEntity)) {
+                EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity) + 1);
+            }
+        } else if (!EntityUtil.equals(oldentity, newEntity)) {
+            // Increase version for other entities if they actually changed.
+            EntityUtil.setVersion(newEntity, EntityUtil.getVersion(oldentity));
+        }
+    }
+
     public synchronized void update(EntityType type, Entity entity) throws FalconException {
         if (updatesInProgress.get() == entity) {
+            try {
+                archive(type, entity.getName());
+            } catch (IOException e) {
+                throw new StoreAccessException(e);
+            }
             updateInternal(type, entity);
         } else {
             throw new FalconException(entity.toShortString() + " is not initialized for update");
@@ -307,6 +366,7 @@ public final class ConfigurationStore implements FalconService {
                 } catch (IOException e) {
                     throw new StoreAccessException(e);
                 }
+                LOG.info("Restored configuration {}/{}", type, name);
                 entityMap.put(name, entity);
                 return entity;
             } else {
@@ -410,13 +470,16 @@ public final class ConfigurationStore implements FalconService {
         throws IOException, FalconException {
 
         InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
+        XMLInputFactory xif = SchemaHelper.createXmlInputFactory();
         try {
-            return (T) type.getUnmarshaller().unmarshal(in);
+            XMLStreamReader xsr = xif.createXMLStreamReader(in);
+            return (T) type.getUnmarshaller().unmarshal(xsr);
+        } catch (XMLStreamException xse) {
+            throw new StoreAccessException("Unable to un-marshall xml definition for " + type + "/" + name, xse);
         } catch (JAXBException e) {
             throw new StoreAccessException("Unable to un-marshall xml definition for " + type + "/" + name, e);
         } finally {
             in.close();
-            LOG.info("Restored configuration {}/{}", type, name);
         }
     }
 

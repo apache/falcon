@@ -63,8 +63,8 @@ public class EventSourcerUtils {
         FileUtils.validatePath(jobFS, new Path(DRStatusStore.BASE_DEFAULT_STORE_PATH));
 
         if (!jobFS.exists(dir)) {
-            if (!jobFS.mkdirs(dir)) {
-                throw new Exception("Creating directory failed: " + dir);
+            if (!FileSystem.mkdirs(jobFS, dir, FileUtils.DEFAULT_DIR_PERMISSION)) {
+                throw new IOException("Creating directory failed: " + dir);
             }
         }
 

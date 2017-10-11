@@ -2,8 +2,30 @@
 
 ---++ Overview
 
-Apache Falcon enforces authentication and authorization which are detailed below. Falcon also
-provides transport level security ensuring data confidentiality and integrity.
+Apache Falcon provides the following security features:
+   * Credential provider alias for passwords used in Falcon server.
+   * Authentication to identify proper users.
+   * Authorization to specify resource access permission for users or groups.
+   * Cross-Site Request Forgery (CSRF) prevention.
+   * SSL to provide transport level security for data confidentiality and integrity.
+
+---++ Credential Provider Alias for Passwords
+Server-side configuration properties (i.e. startup.properties) contain passwords and other sensitive information.
+In addition to specifying properties in plain text, we provide the user an option to use credential provider alias in the property file.
+
+Take SMTP password for example. The user can store the password in a
+[[http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CommandsManual.html#credential][Hadoop credential provider]]
+with the alias name _SMTPPasswordAlias_. In startup.properties where SMTP password is needed, the user can refer to its
+alias name _SMTPPasswordAlias_ instead of providing the real password.
+
+The alias property to be resolved through Hadoop credential provider should have the format:
+_credential.provider.alias.for.[property-key]_. For example,
+_credential.provider.alias.for.falcon.email.smtp.password=SMTPPasswordAlias_ for SMTP password.
+Falcon server, during the start, will automatically retrieve the real password provided the alias name.
+
+The user can specify the provider path with the property key _credential.provider.path_,
+e.g. _credential.provider.path=jceks://file/tmp/test.jceks_.
+If not specified, Falcon will use the default Hadoop credential provider path in core-site.xml.
 
 
 ---++ Authentication (User Identity)
@@ -286,6 +308,22 @@ Administrative groups are determined by the configuration:
 <verbatim>
 # Admin Group Membership, comma separated users
 *.falcon.security.authorization.admin.groups=falcon,testgroup,staff
+</verbatim>
+
+---++ Cross-Site Request Forgery (CSRF) Prevention
+
+Cross-Site Request Forgery (CSRF) is an attack that forces an end user to execute unwanted actions on a web application in which they're currently authenticated.
+Falcon provides an option to prevent CSRF with Hadoop CSRF filter for REST APIs. By default, Falcon CSRF filter is disabled.
+To enable the support for CSRF prevention, set falcon.security.csrf.enabled to true in the startup configuration.
+We also provide options to configure custom header and browser user agents.
+
+<verbatim>
+# CSRF filter enabled flag: false (default) | true
+*.falcon.security.csrf.enabled=true
+# Custom header for CSRF filter
+*.falcon.security.csrf.header=FALCON-CSRF-FILTER
+# Browser user agents to be filtered
+*.falcon.security.csrf.browser=^Mozilla.*,^Opera.*
 </verbatim>
 
 

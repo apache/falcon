@@ -26,8 +26,13 @@ import java.io.InputStream;
 
 /**
  * Exception thrown by FalconClient.
+ * This was converted to RuntimeException in FALCON-1609.
+ * Reasons:
+ *  Ultimate goal of switching from current CLI to spring shell based CLI
+ *  Spring Shell doesn't work well with unchecked Exceptions
+ *  The exception currently only gets surfaced in CLI, and in code existing catch clauses will still work.
  */
-public class FalconCLIException extends Exception {
+public class FalconCLIException extends RuntimeException{
 
     private static final int MB = 1024 * 1024;
 
@@ -47,21 +52,19 @@ public class FalconCLIException extends Exception {
         ClientResponse.Status status = clientResponse.getClientResponseStatus();
         String statusValue = status.toString();
         String message = "";
-        if (status == ClientResponse.Status.BAD_REQUEST) {
-            clientResponse.bufferEntity();
-            InputStream in = clientResponse.getEntityInputStream();
+        clientResponse.bufferEntity();
+        InputStream in = clientResponse.getEntityInputStream();
+        try {
+            in.mark(MB);
+            message = clientResponse.getEntity(APIResult.class).getMessage();
+        } catch (Throwable th) {
+            byte[] data = new byte[MB];
             try {
-                in.mark(MB);
-                message = clientResponse.getEntity(APIResult.class).getMessage();
-            } catch (Throwable th) {
-                byte[] data = new byte[MB];
-                try {
-                    in.reset();
-                    int len = in.read(data);
-                    message = new String(data, 0, len);
-                } catch (IOException e) {
-                    message = e.getMessage();
-                }
+                in.reset();
+                int len = in.read(data);
+                message = new String(data, 0, len);
+            } catch (IOException e) {
+                message = e.getMessage();
             }
         }
         return new FalconCLIException(statusValue + ";" + message);

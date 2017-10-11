@@ -27,6 +27,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.client.FalconCLIConstants;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.catalog.HiveCatalogService;
@@ -60,6 +61,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.servlet.ServletInputStream;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -93,7 +95,9 @@ public class TestContext extends AbstractTestContext {
     public static final String DATASOURCE_TEMPLATE2 = "/datasource-template2.xml";
     public static final String DATASOURCE_TEMPLATE3 = "/datasource-template3.xml";
     public static final String DATASOURCE_TEMPLATE4 = "/datasource-template4.xml";
+    public static final String DATASOURCE_TEMPLATE5 = "/datasource-template5.xml";
     public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
+    public static final String CLUSTER_UPDATED_TEMPLATE = "/cluster-updated-template.xml";
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "https://localhost:41443/falcon-webapp";
@@ -286,6 +290,53 @@ public class TestContext extends AbstractTestContext {
         };
     }
 
+    public ExtensionJobList getExtensionJobs(String extensionName, String fields, String sortOrder, String offset,
+                                             String resultsPerPage, String doAsUser) {
+        WebResource resource = this.service.path("api/extension/list/" + extensionName);
+        resource = addQueryParam(resource, "doAs", doAsUser);
+        resource = addQueryParam(resource, "numResults", resultsPerPage);
+        ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                .method(HttpMethod.GET, ClientResponse.class);
+        return response.getEntity(ExtensionJobList.class);
+    }
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public ExtensionInstanceList getExtensionInstances(String jobName, String nominalStart, String nominalEnd,
+                                                       String instanceStatus, String fields, String orderBy,
+                                                       String sortOrder, String offset, String resultsPerPage,
+                                                       String doAsUser) {
+        WebResource resource = this.service.path("api/extension/instances/" + jobName);
+        resource = addQueryParam(resource, "start", nominalStart);
+        resource = addQueryParam(resource, "end", nominalEnd);
+        resource = addQueryParam(resource, "instanceStatus", instanceStatus);
+        resource = addQueryParam(resource, "doAs", doAsUser);
+        resource = addQueryParam(resource, "fields", fields);
+        resource = addQueryParam(resource, "orderBy", orderBy);
+        resource = addQueryParam(resource, "sortOrder", sortOrder);
+        resource = addQueryParam(resource, "offset", offset);
+        resource = addQueryParam(resource, "numResults", resultsPerPage);
+        ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                .method(HttpMethod.GET, ClientResponse.class);
+        return response.getEntity(ExtensionInstanceList.class);
+    }
+
+    public void waitForInstancesToStart(String entityType, String entityName, long timeout) {
+        long mustEnd = System.currentTimeMillis() + timeout;
+        WebResource resource = this.service.path("api/instance/running/" + entityType + "/" + entityName);
+        InstancesResult instancesResult;
+        while (System.currentTimeMillis() < mustEnd) {
+            ClientResponse response = resource.header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                    .accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML)
+                    .method(HttpMethod.GET, ClientResponse.class);
+            instancesResult = response.getEntity(InstancesResult.class);
+            if (instancesResult.getInstances() != null && instancesResult.getInstances().length > 0) {
+                break;
+            }
+        }
+    }
+
     public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
         return submitAndSchedule(template, overlay, entityType, null, "", null);
@@ -304,7 +355,7 @@ public class TestContext extends AbstractTestContext {
         }
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         if (StringUtils.isNotEmpty(properties)) {
@@ -408,7 +459,7 @@ public class TestContext extends AbstractTestContext {
         WebResource resource = this.service.path("api/entities/submit/" + entityType.name().toLowerCase());
 
         if (StringUtils.isNotEmpty(doAsUser)) {
-            resource = resource.queryParam(FalconCLI.DO_AS_OPT, doAsUser);
+            resource = resource.queryParam(FalconCLIConstants.DO_AS_OPT, doAsUser);
         }
 
         return resource.header("Cookie", getAuthenticationToken())
@@ -446,8 +497,12 @@ public class TestContext extends AbstractTestContext {
 
     public static String overlayParametersOverTemplate(String template,
                                                        Map<String, String> overlay) throws IOException {
-        File tmpFile = getTempFile();
-        OutputStream out = new FileOutputStream(tmpFile);
+        return overlayParametersOverTemplate(getTempFile(), template, overlay);
+    }
+
+    public static String overlayParametersOverTemplate(File file, String template,
+                                                       Map<String, String> overlay) throws IOException {
+        OutputStream out = new FileOutputStream(file);
 
         InputStreamReader in;
         InputStream resourceAsStream = TestContext.class.getResourceAsStream(template);
@@ -470,7 +525,7 @@ public class TestContext extends AbstractTestContext {
         }
         reader.close();
         out.close();
-        return tmpFile.getAbsolutePath();
+        return file.getAbsolutePath();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -576,5 +631,12 @@ public class TestContext extends AbstractTestContext {
 
     public static int executeWithURL(String command) throws Exception {
         return new FalconCLI().run((command + " -url " + TestContext.BASE_URL).split("\\s+"));
+    }
+
+    private WebResource addQueryParam(WebResource resource, String key, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return resource;
+        }
+        return resource.queryParam(key, value);
     }
 }

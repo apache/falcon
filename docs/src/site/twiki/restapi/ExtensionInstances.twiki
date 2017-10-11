@@ -1,0 +1,87 @@
+---++  GET api/extension/instances/:job-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+List instances of an extension job.
+
+---++ Parameters
+   * :job-name Name of the extension job.
+   * start <optional> Show instances from this nominal time. Format: yyyy-MM-dd'T'HH:mm'Z'.
+   * end <optional> Show instances up to this nominal time. Format: yyyy-MM-dd'T'HH:mm'Z'.
+   * instanceStatus <optional> Valid options are RUNNING, SUCCEEDED, FAILED, WAITING, SUSPENDED, KILLED, TIMEOUT.
+   * fields <optional> Entity output fields separated by commas. Valid options: STATUS, TAGS, PIPELINES, CLUSTERS.
+   * orderBy <optional> Column by which results should be ordered. Sorted by descending order. Valid options are nominalTime (default) and status.
+   * sortOrder <optional> Valid options are “asc” and “desc”.
+   * offset <optional> Show results from the offset. Used for pagination. Default is 0.
+   * numResults <optional> Number of instances per entity to show. Default value is 10.
+   * doAs <optional> Impersonate the user.
+
+---++ Results
+A list of entities of the job, each followed by a set of instances.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/extension/instances/daily-health-bill?start=2012-04-01T00:00
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "numEntities": "2",
+    "entitiesSummary": {
+        "entitySummary": [
+            {
+                "entityProfile": {
+                    "type": "FEED",
+                    "name": "SampleUSHealthBill"
+                },
+                "instances": [
+                    {
+                        "instance": "2012-04-02T00:00Z",
+                        "status": "RUNNING",
+                        "cluster": "SampleCluster1",
+                        "sourceCluster": "primaryCluster",
+                        "details": "hftp://sandbox.hortonworks.com:50070/apps/falcon/adf-demo/pig-input-2012-04-02"
+                    },
+                    {
+                        "instance": "2012-04-01T00:00Z",
+                        "status": "SUCCEEDED",
+                        "cluster": "SampleCluster1",
+                        "sourceCluster": "primaryCluster",
+                        "details": "hftp://sandbox.hortonworks.com:50070/apps/falcon/adf-demo/pig-input-2012-04-01"
+                    }
+                ]
+            },
+            {
+                "entityProfile": {
+                    "type": "PROCESS",
+                    "name": "SampleBillPay"
+                },
+                "instances": [
+                    {
+                        "instance": "2012-04-02T00:00Z",
+                        "status": "RUNNING",
+                        "logFile": "http://sandbox.hortonworks.com:11000/oozie?job=0000085-160322203213815-oozie-oozi-W",
+                        "cluster": "primaryCluster",
+                        "startTime": "2016-04-04T22:37:46Z",
+                        "details": "",
+                        "actions": {
+                            "action": "dr-replication",
+                            "status": "RUNNING",
+                            "logFile": "http://sandbox.hortonworks.com:8088/proxy/application_1458678764964_0052/"
+                        }
+                    },
+                    {
+                        "instance": "2012-04-01T00:00Z",
+                        "status": "SKIPPED",
+                        "cluster": "primaryCluster"
+                    }
+                ]
+            }
+        ]
+    }
+}
+</verbatim>

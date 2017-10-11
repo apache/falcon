@@ -35,6 +35,7 @@ public class EmbeddedServer {
         server.addConnector(connector);
 
         WebAppContext application = new WebAppContext(path, "/");
+        application.setParentLoaderPriority(true);
         server.setHandler(application);
     }
 

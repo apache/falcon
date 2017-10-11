@@ -1,0 +1,25 @@
+---++Falcon Entity SLA Monitoring
+
+Entity SLA monitoring allows you to monitor the entity (process and feed) .It keeps track of the instances of the entity that are running and stores them in the db.
+
+
+---++Dependencies:
+
+*Other Services:*
+
+Entity SLA monitoring service requires FalconJPAService to be up. Following are the values you need to set to run EntitySLAMonitoring.
+In startup.properties:
+
+<verbatim>
+*.application.services= org.apache.falcon.state.store.service.FalconJPAService,
+                        org.apache.falcon.service.EntitySLAMonitoringService
+</verbatim>
+
+
+*Falcon Database:*
+
+Entity SLA monitoring service maintains its state in the database.It needs two tables:
+
+   1.MONITORED_ENTITY
+   1.PENDING_INSTANCES
+please have a look at [[FalconDatabase]] to know how to create them.

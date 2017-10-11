@@ -77,6 +77,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Iterator;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests for Oozie workflow definition for feed replication & retention.
@@ -185,15 +189,17 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertLibExtensions(coord, "retention");
         HashMap<String, String> props = getCoordProperties(coord);
         Assert.assertEquals(props.get("ENTITY_PATH"), bundlePath.toString() + "/RETENTION");
+        Assert.assertEquals(props.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(17)}");
         Assert.assertEquals(coord.getEnd(), endTime);
         Assert.assertEquals(coord.getTimezone(), "UTC");
 
         HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
-        Assert.assertEquals(wfProps.get("feedNames"), lifecycleRetentionFeed.getName());
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
+                lifecycleRetentionFeed.getName());
         Assert.assertTrue(StringUtils.equals(wfProps.get("entityType"), EntityType.FEED.name()));
         Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
-        Assert.assertEquals(wfProps.get("queueName"), "retention");
+        Assert.assertEquals(wfProps.get("queueName"), "ageBasedDeleteQueue");
         Assert.assertEquals(wfProps.get("limit"), "hours(2)");
         Assert.assertEquals(wfProps.get("jobPriority"), "LOW");
     }
@@ -214,7 +220,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(coord.getTimezone(), "UTC");
 
         HashMap<String, String> wfProps = getWorkflowProperties(trgMiniDFS.getFileSystem(), coord);
-        Assert.assertEquals(wfProps.get("feedNames"), lifecycleLocalRetentionFeed.getName());
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
+                lifecycleLocalRetentionFeed.getName());
         Assert.assertTrue(StringUtils.equals(wfProps.get("entityType"), EntityType.FEED.name()));
         Assert.assertEquals(wfProps.get("userWorkflowEngine"), "falcon");
         Assert.assertEquals(wfProps.get("queueName"), "local");
@@ -258,6 +265,42 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         COORDINATORAPP tgtCoord = getCoordinator(trgMiniDFS, coords.get(0).getAppPath());
         // Assert target coord frequency
         Assert.assertEquals(tgtCoord.getFrequency(), expectedFrequency);
+    }
+
+    @Test
+    public void testPostProcessing() throws Exception{
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "false");
+        OozieEntityBuilder builder = OozieEntityBuilder.get(fsReplFeed);
+        Path bundlePath = new Path("/projects/falcon/");
+        builder.build(alphaTrgCluster, bundlePath);
+        BUNDLEAPP bundle = getBundle(trgMiniDFS.getFileSystem(), bundlePath);
+        List<COORDINATOR> coords = bundle.getCoordinator();
+
+        Boolean foundUserAction = false;
+        Boolean foundPostProcessing = false;
+        Iterator<COORDINATOR> coordIterator = coords.iterator();
+
+        while(coordIterator.hasNext()){
+            COORDINATORAPP coord = getCoordinator(trgMiniDFS, coordIterator.next().getAppPath());
+            WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
+            Iterator<Object> workflowIterator = workflow.getDecisionOrForkOrJoin().iterator();
+            while (workflowIterator.hasNext()){
+                Object object = workflowIterator.next();
+                if (ACTION.class.isAssignableFrom(object.getClass())){
+                    ACTION action = (ACTION) object;
+                    if (action.getName().equals("eviction") || action.getName().equals("replication")){
+                        foundUserAction = true;
+                    }
+                    if (action.getName().contains("post")){
+                        foundPostProcessing = true;
+                    }
+                }
+            }
+        }
+
+        assertTrue(foundUserAction);
+        assertFalse(foundPostProcessing);
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
     }
 
     @Test
@@ -329,15 +372,17 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
 
         // verify the late data params
-        Assert.assertEquals(props.get("falconInputFeeds"), feed.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName()), feed.getName());
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()), feed.getName());
-        Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
-        Assert.assertEquals(props.get("falconInPaths"), pathsWithPartitions);
-        Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.FILESYSTEM.name());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName()), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName()), pathsWithPartitions);
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName()),
+                Storage.TYPE.FILESYSTEM.name());
 
         // verify the post processing params
-        Assert.assertEquals(props.get("feedNames"), feed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), feed.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()), "${coord:dataOut('output')}");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_NAMES.getName()), feed.getName());
 
         // verify workflow params
         Assert.assertEquals(wfProps.get("userWorkflowName"), "replication-policy");
@@ -561,9 +606,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-export.hql")));
         Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-import.hql")));
 
-        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf")));
-        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-source-hive-site.xml")));
-        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-target-hive-site.xml")));
 
         HashMap<String, String> props = getCoordProperties(coord);
 
@@ -605,14 +647,15 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertTableStorageProperties(trgCluster, trgStorage, props, "falconTarget");
 
         // verify the late data params
-        Assert.assertEquals(props.get("falconInputFeeds"), tableFeed.getName());
-        Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName()), tableFeed.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName()), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()), tableFeed.getName());
-        Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName()), Storage.TYPE.TABLE.name());
 
         // verify the post processing params
-        Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), tableFeed.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_NAMES.getName()), tableFeed.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()), "${coord:dataOut('output')}");
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
         assertReplicationHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord),
@@ -626,11 +669,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     private void assertReplicationHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
         FileSystem fs = trgMiniDFS.getFileSystem();
 
-        Path hiveConfPath = new Path(wfPath, "conf/falcon-source-hive-site.xml");
-        Assert.assertTrue(fs.exists(hiveConfPath));
 
-        hiveConfPath = new Path(wfPath, "conf/falcon-target-hive-site.xml");
-        Assert.assertTrue(fs.exists(hiveConfPath));
 
         boolean isSecurityEnabled = SecurityUtil.isSecurityEnabled();
         if (isSecurityEnabled) {
@@ -651,7 +690,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             }
 
             if ("recordsize".equals(actionName)) {
-                Assert.assertEquals(action.getJava().getJobXml(), "${wf:appPath()}/conf/falcon-source-hive-site.xml");
                 if (isSecurityEnabled) {
                     Assert.assertNotNull(action.getCred());
                     Assert.assertEquals(action.getCred(), "falconSourceHiveAuth");
@@ -705,6 +743,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Configuration conf = fs.getConf();
         conf.set("fs.permissions.umask-mode", umask);
 
+        OozieEntityBuilder feedBuilder = OozieEntityBuilder.get(feed);
+        Path bundlePath = new Path("/projects/falcon/");
+        feedBuilder.build(trgCluster, bundlePath);
+
         // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
         setUmaskInFsConf(srcCluster, umask);
 
@@ -751,8 +793,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         }
 
         // verify the post processing params
-        Assert.assertEquals(wfProps.get("feedNames"), feed.getName());
-        Assert.assertEquals(wfProps.get("feedInstancePaths"), "IGNORE");
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), feed.getName());
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_NAMES.getName()), feed.getName());
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()), "IGNORE");
 
         assertWorkflowRetries(getWorkflowapp(srcMiniDFS.getFileSystem(), coord));
 
@@ -767,6 +810,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
     @Test (dataProvider = "secureOptions")
     public void testRetentionCoordsForTable(String secureOption) throws Exception {
+        StartupProperties.get().setProperty("falcon.postprocessing.enable", "true");
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
         final String umask = "000";
@@ -812,8 +856,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         }
 
         // verify the post processing params
-        Assert.assertEquals(wfProps.get("feedNames"), tableFeed.getName());
-        Assert.assertEquals(wfProps.get("feedInstancePaths"), "IGNORE");
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), tableFeed.getName());
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_NAMES.getName()), tableFeed.getName());
+        Assert.assertEquals(wfProps.get(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()), "IGNORE");
 
         assertWorkflowRetries(coord);
         verifyBrokerProperties(srcCluster, wfProps);

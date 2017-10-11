@@ -48,7 +48,7 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         if (shouldPreProcess()) {
             ACTION action = getPreProcessingAction(false, Tag.REPLICATION);
             addHDFSServersConfig(action, src, target);
-            addTransition(action, REPLICATION_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            addTransition(action, REPLICATION_ACTION_NAME, getFailAction());
             workflow.getDecisionOrForkOrJoin().add(action);
             start = PREPROCESS_ACTION_NAME;
         }
@@ -58,20 +58,8 @@ public class FSReplicationWorkflowBuilder extends FeedReplicationWorkflowBuilder
         addHDFSServersConfig(replication, src, target);
         addAdditionalReplicationProperties(replication);
         enableCounters(replication);
-        addTransition(replication, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(replication);
-
-        //Add post-processing actions
-        ACTION success = getSuccessPostProcessAction();
-        addHDFSServersConfig(success, src, target);
-        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(success);
-
-        ACTION fail = getFailPostProcessAction();
-        addHDFSServersConfig(fail, src, target);
-        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
-        workflow.getDecisionOrForkOrJoin().add(fail);
-
+        enableTDE(replication);
+        addPostProcessing(workflow, replication);
         decorateWorkflow(workflow, wfName, start);
         return workflow;
     }

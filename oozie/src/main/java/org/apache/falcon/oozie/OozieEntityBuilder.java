@@ -109,6 +109,14 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     public abstract Properties build(Cluster cluster, Path buildPath) throws FalconException;
 
     public Properties build(Cluster cluster, Path buildPath, Map<String, String> properties) throws FalconException {
+        Properties props = new Properties();
+        if (properties != null) {
+            props.putAll(properties);
+        }
+        return build(cluster, buildPath, props);
+    }
+
+    public Properties build(Cluster cluster, Path buildPath, Properties properties) throws FalconException {
         Properties builderProperties = build(cluster, buildPath);
         if (properties == null || properties.isEmpty()) {
             return builderProperties;
@@ -129,6 +137,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
         return propertiesCopy;
     }
+
 
     protected String getStoragePath(Path path) {
         if (path != null) {

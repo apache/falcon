@@ -21,7 +21,9 @@ package org.apache.falcon.entity.parser;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -101,7 +103,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
 
         Assert.assertEquals(process.getTags(),
                 "consumer=consumer@xyz.com, owner=producer@xyz.com, _department_type=forecasting");
-        Assert.assertEquals(process.getPipelines(), "testPipeline,dataReplication_Pipeline");
+        Assert.assertEquals(process.getPipelines(), "testPipeline");
 
         Assert.assertEquals(process.getInputs().getInputs().get(0).getName(), "impression");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getFeed(), "impressionFeed");
@@ -121,6 +123,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()), "2011-11-02T00:00Z");
         Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()), "2091-12-30T00:00Z");
         Assert.assertEquals(process.getTimezone().getID(), "UTC");
+        Assert.assertEquals(processCluster.getVersion(), 0);
 
         Assert.assertEquals(process.getSla().getShouldStartIn().toString(), "hours(2)");
         Assert.assertEquals(process.getSla().getShouldEndIn().toString(), "hours(4)");
@@ -386,6 +389,17 @@ public class ProcessEntityParserTest extends AbstractTestBase {
     }
 
     @Test
+    public void testValidateVersion() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream(PROCESS_XML);
+
+        Process process = parser.parse(stream);
+        Assert.assertEquals(process.getVersion(), 0);
+        process.setVersion(10);
+        parser.validate(process);
+        Assert.assertEquals(process.getVersion(), 10);
+    }
+
+    @Test
     public void testValidateACLWithACLAndAuthorizationDisabled() throws Exception {
         InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
 
@@ -627,6 +641,23 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Feed feedEntity = EntityUtil.getEntity(EntityType.FEED, feedName);
         feedEntity.getClusters().getClusters().get(0).getValidity().setEnd(null);
         process.getClusters().getClusters().get(0).getValidity().setEnd(null);
+        parser.validate(process);
+    }
+
+    @Test
+    public void testSparkProcessEntity() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class)
+                .getResourceAsStream(SPARK_PROCESS_XML));
+        Assert.assertEquals(process.getWorkflow().getEngine().value(), "spark");
+        Assert.assertNotNull(process.getWorkflow().getPath());
+        Cluster processCluster = process.getClusters().getClusters().get(0);
+        org.apache.falcon.entity.v0.cluster.Cluster cluster =
+                ConfigurationStore.get().get(EntityType.CLUSTER, processCluster.getName());
+        String clusterEntitySparkMaster = ClusterHelper.getSparkMasterEndPoint(cluster);
+        String processEntitySparkMaster = process.getSparkAttributes().getMaster();
+        String sparkMaster = (processEntitySparkMaster == null) ? clusterEntitySparkMaster : processEntitySparkMaster;
+
+        Assert.assertEquals(sparkMaster, "local");
         parser.validate(process);
     }
 }

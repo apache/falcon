@@ -238,8 +238,28 @@ MIT license. For details, see docs/license/angular-ui-router-LICENSE.txt
 This product bundles jasmine 2.0.2 which is available under a
 MIT license. For details, see docs/license/jasmine-LICENSE.txt
 
-
 This product bundles entypo icons which is available under a
 CC BY-SA license and Font is available under SIL license.
 For details, see docs/license/entypo-icons-LICENSE.txt and
-docs/license/entypo-font-LICENSE.txt
+docs/license/entypo-font-LICENSE.txt. (Entypo pictograms by Daniel 
+Bruce - www.entypo.com)
+
+This product bundles Cabin webfont [regular, italic & bold] under SIL 
+license. For details see docs/license/cabin-font-LICENSE.txt.
+(www.impallari.com & www.ikern.com)
+
+This product bundles normalize v3.0.1 which is available under 
+MIT license.  For details see docs/license/normalize-LICENSE.txt
+
+This product bundles animate v3.2.5 which is available under 
+MIT license For details see docs/license/animate-LICENSE.txt
+
+This product bundles ngTagsInput v2.3.0 which is available under
+MIT license. For details see docs/license/ngTagsInput-LICENSE.txt
+
+This product bundles ngMask v3.1.1 which is available under
+MIT license. For details see docs/license/ngMask-LICENSE.txt
+
+This product bundles angular-notify.css v1.0.0, copyright Chris Gross,
+which is available under a MIT license.
+For details, see docs/license/angular-notify-LICENSE.txt

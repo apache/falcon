@@ -23,27 +23,46 @@
     <parent>
         <artifactId>falcon-main</artifactId>
         <groupId>org.apache.falcon</groupId>
-        <version>0.10-SNAPSHOT</version>
+        <version>0.11-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>falcon-unit</artifactId>
+    <description>Apache Falcon Unit Module</description>
+    <name>Apache Falcon Unit</name>
+    <packaging>jar</packaging>
+
+    <properties>
+        <hadoop.version>2.7.1</hadoop.version>
+    </properties>
+
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.oozie</groupId>
             <artifactId>oozie-core</artifactId>
+            <exclusions>
+                <exclusion>
+                  <groupId>org.apache.openjpa</groupId>
+                  <artifactId>openjpa-jdbc</artifactId>
+                </exclusion>
+                <exclusion>
+                  <groupId>org.apache.openjpa</groupId>
+                  <artifactId>openjpa-persistence</artifactId>
+                </exclusion>
+                <exclusion>
+                  <groupId>c3p0</groupId>
+                  <artifactId>c3p0</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -110,6 +129,29 @@
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>falcon-extensions</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>test-jar</type>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${basedir}/src/test/resources</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

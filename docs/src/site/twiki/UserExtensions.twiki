@@ -1,0 +1,257 @@
+---+ Falcon User Extensions
+
+---++ Overview
+
+A Falcon user extension is a solution template that comprises of Falcon entities that a Falcon user can build. The extension so built can be made available to and discovered by other users (sharing the same Falcon installation).
+Extension users can instantiate the solution template and deploy it by providing relevant parameters.
+
+   * <a href="#Extension Developer">Extension Developer</a>
+
+   * <a href="#Extension User">Extension User</a>
+
+
+---++ Extension Developer
+This user is the developer of an user extension. Following are the various actions a Falcon extension developer performs:
+
+   * Implements the Extension Builder SPI: The SPI contains the following high level behaviour:
+      * Validate the user supplied parameters.
+      * Generate Entities from user supplied parameters.
+      * Get dataset schemas if it generates an o/p feed.
+   * Packages extension as per the guidelines of the framework. See <a href="#Packaging structure for an extension ">Packaging Structure</a> for more details.
+      * README, user param template.
+      * build time jars, resources etc.
+   * Either resources/Jars(packaged) need to provide the canoncial class name under META-INF/services in the Extension Builder SPI classname file in resoruces.
+        Example: org.apache.falcon.ExtensionExample (needs ot be the entry in the META-INF/services/org.apache.falcon.extensions.ExtensionBuilder)
+   * Extension User can use FalconUnit to test an instantiation of the extension.
+        Registers/unregisters/disables an extension with Falcon. See <a href="#Extension Registration API ">Extension Registration API</a> for more details
+
+---+++ Extension Registration API
+---++++ Extension Registration:
+An extension developer has to register his extension with Falcon in order to make it discoverable by other users. Registration of the extension, enables it by default.
+
+---++++ Command:
+falcon extension -register <extension name> -path <location> [-description <short description>]
+
+---++++ Sample Command:
+falcon extension -register data-quality-check -path hdfs://<nn:port>/projects/abc/data-quality-extension [-description “Ensures data complies with schema”]
+
+Note that location will be under user space.
+
+
+---+++ Deregistration of an user extension
+An extension developer can unregister an extension. This is as good as deleting an extension, however, Falcon will not delete the extension package (in the HDFS location). Falcon will delete all references to the extension. Falcon will validate if there are no instances of this extension at the time of unregistering. If present, un-registration will fail.
+
+---++++ Command:
+falcon extension -unregister <extension name>
+
+---++++ Sample Command:
+falcon extension -unregister data-quality-check
+
+---+++ Disabling an user extension
+An extension developer can disable an extension. Existing instances of this extension will not be affected. When disabled, new instances of the extension  cannot be created. Basically, submit and update operations will not be possible. But, a user can delete an existing extension job.
+
+---++++ Command:
+falcon extension -disable <extension name>
+---++++ Sample Command:
+falcon extension -disable data-quality-check
+
+---+++ Enabling a previously disabled user extension
+An extension developer can enable a previously disabled extension. When enabled, new instances of the extension can be created. Submit, update and delete operations on an extension job can be performed.
+
+---++++ Command:
+falcon extension -enable <extension name>
+---++++ Sample Command:
+falcon extension -enable data-quality-checks
+
+
+---+++ Packaging structure for an extension
+The packaging structure for an user extensions will continue to be consistent with that of trusted extensions:
+<verbatim>
+|-- <extension name>
+    |-- README // This file will be ‘cat’ when extension user issues the “describe” command.
+    |-- META
+        |-- properties file // This file will be ‘cat’ when extension user issues the “definition” command.
+    |-- libs // Libraries to used during build time (instantiation of extension) and runtime
+        |-- build
+    |-- resources (OPTIONAL)// Other resource files to be used during build time (instantiation of extension)
+        |-- build
+</verbatim>
+The jar supplied in the build directory should be packaged with the following file META-INF/services/org.apache.falcon.extensions.ExtensionBuilder
+containing the full class name of the class which implements ExtensionBuilder.
+---++++Command: falcon extension -definition -name <extension name>
+ Sample Output
+<verbatim>
+##### Start configuration:
+
+pipeline.name: "my business name"
+xml {
+  schema.path: "/hdfs/path/to/schema.xml"
+  metadata.path: "/hdfs/path/to/metadata.xml"
+}
+start: "2016-01-01T00:00Z"
+end: "2017-01-01T00:00Z"
+queue: "the queue the pipeline will run in"
+falcon-cluster {
+  clusters {
+    cluster1: {} // empty object will inherit start and end dates from above
+    cluster2: {start: "2016-06-01T00:00Z"} // cluster2 was added in between
+    cluster3: {end: "2016-06-01T00:00Z"} // cluster3 was taken out in between
+    }
+  }
+}
+# A note on path.prefix used below. The path of a falcon feed is constructed
+</verbatim>
+
+
+
+---++ Extension User
+The Extension user is the one who will use and instantiate the extensions that are available.
+
+---+++Enumerate Extensions(including trusted extensions)
+---++++Command: falcon extension -enumerate
+Sample Output (Could be tabular format too, instead of plain JSON): {
+<verbatim>
+  "extensions": [
+    {
+      "name": "hdfs-mirroring",
+      "type": "Trusted extension",
+      "description": "This extension implements replicating arbitrary directories on HDFS from one Hadoop cluster to another Hadoop cluster. This piggy backs on replication solution in Falcon which uses the DistCp tool.",
+      “location”: “fs://<falcon-home>/extensions/hdfs-mirroring”
+    },
+    {
+      "name": "data-quality-check",
+      "type": "User extension",
+      "description": "This extension allows you to check if the data complies with the schema."
+      “location” : “hdfs://<nn:port>/projects/<user-dir>/falcon-extensions/…”
+    },
+    "totalResults": 2
+]
+</verbatim>
+---+++ Get description/details of an extension
+Displays the README supplied by the extension Developer “as-it-is”.
+---++++ Command: falcon extension -describe -extensionName <extension name>
+<verbatim>
+Sample Command : falcon extension -describe -extensionName data-quality-check
+Sample Output :
+The data quality extension allows you…..
+
+</verbatim>
+
+---+++Details of an extension
+Gives the details that Extension Developer has supplied during extension registration.
+---++++Command: falcon extension -detail -extensionName <extension name>
+<verbatim>
+Sample Command : falcon extension -detail -extensionName hdfs-mirroring
+Sample Output :
+{
+      "name": "hdfs-mirroring",
+      "type": "Trusted extension",
+      "description": "This extension implements replicating arbitrary directories on HDFS from one Hadoop cluster to another Hadoop cluster. This piggy backs on replication solution in Falcon which uses the DistCp tool.",
+      “location”: “fs://<falcon-home>/extensions/hdfs-mirroring”
+}
+</verbatim>
+
+---+++ Extension Instantiation validation.
+Validates the configs supplied for an instantiation of the given extension.
+<verbatim>
+Sample Command: falcon extension -validate -jobName dataQualityTestJob -extensionName data-quality-check -file extensions/hdfs-mirroring//META/hdfs-mirroring-properties.json
+</verbatim>
+
+---+++ List of the instantiations of an extension
+Lists all the instances of a given extension. Extension Name is optional, when not passed will list down all the extension jobs.
+---++++Command: bin/falcon extension -list -extensionName <extension name>
+<verbatim>
+Sample Output (Could be tabular format too, instead of plain JSON):
+"jobs": [
+    {
+      "name": "data-quality-abc",
+       “feeds”: [“feed1”, “feed2”]
+       “processes” : [“process1”, “process2”]
+    },
+    {
+      "name": "data-quality-xyz",
+      “feeds”: [“feed3”, “feed4”]
+      “processes” : [“process3”, “process4”]
+    },
+    "totalResults": 2
+}
+</verbatim>
+
+---+++Instantiate an extension (Idempotent)
+User can submit an instance of the extension. This generates the entity definitions and submits all entities of an extension to the Prism Server.
+
+Note that only Feeds and Processes (and not clusters) are generated as part instantiation. Also, these entities will be tagged by the framework to the extension job, so that all entities related to an extension job can be identified and tracked.
+
+Commands:
+falcon extension -submit -extensionName <extension name> -jobName <name to be used in all the extension entities> -file <path to extension parameters>
+falcon extension -submitAndSchedule -extensionName <extension name> -jobName <name to be used in all the extension entities> -file <path to extension parameters>
+<verbatim>
+Sample Output:
+falcon/default/Submit successful (feed) out-feed-abc
+submit/falcon/default/Submit successful (process) pig-process-abc
+</verbatim>
+
+---+++ Details of an extension job
+Gets the details of a particular job:
+---++++Command: bin/falcon extension -detail -jobName <jobName>
+<verbatim>
+Sample Output :
+    {
+      "name": "data-quality-abc",
+       “feeds”: [“feed1”, “feed2”]
+       “processes” : [“process1”, “process2”]
+    }
+</verbatim>
+
+---+++Schedule an Extension Job(Idempotent)
+A submitted extension job can be scheduled.
+As of now there is no support for scheduling in specific colos in distributed mode.
+---++++Commands: falcon extension -schedule -jobName <name to be used in all the extension entities>
+<verbatim>
+Sample Output:
+falcon/default/resume successful (feed) out-feed-abc
+submit/falcon/default/resume successful (process) pig-process-abc
+</verbatim>
+
+---+++ Update an extension job
+Lets the user change properties and/or Update/re-generate instance of an extension (Idempotent)
+Users will have an option to update a particular instance of an extension. He can supply new parameters during update. However, an update will always update the entities to use the latest libs of the extension.
+---++++Commands:
+<verbatim>
+falcon extension -update -jobName <name to be used in all the extension entities> -file <path to extension parameters>
+Sample Output:
+falcon/default/Update successful (feed) out-feed-abc
+submit/falcon/default/Update successful (process) pig-process-abc
+</verbatim>
+
+---+++Delete an Extension Job(Idempotent)
+Deletion of the entities that are part of an extension can only be deleted by deleting an extension.
+All the write operations(submit, submitAndSchedule, update and delete) of entites that are part of an extension job can be done only via extension job apis.
+---++++Commands: falcon extension -delete -jobName <name to be used in all the extension entities>
+<verbatim>
+Sample Output:
+falcon/default/Delete successful (feed) out-feed-abc
+submit/falcon/default/Delete successful (process) pig-process-abc
+</verbatim>
+
+---+++Suspend an Extension Job(Idempotent)
+Suspending an extension job will suspend all the entities that are part of the extension.
+As of now there is no support for suspending in specific colos in distributed mode.
+---++++Commands: falcon extension -suspend -jobName <name to be used in all the extension entities>
+<verbatim>
+Sample Output:
+falcon/default/suspend successful (feed) out-feed-abc
+submit/falcon/default/suspend successful (process) pig-process-abc
+</verbatim>
+
+---+++Resume an Extension Job(Idempotent)
+Resuming an extension job will resume all the entities that are part of the extension.
+As of now there is no support for resuming in specific colos in distributed mode.
+---++++Commands: falcon extension -resume -jobName <name to be used in all the extension entities>
+<verbatim>
+Sample Output:
+falcon/default/resume successful (feed) out-feed-abc
+submit/falcon/default/resume successful (process) pig-process-abc
+</verbatim>
+
+All instance(instance of an entity) level operations will have to be performed by Falcon instance operations.

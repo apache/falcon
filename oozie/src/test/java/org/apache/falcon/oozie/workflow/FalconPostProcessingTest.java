@@ -100,6 +100,9 @@ public class FalconPostProcessingTest {
 
     @AfterClass
     public void tearDown() throws Exception {
+        if (broker.isStopped()) {
+            broker.start(true);
+        }
         broker.deleteAllMessages();
         broker.stop();
     }
@@ -210,13 +213,13 @@ public class FalconPostProcessingTest {
 
         // Verify user message
         if (checkUserMessage) {
-            verifyMesssage(consumer);
+            verifyMessage(consumer);
         }
 
         connection.close();
     }
 
-    private void verifyMesssage(MessageConsumer consumer) throws JMSException {
+    private void verifyMessage(MessageConsumer consumer) throws JMSException {
 
         String[] actualFeedNames = new String[outputFeedPaths.length];
         String[] actualFeedPaths = new String[outputFeedPaths.length];

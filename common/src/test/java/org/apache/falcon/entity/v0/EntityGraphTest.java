@@ -20,17 +20,22 @@ package org.apache.falcon.entity.v0;
 
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Load;
 import org.apache.falcon.entity.v0.feed.Argument;
 import org.apache.falcon.entity.v0.feed.Arguments;
 import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Extract;
 import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.FieldsType;
 import org.apache.falcon.entity.v0.feed.FieldIncludeExclude;
 import org.apache.falcon.entity.v0.feed.Import;
 import org.apache.falcon.entity.v0.feed.MergeType;
+import org.apache.falcon.entity.v0.feed.Export;
+import org.apache.falcon.entity.v0.feed.LoadMethod;
+
+
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.datasource.Datasource;
 import org.apache.falcon.entity.v0.process.Input;
@@ -184,6 +189,36 @@ public class EntityGraphTest extends AbstractTestBase {
         return imp;
     }
 
+    private Feed addFeedExport(String feed, Cluster cluster, Datasource ds) {
+
+        Feed f1 = new Feed();
+        f1.setName(feed);
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                new org.apache.falcon.entity.v0.feed.Cluster();
+        feedCluster.setName(cluster.getName());
+        feedCluster.setType(ClusterType.SOURCE);
+        Clusters clusters = new Clusters();
+        clusters.getClusters().add(feedCluster);
+        f1.setClusters(clusters);
+
+        Export exp = getAnExport(LoadMethod.UPDATEONLY, ds);
+        f1.getClusters().getClusters().get(0).setExport(exp);
+        return f1;
+    }
+
+    private Export getAnExport(LoadMethod loadMethod, Datasource ds) {
+
+        org.apache.falcon.entity.v0.feed.Datasource target = new org.apache.falcon.entity.v0.feed.Datasource();
+        target.setName(ds.getName());
+        target.setTableName("test-table");
+        Load load = new Load();
+        load.setType(loadMethod);
+        target.setLoad(load);
+        Export exp = new Export();
+        exp.setTarget(target);
+        return exp;
+    }
+
     private void attachInput(Process process, Feed feed) {
         if (process.getInputs() == null) {
             process.setInputs(new Inputs());
@@ -238,10 +273,10 @@ public class EntityGraphTest extends AbstractTestBase {
 
         store.remove(EntityType.PROCESS, process.getName());
         entities = graph.getDependents(cluster);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
 
         entities = graph.getDependents(process);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
     }
 
     @Test
@@ -320,7 +355,7 @@ public class EntityGraphTest extends AbstractTestBase {
         Assert.assertTrue(entities.contains(f3));
 
         entities = graph.getDependents(p2);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
 
         entities = graph.getDependents(f1);
         Assert.assertEquals(entities.size(), 2);
@@ -328,7 +363,7 @@ public class EntityGraphTest extends AbstractTestBase {
         Assert.assertTrue(entities.contains(cluster));
 
         entities = graph.getDependents(f2);
-        Assert.assertTrue(entities == null);
+        Assert.assertTrue(entities.isEmpty());
 
         entities = graph.getDependents(f3);
         Assert.assertEquals(entities.size(), 2);
@@ -380,6 +415,42 @@ public class EntityGraphTest extends AbstractTestBase {
         store.remove(EntityType.DATASOURCE, "test-db");
         store.remove(EntityType.CLUSTER, "ci1");
     }
+
+    @Test
+    public void testOnAddExport() throws Exception {
+
+        Datasource ds = new Datasource();
+        ds.setName("test-db");
+        ds.setColo("c1");
+
+        Cluster cluster = new Cluster();
+        cluster.setName("ci1");
+        cluster.setColo("c1");
+
+        Feed f1 = addFeedExport("fe1", cluster, ds);
+
+        store.publish(EntityType.CLUSTER, cluster);
+        store.publish(EntityType.DATASOURCE, ds);
+        store.publish(EntityType.FEED, f1);
+
+        Set<Entity> entities = graph.getDependents(cluster);
+        Assert.assertEquals(entities.size(), 1);
+        Assert.assertTrue(entities.contains(f1));
+
+        entities = graph.getDependents(ds);
+        Assert.assertEquals(entities.size(), 1);
+        Assert.assertTrue(entities.contains(f1));
+
+        entities = graph.getDependents(f1);
+        Assert.assertEquals(entities.size(), 2);
+        Assert.assertTrue(entities.contains(cluster));
+        Assert.assertTrue(entities.contains(ds));
+
+        store.remove(EntityType.FEED, "fe1");
+        store.remove(EntityType.DATASOURCE, "test-db");
+        store.remove(EntityType.CLUSTER, "ci1");
+    }
+
 
     @Test
     public void testOnRemoveDatasource() throws Exception {

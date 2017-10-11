@@ -1,0 +1,12 @@
+---+ Falcon Extensions
+
+---++ Overview
+
+A Falcon extension is a solution template comprising of entities that solve a specific use case and enable non-programmers to capture and re-use very complex business logic. Objective of an extension is to solve a standard data processing/management function that can be invoked as a tool using the standard Falcon features (REST API, CLI and UI access) supporting standard Falcon features.
+
+Falcon currently supports two types of extensions:
+
+   * [[TrustedExtensions][Trusted Extensions]]
+
+   * [[UserExtensions][User Extensions]]
+

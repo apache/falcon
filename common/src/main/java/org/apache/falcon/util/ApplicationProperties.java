@@ -22,6 +22,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.security.CredentialProviderHelper;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,9 @@ import java.util.Set;
 public abstract class ApplicationProperties extends Properties {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationProperties.class);
+
+    public static final String CREDENTIAL_PROVIDER_PROPERTY = "credential.provider.path";
+    public static final String ALIAS_PROPERTY_PREFIX = "credential.provider.alias.for.";
 
     protected abstract String getPropertyFile();
 
@@ -167,6 +172,31 @@ public abstract class ApplicationProperties extends Properties {
             keys.add(key.substring(key.indexOf('.') + 1));
         }
         return keys;
+    }
+
+    public void resolveAlias() throws FalconException {
+        try {
+            final Configuration conf = new Configuration();
+            String providerPath = getProperty(CREDENTIAL_PROVIDER_PROPERTY);
+            if (providerPath != null) {
+                conf.set(CredentialProviderHelper.CREDENTIAL_PROVIDER_PATH, providerPath);
+            }
+
+            Properties aliasProperties = new Properties();
+            for (Object keyObj : keySet()) {
+                String key = (String) keyObj;
+                if (key.startsWith(ALIAS_PROPERTY_PREFIX)) {
+                    String propertyKey = key.substring(ALIAS_PROPERTY_PREFIX.length());
+                    String propertyValue = CredentialProviderHelper.resolveAlias(conf, getProperty(key));
+                    aliasProperties.setProperty(propertyKey, propertyValue);
+                }
+            }
+            LOG.info("Resolved alias properties: {}", aliasProperties.stringPropertyNames());
+            putAll(aliasProperties);
+        } catch (Exception e) {
+            LOG.error("Exception while resolving credential alias", e);
+            throw new FalconException("Exception while resolving credential alias", e);
+        }
     }
 
     @Override

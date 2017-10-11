@@ -45,7 +45,7 @@ public interface EntityStateStore {
      * @param entityId
      * @return true, if entity exists in store.
      */
-    boolean entityExists(EntityID entityId) throws StateStoreException;;
+    boolean entityExists(EntityID entityId) throws StateStoreException;
 
     /**
      * @param state

@@ -1,0 +1,198 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-hdfs-snapshot-mirroring'>
+    <start to='snapshot-replication'/>
+    <!-- Snapshot replication action -->
+    <action name="snapshot-replication">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.oozie.libpath</name>
+                    <value>${wf:conf("falcon.libpath")}</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.snapshots.replication.HdfsSnapshotReplicator</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-maxMaps</arg>
+            <arg>${maxMaps}</arg>
+            <arg>-mapBandwidth</arg>
+            <arg>${mapBandwidth}</arg>
+            <arg>-overwrite</arg>
+            <arg>${overwrite}</arg>
+            <arg>-ignoreErrors</arg>
+            <arg>${ignoreErrors}</arg>
+            <arg>-skipChecksum</arg>
+            <arg>${skipChecksum}</arg>
+            <arg>-removeDeletedFiles</arg>
+            <arg>${removeDeletedFiles}</arg>
+            <arg>-preserveBlockSize</arg>
+            <arg>${preserveBlockSize}</arg>
+            <arg>-preserveReplicationNumber</arg>
+            <arg>${preserveReplicationNumber}</arg>
+            <arg>-preservePermission</arg>
+            <arg>${preservePermission}</arg>
+            <arg>-preserveUser</arg>
+            <arg>${preserveUser}</arg>
+            <arg>-preserveGroup</arg>
+            <arg>${preserveGroup}</arg>
+            <arg>-preserveChecksumType</arg>
+            <arg>${preserveChecksumType}</arg>
+            <arg>-preserveAcl</arg>
+            <arg>${preserveAcl}</arg>
+            <arg>-preserveXattr</arg>
+            <arg>${preserveXattr}</arg>
+            <arg>-preserveTimes</arg>
+            <arg>${preserveTimes}</arg>
+            <arg>-sourceNN</arg>
+            <arg>${sourceNN}</arg>
+            <arg>-sourceExecUrl</arg>
+            <arg>${sourceExecUrl}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceSnapshotDir</arg>
+            <arg>${sourceSnapshotDir}</arg>
+            <arg>-targetNN</arg>
+            <arg>${targetNN}</arg>
+            <arg>-targetExecUrl</arg>
+            <arg>${targetExecUrl}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetSnapshotDir</arg>
+            <arg>${targetSnapshotDir}</arg>
+            <arg>-tdeEncryptionEnabled</arg>
+            <arg>${tdeEncryptionEnabled}</arg>
+            <arg>-snapshotJobName</arg>
+            <arg>${snapshotJobName}-${nominalTime}</arg>
+        </java>
+        <ok to="snapshot-retention"/>
+        <error to="fail"/>
+    </action>
+    <!-- Snapshot retention action -->
+    <action name="snapshot-retention">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.oozie.libpath</name>
+                    <value>${wf:conf("falcon.libpath")}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.hdfs-servers</name>
+                    <value>${sourceNN},${targetNN}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.snapshots.retention.HdfsSnapshotEvictor</main-class>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
+            <arg>-sourceNN</arg>
+            <arg>${sourceNN}</arg>
+            <arg>-sourceExecUrl</arg>
+            <arg>${sourceExecUrl}</arg>
+            <arg>-sourceNNKerberosPrincipal</arg>
+            <arg>${sourceNNKerberosPrincipal}</arg>
+            <arg>-sourceSnapshotDir</arg>
+            <arg>${sourceSnapshotDir}</arg>
+            <arg>-sourceSnapshotRetentionPolicy</arg>
+            <arg>${sourceSnapshotRetentionPolicy}</arg>
+            <arg>-sourceSnapshotRetentionAgeLimit</arg>
+            <arg>${sourceSnapshotRetentionAgeLimit}</arg>
+            <arg>-sourceSnapshotRetentionNumber</arg>
+            <arg>${sourceSnapshotRetentionNumber}</arg>
+            <arg>-targetNN</arg>
+            <arg>${targetNN}</arg>
+            <arg>-targetExecUrl</arg>
+            <arg>${targetExecUrl}</arg>
+            <arg>-targetNNKerberosPrincipal</arg>
+            <arg>${targetNNKerberosPrincipal}</arg>
+            <arg>-targetSnapshotDir</arg>
+            <arg>${targetSnapshotDir}</arg>
+            <arg>-targetSnapshotRetentionPolicy</arg>
+            <arg>${targetSnapshotRetentionPolicy}</arg>
+            <arg>-targetSnapshotRetentionAgeLimit</arg>
+            <arg>${targetSnapshotRetentionAgeLimit}</arg>
+            <arg>-targetSnapshotRetentionNumber</arg>
+            <arg>${targetSnapshotRetentionNumber}</arg>
+            <arg>-snapshotJobName</arg>
+            <arg>${snapshotJobName}-${nominalTime}</arg>
+        </java>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>
+            Workflow action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

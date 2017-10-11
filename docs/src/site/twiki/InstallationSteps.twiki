@@ -20,21 +20,22 @@ $git clone https://git-wip-us.apache.org/repos/asf/falcon.git falcon
 ---+++Step 2 - Build Falcon
 
 <verbatim>
-$cd falcon
-$export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify" && mvn clean install
+$ cd falcon
+$ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m -noverify"
+$ mvn clean install 
+
 </verbatim>
 It builds and installs the package into the local repository, for use as a dependency in other projects locally.
 
-[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of Hadoop]
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 
-*NOTE:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
-[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of Oozie. Oozie versions
->= 4 are supported]
-NOTE: Falcon builds with JDK 1.7/1.8 using -noverify option
-      To compile Falcon with Hive Replication, optionally "-P hadoop-2,hivedr" can be appended. For this Hive >= 1.2.0
-      and Oozie >= 4.2.0 should be available.
+*Note 1:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
+          Falcon build with JDK 1.7 using -noverify option
 
-
+*Note 2:* To compile Falcon with addon extensions, append additional profiles to build command using syntax -P<<profile1,profile2>>
+          For Hive Mirroring extension, use profile"hivedr". Hive >= 1.2.0 and Oozie >= 4.2.0 is required
+          For HDFS Snapshot mirroring extension, use profile "hdfs-snapshot-mirroring". Hadoop >= 2.7.0 is required
+          For ADF integration, use profile "adf"
 
 ---+++Step 3 - Package and Deploy Falcon
 
@@ -75,6 +76,8 @@ $src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 >> ex. src/bin/package.sh 2.5.0 4.0.0
 >> Falcon package is available in <<falcon home>>/target/apache-falcon-<<version>>-bin.tar.gz
 >> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
+>> __IMPORTANT:  You need to download the je-5.0.73 version from http://download.oracle.com/otn/berkeley-db/je-5.0.73.zip and extract je-5.0.73 under the Falcon webapp directory or provision an HBase cluster for use as Falcon graphdb backend DB.
+    Depending on the Graphdb backend choice, update the startup.properties appropriately.__
 </verbatim>
 
 *NOTE:* If you have a separate Apache Oozie installation, you will need to follow some additional steps:

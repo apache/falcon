@@ -65,6 +65,18 @@ case $type in
   client)
     # set the client class path
     FALCONCPPATH="$FALCON_CONF:${BASEDIR}/client/lib/*"
+    HADOOPDIR=`which hadoop`
+    if [ "$HADOOP_HOME" != "" ]; then
+      echo "Hadoop home is set, adding libraries from '${HADOOP_HOME}/bin/hadoop classpath' into falcon classpath"
+      FALCONCPPATH="${FALCONCPPATH}:`${HADOOP_HOME}/bin/hadoop classpath`"
+    elif [ "$HADOOPDIR" != "" ]; then
+      echo "Hadoop is installed, adding hadoop classpath to falcon classpath"
+      FALCONCPPATH="${FALCONCPPATH}:`hadoop classpath`"
+    else
+      echo "Could not find installed hadoop and HADOOP_HOME is not set."
+      echo "Using the default jars bundled in ${BASEDIR}/hadooplibs/"
+      FALCONCPPATH="${FALCONCPPATH}:${BASEDIR}/hadooplibs/*"
+    fi
     for i in `ls ${BASEDIR}/server/webapp`; do
       FALCONCPPATH="${FALCONCPPATH}:${i}/WEB-INF/lib/*"
     done
@@ -123,5 +135,8 @@ case $type in
     exit 1
   ;;
 esac
+# Allow FALCONCPPATH to be augmented with extra classpath.  Add to the end
+# so that Falcon classes are higher in precedence.
+FALCONCPPATH="${FALCONCPPATH}:${FALCON_EXTRA_CLASS_PATH}"
 export FALCONCPPATH
 export FALCON_OPTS

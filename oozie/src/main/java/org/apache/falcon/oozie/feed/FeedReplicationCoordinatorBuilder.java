@@ -262,6 +262,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
 
         // falcon post processing
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), "${coord:dataOut('output')}");
     }
 
@@ -275,11 +276,6 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             Path scriptPath = new Path(buildPath, "scripts");
             copyHiveScript(fs, scriptPath, IMPORT_HQL);
             copyHiveScript(fs, scriptPath, EXPORT_HQL);
-
-            // create hive conf to stagingDir
-            Path confPath = new Path(buildPath + "/conf");
-            persistHiveConfiguration(fs, confPath, srcCluster, "falcon-source-");
-            persistHiveConfiguration(fs, confPath, trgCluster, "falcon-target-");
         } catch (IOException e) {
             throw new FalconException("Unable to create hive conf files", e);
         }
