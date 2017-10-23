@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon.designer</groupId>
     <artifactId>designer-main</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.11</version>
     <description>Apache Falcon Pipeline Designer</description>
     <name>Apache Falcon Pipeline Designer</name>
     <packaging>pom</packaging>
