@@ -159,5 +159,6 @@ None
 ### DOCUMENTATION:
 | JIRA | Summary | Priority | Contributor | Reporter |
 |:---- |:---- |:---- |:---- |:---- |
+| [FALCON-2196](https://issues.apache.org/jira/browse/FALCON-2196) | Extensions User documentation | Major | sandeep samudrala | Pallavi Rao |
 | [FALCON-2143](https://issues.apache.org/jira/browse/FALCON-2143) | Documentation of BacklogEmitter Service | Major | Praveen Adlakha | Praveen Adlakha |
 | [FALCON-2078](https://issues.apache.org/jira/browse/FALCON-2078) | Documentation for Process SLA | Major | Praveen Adlakha | Praveen Adlakha |
