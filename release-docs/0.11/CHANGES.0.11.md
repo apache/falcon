@@ -59,6 +59,7 @@ None
 | [FALCON-2197](https://issues.apache.org/jira/browse/FALCON-2197) | <span class="parentIssue">FALCON-2182</span> Add enable and disable option for an extension | extensions | Major | Pracheer Agarwal | Pallavi Rao |
 | [FALCON-2189](https://issues.apache.org/jira/browse/FALCON-2189) | <span class="parentIssue">FALCON-2182</span> Falcon build is failing for falcon jpa service to be initialized before extension servivce | extensions | Major | sandeep samudrala | sandeep samudrala |
 | [FALCON-2153](https://issues.apache.org/jira/browse/FALCON-2153) | <span class="parentIssue">FALCON-2170</span> Resetting Gauge value in BacklogEmitterService | common | Major | Praveen Adlakha | Praveen Adlakha |
+<<<<<<< HEAD
 | [FALCON-2059](https://issues.apache.org/jira/browse/FALCON-2059) | BacklogMetricEmitter Service for Falcon | metrics | Major | pavan kumar kolamuri | pavan kumar kolamuri |
 | [FALCON-2082](https://issues.apache.org/jira/browse/FALCON-2082) | Add CSRF filter for REST APIs | prism | Major | Ying Zheng | Ying Zheng |
 | [FALCON-1596](https://issues.apache.org/jira/browse/FALCON-1596) | Spring shell based CLI for falcon | shell | Major | Praveen Adlakha | Rajat Khandelwal |
