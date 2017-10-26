@@ -8,6 +8,7 @@ None
 ### NEW FEATURES:
 | JIRA | Summary | Component | Priority | Contributor | Reporter |
 |:---- |:---- | :--- |:---- |:---- |:---- |
+| [FALCON-2182](https://issues.apache.org/jira/browse/FALCON-2182) | Add support for Falcon user extensions | extensions | Major | - | Pallavi Rao |
 | [FALCON-2235](https://issues.apache.org/jira/browse/FALCON-2235) | <span class="parentIssue">FALCON-2182</span> Suspend/Resume API support for extension job (user extension) | extensions | Major | sandeep samudrala | sandeep samudrala |
 | [FALCON-2195](https://issues.apache.org/jira/browse/FALCON-2195) | <span class="parentIssue">FALCON-2182</span> Add API to get details of an extension job | extensions | Major | sandeep samudrala | Pallavi Rao |
 | [FALCON-1610](https://issues.apache.org/jira/browse/FALCON-1610) | <span class="parentIssue">FALCON-1596</span> Add instance commands to Falcon spring-shell CLI | client | Major | Praveen Adlakha | Rajat Khandelwal |
@@ -58,6 +59,8 @@ None
 | [FALCON-2197](https://issues.apache.org/jira/browse/FALCON-2197) | <span class="parentIssue">FALCON-2182</span> Add enable and disable option for an extension | extensions | Major | Pracheer Agarwal | Pallavi Rao |
 | [FALCON-2189](https://issues.apache.org/jira/browse/FALCON-2189) | <span class="parentIssue">FALCON-2182</span> Falcon build is failing for falcon jpa service to be initialized before extension servivce | extensions | Major | sandeep samudrala | sandeep samudrala |
 | [FALCON-2153](https://issues.apache.org/jira/browse/FALCON-2153) | <span class="parentIssue">FALCON-2170</span> Resetting Gauge value in BacklogEmitterService | common | Major | Praveen Adlakha | Praveen Adlakha |
+<<<<<<< HEAD
+| [FALCON-2059](https://issues.apache.org/jira/browse/FALCON-2059) | BacklogMetricEmitter Service for Falcon | metrics | Major | pavan kumar kolamuri | pavan kumar kolamuri |
 | [FALCON-2082](https://issues.apache.org/jira/browse/FALCON-2082) | Add CSRF filter for REST APIs | prism | Major | Ying Zheng | Ying Zheng |
 | [FALCON-1596](https://issues.apache.org/jira/browse/FALCON-1596) | Spring shell based CLI for falcon | shell | Major | Praveen Adlakha | Rajat Khandelwal |
 
@@ -147,8 +150,9 @@ None
 | [FALCON-2292](https://issues.apache.org/jira/browse/FALCON-2292) | User Extension submission is failing because of the validate late inputs | extensions | Major | sandeep samudrala | sandeep samudrala |
 | [FALCON-2291](https://issues.apache.org/jira/browse/FALCON-2291) | Incorrect path to the REST calls on extension (POST) | docs | Major | Pengfei Xuan | Pengfei Xuan |
 | [FALCON-2290](https://issues.apache.org/jira/browse/FALCON-2290) | Change staging directory for entity creation while extension job submission | extensions | Major | Pracheer Agarwal | Pracheer Agarwal |
-| [FALCON-2287](https://issues.apache.org/jira/browse/FALCON-2287) | Extension list fails with MIME type error on server | extensions | Major | Pracheer Agarwal | Pragya Mittal | | [FALCON-2283](https://issues.apache.org/jira/browse/FALCON-2283) | Internal Server Error : On trying to submit a trusted extension job 
- | extensions | Major | sandeep samudrala | Richie Varghese | | [FALCON-2279](https://issues.apache.org/jira/browse/FALCON-2279) | Killed instances are not rerun via falcon | rerun | Major | sandeep samudrala | Pragya Mittal |
+| [FALCON-2287](https://issues.apache.org/jira/browse/FALCON-2287) | Extension list fails with MIME type error on server | extensions | Major | Pracheer Agarwal | Pragya Mittal | 
+| [FALCON-2283](https://issues.apache.org/jira/browse/FALCON-2283) | Internal Server Error : On trying to submit a trusted extension job | extensions | Major | sandeep samudrala | Richie Varghese | 
+| [FALCON-2279](https://issues.apache.org/jira/browse/FALCON-2279) | Killed instances are not rerun via falcon | rerun | Major | sandeep samudrala | Pragya Mittal |
 | [FALCON-2277](https://issues.apache.org/jira/browse/FALCON-2277) | Incorrect error message on registering trusted exceptions | extensions | Major | Pracheer Agarwal | Richie Varghese |
 | [FALCON-2276](https://issues.apache.org/jira/browse/FALCON-2276) | FalconCLIException while submitting trusted extension job | extensions | Major | sandeep samudrala | Richie Varghese |
 | [FALCON-2274](https://issues.apache.org/jira/browse/FALCON-2274) | Job list in extension is failing with IllegalArgumentException | extensions | Major | Pracheer Agarwal | Pragya Mittal |
