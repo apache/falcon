@@ -15,24 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.falcon.lifecycle;
+
+
+package org.apache.falcon.lifecycle.archival;
+
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.feed.Feed;
 
 /**
- * Enum for valid lifecycle stages for the feed.
+ * Archival policy which archives all instances of instance time depending on the given frequency.
+ * It will create the workflow and coordinators for this policy.
  */
-public enum FeedLifecycleStage {
+public class AgeBasedArchival extends ArchivalPolicy {
 
-    RETENTION("AgeBasedDelete"),
-    ARCHIVAL("AgeBasedArchival");
+    @Override
+    public void validate(Feed feed, String clusterName) throws FalconException {
 
-    private String defaultPolicyName;
-
-    private FeedLifecycleStage(String defaultPolicyName) {
-        this.defaultPolicyName = defaultPolicyName;
     }
-
-    public String getDefaultPolicyName() {
-        return defaultPolicyName;
-    }
-
 }

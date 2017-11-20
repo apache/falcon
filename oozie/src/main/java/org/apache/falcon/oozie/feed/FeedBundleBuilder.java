@@ -58,7 +58,7 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
                     props.add(appProps);
                 }
             }
-        } else {
+        } else if (FeedHelper.getRetentionStage(this.entity, cluster.getName()) == null){
             List<Properties> evictionProps =
                     OozieCoordinatorBuilder.get(entity, Tag.RETENTION).buildCoords(cluster, buildPath);
             if (evictionProps != null) {

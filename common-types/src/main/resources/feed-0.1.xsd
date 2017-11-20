@@ -364,6 +364,7 @@
 
         <xs:all>
             <xs:element type="retention-stage" name="retention-stage" minOccurs="0"></xs:element>
+            <xs:element type="archival-stage" name="archival-stage" minOccurs="0"></xs:element>
         </xs:all>
 
     </xs:complexType>
@@ -573,6 +574,24 @@
             <xs:element type="xs:string" name="queue" minOccurs="0" maxOccurs="1"></xs:element>
             <xs:element type="xs:string" name="priority" minOccurs="0" maxOccurs="1"></xs:element>
             <xs:element type="properties" name="properties" minOccurs="0" maxOccurs="1"></xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="archival-stage">
+        <xs:annotation>
+            <xs:documentation>
+                Archival stage is the new way to define archival for a feed using feed lifecycle feature. Archival
+                has a configurable policy which does the validation and the real execution through workflow engine.
+                This method of specifying archival gives you more control for archival rather than defining archival
+                source and target in replication lifecycle stage of feed.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:all>
+            <xs:element type="non-empty-string" name="policy" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="xs:string" name="deleteFromSource" minOccurs="1"></xs:element>
+            <xs:element type="xs:string" name="queue" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="location" name="location" minOccurs="1"></xs:element>
+            <xs:element type="properties" name="properties" minOccurs="0"></xs:element>
         </xs:all>
     </xs:complexType>
 </xs:schema>

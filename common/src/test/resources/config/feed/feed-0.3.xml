@@ -79,5 +79,10 @@
                 <property name="retention.policy.agebaseddelete.limit" value="hours(7)"></property>
             </properties>
         </retention-stage>
+        <archival-stage>
+            <deleteFromSource>false</deleteFromSource>
+            <queue>default</queue>
+            <location type="data" path="s4://inmobi-gridops-databus-archival-pek1/baseSummary-pek1-op-ivory/${YEAR}-${MONTH}-${DAY}-${HOUR}/"/>
+        </archival-stage>
     </lifecycle>
 </feed>

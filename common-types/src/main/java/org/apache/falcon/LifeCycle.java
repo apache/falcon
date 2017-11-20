@@ -27,7 +27,8 @@ public enum LifeCycle {
     EVICTION(Tag.RETENTION),
     REPLICATION(Tag.REPLICATION),
     IMPORT(Tag.IMPORT),
-    EXPORT(Tag.EXPORT);
+    EXPORT(Tag.EXPORT),
+    ARCHIVAL(Tag.ARCHIVAL);
 
     private final Tag tag;
 
