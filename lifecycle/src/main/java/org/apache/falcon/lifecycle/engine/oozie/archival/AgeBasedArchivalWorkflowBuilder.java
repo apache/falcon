@@ -26,6 +26,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.ArchivalStage;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.lifecycle.engine.oozie.utils.OozieBuilderUtils;
@@ -85,6 +86,11 @@ public class AgeBasedArchivalWorkflowBuilder {
 
         props.putAll(getWorkflowProperties(feed, cluster));
         props.putAll(FeedHelper.getUserWorkflowProperties(LifeCycle.ARCHIVAL));
+
+        ArchivalStage archivalStage = FeedHelper.getArchivalStage(feed, cluster.getName());
+        if (StringUtils.isNotBlank(archivalStage.getQueue())) {
+            props.put(OozieBuilderUtils.MR_QUEUE_NAME, archivalStage.getQueue());
+        }
 
         // Write out the config to config-default.xml
         OozieBuilderUtils.marshalDefaultConfig(cluster, workflow, props, buildPath);
