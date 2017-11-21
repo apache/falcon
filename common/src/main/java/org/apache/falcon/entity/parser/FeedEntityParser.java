@@ -157,22 +157,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         LifecyclePolicyMap map = LifecyclePolicyMap.get();
         for (Cluster cluster : feed.getClusters().getClusters()) {
             if (FeedHelper.isLifecycleEnabled(feed, cluster.getName())) {
-                if (FeedHelper.getRetentionStage(feed, cluster.getName()) == null) {
-                    throw new ValidationException("Retention is a mandatory stage, didn't find it for cluster: "
-                            + cluster.getName());
-                }
-                validateRetentionFrequency(feed, cluster.getName());
-                for (String policyName : FeedHelper.getPolicies(feed, cluster.getName())) {
-                    map.get(policyName).validate(feed, cluster.getName());
-                }
-            }
-        }
-    }
-
-    private void validateLifecycleTags(Feed feed) throws FalconException {
-        LifecyclePolicyMap map = LifecyclePolicyMap.get();
-        for (Cluster cluster : feed.getClusters().getClusters()) {
-            if (FeedHelper.isLifecycleEnabled(feed, cluster.getName())) {
                 if ((FeedHelper.getRetentionStage(feed, cluster.getName()) != null) || (FeedHelper.getArchivalStage(feed, cluster.getName()) != null)) {
                     validateRetentionStage(feed, cluster);
                     validateArchivalStage(feed, cluster);
