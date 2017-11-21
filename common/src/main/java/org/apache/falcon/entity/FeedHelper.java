@@ -386,7 +386,7 @@ public final class FeedHelper {
 
             if (clusterLifecycle != null && clusterLifecycle.getRetentionStage() != null) {
                 return clusterLifecycle.getRetentionStage();
-            } else if (globalLifecycle != null) {
+            } else if (globalLifecycle != null && globalLifecycle.getRetentionStage() != null) {
                 return globalLifecycle.getRetentionStage();
             }
         }

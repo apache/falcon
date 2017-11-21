@@ -33,18 +33,18 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.ACL;
-import org.apache.falcon.entity.v0.feed.Extract;
-import org.apache.falcon.entity.v0.feed.ExtractMethod;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.Cluster;
-import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.MergeType;
 import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.feed.Sla;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.ACL;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.Extract;
+import org.apache.falcon.entity.v0.feed.ExtractMethod;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -165,6 +165,38 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 for (String policyName : FeedHelper.getPolicies(feed, cluster.getName())) {
                     map.get(policyName).validate(feed, cluster.getName());
                 }
+            }
+        }
+    }
+
+    private void validateLifecycleTags(Feed feed) throws FalconException {
+        LifecyclePolicyMap map = LifecyclePolicyMap.get();
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            if (FeedHelper.isLifecycleEnabled(feed, cluster.getName())) {
+                if ((FeedHelper.getRetentionStage(feed, cluster.getName()) != null) || (FeedHelper.getArchivalStage(feed, cluster.getName()) != null)) {
+                    validateRetentionStage(feed, cluster);
+                    validateArchivalStage(feed, cluster);
+                    for (String policyName : FeedHelper.getPolicies(feed, cluster.getName())) {
+                        map.get(policyName).validate(feed, cluster.getName());
+                    }
+                } else {
+                    throw new ValidationException("Atleast one of Retention/Archival is a mandatory stage, didn't find it for cluster: "
+                            + cluster.getName());
+                }
+            }
+        }
+    }
+
+    private void validateRetentionStage(Feed feed, Cluster cluster) throws FalconException {
+        if (FeedHelper.getRetentionStage(feed, cluster.getName()) != null) {
+            validateRetentionFrequency(feed, cluster.getName());
+        }
+    }
+
+    private void validateArchivalStage(Feed feed, Cluster cluster) throws FalconException {
+        if (FeedHelper.getArchivalStage(feed, cluster.getName()) != null) {
+            if (FeedHelper.getArchivalStage(feed, cluster.getName()).getLocation().getPath().isEmpty()) {
+                throw new ValidationException("Location path cannot be empty.");
             }
         }
     }

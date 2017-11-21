@@ -363,8 +363,8 @@
         </xs:annotation>
 
         <xs:all>
-            <xs:element type="retention-stage" name="retention-stage" minOccurs="0"></xs:element>
-            <xs:element type="archival-stage" name="archival-stage" minOccurs="0"></xs:element>
+            <xs:element type="retention-stage" name="retention-stage" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element type="archival-stage" name="archival-stage" minOccurs="0" maxOccurs="1"></xs:element>
         </xs:all>
 
     </xs:complexType>

@@ -46,7 +46,7 @@ public class AgeBasedDelete extends RetentionPolicy {
         // validate that it is a valid cluster
         Cluster cluster = FeedHelper.getCluster(feed, clusterName);
         Frequency retentionLimit = getRetentionLimit(feed, clusterName);
-        if (cluster != null) {
+        if (cluster != null && retentionLimit != null) {
             validateLimitWithSla(feed, cluster, retentionLimit.toString());
             validateLimitWithLateData(feed, cluster, retentionLimit.toString());
             String lifecycleEngine = StartupProperties.get().getProperty("lifecycle.engine.impl",
@@ -122,9 +122,8 @@ public class AgeBasedDelete extends RetentionPolicy {
                 throw new FalconException("Invalid value for property: " + LIMIT_PROPERTY_NAME + ", should be a valid "
                         + "frequency e.g. hours(2)", e);
             }
-        } else {
-            throw new FalconException("Cluster " + clusterName + " doesn't contain retention stage");
         }
+        return null;
     }
 
 }
