@@ -588,7 +588,7 @@
         </xs:annotation>
         <xs:all>
             <xs:element type="non-empty-string" name="policy" minOccurs="0" maxOccurs="1"></xs:element>
-            <xs:element type="xs:string" name="deleteFromSource" minOccurs="1"></xs:element>
+            <xs:element type="xs:string" name="deleteFromSource" minOccurs="0"></xs:element>
             <xs:element type="xs:string" name="queue" minOccurs="0" maxOccurs="1"></xs:element>
             <xs:element type="location" name="location" minOccurs="1"></xs:element>
             <xs:element type="properties" name="properties" minOccurs="0"></xs:element>

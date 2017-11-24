@@ -266,8 +266,9 @@ public class FeedHelperTest extends AbstractTestBase {
                 .getParser(EntityType.FEED);
         Feed feed = parser.parse(this.getClass().getResourceAsStream(FEED3_XML));
         List<String> policies = FeedHelper.getPolicies(feed, "testCluster");
-        Assert.assertEquals(policies.size(), 1);
+        Assert.assertEquals(policies.size(), 2);
         Assert.assertEquals(policies.get(0), "AgeBasedDelete");
+        Assert.assertEquals(policies.get(1), "AgeBasedArchival");
     }
 
     @Test
