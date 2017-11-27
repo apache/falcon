@@ -400,7 +400,7 @@ public final class FeedHelper {
 
             if (clusterLifecycle != null && clusterLifecycle.getArchivalStage() != null) {
                 return clusterLifecycle.getArchivalStage();
-            } else if (globalLifecycle != null) {
+            } else if (globalLifecycle != null && globalLifecycle.getArchivalStage() != null) {
                 return globalLifecycle.getArchivalStage();
             }
         }
@@ -436,15 +436,20 @@ public final class FeedHelper {
         Cluster cluster = getCluster(feed, clusterName);
         if (cluster != null) {
             if (isLifecycleEnabled(feed, clusterName)) {
-                String policy = getRetentionStage(feed, clusterName).getPolicy();
-                policy = StringUtils.isBlank(policy)
-                        ? FeedLifecycleStage.RETENTION.getDefaultPolicyName() : policy;
-                result.add(policy);
+                String policy = "";
+                if (getRetentionStage(feed, clusterName) != null) {
+                    policy = getRetentionStage(feed, clusterName).getPolicy();
+                    policy = StringUtils.isBlank(policy)
+                            ? FeedLifecycleStage.RETENTION.getDefaultPolicyName() : policy;
+                    result.add(policy);
+                }
 
-                policy = getArchivalStage(feed, clusterName).getPolicy();
-                policy = StringUtils.isBlank(policy)
-                        ? FeedLifecycleStage.ARCHIVAL.getDefaultPolicyName() : policy;
-                result.add(policy);
+                if (getArchivalStage(feed, clusterName) != null) {
+                    policy = getArchivalStage(feed, clusterName).getPolicy();
+                    policy = StringUtils.isBlank(policy)
+                            ? FeedLifecycleStage.ARCHIVAL.getDefaultPolicyName() : policy;
+                    result.add(policy);
+                }
             }
             return result;
         }
@@ -1306,6 +1311,8 @@ public final class FeedHelper {
             Location location = archivalStage.getLocation();
             if ((location != null) && (location.getPath() != null)) {
                 archivalPath = location.getPath();
+            } else {
+                throw new FalconException("Location cannot be empty.");
             }
         }
         return archivalPath;

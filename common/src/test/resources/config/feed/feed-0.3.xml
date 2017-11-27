@@ -53,6 +53,11 @@
                         <property name="retention.policy.agebaseddelete.limit" value="hours(9)"></property>
                     </properties>
                 </retention-stage>
+                <archival-stage>
+                    <deleteFromSource>false</deleteFromSource>
+                    <queue>default</queue>
+                    <location type="data" path="s4://prodnew/falcon/${YEAR}-${MONTH}-${DAY}-${HOUR}/"/>
+                </archival-stage>
             </lifecycle>
         </cluster>
         <cluster name="backupCluster" type="target">
@@ -82,7 +87,7 @@
         <archival-stage>
             <deleteFromSource>false</deleteFromSource>
             <queue>default</queue>
-            <location type="data" path="s4://inmobi-gridops-databus-archival-pek1/baseSummary-pek1-op-ivory/${YEAR}-${MONTH}-${DAY}-${HOUR}/"/>
+            <location type="data" path="s4://prod/falcon/${YEAR}-${MONTH}-${DAY}-${HOUR}/"/>
         </archival-stage>
     </lifecycle>
 </feed>
