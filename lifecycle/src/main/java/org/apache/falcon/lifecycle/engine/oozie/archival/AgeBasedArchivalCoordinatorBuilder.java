@@ -19,11 +19,9 @@
 package org.apache.falcon.lifecycle.engine.oozie.archival;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
-import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
@@ -32,19 +30,25 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
-import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.ExecutionType;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.lifecycle.engine.oozie.utils.OozieBuilderUtils;
-import org.apache.falcon.oozie.coordinator.*;
+import org.apache.falcon.oozie.coordinator.SYNCDATASET;
+import org.apache.falcon.oozie.coordinator.DATAOUT;
+import org.apache.falcon.oozie.coordinator.DATAIN;
+import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
+import org.apache.falcon.oozie.coordinator.ACTION;
+import org.apache.falcon.oozie.coordinator.WORKFLOW;
+import org.apache.falcon.oozie.coordinator.DATASETS;
+import org.apache.falcon.oozie.coordinator.CONTROLS;
+import org.apache.falcon.oozie.coordinator.INPUTEVENTS;
+import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-
-import static org.json.XMLTokener.entity;
 
 public class AgeBasedArchivalCoordinatorBuilder {
 
@@ -57,6 +61,10 @@ public class AgeBasedArchivalCoordinatorBuilder {
     private static final String PARALLEL = "parallel";
     private static final String TIMEOUT = "timeout";
     private static final String ORDER = "order";
+    public static final String IN_DATASET_NAME = "input-dataset";
+    public static final String OUT_DATASET_NAME = "output-dataset";
+    public static final String DATAIN_NAME = "input";
+    public static final String DATAOUT_NAME = "output";
 
     /**
      * Builds the coordinator app.
@@ -77,7 +85,7 @@ public class AgeBasedArchivalCoordinatorBuilder {
 
         COORDINATORAPP coord = new COORDINATORAPP();
 
-        String coordName = EntityUtil.getWorkflowName(LifeCycle.EVICTION.getTag(), feed).toString();
+        String coordName = EntityUtil.getWorkflowName(LifeCycle.ARCHIVAL.getTag(), feed).toString();
 
         long replicationDelayInMillis = getReplicationDelayInMillis(feed, cluster);
         Date sourceStartDate = getStartDate(feed, cluster, replicationDelayInMillis);
@@ -93,8 +101,7 @@ public class AgeBasedArchivalCoordinatorBuilder {
             long delayInMins = -1 * replicationDelayInMillis / (1000 * 60);
             String elExp = "${now(0," + delayInMins + ")}";
 
-            coord.getInputEvents().getDataIn().get(0).getInstance().set(0, elExp);
-            coord.getOutputEvents().getDataOut().get(0).setInstance(elExp);
+            initializeInputOutputPath(coord, cluster, feed, elExp);
         }
 
         setCoordControls(feed, coord);
@@ -115,6 +122,45 @@ public class AgeBasedArchivalCoordinatorBuilder {
 
     }
 
+    private static void initializeInputOutputPath(COORDINATORAPP coord, Cluster cluster, Feed feed, String elExp)
+            throws FalconException {
+
+        if (coord.getInputEvents() == null) {
+            coord.setInputEvents(new INPUTEVENTS());
+        }
+
+        if (coord.getOutputEvents() == null) {
+            coord.setOutputEvents(new OUTPUTEVENTS());
+        }
+
+        DATAIN datain = createDataIn(feed, cluster);
+        coord.getInputEvents().getDataIn().add(datain);
+
+        DATAOUT dataout = createDataOut(feed, cluster);
+        coord.getOutputEvents().getDataOut().add(dataout);
+
+        coord.getInputEvents().getDataIn().get(0).getInstance().set(0, elExp);
+        coord.getOutputEvents().getDataOut().get(0).setInstance(elExp);
+    }
+
+
+    private static DATAIN createDataIn(Feed feed, Cluster cluster) {
+        DATAIN datain = new DATAIN();
+        datain.setName(DATAIN_NAME);
+        datain.setDataset(IN_DATASET_NAME);
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+        datain.getInstance().add(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
+        return datain;
+    }
+
+    private static DATAOUT createDataOut(Feed feed, Cluster cluster) {
+        DATAOUT dataout = new DATAOUT();
+        dataout.setName(DATAOUT_NAME);
+        dataout.setDataset(OUT_DATASET_NAME);
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+        dataout.setInstance("${coord:current(0)}");
+        return dataout;
+    }
 
     private static ACTION getReplicationWorkflowAction(Feed feed, Cluster cluster, Path buildPath, String coordName,
                                                 Storage sourceStorage) throws FalconException {
@@ -235,7 +281,12 @@ public class AgeBasedArchivalCoordinatorBuilder {
     }
 
     private static void initializeInputDataSet(Feed feed, Cluster cluster, COORDINATORAPP coord, Storage storage) throws FalconException {
-        SYNCDATASET inputDataset = (SYNCDATASET)coord.getDatasets().getDatasetOrAsyncDataset().get(0);
+        if (coord.getDatasets() == null) {
+            coord.setDatasets(new DATASETS());
+        }
+
+        SYNCDATASET inputDataset = new SYNCDATASET();
+        inputDataset.setName(IN_DATASET_NAME);
 
         String uriTemplate = storage.getUriTemplate(LocationType.DATA);
         inputDataset.setUriTemplate(uriTemplate);
@@ -247,14 +298,22 @@ public class AgeBasedArchivalCoordinatorBuilder {
         } else {
             inputDataset.setDoneFlag(feed.getAvailabilityFlag());
         }
+
+        coord.getDatasets().getDatasetOrAsyncDataset().add(inputDataset);
     }
 
     private static void initializeOutputDataSet(Feed feed, Cluster cluster, COORDINATORAPP coord,
                                          String targetPath) throws FalconException {
-        SYNCDATASET outputDataset = (SYNCDATASET)coord.getDatasets().getDatasetOrAsyncDataset().get(1);
+        if (coord.getDatasets() == null) {
+            coord.setDatasets(new DATASETS());
+        }
+
+        SYNCDATASET outputDataset = new SYNCDATASET();
+        outputDataset.setName(OUT_DATASET_NAME);
         outputDataset.setUriTemplate(targetPath);
 
         setDatasetValues(feed, outputDataset, cluster);
+        coord.getDatasets().getDatasetOrAsyncDataset().add(outputDataset);
     }
 
 
