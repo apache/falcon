@@ -54,7 +54,11 @@ public class AgeBasedArchivalWorkflowBuilder {
     }
 
     public static Properties build(Cluster cluster, Path basePath, Feed feed) throws FalconException {
-        Path buildPath = OozieBuilderUtils.getBuildPath(basePath, LifeCycle.ARCHIVAL.getTag());
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+
+        // workflow is serialized to a specific dir
+        Path buildPath = new Path(basePath, Tag.ARCHIVAL.name() + "/" + feedCluster.getName());
+
         WORKFLOWAPP workflow = new WORKFLOWAPP();
         String wfName = EntityUtil.getWorkflowName(Tag.ARCHIVAL, feed).toString();
 
