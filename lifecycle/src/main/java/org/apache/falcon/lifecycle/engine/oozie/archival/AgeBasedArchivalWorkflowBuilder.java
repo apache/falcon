@@ -82,7 +82,7 @@ public class AgeBasedArchivalWorkflowBuilder {
 
 
         Properties props = OozieBuilderUtils.getProperties(buildPath, wfName);
-        props.putAll(OozieBuilderUtils.createDefaultConfiguration(cluster, feed, WorkflowExecutionContext.EntityOperations.REPLICATE));
+        props.putAll(OozieBuilderUtils.createDefaultConfiguration(cluster, feed, WorkflowExecutionContext.EntityOperations.ARCHIVE));
 
         props.putAll(getWorkflowProperties(feed, cluster));
         props.putAll(FeedHelper.getUserWorkflowProperties(LifeCycle.ARCHIVAL));
